@@ -377,8 +377,16 @@ NBEdge::computeEdgeShape() throw() {
             if (pbv.size()>0) {
                 SUMOReal pb = VectorHelper<SUMOReal>::maxValue(pbv);
                 if (pb>=0) {
-                    shape.eraseAt(0);
-                    shape.push_front_noDoublePos(lb.getPositionAtDistance(pb));
+                    //DIRTY FIX. ROADS LYING TOTALLY IN A JUNCTION CAUSE A LATER ASSERT TO FAIL
+                    if (old[1] == lb.getPositionAtDistance(pb))  {
+                        std::cout << "HERE BE DRAGONS" << std::endl;
+                        shape = old;
+
+                    }
+                    else {
+                        shape.eraseAt(0);
+                        shape.push_front_noDoublePos(lb.getPositionAtDistance(pb));
+                    }
                 }
             }
         }
