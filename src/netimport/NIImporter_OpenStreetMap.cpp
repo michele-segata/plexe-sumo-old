@@ -204,6 +204,8 @@ NIImporter_OpenStreetMap::_loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) 
     tc.insert("highway.residential",   1, (SUMOReal)(50. /3.6),  4, WIDTH);  // actually, maybe one lane for parking would be nice...
     tc.insert("highway.living_street", 1, (SUMOReal)(10. /3.6),  3, WIDTH);
     tc.insert("highway.service",       1, (SUMOReal)(20. /3.6),  2, WIDTH, SVC_DELIVERY);
+// [sommer] hack to restrict import to actual roads
+/*
     tc.insert("highway.track",         1, (SUMOReal)(20. /3.6),  1, WIDTH);
     tc.insert("highway.services",      1, (SUMOReal)(30. /3.6),  1, WIDTH);
     tc.insert("highway.unsurfaced",    1, (SUMOReal)(30. /3.6),  1, WIDTH);  // additional
@@ -226,7 +228,7 @@ NIImporter_OpenStreetMap::_loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) 
     tc.insert("railway.subway",        1, (SUMOReal)(30. /3.6),  1, WIDTH, SVC_CITYRAIL);
     tc.insert("railway.preserved",     1, (SUMOReal)(30. /3.6),  1, WIDTH, SVC_LIGHTRAIL);
     tc.insert("railway.monorail",      1, (SUMOReal)(30. /3.6),  1, WIDTH, SVC_LIGHTRAIL);  // rail stuff has to be discussed
-
+*/
 
     /* Parse file(s)
      * Each file is parsed twice: first for nodes, second for edges. */
