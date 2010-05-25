@@ -208,9 +208,6 @@ SUMOSAXAttributes::getStringReporting(int attr, const char* objectid,
     }
     try {
         std::string ret = getString(attr);
-        if (ret=="") {
-            throw EmptyData();
-        }
         return ret;
     } catch (EmptyData&) {
         if (report) {
