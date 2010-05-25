@@ -352,6 +352,10 @@ NBOwnTLDef::collectLinks() throw(ProcessError) {
                     if (el.toEdge!=0&&el.toLane>=(int) el.toEdge->getNumLanes()) {
                         throw ProcessError("Connection '" + incoming->getID() + "_" + toString(j) + "->" + el.toEdge->getID() + "_" + toString(el.toLane) + "' yields in a not existing lane.");
                     }
+                    if (!el.toEdge) {
+                        std::cout << "HERE BE DRAGONS (II)" << std::endl;
+                        continue;
+                    }
                     int tlIndex = (int)myControlledLinks.size();
                     myControlledLinks.push_back(NBConnection(incoming, el.fromLane, el.toEdge, el.toLane, tlIndex));
                 }
