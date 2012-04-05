@@ -33,6 +33,7 @@
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOVTypeParameter.h>
 #include "MSNet.h"
+#include "cfmodels/MSCFModel_CACC.h"
 #include "cfmodels/MSCFModel_IDM.h"
 #include "cfmodels/MSCFModel_Kerner.h"
 #include "cfmodels/MSCFModel_Krauss.h"
@@ -266,6 +267,13 @@ MSVehicleType::build(SUMOVTypeParameter& from) throw(ProcessError) {
                                         get(from.cfParameter, SUMO_ATTR_CF_WIEDEMANN_SECURITY, 0.5),
                                         get(from.cfParameter, SUMO_ATTR_CF_WIEDEMANN_ESTIMATION, 0.5));
         break;
+    case SUMO_TAG_CF_CACC:
+    	model = new MSCFModel_CACC(vtype,
+									get(from.cfParameter, SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL),
+									get(from.cfParameter, SUMO_ATTR_DECEL, DEFAULT_VEH_DECEL),
+    			                    get(from.cfParameter, SUMO_ATTR_DESIRED_GAP, 5));
+    	break;
+
     case SUMO_TAG_CF_KRAUSS:
     default:
         model = new MSCFModel_Krauss(vtype,
