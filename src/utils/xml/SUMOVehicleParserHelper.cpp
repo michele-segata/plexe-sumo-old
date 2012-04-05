@@ -615,6 +615,12 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         wiedemannParams.insert(SUMO_ATTR_CF_WIEDEMANN_SECURITY);
         wiedemannParams.insert(SUMO_ATTR_CF_WIEDEMANN_ESTIMATION);
         allowedCFModelAttrs[SUMO_TAG_CF_WIEDEMANN] = wiedemannParams;
+
+        std::set<SumoXMLAttr> caccParams;
+        caccParams.insert(SUMO_ATTR_ACCEL);
+        caccParams.insert(SUMO_ATTR_DECEL);
+        caccParams.insert(SUMO_ATTR_DESIRED_GAP);
+        allowedCFModelAttrs[SUMO_TAG_CF_CACC] = caccParams;
     }
     return allowedCFModelAttrs;
 }

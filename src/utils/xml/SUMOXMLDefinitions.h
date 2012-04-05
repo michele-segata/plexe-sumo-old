@@ -212,6 +212,7 @@ enum SumoXMLTag {
     SUMO_TAG_CF_PWAGNER2009,
     SUMO_TAG_CF_BKERNER,
     SUMO_TAG_CF_WIEDEMANN,
+    SUMO_TAG_CF_CACC,
 
     SUMO_TAG_PERSON,
     SUMO_TAG_RIDE,
@@ -334,6 +335,7 @@ enum SumoXMLAttr {
     /* Car following model attributes */
     SUMO_ATTR_SIGMA,    // used by: Krauss
     SUMO_ATTR_TAU,      // Krauss
+    SUMO_ATTR_DESIRED_GAP,// CACC
     /* route alternatives / distribution attributes */
     SUMO_ATTR_LAST,
     SUMO_ATTR_COST,

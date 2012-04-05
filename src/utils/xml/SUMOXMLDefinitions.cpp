@@ -168,6 +168,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "carFollowing-PWagner2009", SUMO_TAG_CF_PWAGNER2009 },
     { "carFollowing-BKerner",     SUMO_TAG_CF_BKERNER },
     { "carFollowing-Wiedemann",   SUMO_TAG_CF_WIEDEMANN },
+    { "carFollowing-CACC",   	  SUMO_TAG_CF_CACC },
 
     { "person",           SUMO_TAG_PERSON },
     { "ride",             SUMO_TAG_RIDE },
@@ -265,6 +266,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     { "sigma",          SUMO_ATTR_SIGMA },
     { "tau",            SUMO_ATTR_TAU },
+    { "desGap",			SUMO_ATTR_DESIRED_GAP },
 
     { "last",           SUMO_ATTR_LAST },
     { "cost",           SUMO_ATTR_COST },
