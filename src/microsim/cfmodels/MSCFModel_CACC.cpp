@@ -110,7 +110,8 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSp
 	double predAcc = SPEED2ACCEL(predSpeed - vars->predPreviousSpeed);
 
 	//MS TODO: testing phase
-	MSVehicle *leader = MSNet::getInstance()->getVehicleControl().getVehicle(leaderid);
+	size_t prefix_end = id.find_last_of('.');
+	SUMOVehicle *leader = MSNet::getInstance()->getVehicleControl().getVehicle(id.substr(0, prefix_end) + ".0");
 
 	vars->leaderAcc = SPEED2ACCEL(vars->leaderSpeed - leader->getSpeed());
 	vars->leaderSpeed = leader->getSpeed();
