@@ -200,7 +200,9 @@ bool
 TraCIServerAPI_VehicleType::setVariable(const int cmd, const int variable, const int valueDataType,
                                         MSVehicleType& v, traci::TraCIServer& server,
                                         tcpip::Storage& inputStorage, tcpip::Storage& outputStorage) {
-    switch (variable) {
+    //MS TODO:  here ve can access car follow model and set variables. modify code
+    //v.getCarFollowModel()->
+	switch (variable) {
     case VAR_LENGTH: {
         if (valueDataType!=TYPE_DOUBLE) {
             server.writeStatusCmd(cmd, RTYPE_ERR, "Setting length requires a double.", outputStorage);

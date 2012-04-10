@@ -349,6 +349,8 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
     std::string warning = ""; // additional description for response
     // variable
     int variable = inputStorage.readUnsignedByte();
+
+    //MS TODO: add new var
     if (variable!=CMD_STOP&&variable!=CMD_CHANGELANE
             &&variable!=CMD_SLOWDOWN&&variable!=CMD_CHANGETARGET
             &&variable!=VAR_ROUTE_ID&&variable!=VAR_ROUTE
@@ -368,6 +370,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
     }
     // id
     std::string id = inputStorage.readString();
+    //MS how to get a vehicle from everywhere
     SUMOVehicle* v = MSNet::getInstance()->getVehicleControl().getVehicle(id);
     if (v==0&&variable!=ADD) {
         server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Vehicle '" + id + "' is not known", outputStorage);

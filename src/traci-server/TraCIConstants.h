@@ -599,5 +599,6 @@
 #define VAR_TRACK_VEHICLE 0xa6
 
 
+//MS TODO: add new var for setting new parameters, e.g., for CACC
 
 #endif
