@@ -113,7 +113,7 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSp
 	size_t prefix_end = id.find_last_of('.');
 	SUMOVehicle *leader = MSNet::getInstance()->getVehicleControl().getVehicle(id.substr(0, prefix_end) + ".0");
 
-	vars->leaderAcc = SPEED2ACCEL(vars->leaderSpeed - leader->getSpeed());
+	vars->leaderAcc = SPEED2ACCEL(leader->getSpeed() - vars->leaderSpeed);
 	vars->leaderSpeed = leader->getSpeed();
 
 	//now apply the CACC formula to compute the acceleration that should be applied
