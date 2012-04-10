@@ -108,8 +108,12 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSp
 	double epsilon_dot = egoSpeed - predSpeed; //+ error
 	//compute acceleration of previous vehicle, basing on its previous and current speed
 	double predAcc = SPEED2ACCEL(predSpeed - vars->predPreviousSpeed);
-	vars->leaderAcc = predAcc;
-	vars->leaderSpeed = predSpeed;
+
+	//MS TODO: testing phase
+	MSVehicle *leader = MSNet::getInstance()->getVehicleControl().getVehicle(leaderid);
+
+	vars->leaderAcc = SPEED2ACCEL(vars->leaderSpeed - leader->getSpeed());
+	vars->leaderSpeed = leader->getSpeed();
 
 	//now apply the CACC formula to compute the acceleration that should be applied
 	double computedAcc = var1 * predAcc + var2 * vars->leaderAcc + var3 * epsilon_dot + var4 * (egoSpeed - vars->leaderSpeed) + var5 * epsilon;
