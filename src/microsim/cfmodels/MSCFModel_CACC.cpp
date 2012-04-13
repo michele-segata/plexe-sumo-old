@@ -131,6 +131,26 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSp
 
 }
 
+void
+MSCFModel_CACC::setLeaderSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration) {
+
+	//get state variables for CACC
+	VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
+
+	vars->leaderSpeed = speed;
+	vars->leaderAcc = acceleration;
+
+}
+
+void
+MSCFModel_CACC::getVariables(const MSVehicle* const veh, SUMOReal *speed, SUMOReal *acceleration) {
+	//get state variables for CACC
+	VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
+
+	*speed = veh->getSpeed();
+	*acceleration = vars->prevEgoAcc;
+
+}
 
 MSCFModel*
 MSCFModel_CACC::duplicate(const MSVehicleType* vtype) const {

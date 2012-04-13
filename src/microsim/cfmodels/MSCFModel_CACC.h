@@ -79,6 +79,12 @@ public:
      */
     SUMOReal interactionGap(const MSVehicle* const , SUMOReal vL) const;
 
+    /** @brief Set leader speed
+     *
+     */
+    void setLeaderSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration);
+
+    void getVariables(const MSVehicle* const veh, SUMOReal *speed, SUMOReal *acceleration);
 
     /** @brief Returns the model's name
      * @return The model's name
