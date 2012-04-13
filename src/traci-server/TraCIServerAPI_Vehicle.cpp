@@ -45,6 +45,8 @@
 #include "TraCIServerAPI_Vehicle.h"
 #include "TraCIServerAPI_VehicleType.h"
 
+#include <microsim/cfmodels/MSCFModel_CACC.h>
+
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
@@ -66,8 +68,6 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
     // variable & id
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
-
-    std::cout << "ProcessGet\n";
 
     // check variable
     if (variable!=ID_LIST&&variable!=VAR_SPEED&&variable!=VAR_SPEED_WITHOUT_TRACI&&variable!=VAR_POSITION&&variable!=VAR_ANGLE
@@ -336,6 +336,22 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
                 return false;
             }
             break;
+
+        case VAR_GET_CACC:
+
+            SUMOReal leaderSpeed;
+            SUMOReal leaderAcc;
+
+            ((MSCFModel_CACC *)(&v->getCarFollowModel()))->getVariables(v, &leaderSpeed, &leaderAcc);
+
+            tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+            tempMsg.writeDouble(leaderSpeed);
+
+            tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+            tempMsg.writeDouble(leaderAcc);
+
+            break;
+
         default:
             TraCIServerAPI_VehicleType::getVariable(variable, v->getVehicleType(), tempMsg);
             break;
@@ -354,7 +370,6 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
     // variable
     int variable = inputStorage.readUnsignedByte();
 
-    //MS TODO: add new var
     if (variable!=CMD_STOP&&variable!=CMD_CHANGELANE
             &&variable!=CMD_SLOWDOWN&&variable!=CMD_CHANGETARGET
             &&variable!=VAR_ROUTE_ID&&variable!=VAR_ROUTE
@@ -964,6 +979,17 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         static_cast<MSVehicle*>(v)->getLane()->removeVehicle(static_cast<MSVehicle*>(v));
         MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(static_cast<MSVehicle*>(v));
     }
+    break;
+    case VAR_SET_CACC:
+
+        SUMOReal leaderSpeed;
+        SUMOReal leaderAcc;
+
+        leaderSpeed = inputStorage.readDouble();
+        leaderAcc = inputStorage.readDouble();
+
+        ((MSCFModel_CACC *)(&v->getCarFollowModel()))->setLeaderSpeed(v, leaderSpeed, leaderAcc);
+
     break;
     default:
         try {

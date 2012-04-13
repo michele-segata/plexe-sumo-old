@@ -33,8 +33,6 @@
 #include "TraCIConstants.h"
 #include "TraCIServerAPI_VehicleType.h"
 
-#include <microsim/cfmodels/MSCFModel_CACC.h>
-
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
@@ -97,9 +95,6 @@ TraCIServerAPI_VehicleType::processGet(TraCIServer& server, tcpip::Storage& inpu
 bool
 TraCIServerAPI_VehicleType::getVariable(const int variable, const MSVehicleType& v, tcpip::Storage& tempMsg) {
 
-	MSVehicle * veh = (MSVehicle *) MSNet::getInstance()->getVehicleControl().getVehicle(v.getID());
-	std::stringstream ss;
-
     switch (variable) {
     case VAR_LENGTH:
         tempMsg.writeUnsignedByte(TYPE_DOUBLE);
@@ -160,25 +155,7 @@ TraCIServerAPI_VehicleType::getVariable(const int variable, const MSVehicleType&
         tempMsg.writeUnsignedByte(static_cast<int>(v.getColor().blue()*255.+0.5));
         tempMsg.writeUnsignedByte(255);
         break;
-    case VAR_GET_CACC:
-    	SUMOReal leaderSpeed;
-    	SUMOReal leaderAcc;
 
-    	((MSCFModel_CACC *)(&v.getCarFollowModel()))->getVariables(veh, &leaderSpeed, &leaderAcc);
-
-    	tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-    	tempMsg.writeDouble(leaderSpeed);
-
-    	ss << "writing a message of size " << tempMsg.size();
-    	WRITE_MESSAGE(ss.str());
-    	ss.clear();
-    	tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-    	tempMsg.writeDouble(leaderAcc);
-
-    	ss << "writing a message of size " << tempMsg.size();
-    	WRITE_MESSAGE(ss.str());
-    	ss.clear();
-    	break;
     default:
         break;
     }
@@ -225,8 +202,7 @@ bool
 TraCIServerAPI_VehicleType::setVariable(const int cmd, const int variable, const int valueDataType,
                                         MSVehicleType& v, traci::TraCIServer& server,
                                         tcpip::Storage& inputStorage, tcpip::Storage& outputStorage) {
-    //MS TODO:  here ve can access car follow model and set variables. modify code
-    //v.getCarFollowModel()->
+
 	switch (variable) {
     case VAR_LENGTH: {
         if (valueDataType!=TYPE_DOUBLE) {
