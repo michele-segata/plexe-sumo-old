@@ -600,5 +600,7 @@
 
 
 //MS TODO: add new var for setting new parameters, e.g., for CACC
+#define VAR_SET_CACC 0xb0
+#define VAR_GET_CACC 0xb1
 
 #endif

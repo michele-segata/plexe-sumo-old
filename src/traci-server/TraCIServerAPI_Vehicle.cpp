@@ -66,6 +66,9 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
     // variable & id
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
+
+    std::cout << "ProcessGet\n";
+
     // check variable
     if (variable!=ID_LIST&&variable!=VAR_SPEED&&variable!=VAR_SPEED_WITHOUT_TRACI&&variable!=VAR_POSITION&&variable!=VAR_ANGLE
             &&variable!=VAR_ROAD_ID&&variable!=VAR_LANE_ID&&variable!=VAR_LANE_INDEX
@@ -82,6 +85,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_ACCEL&&variable!=VAR_DECEL&&variable!=VAR_IMPERFECTION
             &&variable!=VAR_TAU&&variable!=VAR_BEST_LANES&&variable!=DISTANCE_REQUEST
             &&variable!=ID_COUNT
+            &&variable!=VAR_GET_CACC
        ) {
         server.writeStatusCmd(CMD_GET_VEHICLE_VARIABLE, RTYPE_ERR, "Get Vehicle Variable: unsupported variable specified", outputStorage);
         return false;
@@ -364,6 +368,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_TAU
             &&variable!=VAR_SPEED&&variable!=VAR_SPEEDSETMODE&&variable!=VAR_COLOR
             &&variable!=ADD&&variable!=REMOVE
+            &&variable!=VAR_SET_CACC
        ) {
         server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Change Vehicle State: unsupported variable specified", outputStorage);
         return false;
