@@ -86,6 +86,9 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSp
 	string id = veh->getID();
 	std::stringstream ss;
 
+	//get state variables for CACC
+	VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
+
 	if (id.substr(id.size() - 2, 2).compare(".0") == 0)
 	{
 		return 36.11;
@@ -99,9 +102,6 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSp
 	ss << "Vehicle " << id << " runs at " << egoSpeed << " at a distance of " << gap2pred;
 	WRITE_MESSAGE(ss.str());
 
-	//get state variables for CACC
-	VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
-
 	//compute epsilon, i.e., the desired distance error
 	double epsilon = -gap2pred + myDesiredGap; //+ error
 	//compute epsilon_dot, i.e., the desired speed error
@@ -110,11 +110,11 @@ MSCFModel_CACC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSp
 	double predAcc = SPEED2ACCEL(predSpeed - vars->predPreviousSpeed);
 
 	//MS TODO: testing phase
-	size_t prefix_end = id.find_last_of('.');
-	SUMOVehicle *leader = MSNet::getInstance()->getVehicleControl().getVehicle(id.substr(0, prefix_end) + ".0");
+	//size_t prefix_end = id.find_last_of('.');
+//	SUMOVehicle *leader = MSNet::getInstance()->getVehicleControl().getVehicle(id.substr(0, prefix_end) + ".0");
 
-	vars->leaderAcc = SPEED2ACCEL(leader->getSpeed() - vars->leaderSpeed);
-	vars->leaderSpeed = leader->getSpeed();
+//	vars->leaderAcc = SPEED2ACCEL(leader->getSpeed() - vars->leaderSpeed);
+//	vars->leaderSpeed = leader->getSpeed();
 
 	//now apply the CACC formula to compute the acceleration that should be applied
 	double computedAcc = var1 * predAcc + var2 * vars->leaderAcc + var3 * epsilon_dot + var4 * (egoSpeed - vars->leaderSpeed) + var5 * epsilon;
