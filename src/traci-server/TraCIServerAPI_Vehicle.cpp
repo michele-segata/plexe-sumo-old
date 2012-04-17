@@ -988,7 +988,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         leaderSpeed = inputStorage.readDouble();
         leaderAcc = inputStorage.readDouble();
 
-        ((MSCFModel_CACC *)(&v->getCarFollowModel()))->setLeaderSpeed(v, leaderSpeed, leaderAcc);
+        ((MSCFModel_CACC *)(&v->getVehicleType().getCarFollowModel()))->setLeaderSpeed((MSVehicle *)v, leaderSpeed, leaderAcc);
 
     break;
     default:
