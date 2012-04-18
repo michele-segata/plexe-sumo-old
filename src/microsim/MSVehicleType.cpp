@@ -34,6 +34,7 @@
 #include <utils/common/SUMOVTypeParameter.h>
 #include "MSNet.h"
 #include "cfmodels/MSCFModel_CACC.h"
+#include "cfmodels/MSCFModel_CC.h"
 #include "cfmodels/MSCFModel_IDM.h"
 #include "cfmodels/MSCFModel_Kerner.h"
 #include "cfmodels/MSCFModel_Krauss.h"
@@ -273,6 +274,22 @@ MSVehicleType::build(SUMOVTypeParameter& from) throw(ProcessError) {
 									get(from.cfParameter, SUMO_ATTR_DECEL, DEFAULT_VEH_DECEL),
     			                    get(from.cfParameter, SUMO_ATTR_DESIRED_GAP, 5));
     	break;
+
+    case SUMO_TAG_CF_CC:
+        model = new MSCFModel_CC(vtype,
+                                 get(from.cfParameter, SUMO_ATTR_ACCEL, 1.5),
+                                 get(from.cfParameter, SUMO_ATTR_DECEL, 6),
+                                 get(from.cfParameter, SUMO_ATTR_CF_CC_CCDECEL, 1.5),
+                                 get(from.cfParameter, SUMO_ATTR_TAU, 1.5),
+                                 get(from.cfParameter, SUMO_ATTR_CF_CC_CONSTSPACING, 5.0),
+                                 get(from.cfParameter, SUMO_ATTR_CF_CC_KP, 1.0),
+                                 get(from.cfParameter, SUMO_ATTR_CF_CC_LAMBDA, 0.1),
+                                 get(from.cfParameter, SUMO_ATTR_CF_CC_C1, 0.5),
+                                 get(from.cfParameter, SUMO_ATTR_CF_CC_XI, 1),
+                                 get(from.cfParameter, SUMO_ATTR_CF_CC_OMEGAN, 0.2),
+                                 get(from.cfParameter, SUMO_ATTR_CF_CC_TAU, 0.5));
+
+        break;
 
     case SUMO_TAG_CF_KRAUSS:
     default:
