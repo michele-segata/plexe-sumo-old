@@ -139,6 +139,8 @@ public:
 
     void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration);
 
+    void getVehicleInformation(const MSVehicle* veh, SUMOReal &speed, SUMOReal &acceleration);
+
 
 private:
     class VehicleVariables : public MSCFModel::VehicleVariables {
@@ -185,7 +187,7 @@ private:
 
 
 private:
-    SUMOReal _v(const MSVehicle* const veh) const;
+    SUMOReal _v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed) const;
 
     /// @brief controller for the CC which computes the acceleration to be applied. the value needs to be passed to the actuator
     SUMOReal _cc(const MSVehicle* const veh) const;
@@ -198,7 +200,7 @@ private:
 
     /// @brief computes the actual acceleration the actuator is able to apply to the car, given engine time constant and previous
     /// acceleration
-    SUMOReal _actuator(const MSVehicle* const veh, SUMOReal acceleration, SUMOReal previousAcceleration) const;
+    SUMOReal _actuator(const MSVehicle* const veh, SUMOReal acceleration) const;
 
     SUMOReal desiredSpeed(const MSVehicle* const veh) const {
         return MIN2(myType->getMaxSpeed(), veh->getLane()->getMaxSpeed());

@@ -45,7 +45,7 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
     : MSCFModel(vtype, accel, decel, headwayTime), myCcDecel(ccDecel), myConstantSpacing(constantSpacing)
     , myKp(kp), myLambda(lambda), myC1(c1), myXi(xi), myOmegaN(omegaN), myTau(tau), myAlpha1(1 - myC1), myAlpha2(myC1),
     myAlpha3(-(2 * myXi - myC1 *(myXi + sqrt(myXi* myXi - 1))) * myOmegaN), myAlpha4(-(myXi + sqrt(myXi* myXi - 1)) * myOmegaN* myC1),
-    myAlpha5(-myOmegaN* myOmegaN), myAlpha(DELTA_T / (myTau + DELTA_T), myOneMinusAlpha(1 - myAlpha)) {
+    myAlpha5(-myOmegaN* myOmegaN), myAlpha(DELTA_T / (myTau + DELTA_T)), myOneMinusAlpha(1 - myAlpha) {
     if (DELTA_T != 100) {
         std::cerr << "Fatal error: in order to use automatic cruise control models, time step must be set to 100 ms\n";
         assert(false);
@@ -71,6 +71,10 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
 
 SUMOReal
 MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
+    if (gap2pred < 0.01) {
+            return 0;
+        }
+    return _v(veh, gap2pred, veh->getSpeed(), 0, desiredSpeed(veh));
     VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
     switch (vars->activeController) {
         case VehicleVariables::ACC:
@@ -93,10 +97,6 @@ MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
             break;
 
     }
-    if (gap2pred < 0.01) {
-        return 0;
-    }
-    return _v(veh, gap2pred, veh->getSpeed(), 0, desiredSpeed(veh));
 }
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
@@ -116,6 +116,8 @@ MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 SUMOReal
 MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed) const {
 
+    std::stringstream debug;
+
     //acceleration computed by the controller
     double controllerAcceleration;
 
@@ -123,8 +125,13 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     //TODO: only for testing
     //-----------------------------------------------------------
+    std::string id = veh->getID();
     if (id.substr(id.size() - 2, 2).compare(".0") == 0) {
         vars->activeController = VehicleVariables::ACC;
+        if (MSNet::getInstance()->getCurrentTimeStep() < 120000)
+            vars->ccDesiredSpeed = 36;
+        else
+            vars->ccDesiredSpeed = 30;
     } else {
         vars->activeController = VehicleVariables::CACC;
     }
@@ -143,9 +150,13 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     vars->frontSpeed = predSpeed;
     vars->lastUpdate = MSNet::getInstance()->getCurrentTimeStep();
 
+    debug << "V " << id;
+
     switch (vars->activeController) {
 
         case VehicleVariables::ACC:
+
+            debug << " uses CC";
 
             //TODO: modify. for now uses only CC
             controllerAcceleration = _cc(veh);
@@ -153,6 +164,8 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
             break;
 
         case VehicleVariables::CACC:
+
+            debug << " uses CACC";
 
             //TODO: again modify probably range/range-rate controller is needed
             controllerAcceleration = _cacc(veh);
@@ -173,11 +186,19 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     }
 
+    debug << " accel=" << controllerAcceleration;
+
     //compute the actual acceleration applied by the engine
     vars->egoAcceleration = _actuator(veh, controllerAcceleration);
 
+    debug << " actuators=" << vars->egoAcceleration;
+
     //compute the speed from the actual acceleration
-    vars->egoSpeed = ACCEL2SPEED(vars->egoAcceleration);
+    vars->egoSpeed += ACCEL2SPEED(vars->egoAcceleration);
+
+    debug << " speed=" << vars->egoSpeed << "\n";
+
+    WRITE_MESSAGE(debug.str());
 
     return MAX2(SUMOReal(0), vars->egoSpeed);
 }
@@ -222,6 +243,26 @@ MSCFModel_CC::_actuator(const MSVehicle* const veh, SUMOReal acceleration) const
 
     return myAlpha * acceleration + myOneMinusAlpha * vars->egoAcceleration;
 
+}
+
+void
+MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->ccDesiredSpeed = ccDesiredSpeed;
+}
+
+void
+MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration) {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->leaderAcceleration = acceleration;
+    vars->leaderSpeed = speed;
+}
+
+void
+MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal &speed, SUMOReal &acceleration) {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    speed = vars->egoSpeed;
+    acceleration = vars->egoAcceleration;
 }
 
 
