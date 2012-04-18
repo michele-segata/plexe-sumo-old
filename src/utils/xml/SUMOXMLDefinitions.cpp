@@ -169,6 +169,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "carFollowing-BKerner",     SUMO_TAG_CF_BKERNER },
     { "carFollowing-Wiedemann",   SUMO_TAG_CF_WIEDEMANN },
     { "carFollowing-CACC",   	  SUMO_TAG_CF_CACC },
+    { "carFollowing-CC",          SUMO_TAG_CF_CC },
 
     { "person",           SUMO_TAG_PERSON },
     { "ride",             SUMO_TAG_RIDE },
@@ -411,6 +412,15 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     { "security",       SUMO_ATTR_CF_WIEDEMANN_SECURITY },
     { "estimation",     SUMO_ATTR_CF_WIEDEMANN_ESTIMATION },
+
+    { "ccDecel",        SUMO_ATTR_CF_CC_CCDECEL },
+    { "constSpacing",   SUMO_ATTR_CF_CC_CONSTSPACING },
+    { "kp",             SUMO_ATTR_CF_CC_KP },
+    { "lambda",         SUMO_ATTR_CF_CC_LAMBDA },
+    { "c1",             SUMO_ATTR_CF_CC_C1 },
+    { "xi",             SUMO_ATTR_CF_CC_XI },
+    { "omegaN",         SUMO_ATTR_CF_CC_OMEGAN },
+    { "tau",             SUMO_ATTR_CF_CC_TAU },
 
     { "generateWalks",  SUMO_ATTR_GENERATE_WALKS },
 

@@ -621,6 +621,20 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         caccParams.insert(SUMO_ATTR_DECEL);
         caccParams.insert(SUMO_ATTR_DESIRED_GAP);
         allowedCFModelAttrs[SUMO_TAG_CF_CACC] = caccParams;
+
+        std::set<SumoXMLAttr> ccParams;
+        ccParams.insert(SUMO_ATTR_ACCEL);
+        ccParams.insert(SUMO_ATTR_DECEL);
+        ccParams.insert(SUMO_ATTR_TAU);
+        ccParams.insert(SUMO_ATTR_CF_CC_C1);
+        ccParams.insert(SUMO_ATTR_CF_CC_CCDECEL);
+        ccParams.insert(SUMO_ATTR_CF_CC_CONSTSPACING);
+        ccParams.insert(SUMO_ATTR_CF_CC_KP);
+        ccParams.insert(SUMO_ATTR_CF_CC_LAMBDA);
+        ccParams.insert(SUMO_ATTR_CF_CC_OMEGAN);
+        ccParams.insert(SUMO_ATTR_CF_CC_TAU);
+        ccParams.insert(SUMO_ATTR_CF_CC_XI);
+        allowedCFModelAttrs[SUMO_TAG_CF_CC] = ccParams;
     }
     return allowedCFModelAttrs;
 }
