@@ -45,7 +45,7 @@
 #include "TraCIServerAPI_Vehicle.h"
 #include "TraCIServerAPI_VehicleType.h"
 
-#include <microsim/cfmodels/MSCFModel_CACC.h>
+#include <microsim/cfmodels/MSCFModel_CC.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -342,7 +342,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             SUMOReal leaderSpeed;
             SUMOReal leaderAcc;
 
-            ((MSCFModel_CACC *)(&v->getCarFollowModel()))->getVariables(v, &leaderSpeed, &leaderAcc);
+            ((MSCFModel_CC *)(&v->getCarFollowModel()))->getVehicleInformation(v, leaderSpeed, leaderAcc);
 
             tempMsg.writeUnsignedByte(TYPE_DOUBLE);
             tempMsg.writeDouble(leaderSpeed);
@@ -988,7 +988,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         leaderSpeed = inputStorage.readDouble();
         leaderAcc = inputStorage.readDouble();
 
-        ((MSCFModel_CACC *)(&v->getVehicleType().getCarFollowModel()))->setLeaderSpeed((MSVehicle *)v, leaderSpeed, leaderAcc);
+        ((MSCFModel_CC *)(&v->getVehicleType().getCarFollowModel()))->setLeaderInformation((MSVehicle *)v, leaderSpeed, leaderAcc);
 
     break;
     default:
