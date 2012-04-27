@@ -279,6 +279,10 @@ MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) {
 void
 MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration) {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    std::stringstream debug;
+    debug.precision(2);
+    debug << veh->getID() << " updates leader info: v=" << speed << " a=" << acceleration;
+    WRITE_ERROR(debug.str());
     vars->leaderAcceleration = acceleration;
     vars->leaderSpeed = speed;
 }
