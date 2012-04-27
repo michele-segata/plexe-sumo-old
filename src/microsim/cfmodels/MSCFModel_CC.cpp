@@ -284,7 +284,7 @@ MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMORea
 }
 
 void
-MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal &speed, SUMOReal &acceleration) {
+MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration) {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     speed = vars->egoSpeed;
     acceleration = vars->egoAcceleration;

@@ -139,7 +139,7 @@ public:
 
     void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration);
 
-    void getVehicleInformation(const MSVehicle* veh, SUMOReal &speed, SUMOReal &acceleration);
+    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration);
 
 
 private:
