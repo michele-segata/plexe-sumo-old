@@ -65,16 +65,16 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
 
 SUMOReal
 MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal /*predMaxDecel*/) const {
-    return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh));
+    return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), true);
 }
 
 
 SUMOReal
 MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
     if (gap2pred < 0.01) {
-            return 0;
-        }
-    return _v(veh, gap2pred, veh->getSpeed(), 0, desiredSpeed(veh));
+        return 0;
+    }
+    return _v(veh, gap2pred, veh->getSpeed(), 0, desiredSpeed(veh), false);
     VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
     switch (vars->activeController) {
         case VehicleVariables::ACC:
@@ -114,12 +114,19 @@ MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 
 
 SUMOReal
-MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed) const {
+MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, bool invokedFromFollowSpeed) const {
 
-    std::stringstream debug;
+    std::stringstream debugstr;
+    debugstr.precision(2);
 
     //acceleration computed by the controller
     double controllerAcceleration;
+    //acceleration actually actuated by the engine
+    double engineAcceleration;
+    //speed computed by the model
+    double speed;
+
+    bool debug = false;
 
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
 
@@ -128,47 +135,67 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     std::string id = veh->getID();
     if (id.substr(id.size() - 2, 2).compare(".0") == 0) {
         vars->activeController = VehicleVariables::ACC;
-        if (MSNet::getInstance()->getCurrentTimeStep() < 120000)
+        if (MSNet::getInstance()->getCurrentTimeStep() < 120000) {
             vars->ccDesiredSpeed = 36;
-        else
-            vars->ccDesiredSpeed = 30;
+        } else {
+            vars->ccDesiredSpeed = 25;
+        }
     } else {
         vars->activeController = VehicleVariables::CACC;
     }
     //-----------------------------------------------------------
 
-    //this function has already been invoked for this timestep
-    if (vars->lastUpdate == MSNet::getInstance()->getCurrentTimeStep()) {
-        return vars->egoSpeed;
+    //has this function already been invoked for this timestep?
+    if (vars->lastUpdate != MSNet::getInstance()->getCurrentTimeStep() && invokedFromFollowSpeed) {
+        debug = true;
+        //relative speed at time now - 1
+        double dv_t0 = vars->egoPreviousSpeed - vars->frontSpeed;
+        //relative speed at time now
+        double dv_t1 = egoSpeed - predSpeed;
+        vars->egoSpeed = egoSpeed;
+        vars->egoAcceleration = SPEED2ACCEL(veh->getSpeed() - vars->egoPreviousSpeed);
+        vars->egoPreviousSpeed = veh->getSpeed();
+        vars->lastUpdate = MSNet::getInstance()->getCurrentTimeStep();
+        vars->frontAcceleration = vars->egoAcceleration - SPEED2ACCEL(dv_t1 - dv_t0);
+        vars->frontSpeed = predSpeed;
     }
 
-
-    //update variables, first of all
-    vars->egoSpeed = egoSpeed;
-    vars->frontAcceleration = SPEED2ACCEL(predSpeed - vars->frontSpeed);
-    vars->frontDistance = gap2pred;
-    vars->frontSpeed = predSpeed;
-    vars->lastUpdate = MSNet::getInstance()->getCurrentTimeStep();
-
-    debug << "V " << id;
+    debugstr << "V " << id;
 
     switch (vars->activeController) {
 
         case VehicleVariables::ACC:
 
-            debug << " uses CC";
+            debugstr << " uses CC";
 
             //TODO: modify. for now uses only CC
-            controllerAcceleration = _cc(veh);
+            controllerAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
 
             break;
 
         case VehicleVariables::CACC:
 
-            debug << " uses CACC";
+            debugstr << " uses CACC";
+
+            double predAcceleration, leaderAcceleration, leaderSpeed;
+
+            if (invokedFromFollowSpeed) {
+                predAcceleration = vars->frontAcceleration;
+                leaderAcceleration = vars->leaderAcceleration;
+                leaderSpeed = vars->leaderSpeed;
+            }
+            else {
+                /* if the method has not been invoked from followSpeed() then it has been
+                 * invoked from stopSpeed(). In such case we set all parameters of preceding
+                 * vehicles as they were non-moving obstacles
+                 */
+                predAcceleration = 0;
+                leaderAcceleration = 0;
+                leaderSpeed = 0;
+            }
 
             //TODO: again modify probably range/range-rate controller is needed
-            controllerAcceleration = _cacc(veh);
+            controllerAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration);
 
             break;
 
@@ -186,62 +213,60 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     }
 
-    debug << " accel=" << controllerAcceleration;
+    debugstr << " accel=" << controllerAcceleration;
 
     //compute the actual acceleration applied by the engine
-    vars->egoAcceleration = _actuator(veh, controllerAcceleration);
+    engineAcceleration = _actuator(controllerAcceleration, vars->egoAcceleration);
 
-    debug << " actuators=" << vars->egoAcceleration;
+    debugstr << " actuators=" << engineAcceleration;
 
     //compute the speed from the actual acceleration
-    vars->egoSpeed += ACCEL2SPEED(vars->egoAcceleration);
+    speed = egoSpeed + ACCEL2SPEED(engineAcceleration);
 
-    debug << " speed=" << vars->egoSpeed << "\n";
+    debugstr << " speed=" << speed << "";
 
-    WRITE_MESSAGE(debug.str());
+    debugstr << " distance=" << gap2pred;
 
-    return MAX2(SUMOReal(0), vars->egoSpeed);
+    if (debug)
+        WRITE_MESSAGE(debugstr.str());
+
+    return MAX2(SUMOReal(0), speed);
 }
 
 SUMOReal
-MSCFModel_CC::_cc(const MSVehicle* const veh) const {
+MSCFModel_CC::_cc(SUMOReal egoSpeed, SUMOReal desSpeed) const {
 
-    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-
-    return fmin(myAccel, fmax(-myCcDecel, -myKp * (vars->egoSpeed - vars->ccDesiredSpeed)));
-
-}
-
-SUMOReal
-MSCFModel_CC::_acc(const MSVehicle* const veh) const {
-
-    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-
-    return fmin(myAccel, fmax(-myDecel, -1.0 / myHeadwayTime * (vars->egoSpeed - vars->frontSpeed + myLambda * (-vars->frontDistance + myHeadwayTime * vars->egoSpeed))));
+    //Eq. 5.5 of the Rajamani book, with Ki = 0 and bounds on max and min acceleration
+    return fmin(myAccel, fmax(-myCcDecel, -myKp * (egoSpeed - desSpeed)));
 
 }
 
 SUMOReal
-MSCFModel_CC::_cacc(const MSVehicle* const veh) const {
+MSCFModel_CC::_acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred) const {
 
-    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    //Eq. 6.18 of the Rajamani book
+    return fmin(myAccel, fmax(-myDecel, -1.0 / myHeadwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + myHeadwayTime * egoSpeed))));
+
+}
+
+SUMOReal
+MSCFModel_CC::_cacc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration) const {
 
     //compute epsilon, i.e., the desired distance error
-    double epsilon = -vars->frontDistance + myConstantSpacing; //NOTICE: error (if any) should already be included in frontDistance
+    double epsilon = -gap2pred + myConstantSpacing; //NOTICE: error (if any) should already be included in gap2pred
     //compute epsilon_dot, i.e., the desired speed error
-    double epsilon_dot = vars->egoSpeed - vars->frontSpeed;
-
-    return fmin(myAccel, fmax(-myDecel, myAlpha1 * vars->frontAcceleration + myAlpha2 * vars->leaderAcceleration +
-                              myAlpha3 * epsilon_dot + myAlpha4 * (vars->egoSpeed - vars->leaderSpeed) + myAlpha5 * epsilon));
+    double epsilon_dot = egoSpeed - predSpeed;
+    //Eq. 7.39 of the Rajamani book
+    return fmin(myAccel, fmax(-myDecel, myAlpha1 * predAcceleration + myAlpha2 * leaderAcceleration +
+                              myAlpha3 * epsilon_dot + myAlpha4 * (egoSpeed - leaderSpeed) + myAlpha5 * epsilon));
 
 }
 
 SUMOReal
-MSCFModel_CC::_actuator(const MSVehicle* const veh, SUMOReal acceleration) const {
+MSCFModel_CC::_actuator(SUMOReal acceleration, SUMOReal currentAcceleration) const {
 
-    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-
-    return myAlpha * acceleration + myOneMinusAlpha * vars->egoAcceleration;
+    //standard low-pass filter discrete implementation
+    return myAlpha * acceleration + myOneMinusAlpha * currentAcceleration;
 
 }
 

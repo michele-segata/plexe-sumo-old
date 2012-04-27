@@ -160,6 +160,8 @@ private:
         SUMOReal egoSpeed;
         /// @brief current vehicle acceleration
         SUMOReal egoAcceleration;
+        /// @brief vehicle speed at previous timestep
+        SUMOReal egoPreviousSpeed;
         /// @brief current front vehicle speed
         SUMOReal frontSpeed;
         /// @brief current front vehicle distance
@@ -187,20 +189,45 @@ private:
 
 
 private:
-    SUMOReal _v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed) const;
+    SUMOReal _v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, bool invokedFromFollowingSpeed) const;
 
-    /// @brief controller for the CC which computes the acceleration to be applied. the value needs to be passed to the actuator
-    SUMOReal _cc(const MSVehicle* const veh) const;
+    /** @brief controller for the CC which computes the acceleration to be applied. the value needs to be passed to the actuator
+     *
+     * @param[in] egoSpeed vehicle current speed
+     * @param[in] desSpeed vehicle desired speed
+     * @return the acceleration to be given to the actuator
+     */
+    SUMOReal _cc(SUMOReal egoSpeed, SUMOReal desSpeed) const;
 
-    /// @brief controller for the ACC which computes the acceleration to be applied. the value needs to be passed to the actuator
-    SUMOReal _acc(const MSVehicle* const vehd) const;
+    /** @brief controller for the ACC which computes the acceleration to be applied. the value needs to be passed to the actuator
+     *
+     * @param[in] egoSpeed vehicle current speed
+     * @param[in] desSpeed vehicle desired speed
+     * @param[in] gap2pred the distance to preceding vehicle
+     * @return the acceleration to be given to the actuator
+     */
+    SUMOReal _acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred) const;
 
-    /// @brief controller for the CACC which computes the acceleration to be applied. the value needs to be passed to the actuator
-    SUMOReal _cacc(const MSVehicle* const veh) const;
+    /** @brief controller for the CACC which computes the acceleration to be applied. the value needs to be passed to the actuator
+     *
+     * @param[in] egoSpeed vehicle current speed
+     * @param[in] desSpeed vehicle desired speed
+     * @param[in] predAcceleration acceleration of preceding vehicle
+     * @param[in] gap2pred the distance to preceding vehicle
+     * @param[in] leaderSpeed the speed of the platoon leader
+     * @param[in] leaderAcceleration the acceleration of the platoon leader
+     * @return the acceleration to be given to the actuator
+     */
+    SUMOReal _cacc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration) const;
 
-    /// @brief computes the actual acceleration the actuator is able to apply to the car, given engine time constant and previous
-    /// acceleration
-    SUMOReal _actuator(const MSVehicle* const veh, SUMOReal acceleration) const;
+    /** @brief computes the actual acceleration the actuator is able to apply to the car, given engine time constant and previous
+     * acceleration
+     *
+     * @param[in] acceleration the acceleration to be applied, computed by the controller
+     * @param[in] currentAcceleration the current car acceleration
+     * @return the actual acceleration applied by the engine
+     */
+    SUMOReal _actuator(SUMOReal acceleration, SUMOReal currentAcceleration) const;
 
     SUMOReal desiredSpeed(const MSVehicle* const veh) const {
         return MIN2(myType->getMaxSpeed(), veh->getLane()->getMaxSpeed());
