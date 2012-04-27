@@ -45,7 +45,7 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
     : MSCFModel(vtype, accel, decel, headwayTime), myCcDecel(ccDecel), myConstantSpacing(constantSpacing)
     , myKp(kp), myLambda(lambda), myC1(c1), myXi(xi), myOmegaN(omegaN), myTau(tau), myAlpha1(1 - myC1), myAlpha2(myC1),
     myAlpha3(-(2 * myXi - myC1 *(myXi + sqrt(myXi* myXi - 1))) * myOmegaN), myAlpha4(-(myXi + sqrt(myXi* myXi - 1)) * myOmegaN* myC1),
-    myAlpha5(-myOmegaN* myOmegaN), myAlpha(DELTA_T / (myTau + DELTA_T)), myOneMinusAlpha(1 - myAlpha) {
+    myAlpha5(-myOmegaN* myOmegaN), myAlpha(TS / (myTau + TS)), myOneMinusAlpha(1 - myAlpha) {
     if (DELTA_T != 100) {
         std::cerr << "Fatal error: in order to use automatic cruise control models, time step must be set to 100 ms\n";
         assert(false);
