@@ -213,3 +213,20 @@ bool MSCACCLaneChanger::change() {
 
 }
 
+void
+MSCACCLaneChanger::laneChange(SUMOTime t) {
+
+    //the code has been copied and adapted from MSLaneChanger::laneChange()
+
+    // This is what happens in one timestep. After initialization of the
+    // changer, each vehicle will try to change. After that the changer
+    // nedds an update to prevent multiple changes of one vehicle.
+    // Finally, the change-result has to be given back to the lanes.
+    initChanger();
+    while (vehInChanger()) {
+
+        bool haveChanged = change();
+        updateChanger(haveChanged);
+    }
+    updateLanes(t);
+}

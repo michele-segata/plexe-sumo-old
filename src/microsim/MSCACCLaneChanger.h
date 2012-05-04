@@ -58,6 +58,13 @@ public:
     /// Destructor.
     ~MSCACCLaneChanger();
 
+    /**
+     * override original laneChange() method so that the MSCACCLaneChanger::change()
+     * method is invoked, instead of the MSLaneChanger::change()
+     *
+     */
+    void laneChange(SUMOTime t);
+
 protected:
 
     /**
