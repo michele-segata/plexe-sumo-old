@@ -119,7 +119,7 @@ bool MSCACCLaneChanger::change() {
     if (cacc_goto_left != STAY_THERE && (myCandi + 1) != myChanger.end() && (myCandi + 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
         std::pair<MSVehicle* const, SUMOReal> lLead = getRealLeader(myCandi + 1);
         std::pair<MSVehicle* const, SUMOReal> lFollow = getRealFollower(myCandi + 1);
-        state2 = cacc_goto_left == GOTO_LEFT ? LCA_SPEEDGAIN : change2left(leader, lLead, lFollow, preb);
+        state2 = cacc_goto_left == GOTO_LEFT ? LCA_SPEEDGAIN : 0;
         if ((state2 & LCA_URGENT) != 0 || (state2 & LCA_SPEEDGAIN) != 0) {
             state2 |= LCA_LEFT;
         }
