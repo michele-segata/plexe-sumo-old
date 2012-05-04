@@ -43,7 +43,7 @@
 // class declarations
 // ===========================================================================
 class MSLane;
-class MSLaneChanger;
+class MSCACCLaneChanger;
 class OutputDevice;
 class SUMOVehicle;
 class SUMOVehicleParameter;
@@ -466,7 +466,7 @@ protected:
     std::vector<MSLane*>* myLanes;
 
     /// @brief This member will do the lane-change
-    MSLaneChanger* myLaneChanger;
+    MSCACCLaneChanger* myLaneChanger;
 
     /// @brief the purpose of the edge
     EdgeBasicFunction myFunction;
