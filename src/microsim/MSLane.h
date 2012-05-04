@@ -52,6 +52,7 @@
 // class declarations
 // ===========================================================================
 class MSLaneChanger;
+class MSCACCLaneChanger;
 class MSLink;
 class MSMoveReminder;
 class GUILaneWrapper;
@@ -73,6 +74,7 @@ class MSLane : public Named {
 public:
     /// needs access to myTmpVehicles (this maybe should be done via SUMOReal-buffering!!!)
     friend class MSLaneChanger;
+    friend class MSCACCLaneChanger;
 
     friend class GUILaneWrapper;
 
