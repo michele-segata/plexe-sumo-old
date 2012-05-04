@@ -29,7 +29,7 @@
 
 #include "MSEdge.h"
 #include "MSLane.h"
-#include "MSLaneChanger.h"
+#include "MSCACCLaneChanger.h"
 #include "MSGlobals.h"
 #include <algorithm>
 #include <iostream>
@@ -87,7 +87,7 @@ MSEdge::initialize(std::vector<MSLane*>* lanes, EdgeBasicFunction function) thro
     myLanes = lanes;
     myFunction = function;
     if (myLanes && myLanes->size() > 1 && function!=EDGEFUNCTION_INTERNAL) {
-        myLaneChanger = new MSLaneChanger(myLanes, OptionsCont::getOptions().getBool("lanechange.allow-swap"));
+        myLaneChanger = new MSCACCLaneChanger(myLanes, OptionsCont::getOptions().getBool("lanechange.allow-swap"));
     }
 }
 
