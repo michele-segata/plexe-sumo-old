@@ -17,8 +17,37 @@
 //   (at your option) any later version.
 //
 /****************************************************************************/
+// ===========================================================================
+// included modules
+// ===========================================================================
+#ifdef _MSC_VER
+#include <windows_config.h>
+#else
+#include <config.h>
+#endif
 
 #include "MSCACCLaneChanger.h"
+#include "MSVehicle.h"
+#include "MSVehicleType.h"
+#include "MSVehicleTransfer.h"
+#include "MSGlobals.h"
+#include <cassert>
+#include <iterator>
+#include <cstdlib>
+#include <cmath>
+#include <microsim/MSAbstractLaneChangeModel.h>
+#include <utils/common/MsgHandler.h>
+
+#ifdef CHECK_MEMORY_LEAKS
+#include <foreign/nvwa/debug_new.h>
+#endif // CHECK_MEMORY_LEAKS
+
+//#define DEBUG_VEHICLE_GUI_SELECTION 1
+#ifdef DEBUG_VEHICLE_GUI_SELECTION
+#include <utils/gui/div/GUIGlobalSelection.h>
+#include <guisim/GUIVehicle.h>
+#include <guisim/GUILane.h>
+#endif
 
 MSCACCLaneChanger::MSCACCLaneChanger(std::vector<MSLane*>* lanes, bool allowSwap) :
     MSLaneChanger(lanes, allowSwap) {
