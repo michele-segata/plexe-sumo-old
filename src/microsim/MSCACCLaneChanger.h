@@ -1,0 +1,63 @@
+/****************************************************************************/
+/// @file    MSCACCLaneChanger.h
+/// @author  Michele Segata
+/// @date    Fri, 04 Mar 2012
+/// @version $Id: MSCACCLaneChanger.h $
+///
+// Performs lane changing of vehicles, taking into account the presence of
+// platooning vehicles and a dedicated lane for platooning
+/****************************************************************************/
+// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+/****************************************************************************/
+//
+//   This program is free software; you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation; either version 2 of the License, or
+//   (at your option) any later version.
+//
+/****************************************************************************/
+
+#ifndef MSCACCLANECHANGER_H_
+#define MSCACCLANECHANGER_H_
+
+// ===========================================================================
+// included modules
+// ===========================================================================
+#include "MSLaneChanger.h"
+
+// ===========================================================================
+// class definitions
+// ===========================================================================
+/** @class MSCACCLaneChanger
+ * @brief Implements a slightly modified lane changing mechanism which takes
+ * into account the need for platooning. This mechanism reserves the leftmost
+ * lane for automated platoons, while other lanes will be used by normal
+ * drivers. This lane changer permits to performs actions such as "move left
+ * to join platoon" or "stay in the platoon lane", by overriding the usual
+ * lane changing behavior. For normal drivers, the lane changing mechanism
+ * remains unchanged
+ * @see MSLaneChanger
+ */
+class MSCACCLaneChanger : public MSLaneChanger  {
+public:
+    /// Constructor
+    MSCACCLaneChanger(std::vector<MSLane*>* lanes, bool allowSwap);
+
+    /// Destructor.
+    ~MSCACCLaneChanger();
+
+protected:
+
+    /**
+     * override original change() method so that first, request for lane
+     * changing for platooning are made, and then, if no request are
+     * present, or the car is a normal driver, the superclass change()
+     * method is invoked.
+     * TODO: test for correct behavior
+     *
+     */
+    bool change();
+};
+
+#endif /* MSCACCLANECHANGER_H_ */
