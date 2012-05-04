@@ -107,13 +107,6 @@ bool MSCACCLaneChanger::change() {
 
     enum CACC_ACTION cacc_goto_left = needtostayleft(vehicle);
 
-    //if the car must stay in the reserved lane, then no lane change must be done
-    if (cacc_goto_left == STAY_THERE)
-        return false;
-
-    //vehicle->getRoute().getEdges()[0]->getID();
-    //vehicle->getRoute().getDistanceBetween()
-
     // check whether the vehicle wants and is able to change to left lane
     int state2 = 0;
     if (cacc_goto_left != STAY_THERE && (myCandi + 1) != myChanger.end() && (myCandi + 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
@@ -208,8 +201,18 @@ bool MSCACCLaneChanger::change() {
         }
     }
 
-    //if we get here, lane changing for platooning has not been done. invoke normal lane changing
-    return MSLaneChanger::change();
+    //if the car must stay in the reserved lane, then no lane change must be done
+    if (cacc_goto_left == STAY_THERE) {
+        // Candidate didn't change lane.
+        myCandi->lane->myTmpVehicles.push_front(veh(myCandi));
+        vehicle->myLastLaneChangeOffset += DELTA_T;
+        (myCandi)->dens += vehicle->getVehicleType().getLengthWithGap();
+        return false;
+    }
+    else {
+        //if we get here, lane changing for platooning has not been done. invoke normal lane changing
+        return MSLaneChanger::change();
+    }
 
 }
 
