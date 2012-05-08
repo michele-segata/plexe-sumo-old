@@ -46,10 +46,14 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
     , myKp(kp), myLambda(lambda), myC1(c1), myXi(xi), myOmegaN(omegaN), myTau(tau), myAlpha1(1 - myC1), myAlpha2(myC1),
     myAlpha3(-(2 * myXi - myC1 *(myXi + sqrt(myXi* myXi - 1))) * myOmegaN), myAlpha4(-(myXi + sqrt(myXi* myXi - 1)) * myOmegaN* myC1),
     myAlpha5(-myOmegaN* myOmegaN), myAlpha(TS / (myTau + TS)), myOneMinusAlpha(1 - myAlpha) {
+
     if (DELTA_T != 100) {
         std::cerr << "Fatal error: in order to use automatic cruise control models, time step must be set to 100 ms\n";
         assert(false);
     }
+
+    //instantiate the driver model. For now, use Krauss as default, then needs to be parameterized
+    myHumanDriver = new MSCFModel_Krauss(vtype, accel, decel, 0.5, 1.5);
 }
 
 MSCFModel_CC::~MSCFModel_CC() {}
@@ -57,61 +61,56 @@ MSCFModel_CC::~MSCFModel_CC() {}
 
 SUMOReal
 MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
-    const SUMOReal vNext = MSCFModel::moveHelper(veh, vPos);
-    //TODO: understand and change this method
+    SUMOReal vNext;
+    VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
+    if (vars->activeController != VehicleVariables::DRIVER)
+        //TODO: understand and change this method
+        vNext = MSCFModel::moveHelper(veh, vPos);
+    else
+        vNext = myHumanDriver->moveHelper(veh, vPos);
     return vNext;
 }
 
 
 SUMOReal
-MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal /*predMaxDecel*/) const {
-    return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), true);
+MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const {
+    VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
+    vars->activeController = VehicleVariables::ACC;
+    if (vars->activeController != VehicleVariables::DRIVER)
+        return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), true);
+    else
+        return myHumanDriver->followSpeed(veh, speed, gap2pred, predSpeed, predMaxDecel);
 }
 
 
 SUMOReal
 MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
-    if (gap2pred < 0.01) {
-        return 0;
+    VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
+    if (vars->activeController != VehicleVariables::DRIVER)
+    {
+        if (gap2pred<0.01) {
+            return 0;
+        }
+        return _v(veh, gap2pred, veh->getSpeed(), 0, desiredSpeed(veh), false);
     }
-    return _v(veh, gap2pred, veh->getSpeed(), 0, desiredSpeed(veh), false);
-    VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
-    switch (vars->activeController) {
-        case VehicleVariables::ACC:
-        case VehicleVariables::CACC:
-
-            std::cerr << "Cruise controllers should not be used when a stop can happen, like intersections\n";
-            assert(false);
-            break;
-
-        case VehicleVariables::DRIVER:
-
-            std::cerr << "stopSpeed() correctly invoked for driver, but still not implemented\n";
-            assert(false);
-            break;
-
-        default:
-
-            std::cerr << "Unkown controller selected\n";
-            assert(false);
-            break;
-
-    }
+    else
+        return myHumanDriver->stopSpeed(veh, gap2pred);
 }
-#include <microsim/MSLane.h>
-#include <microsim/MSVehicle.h>
-#include <microsim/MSVehicleType.h>
-#include <utils/xml/SUMOXMLDefinitions.h>
 
 /// @todo update interactionGap logic to IDM
 SUMOReal
 MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 
-    //TODO: understand and change this. for now use maximum radar range
-    return 250;
+    VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
+    if (vars->activeController != VehicleVariables::DRIVER)
+    {
+        //TODO: understand this. for now set maximum radar range
+        return 250;
+    }
+    else
+        return myHumanDriver->interactionGap(veh, vL);
 
 }
-
 
 SUMOReal
 MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, bool invokedFromFollowSpeed) const {

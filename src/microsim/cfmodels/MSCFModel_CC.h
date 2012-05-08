@@ -33,6 +33,7 @@
 #include <microsim/MSVehicle.h>
 #include <microsim/MSVehicleType.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
+#include <microsim/cfmodels/MSCFModel_Krauss.h>
 
 
 // ===========================================================================
@@ -235,6 +236,9 @@ private:
 
 
 private:
+
+    /// @brief the car following model which drives the car when automated cruising is disabled, i.e., the human driver
+    MSCFModel *myHumanDriver;
 
     /// @brief The maximum deceleration that the CC can output
     const SUMOReal myCcDecel;
