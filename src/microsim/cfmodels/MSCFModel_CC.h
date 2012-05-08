@@ -136,10 +136,36 @@ public:
         return new VehicleVariables();
     }
 
+    /**
+     * @brief set the cruise control desired speed. notice that this command does
+     * not enable the cruise control and can also be used when cruise control is
+     * already active
+     *
+     * @param[in] veh the vehicle for which the desired speed has to be changed
+     * @param[in] ccDesiredSpeed the desired speed in m/s
+     */
     void setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed);
 
+    /**
+     * @brief set the information about the platoon leader. This method should be invoked
+     * by TraCI when a wireless message with such data is received. For testing, it might
+     * be also invoked from SUMO source code
+     *
+     * @param[in] veh the vehicle for which the data must be saved
+     * @param[in] speed the leader speed
+     * @param[in] acceleration the leader acceleration
+     */
     void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration);
 
+    /**
+     * @brief get the information about a vehicle. This can be used by TraCI in order to
+     * get speed and acceleration of the platoon leader before sending them to other
+     * vehicles
+     *
+     * @param[in] veh the vehicle for which the data is requested
+     * @param[out] speed where the speed is written
+     * @param[out] acceleration where the acceleration is written
+     */
     void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration);
 
 
