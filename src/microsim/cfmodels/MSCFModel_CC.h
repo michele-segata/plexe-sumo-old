@@ -168,6 +168,15 @@ public:
      */
     void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration);
 
+    /**
+     * @brief switch on the ACC, so disabling the human driver car control
+     *
+     * @param[in] veh the vehicle for which the ACC must be switched on
+     * @param[in] veh ccDesiredSpeed the cruise control speed
+     */
+    void switchOnACC(const MSVehicle *veh, double ccDesiredSpeed);
+
+
 
 private:
     class VehicleVariables : public MSCFModel::VehicleVariables {

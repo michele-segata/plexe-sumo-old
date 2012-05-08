@@ -298,6 +298,12 @@ MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOR
     acceleration = vars->egoAcceleration;
 }
 
+void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed) {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->ccDesiredSpeed = ccDesiredSpeed;
+    //TODO: check for correctness
+    vars->activeController = VehicleVariables::ACC;
+}
 
 MSCFModel*
 MSCFModel_CC::duplicate(const MSVehicleType* vtype) const {
