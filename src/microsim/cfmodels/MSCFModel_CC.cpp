@@ -167,8 +167,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
             debugstr << " uses CC";
 
-            //TODO: modify. for now uses only CC
-            controllerAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
+            controllerAcceleration = fmin(_cc(egoSpeed, vars->ccDesiredSpeed), _acc(egoSpeed, predSpeed, gap2pred));
 
             break;
 
