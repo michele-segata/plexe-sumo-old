@@ -147,7 +147,8 @@ private:
     class VehicleVariables : public MSCFModel::VehicleVariables {
     public:
         VehicleVariables() : egoSpeed(0), egoAcceleration(0), frontSpeed(0), frontDistance(0), leaderSpeed(0),
-            leaderAcceleration(0), platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), activeController(ACC), lastUpdate(0) {}
+            leaderAcceleration(0), platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), lastUpdate(0), activeController(DRIVER),
+            frontAcceleration(0), egoPreviousSpeed(0) {}
 
         /** @enum ActiveController
          * @brief Determines the currently active controller, i.e., ACC, CACC, or the
