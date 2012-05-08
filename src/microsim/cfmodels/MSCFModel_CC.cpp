@@ -117,6 +117,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     std::stringstream debugstr;
     debugstr.precision(2);
+    debugstr.setf(std::stringstream::fixed, std::stringstream::floatfield);
 
     //acceleration computed by the controller
     double controllerAcceleration;
@@ -125,7 +126,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     //speed computed by the model
     double speed;
 
-    bool debug = false;
+    bool debug = true;
 
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
 
@@ -134,13 +135,18 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     std::string id = veh->getID();
     if (id.substr(id.size() - 2, 2).compare(".0") == 0) {
         vars->activeController = VehicleVariables::ACC;
-        if (MSNet::getInstance()->getCurrentTimeStep() < 120000) {
-            vars->ccDesiredSpeed = 36;
+        vars->ccDesiredSpeed = 30;
+        if (MSNet::getInstance()->getCurrentTimeStep() < 180000) {
+            vars->ccDesiredSpeed = 30;
         } else {
-            vars->ccDesiredSpeed = 25;
+            if (MSNet::getInstance()->getCurrentTimeStep() < 240000)
+                vars->ccDesiredSpeed = 50;
+            else
+                vars->ccDesiredSpeed = 25;
         }
     } else {
-        vars->activeController = VehicleVariables::CACC;
+        vars->activeController = VehicleVariables::ACC;
+        vars->ccDesiredSpeed = 40;
     }
     //-----------------------------------------------------------
 
@@ -221,7 +227,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     //compute the speed from the actual acceleration
     speed = egoSpeed + ACCEL2SPEED(engineAcceleration);
 
-    debugstr << " speed=" << speed << "";
+    debugstr << " speed=" << (speed*3.6) << "";
 
     debugstr << " distance=" << gap2pred;
 
