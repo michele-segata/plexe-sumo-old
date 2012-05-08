@@ -37,6 +37,7 @@
 #include <cmath>
 #include <microsim/MSAbstractLaneChangeModel.h>
 #include <utils/common/MsgHandler.h>
+#include <microsim/cfmodels/MSCFModel_CC.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -62,9 +63,11 @@ enum CACC_ACTION {
 
 enum CACC_ACTION needtostayleft(MSVehicle* vehicle) {
 
-    if (vehicle->getID() != "f1.0") {
+    const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&vehicle->getCarFollowModel());
+
+    //if the car is not CACC enabled, then we just let the default lane change model to take control
+    if (!model)
         return DONT_CARE;
-    }
 
     if (MSNet::getInstance()->getCurrentTimeStep() <= 25000 || MSNet::getInstance()->getCurrentTimeStep() >= 60000) {
         return DONT_CARE;
