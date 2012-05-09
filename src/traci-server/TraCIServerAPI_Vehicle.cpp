@@ -69,6 +69,8 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
 
+    const MSCFModel_CC *model;
+
     // check variable
     if (variable!=ID_LIST&&variable!=VAR_SPEED&&variable!=VAR_SPEED_WITHOUT_TRACI&&variable!=VAR_POSITION&&variable!=VAR_ANGLE
             &&variable!=VAR_ROAD_ID&&variable!=VAR_LANE_ID&&variable!=VAR_LANE_INDEX
@@ -85,7 +87,9 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_ACCEL&&variable!=VAR_DECEL&&variable!=VAR_IMPERFECTION
             &&variable!=VAR_TAU&&variable!=VAR_BEST_LANES&&variable!=DISTANCE_REQUEST
             &&variable!=ID_COUNT
-            &&variable!=VAR_GET_CACC
+            &&variable!=VAR_GET_SPEED_AND_ACCELERATION
+            &&variable!=VAR_GET_LANES_COUNT
+            &&variable!=VAR_GET_CC_INSTALLED
        ) {
         server.writeStatusCmd(CMD_GET_VEHICLE_VARIABLE, RTYPE_ERR, "Get Vehicle Variable: unsupported variable specified", outputStorage);
         return false;
@@ -337,18 +341,41 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             }
             break;
 
-        case VAR_GET_CACC:
+        case VAR_GET_SPEED_AND_ACCELERATION:
 
-            SUMOReal leaderSpeed;
-            SUMOReal leaderAcc;
+            SUMOReal speed;
+            SUMOReal acceleration;
 
-            ((MSCFModel_CC *)(&v->getCarFollowModel()))->getVehicleInformation(v, leaderSpeed, leaderAcc);
+            model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
+            assert(model);
+
+            model->getVehicleInformation((const MSVehicle *)v, speed, acceleration);
 
             tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-            tempMsg.writeDouble(leaderSpeed);
+            tempMsg.writeDouble(speed);
 
             tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-            tempMsg.writeDouble(leaderAcc);
+            tempMsg.writeDouble(acceleration);
+
+            break;
+
+        case VAR_GET_LANES_COUNT:
+
+            tempMsg.writeUnsignedByte(TYPE_INTEGER);
+            if (onRoad) {
+                const std::vector<MSLane*> &lanes = v->getLane()->getEdge().getLanes();
+                tempMsg.writeInt((int)lanes.size());
+            } else {
+                tempMsg.writeInt(INVALID_INT_VALUE);
+            }
+            break;
+
+        case VAR_GET_CC_INSTALLED:
+
+            model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
+
+            tempMsg.writeUnsignedByte(TYPE_UBYTE);
+            tempMsg.writeUnsignedByte(model != 0);
 
             break;
 
@@ -383,7 +410,9 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_TAU
             &&variable!=VAR_SPEED&&variable!=VAR_SPEEDSETMODE&&variable!=VAR_COLOR
             &&variable!=ADD&&variable!=REMOVE
-            &&variable!=VAR_SET_CACC
+            &&variable!=VAR_SET_LEADER_SPEED_AND_ACCELERATION
+            &&variable!=VAR_SET_ACTIVE_CONTROLLER
+            &&variable!=VAR_SET_CC_DESIRED_SPEED
        ) {
         server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Change Vehicle State: unsupported variable specified", outputStorage);
         return false;
@@ -980,7 +1009,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(static_cast<MSVehicle*>(v));
     }
     break;
-    case VAR_SET_CACC:
+    case VAR_SET_LEADER_SPEED_AND_ACCELERATION:
 
         SUMOReal leaderSpeed;
         SUMOReal leaderAcc;
@@ -988,9 +1017,40 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         leaderSpeed = inputStorage.readDouble();
         leaderAcc = inputStorage.readDouble();
 
-        ((MSCFModel_CC *)(&v->getVehicleType().getCarFollowModel()))->setLeaderInformation((MSVehicle *)v, leaderSpeed, leaderAcc);
+        const MSCFModel_CC * model;
+        model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
+        assert(model);
+
+        model->setLeaderInformation((MSVehicle *)v, leaderSpeed, leaderAcc);
 
     break;
+    case VAR_SET_ACTIVE_CONTROLLER: {
+
+        const MSCFModel_CC * model;
+        model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
+        assert(model);
+
+        int activeController = inputStorage.readInt();
+
+        assert(activeController >= 0 && activeController <= 2);
+        model->setActiveController((const MSVehicle *)v, (enum MSCFModel_CC::ACTIVE_CONTROLLER)activeController);
+
+    }
+    break;
+    case VAR_SET_CC_DESIRED_SPEED: {
+
+        const MSCFModel_CC * model;
+        model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
+        assert(model);
+
+        double ccDesiredSpeed = inputStorage.readDouble();
+
+        model->setCCDesiredSpeed((MSVehicle *)v, ccDesiredSpeed);
+
+
+    }
+    break;
+
     default:
         try {
             if (!TraCIServerAPI_VehicleType::setVariable(CMD_SET_VEHICLE_VARIABLE, variable, valueDataType,

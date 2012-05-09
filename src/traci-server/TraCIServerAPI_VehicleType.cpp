@@ -333,14 +333,6 @@ TraCIServerAPI_VehicleType::setVariable(const int cmd, const int variable, const
         v.setColor(col);
     }
     break;
-    case VAR_SET_CACC: {
-    	SUMOReal leaderSpeed = (SUMOReal) inputStorage.readDouble();
-    	SUMOReal leaderAcc = (SUMOReal) inputStorage.readDouble();
-    	MSVehicle * veh = (MSVehicle *) MSNet::getInstance()->getVehicleControl().getVehicle(v.getID());
-    	((MSCFModel_CACC *)(&v.getCarFollowModel()))->setLeaderSpeed(veh, leaderSpeed, leaderAcc);
-    	break;
-    }
-    break;
     default:
         break;
     }

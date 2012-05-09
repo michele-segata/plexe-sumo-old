@@ -599,8 +599,27 @@
 #define VAR_TRACK_VEHICLE 0xa6
 
 
-//MS TODO: add new var for setting new parameters, e.g., for CACC
-#define VAR_SET_CACC 0xf0
-#define VAR_GET_CACC 0xf1
+
+
+// get vehicle speed and acceleration, needed for example by the platoon leader (get: vehicle)
+#define VAR_GET_SPEED_AND_ACCELERATION 0xf0
+
+// set speed and acceleration of the platoon leader
+#define VAR_SET_LEADER_SPEED_AND_ACCELERATION 0xf1
+
+// get lane count for the street the vehicle is currently traveling
+#define VAR_GET_LANES_COUNT 0xf2
+
+// set the lane change action that the driver should perform as given by the platooning controller
+#define VAR_SET_LANE_CHANGE_ACTION 0xf3
+
+// set the cruise control desired speed
+#define VAR_SET_CC_DESIRED_SPEED 0xf4
+
+// set the currently active vehicle controller which can be either the driver, or the ACC or the CACC
+#define VAR_SET_ACTIVE_CONTROLLER 0xf5
+
+// get whether a cruise controller is installed in the car
+#define VAR_GET_CC_INSTALLED 0xf6
 
 #endif
