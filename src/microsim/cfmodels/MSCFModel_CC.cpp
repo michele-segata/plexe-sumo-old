@@ -63,7 +63,7 @@ SUMOReal
 MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
     SUMOReal vNext;
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    if (vars->activeController != VehicleVariables::DRIVER)
+    if (vars->activeController != MSCFModel_CC::DRIVER)
         //TODO: understand and change this method
         vNext = MSCFModel::moveHelper(veh, vPos);
     else
@@ -75,8 +75,8 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
 SUMOReal
 MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const {
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    vars->activeController = VehicleVariables::ACC;
-    if (vars->activeController != VehicleVariables::DRIVER)
+    vars->activeController = MSCFModel_CC::ACC;
+    if (vars->activeController != MSCFModel_CC::DRIVER)
         return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), true);
     else
         return myHumanDriver->followSpeed(veh, speed, gap2pred, predSpeed, predMaxDecel);
@@ -86,7 +86,7 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
 SUMOReal
 MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    if (vars->activeController != VehicleVariables::DRIVER)
+    if (vars->activeController != MSCFModel_CC::DRIVER)
     {
         if (gap2pred<0.01) {
             return 0;
@@ -102,7 +102,7 @@ SUMOReal
 MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    if (vars->activeController != VehicleVariables::DRIVER)
+    if (vars->activeController != MSCFModel_CC::DRIVER)
     {
         //TODO: understand this. for now set maximum radar range
         return 250;
@@ -134,7 +134,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     //-----------------------------------------------------------
     std::string id = veh->getID();
     if (id.substr(id.size() - 2, 2).compare(".0") == 0) {
-        vars->activeController = VehicleVariables::ACC;
+        vars->activeController = MSCFModel_CC::ACC;
         vars->ccDesiredSpeed = 30;
         if (MSNet::getInstance()->getCurrentTimeStep() < 180000) {
             vars->ccDesiredSpeed = 30;
@@ -145,7 +145,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                 vars->ccDesiredSpeed = 25;
         }
     } else {
-        vars->activeController = VehicleVariables::ACC;
+        vars->activeController = MSCFModel_CC::ACC;
         vars->ccDesiredSpeed = 40;
     }
     //-----------------------------------------------------------
@@ -169,7 +169,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     switch (vars->activeController) {
 
-        case VehicleVariables::ACC:
+        case MSCFModel_CC::ACC:
 
             debugstr << " uses CC";
 
@@ -177,7 +177,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
             break;
 
-        case VehicleVariables::CACC:
+        case MSCFModel_CC::CACC:
 
             debugstr << " uses CACC";
 
@@ -203,7 +203,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
             break;
 
-        case VehicleVariables::DRIVER:
+        case MSCFModel_CC::DRIVER:
 
             std::cerr << "Switching to normal driver behavior still not implemented in MSCFModel_CC\n";
             assert(false);
@@ -275,13 +275,13 @@ MSCFModel_CC::_actuator(SUMOReal acceleration, SUMOReal currentAcceleration) con
 }
 
 void
-MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) {
+MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->ccDesiredSpeed = ccDesiredSpeed;
 }
 
 void
-MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration) {
+MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     std::stringstream debug;
     debug.precision(2);
@@ -292,17 +292,25 @@ MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMORea
 }
 
 void
-MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration) {
+MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     speed = vars->egoSpeed;
     acceleration = vars->egoAcceleration;
 }
 
-void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed) {
+void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->ccDesiredSpeed = ccDesiredSpeed;
-    //TODO: check for correctness
-    vars->activeController = VehicleVariables::ACC;
+    vars->activeController = MSCFModel_CC::ACC;
+}
+
+void MSCFModel_CC::setActiveController(const MSVehicle *veh, enum MSCFModel_CC::ACTIVE_CONTROLLER activeController) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->activeController = activeController;
+}
+
+enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCFModel_CC::getLaneChangeAction() {
+    return MSCFModel_CC::DRIVER_CHOICE;
 }
 
 MSCFModel*

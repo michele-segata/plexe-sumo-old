@@ -44,10 +44,36 @@
  * Control (CC), Adaptive Cruise Control (ACC) and Cooperative Adaptive Cruise
  * Control (CACC). Take as references the chapters 5, 6 and 7 of the Rajamani's
  * book "Vehicle dynamics and control" (2011).
+ * This model is meant to be used for simulation of platooning systems in mixed
+ * scenarios, so with automatic and driver controlled vehicles.
+ * The platooning manager is a distributed application implemented for veins
+ * (so for omnet++) supported by a 802.11p based communication protocol, which
+ * will determine the actions to be performed (such as switching on the
+ * automatic controller, or the lane to move to) and communicate them to this
+ * car following models via TraCI
  * @see MSCFModel
  */
 class MSCFModel_CC : public MSCFModel {
 public:
+
+    /**
+     * @brief action that might be requested by the platooning management
+     */
+    enum PLATOONING_LANE_CHANGE_ACTION {
+        DRIVER_CHOICE = 0, //the platooning management is not active, so just let the driver choose the lane
+        MOVE_TO_MANAGEMENT_LANE = 1, //the platooning manager tells the driver to move to the management lane, either for join or leave the platoon
+        MOVE_TO_PLATOONING_LANE = 2, //the car is in position for joining a platoon and may now move to the dedicated platooning lane for joining
+        STAY_IN_PLATOONING_LANE = 3//the car is part of a platoon, so it has to stay on the dedicated platooning lane
+    };
+
+    /** @enum ActiveController
+     * @brief Determines the currently active controller, i.e., ACC, CACC, or the
+     * driver. In future we might need to switch off the automatic controller and
+     * leave the control to the mobility model which reproduces a human driver
+     */
+    enum ACTIVE_CONTROLLER
+    {DRIVER = 0, ACC = 1, CACC = 2};
+
     /** @brief Constructor
      * @param[in] accel The maximum acceleration that controllers can output (def. 1.5 m/s^2)
      * @param[in] decel The maximum deceleration that ACC and CACC controllers can output (def. 6 m/s^2)
@@ -144,7 +170,7 @@ public:
      * @param[in] veh the vehicle for which the desired speed has to be changed
      * @param[in] ccDesiredSpeed the desired speed in m/s
      */
-    void setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed);
+    void setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) const;
 
     /**
      * @brief set the information about the platoon leader. This method should be invoked
@@ -155,7 +181,7 @@ public:
      * @param[in] speed the leader speed
      * @param[in] acceleration the leader acceleration
      */
-    void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration);
+    void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration)  const;
 
     /**
      * @brief get the information about a vehicle. This can be used by TraCI in order to
@@ -166,7 +192,7 @@ public:
      * @param[out] speed where the speed is written
      * @param[out] acceleration where the acceleration is written
      */
-    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration);
+    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration) const;
 
     /**
      * @brief switch on the ACC, so disabling the human driver car control
@@ -174,9 +200,27 @@ public:
      * @param[in] veh the vehicle for which the ACC must be switched on
      * @param[in] veh ccDesiredSpeed the cruise control speed
      */
-    void switchOnACC(const MSVehicle *veh, double ccDesiredSpeed);
+    void switchOnACC(const MSVehicle *veh, double ccDesiredSpeed) const;
 
+    /**
+     * @brief set the active controller. Notice that if the selected controller is ACC or CACC
+     * the setCCDesiredSpeed must be invoked before, otherwise the speed is set to the default
+     * value
+     *
+     * @param[in] veh the vehicle for which the action is requested
+     * @param[in] activeController the controller to be set as active, which can be either the
+     * driver, or the ACC or the CACC
+     */
+    void setActiveController(const MSVehicle *veh, enum MSCFModel_CC::ACTIVE_CONTROLLER activeController)  const;
 
+    /**
+     * @brief gets the lane change action requested by the platooning management system.
+     * The action is set by the platooning manager via TraCI and it is requested by the
+     * MSCACCLaneChanger class
+     *
+     * @return the lane changing action to be performed
+     */
+    enum PLATOONING_LANE_CHANGE_ACTION getLaneChangeAction();
 
 private:
     class VehicleVariables : public MSCFModel::VehicleVariables {
@@ -184,14 +228,6 @@ private:
         VehicleVariables() : egoSpeed(0), egoAcceleration(0), frontSpeed(0), frontDistance(0), leaderSpeed(0),
             leaderAcceleration(0), platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), lastUpdate(0), activeController(DRIVER),
             frontAcceleration(0), egoPreviousSpeed(0) {}
-
-        /** @enum ActiveController
-         * @brief Determines the currently active controller, i.e., ACC, CACC, or the
-         * driver. In future we might need to switch off the automatic controller and
-         * leave the control to the mobility model which reproduces a human driver
-         */
-        enum ActiveController
-        {ACC, CACC, DRIVER};
 
         /// @brief current vehicle speed
         SUMOReal egoSpeed;
@@ -215,7 +251,7 @@ private:
         /// @brief CC desired speed
         SUMOReal ccDesiredSpeed;
         /// @brief currently active controller
-        enum ActiveController activeController;
+        enum ACTIVE_CONTROLLER activeController;
 
         //TODO: most probably the following variables needs to be moved to the application logic (i.e., network protocol)
         /// @brief own platoon id
