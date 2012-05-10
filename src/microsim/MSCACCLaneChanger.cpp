@@ -122,6 +122,32 @@ bool MSCACCLaneChanger::change() {
         //the change2left method tells us whether we have a vehicle on the left blocking the way so we can avoid collisions
         blockedCheck = change2left(leader, lLead, lFollow,preb);
         bool changingAllowed2 = (blockedCheck & LCA_BLOCKED) == 0;
+
+        if (changingAllowed2 && (laneChangeAction == MSCFModel_CC::MOVE_TO_PLATOONING_LANE || laneChangeAction == MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE)) {
+
+            //set destination to be the leftmost lane
+            int destination = vehicle->getEdge()->getLanes().size() - 1;
+            //if the action is to move to management lane, then the destination is the leftmost minus one
+            if (laneChangeAction == MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE)
+                destination--;
+
+            //compute the difference between where we are and where we are heading at
+            int currentToDestination = vehicle->getLaneIndex() - destination;
+
+            if (currentToDestination == 0) {
+                //we are were we are requested to go
+                //prevent further lane changes
+                state2 &= ~LCA_LEFT;
+                laneChangeAction = MSCFModel_CC::STAY_IN_PLATOONING_LANE;
+            }
+//            else {
+//                if (currentToDestination < 0) {
+//                    //we need to move left
+//                }
+//            }
+
+        }
+
         //vehicle->getLaneChangeModel().setOwnState(state2|state1);
         // change if the vehicle wants to and is allowed to change
         if ((state2 & LCA_LEFT) != 0 && changingAllowed2) {
