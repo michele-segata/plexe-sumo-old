@@ -112,6 +112,7 @@ bool MSCACCLaneChanger::change() {
 
     // check whether the vehicle wants and is able to change to left lane
     int state2 = 0;
+    int blockedCheck = 0;
     if (cacc_goto_left != STAY_THERE && (myCandi + 1) != myChanger.end() && (myCandi + 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
         std::pair<MSVehicle* const, SUMOReal> lLead = getRealLeader(myCandi + 1);
         std::pair<MSVehicle* const, SUMOReal> lFollow = getRealFollower(myCandi + 1);
@@ -119,7 +120,9 @@ bool MSCACCLaneChanger::change() {
         if ((state2 & LCA_URGENT) != 0 || (state2 & LCA_SPEEDGAIN) != 0) {
             state2 |= LCA_LEFT;
         }
-        bool changingAllowed2 = (state2 & LCA_BLOCKED) == 0;
+        //the change2left method tells us whether we have a vehicle on the left blocking the way so we can avoid collisions
+        blockedCheck = change2left(leader, lLead, lFollow,preb);
+        bool changingAllowed2 = (blockedCheck & LCA_BLOCKED) == 0;
         //vehicle->getLaneChangeModel().setOwnState(state2|state1);
         // change if the vehicle wants to and is allowed to change
         if ((state2 & LCA_LEFT) != 0 && changingAllowed2) {
