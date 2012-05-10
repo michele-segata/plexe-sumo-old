@@ -37,6 +37,8 @@
 #include <vector>
 #include <utils/iodevices/OutputDevice.h>
 
+#include <microsim/cfmodels/MSCFModel_CC.h>
+
 // ===========================================================================
 // class definitions
 // ===========================================================================
@@ -76,6 +78,12 @@ protected:
      *
      */
     bool change();
+
+    /**
+     * returns the lane change action to be performed, as given by the CC car following
+     * model
+     */
+    enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION getLaneChangeAction(MSVehicle* vehicle);
 };
 
 #endif /* MSCACCLANECHANGER_H_ */

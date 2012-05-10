@@ -37,7 +37,6 @@
 #include <cmath>
 #include <microsim/MSAbstractLaneChangeModel.h>
 #include <utils/common/MsgHandler.h>
-#include <microsim/cfmodels/MSCFModel_CC.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -57,27 +56,25 @@ MSCACCLaneChanger::MSCACCLaneChanger(std::vector<MSLane*>* lanes, bool allowSwap
 MSCACCLaneChanger::~MSCACCLaneChanger() {
 }
 
-enum CACC_ACTION {
-    GOTO_LEFT, STAY_THERE, DONT_CARE
-};
-
-enum CACC_ACTION needtostayleft(MSVehicle* vehicle) {
+enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCACCLaneChanger::getLaneChangeAction(MSVehicle* vehicle) {
 
     const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&vehicle->getCarFollowModel());
 
     //if the car is not CACC enabled, then we just let the default lane change model to take control
     if (!model)
-        return DONT_CARE;
+        return MSCFModel_CC::DRIVER_CHOICE;
+    else
+        return model->getLaneChangeAction(vehicle);
 
-    if (MSNet::getInstance()->getCurrentTimeStep() <= 25000 || MSNet::getInstance()->getCurrentTimeStep() >= 60000) {
-        return DONT_CARE;
+    /*if (MSNet::getInstance()->getCurrentTimeStep() <= 25000 || MSNet::getInstance()->getCurrentTimeStep() >= 60000) {
+        return MSCFModel_CC::DRIVER_CHOICE;
     } else {
         if (vehicle->getLaneIndex() != 2) {
             return GOTO_LEFT;
         } else {
             return STAY_THERE;
         }
-    }
+    }*/
 
 }
 
@@ -108,18 +105,20 @@ bool MSCACCLaneChanger::change() {
     vehicle->getLaneChangeModel().prepareStep();
     std::pair<MSVehicle* const, SUMOReal> leader = getRealThisLeader(myCandi);
 
-    enum CACC_ACTION cacc_goto_left = needtostayleft(vehicle);
+    enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
 
     // check whether the vehicle wants and is able to change to left lane
     int state2 = 0;
     int blockedCheck = 0;
-    if (cacc_goto_left != STAY_THERE && (myCandi + 1) != myChanger.end() && (myCandi + 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
+    if (laneChangeAction != MSCFModel_CC::STAY_IN_PLATOONING_LANE && (myCandi + 1) != myChanger.end() && (myCandi + 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
         std::pair<MSVehicle* const, SUMOReal> lLead = getRealLeader(myCandi + 1);
         std::pair<MSVehicle* const, SUMOReal> lFollow = getRealFollower(myCandi + 1);
-        state2 = cacc_goto_left == GOTO_LEFT ? LCA_SPEEDGAIN : 0;
+        //TODO: debug this for make it work with different situations
+        state2 = laneChangeAction == MSCFModel_CC::MOVE_TO_PLATOONING_LANE ? LCA_SPEEDGAIN : 0;
         if ((state2 & LCA_URGENT) != 0 || (state2 & LCA_SPEEDGAIN) != 0) {
             state2 |= LCA_LEFT;
         }
+
         //the change2left method tells us whether we have a vehicle on the left blocking the way so we can avoid collisions
         blockedCheck = change2left(leader, lLead, lFollow,preb);
         bool changingAllowed2 = (blockedCheck & LCA_BLOCKED) == 0;
@@ -208,7 +207,7 @@ bool MSCACCLaneChanger::change() {
     }
 
     //if the car must stay in the reserved lane, then no lane change must be done
-    if (cacc_goto_left == STAY_THERE) {
+    if (laneChangeAction == MSCFModel_CC::STAY_IN_PLATOONING_LANE) {
         // Candidate didn't change lane.
         myCandi->lane->myTmpVehicles.push_front(veh(myCandi));
         vehicle->myLastLaneChangeOffset += DELTA_T;
