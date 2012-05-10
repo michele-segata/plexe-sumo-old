@@ -74,7 +74,23 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
 
 SUMOReal
 MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const {
+
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
+
+    //has this function already been invoked for this timestep?
+    if (vars->lastUpdate != MSNet::getInstance()->getCurrentTimeStep() /*&& invokedFromFollowSpeed*/) {
+        //relative speed at time now - 1
+        double dv_t0 = vars->egoPreviousSpeed - vars->frontSpeed;
+        //relative speed at time now
+        double dv_t1 = speed - predSpeed;
+        vars->egoSpeed = speed;
+        vars->egoAcceleration = SPEED2ACCEL(veh->getSpeed() - vars->egoPreviousSpeed);
+        vars->egoPreviousSpeed = veh->getSpeed();
+        vars->lastUpdate = MSNet::getInstance()->getCurrentTimeStep();
+        vars->frontAcceleration = vars->egoAcceleration - SPEED2ACCEL(dv_t1 - dv_t0);
+        vars->frontSpeed = predSpeed;
+    }
+
     if (vars->activeController != MSCFModel_CC::DRIVER)
         return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), true);
     else
@@ -96,7 +112,6 @@ MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
         return myHumanDriver->stopSpeed(veh, gap2pred);
 }
 
-/// @todo update interactionGap logic to IDM
 SUMOReal
 MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 
@@ -152,21 +167,6 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
         vars->ccDesiredSpeed = 40;
     }*/
     //-----------------------------------------------------------
-
-    //has this function already been invoked for this timestep?
-    if (vars->lastUpdate != MSNet::getInstance()->getCurrentTimeStep() && invokedFromFollowSpeed) {
-        debug = true;
-        //relative speed at time now - 1
-        double dv_t0 = vars->egoPreviousSpeed - vars->frontSpeed;
-        //relative speed at time now
-        double dv_t1 = egoSpeed - predSpeed;
-        vars->egoSpeed = egoSpeed;
-        vars->egoAcceleration = SPEED2ACCEL(veh->getSpeed() - vars->egoPreviousSpeed);
-        vars->egoPreviousSpeed = veh->getSpeed();
-        vars->lastUpdate = MSNet::getInstance()->getCurrentTimeStep();
-        vars->frontAcceleration = vars->egoAcceleration - SPEED2ACCEL(dv_t1 - dv_t0);
-        vars->frontSpeed = predSpeed;
-    }
 
     debugstr << "V " << id;
 
