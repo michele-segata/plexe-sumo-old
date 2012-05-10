@@ -75,7 +75,6 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
 SUMOReal
 MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const {
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    vars->activeController = MSCFModel_CC::ACC;
     if (vars->activeController != MSCFModel_CC::DRIVER)
         return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), true);
     else
@@ -125,6 +124,10 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     double engineAcceleration;
     //speed computed by the model
     double speed;
+    //acceleration computed by the Cruise Control
+    double ccAcceleration;
+    //acceleration computed by the Adaptive Cruise Control
+    double accAcceleration;
 
     bool debug = true;
 
@@ -133,7 +136,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     //TODO: only for testing
     //-----------------------------------------------------------
     std::string id = veh->getID();
-    if (id.substr(id.size() - 2, 2).compare(".0") == 0) {
+    /*if (id.substr(id.size() - 2, 2).compare(".0") == 0) {
         vars->activeController = MSCFModel_CC::ACC;
         vars->ccDesiredSpeed = 30;
         if (MSNet::getInstance()->getCurrentTimeStep() < 180000) {
@@ -147,7 +150,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     } else {
         vars->activeController = MSCFModel_CC::ACC;
         vars->ccDesiredSpeed = 40;
-    }
+    }*/
     //-----------------------------------------------------------
 
     //has this function already been invoked for this timestep?
@@ -171,9 +174,18 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
         case MSCFModel_CC::ACC:
 
-            debugstr << " uses CC";
+            ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
+            accAcceleration = _acc(egoSpeed, predSpeed, gap2pred);
 
-            controllerAcceleration = fmin(_cc(egoSpeed, vars->ccDesiredSpeed), _acc(egoSpeed, predSpeed, gap2pred));
+            if (gap2pred > 250 || ccAcceleration < accAcceleration) {
+                controllerAcceleration = ccAcceleration;
+                debugstr << " uses CC";
+            }
+            else {
+                controllerAcceleration = accAcceleration;
+                debugstr << " uses ACC";
+            }
+
 
             break;
 
