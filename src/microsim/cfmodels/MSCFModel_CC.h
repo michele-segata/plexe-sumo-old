@@ -63,6 +63,7 @@ public:
         DRIVER_CHOICE = 0, //the platooning management is not active, so just let the driver choose the lane
         MOVE_TO_MANAGEMENT_LANE = 1, //the platooning manager tells the driver to move to the management lane, either for join or leave the platoon
         MOVE_TO_PLATOONING_LANE = 2, //the car is in position for joining a platoon and may now move to the dedicated platooning lane for joining
+        //TODO: maybe change with STAY_IN_CURRENT_LANE
         STAY_IN_PLATOONING_LANE = 3//the car is part of a platoon, so it has to stay on the dedicated platooning lane
     };
 
@@ -220,14 +221,19 @@ public:
      *
      * @return the lane changing action to be performed
      */
-    enum PLATOONING_LANE_CHANGE_ACTION getLaneChangeAction();
+    enum PLATOONING_LANE_CHANGE_ACTION getLaneChangeAction(const MSVehicle *veh) const;
+
+    /**
+     * @brief sets the lane change action requested by the platooning management system.
+     */
+    void setLaneChangeAction(const MSVehicle *veh, enum PLATOONING_LANE_CHANGE_ACTION action) const;
 
 private:
     class VehicleVariables : public MSCFModel::VehicleVariables {
     public:
         VehicleVariables() : egoSpeed(0), egoAcceleration(0), frontSpeed(0), frontDistance(0), leaderSpeed(0),
             leaderAcceleration(0), platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), lastUpdate(0), activeController(DRIVER),
-            frontAcceleration(0), egoPreviousSpeed(0) {}
+            frontAcceleration(0), egoPreviousSpeed(0), laneChangeAction(MSCFModel_CC::DRIVER_CHOICE) {}
 
         /// @brief current vehicle speed
         SUMOReal egoSpeed;
@@ -252,6 +258,9 @@ private:
         SUMOReal ccDesiredSpeed;
         /// @brief currently active controller
         enum ACTIVE_CONTROLLER activeController;
+
+        /// @brief lane change action to be performed as given by the platoon management application
+        enum PLATOONING_LANE_CHANGE_ACTION laneChangeAction;
 
         //TODO: most probably the following variables needs to be moved to the application logic (i.e., network protocol)
         /// @brief own platoon id

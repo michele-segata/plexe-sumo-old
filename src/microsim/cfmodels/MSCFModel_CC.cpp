@@ -309,8 +309,14 @@ void MSCFModel_CC::setActiveController(const MSVehicle *veh, enum MSCFModel_CC::
     vars->activeController = activeController;
 }
 
-enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCFModel_CC::getLaneChangeAction() {
-    return MSCFModel_CC::DRIVER_CHOICE;
+enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCFModel_CC::getLaneChangeAction(const MSVehicle *veh) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    return vars->laneChangeAction;
+}
+
+void MSCFModel_CC::setLaneChangeAction(const MSVehicle *veh, enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION action) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->laneChangeAction = action;
 }
 
 MSCFModel*
