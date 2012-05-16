@@ -90,6 +90,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_GET_SPEED_AND_ACCELERATION
             &&variable!=VAR_GET_LANES_COUNT
             &&variable!=VAR_GET_CC_INSTALLED
+            &&variable!=VAR_GET_RADAR_DATA
        ) {
         server.writeStatusCmd(CMD_GET_VEHICLE_VARIABLE, RTYPE_ERR, "Get Vehicle Variable: unsupported variable specified", outputStorage);
         return false;
@@ -379,6 +380,22 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
 
             break;
 
+        case VAR_GET_RADAR_DATA:
+
+            SUMOReal distance, relativeSpeed;
+
+            model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
+            assert(model);
+
+            model->getRadarMeasurements(v, distance, relativeSpeed);
+
+            tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+            tempMsg.writeDouble(distance);
+            tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+            tempMsg.writeDouble(relativeSpeed);
+
+            break;
+
         default:
             TraCIServerAPI_VehicleType::getVariable(variable, v->getVehicleType(), tempMsg);
             break;
@@ -414,6 +431,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_SET_ACTIVE_CONTROLLER
             &&variable!=VAR_SET_CC_DESIRED_SPEED
             &&variable!=VAR_SET_LANE_CHANGE_ACTION
+            &&variable!=VAR_SET_CONTROLLER_FAKE_DATA
        ) {
         server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Change Vehicle State: unsupported variable specified", outputStorage);
         return false;
@@ -1061,6 +1079,35 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         assert(action >= MSCFModel_CC::DRIVER_CHOICE && action <= MSCFModel_CC::STAY_IN_PLATOONING_LANE);
 
         model->setLaneChangeAction((MSVehicle *)v, (enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION) action);
+
+    }
+    break;
+    case VAR_SET_CONTROLLER_FAKE_DATA: {
+
+        const MSCFModel_CC * model;
+        model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
+        assert(model);
+
+        //TODO: only basic idea for data needed for joining. might need to be extended
+        /* we expect to get from the upper application the data that the CACC needs, i.e.:
+         * - front distance, front speed and front vehicle acceleration: this information
+         *   regards the car that the vehicle joining the platoon will have directly in
+         *   front. this data might be real or might be fake: for example, if the platoon
+         *   management algorithm decides to set the vehicle as the new leader, there won't
+         *   be a car in front, and the fake data will be used only for positioning. in the
+         *   case of fake data, acceleration must be set to 0
+         * - leader front speed and acceleration: this information is the same as previously
+         *   described for vehicle in front, but regards the leader. again, if the vehicle
+         *   is being set as the new leader, this data might be fake data
+         */
+        double frontDistance, frontSpeed, frontAcceleration;
+        double leaderSpeed, leaderAcceleration;
+
+        frontDistance = inputStorage.readDouble();
+        frontSpeed = inputStorage.readDouble();
+        frontAcceleration = inputStorage.readDouble();
+        leaderSpeed = inputStorage.readDouble();
+        leaderAcceleration = inputStorage.readDouble();
 
     }
     break;

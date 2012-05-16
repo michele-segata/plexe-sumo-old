@@ -89,6 +89,7 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
         vars->lastUpdate = MSNet::getInstance()->getCurrentTimeStep();
         vars->frontAcceleration = vars->egoAcceleration - SPEED2ACCEL(dv_t1 - dv_t0);
         vars->frontSpeed = predSpeed;
+        vars->frontDistance = gap2pred;
     }
 
     if (vars->activeController != MSCFModel_CC::DRIVER)
@@ -329,6 +330,23 @@ enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCFModel_CC::getLaneChangeActi
 void MSCFModel_CC::setLaneChangeAction(const MSVehicle *veh, enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION action) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->laneChangeAction = action;
+}
+
+void MSCFModel_CC::getRadarMeasurements(const MSVehicle * veh, double &distance, double &relativeSpeed) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    distance = vars->frontDistance;
+    relativeSpeed = vars->frontSpeed - vars->egoSpeed;
+}
+
+void MSCFModel_CC::setControllerFakeData(const MSVehicle *veh, double frontDistance, double frontSpeed, double frontAcceleration,
+            double leaderSpeed, double leaderAcceleration) const {
+
+    VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
+    vars->fakeData.frontAcceleration = frontAcceleration;
+    vars->fakeData.frontDistance = frontDistance;
+    vars->fakeData.frontSpeed = frontSpeed;
+    vars->fakeData.leaderAcceleration = leaderAcceleration;
+    vars->fakeData.leaderSpeed = leaderSpeed;
 }
 
 MSCFModel*

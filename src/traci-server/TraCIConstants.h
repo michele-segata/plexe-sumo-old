@@ -622,4 +622,12 @@
 // get whether a cruise controller is installed in the car
 #define VAR_GET_CC_INSTALLED 0xf6
 
+// get radar data from the car
+#define VAR_GET_RADAR_DATA 0xf7
+
+// communicate with the cruise control to give him fake indications. this can be useful when you want
+// to advance a vehicle to a certain position, for example, for joining a platoon. clearly the ACC
+// must always take into consideration both fake and real data
+#define VAR_SET_CONTROLLER_FAKE_DATA 0xf8
+
 #endif

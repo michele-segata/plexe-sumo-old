@@ -67,13 +67,37 @@ public:
         STAY_IN_PLATOONING_LANE = 3//the car is part of a platoon, so it has to stay on the dedicated platooning lane
     };
 
-    /** @enum ActiveController
+    /** @enum ACTIVE_CONTROLLER
      * @brief Determines the currently active controller, i.e., ACC, CACC, or the
      * driver. In future we might need to switch off the automatic controller and
      * leave the control to the mobility model which reproduces a human driver
      */
     enum ACTIVE_CONTROLLER
     {DRIVER = 0, ACC = 1, CACC = 2};
+
+    /**
+     * @struct FAKE_CONTROLLER_DATA
+     * @brief represent the set of fake data which is sent to the controller in
+     * order to automatically make the car move to a precise position before
+     * joining the platoon.
+     * we expect to get from the upper application the data that the CACC needs, i.e.:
+     * - front distance, front speed and front vehicle acceleration: this information
+     *   regards the car that the vehicle joining the platoon will have directly in
+     *   front. this data might be real or might be fake: for example, if the platoon
+     *   management algorithm decides to set the vehicle as the new leader, there won't
+     *   be a car in front, and the fake data will be used only for positioning. in the
+     *   case of fake data, acceleration must be set to 0
+     * - leader front speed and acceleration: this information is the same as previously
+     *   described for vehicle in front, but regards the leader. again, if the vehicle
+     *   is being set as the new leader, this data might be fake data
+     */
+    struct FAKE_CONTROLLER_DATA {
+        double frontDistance;
+        double frontSpeed;
+        double frontAcceleration;
+        double leaderSpeed;
+        double leaderAcceleration;
+    };
 
     /** @brief Constructor
      * @param[in] accel The maximum acceleration that controllers can output (def. 1.5 m/s^2)
@@ -228,12 +252,30 @@ public:
      */
     void setLaneChangeAction(const MSVehicle *veh, enum PLATOONING_LANE_CHANGE_ACTION action) const;
 
+    /**
+     * @brief return the data that is currently being measured by the radar
+     */
+    void getRadarMeasurements(const MSVehicle * veh, double &distance, double &relativeSpeed) const;
+
+    /**
+     * @brief set the fake data which the controller will use for joining while in the
+     * management lane
+     */
+    void setControllerFakeData(const MSVehicle *veh, double frontDistance, double frontSpeed, double frontAcceleration,
+            double leaderSpeed, double leaderAcceleration) const;
+
 private:
     class VehicleVariables : public MSCFModel::VehicleVariables {
     public:
         VehicleVariables() : egoSpeed(0), egoAcceleration(0), frontSpeed(0), frontDistance(0), leaderSpeed(0),
             leaderAcceleration(0), platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), lastUpdate(0), activeController(DRIVER),
-            frontAcceleration(0), egoPreviousSpeed(0), laneChangeAction(MSCFModel_CC::DRIVER_CHOICE) {}
+            frontAcceleration(0), egoPreviousSpeed(0), laneChangeAction(MSCFModel_CC::DRIVER_CHOICE) {
+            fakeData.frontAcceleration = 0;
+            fakeData.frontDistance = 0;
+            fakeData.frontSpeed = 0;
+            fakeData.leaderAcceleration = 0;
+            fakeData.leaderSpeed = 0;
+        }
 
         /// @brief current vehicle speed
         SUMOReal egoSpeed;
@@ -258,6 +300,9 @@ private:
         SUMOReal ccDesiredSpeed;
         /// @brief currently active controller
         enum ACTIVE_CONTROLLER activeController;
+
+        /// @brief fake controller data. @see FAKE_CONTROLLER_DATA
+        struct FAKE_CONTROLLER_DATA fakeData;
 
         /// @brief lane change action to be performed as given by the platoon management application
         enum PLATOONING_LANE_CHANGE_ACTION laneChangeAction;
