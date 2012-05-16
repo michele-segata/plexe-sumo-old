@@ -121,6 +121,12 @@ bool MSCACCLaneChanger::change() {
 
         //the change2left method tells us whether we have a vehicle on the left blocking the way so we can avoid collisions
         blockedCheck = change2left(leader, lLead, lFollow,preb);
+        if (leader.first) {
+            double speedAfterChange = vehicle->getCarFollowModel().followSpeed(vehicle, vehicle->getSpeed(), vehicle->gap2pred(*leader.first), leader.first->getSpeed(), 0);
+            if (SPEED2ACCEL(speedAfterChange - vehicle->getSpeed()) < -2)
+                blockedCheck |= LCA_BLOCKED;
+        }
+
         bool changingAllowed2 = (blockedCheck & LCA_BLOCKED) == 0;
 
         if (changingAllowed2 && (laneChangeAction == MSCFModel_CC::MOVE_TO_PLATOONING_LANE || laneChangeAction == MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE)) {
