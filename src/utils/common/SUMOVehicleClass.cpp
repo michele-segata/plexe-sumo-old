@@ -81,6 +81,7 @@ StringBijection<SUMOVehicleShape>::Entry sumoVehicleShapeStringInitializer[] = {
     {"passenger/hatchback",   SVS_PASSENGER_HATCHBACK},
     {"passenger/wagon",       SVS_PASSENGER_WAGON},
     {"passenger/van",         SVS_PASSENGER_VAN},
+    {"passenger/automated",   SVS_PASSENGER_AUTOMATED},
     {"delivery",              SVS_DELIVERY},
     {"transport",             SVS_TRANSPORT},
     {"transport/semitrailer", SVS_TRANSPORT_SEMITRAILER},
