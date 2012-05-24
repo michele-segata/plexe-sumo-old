@@ -630,4 +630,7 @@
 // must always take into consideration both fake and real data
 #define VAR_SET_CONTROLLER_FAKE_DATA 0xf8
 
+// get the distance that a car has to travel until it reaches the end of its route
+#define VAR_GET_DISTANCE_TO_END 0xf9
+
 #endif

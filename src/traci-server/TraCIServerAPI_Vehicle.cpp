@@ -91,6 +91,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_GET_LANES_COUNT
             &&variable!=VAR_GET_CC_INSTALLED
             &&variable!=VAR_GET_RADAR_DATA
+            &&variable!=VAR_GET_DISTANCE_TO_END
        ) {
         server.writeStatusCmd(CMD_GET_VEHICLE_VARIABLE, RTYPE_ERR, "Get Vehicle Variable: unsupported variable specified", outputStorage);
         return false;
@@ -393,6 +394,31 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             tempMsg.writeDouble(distance);
             tempMsg.writeUnsignedByte(TYPE_DOUBLE);
             tempMsg.writeDouble(relativeSpeed);
+
+            break;
+
+        case VAR_GET_DISTANCE_TO_END:
+
+            //route of the vehicle
+            const MSRoute *route;
+            //edge the vehicle is currently traveling on
+            const MSEdge *currentEdge;
+            //last edge of the route of this vehicle
+            const MSEdge *lastEdge;
+            //current position of the vehicle on the edge its traveling in
+            double positionOnEdge;
+            //distance to trip end using
+            double distanceToEnd;
+
+            route = &v->getRoute();
+            currentEdge = v->getEdge();
+            lastEdge = route->getEdges().back();
+            positionOnEdge = v->getPositionOnLane();
+            distanceToEnd = route->getDistanceBetween(positionOnEdge, lastEdge->getLanes()[0]->getLength(), currentEdge, lastEdge);
+
+            //write message back
+            tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+            tempMsg.writeDouble(distanceToEnd);
 
             break;
 
