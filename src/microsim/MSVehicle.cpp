@@ -762,7 +762,7 @@ MSVehicle::moveChecked() {
     }
     // call reminders after vNext is set
     SUMOReal pos = myState.myPos;
-    vNext = MIN2(vNext, getMaxSpeed());
+    //vNext = MIN2(vNext, getMaxSpeed());
 
 #ifdef _MESSAGES
     if (myHBMsgEmitter != 0) {
