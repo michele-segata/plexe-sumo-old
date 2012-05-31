@@ -157,6 +157,11 @@ bool MSCACCLaneChanger::change() {
             state2 |= LCA_LEFT;
         }
 
+        //tell to the car following model to ignore the modifications. we are about to call the followSpeed() method
+        //only for knowing whether we might get a benefit from changing lane
+        const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&vehicle->getCarFollowModel());
+        model->setIgnoreModifications(vehicle, true);
+
         //the change2left method tells us whether we have a vehicle on the left blocking the way so we can avoid collisions
         blockedCheck = change2left(leader, lLead, lFollow,preb);
         if (leader.first) {
@@ -164,6 +169,8 @@ bool MSCACCLaneChanger::change() {
             if (SPEED2ACCEL(speedAfterChange - vehicle->getSpeed()) < -2)
                 blockedCheck |= LCA_BLOCKED;
         }
+        //disable ignore modification from now on. follow speed will not be called
+        model->setIgnoreModifications(vehicle, false);
 
         bool changingAllowed2 = (blockedCheck & LCA_BLOCKED) == 0;
 
