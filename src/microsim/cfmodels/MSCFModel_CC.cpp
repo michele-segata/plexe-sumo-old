@@ -111,6 +111,15 @@ MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
     }
     else
         return myHumanDriver->stopSpeed(veh, gap2pred);
+SUMOReal MSCFModel_CC::freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const {
+    VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
+    if (vars->activeController != MSCFModel_CC::DRIVER)
+    {
+        return _v(veh, seen, speed, maxSpeed, desiredSpeed(veh), MSCFModel_CC::FREE_SPEED);
+    }
+    else {
+        return MSCFModel::freeSpeed(veh, speed, seen, maxSpeed);
+    }
 }
 
 SUMOReal
@@ -128,6 +137,9 @@ MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 }
 
 SUMOReal
+MSCFModel_CC::maxNextSpeed(SUMOReal speed) const {
+    return speed + (SUMOReal) ACCEL2SPEED(getMaxAccel());
+}
 MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, bool invokedFromFollowSpeed) const {
 
     std::stringstream debugstr;

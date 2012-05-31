@@ -152,6 +152,19 @@ public:
      */
     SUMOReal stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const;
 
+    /** @brief Computes the vehicle's safe speed (no dawdling)
+     *
+     * Returns the velocity of the vehicle in dependence to the vehicle's and its leader's values and the distance between them.
+     * @param[in] veh The vehicle (EGO)
+     * @param[in] speed The vehicle's speed
+     * @param[in] seen The look ahead distance
+     * @param[in] maxSpeed The maximum allowed speed
+     * @return EGO's safe speed
+     */
+    SUMOReal freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const;
+
+    SUMOReal maxNextSpeed(SUMOReal speed) const;
+
 
     /** @brief Returns the maximum gap at which an interaction between both vehicles occurs
      *
