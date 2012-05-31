@@ -636,4 +636,7 @@
 // get the current lane change action
 #define VAR_GET_LANE_CHANGE_ACTION 0xfa
 
+// get the currently active vehicle controller
+#define VAR_GET_ACTIVE_CONTROLLER 0xfb
+
 #endif

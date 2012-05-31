@@ -252,6 +252,14 @@ public:
     void setActiveController(const MSVehicle *veh, enum MSCFModel_CC::ACTIVE_CONTROLLER activeController)  const;
 
     /**
+     * @brief return the currently active controller
+     *
+     * @param[in] veh the vehicle for which the action is requested
+     * @return the currently active controller
+     */
+    enum MSCFModel_CC::ACTIVE_CONTROLLER getActiveController(const MSVehicle *veh) const;
+
+    /**
      * @brief gets the lane change action requested by the platooning management system.
      * The action is set by the platooning manager via TraCI and it is requested by the
      * MSCACCLaneChanger class

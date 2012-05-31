@@ -369,6 +369,11 @@ void MSCFModel_CC::setActiveController(const MSVehicle *veh, enum MSCFModel_CC::
     vars->activeController = activeController;
 }
 
+enum MSCFModel_CC::ACTIVE_CONTROLLER MSCFModel_CC::getActiveController(const MSVehicle *veh) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    return vars->activeController;
+}
+
 enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCFModel_CC::getLaneChangeAction(const MSVehicle *veh) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     return vars->laneChangeAction;
