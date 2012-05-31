@@ -166,8 +166,8 @@ bool MSCACCLaneChanger::change() {
         blockedCheck = change2left(leader, lLead, lFollow,preb);
         if (leader.first) {
             double speedAfterChange = vehicle->getCarFollowModel().followSpeed(vehicle, vehicle->getSpeed(), vehicle->gap2pred(*leader.first), leader.first->getSpeed(), 0);
-            if (SPEED2ACCEL(speedAfterChange - vehicle->getSpeed()) < -2)
-                blockedCheck |= LCA_BLOCKED;
+//            if (SPEED2ACCEL(speedAfterChange - vehicle->getSpeed()) < -2)
+//                blockedCheck |= LCA_BLOCKED;
         }
         //disable ignore modification from now on. follow speed will not be called
         model->setIgnoreModifications(vehicle, false);
