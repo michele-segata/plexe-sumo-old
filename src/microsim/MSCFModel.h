@@ -216,7 +216,7 @@ public:
      * @param[in] speed The vehicle's current speed
      * @return The maximum possible speed for the next step
      */
-    SUMOReal maxNextSpeed(SUMOReal speed) const;
+    virtual SUMOReal maxNextSpeed(SUMOReal speed) const;
 
 
     /** @brief Returns the distance the vehicle needs to halt including driver's reaction time
