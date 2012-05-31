@@ -639,4 +639,7 @@
 // get the currently active vehicle controller
 #define VAR_GET_ACTIVE_CONTROLLER 0xfb
 
+// get the distance from the beginning of the route
+#define VAR_GET_DISTANCE_FROM_BEGIN 0xfc
+
 #endif
