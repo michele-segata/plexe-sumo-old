@@ -276,8 +276,10 @@ bool MSCACCLaneChanger::change() {
         }
     }
 
-    //if the car must stay in the reserved lane, then no lane change must be done
-    if (laneChangeAction == MSCFModel_CC::STAY_IN_PLATOONING_LANE) {
+    //if the action must not be chosen by the driver, and we arrive at this
+    //point, then no lane change must be done
+    //if (laneChangeAction == MSCFModel_CC::STAY_IN_PLATOONING_LANE) {
+    if (laneChangeAction != MSCFModel_CC::DRIVER_CHOICE) {
         // Candidate didn't change lane.
         myCandi->lane->myTmpVehicles.push_front(veh(myCandi));
         vehicle->myLastLaneChangeOffset += DELTA_T;
@@ -285,7 +287,7 @@ bool MSCACCLaneChanger::change() {
         return false;
     }
     else {
-        //if we get here, lane changing for platooning has not been done. invoke normal lane changing
+        //if we get here, lane changing for platooning has not been requested. invoke normal lane changing
         return MSLaneChanger::change();
     }
 
