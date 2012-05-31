@@ -78,6 +78,15 @@ enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCACCLaneChanger::getLaneChang
 
 }
 
+void MSCACCLaneChanger::setLaneChangeAction(MSVehicle* vehicle, enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION action) {
+
+    const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&vehicle->getCarFollowModel());
+
+    assert(model);
+    model->setLaneChangeAction(vehicle, action);
+
+}
+
 bool MSCACCLaneChanger::change() {
 
     //the code has been copied and adapted from MSLaneChanger::change()
@@ -106,6 +115,34 @@ bool MSCACCLaneChanger::change() {
     std::pair<MSVehicle* const, SUMOReal> leader = getRealThisLeader(myCandi);
 
     enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
+
+    //first of all: check for the requested action: if it has been fulfilled then change it
+    switch (laneChangeAction) {
+
+    case MSCFModel_CC::MOVE_TO_PLATOONING_LANE: {
+
+        if (vehicle->getLaneIndex() == vehicle->getEdge()->getLanes().size() - 1) {
+            setLaneChangeAction(vehicle, MSCFModel_CC::STAY_IN_CURRENT_LANE);
+        }
+
+        break;
+
+    }
+
+    case MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE: {
+
+        if (vehicle->getLaneIndex() == vehicle->getEdge()->getLanes().size() - 2) {
+            setLaneChangeAction(vehicle, MSCFModel_CC::STAY_IN_CURRENT_LANE);
+        }
+
+        break;
+
+    }
+
+    default:
+        break;
+
+    }
 
     // check whether the vehicle wants and is able to change to left lane
     int state2 = 0;
