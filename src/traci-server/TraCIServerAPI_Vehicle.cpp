@@ -92,6 +92,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_GET_CC_INSTALLED
             &&variable!=VAR_GET_RADAR_DATA
             &&variable!=VAR_GET_DISTANCE_TO_END
+            &&variable!=VAR_GET_LANE_CHANGE_ACTION
        ) {
         server.writeStatusCmd(CMD_GET_VEHICLE_VARIABLE, RTYPE_ERR, "Get Vehicle Variable: unsupported variable specified", outputStorage);
         return false;
@@ -419,6 +420,16 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             //write message back
             tempMsg.writeUnsignedByte(TYPE_DOUBLE);
             tempMsg.writeDouble(distanceToEnd);
+
+            break;
+
+        case VAR_GET_LANE_CHANGE_ACTION:
+
+            model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
+            assert(model);
+
+            tempMsg.writeUnsignedByte(TYPE_INTEGER);
+            tempMsg.writeInt(model->getLaneChangeAction(v));
 
             break;
 

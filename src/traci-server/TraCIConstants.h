@@ -633,4 +633,7 @@
 // get the distance that a car has to travel until it reaches the end of its route
 #define VAR_GET_DISTANCE_TO_END 0xf9
 
+// get the current lane change action
+#define VAR_GET_LANE_CHANGE_ACTION 0xfa
+
 #endif
