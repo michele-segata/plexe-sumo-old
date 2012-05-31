@@ -64,7 +64,7 @@ public:
         MOVE_TO_MANAGEMENT_LANE = 1, //the platooning manager tells the driver to move to the management lane, either for join or leave the platoon
         MOVE_TO_PLATOONING_LANE = 2, //the car is in position for joining a platoon and may now move to the dedicated platooning lane for joining
         //TODO: maybe change with STAY_IN_CURRENT_LANE
-        STAY_IN_PLATOONING_LANE = 3//the car is part of a platoon, so it has to stay on the dedicated platooning lane
+        STAY_IN_CURRENT_LANE = 3//the car is part of a platoon, so it has to stay on the dedicated platooning lane
     };
 
     /** @enum ACTIVE_CONTROLLER

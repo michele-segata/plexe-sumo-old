@@ -110,7 +110,8 @@ bool MSCACCLaneChanger::change() {
     // check whether the vehicle wants and is able to change to left lane
     int state2 = 0;
     int blockedCheck = 0;
-    if (laneChangeAction != MSCFModel_CC::STAY_IN_PLATOONING_LANE && (myCandi + 1) != myChanger.end() && (myCandi + 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
+    if (laneChangeAction != MSCFModel_CC::STAY_IN_CURRENT_LANE && laneChangeAction != MSCFModel_CC::DRIVER_CHOICE && (myCandi + 1) != myChanger.end() && (myCandi + 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
+
         std::pair<MSVehicle* const, SUMOReal> lLead = getRealLeader(myCandi + 1);
         std::pair<MSVehicle* const, SUMOReal> lFollow = getRealFollower(myCandi + 1);
         //TODO: debug this for make it work with different situations
@@ -144,7 +145,7 @@ bool MSCACCLaneChanger::change() {
                 //we are were we are requested to go
                 //prevent further lane changes
                 state2 &= ~LCA_LEFT;
-                laneChangeAction = MSCFModel_CC::STAY_IN_PLATOONING_LANE;
+                laneChangeAction = MSCFModel_CC::STAY_IN_CURRENT_LANE;
             }
 //            else {
 //                if (currentToDestination < 0) {

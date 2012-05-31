@@ -1102,7 +1102,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         assert(model);
 
         int action = inputStorage.readInt();
-        assert(action >= MSCFModel_CC::DRIVER_CHOICE && action <= MSCFModel_CC::STAY_IN_PLATOONING_LANE);
+        assert(action >= MSCFModel_CC::DRIVER_CHOICE && action <= MSCFModel_CC::STAY_IN_CURRENT_LANE);
 
         model->setLaneChangeAction((MSVehicle *)v, (enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION) action);
 
