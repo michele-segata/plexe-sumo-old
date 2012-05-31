@@ -58,16 +58,34 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
 
 MSCFModel_CC::~MSCFModel_CC() {}
 
-
 SUMOReal
 MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
     SUMOReal vNext;
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    if (vars->activeController != MSCFModel_CC::DRIVER)
-        //TODO: understand and change this method
-        vNext = MSCFModel::moveHelper(veh, vPos);
+
+    if (vars->activeController != MSCFModel_CC::DRIVER) {
+        //if during this simulation step the speed has been set by the followSpeed() method, then use such value
+        if (vars->followSpeedSetTime == MSNet::getInstance()->getCurrentTimeStep()) {
+            vNext = vars->controllerFollowSpeed;
+        }
+        //otherwise use the value set by the freeSpeed() method
+        else {
+            vNext = vars->controllerFreeSpeed;
+        }
+    }
     else
         vNext = myHumanDriver->moveHelper(veh, vPos);
+
+    //update ego data
+
+    //this method should be called only once per vehicle per simulation step. is it true?
+    assert(vars->egoDataLastUpdate != MSNet::getInstance()->getCurrentTimeStep());
+
+    vars->egoPreviousSpeed = vars->egoSpeed;
+    vars->egoSpeed = vNext;
+    vars->egoAcceleration = SPEED2ACCEL(vars->egoSpeed - vars->egoPreviousSpeed);
+    vars->egoDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
+
     return vNext;
 }
 
@@ -78,22 +96,26 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
 
     //has this function already been invoked for this timestep?
-    if (vars->lastUpdate != MSNet::getInstance()->getCurrentTimeStep() /*&& invokedFromFollowSpeed*/) {
+    if (vars->frontDataLastUpdate != MSNet::getInstance()->getCurrentTimeStep() && !vars->ignoreModifications) {
         //relative speed at time now - 1
         double dv_t0 = vars->egoPreviousSpeed - vars->frontSpeed;
         //relative speed at time now
         double dv_t1 = speed - predSpeed;
-        vars->egoSpeed = speed;
-        vars->egoAcceleration = SPEED2ACCEL(veh->getSpeed() - vars->egoPreviousSpeed);
-        vars->egoPreviousSpeed = veh->getSpeed();
-        vars->lastUpdate = MSNet::getInstance()->getCurrentTimeStep();
+
+        vars->frontDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
         vars->frontAcceleration = vars->egoAcceleration - SPEED2ACCEL(dv_t1 - dv_t0);
+        //if we receive the first update of the simulation about the vehicle in front, we might save a wrong acceleration
+        //value, because we had no previous speed value, so we might save an acceleration of more than 10g for example
+        //so we can just set it to 0. at the next time step (100ms) it will be correctly updated
+        if (vars->frontAcceleration > 10 || vars->frontAcceleration < -10)
+            vars->frontAcceleration = 0;
         vars->frontSpeed = predSpeed;
         vars->frontDistance = gap2pred;
     }
 
-    if (vars->activeController != MSCFModel_CC::DRIVER)
-        return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), true);
+    if (vars->activeController != MSCFModel_CC::DRIVER) {
+        return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), MSCFModel_CC::FOLLOW_SPEED);
+    }
     else
         return myHumanDriver->followSpeed(veh, speed, gap2pred, predSpeed, predMaxDecel);
 }
@@ -101,16 +123,51 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
 
 SUMOReal
 MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
+
+    /**
+     * This SUMO method is meant for asking the car what speed the driver would
+     * apply if it would have to stop in gap2pred meters. This method is called
+     * by the SUMO engine when a approaching a junction, asking something like
+     * "what would you do if...?". So this method should return the current speed
+     * if the model thinks that there is more than enough space to stop,
+     * otherwise it should return a reduced speed. SUMO, then, will use the
+     * reduced speed in two cases:
+     * 1) there is the real need for using that: for example, we are approaching
+     * an intersection where the traffic light is red
+     * 2) we are very far from the intersection: in this case SUMO still does not
+     * know whether the car will have to stop (e.g., it does not know if the
+     * traffic light will be red or not), so in this case SUMO decides to use the
+     * reduced speed, because IF the car will have to stop, by using this reduced
+     * speed it will be able to do that.
+     *
+     * Point number 2) causes a problem with ACC: the reaction of the ACC to a
+     * completely stopped obstacle in front (this is how a red traffic light is
+     * actually modeled) is applying a huge deceleration which, combined with all
+     * the really complicated logics behind SUMO, makes the car stop at every
+     * junction, even if this is a simple connection between two edges.
+     * For making this work there is an easy and logic workaround: if the CC
+     * is switched on, then we just return the current speed. This is actually
+     * correct: the radar is only able to detect real obstacles, and not
+     * intersections, so in reality the ACC controller will just let the car
+     * go. It is a duty of the driver to switch the CC off before an intersection.
+     *
+     * If the CC is switched off, then we just call the stopSpeed method of the
+     * installed carFollowing model simulating the real driver.
+     *
+     * EVEN WORSE: by simply returning the current speed you might never accelerate
+     * when needed. So when the CC is enabled we just return a really high value
+     */
+
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
     if (vars->activeController != MSCFModel_CC::DRIVER)
     {
-        if (gap2pred<0.01) {
-            return 0;
-        }
-        return _v(veh, gap2pred, veh->getSpeed(), 0, desiredSpeed(veh), false);
+        return 1e6;
     }
-    else
+    else {
         return myHumanDriver->stopSpeed(veh, gap2pred);
+    }
+}
+
 SUMOReal MSCFModel_CC::freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const {
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
     if (vars->activeController != MSCFModel_CC::DRIVER)
@@ -128,11 +185,12 @@ MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
     if (vars->activeController != MSCFModel_CC::DRIVER)
     {
-        //TODO: understand this. for now set maximum radar range
+        //maximum radar range is CC is enabled
         return 250;
     }
-    else
+    else {
         return myHumanDriver->interactionGap(veh, vL);
+    }
 
 }
 
@@ -140,11 +198,9 @@ SUMOReal
 MSCFModel_CC::maxNextSpeed(SUMOReal speed) const {
     return speed + (SUMOReal) ACCEL2SPEED(getMaxAccel());
 }
-MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, bool invokedFromFollowSpeed) const {
 
-    std::stringstream debugstr;
-    debugstr.precision(2);
-    debugstr.setf(std::stringstream::fixed, std::stringstream::floatfield);
+SUMOReal
+MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, enum CONTROLLER_INVOKER invoker) const {
 
     //acceleration computed by the controller
     double controllerAcceleration;
@@ -156,32 +212,14 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     double ccAcceleration;
     //acceleration computed by the Adaptive Cruise Control
     double accAcceleration;
+    //acceleration computed by the Cooperative Adaptive Cruise Control
+    double caccAcceleration;
 
     bool debug = true;
 
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
 
-    //TODO: only for testing
-    //-----------------------------------------------------------
     std::string id = veh->getID();
-    /*if (id.substr(id.size() - 2, 2).compare(".0") == 0) {
-        vars->activeController = MSCFModel_CC::ACC;
-        vars->ccDesiredSpeed = 30;
-        if (MSNet::getInstance()->getCurrentTimeStep() < 180000) {
-            vars->ccDesiredSpeed = 30;
-        } else {
-            if (MSNet::getInstance()->getCurrentTimeStep() < 240000)
-                vars->ccDesiredSpeed = 50;
-            else
-                vars->ccDesiredSpeed = 25;
-        }
-    } else {
-        vars->activeController = MSCFModel_CC::ACC;
-        vars->ccDesiredSpeed = 40;
-    }*/
-    //-----------------------------------------------------------
-
-    debugstr << "V " << id;
 
     switch (vars->activeController) {
 
@@ -192,11 +230,9 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
             if (gap2pred > 250 || ccAcceleration < accAcceleration) {
                 controllerAcceleration = ccAcceleration;
-                debugstr << " uses CC";
             }
             else {
                 controllerAcceleration = accAcceleration;
-                debugstr << " uses ACC";
             }
 
 
@@ -204,11 +240,9 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
         case MSCFModel_CC::CACC:
 
-            debugstr << " uses CACC";
-
             double predAcceleration, leaderAcceleration, leaderSpeed;
 
-            if (invokedFromFollowSpeed) {
+            if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
                 predAcceleration = vars->frontAcceleration;
                 leaderAcceleration = vars->leaderAcceleration;
                 leaderSpeed = vars->leaderSpeed;
@@ -224,7 +258,9 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
             }
 
             //TODO: again modify probably range/range-rate controller is needed
-            controllerAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration);
+            ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
+            caccAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration);
+            controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
 
             break;
 
@@ -242,22 +278,25 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     }
 
-    debugstr << " accel=" << controllerAcceleration;
-
     //compute the actual acceleration applied by the engine
     engineAcceleration = _actuator(controllerAcceleration, vars->egoAcceleration);
-
-    debugstr << " actuators=" << engineAcceleration;
 
     //compute the speed from the actual acceleration
     speed = egoSpeed + ACCEL2SPEED(engineAcceleration);
 
-    debugstr << " speed=" << (speed*3.6) << "";
+    //if we have to ignore modifications (e.g., when this method is invoked by the lane changing logic)
+    //DO NOT change the state of the vehicle
+    if (!vars->ignoreModifications) {
 
-    debugstr << " distance=" << gap2pred;
+        if (invoker == MSCFModel_CC::FOLLOW_SPEED && vars->followSpeedSetTime != MSNet::getInstance()->getCurrentTimeStep()) {
+            vars->controllerFollowSpeed = speed;
+            vars->followSpeedSetTime = MSNet::getInstance()->getCurrentTimeStep();
+        }
 
-    if (debug)
-        WRITE_MESSAGE(debugstr.str());
+        if (invoker == MSCFModel_CC::FREE_SPEED)
+            vars->controllerFreeSpeed = speed;
+
+    }
 
     return MAX2(SUMOReal(0), speed);
 }
@@ -308,10 +347,10 @@ MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) c
 void
 MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-    std::stringstream debug;
-    debug.precision(2);
-    debug << veh->getID() << " updates leader info: v=" << speed << " a=" << acceleration;
-    WRITE_ERROR(debug.str());
+    //std::stringstream debug;
+    //debug.precision(2);
+    //debug << veh->getID() << " updates leader info: v=" << speed << " a=" << acceleration;
+    //WRITE_ERROR(debug.str());
     vars->leaderAcceleration = acceleration;
     vars->leaderSpeed = speed;
 }
@@ -359,6 +398,11 @@ void MSCFModel_CC::setControllerFakeData(const MSVehicle *veh, double frontDista
     vars->fakeData.frontSpeed = frontSpeed;
     vars->fakeData.leaderAcceleration = leaderAcceleration;
     vars->fakeData.leaderSpeed = leaderSpeed;
+}
+
+void MSCFModel_CC::setIgnoreModifications(const MSVehicle *veh, bool ignore) const {
+    VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
+    vars->ignoreModifications = ignore;
 }
 
 MSCFModel*

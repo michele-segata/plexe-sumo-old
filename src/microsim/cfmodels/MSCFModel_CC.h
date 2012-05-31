@@ -277,12 +277,34 @@ public:
     void setControllerFakeData(const MSVehicle *veh, double frontDistance, double frontSpeed, double frontAcceleration,
             double leaderSpeed, double leaderAcceleration) const;
 
+    /**
+     * @brief tells the module to ignore modifications to the state state of the vehicle. a class is going to invoke
+     * methods like followSpeed, but not for changing actually moving the vehicle. for example the lane changer
+     * invokes followSpeed to determine whether the car can gain some advantages by moving to another lane. this
+     * advantage is computed by using the followSpeed method. in such case, the state of the vehicle should not
+     * be changed
+     */
+    void setIgnoreModifications(const MSVehicle *veh, bool ignore) const;
+
 private:
+
+    /**
+     * This enum tells to the _v method who has invoked it
+     */
+    enum CONTROLLER_INVOKER {
+        STOP_SPEED,
+        FOLLOW_SPEED,
+        FREE_SPEED
+    };
+
     class VehicleVariables : public MSCFModel::VehicleVariables {
     public:
-        VehicleVariables() : egoSpeed(0), egoAcceleration(0), frontSpeed(0), frontDistance(0), leaderSpeed(0),
-            leaderAcceleration(0), platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), lastUpdate(0), activeController(DRIVER),
-            frontAcceleration(0), egoPreviousSpeed(0), laneChangeAction(MSCFModel_CC::DRIVER_CHOICE) {
+        VehicleVariables() : egoDataLastUpdate(0), egoSpeed(0), egoAcceleration(0), egoPreviousSpeed(0),
+            frontDataLastUpdate(0), frontSpeed(0), frontDistance(0), frontAcceleration(0),
+            leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
+            platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), lastUpdate(0), activeController(DRIVER),
+            laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
+            ignoreModifications(false) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -290,12 +312,17 @@ private:
             fakeData.leaderSpeed = 0;
         }
 
+        /// @brief last time ego data has been updated
+        SUMOTime egoDataLastUpdate;
         /// @brief current vehicle speed
         SUMOReal egoSpeed;
         /// @brief current vehicle acceleration
         SUMOReal egoAcceleration;
         /// @brief vehicle speed at previous timestep
         SUMOReal egoPreviousSpeed;
+
+        /// @brief last time front vehicle data has been updated
+        SUMOTime frontDataLastUpdate;
         /// @brief current front vehicle speed
         SUMOReal frontSpeed;
         /// @brief current front vehicle distance
@@ -304,10 +331,31 @@ private:
         SUMOReal frontAcceleration;
         /// @brief last timestep at which front vehicle data has been updated
         SUMOTime lastUpdate;
+
+        /// @brief last time leader vehicle data has been updated
+        SUMOTime leaderDataLastUpdate;
         /// @brief platoon's leader speed (used by CACC)
         SUMOReal leaderSpeed;
         /// @brief platoon's leader acceleration (used by CACC)
         SUMOReal leaderAcceleration;
+
+        //time at which followSpeed has been invoked. In this way
+        //we can tell moveHelper whether controllerFollowSpeed must
+        //be used or not, by checking if this value has been set
+        //in the current time step
+        SUMOTime followSpeedSetTime;
+        //speed computed by followSpeed
+        double controllerFollowSpeed;
+        //speed computed by freeSpeed
+        double controllerFreeSpeed;
+
+        /** tells the module to ignore modifications to the state state of the vehicle. a class is going to invoke
+         *  methods like followSpeed, but not for changing actually moving the vehicle. for example the lane changer
+         *  invokes followSpeed to determine whether the car can gain some advantages by moving to another lane. this
+         *  advantage is computed by using the followSpeed method. in such case, the state of the vehicle should not
+         *  be changed
+         */
+        bool ignoreModifications;
 
         /// @brief CC desired speed
         SUMOReal ccDesiredSpeed;
@@ -329,7 +377,7 @@ private:
 
 
 private:
-    SUMOReal _v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, bool invokedFromFollowingSpeed) const;
+    SUMOReal _v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, enum CONTROLLER_INVOKER invoker) const;
 
     /** @brief controller for the CC which computes the acceleration to be applied. the value needs to be passed to the actuator
      *
