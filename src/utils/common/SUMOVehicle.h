@@ -32,6 +32,7 @@
 #include <config.h>
 #endif
 
+#include <typeinfo>
 #include <vector>
 #include <typeinfo>
 #include <utils/common/SUMOTime.h>
