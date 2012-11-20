@@ -642,4 +642,7 @@
 // get the distance from the beginning of the route
 #define VAR_GET_DISTANCE_FROM_BEGIN 0xfc
 
+// set speed and acceleration of preceding vehicle
+#define VAR_SET_PRECEDING_SPEED_AND_ACCELERATION 0xfd
+
 #endif

@@ -222,6 +222,18 @@ public:
     void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration)  const;
 
     /**
+     * @brief set the information about preceding vehicle. This method should be invoked
+     * by TraCI when a wireless message with such data is received. For testing, it might
+     * be also invoked from SUMO source code
+     *
+     * @param[in] veh the vehicle for which the data must be saved
+     * @param[in] speed the speed of the preceding vehicle
+     * @param[in] acceleration the acceleration of the preceding vehicle
+     *
+     */
+    void setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration) const;
+
+    /**
      * @brief get the information about a vehicle. This can be used by TraCI in order to
      * get speed and acceleration of the platoon leader before sending them to other
      * vehicles

@@ -352,6 +352,14 @@ MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMORea
 }
 
 void
+MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->frontAcceleration = acceleration;
+    vars->frontSpeed = speed;
+    vars->frontDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
+}
+
+void
 MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     speed = vars->egoSpeed;
