@@ -1106,7 +1106,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
     }
     break;
     case VAR_SET_LEADER_SPEED_AND_ACCELERATION:
-
+    {
         SUMOReal leaderSpeed;
         SUMOReal leaderAcc;
 
@@ -1118,10 +1118,10 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         assert(model);
 
         model->setLeaderInformation((MSVehicle *)v, leaderSpeed, leaderAcc);
-
+    }
     break;
     case VAR_SET_PRECEDING_SPEED_AND_ACCELERATION:
-
+    {
         SUMOReal precSpeed;
         SUMOReal precAcc;
 
@@ -1133,7 +1133,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         assert(model);
 
         model->setPrecedingInformation((MSVehicle *)v, precSpeed, precAcc);
-
+    }
     break;
     case VAR_SET_ACTIVE_CONTROLLER: {
 
