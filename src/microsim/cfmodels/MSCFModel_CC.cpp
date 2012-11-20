@@ -97,19 +97,19 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
 
     //has this function already been invoked for this timestep?
     if (vars->frontDataLastUpdate != MSNet::getInstance()->getCurrentTimeStep() && !vars->ignoreModifications) {
-        //relative speed at time now - 1
-        double dv_t0 = vars->egoPreviousSpeed - vars->frontSpeed;
-        //relative speed at time now
-        double dv_t1 = speed - predSpeed;
+//        //relative speed at time now - 1
+//        double dv_t0 = vars->egoPreviousSpeed - vars->frontSpeed;
+//        //relative speed at time now
+//        double dv_t1 = speed - predSpeed;
 
         vars->frontDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
-        vars->frontAcceleration = vars->egoAcceleration - SPEED2ACCEL(dv_t1 - dv_t0);
-        //if we receive the first update of the simulation about the vehicle in front, we might save a wrong acceleration
-        //value, because we had no previous speed value, so we might save an acceleration of more than 10g for example
-        //so we can just set it to 0. at the next time step (100ms) it will be correctly updated
-        if (vars->frontAcceleration > 10 || vars->frontAcceleration < -10)
-            vars->frontAcceleration = 0;
-        vars->frontSpeed = predSpeed;
+//        vars->frontAcceleration = vars->egoAcceleration - SPEED2ACCEL(dv_t1 - dv_t0);
+//        //if we receive the first update of the simulation about the vehicle in front, we might save a wrong acceleration
+//        //value, because we had no previous speed value, so we might save an acceleration of more than 10g for example
+//        //so we can just set it to 0. at the next time step (100ms) it will be correctly updated
+//        if (vars->frontAcceleration > 10 || vars->frontAcceleration < -10)
+//            vars->frontAcceleration = 0;
+//        vars->frontSpeed = predSpeed;
         vars->frontDistance = gap2pred;
     }
 
