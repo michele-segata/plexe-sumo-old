@@ -116,6 +116,8 @@ bool MSCACCLaneChanger::change() {
 
     enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
 
+    MSCFModel_CC::VehicleVariables *vars = (MSCFModel_CC::VehicleVariables *)vehicle->getCarFollowVariables();
+
     //first of all: check for the requested action: if it has been fulfilled then change it
     switch (laneChangeAction) {
 
@@ -132,6 +134,16 @@ bool MSCACCLaneChanger::change() {
     case MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE: {
 
         if (vehicle->getLaneIndex() == vehicle->getEdge()->getLanes().size() - 2) {
+            setLaneChangeAction(vehicle, MSCFModel_CC::STAY_IN_CURRENT_LANE);
+        }
+
+        break;
+
+    }
+
+    case MSCFModel_CC::MOVE_TO_FIXED_LANE: {
+
+        if (vehicle->getLaneIndex() == vars->fixedLane) {
             setLaneChangeAction(vehicle, MSCFModel_CC::STAY_IN_CURRENT_LANE);
         }
 
@@ -174,13 +186,21 @@ bool MSCACCLaneChanger::change() {
 
         bool changingAllowed2 = (blockedCheck & LCA_BLOCKED) == 0;
 
-        if (changingAllowed2 && (laneChangeAction == MSCFModel_CC::MOVE_TO_PLATOONING_LANE || laneChangeAction == MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE)) {
+        if (changingAllowed2 && (laneChangeAction == MSCFModel_CC::MOVE_TO_PLATOONING_LANE || laneChangeAction == MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE || laneChangeAction == MSCFModel_CC::MOVE_TO_FIXED_LANE)) {
 
-            //set destination to be the leftmost lane
-            int destination = vehicle->getEdge()->getLanes().size() - 1;
-            //if the action is to move to management lane, then the destination is the leftmost minus one
-            if (laneChangeAction == MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE)
-                destination--;
+            int destination;
+
+            if (laneChangeAction == MSCFModel_CC::MOVE_TO_FIXED_LANE) {
+                destination = vars->fixedLane;
+                assert(destination < vehicle->getEdge()->getLanes().size());
+            }
+            else {
+                //set destination to be the leftmost lane
+                destination = vehicle->getEdge()->getLanes().size() - 1;
+                //if the action is to move to management lane, then the destination is the leftmost minus one
+                if (laneChangeAction == MSCFModel_CC::MOVE_TO_MANAGEMENT_LANE)
+                    destination--;
+            }
 
             //compute the difference between where we are and where we are heading at
             int currentToDestination = vehicle->getLaneIndex() - destination;

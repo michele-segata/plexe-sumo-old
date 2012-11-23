@@ -645,4 +645,7 @@
 // set speed and acceleration of preceding vehicle
 #define VAR_SET_PRECEDING_SPEED_AND_ACCELERATION 0xfd
 
+// set vehicle to move to a fixed lane
+#define VAR_SET_FIXED_LANE 0xfe
+
 #endif

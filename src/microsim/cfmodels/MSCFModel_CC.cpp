@@ -392,6 +392,15 @@ void MSCFModel_CC::setLaneChangeAction(const MSVehicle *veh, enum MSCFModel_CC::
     vars->laneChangeAction = action;
 }
 
+void MSCFModel_CC::setFixedLane(const MSVehicle *veh, int lane) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    //set the lane change only if the index is valid
+    if (lane < veh->getEdge()->getLanes().size()) {
+        vars->fixedLane = lane;
+        vars->laneChangeAction = MOVE_TO_FIXED_LANE;
+    }
+}
+
 void MSCFModel_CC::getRadarMeasurements(const MSVehicle * veh, double &distance, double &relativeSpeed) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     distance = vars->frontDistance;

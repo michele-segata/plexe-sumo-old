@@ -509,6 +509,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             &&variable!=VAR_SET_LANE_CHANGE_ACTION
             &&variable!=VAR_SET_CONTROLLER_FAKE_DATA
             &&variable!=VAR_SET_PRECEDING_SPEED_AND_ACCELERATION
+            &&variable!=VAR_SET_FIXED_LANE
        ) {
         server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Change Vehicle State: unsupported variable specified", outputStorage);
         return false;
@@ -1200,6 +1201,17 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         frontAcceleration = inputStorage.readDouble();
         leaderSpeed = inputStorage.readDouble();
         leaderAcceleration = inputStorage.readDouble();
+
+    }
+    break;
+    case VAR_SET_FIXED_LANE: {
+
+        const MSCFModel_CC * model;
+        model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
+        assert(model);
+
+        int lane = inputStorage.readInt();
+        model->setFixedLane((const MSVehicle *)v, lane);
 
     }
     break;

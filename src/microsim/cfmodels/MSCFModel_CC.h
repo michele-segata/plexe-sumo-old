@@ -64,7 +64,8 @@ public:
         MOVE_TO_MANAGEMENT_LANE = 1, //the platooning manager tells the driver to move to the management lane, either for join or leave the platoon
         MOVE_TO_PLATOONING_LANE = 2, //the car is in position for joining a platoon and may now move to the dedicated platooning lane for joining
         //TODO: maybe change with STAY_IN_CURRENT_LANE
-        STAY_IN_CURRENT_LANE = 3//the car is part of a platoon, so it has to stay on the dedicated platooning lane
+        STAY_IN_CURRENT_LANE = 3,//the car is part of a platoon, so it has to stay on the dedicated platooning lane
+        MOVE_TO_FIXED_LANE = 4//move the car to a specific lane. this is going to substitute MOVE_TO_MANAGEMENT_LANE and MOVE_TO_PLATOONING_LANE
     };
 
     /** @enum ACTIVE_CONTROLLER
@@ -286,6 +287,19 @@ public:
     void setLaneChangeAction(const MSVehicle *veh, enum PLATOONING_LANE_CHANGE_ACTION action) const;
 
     /**
+     * @brief sets the lane a car should stay in. might be useful to form platoons in any
+     * lane and not in a dedicated one.
+     * After setting the lane, the lane change action (enum PLATOONING_LANE_CHANE_ACTION) will
+     * be set to STAY_IN_CURRENT_LANE. Afterwards, it might be possible to either call this
+     * method again to change lane (and still keep it fixed) or setting the lane change action
+     * to DRIVER_CHOICE, to let the driver model chose the appropriate lane
+     *
+     * @param[in] lane index of the lane to move to, starting from 0. 0 is the rightmost.
+     * If there is no such lane, the request will be ignored
+     */
+    void setFixedLane(const MSVehicle *veh, int lane) const;
+
+    /**
      * @brief return the data that is currently being measured by the radar
      */
     void getRadarMeasurements(const MSVehicle * veh, double &distance, double &relativeSpeed) const;
@@ -317,6 +331,8 @@ private:
         FREE_SPEED
     };
 
+public:
+
     class VehicleVariables : public MSCFModel::VehicleVariables {
     public:
         VehicleVariables() : egoDataLastUpdate(0), egoSpeed(0), egoAcceleration(0), egoPreviousSpeed(0),
@@ -324,7 +340,7 @@ private:
             leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
             platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), lastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
-            ignoreModifications(false) {
+            ignoreModifications(false), fixedLane(-1) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -387,6 +403,9 @@ private:
 
         /// @brief lane change action to be performed as given by the platoon management application
         enum PLATOONING_LANE_CHANGE_ACTION laneChangeAction;
+
+        /// @brief fixed lane selected
+        int fixedLane;
 
         //TODO: most probably the following variables needs to be moved to the application logic (i.e., network protocol)
         /// @brief own platoon id
