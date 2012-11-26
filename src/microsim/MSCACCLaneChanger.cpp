@@ -164,7 +164,10 @@ bool MSCACCLaneChanger::change() {
         std::pair<MSVehicle* const, SUMOReal> lLead = getRealLeader(myCandi + 1);
         std::pair<MSVehicle* const, SUMOReal> lFollow = getRealFollower(myCandi + 1);
         //TODO: debug this for make it work with different situations
-        state2 = laneChangeAction == MSCFModel_CC::MOVE_TO_PLATOONING_LANE ? LCA_SPEEDGAIN : 0;
+        state2 =
+                laneChangeAction == MSCFModel_CC::MOVE_TO_PLATOONING_LANE ||
+                laneChangeAction == MSCFModel_CC::MOVE_TO_FIXED_LANE
+                ? LCA_SPEEDGAIN : 0;
         if ((state2 & LCA_URGENT) != 0 || (state2 & LCA_SPEEDGAIN) != 0) {
             state2 |= LCA_LEFT;
         }
