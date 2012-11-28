@@ -96,21 +96,21 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
 
     //has this function already been invoked for this timestep?
-    if (vars->frontDataLastUpdate != MSNet::getInstance()->getCurrentTimeStep() && !vars->ignoreModifications) {
+    if (vars->radarLastUpdate != MSNet::getInstance()->getCurrentTimeStep() && !vars->ignoreModifications) {
 //        //relative speed at time now - 1
 //        double dv_t0 = vars->egoPreviousSpeed - vars->frontSpeed;
 //        //relative speed at time now
 //        double dv_t1 = speed - predSpeed;
 
-        vars->frontDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
+        vars->radarLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
 //        vars->frontAcceleration = vars->egoAcceleration - SPEED2ACCEL(dv_t1 - dv_t0);
 //        //if we receive the first update of the simulation about the vehicle in front, we might save a wrong acceleration
 //        //value, because we had no previous speed value, so we might save an acceleration of more than 10g for example
 //        //so we can just set it to 0. at the next time step (100ms) it will be correctly updated
 //        if (vars->frontAcceleration > 10 || vars->frontAcceleration < -10)
 //            vars->frontAcceleration = 0;
-//        vars->frontSpeed = predSpeed;
-        vars->frontDistance = gap2pred;
+        vars->radarFrontSpeed = predSpeed;
+        vars->radarFrontDistance = gap2pred;
     }
 
     if (vars->activeController != MSCFModel_CC::DRIVER) {
@@ -403,8 +403,8 @@ void MSCFModel_CC::setFixedLane(const MSVehicle *veh, int lane) const {
 
 void MSCFModel_CC::getRadarMeasurements(const MSVehicle * veh, double &distance, double &relativeSpeed) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-    distance = vars->frontDistance;
-    relativeSpeed = vars->frontSpeed - vars->egoSpeed;
+    distance = vars->radarFrontDistance;
+    relativeSpeed = vars->radarFrontSpeed - vars->egoSpeed;
 }
 
 void MSCFModel_CC::setControllerFakeData(const MSVehicle *veh, double frontDistance, double frontSpeed, double frontAcceleration,

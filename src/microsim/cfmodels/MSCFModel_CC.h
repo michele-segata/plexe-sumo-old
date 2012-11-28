@@ -336,9 +336,9 @@ public:
     class VehicleVariables : public MSCFModel::VehicleVariables {
     public:
         VehicleVariables() : egoDataLastUpdate(0), egoSpeed(0), egoAcceleration(0), egoPreviousSpeed(0),
-            frontDataLastUpdate(0), frontSpeed(0), frontDistance(0), frontAcceleration(0),
-            leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
-            platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), lastUpdate(0), activeController(DRIVER),
+            frontDataLastUpdate(0), frontSpeed(0), radarFrontDistance(0), frontAcceleration(0),
+            radarFrontSpeed(0), leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
+            platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
             ignoreModifications(false), fixedLane(-1) {
             fakeData.frontAcceleration = 0;
@@ -357,16 +357,18 @@ public:
         /// @brief vehicle speed at previous timestep
         SUMOReal egoPreviousSpeed;
 
-        /// @brief last time front vehicle data has been updated
+        /// @brief last time front vehicle data (speed and acceleration) has been updated
         SUMOTime frontDataLastUpdate;
         /// @brief current front vehicle speed
         SUMOReal frontSpeed;
-        /// @brief current front vehicle distance
-        SUMOReal frontDistance;
         /// @brief current front vehicle acceleration (used by CACC)
         SUMOReal frontAcceleration;
-        /// @brief last timestep at which front vehicle data has been updated
-        SUMOTime lastUpdate;
+        /// @brief last timestep at which front vehicle data (distance) has been updated
+        SUMOTime radarLastUpdate;
+        /// @brief current front vehicle distance as provided by the radar
+        SUMOReal radarFrontDistance;
+        /// @brief current front vehicle speed as provided by the radar
+        SUMOReal radarFrontSpeed;
 
         /// @brief last time leader vehicle data has been updated
         SUMOTime leaderDataLastUpdate;
