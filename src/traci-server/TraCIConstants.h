@@ -648,4 +648,7 @@
 // set vehicle to move to a fixed lane
 #define VAR_SET_FIXED_LANE 0xfe
 
+// set ACC headway time
+#define VAR_SET_ACC_HEADWAY_TIME 0xff
+
 #endif

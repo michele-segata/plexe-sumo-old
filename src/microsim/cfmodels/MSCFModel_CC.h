@@ -249,9 +249,19 @@ public:
      * @brief switch on the ACC, so disabling the human driver car control
      *
      * @param[in] veh the vehicle for which the ACC must be switched on
-     * @param[in] veh ccDesiredSpeed the cruise control speed
+     * @param[in] ccDesiredSpeed the cruise control speed
      */
     void switchOnACC(const MSVehicle *veh, double ccDesiredSpeed) const;
+
+    /**
+     * @brief set the headway time for the ACC controller. This might be useful for
+     * analyzing instabilities, for example by setting headway time to a value like
+     * 0.3 seconds
+     *
+     * @param[in] veh the vehicle for which the ACC headway time must be changed
+     * @param[in] headwayTime headway time to be set
+     */
+    void setACCHeadwayTime(const MSVehicle *veh, double headwayTime) const;
 
     /**
      * @brief set the active controller. Notice that if the selected controller is ACC or CACC
@@ -340,7 +350,7 @@ public:
             radarFrontSpeed(0), leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
             platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
-            ignoreModifications(false), fixedLane(-1) {
+            ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -369,6 +379,9 @@ public:
         SUMOReal radarFrontDistance;
         /// @brief current front vehicle speed as provided by the radar
         SUMOReal radarFrontSpeed;
+
+        /// @brief headway time for ACC
+        SUMOReal accHeadwayTime;
 
         /// @brief last time leader vehicle data has been updated
         SUMOTime leaderDataLastUpdate;
@@ -433,9 +446,10 @@ private:
      * @param[in] egoSpeed vehicle current speed
      * @param[in] desSpeed vehicle desired speed
      * @param[in] gap2pred the distance to preceding vehicle
+     * @param[in] headwayTime the headway time ACC should maintain
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred) const;
+    SUMOReal _acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const;
 
     /** @brief controller for the CACC which computes the acceleration to be applied. the value needs to be passed to the actuator
      *

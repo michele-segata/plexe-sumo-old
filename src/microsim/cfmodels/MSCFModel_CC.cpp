@@ -226,7 +226,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
         case MSCFModel_CC::ACC:
 
             ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
-            accAcceleration = _acc(egoSpeed, predSpeed, gap2pred);
+            accAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
 
             if (gap2pred > 250 || ccAcceleration < accAcceleration) {
                 controllerAcceleration = ccAcceleration;
@@ -310,10 +310,10 @@ MSCFModel_CC::_cc(SUMOReal egoSpeed, SUMOReal desSpeed) const {
 }
 
 SUMOReal
-MSCFModel_CC::_acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred) const {
+MSCFModel_CC::_acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const {
 
     //Eq. 6.18 of the Rajamani book
-    return fmin(myAccel, fmax(-myDecel, -1.0 / myHeadwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + myHeadwayTime * egoSpeed))));
+    return fmin(myAccel, fmax(-myDecel, -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed))));
 
 }
 
@@ -370,6 +370,12 @@ void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  con
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->ccDesiredSpeed = ccDesiredSpeed;
     vars->activeController = MSCFModel_CC::ACC;
+}
+
+void MSCFModel_CC::setACCHeadwayTime(const MSVehicle *veh, double headwayTime) const {
+    assert(headwayTime > 0);
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->accHeadwayTime = headwayTime;
 }
 
 void MSCFModel_CC::setActiveController(const MSVehicle *veh, enum MSCFModel_CC::ACTIVE_CONTROLLER activeController) const {
