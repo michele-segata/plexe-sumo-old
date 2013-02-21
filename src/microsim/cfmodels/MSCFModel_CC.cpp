@@ -83,7 +83,14 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
 
     vars->egoPreviousSpeed = vars->egoSpeed;
     vars->egoSpeed = vNext;
-    vars->egoAcceleration = SPEED2ACCEL(vars->egoSpeed - vars->egoPreviousSpeed);
+    //value for acceleration must be checked as it might create problems. for example, if in the .rou.xml
+    //file an initial speed is set, since egoPreviousSpeed will be zero, the initial acceleration will
+    //be huge. such acceleration, will be "remembered" by the low pass filtering mechanism implementing
+    //the actuator, so the cars will be wrongly accelerating (might reach more than 300km/h) until the
+    //low pass filter will let the acceleration go down to a normal value.
+    //so here we check whether computed acceleration has a reasonable value. if not just set it to 0
+    double potentialAcceleration = SPEED2ACCEL(vars->egoSpeed - vars->egoPreviousSpeed);
+    vars->egoAcceleration = potentialAcceleration < 5 ? potentialAcceleration : 0;
     vars->egoDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
 
     return vNext;
