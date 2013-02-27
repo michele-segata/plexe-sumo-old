@@ -346,7 +346,7 @@ public:
     class VehicleVariables : public MSCFModel::VehicleVariables {
     public:
         VehicleVariables() : egoDataLastUpdate(0), egoSpeed(0), egoAcceleration(0), egoPreviousSpeed(0),
-            frontDataLastUpdate(0), frontSpeed(0), radarFrontDistance(0), frontAcceleration(0),
+            frontDataLastUpdate(0), frontSpeed(0), radarFrontDistance(1000), frontAcceleration(0),
             radarFrontSpeed(0), leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
             platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
