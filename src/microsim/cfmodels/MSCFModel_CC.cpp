@@ -228,60 +228,67 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     std::string id = veh->getID();
 
-    switch (vars->activeController) {
+    if (vars->activeController != MSCFModel_CC::DRIVER && vars->useFixedAcceleration) {
+        controllerAcceleration = vars->fixedAcceleration;
+    }
+    else {
 
-        case MSCFModel_CC::ACC:
+        switch (vars->activeController) {
 
-            ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
-            accAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
+            case MSCFModel_CC::ACC:
 
-            if (gap2pred > 250 || ccAcceleration < accAcceleration) {
-                controllerAcceleration = ccAcceleration;
-            }
-            else {
-                controllerAcceleration = accAcceleration;
-            }
+                ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
+                accAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
+
+                if (gap2pred > 250 || ccAcceleration < accAcceleration) {
+                    controllerAcceleration = ccAcceleration;
+                }
+                else {
+                    controllerAcceleration = accAcceleration;
+                }
 
 
-            break;
+                break;
 
-        case MSCFModel_CC::CACC:
+            case MSCFModel_CC::CACC:
 
-            double predAcceleration, leaderAcceleration, leaderSpeed;
+                double predAcceleration, leaderAcceleration, leaderSpeed;
 
-            if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
-                predAcceleration = vars->frontAcceleration;
-                leaderAcceleration = vars->leaderAcceleration;
-                leaderSpeed = vars->leaderSpeed;
-            }
-            else {
-                /* if the method has not been invoked from followSpeed() then it has been
-                 * invoked from stopSpeed(). In such case we set all parameters of preceding
-                 * vehicles as they were non-moving obstacles
-                 */
-                predAcceleration = 0;
-                leaderAcceleration = 0;
-                leaderSpeed = 0;
-            }
+                if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
+                    predAcceleration = vars->frontAcceleration;
+                    leaderAcceleration = vars->leaderAcceleration;
+                    leaderSpeed = vars->leaderSpeed;
+                }
+                else {
+                    /* if the method has not been invoked from followSpeed() then it has been
+                     * invoked from stopSpeed(). In such case we set all parameters of preceding
+                     * vehicles as they were non-moving obstacles
+                     */
+                    predAcceleration = 0;
+                    leaderAcceleration = 0;
+                    leaderSpeed = 0;
+                }
 
-            //TODO: again modify probably range/range-rate controller is needed
-            ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
-            caccAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration);
-            controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+                //TODO: again modify probably range/range-rate controller is needed
+                ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
+                caccAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration);
+                controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
 
-            break;
+                break;
 
-        case MSCFModel_CC::DRIVER:
+            case MSCFModel_CC::DRIVER:
 
-            std::cerr << "Switching to normal driver behavior still not implemented in MSCFModel_CC\n";
-            assert(false);
-            break;
+                std::cerr << "Switching to normal driver behavior still not implemented in MSCFModel_CC\n";
+                assert(false);
+                break;
 
-        default:
+            default:
 
-            std::cerr << "Invalid controller selected in MSCFModel_CC\n";
-            assert(false);
-            break;
+                std::cerr << "Invalid controller selected in MSCFModel_CC\n";
+                assert(false);
+                break;
+
+        }
 
     }
 
@@ -383,6 +390,12 @@ void MSCFModel_CC::setACCHeadwayTime(const MSVehicle *veh, double headwayTime) c
     assert(headwayTime > 0);
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->accHeadwayTime = headwayTime;
+}
+
+void MSCFModel_CC::setFixedAcceleration(const MSVehicle *veh, int activate, double acceleration) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->useFixedAcceleration = activate;
+    vars->fixedAcceleration = acceleration;
 }
 
 void MSCFModel_CC::setActiveController(const MSVehicle *veh, enum MSCFModel_CC::ACTIVE_CONTROLLER activeController) const {

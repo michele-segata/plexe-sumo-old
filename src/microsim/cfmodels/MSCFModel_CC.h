@@ -264,6 +264,16 @@ public:
     void setACCHeadwayTime(const MSVehicle *veh, double headwayTime) const;
 
     /**
+     * @brief enable/disable the use of a fixed acceleration, instead of using the one computed by
+     * the controllers. the acceleration is used only if the CC/ACC/CACC is enabled
+     *
+     * @param[in] veh the vehicle for which the fixed acceleration has to be set
+     * @param[in] activate activate (1) or deactivate (0) the fixed acceleration
+     * @param[in] acceleration the fixed acceleration to be used (if activate == 1)
+     */
+    void setFixedAcceleration(const MSVehicle *veh, int activate, double acceleration) const;
+
+    /**
      * @brief set the active controller. Notice that if the selected controller is ACC or CACC
      * the setCCDesiredSpeed must be invoked before, otherwise the speed is set to the default
      * value
@@ -350,7 +360,7 @@ public:
             radarFrontSpeed(0), leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
             platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
-            ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5) {
+            ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -399,6 +409,11 @@ public:
         double controllerFollowSpeed;
         //speed computed by freeSpeed
         double controllerFreeSpeed;
+
+        //enable/disable the use of a constant, user defined acceleration instead of the one computed by the controller
+        int useFixedAcceleration;
+        //fixed acceleration to use
+        double fixedAcceleration;
 
         /** tells the module to ignore modifications to the state state of the vehicle. a class is going to invoke
          *  methods like followSpeed, but not for changing actually moving the vehicle. for example the lane changer

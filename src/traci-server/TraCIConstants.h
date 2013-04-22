@@ -599,7 +599,8 @@
 #define VAR_TRACK_VEHICLE 0xa6
 
 
-
+// set a fixed acceleration to a vehicle controlled by CC/ACC/CACC
+#define VAR_SET_FIXED_ACCELERATION 0xef
 
 // get vehicle speed and acceleration, needed for example by the platoon leader (get: vehicle)
 #define VAR_GET_SPEED_AND_ACCELERATION 0xf0
