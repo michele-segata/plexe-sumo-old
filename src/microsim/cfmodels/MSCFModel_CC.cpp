@@ -444,6 +444,16 @@ void MSCFModel_CC::setIgnoreModifications(const MSVehicle *veh, bool ignore) con
     vars->ignoreModifications = ignore;
 }
 
+void MSCFModel_CC::setCrashed(const MSVehicle *veh, bool crashed) const {
+    VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
+    vars->crashed = crashed;
+}
+
+bool MSCFModel_CC::isCrashed(const MSVehicle *veh) const {
+    VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
+    return vars->crashed;
+}
+
 MSCFModel*
 MSCFModel_CC::duplicate(const MSVehicleType* vtype) const {
     return new MSCFModel_CC(vtype,

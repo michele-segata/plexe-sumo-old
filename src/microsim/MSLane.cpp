@@ -54,6 +54,7 @@
 #include <utils/common/ToString.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/common/HelpersHarmonoise.h>
+#include <microsim/cfmodels/MSCFModel_CC.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -661,6 +662,9 @@ MSLane::detectCollisions(SUMOTime timestep) {
         SUMOReal gap = (*pred)->getPositionOnLane() - (*pred)->getVehicleType().getLengthWithGap() - (*veh)->getPositionOnLane();
         if (gap < 0) {
             MSVehicle* vehV = *veh;
+            const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&vehV->getCarFollowModel());
+            assert(model);
+            model->setCrashed(vehV, true);
             WRITE_WARNING("Teleporting vehicle '" + vehV->getID() + "'; collision, lane='" + getID() + "', time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
             myVehicleLengthSum -= vehV->getVehicleType().getLengthWithGap();
             MSVehicleTransfer::getInstance()->addVeh(timestep, vehV);

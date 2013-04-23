@@ -340,6 +340,22 @@ public:
      */
     void setIgnoreModifications(const MSVehicle *veh, bool ignore) const;
 
+    /**
+     * @brief tells the module that in the last timestep the car has crashed (or not)
+     *
+     * @param[in] veh the vehicle
+     * @param[in] crashed whether the car has crashed or not
+     */
+    void setCrashed(const MSVehicle *veh, bool crashed) const;
+
+    /**
+     * @brief tells whether the car has crashed or not
+     *
+     * @param[in] veh the vehicle
+     * @return true if the vehicle has crashed, false otherwise
+     */
+    bool isCrashed(const MSVehicle *veh) const;
+
 private:
 
     /**
@@ -360,7 +376,8 @@ public:
             radarFrontSpeed(0), leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
             platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
-            ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0) {
+            ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
+            crashed(false) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -422,6 +439,9 @@ public:
          *  be changed
          */
         bool ignoreModifications;
+
+        //car collided in the last timestep
+        bool crashed;
 
         /// @brief CC desired speed
         SUMOReal ccDesiredSpeed;

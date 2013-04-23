@@ -599,6 +599,9 @@
 #define VAR_TRACK_VEHICLE 0xa6
 
 
+// determine whether a vehicle has crashed or not
+#define VAR_GET_CRASHED 0xee
+
 // set a fixed acceleration to a vehicle controlled by CC/ACC/CACC
 #define VAR_SET_FIXED_ACCELERATION 0xef
 

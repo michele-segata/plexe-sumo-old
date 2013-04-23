@@ -59,6 +59,7 @@
 #include "MSEdgeWeightsStorage.h"
 #include <utils/common/HelpersHBEFA.h>
 #include <utils/common/HelpersHarmonoise.h>
+#include <microsim/cfmodels/MSCFModel_CC.h>
 
 #ifdef _MESSAGES
 #include "MSMessageEmitter.h"
@@ -628,6 +629,9 @@ MSVehicle::moveRegardingCritical(SUMOTime t, const MSLane* const lane,
         // interaction with leader if one exists on same lane
         SUMOReal gap = gap2pred(*pred);
         if (MSGlobals::gCheck4Accidents && gap < 0) {
+            const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&cfModel);
+            assert(model);
+            model->setCrashed(this, true);
             // collision occured!
             return true;
         }
