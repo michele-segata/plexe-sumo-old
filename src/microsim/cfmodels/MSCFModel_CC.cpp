@@ -47,11 +47,6 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
     myAlpha3(-(2 * myXi - myC1 *(myXi + sqrt(myXi* myXi - 1))) * myOmegaN), myAlpha4(-(myXi + sqrt(myXi* myXi - 1)) * myOmegaN* myC1),
     myAlpha5(-myOmegaN* myOmegaN), myAlpha(TS / (myTau + TS)), myOneMinusAlpha(1 - myAlpha) {
 
-    if (DELTA_T != 100) {
-        std::cerr << "Fatal error: in order to use automatic cruise control models, time step must be set to 100 ms\n";
-        assert(false);
-    }
-
     //instantiate the driver model. For now, use Krauss as default, then needs to be parameterized
     myHumanDriver = new MSCFModel_Krauss(vtype, accel, decel, 0.5, 1.5);
 }
