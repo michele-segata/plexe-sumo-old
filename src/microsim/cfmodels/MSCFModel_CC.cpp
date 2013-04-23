@@ -296,7 +296,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     engineAcceleration = _actuator(controllerAcceleration, vars->egoAcceleration);
 
     //compute the speed from the actual acceleration
-    speed = egoSpeed + ACCEL2SPEED(engineAcceleration);
+    speed = MAX2(SUMOReal(0), egoSpeed + ACCEL2SPEED(engineAcceleration));
 
     //if we have to ignore modifications (e.g., when this method is invoked by the lane changing logic)
     //DO NOT change the state of the vehicle
@@ -312,7 +312,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     }
 
-    return MAX2(SUMOReal(0), speed);
+    return speed;
 }
 
 SUMOReal
