@@ -76,6 +76,10 @@ public:
     /** Initialises the junction after the net was completely loaded */
     void postloadInit();
 
+    std::vector<MSLane*> getIncomingLanes() {
+        return myIncomingLanes;
+    }
+
 private:
     /** Lanes incoming to the junction */
     std::vector<MSLane*> myIncomingLanes;
