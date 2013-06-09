@@ -72,6 +72,10 @@ public:
     /// initialises the junction after the whole net has been loaded
     virtual void postloadInit();
 
+    std::vector<MSLane*> getIncomingLanes() {
+        return myIncomingLanes;
+    }
+
 protected:
     /** @brief Constructor
      * @param[in] id The id of the junction

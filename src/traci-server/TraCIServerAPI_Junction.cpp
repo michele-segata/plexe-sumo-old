@@ -37,8 +37,11 @@
 #include "TraCIConstants.h"
 #include <microsim/MSNet.h>
 #include <microsim/MSJunction.h>
+#include <microsim/MSNoLogicJunction.h>
+#include <microsim/MSLogicJunction.h>
 #include <microsim/MSJunctionControl.h>
 #include <microsim/MSNet.h>
+#include <microsim/MSLane.h>
 #include "TraCIServerAPI_Junction.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -56,7 +59,7 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
     // check variable
-    if (variable != ID_LIST && variable != VAR_POSITION && variable != ID_COUNT && variable != VAR_SHAPE) {
+    if (variable != ID_LIST && variable != VAR_POSITION && variable != ID_COUNT && variable != VAR_SHAPE && variable != TL_CONTROLLED_LANES) {
         return server.writeErrorStatusCmd(CMD_GET_JUNCTION_VARIABLE, "Get Junction Variable: unsupported variable specified", outputStorage);
     }
     // begin response building
@@ -94,6 +97,19 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
                 for (unsigned int iPoint = 0; iPoint < MIN2(static_cast<size_t>(255), j->getShape().size()); ++iPoint) {
                     tempMsg.writeDouble(j->getShape()[iPoint].x());
                     tempMsg.writeDouble(j->getShape()[iPoint].y());
+                }
+                break;
+            case TL_CONTROLLED_LANES:
+                {
+                    std::vector<MSLane*> lanes;
+                    if (dynamic_cast<MSNoLogicJunction*>(j)) lanes = dynamic_cast<MSNoLogicJunction*>(j)->getIncomingLanes();
+                    if (dynamic_cast<MSLogicJunction*>(j)) lanes = dynamic_cast<MSLogicJunction*>(j)->getIncomingLanes();
+                    tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
+                    std::vector<std::string> laneIDs;
+                    for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
+                        laneIDs.push_back((*i)->getID());
+                    }
+                    tempMsg.writeStringList(laneIDs);
                 }
                 break;
 
