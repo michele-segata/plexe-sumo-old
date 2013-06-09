@@ -35,6 +35,8 @@
 #include "TraCIConstants.h"
 #include <microsim/MSNet.h>
 #include <microsim/MSJunction.h>
+#include <microsim/MSNoLogicJunction.h>
+#include <microsim/MSLogicJunction.h>
 #include <microsim/MSJunctionControl.h>
 #include <microsim/MSNet.h>
 #include "TraCIServerAPI_Junction.h"
@@ -60,7 +62,7 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
     // check variable
-    if (variable != ID_LIST && variable != VAR_POSITION && variable != ID_COUNT) {
+    if (variable != ID_LIST && variable != VAR_POSITION && variable != ID_COUNT && variable != TL_CONTROLLED_LANES) {
         return server.writeErrorStatusCmd(CMD_GET_JUNCTION_VARIABLE, "Get Junction Variable: unsupported variable specified", outputStorage);
     }
     // begin response building
@@ -91,6 +93,19 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
                 tempMsg.writeUnsignedByte(POSITION_2D);
                 tempMsg.writeDouble(j->getPosition().x());
                 tempMsg.writeDouble(j->getPosition().y());
+                break;
+            case TL_CONTROLLED_LANES:
+                {
+                    std::vector<MSLane*> lanes;
+                    if (dynamic_cast<MSNoLogicJunction*>(j)) lanes = dynamic_cast<MSNoLogicJunction*>(j)->getIncomingLanes();
+                    if (dynamic_cast<MSLogicJunction*>(j)) lanes = dynamic_cast<MSLogicJunction*>(j)->getIncomingLanes();
+                    tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
+                    std::vector<std::string> laneIDs;
+                    for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
+                        laneIDs.push_back((*i)->getID());
+                    }
+                    tempMsg.writeStringList(laneIDs);
+                }
                 break;
             default:
                 break;
