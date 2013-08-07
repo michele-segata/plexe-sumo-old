@@ -39,6 +39,7 @@
 #include <microsim/MSLogicJunction.h>
 #include <microsim/MSJunctionControl.h>
 #include <microsim/MSNet.h>
+#include <microsim/MSLane.h>
 #include "TraCIServerAPI_Junction.h"
 
 #ifdef CHECK_MEMORY_LEAKS
