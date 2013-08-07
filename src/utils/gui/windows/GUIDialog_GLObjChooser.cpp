@@ -109,7 +109,7 @@ GUIDialog_GLObjChooser::GUIDialog_GLObjChooser(
                  0, 0, 0, 0, 4, 4, 4, 4);
 
     myParent->getParent()->addChild(this);
-    myTextEntry->setFocus();
+    //myTextEntry->setFocus();
 }
 
 
