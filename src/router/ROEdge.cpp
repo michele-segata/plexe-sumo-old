@@ -51,6 +51,9 @@
 // ===========================================================================
 // static member definitions
 // ===========================================================================
+bool ROEdge::myUseBoundariesOnOverrideTT = false;
+bool ROEdge::myUseBoundariesOnOverrideE = false;
+bool ROEdge::myInterpolate = false;
 bool ROEdge::myHaveTTWarned = false;
 bool ROEdge::myHaveEWarned = false;
 std::vector<ROEdge*> ROEdge::myEdges;
@@ -59,13 +62,12 @@ std::vector<ROEdge*> ROEdge::myEdges;
 // ===========================================================================
 // method definitions
 // ===========================================================================
-ROEdge::ROEdge(const std::string& id, RONode* from, RONode* to, unsigned int index,
-               bool useBoundariesOnOverride, bool interpolate)
+ROEdge::ROEdge(const std::string& id, RONode* from, RONode* to, unsigned int index)
     : myID(id), mySpeed(-1),
       myIndex(index), myLength(-1),
-      myUsingTTTimeLine(false), myUseBoundariesOnOverrideTT(useBoundariesOnOverride),
-      myUsingETimeLine(false), myUseBoundariesOnOverrideE(useBoundariesOnOverride),
-      myFromNode(from), myToNode(to), myInterpolate(interpolate) {
+      myUsingTTTimeLine(false), 
+      myUsingETimeLine(false), 
+      myFromNode(from), myToNode(to) {
     while (myEdges.size() <= index) {
         myEdges.push_back(0);
     }
@@ -90,26 +92,17 @@ ROEdge::addLane(ROLane* lane) {
     myLanes.push_back(lane);
 
     // integrate new allowed classes
-    const SUMOVehicleClasses& allowed = lane->getAllowedClasses();
-    myAllowedClasses.insert(allowed.begin(), allowed.end());
-    for (SUMOVehicleClasses::const_iterator it = allowed.begin(); it != allowed.end(); it++) {
-        myNotAllowedClasses.erase(*it);
-    }
-    // integrate new disallowed classes
-    const SUMOVehicleClasses& disallowed = lane->getNotAllowedClasses();
-    for (SUMOVehicleClasses::const_iterator it = disallowed.begin(); it != disallowed.end(); it++) {
-        // only add to myNotAllowedClasses if not explicitly allowed by other lanes
-        if (myAllowedClasses.count(*it) == 0) {
-            myNotAllowedClasses.insert(*it);
-        }
-    }
+    myCombinedPermissions |= lane->getPermissions();
 }
 
 
 void
-ROEdge::addFollower(ROEdge* s) {
+ROEdge::addFollower(ROEdge* s, std::string) {
     if (find(myFollowingEdges.begin(), myFollowingEdges.end(), s) == myFollowingEdges.end()) {
         myFollowingEdges.push_back(s);
+#ifdef HAVE_MESOSIM // catchall for internal stuff
+        s->myApproachingEdges.push_back(this);
+#endif
     }
 }
 
@@ -130,17 +123,22 @@ ROEdge::addTravelTime(SUMOReal value, SUMOReal timeBegin, SUMOReal timeEnd) {
 
 SUMOReal
 ROEdge::getEffort(const ROVehicle* const veh, SUMOReal time) const {
-    UNUSED_PARAMETER(veh);
     SUMOReal ret = 0;
     if (!getStoredEffort(time, ret)) {
-        return (SUMOReal)(myLength / mySpeed);
+        return (SUMOReal)(myLength / MIN2(veh->getType()->maxSpeed, mySpeed));
     }
     return ret;
 }
 
 
+SUMOReal 
+ROEdge::getDistanceTo(const ROEdge* other) const {
+    return getToNode()->getPosition().distanceTo2D(other->getFromNode()->getPosition());
+}
+
+
 SUMOReal
-ROEdge::getTravelTime(const ROVehicle* const, SUMOReal time) const {
+ROEdge::getTravelTime(const ROVehicle* const veh, SUMOReal time) const {
     if (myUsingTTTimeLine) {
         if (!myHaveTTWarned && !myTravelTimes.describesTime(time)) {
             WRITE_WARNING("No interval matches passed time " + toString(time)  + " in edge '" + myID + "'.\n Using edge's length / edge's speed.");
@@ -156,7 +154,13 @@ ROEdge::getTravelTime(const ROVehicle* const, SUMOReal time) const {
         return myTravelTimes.getValue(time);
     }
     // ok, no absolute value was found, use the normal value (without) as default
-    return (SUMOReal)(myLength / mySpeed);
+    return getMinimumTravelTime(veh);
+}
+
+
+SUMOReal
+ROEdge::getMinimumTravelTime(const ROVehicle* const veh) const {
+    return (SUMOReal)(myLength / MIN2(veh->getType()->maxSpeed, mySpeed));
 }
 
 
@@ -164,13 +168,9 @@ SUMOReal
 ROEdge::getCOEffort(const ROVehicle* const veh, SUMOReal time) const {
     SUMOReal ret = 0;
     if (!getStoredEffort(time, ret)) {
-        SUMOReal v = mySpeed;
-        SUMOEmissionClass c = SVE_UNKNOWN;
-        if (veh->getType() != 0) {
-            v = MIN2(veh->getType()->maxSpeed, mySpeed);
-            c = veh->getType()->emissionClass;
-        }
-        ret = HelpersHBEFA::computeCO(c, v, 0) * getTravelTime(veh, time);
+        const SUMOReal vMax = MIN2(veh->getType()->maxSpeed, mySpeed);
+        const SUMOReal accel = veh->getType()->get(SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL) * veh->getType()->get(SUMO_ATTR_SIGMA, DEFAULT_VEH_SIGMA) / 2.;
+        ret = HelpersHBEFA::computeDefaultCO(veh->getType()->emissionClass, vMax, accel, getTravelTime(veh, time));
     }
     return ret;
 }
@@ -180,13 +180,9 @@ SUMOReal
 ROEdge::getCO2Effort(const ROVehicle* const veh, SUMOReal time) const {
     SUMOReal ret = 0;
     if (!getStoredEffort(time, ret)) {
-        SUMOReal v = mySpeed;
-        SUMOEmissionClass c = SVE_UNKNOWN;
-        if (veh->getType() != 0) {
-            v = MIN2(veh->getType()->maxSpeed, mySpeed);
-            c = veh->getType()->emissionClass;
-        }
-        ret = HelpersHBEFA::computeCO2(c, v, 0) * getTravelTime(veh, time);
+        const SUMOReal vMax = MIN2(veh->getType()->maxSpeed, mySpeed);
+        const SUMOReal accel = veh->getType()->get(SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL) * veh->getType()->get(SUMO_ATTR_SIGMA, DEFAULT_VEH_SIGMA) / 2.;
+        ret = HelpersHBEFA::computeDefaultCO2(veh->getType()->emissionClass, vMax, accel, getTravelTime(veh, time));
     }
     return ret;
 }
@@ -196,13 +192,9 @@ SUMOReal
 ROEdge::getPMxEffort(const ROVehicle* const veh, SUMOReal time) const {
     SUMOReal ret = 0;
     if (!getStoredEffort(time, ret)) {
-        SUMOReal v = mySpeed;
-        SUMOEmissionClass c = SVE_UNKNOWN;
-        if (veh->getType() != 0) {
-            v = MIN2(veh->getType()->maxSpeed, mySpeed);
-            c = veh->getType()->emissionClass;
-        }
-        ret = HelpersHBEFA::computePMx(c, v, 0) * getTravelTime(veh, time);
+        const SUMOReal vMax = MIN2(veh->getType()->maxSpeed, mySpeed);
+        const SUMOReal accel = veh->getType()->get(SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL) * veh->getType()->get(SUMO_ATTR_SIGMA, DEFAULT_VEH_SIGMA) / 2.;
+        ret = HelpersHBEFA::computeDefaultPMx(veh->getType()->emissionClass, vMax, accel, getTravelTime(veh, time));
     }
     return ret;
 }
@@ -212,13 +204,9 @@ SUMOReal
 ROEdge::getHCEffort(const ROVehicle* const veh, SUMOReal time) const {
     SUMOReal ret = 0;
     if (!getStoredEffort(time, ret)) {
-        SUMOReal v = mySpeed;
-        SUMOEmissionClass c = SVE_UNKNOWN;
-        if (veh->getType() != 0) {
-            v = MIN2(veh->getType()->maxSpeed, mySpeed);
-            c = veh->getType()->emissionClass;
-        }
-        ret = HelpersHBEFA::computeHC(c, v, 0) * getTravelTime(veh, time);
+        const SUMOReal vMax = MIN2(veh->getType()->maxSpeed, mySpeed);
+        const SUMOReal accel = veh->getType()->get(SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL) * veh->getType()->get(SUMO_ATTR_SIGMA, DEFAULT_VEH_SIGMA) / 2.;
+        ret = HelpersHBEFA::computeDefaultHC(veh->getType()->emissionClass, vMax, accel, getTravelTime(veh, time));
     }
     return ret;
 }
@@ -228,13 +216,9 @@ SUMOReal
 ROEdge::getNOxEffort(const ROVehicle* const veh, SUMOReal time) const {
     SUMOReal ret = 0;
     if (!getStoredEffort(time, ret)) {
-        SUMOReal v = mySpeed;
-        SUMOEmissionClass c = SVE_UNKNOWN;
-        if (veh->getType() != 0) {
-            v = MIN2(veh->getType()->maxSpeed, mySpeed);
-            c = veh->getType()->emissionClass;
-        }
-        ret = HelpersHBEFA::computeNOx(c, v, 0) * getTravelTime(veh, time);
+        const SUMOReal vMax = MIN2(veh->getType()->maxSpeed, mySpeed);
+        const SUMOReal accel = veh->getType()->get(SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL) * veh->getType()->get(SUMO_ATTR_SIGMA, DEFAULT_VEH_SIGMA) / 2.;
+        ret = HelpersHBEFA::computeDefaultNOx(veh->getType()->emissionClass, vMax, accel, getTravelTime(veh, time));
     }
     return ret;
 }
@@ -244,13 +228,9 @@ SUMOReal
 ROEdge::getFuelEffort(const ROVehicle* const veh, SUMOReal time) const {
     SUMOReal ret = 0;
     if (!getStoredEffort(time, ret)) {
-        SUMOReal v = mySpeed;
-        SUMOEmissionClass c = SVE_UNKNOWN;
-        if (veh->getType() != 0) {
-            v = MIN2(veh->getType()->maxSpeed, mySpeed);
-            c = veh->getType()->emissionClass;
-        }
-        ret = HelpersHBEFA::computeFuel(c, v, 0) * getTravelTime(veh, time);
+        const SUMOReal vMax = MIN2(veh->getType()->maxSpeed, mySpeed);
+        const SUMOReal accel = veh->getType()->get(SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL) * veh->getType()->get(SUMO_ATTR_SIGMA, DEFAULT_VEH_SIGMA) / 2.;
+        ret = HelpersHBEFA::computeDefaultFuel(veh->getType()->emissionClass, vMax, accel, getTravelTime(veh, time));
     }
     return ret;
 }
@@ -260,12 +240,7 @@ SUMOReal
 ROEdge::getNoiseEffort(const ROVehicle* const veh, SUMOReal time) const {
     SUMOReal ret = 0;
     if (!getStoredEffort(time, ret)) {
-        SUMOReal v = mySpeed;
-        SUMOEmissionClass c = SVE_UNKNOWN;
-        if (veh->getType() != 0) {
-            v = MIN2(veh->getType()->maxSpeed, mySpeed);
-            c = veh->getType()->emissionClass;
-        }
+        const SUMOReal v = MIN2(veh->getType()->maxSpeed, mySpeed);
         ret = HelpersHarmonoise::computeNoise(veh->getType()->emissionClass, v, 0);
     }
     return ret;
@@ -306,34 +281,20 @@ ROEdge::getNoFollowing() const {
 }
 
 
+#ifdef HAVE_MESOSIM // catchall for internal stuff
+unsigned int
+ROEdge::getNumApproaching() const {
+    if (getType() == ET_SOURCE) {
+        return 0;
+    }
+    return (unsigned int) myApproachingEdges.size();
+}
+#endif
+
+
 void
 ROEdge::setType(ROEdge::EdgeType type) {
     myType = type;
-}
-
-
-bool
-ROEdge::prohibits(const ROVehicle* const vehicle) const {
-    if (myAllowedClasses.size() == 0 && myNotAllowedClasses.size() == 0) {
-        return false;
-    }
-    // ok, vehicles with an unknown class may be only prohibited
-    //  if the edge is limited to a set of classes
-    SUMOVehicleClass vclass = vehicle->getType() != 0 ? vehicle->getType()->vehicleClass : DEFAULT_VEH_CLASS;
-    if (vclass == SVC_UNKNOWN) {
-        return false;
-    }
-    // check whether it is explicitly disallowed
-    if (find(myNotAllowedClasses.begin(), myNotAllowedClasses.end(), vclass) != myNotAllowedClasses.end()) {
-        return true;
-    }
-    // check whether it is within the allowed classes
-    if (myAllowedClasses.size() == 0 || find(myAllowedClasses.begin(), myAllowedClasses.end(), vclass) != myAllowedClasses.end()) {
-        return false;
-    }
-    // ok, we have a set of allowed vehicle classes, but this vehicle's class
-    //  is not among them
-    return true;
 }
 
 

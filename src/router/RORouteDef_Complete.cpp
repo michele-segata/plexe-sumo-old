@@ -63,15 +63,16 @@ RORouteDef_Complete::RORouteDef_Complete(const std::string& id,
 RORouteDef_Complete::~RORouteDef_Complete() {}
 
 
-RORoute*
-RORouteDef_Complete::buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
+void
+RORouteDef_Complete::preComputeCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                                        SUMOTime begin, const ROVehicle& veh) const {
     if (myTryRepair) {
         const std::vector<const ROEdge*> &oldEdges = myEdges;
         if (oldEdges.size() == 0) {
             MsgHandler* m = OptionsCont::getOptions().getBool("ignore-errors") ? MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance();
             m->inform("Could not repair empty route of vehicle '" + veh.getID() + "'.");
-            return new RORoute(myID, 0, 1, std::vector<const ROEdge*>(), copyColorIfGiven());
+            myPrecomputed =  new RORoute(myID, 0, 1, std::vector<const ROEdge*>(), copyColorIfGiven());
+            return;
         }
         std::vector<const ROEdge*> newEdges;
         newEdges.push_back(*(oldEdges.begin()));
@@ -82,7 +83,7 @@ RORouteDef_Complete::buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &ro
                 std::vector<const ROEdge*> edges;
                 router.compute(*(i - 1), *i, &veh, begin, edges);
                 if (edges.size() == 0) {
-                    return 0;
+                    return;
                 }
                 std::copy(edges.begin() + 1, edges.end(), back_inserter(newEdges));
             }
@@ -96,7 +97,7 @@ RORouteDef_Complete::buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &ro
     if (costs < 0) {
         throw ProcessError("Route '" + getID() + "' (vehicle '" + veh.getID() + "') is not valid.");
     }
-    return new RORoute(myID, 0, 1, myEdges, copyColorIfGiven());
+    myPrecomputed = new RORoute(myID, 0, 1, myEdges, copyColorIfGiven());
 }
 
 
@@ -121,31 +122,31 @@ RORouteDef_Complete::writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &r
                                         bool asAlternatives, bool withExitTimes) const {
     // (optional) alternatives header
     if (asAlternatives) {
-        dev.openTag("routeDistribution") << " last=\"0\">\n";
+        dev.openTag(SUMO_TAG_ROUTE_DISTRIBUTION).writeAttr(SUMO_ATTR_LAST, 0).closeOpener();
     }
     // the route
-    dev.openTag("route");
+    dev.openTag(SUMO_TAG_ROUTE);
     if (asAlternatives) {
-        dev << " cost=\"" << router.recomputeCosts(myEdges, veh, veh->getDepartureTime());
-        dev << "\" probability=\"1.00\"";
+        dev.writeAttr(SUMO_ATTR_COST, router.recomputeCosts(myEdges, veh, veh->getDepartureTime()));
+        dev.writeAttr(SUMO_ATTR_PROB, 1.);
     }
     if (myColor != 0) {
-        dev << " color=\"" << *myColor << "\"";
+        dev.writeAttr(SUMO_ATTR_COLOR, *myColor);
     }
-    dev << " edges=\"" << myEdges;
+    dev.writeAttr(SUMO_ATTR_EDGES, myEdges);
     if (withExitTimes) {
+        std::string exitTimes;
         SUMOReal time = STEPS2TIME(veh->getDepartureTime());
-        dev << "\" exitTimes=\"";
-        std::vector<const ROEdge*>::const_iterator i = myEdges.begin();
-        for (; i != myEdges.end(); ++i) {
+        for (std::vector<const ROEdge*>::const_iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
             if (i != myEdges.begin()) {
-                dev << " ";
+                exitTimes += " ";
             }
-            time += (*i)->getTravelTime(veh, (SUMOTime) time);
-            dev << time;
+            time += (*i)->getTravelTime(veh, time);
+            exitTimes += toString(time);
         }
+        dev.writeAttr("exitTimes", exitTimes);
     }
-    (dev << "\"").closeTag(true);
+    dev.closeTag(true);
     // (optional) alternatives end
     if (asAlternatives) {
         dev.closeTag();
@@ -153,6 +154,11 @@ RORouteDef_Complete::writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &r
     return dev;
 }
 
+
+const ROEdge*
+RORouteDef_Complete::getDestination() const {
+    return myEdges.back();
+}
 
 
 /****************************************************************************/

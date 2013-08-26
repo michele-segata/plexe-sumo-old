@@ -86,15 +86,13 @@ NIXMLTypesHandler::myStartElement(int element,
     std::string disallowS = attrs.getOptStringReporting(SUMO_ATTR_DISALLOW, id.c_str(), ok, "");
     bool oneway = attrs.getOptBoolReporting(SUMO_ATTR_ONEWAY, id.c_str(), ok, false);
     bool discard = attrs.getOptBoolReporting(SUMO_ATTR_DISCARD, id.c_str(), ok, false);
-    SUMOReal width = attrs.getOptSUMORealReporting(SUMO_ATTR_WIDTH, id.c_str(), ok, (SUMOReal) - 1);
+    SUMOReal width = attrs.getOptSUMORealReporting(SUMO_ATTR_WIDTH, id.c_str(), ok, NBEdge::UNSPECIFIED_WIDTH);
     if (!ok) {
         return;
     }
     // build the type
-    SUMOVehicleClasses allow;
-    SUMOVehicleClasses disallow;
-    parseVehicleClasses(allowS, disallowS, allow, disallow);
-    if (!myTypeCont.insert(id, noLanes, speed, priority, allow, disallow, width, oneway)) {
+    SVCPermissions permissions = parseVehicleClasses(allowS, disallowS);
+    if (!myTypeCont.insert(id, noLanes, speed, priority, permissions, width, oneway)) {
         WRITE_ERROR("Duplicate type occured. ID='" + id + "'");
     } else {
         if (discard) {

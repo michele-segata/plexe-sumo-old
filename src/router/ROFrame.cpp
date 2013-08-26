@@ -57,6 +57,10 @@ ROFrame::fillOptions(OptionsCont& oc, bool forDuarouter) {
     oc.addSynonyme("output-file", "output");
     oc.addDescription("output-file", "Output", "Write generated routes to FILE");
 
+    oc.doRegister("vtype-output", new Option_FileName(""));
+    oc.addSynonyme("vtype-output", "vtype");
+    oc.addDescription("vtype-output", "Output", "Write used vehicle types into separate FILE");
+
     oc.doRegister("net-file", 'n', new Option_FileName());
     oc.addSynonyme("net-file", "net");
     oc.addDescription("net-file", "Input", "Use FILE as SUMO-network to route on");
@@ -87,14 +91,13 @@ ROFrame::fillOptions(OptionsCont& oc, bool forDuarouter) {
         oc.addSynonyme("weight-attribute", "measure", true);
         oc.addDescription("weight-attribute", "Input", "Name of the xml attribute which gives the edge weight");
     }
-
+        
     // register the time settings
     oc.doRegister("begin", 'b', new Option_String("0", "TIME"));
     oc.addDescription("begin", "Time", "Defines the begin time; Previous trips will be discarded");
 
     oc.doRegister("end", 'e', new Option_String(SUMOTIME_MAXSTRING, "TIME"));
     oc.addDescription("end", "Time", "Defines the end time; Later trips will be discarded; Defaults to the maximum time that SUMO can represent");
-
 
     // register the processing options
     oc.doRegister("ignore-errors", new Option_Bool(false));
@@ -124,6 +127,21 @@ ROFrame::fillOptions(OptionsCont& oc, bool forDuarouter) {
     oc.doRegister("with-taz", new Option_Bool(false));
     oc.addDescription("with-taz", "Processing", "Use origin and destination zones (districts) for in- and output");
 
+    if (forDuarouter) {
+        oc.doRegister("routing-algorithm", new Option_String("dijkstra"));
+        oc.addDescription("routing-algorithm", "Processing", 
+#ifndef HAVE_MESOSIM // catchall for internal stuff
+                "Select among routing algorithms ['dijkstra', 'astar']"
+#else
+                "Select among routing algorithms ['dijkstra', 'astar', 'bulkstar', 'CH', 'CHWrapper']"
+#endif
+                );
+
+#ifdef HAVE_MESOSIM // catchall for internal stuff
+    oc.doRegister("weight-period", new Option_String("3600", "TIME"));
+    oc.addDescription("weight-period", "Processing", "Aggregation period for the given weight files; triggers rebuilding of Contraction Hirarchy"); 
+#endif
+    }
 
     // register defaults options
     oc.doRegister("departlane", new Option_String());
@@ -151,6 +169,9 @@ ROFrame::fillOptions(OptionsCont& oc, bool forDuarouter) {
     // register report options
     oc.doRegister("stats-period", new Option_Integer(-1));
     oc.addDescription("stats-period", "Report", "Defines how often statistics shall be printed");
+
+    oc.doRegister("no-step-log", new Option_Bool(false));
+    oc.addDescription("no-step-log", "Report", "Disable console output of route parsing step");
 }
 
 
@@ -166,7 +187,6 @@ ROFrame::checkOptions(OptionsCont& oc) {
         WRITE_ERROR("At least two alternatives should be enabled");
         return false;
     }
-    // check departure/arrival options
     return true;
 }
 

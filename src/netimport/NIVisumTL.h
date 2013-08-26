@@ -49,81 +49,119 @@ class NBTrafficLightLogicCont;
  */
 class NIVisumTL {
 public:
-    /// Timeperiod with starttime and endtime
+    /** @class TimePeriod
+     * @brief A time period with a start and an end time
+     */
     class TimePeriod {
     public:
-        // constructor
-        TimePeriod();
-        TimePeriod(SUMOTime StartTime, SUMOTime EndTime);
-        // destructor
-        ~TimePeriod();
-        void SetStartTime(SUMOTime StartTime);
-        void SetEndTime(SUMOTime EndTime);
-        SUMOTime GetStartTime();
-        SUMOTime GetEndTime();
+        /// @brief Constructor
+        TimePeriod(SUMOTime startTime, SUMOTime endTime) : myStartTime(startTime), myEndTime(endTime) {}
+
+        /// @brief Destructor
+        ~TimePeriod() {}
+
+        /// @brief Returns the stored start time
+        SUMOTime getStartTime() {
+            return myStartTime;
+        }
+
+        /// @brief Returns the stored end time
+        SUMOTime getEndTime() {
+            return myEndTime;
+        }
+
     private:
+        /// @brief Start time
         SUMOTime myStartTime;
+        /// @brief End time
         SUMOTime myEndTime;
     };
 
-    // phase
+
+
+    /** @class Phase
+     * @brief A phase
+     */
     class Phase : public TimePeriod {
     public:
-        Phase();
-        Phase(SUMOTime StartTime, SUMOTime EndTime);
-        ~Phase();
+        /// @brief Constructor
+        Phase(SUMOTime startTime, SUMOTime endTime) : NIVisumTL::TimePeriod(startTime, endTime) {}
+
+        /// @brief Destructor
+        ~Phase() {}
+
     };
 
-    // Vectors
-    typedef std::vector<NBNode*> NodeVector;
-    typedef std::map<std::string, Phase*> PhaseMap;
 
-    // SignalGroup
-    // a Signal Group can be defined either by a time period or by phases
+
+    /** @class SignalGroup
+     * @brief A signal group can be defined either by a time period or by phases
+     */
     class SignalGroup : public TimePeriod {
     public:
-        // constructor
-        SignalGroup(const std::string& Name, SUMOTime StartTime, SUMOTime EndTime);
-        // destructor
-        ~SignalGroup();
+        /// @brief constructor
+        SignalGroup(const std::string& name, SUMOTime startTime, SUMOTime endTime)
+            : NIVisumTL::TimePeriod(startTime, endTime), myName(name) {}
+        
+        /// @brief destructor
+        ~SignalGroup() {}
+
+        /// @brief Returns the connections vector
+        NBConnectionVector &connections() {
+            return myConnections;
+        }
+
+        /// @brief Returns the phases map
+        std::map<std::string, Phase*> &phases() {
+            return myPhases;
+        }
+
     private:
+        /// @brief Connections
         NBConnectionVector myConnections;
-        PhaseMap myPhases;
+        /// @brief phases
+        std::map<std::string, Phase*> myPhases;
+        /// @brief name
         std::string myName;
-    public:
-        NBConnectionVector* GetConnections();
-        PhaseMap* GetPhases();
-        std::string GetName();
     };
 
-    // SignalGroupVector
-    typedef std::map<std::string, SignalGroup*> SignalGroupMap;
+
+
 public:
-    // constructor
-    NIVisumTL();
-    NIVisumTL(const std::string& Name, SUMOTime CycleTime, SUMOTime IntermediateTime,
-              bool PhaseDefined);
-    // destructor
+    /** @brief Constructor
+     * @param[in] name The name of the TLS
+     * @param[in] cycleTime The cycle time of the TLS
+     * @param[in] intermediateTime The name of the TLS
+     * @param[in] phaseDefined Whether phases are defined
+     */
+    NIVisumTL(const std::string& name, SUMOTime cycleTime, SUMOTime intermediateTime,
+              bool phaseDefined);
+
+    /// @brief Destructor
     ~NIVisumTL();
-    // nodes and phases
-    NodeVector* GetNodes();
-    PhaseMap* GetPhases();
-    SignalGroupMap* GetSignalGroups();
-    // set
-    void SetPhaseDefined(bool PhaseDefined);
-    void SetCycleTime(SUMOTime CylcleTime);
-    void SetIntermediateTime(SUMOTime IntermediateTime);
-    // get
-    bool GetPhaseDefined();
-    SUMOTime GetCycleTime();
-    SUMOTime GetIntermediateTime();
-    SUMOTime GetName();
-    SignalGroup* GetSignalGroup(const std::string Name);
-    // add
-    void AddSignalGroup(const std::string Name, SUMOTime StartTime, SUMOTime EndTime);
-    void AddPhase(const std::string Name, SUMOTime StartTime, SUMOTime EndTime);
-    // build the trafficlight
+
+    /// @brief Adds a node to control
+    void addNode(NBNode *n) {
+        myNodes.push_back(n);
+    }
+
+    /// @brief Adds a signal group
+    void addSignalGroup(const std::string &name, SUMOTime startTime, SUMOTime endTime);
+
+    /// @brief Adds a phase
+    void addPhase(const std::string &name, SUMOTime startTime, SUMOTime endTime);
+
+    /// @brief Returns the map of named phases
+    std::map<std::string, Phase*>& getPhases() {
+        return myPhases;
+    }
+
+    /// @brief Returns the named signal group
+    SignalGroup& getSignalGroup(const std::string &name);
+
+    /// @brief build the traffic light and add it to the given container
     void build(NBTrafficLightLogicCont& tlc);
+
 private:
     // name of traffic light
     std::string myName;
@@ -138,13 +176,13 @@ private:
     bool myPhaseDefined;
 
     // vector of nodes belonging to this traffic light
-    NodeVector myNodes;
+    std::vector<NBNode*> myNodes;
 
     // vector of used phases if phasedefined
-    PhaseMap myPhases;
+    std::map<std::string, Phase*> myPhases;
 
     // vector of used Signalgroups
-    SignalGroupMap mySignalGroups;
+    std::map<std::string, SignalGroup*> mySignalGroups;
 
 };
 

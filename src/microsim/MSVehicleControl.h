@@ -32,6 +32,7 @@
 #include <config.h>
 #endif
 
+#include <math.h>
 #include <string>
 #include <map>
 #include <set>
@@ -138,9 +139,10 @@ public:
     /** @brief Deletes the vehicle
      *
      * @param[in] v The vehicle to delete
+     * @param[discard] Whether the vehicle is discard during loading (scale < 1)
      * @todo Isn't this quite insecure?
      */
-    virtual void deleteVehicle(SUMOVehicle* v) ;
+    virtual void deleteVehicle(SUMOVehicle* v, bool discard=false) ;
 
 
     /** @brief Removes a vehicle after it has ended
@@ -219,19 +221,15 @@ public:
      * @return The number of vehicles that have entered the simulation so far
      */
     unsigned int getDepartedVehicleNo() const {
-        return myRunningVehNo + myEndedVehNo;
+        return myRunningVehNo + myEndedVehNo - myDiscarded;
     }
 
 
-    /** @brief Returns the information whether the currently vehicle number is still in the given range
+    /** @brief Returns the information whether the currently vehicle number shall be emitted 
+     * considering that only frac of all vehicles shall be emitted overall
      * @return True iff the vehicle number is acceptable
      */
-    bool isInQuota(const SUMOReal frac) const {
-        if (MSGlobals::gFractions.find(frac) == MSGlobals::gFractions.end()) {
-            return (myLoadedVehNo - 1) % 1000 < (unsigned int)(frac * 1000.);
-        }
-        return (myLoadedVehNo - 1) % MSGlobals::gFractions[frac].second < MSGlobals::gFractions[frac].first;
-    }
+    bool isInQuota(const SUMOReal frac) const;
 
 
     /** @brief Returns the number of build vehicles that have not been removed
@@ -381,6 +379,9 @@ protected:
 
     /// @brief The number of removed vehicles
     unsigned int myEndedVehNo;
+
+    /// @brief The number of vehicles which were discarded while loading
+    unsigned int myDiscarded;
     /// @}
 
 

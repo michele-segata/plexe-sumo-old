@@ -29,6 +29,7 @@ plain_tllogic:plain.tll.xml
 foreign:foreign.net
 cfg:config.cfg
 log:log.txt
+joined_nodes:joined.nod.xml
 
 [run_dependent_text]
 output:\r{REPLACE \n}
@@ -36,6 +37,7 @@ plain_nodes:<!--{[->]}-->
 plain_edges:<!--{[->]}-->
 plain_connections:<!--{[->]}-->
 plain_tllogic:<!--{[->]}-->
+joined_nodes:<!--{[->]}-->
 net:<!--{[->]}-->
 errors:Leaked object at 
 errors:*** 9 leaks found

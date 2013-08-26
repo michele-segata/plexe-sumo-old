@@ -2,6 +2,24 @@
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/od2tripsConfiguration.xsd">
 
+    <configuration>
+        <!-- Loads the named config on startup -->
+        <configuration-file value="" synonymes="c configuration" type="FILE"/>
+
+        <!-- Saves current configuration into FILE -->
+        <save-configuration value="" synonymes="save-config" type="FILE"/>
+
+        <!-- Saves a configuration template (empty) into FILE -->
+        <save-template value="" type="FILE"/>
+
+        <!-- Saves the configuration schema into FILE -->
+        <save-schema value="" type="FILE"/>
+
+        <!-- Adds comments to saved template, configuration, or schema -->
+        <save-commented value="" synonymes="save-template.commented" type="BOOL"/>
+
+    </configuration>
+
     <input>
         <!-- Loads network (districts) from FILE -->
         <net-file value="" synonymes="n net" type="FILE"/>
@@ -51,6 +69,9 @@
         <!-- Continue on broken input -->
         <dismiss-loading-errors value="false" type="BOOL"/>
 
+        <!-- Disable console output of current time step -->
+        <no-step-log value="false" type="BOOL"/>
+
     </processing>
 
     <defaults>
@@ -90,10 +111,10 @@
         <!-- Disables output of warnings -->
         <no-warnings value="false" synonymes="W suppress-warnings" type="BOOL"/>
 
-        <!-- Writes all messages to FILE -->
+        <!-- Writes all messages to FILE (implies verbose) -->
         <log value="" synonymes="l log-file" type="FILE"/>
 
-        <!-- Writes all non-error messages to FILE -->
+        <!-- Writes all non-error messages to FILE (implies verbose) -->
         <message-log value="" type="FILE"/>
 
         <!-- Writes all warnings and errors to FILE -->

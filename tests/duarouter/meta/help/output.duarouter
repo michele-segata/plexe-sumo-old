@@ -1,15 +1,10 @@
-SUMO duarouter Version dev-SVN-r11672
+SUMO duarouter Version dev-SVN-r11548
  Copyright (C) 2001-2012 DLR and contributors; http://sumo.sourceforge.net
- 
 Shortest path router and DUE computer for the microscopic road traffic
   simulation SUMO.
 
 Usage: duarouter [OPTION]*
- 
- Example:
-  duarouter -c <CONFIGURATION>
- 
- Configuration Options:
+Configuration Options:
   -c, --configuration-file FILE    Loads the named config on startup
   --save-configuration FILE        Saves current configuration into FILE
   --save-template FILE             Saves a configuration template (empty) into
@@ -18,7 +13,7 @@ Usage: duarouter [OPTION]*
   --save-commented                 Adds comments to saved template,
                                      configuration, or schema
 
- Input Options:
+Input Options:
   -n, --net-file FILE              Use FILE as SUMO-network to route on
   -d, --taz-files FILE             Read (additional) districts from FILE
   -a, --alternative-files FILE     Read alternatives from FILE
@@ -30,11 +25,12 @@ Usage: duarouter [OPTION]*
   -t, --trip-files FILE            Read trip-definitions from FILE(s)
   -r, --route-files FILE           Read sumo-routes from FILE(s)
 
- Output Options:
+Output Options:
   -o, --output-file FILE           Write generated routes to FILE
+  --vtype-output FILE              Write used vehicle types into separate FILE
   --exit-times                     Write exit times (weights) for each edge
 
- Processing Options:
+Processing Options:
   --ignore-errors                  Continue if a route could not be build
   --unsorted-input                 Assume input is unsorted
   --randomize-flows                generate random departure times for flow
@@ -48,6 +44,8 @@ Usage: duarouter [OPTION]*
                                      boundaries
   --with-taz                       Use origin and destination zones (districts)
                                      for in- and output
+  --routing-algorithm STR          Select among routing algorithms ['dijkstra',
+                                     'astar']
   --weights.expand                 Expand weights behind the simulation's end
   --gawron.beta FLOAT              Use FLOAT as Gawron's beta
   --gawron.a FLOAT                 Use FLOAT as Gawron's a
@@ -57,8 +55,10 @@ Usage: duarouter [OPTION]*
   --logit                          Use c-logit model
   --logit.beta FLOAT               Use FLOAT as logit's beta
   --logit.gamma FLOAT              Use FLOAT as logit's gamma
+  --logit.theta FLOAT              Use FLOAT as logit's theta (negative values
+                                     mean auto-estimation)
 
- Defaults Options:
+Defaults Options:
   --departlane STR                 Assigns a default depart lane
   --departpos STR                  Assigns a default depart position
   --departspeed STR                Assigns a default depart speed
@@ -67,7 +67,7 @@ Usage: duarouter [OPTION]*
   --arrivalspeed STR               Assigns a default arrival speed
   --defaults-override              Defaults will override given values
 
- Time Options:
+Time Options:
   -b, --begin TIME                 Defines the begin time;
                                      Previous trips will be discarded
   -e, --end TIME                   Defines the end time;
@@ -75,21 +75,31 @@ Usage: duarouter [OPTION]*
                                      Defaults to the maximum time that SUMO can
                                      represent
 
- Report Options:
+Report Options:
   -v, --verbose                    Switches to verbose output
   -p, --print-options              Prints option values before processing
   -?, --help                       Prints this screen
   -V, --version                    Prints the current version
   -W, --no-warnings                Disables output of warnings
-  -l, --log FILE                   Writes all messages to FILE
+  -l, --log FILE                   Writes all messages to FILE (implies
+                                     verbose)
   --message-log FILE               Writes all non-error messages to FILE
+                                     (implies verbose)
   --error-log FILE                 Writes all warnings and errors to FILE
   --stats-period INT               Defines how often statistics shall be
                                      printed
+  --no-step-log                    Disable console output of route parsing step
 
- Random Number Options:
+Random Number Options:
   --random                         Initialises the random number generator with
                                      the current system time
   --seed INT                       Initialises the random number generator with
                                      the given value
 
+
+Examples:
+  duarouter -c <CONFIGURATION>
+    run routing with options from file
+
+Report bugs at <http://sourceforge.net/apps/trac/sumo/>.
+Get in contact via <sumo-user@lists.sourceforge.net>.

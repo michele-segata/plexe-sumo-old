@@ -62,7 +62,7 @@
 
 /* Version number of package */
 #ifndef HAVE_VERSION_H
-#define VERSION_STRING "0.14.0"
+#define VERSION_STRING "0.15.0"
 #endif
 
 /* Define if junction internal lanes should be used. */

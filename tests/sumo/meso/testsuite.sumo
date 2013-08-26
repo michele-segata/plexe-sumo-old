@@ -6,3 +6,5 @@ tau
 
 # controlling traffic lights and priority junctions
 junction_control
+bugs
+teleport

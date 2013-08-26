@@ -54,7 +54,11 @@
 #include "RORDLoader_TripDefs.h"
 #include "RORDLoader_SUMOBase.h"
 #include "RORDGenerator_ODAmounts.h"
-#include "ROAbstractRouteDefLoader.h"
+#include "ROTypedXMLRoutesLoader.h"
+
+#ifdef HAVE_MESOSIM // catchall for internal stuff
+#include <internal/RouteAggregator.h>
+#endif // have HAVE_MESOSIM
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -101,8 +105,11 @@ ROLoader::EdgeFloatTimeLineRetriever_EdgeWeight::addEdgeWeight(const std::string
 // ---------------------------------------------------------------------------
 // ROLoader - methods
 // ---------------------------------------------------------------------------
-ROLoader::ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed)
-    : myOptions(oc), myEmptyDestinationsAllowed(emptyDestinationsAllowed) {}
+ROLoader::ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed) : 
+    myOptions(oc), 
+    myEmptyDestinationsAllowed(emptyDestinationsAllowed),
+    myLogSteps(!oc.getBool("no-step-log"))
+{}
 
 
 ROLoader::~ROLoader() {
@@ -164,7 +171,7 @@ ROLoader::openRoutes(RONet& net) {
     if (ok && !myOptions.getBool("unsorted-input")) {
         WRITE_MESSAGE("Skipping...");
         for (RouteLoaderCont::iterator i = myHandler.begin(); ok && i != myHandler.end(); i++) {
-            ok &= (*i)->readRoutesAtLeastUntil(string2time(myOptions.getString("begin")), true);
+            ok &= (*i)->readRoutesAtLeastUntil(string2time(myOptions.getString("begin")));
         }
         WRITE_MESSAGE("Skipped until: " + time2string(getMinTimeStep()));
     }
@@ -201,7 +208,9 @@ ROLoader::processRoutesStepWise(SUMOTime start, SUMOTime end,
         }
         errorOccured = MsgHandler::getErrorInstance()->wasInformed() && !myOptions.getBool("ignore-errors");
     }
-    WRITE_MESSAGE("Routes found between time steps " + time2string(firstStep) + " and " + time2string(lastStep) + ".");
+    if (myLogSteps) {
+        WRITE_MESSAGE("Routes found between time steps " + time2string(firstStep) + " and " + time2string(lastStep) + ".");
+    }
 }
 
 
@@ -212,7 +221,7 @@ ROLoader::makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge, RO
     if (myHandler.size() != 0) {
         for (i = myHandler.begin(); i != myHandler.end(); i++) {
             // load routes until the time point is reached
-            if ((*i)->readRoutesAtLeastUntil(end, false)) {
+            if ((*i)->readRoutesAtLeastUntil(end)) {
                 // save the routes
                 net.saveAndRemoveRoutesUntil(myOptions, router, end);
             } else {
@@ -247,7 +256,7 @@ ROLoader::processAllRoutes(SUMOTime start, SUMOTime end,
     long absNo = end - start;
     bool ok = true;
     for (RouteLoaderCont::iterator i = myHandler.begin(); ok && i != myHandler.end(); i++) {
-        ok &= (*i)->readRoutesAtLeastUntil(SUMOTime_MAX, false);
+        ok &= (*i)->readRoutesAtLeastUntil(SUMOTime_MAX);
     }
     // save the routes
     SUMOTime time = start;
@@ -258,6 +267,22 @@ ROLoader::processAllRoutes(SUMOTime start, SUMOTime end,
             time = end;
         }
     }
+}
+
+
+void
+ROLoader::processAllRoutesWithBulkRouter(SUMOTime start, SUMOTime end,
+                           RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router) {
+#ifndef HAVE_MESOSIM // catchall for internal stuff
+    assert(false);
+#else
+    bool ok = true;
+    for (RouteLoaderCont::iterator i = myHandler.begin(); ok && i != myHandler.end(); i++) {
+        ok &= (*i)->readRoutesAtLeastUntil(SUMOTime_MAX);
+    }
+    RouteAggregator::processAllRoutes(net, router);
+    net.saveAndRemoveRoutesUntil(myOptions, router, end);
+#endif
 }
 
 
@@ -279,7 +304,7 @@ ROLoader::openTypedRoutes(const std::string& optionName,
     for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
         // build the instance when everything's all right
         try {
-            ROAbstractRouteDefLoader* instance = buildNamedHandler(optionName, *fileIt, net);
+            ROTypedXMLRoutesLoader* instance = buildNamedHandler(optionName, *fileIt, net);
             myHandler.push_back(instance);
         } catch (ProcessError& e) {
             std::string msg = "The loader for " + optionName + " from file '" + *fileIt + "' could not be initialised;";
@@ -297,20 +322,13 @@ ROLoader::openTypedRoutes(const std::string& optionName,
 }
 
 
-ROAbstractRouteDefLoader*
+ROTypedXMLRoutesLoader*
 ROLoader::buildNamedHandler(const std::string& optionName,
                             const std::string& file,
                             RONet& net) {
     if (optionName == "route-files" || optionName == "alternative-files") {
-        const SUMOReal beta = myOptions.getBool("logit")
-                              ? myOptions.getFloat("logit.beta")
-                              : myOptions.getFloat("gawron.beta");
-        const SUMOReal gamma = myOptions.getBool("logit")
-                               ? myOptions.getFloat("logit.gamma")
-                               : -1;
         return new RORDLoader_SUMOBase(net,
                                        string2time(myOptions.getString("begin")), string2time(myOptions.getString("end")),
-                                       beta, myOptions.getFloat("gawron.a"), gamma,
                                        myOptions.getInt("max-alternatives"), myOptions.getBool("repair"),
                                        myOptions.getBool("with-taz"), myOptions.getBool("keep-all-routes"),
                                        myOptions.getBool("skip-new-routes"), file);
@@ -374,12 +392,9 @@ ROLoader::loadWeights(RONet& net, const std::string& optionName,
 
 void
 ROLoader::writeStats(SUMOTime time, SUMOTime start, int absNo) {
-    if (myOptions.getBool("verbose")) {
-        SUMOReal perc = (SUMOReal)(time - start) / (SUMOReal) absNo;
-        std::cout.setf(std::ios::fixed, std::ios::floatfield); // use decimal format
-        std::cout.setf(std::ios::showpoint); // print decimal point
-        std::cout << std::setprecision(OUTPUT_ACCURACY);
-        MsgHandler::getMessageInstance()->progressMsg("Reading time step: " + time2string(time) + "  (" + time2string(time - start) + "/" + time2string(absNo) + " = " + toString(perc * 100) + "% done)       ");
+    if (myLogSteps) {
+        const SUMOReal perc = (SUMOReal)(time - start) / (SUMOReal) absNo;
+        std::cout << "Reading time step: " + time2string(time) + "  (" + time2string(time - start) + "/" + time2string(absNo) + " = " + toString(perc * 100) + "% done)       \r";
     }
 }
 

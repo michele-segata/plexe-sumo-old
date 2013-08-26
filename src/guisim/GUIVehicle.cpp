@@ -78,6 +78,8 @@ FXDEFMAP(GUIVehicle::GUIVehiclePopupMenu) GUIVehiclePopupMenuMap[] = {
     FXMAPFUNC(SEL_COMMAND, MID_HIDE_BEST_LANES, GUIVehicle::GUIVehiclePopupMenu::onCmdHideBestLanes),
     FXMAPFUNC(SEL_COMMAND, MID_START_TRACK, GUIVehicle::GUIVehiclePopupMenu::onCmdStartTrack),
     FXMAPFUNC(SEL_COMMAND, MID_STOP_TRACK, GUIVehicle::GUIVehiclePopupMenu::onCmdStopTrack),
+    FXMAPFUNC(SEL_COMMAND, MID_SHOW_LFLINKITEMS, GUIVehicle::GUIVehiclePopupMenu::onCmdShowLFLinkItems),
+    FXMAPFUNC(SEL_COMMAND, MID_HIDE_LFLINKITEMS, GUIVehicle::GUIVehiclePopupMenu::onCmdHideLFLinkItems),
 };
 
 // Object implementation
@@ -150,7 +152,6 @@ GUIVehicle::GUIVehiclePopupMenu::onCmdShowAllRoutes(FXObject*, FXSelector, void*
     return 1;
 }
 
-
 long
 GUIVehicle::GUIVehiclePopupMenu::onCmdHideAllRoutes(FXObject*, FXSelector, void*) {
     assert(myObject->getType() == GLO_VEHICLE);
@@ -168,6 +169,13 @@ GUIVehicle::GUIVehiclePopupMenu::onCmdShowCurrentRoute(FXObject*, FXSelector, vo
     return 1;
 }
 
+long
+GUIVehicle::GUIVehiclePopupMenu::onCmdHideCurrentRoute(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_VEHICLE);
+    static_cast<GUIVehicle*>(myObject)->removeActiveAddVisualisation(myParent, VO_SHOW_ROUTE);
+    return 1;
+}
+
 
 long
 GUIVehicle::GUIVehiclePopupMenu::onCmdShowBestLanes(FXObject*, FXSelector, void*) {
@@ -175,14 +183,6 @@ GUIVehicle::GUIVehiclePopupMenu::onCmdShowBestLanes(FXObject*, FXSelector, void*
     if (!static_cast<GUIVehicle*>(myObject)->hasActiveAddVisualisation(myParent, VO_SHOW_BEST_LANES)) {
         static_cast<GUIVehicle*>(myObject)->addActiveAddVisualisation(myParent, VO_SHOW_BEST_LANES);
     }
-    return 1;
-}
-
-
-long
-GUIVehicle::GUIVehiclePopupMenu::onCmdHideCurrentRoute(FXObject*, FXSelector, void*) {
-    assert(myObject->getType() == GLO_VEHICLE);
-    static_cast<GUIVehicle*>(myObject)->removeActiveAddVisualisation(myParent, VO_SHOW_ROUTE);
     return 1;
 }
 
@@ -209,6 +209,23 @@ GUIVehicle::GUIVehiclePopupMenu::onCmdStopTrack(FXObject*, FXSelector, void*) {
     assert(myObject->getType() == GLO_VEHICLE);
     static_cast<GUIVehicle*>(myObject)->removeActiveAddVisualisation(myParent, VO_TRACKED);
     myParent->stopTrack();
+    return 1;
+}
+
+
+long
+GUIVehicle::GUIVehiclePopupMenu::onCmdShowLFLinkItems(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_VEHICLE);
+    if (!static_cast<GUIVehicle*>(myObject)->hasActiveAddVisualisation(myParent, VO_SHOW_LFLINKITEMS)) {
+        static_cast<GUIVehicle*>(myObject)->addActiveAddVisualisation(myParent, VO_SHOW_LFLINKITEMS);
+    }
+    return 1;
+}
+
+long
+GUIVehicle::GUIVehiclePopupMenu::onCmdHideLFLinkItems(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_VEHICLE);
+    static_cast<GUIVehicle*>(myObject)->removeActiveAddVisualisation(myParent, VO_SHOW_LFLINKITEMS);
     return 1;
 }
 
@@ -261,6 +278,11 @@ GUIVehicle::getPopUpMenu(GUIMainWindow& app,
         new FXMenuCommand(ret, "Hide Best Lanes", 0, ret, MID_HIDE_BEST_LANES);
     } else {
         new FXMenuCommand(ret, "Show Best Lanes", 0, ret, MID_SHOW_BEST_LANES);
+    }
+    if (hasActiveAddVisualisation(&parent, VO_SHOW_LFLINKITEMS)) {
+        new FXMenuCommand(ret, "Hide Link Items", 0, ret, MID_HIDE_LFLINKITEMS);
+    } else {
+        new FXMenuCommand(ret, "Show Link Items", 0, ret, MID_SHOW_LFLINKITEMS);
     }
     new FXMenuSeparator(ret);
     int trackedID = parent.getTrackedID();
@@ -333,8 +355,7 @@ GUIVehicle::getCenteringBoundary() const {
 inline void
 drawAction_drawVehicleAsBoxPlus(const GUIVehicle& veh) {
     glPushMatrix();
-    glTranslated(0., veh.getVehicleType().getMinGap(), 0.);
-    glScaled(veh.getVehicleType().getGuiWidth(), veh.getVehicleType().getLength(), 1.);
+    glScaled(veh.getVehicleType().getWidth(), veh.getVehicleType().getLength(), 1.);
     glBegin(GL_TRIANGLE_STRIP);
     glVertex2d(0., 0.);
     glVertex2d(-.5, .15);
@@ -354,8 +375,7 @@ drawAction_drawVehicleAsTrianglePlus(const GUIVehicle& veh) {
         return;
     }
     glPushMatrix();
-    glTranslated(0., veh.getVehicleType().getMinGap(), 0.);
-    glScaled(veh.getVehicleType().getGuiWidth(), length, 1.);
+    glScaled(veh.getVehicleType().getWidth(), length, 1.);
     glBegin(GL_TRIANGLES);
     glVertex2d(0., 0.);
     glVertex2d(-.5, 1.);
@@ -390,8 +410,7 @@ drawAction_drawVehicleAsPoly(const GUIVehicle& veh) {
     SUMOReal length = veh.getVehicleType().getLength();
     glPushMatrix();
     glRotated(90, 0, 0, 1);
-    glTranslated(veh.getVehicleType().getMinGap(), 0, 0);
-    glScaled(length, veh.getVehicleType().getGuiWidth(), 1.);
+    glScaled(length, veh.getVehicleType().getWidth(), 1.);
     SUMOVehicleShape shape = veh.getVehicleType().getGuiShape();
 
     // draw main body
@@ -791,11 +810,11 @@ inline void
 drawAction_drawBlinker(const GUIVehicle& veh, double dir) {
     glColor3d(1.f, .8f, 0);
     glPushMatrix();
-    glTranslated(dir, BLINKER_POS_FRONT + veh.getVehicleType().getMinGap(), -0.1);
+    glTranslated(dir, BLINKER_POS_FRONT, -0.1);
     GLHelper::drawFilledCircle(.5, 6);
     glPopMatrix();
     glPushMatrix();
-    glTranslated(dir, veh.getVehicleType().getLengthWithGap() - BLINKER_POS_BACK, -0.1);
+    glTranslated(dir, veh.getVehicleType().getLength() - BLINKER_POS_BACK, -0.1);
     GLHelper::drawFilledCircle(.5, 6);
     glPopMatrix();
 }
@@ -806,7 +825,7 @@ drawAction_drawVehicleBlinker(const GUIVehicle& veh) {
     if (!veh.signalSet(MSVehicle::VEH_SIGNAL_BLINKER_RIGHT | MSVehicle::VEH_SIGNAL_BLINKER_LEFT | MSVehicle::VEH_SIGNAL_BLINKER_EMERGENCY)) {
         return;
     }
-    const double offset = MAX2(.5 * veh.getVehicleType().getGuiWidth(), .4);
+    const double offset = MAX2(.5 * veh.getVehicleType().getWidth(), .4);
     if (veh.signalSet(MSVehicle::VEH_SIGNAL_BLINKER_RIGHT)) {
         drawAction_drawBlinker(veh, -offset);
     }
@@ -827,11 +846,11 @@ drawAction_drawVehicleBrakeLight(const GUIVehicle& veh) {
     }
     glColor3f(1.f, .2f, 0);
     glPushMatrix();
-    glTranslated(-veh.getVehicleType().getGuiWidth() * 0.5, veh.getVehicleType().getLengthWithGap(), -0.1);
+    glTranslated(-veh.getVehicleType().getWidth() * 0.5, veh.getVehicleType().getLength(), -0.1);
     GLHelper::drawFilledCircle(.5, 6);
     glPopMatrix();
     glPushMatrix();
-    glTranslated(veh.getVehicleType().getGuiWidth() * 0.5, veh.getVehicleType().getLengthWithGap(), -0.1);
+    glTranslated(veh.getVehicleType().getWidth() * 0.5, veh.getVehicleType().getLength(), -0.1);
     GLHelper::drawFilledCircle(.5, 6);
     glPopMatrix();
 }
@@ -873,12 +892,13 @@ GUIVehicle::drawGL(const GUIVisualizationSettings& s) const {
             break;
     }
     if (s.drawMinGap) {
+        SUMOReal minGap = -getVehicleType().getMinGap();
         glColor3d(0., 1., 0.);
         glBegin(GL_LINES);
         glVertex2d(0., 0);
-        glVertex2d(0., getVehicleType().getMinGap());
-        glVertex2d(-.5, 0);
-        glVertex2d(.5, 0);
+        glVertex2d(0., minGap);
+        glVertex2d(-.5, minGap);
+        glVertex2d(.5, minGap);
         glEnd();
     }
     // draw the blinker and brakelights if wished
@@ -949,7 +969,7 @@ GUIVehicle::drawGL(const GUIVisualizationSettings& s) const {
         */
     }
     glPopMatrix();
-    drawName(myLane->getShape().positionAtLengthPosition(myState.pos() - getVehicleType().getLengthWithGap() / 2),
+    drawName(myLane->getShape().positionAtLengthPosition(myState.pos() - getVehicleType().getLength() / 2),
              s.scale, s.vehicleName);
     glPopName();
 }
@@ -975,6 +995,33 @@ GUIVehicle::drawGLAdditional(GUISUMOAbstractView* const parent, const GUIVisuali
             }
         } else {
             drawRoute(s, 0, 0.25);
+        }
+    }
+    if (hasActiveAddVisualisation(parent, VO_SHOW_LFLINKITEMS)) {
+        for (DriveItemVector::const_iterator i = myLFLinkLanes.begin(); i != myLFLinkLanes.end(); ++i) {
+            if((*i).myLink==0) {
+                continue;
+            }
+            MSLink* link = (*i).myLink;
+#ifdef HAVE_INTERNAL_LANES
+            MSLane *via = link->getViaLane();
+            if (via == 0) {
+                via = link->getLane();
+            }
+#else
+            MSLane *via = link->getLane();
+#endif
+            if (via != 0) {
+                Position p = via->getShape()[0];
+                if((*i).mySetRequest) {
+                    glColor3f(0, 1, 0);
+                } else {
+                    glColor3f(1, 0, 0);
+                }
+                glTranslated(p.x(), p.y(), -.1);
+                GLHelper::drawFilledCircle(1);
+                glTranslated(-p.x(), -p.y(), .1);
+            }
         }
     }
     glPopMatrix();

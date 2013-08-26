@@ -57,7 +57,7 @@
 void
 RODFFrame::fillOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
-    oc.addCallExample("-c <CONFIGURATION>");
+    oc.addCallExample("-c <CONFIGURATION>", "run routing with options from file");
 
     // insert options sub-topics
     SystemFrame::addConfigurationOptions(oc); // fill this subtopic, too
@@ -224,6 +224,10 @@ RODFFrame::fillOptions() {
 
     oc.doRegister("print-absolute-flows", new Option_Bool(false));
     oc.addDescription("print-absolute-flows", "Report", "Prints aggregated detector flows");
+
+    // register report options
+    oc.doRegister("no-step-log", new Option_Bool(false));
+    oc.addDescription("no-step-log", "Report", "Disable console output of route parsing step");
 
     RandHelper::insertRandOptions();
 }

@@ -48,10 +48,17 @@ class StringBijection {
 
 public:
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4510 4512 4610) // no default constructor and no assignment operator; conflicts with initializer
+#endif
     struct Entry {
         const char* str;
         const T key;
     };
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 
     StringBijection() {}
@@ -107,9 +114,9 @@ public:
 
     std::vector<std::string> getStrings() const {
         std::vector<std::string> result;
-        typename std::map<std::string, T>::const_iterator it; // learn something new every day
-        for (it = myString2T.begin(); it != myString2T.end(); it++) {
-            result.push_back(it->first);
+        typename std::map<T, std::string>::const_iterator it; // learn something new every day
+        for (it = myT2String.begin(); it != myT2String.end(); it++) {
+            result.push_back(it->second);
         }
         return result;
     }

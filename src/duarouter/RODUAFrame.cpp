@@ -55,7 +55,7 @@
 void
 RODUAFrame::fillOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
-    oc.addCallExample("-c <CONFIGURATION>");
+    oc.addCallExample("-c <CONFIGURATION>", "run routing with options from file");
 
     // insert options sub-topics
     SystemFrame::addConfigurationOptions(oc); // fill this subtopic, too
@@ -121,13 +121,17 @@ RODUAFrame::addDUAOptions() {
     oc.doRegister("logit", new Option_Bool(false));
     oc.addDescription("logit", "Processing", "Use c-logit model");
 
-    oc.doRegister("logit.beta", new Option_Float(SUMOReal(0.15)));
+    oc.doRegister("logit.beta", new Option_Float(SUMOReal(-1)));
     oc.addSynonyme("logit.beta", "lBeta", true);
     oc.addDescription("logit.beta", "Processing", "Use FLOAT as logit's beta");
 
     oc.doRegister("logit.gamma", new Option_Float(SUMOReal(1)));
     oc.addSynonyme("logit.gamma", "lGamma", true);
     oc.addDescription("logit.gamma", "Processing", "Use FLOAT as logit's gamma");
+
+    oc.doRegister("logit.theta", new Option_Float(SUMOReal(-1)));
+    oc.addSynonyme("logit.theta", "lTheta", true);
+    oc.addDescription("logit.theta", "Processing", "Use FLOAT as logit's theta (negative values mean auto-estimation)");
 
 }
 
@@ -142,6 +146,10 @@ RODUAFrame::checkOptions() {
     ok &= (!oc.isSet("arrivallane") || SUMOVehicleParameter::arrivallaneValidate(oc.getString("arrivallane")));
     ok &= (!oc.isSet("arrivalpos") || SUMOVehicleParameter::arrivalposValidate(oc.getString("arrivalpos")));
     ok &= (!oc.isSet("arrivalspeed") || SUMOVehicleParameter::arrivalspeedValidate(oc.getString("arrivalspeed")));
+    if (oc.getString("routing-algorithm") != "dijkstra" && oc.getString("weight-attribute") != "traveltime") {
+        WRITE_ERROR("Only routing algorithm 'dijkstra' supports weight-attribute '" + oc.getString("weight-attribute") + "'.");
+        return false;
+    }
     return ok;
 }
 

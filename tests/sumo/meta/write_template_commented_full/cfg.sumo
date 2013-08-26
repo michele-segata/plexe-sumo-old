@@ -2,6 +2,24 @@
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/sumoConfiguration.xsd">
 
+    <configuration>
+        <!-- Loads the named config on startup -->
+        <configuration-file value="" synonymes="c configuration" type="FILE"/>
+
+        <!-- Saves current configuration into FILE -->
+        <save-configuration value="" synonymes="save-config" type="FILE"/>
+
+        <!-- Saves a configuration template (empty) into FILE -->
+        <save-template value="" type="FILE"/>
+
+        <!-- Saves the configuration schema into FILE -->
+        <save-schema value="" type="FILE"/>
+
+        <!-- Adds comments to saved template, configuration, or schema -->
+        <save-commented value="" synonymes="save-template.commented" type="BOOL"/>
+
+    </configuration>
+
     <input>
         <!-- Load road network description from FILE -->
         <net-file value="" synonymes="n net" type="FILE"/>
@@ -60,8 +78,8 @@
     </time>
 
     <processing>
-        <!-- Load routes for the next INT steps ahead -->
-        <route-steps value="200" synonymes="s" type="INT"/>
+        <!-- Load routes for the next number of seconds ahead -->
+        <route-steps value="200" synonymes="s" type="TIME"/>
 
         <!-- Disable (junction) internal links -->
         <no-internal-links value="false" type="BOOL"/>
@@ -114,10 +132,10 @@
         <!-- Disables output of warnings -->
         <no-warnings value="false" synonymes="W suppress-warnings" type="BOOL"/>
 
-        <!-- Writes all messages to FILE -->
+        <!-- Writes all messages to FILE (implies verbose) -->
         <log value="" synonymes="l log-file" type="FILE"/>
 
-        <!-- Writes all non-error messages to FILE -->
+        <!-- Writes all non-error messages to FILE (implies verbose) -->
         <message-log value="" type="FILE"/>
 
         <!-- Writes all warnings and errors to FILE -->
@@ -195,8 +213,8 @@
         <!-- Start the GUI in gaming mode -->
         <game value="false" synonymes="G" type="BOOL"/>
 
-        <!-- Does not start the simulation after loading -->
-        <no-start value="false" synonymes="N" type="BOOL"/>
+        <!-- Start the simulation after loading -->
+        <start value="false" synonymes="S" type="BOOL"/>
 
         <!-- Do not load background pictures -->
         <disable-textures value="false" synonymes="T" type="BOOL"/>

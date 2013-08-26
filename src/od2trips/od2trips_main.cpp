@@ -76,7 +76,7 @@
 void
 fillOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
-    oc.addCallExample("-c <CONFIGURATION>");
+    oc.addCallExample("-c <CONFIGURATION>", "run with configuration file");
 
     // insert options sub-topics
     SystemFrame::addConfigurationOptions(oc); // fill this subtopic, too
@@ -138,6 +138,9 @@ fillOptions() {
 
     oc.doRegister("dismiss-loading-errors", new Option_Bool(false)); // !!! describe, document
     oc.addDescription("dismiss-loading-errors", "Processing", "Continue on broken input");
+
+    oc.doRegister("no-step-log", new Option_Bool(false));
+    oc.addDescription("no-step-log", "Processing", "Disable console output of current time step");
 
 
     // register defaults options
@@ -472,6 +475,7 @@ main(int argc, char** argv) {
         fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
+            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
@@ -506,7 +510,7 @@ main(int argc, char** argv) {
         }
         OutputDevice& dev = OutputDevice::getDeviceByOption("output-file");
         matrix.write(SUMOTime(string2time(oc.getString("begin")) / 1000.), SUMOTime(string2time(oc.getString("end")) / 1000.),
-                     dev, oc.getBool("spread.uniform"), oc.getBool("ignore-vehicle-type"), oc.getString("prefix"));
+                     dev, oc.getBool("spread.uniform"), oc.getBool("ignore-vehicle-type"), oc.getString("prefix"), !oc.getBool("no-step-log"));
         WRITE_MESSAGE(toString(matrix.getNoDiscarded()) + " vehicles discarded.");
         WRITE_MESSAGE(toString(matrix.getNoWritten()) + " vehicles written.");
     } catch (ProcessError& e) {

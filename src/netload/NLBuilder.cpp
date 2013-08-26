@@ -181,7 +181,7 @@ NLBuilder::build() {
         }
     }
     // load routes
-    if (myOptions.isSet("route-files") && myOptions.getInt("route-steps") <= 0) {
+    if (myOptions.isSet("route-files") && string2time(myOptions.getString("route-steps")) <= 0) {
         if (!load("route-files")) {
             return false;
         }
@@ -249,17 +249,13 @@ NLBuilder::load(const std::string& mmlWhat) {
     }
     std::vector<std::string> files = OptionsCont::getOptions().getStringVector(mmlWhat);
     for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
-        if (!gSuppressMessages) {
-            PROGRESS_BEGIN_MESSAGE("Loading " + mmlWhat + " from '" + *fileIt + "'");
-        }
+        PROGRESS_BEGIN_MESSAGE("Loading " + mmlWhat + " from '" + *fileIt + "'");
         long before = SysUtils::getCurrentMillis();
         if (!XMLSubSys::runParser(myXMLHandler, *fileIt)) {
             WRITE_MESSAGE("Loading of " + mmlWhat + " failed.");
             return false;
         }
-        if (!gSuppressMessages) {
-            MsgHandler::getMessageInstance()->endProcessMsg(" done (" + toString(SysUtils::getCurrentMillis() - before) + "ms).");
-        }
+        MsgHandler::getMessageInstance()->endProcessMsg(" done (" + toString(SysUtils::getCurrentMillis() - before) + "ms).");
     }
     return true;
 }
@@ -270,7 +266,7 @@ NLBuilder::buildRouteLoaderControl(const OptionsCont& oc) {
     // build the loaders
     MSRouteLoaderControl::LoaderVector loaders;
     // check whether a list is existing
-    if (oc.isSet("route-files") && oc.getInt("route-steps") > 0) {
+    if (oc.isSet("route-files") && string2time(oc.getString("route-steps")) > 0) {
         std::vector<std::string> files = oc.getStringVector("route-files");
         for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
             if (!FileHelpers::exists(*fileIt)) {
@@ -283,7 +279,7 @@ NLBuilder::buildRouteLoaderControl(const OptionsCont& oc) {
         }
     }
     // build the route control
-    return new MSRouteLoaderControl(myNet, oc.getInt("route-steps"), loaders);
+    return new MSRouteLoaderControl(myNet, string2time(oc.getString("route-steps")), loaders);
 }
 
 

@@ -39,7 +39,9 @@
 #include <algorithm>
 #include <utils/common/ValueTimeLine.h>
 #include <utils/common/SUMOVehicleClass.h>
+#include <utils/common/SUMOVTypeParameter.h>
 #include "RONode.h"
+#include "ROVehicle.h"
 
 
 // ===========================================================================
@@ -85,12 +87,8 @@ public:
      * @param[in] from The node the edge begins at
      * @param[in] to The node the edge ends at
      * @param[in] index The numeric id of the edge
-     * @param[in] useBoundariesOnOverride Whether the edge shall use a boundary value if the requested is beyond known time scale
-     * @param[in] interpolate Whether the edge shall interpolate at interval boundaries
-     * @todo useBoundariesOnOverride and interpolate should not be members of the edge
      */
-    ROEdge(const std::string& id, RONode* from, RONode* to, unsigned int index,
-           bool useBoundariesOnOverride, bool interpolate = false) ;
+    ROEdge(const std::string& id, RONode* from, RONode* to, unsigned int index);
 
 
     /// Destructor
@@ -114,11 +112,11 @@ public:
     /** @brief Adds information about a connected edge
      *
      * The edge is added to "myFollowingEdges".
-     *
-     * @param[in] lane The lane to add
+     * @param[in] s The edge to add
      * @todo What about vehicle-type aware connections?
+     * @note: if HAVE_MESOSIM is defined, the backward connections is added as well
      */
-    virtual void addFollower(ROEdge* s) ;
+    virtual void addFollower(ROEdge* s, std::string dir="");
 
 
     /** @brief Sets the type of te edge
@@ -222,7 +220,14 @@ public:
      * @param[in] vehicle The vehicle for which the information has to be returned
      * @return Whether the vehicle must not enter this edge
      */
-    bool prohibits(const ROVehicle* const vehicle) const ;
+    inline bool prohibits(const ROVehicle* const vehicle) const {
+        const SUMOVehicleClass vclass = vehicle->getVClass();
+        return (myCombinedPermissions & vclass) != vclass;
+    }
+
+    inline SVCPermissions getPermissions() const {
+        return myCombinedPermissions;
+    }
 
 
     /** @brief Returns whether this edge succeding edges prohibit the given vehicle to pass them
@@ -274,6 +279,27 @@ public:
     }
 
 
+#ifdef HAVE_MESOSIM // catchall for internal stuff
+    /** @brief Returns the number of edges this edge is connected to
+     *
+     * If this edge's type is set to "source", 0 is returned, otherwise
+     *  the number of edges stored in "myApproachingEdges".
+     *
+     * @return The number of edges following this edge
+     */
+    unsigned int getNumApproaching() const ;
+
+
+    /** @brief Returns the edge at the given position from the list of reachable edges
+     * @param[in] pos The position of the list within the list of approached
+     * @return The following edge, stored at position pos
+     */
+    ROEdge* getApproaching(unsigned int pos) const {
+        return myApproachingEdges[pos];
+    }
+#endif
+
+
     /** @brief Returns the effort for this edge
      *
      * @param[in] veh The vehicle for which the effort on this edge shall be retrieved
@@ -294,6 +320,14 @@ public:
     SUMOReal getTravelTime(const ROVehicle* const veh, SUMOReal time) const ;
 
 
+    /** @brief Returns the travel time for this edge without using any stored timeLine
+     *
+     * @param[in] veh The vehicle for which the effort on this edge shall be retrieved
+     * @param[in] time The time for which the effort shall be returned [s]
+     */
+    SUMOReal getMinimumTravelTime(const ROVehicle* const veh) const ;
+
+
     SUMOReal getCOEffort(const ROVehicle* const veh, SUMOReal time) const ;
     SUMOReal getCO2Effort(const ROVehicle* const veh, SUMOReal time) const ;
     SUMOReal getPMxEffort(const ROVehicle* const veh, SUMOReal time) const ;
@@ -303,8 +337,27 @@ public:
     SUMOReal getNoiseEffort(const ROVehicle* const veh, SUMOReal time) const ;
     //@}
 
+
+    /// @brief optimistic distance heuristic for use in routing
+    SUMOReal getDistanceTo(const ROEdge* other) const;
+
+
     /** @brief Returns the ROEdge at the index */
     static ROEdge* dictionary(size_t index) ;
+
+    /// @brief Returns the number of edges
+    static size_t dictSize() {
+        return myEdges.size();
+    };
+
+    static void setTimeLineOptions(
+            bool useBoundariesOnOverrideTT,
+            bool useBoundariesOnOverrideE,
+            bool interpolate) {
+        myUseBoundariesOnOverrideTT = useBoundariesOnOverrideTT;
+        myUseBoundariesOnOverrideE = useBoundariesOnOverrideE;
+        myInterpolate = interpolate;
+    }
 
 
 protected:
@@ -337,25 +390,30 @@ protected:
     /// @brief Information whether the time line shall be used instead of the length value
     bool myUsingTTTimeLine;
     /// @brief Whether overriding weight boundaries shall be reported
-    bool myUseBoundariesOnOverrideTT;
-    /// @brief Information whether the edge has reported missing weights
-    static bool myHaveTTWarned;
+    static bool myUseBoundariesOnOverrideTT;
 
     /// @brief Container storing passing time varying over time for the edge
     mutable ValueTimeLine<SUMOReal> myEfforts;
     /// @brief Information whether the time line shall be used instead of the length value
     bool myUsingETimeLine;
     /// @brief Whether overriding weight boundaries shall be reported
-    bool myUseBoundariesOnOverrideE;
-    /// @brief Information whether the edge has reported missing weights
-    static bool myHaveEWarned;
+    static bool myUseBoundariesOnOverrideE;
 
     /// @brief Information whether to interpolate at interval boundaries
-    bool myInterpolate;
+    static bool myInterpolate;
 
+    /// @brief Information whether the edge has reported missing weights
+    static bool myHaveEWarned;
+    /// @brief Information whether the edge has reported missing weights
+    static bool myHaveTTWarned;
 
     /// @brief List of edges that may be approached from this edge
     std::vector<ROEdge*> myFollowingEdges;
+
+#ifdef HAVE_MESOSIM // catchall for internal stuff
+    /// @brief List of edges that approached this edge
+    std::vector<ROEdge*> myApproachingEdges;
+#endif
 
     /// @brief The type of the edge
     EdgeType myType;
@@ -363,11 +421,8 @@ protected:
     /// @brief This edge's lanes
     std::vector<ROLane*> myLanes;
 
-    /// @brief The list of allowed vehicle classes
-    SUMOVehicleClasses myAllowedClasses;
-
-    /// @brief The list of disallowed vehicle classes
-    SUMOVehicleClasses myNotAllowedClasses;
+    /// @brief The list of allowed vehicle classes combined across lanes
+    SVCPermissions myCombinedPermissions;
 
     /// @brief The nodes this edge is connecting
     RONode* myFromNode, *myToNode;

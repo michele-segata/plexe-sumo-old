@@ -30,6 +30,8 @@
 #include "MSCFModel_CC.h"
 #include <microsim/MSVehicle.h>
 #include <microsim/MSLane.h>
+#include <microsim/MSNet.h>
+#include <microsim/MSEdge.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOTime.h>
 

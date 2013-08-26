@@ -183,7 +183,6 @@ RONetHandler::parseLane(const SUMOSAXAttributes& attrs) {
         return;
     }
     bool ok = true;
-    SUMOVehicleClasses allowed, disallowed;
     // get the id, report an error if not given or empty...
     std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
     if (!ok) {
@@ -201,13 +200,13 @@ RONetHandler::parseLane(const SUMOSAXAttributes& attrs) {
     }
     // get the length
     // get the vehicle classes
-    parseVehicleClasses(allow, disallow, allowed, disallowed);
-    if (allowed.size() != 0 || disallowed.size() != 0) {
+    SVCPermissions permissions = parseVehicleClasses(allow, disallow);
+    if (permissions != SVCFreeForAll) {
         myNet.setRestrictionFound();
     }
     // add when both values are valid
     if (maxSpeed > 0 && length > 0 && id.length() > 0) {
-        myCurrentEdge->addLane(new ROLane(id, length, maxSpeed, allowed, disallowed));
+        myCurrentEdge->addLane(new ROLane(id, length, maxSpeed, permissions));
     }
 }
 
@@ -277,6 +276,7 @@ RONetHandler::parseConnection(const SUMOSAXAttributes& attrs) {
     bool ok = true;
     std::string fromID = attrs.getStringReporting(SUMO_ATTR_FROM, 0, ok);
     std::string toID = attrs.getStringReporting(SUMO_ATTR_TO, 0, ok);
+    std::string dir = attrs.getStringReporting(SUMO_ATTR_DIR, 0, ok);
     if (fromID[0] == ':') { // skip inner lane connections
         return;
     }
@@ -288,7 +288,7 @@ RONetHandler::parseConnection(const SUMOSAXAttributes& attrs) {
     if (to == 0) {
         throw ProcessError("unknown to-edge '" + toID + "' in connection");
     }
-    from->addFollower(to);
+    from->addFollower(to, dir);
 }
 
 

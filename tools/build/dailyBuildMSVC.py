@@ -37,7 +37,7 @@ optParser.add_option("-e", "--sumo-exe", dest="sumoExe", default="sumo",
 optParser.add_option("-m", "--remote-dir", dest="remoteDir",
                      help="directory to move the results to")
 optParser.add_option("-a", "--add-build-config-prefix", dest="addConf",
-                     help="directory to move the results to")
+                     help="prefix of an additional configuration to build")
 optParser.add_option("-f", "--force", action="store_true",
                      default=False, help="force rebuild even if no source changed")
 (options, args) = optParser.parse_args()
@@ -70,16 +70,19 @@ for platform in ["Win32", "x64"]:
     if platform == "Win32":
         with open(makeLog, 'w') as log:
             subprocess.call("svn.exe up %s\\trunk" % options.rootDir, stdout=log, stderr=subprocess.STDOUT)
-        match_update = re.search('Updated to revision (\d*)\.', open(makeLog).read())
-        if match_update:
-            svnrev = match_update.group(1)
-        elif options.force:
-            match = re.search('At revision (\d*)\.', open(makeLog).read())
-            if match:
-                svnrev = match.group(1)
+        update_log = open(makeLog).read()
+        match_rev = re.search('At revision (\d*)\.', update_log)
+        if match_rev:
+            svnrev = match_rev.group(1)
         else:
+            open(makeLog, 'a').write("Error parsing svn revision\n")
+            sys.exit()
+        update_lines = len(update_log[:update_log.index('Fetching external')].splitlines())
+        if update_lines < 3 and not options.force:
+            open(makeLog, 'a').write("No changes since last update, skipping build and test\n")
             print "No changes since last update, skipping build and test"
             sys.exit()
+
     subprocess.call(compiler+" /rebuild Release|%s %s\\%s /out %s" % (platform, options.rootDir, options.project, makeLog))
     if options.addConf:
         subprocess.call(compiler+" /rebuild %sRelease|%s %s\\%s /out %s" % (options.addConf, platform, options.rootDir, options.project, makeLog))
@@ -114,7 +117,8 @@ for platform in ["Win32", "x64"]:
         if os.path.exists(maxFile.replace("-src-", "-doc-")):
             docZip = zipfile.ZipFile(maxFile.replace("-src-", "-doc-"))
             for f in docZip.namelist():
-                zipf.writestr(f, docZip.read(f))
+                if not "/doxygen/" in f:
+                    zipf.writestr(f, docZip.read(f))
             docZip.close()
         files_to_zip = (
                 glob.glob(os.path.join(env["XERCES"+envSuffix], "bin", "xerces-c_?_?.dll")) +
@@ -137,6 +141,11 @@ for platform in ["Win32", "x64"]:
     except IOError, (errno, strerror):
         print >> log, "Warning: Could not zip to %s!" % binaryZip
         print >> log, "I/O error(%s): %s" % (errno, strerror)
+    if platform == "Win32" and options.sumoExe == "sumo":
+        try:
+            subprocess.call(os.path.join(os.path.dirname(__file__), '..', game, 'setup.py'), stdout=log, stderr=subprocess.STDOUT)
+        except:
+            print >> log, "Warning: Could not create nightly sumogame.zip!"
     log.close()
     subprocess.call(compiler+" /rebuild Debug|%s %s\\%s /out %s" % (platform, options.rootDir, options.project, makeAllLog))
     if options.addConf:

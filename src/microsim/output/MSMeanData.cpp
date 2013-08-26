@@ -35,6 +35,7 @@
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
+#include <microsim/MSNet.h>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/ToString.h>
 #include <utils/iodevices/OutputDevice.h>
@@ -86,8 +87,8 @@ MSMeanData::MeanDataValues::notifyMove(SUMOVehicle& veh, SUMOReal oldPos, SUMORe
     if (oldPos < 0 && newSpeed != 0) {
         timeOnLane = newPos / newSpeed;
     }
-    if (newPos > myLaneLength && newSpeed != 0) {
-        timeOnLane -= (newPos - myLaneLength) / newSpeed;
+    if (newPos-veh.getVehicleType().getLength() > myLaneLength && newSpeed != 0) {
+        timeOnLane -= (newPos - veh.getVehicleType().getLength() - myLaneLength) / newSpeed;
         if (fabs(timeOnLane) < 0.001) { // reduce rounding errors
             timeOnLane = 0.;
         }
@@ -208,9 +209,14 @@ MSMeanData::MeanDataValueTracker::isEmpty() const {
 
 
 void
-MSMeanData::MeanDataValueTracker::write(OutputDevice& dev, const SUMOTime period,
-                                        const SUMOReal numLanes, const int /*numVehicles*/) const {
-    myCurrentData.front()->myValues->write(dev, period, numLanes, myCurrentData.front()->myNumVehicleEntered);
+MSMeanData::MeanDataValueTracker::write(OutputDevice& dev,
+                                        const SUMOTime period,
+                                        const SUMOReal numLanes,
+                                        const SUMOReal defaultTravelTime,
+                                        const int /*numVehicles*/) const {
+    myCurrentData.front()->myValues->write(dev, period, numLanes,
+                                           defaultTravelTime,
+                                           myCurrentData.front()->myNumVehicleEntered);
 }
 
 
@@ -239,9 +245,10 @@ MSMeanData::MeanDataValueTracker::getSamples() const {
 // ---------------------------------------------------------------------------
 MSMeanData::MSMeanData(const std::string& id,
                        const SUMOTime dumpBegin, const SUMOTime dumpEnd,
-                       const bool useLanes, const bool withEmpty, const bool withInternal,
-                       const bool trackVehicles,
-                       const SUMOReal maxTravelTime, const SUMOReal minSamples,
+                       const bool useLanes, const bool withEmpty,
+                       const bool printDefaults, const bool withInternal, const bool trackVehicles,
+                       const SUMOReal maxTravelTime,
+                       const SUMOReal minSamples,
                        const std::set<std::string> vTypes) :
     MSDetectorFileOutput(id),
     myMinSamples(minSamples),
@@ -251,6 +258,7 @@ MSMeanData::MSMeanData(const std::string& id,
     myDumpBegin(dumpBegin),
     myDumpEnd(dumpEnd),
     myDumpEmpty(withEmpty),
+    myPrintDefaults(printDefaults),
     myDumpInternal(withInternal),
     myTrackVehicles(trackVehicles) {
 }
@@ -350,9 +358,10 @@ MSMeanData::writeEdge(OutputDevice& dev,
             s->prepareDetectorForWriting(*data);
             s = s->getNextSegment();
         }
-        if (writePrefix(dev, *data, "<edge id=\"" + edge->getID())) {
+        if (writePrefix(dev, *data, "edge", edge->getID())) {
             data->write(dev, stopTime - startTime,
-                        (SUMOReal)edge->getLanes().size());
+                        (SUMOReal)edge->getLanes().size(),
+                        myPrintDefaults ? edge->getLength() / edge->getMaxSpeed() : -1.);
         }
         data->reset(true);
         return;
@@ -370,12 +379,13 @@ MSMeanData::writeEdge(OutputDevice& dev,
             }
         }
         if (writeCheck) {
-            dev.openTag("edge") << " id=\"" << edge->getID() << "\">\n";
+            dev.openTag("edge").writeAttr(SUMO_ATTR_ID, edge->getID()).closeOpener();
         }
         for (lane = edgeValues.begin(); lane != edgeValues.end(); ++lane) {
             MeanDataValues& meanData = **lane;
-            if (writePrefix(dev, meanData, "<lane id=\"" + meanData.getLane()->getID())) {
-                meanData.write(dev, stopTime - startTime, 1.f);
+            if (writePrefix(dev, meanData, "lane", meanData.getLane()->getID())) {
+                meanData.write(dev, stopTime - startTime, 1.f,
+                               myPrintDefaults ? meanData.getLane()->getLength() / meanData.getLane()->getMaxSpeed() : -1.);
             }
             meanData.reset(true);
         }
@@ -385,19 +395,21 @@ MSMeanData::writeEdge(OutputDevice& dev,
     } else {
         if (myTrackVehicles) {
             MeanDataValues& meanData = **edgeValues.begin();
-            if (writePrefix(dev, meanData, "<edge id=\"" + edge->getID())) {
-                meanData.write(dev, stopTime - startTime, (SUMOReal)edge->getLanes().size());
+            if (writePrefix(dev, meanData, "edge", edge->getID())) {
+                meanData.write(dev, stopTime - startTime, (SUMOReal)edge->getLanes().size(),
+                               myPrintDefaults ? edge->getLength() / edge->getMaxSpeed() : -1.);
             }
             meanData.reset(true);
         } else {
-            MeanDataValues* sumData = createValues(0, edge->getLanes()[0]->getLength(), false);
+            MeanDataValues* sumData = createValues(0, edge->getLength(), false);
             for (lane = edgeValues.begin(); lane != edgeValues.end(); ++lane) {
                 MeanDataValues& meanData = **lane;
                 meanData.addTo(*sumData);
                 meanData.reset();
             }
-            if (writePrefix(dev, *sumData, "<edge id=\"" + edge->getID())) {
-                sumData->write(dev, stopTime - startTime, (SUMOReal)edge->getLanes().size());
+            if (writePrefix(dev, *sumData, "edge", edge->getID())) {
+                sumData->write(dev, stopTime - startTime, (SUMOReal)edge->getLanes().size(),
+                               myPrintDefaults ? edge->getLength() / edge->getMaxSpeed() : -1.);
             }
             delete sumData;
         }
@@ -406,9 +418,9 @@ MSMeanData::writeEdge(OutputDevice& dev,
 
 
 bool
-MSMeanData::writePrefix(OutputDevice& dev, const MeanDataValues& values, const std::string prefix) const {
+MSMeanData::writePrefix(OutputDevice& dev, const MeanDataValues& values, const std::string tag, const std::string id) const {
     if (myDumpEmpty || !values.isEmpty()) {
-        dev.indent() << prefix << "\" sampledSeconds=\"" << values.getSamples();
+        dev.openTag(tag).writeAttr(SUMO_ATTR_ID, id) << " sampledSeconds=\"" << values.getSamples();
         return true;
     }
     return false;

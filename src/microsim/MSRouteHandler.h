@@ -35,7 +35,7 @@
 #include <string>
 #include "MSPerson.h"
 #include "MSVehicle.h"
-#include <utils/xml/SUMOSAXHandler.h>
+#include <utils/xml/SUMORouteHandler.h>
 #include <utils/common/SUMOTime.h>
 
 
@@ -57,7 +57,7 @@ class MSVehicleType;
  * their transfering to the MSNet::RouteDict
  * The result of the operations are single MSNet::Route-instances
  */
-class MSRouteHandler : public SUMOSAXHandler {
+class MSRouteHandler : public SUMORouteHandler {
 public:
     /// standard constructor
     MSRouteHandler(const std::string& file,
@@ -65,13 +65,6 @@ public:
 
     /// standard destructor
     virtual ~MSRouteHandler() ;
-
-    /// Returns the last loaded depart time
-    SUMOTime getLastDepart() const;
-
-    /// check start and end position of a stop
-    bool checkStopPos(SUMOReal& startPos, SUMOReal& endPos, const SUMOReal laneLength,
-                      const SUMOReal minLength, const bool friendlyPos);
 
 protected:
     /// @name inherited from GenericSAXHandler
@@ -133,28 +126,8 @@ protected:
     void addStop(const SUMOSAXAttributes& attrs) ;
 
 protected:
-    SUMOVehicleParameter* myVehicleParameter;
-
-    /// @brief The insertion time of the vehicle read last
-    SUMOTime myLastDepart;
-
     /// @brief The current route
     MSEdgeVector myActiveRoute;
-
-    /// @brief The id of the current route
-    std::string myActiveRouteID;
-
-    /// @brief The id of the route the current route references to
-    std::string myActiveRouteRefID;
-
-    /// @brief The id of the current route
-    SUMOReal myActiveRouteProbability;
-
-    /// @brief The currently parsed route's color
-    RGBColor myActiveRouteColor;
-
-    /// @brief List of the stops on the parsed route
-    std::vector<SUMOVehicleParameter::Stop> myActiveRouteStops;
 
     /// @brief The plan of the current person
     MSPerson::MSPersonPlan* myActivePlan;
@@ -177,17 +150,7 @@ protected:
     /// @brief The scaling factor (especially for inc-dua)
     SUMOReal myScale;
 
-    /// @brief The currently parsed vehicle type
-    SUMOVTypeParameter* myCurrentVType;
-
-    bool myHaveWarnedAboutDeprecatedFriendlyPos, myHaveWarnedAboutDeprecatedBusStop;
-    bool myHaveWarnedAboutDeprecatedVType, myHaveWarnedAboutDeprecatedVTypeDistribution;
-    bool myHaveWarnedAboutDeprecatedVTypes, myHaveWarnedAboutDeprecatedRefID;
-
 private:
-    /// Checks whether the route file is sorted by departure time if needed
-    bool checkLastDepart();
-
     /// @brief Invalidated copy constructor
     MSRouteHandler(const MSRouteHandler& s);
 

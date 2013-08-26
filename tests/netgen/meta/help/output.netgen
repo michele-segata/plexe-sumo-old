@@ -1,20 +1,12 @@
-SUMO netgen Version dev-SVN-r11690
+SUMO netgen Version dev-SVN-r12007
  Copyright (C) 2001-2012 DLR and contributors; http://sumo.sourceforge.net
- 
 Road network generator for the microscopic road traffic simulation SUMO.
 
 Usage: netgen [OPTION]*
- 
- Examples:
-  netgen -c <CONFIGURATION>
-  netgen --grid [grid-network options] -o <OUTPUTFILE>
-  netgen --spider [spider-network options] -o <OUTPUTFILE>
-  netgen --rand [random-network options] -o <OUTPUTFILE>
- 
  Either "--grid", "--spider" or "--rand" must be supplied.
   In dependance to these switches other options are used.
  
- Configuration Options:
+Configuration Options:
   -c, --configuration-file FILE       Loads the named config on startup
   --save-configuration FILE           Saves current configuration into FILE
   --save-template FILE                Saves a configuration template (empty)
@@ -23,7 +15,7 @@ Usage: netgen [OPTION]*
   --save-commented                    Adds comments to saved template,
                                         configuration, or schema
 
- Grid Network Options:
+Grid Network Options:
   -g, --grid                          Forces NETGEN to build a grid-like
                                         network
   --grid.number INT                   The number of junctions in both dirs
@@ -40,7 +32,7 @@ Usage: netgen [OPTION]*
                                         boundary;
                                         0 means no streets are attached
 
- Spider Network Options:
+Spider Network Options:
   -s, --spider                        Forces NETGEN to build a spider-net-like
                                         network
   --spider.arm-number INT             The number of axes within the net
@@ -48,7 +40,7 @@ Usage: netgen [OPTION]*
   --spider.space-radius FLOAT         The distances between the circles
   --spider.omit-center                Omit the central node of the network
 
- Random Network Options:
+Random Network Options:
   -r, --rand                          Forces NETGEN to build a random network
   --rand.iterations INT               Describes how many times an edge shall be
                                         added to the net
@@ -66,10 +58,13 @@ Usage: netgen [OPTION]*
   --rand.neighbor-dist5 FLOAT         
   --rand.neighbor-dist6 FLOAT         
 
- Output Options:
+Output Options:
   -o, --output-file FILE              The generated net will be written to FILE
   --plain-output-prefix FILE          Prefix of files to write plain xml nodes,
                                         edges and connections to
+  --junctions.join-output FILE        Writes information about joined junctions
+                                        to FILE (can be loaded as additional
+                                        node-file to reproduce joins
   -M, --map-output FILE               Writes joined edges information to FILE
   --matsim-output FILE                The generated net will be written to FILE
                                         using MATsim format.
@@ -78,7 +73,7 @@ Usage: netgen [OPTION]*
   --output.street-names               Street names will be included in the
                                         output (if available).
 
- TLS Building Options:
+TLS Building Options:
   --tls.set STR                       Interprets STR as list of junctions to be
                                         controlled by TLS
   --tls.unset STR                     Interprets STR as list of junctions to be
@@ -96,20 +91,23 @@ Usage: netgen [OPTION]*
   --tls.quarter-offset STR            TLSs in STR will be shifted by
                                         quarter-phase
 
- Edge Removal Options:
+Edge Removal Options:
   --keep-edges.min-speed FLOAT        Only keep edges with speed > FLOAT
   --remove-edges.explicit STR         Remove edges in STR
   --keep-edges.explicit STR           Only keep edges in STR
   --keep-edges.input-file FILE        Only keep edges in FILE
   --keep-edges.in-boundary STR        Only keep edges which are located within
-                                        the given boundary
+                                        the given boundary (given either as
+                                        CARTESIAN corner coordinates
+                                        <xmin,ymin,xmax,ymax> or as polygon
+                                        <x0,y0,x1,y1,...>)
 
- Unregulated Nodes Options:
+Unregulated Nodes Options:
   --keep-nodes-unregulated            All nodes will be unregulated
   --keep-nodes-unregulated.explicit STR  Do not regulate nodes in STR
   --keep-nodes-unregulated.district-nodes  Do not regulate district nodes
 
- Processing Options:
+Processing Options:
   --no-internal-links                 Omits internal links
   --no-turnarounds                    Disables building turnarounds
   --no-turnarounds.tls                Disables building turnarounds at
@@ -126,25 +124,40 @@ Usage: netgen [OPTION]*
   --junctions.join-dist FLOAT         Determines the maximal distance for
                                         joining junctions (defaults to 15)
 
- Building Defaults Options:
+Building Defaults Options:
   -L, --default.lanenumber INT        The default number of lanes in an edge
   -S, --default.speed FLOAT           The default speed on an edge (in m/s)
   -P, --default.priority INT          The default priority of an edge
   -j, --default-junction-type STR     [traffic_light|priority|right_before_left] Determines the type of the build junctions
 
- Report Options:
+Report Options:
   -v, --verbose                       Switches to verbose output
   -p, --print-options                 Prints option values before processing
   -?, --help                          Prints this screen
   -V, --version                       Prints the current version
   -W, --no-warnings                   Disables output of warnings
-  -l, --log FILE                      Writes all messages to FILE
+  -l, --log FILE                      Writes all messages to FILE (implies
+                                        verbose)
   --message-log FILE                  Writes all non-error messages to FILE
+                                        (implies verbose)
   --error-log FILE                    Writes all warnings and errors to FILE
 
- Random Number Options:
+Random Number Options:
   --random                            Initialises the random number generator
                                         with the current system time
   --seed INT                          Initialises the random number generator
                                         with the given value
 
+
+Examples:
+  netgen -c <CONFIGURATION>
+    create net from given configuration
+  netgen --grid [grid-network options] -o <OUTPUTFILE>
+    create grid net
+  netgen --spider [spider-network options] -o <OUTPUTFILE>
+    create spider net
+  netgen --rand [random-network options] -o <OUTPUTFILE>
+    create random net
+
+Report bugs at <http://sourceforge.net/apps/trac/sumo/>.
+Get in contact via <sumo-user@lists.sourceforge.net>.

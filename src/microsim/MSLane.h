@@ -35,32 +35,24 @@
 #include <config.h>
 #endif
 
-#include "MSEdge.h"
-#include "MSLinkCont.h"
-#include "MSVehicle.h"
-#include <bitset>
-#include <deque>
 #include <vector>
-#include <utility>
-#include <map>
-#include <string>
-#include <iostream>
-#include "MSNet.h"
-#include <utils/geom/PositionVector.h>
-#include <utils/geom/Line.h>
-#include <utils/geom/GeomHelper.h>
-#include <utils/common/SUMOTime.h>
-#include <utils/common/SUMOVehicleClass.h>
+#include <deque>
+#include <cassert>
 #include <utils/common/Named.h>
+#include <utils/common/SUMOVehicleClass.h>
+#include <utils/geom/PositionVector.h>
+#include "MSLinkCont.h"
+#include "MSMoveReminder.h"
 
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
+class MSEdge;
+class MSVehicle;
 class MSLaneChanger;
 class MSCACCLaneChanger;
 class MSLink;
-class MSMoveReminder;
 class GUILaneWrapper;
 class MSVehicleTransfer;
 class OutputDevice;
@@ -88,12 +80,9 @@ public:
 
     /** Function-object in order to find the vehicle, that has just
         passed the detector. */
-    struct VehPosition : public std::binary_function < const MSVehicle*,
-            SUMOReal, bool > {
+    struct VehPosition : public std::binary_function < const MSVehicle*, SUMOReal, bool > {
         /// compares vehicle position to the detector position
-        bool operator()(const MSVehicle* cmp, SUMOReal pos) const {
-            return cmp->getPositionOnLane() >= pos;
-        }
+        bool operator()(const MSVehicle* cmp, SUMOReal pos) const;
     };
 
 public:
@@ -106,14 +95,12 @@ public:
      * @param[in] numericalID The numerical id of the lane
      * @param[in] shape The shape of the lane
      * @param[in] width The width of the lane
-     * @param[in] allowed Vehicle classes that explicitly may drive on this lane
-     * @param[in] disallowed Vehicle classes that are explicitly forbidden on this lane
+     * @param[in] permissions Encoding of the Vehicle classes that may drive on this lane
      * @see SUMOVehicleClass
      */
     MSLane(const std::string& id, SUMOReal maxSpeed, SUMOReal length, MSEdge* const edge,
            unsigned int numericalID, const PositionVector& shape, SUMOReal width,
-           const SUMOVehicleClasses& allowed,
-           const SUMOVehicleClasses& disallowed) ;
+           SVCPermissions permissions);
 
 
     /// @brief Destructor
@@ -354,19 +341,11 @@ public:
     }
 
 
-    /** @brief Returns vehicle classes explicitly allowed on this lane
+    /** @brief Returns the vehicle class permissions for this lane
      * @return This lane's allowed vehicle classes
      */
-    const SUMOVehicleClasses& getAllowedClasses() const {
-        return myAllowedClasses;
-    }
-
-
-    /** @brief Returns vehicle classes explicitly disallowed on this lane
-     * @return This lane's disallowed vehicle classes
-     */
-    const SUMOVehicleClasses& getNotAllowedClasses() const {
-        return myNotAllowedClasses;
+    inline SVCPermissions getPermissions() {
+        return myPermissions;
     }
 
 
@@ -493,17 +472,14 @@ public:
     MSLane* getLeftLane() const;
     MSLane* getRightLane() const;
 
-    void setAllowedClasses(const SUMOVehicleClasses& classes) {
-        myAllowedClasses = classes;
+    inline void setPermissions(SVCPermissions permissions) {
+        myPermissions = permissions;
     }
 
 
-    void setNotAllowedClasses(const SUMOVehicleClasses& classes) {
-        myNotAllowedClasses = classes;
+    inline bool allowsVehicleClass(SUMOVehicleClass vclass) const {
+        return (myPermissions & vclass) == vclass;
     }
-
-
-    bool allowsVehicleClass(SUMOVehicleClass vclass) const;
 
     void addIncomingLane(MSLane* lane, MSLink* viaLink);
 
@@ -671,19 +647,14 @@ protected:
     VehCont myTmpVehicles;
 
 
-    SUMOReal myBackDistance;
-
     /** Vehicle-buffer for vehicle that was put onto this lane by a
         junction. The  buffer is necessary, because of competing
         push- and pop-operations on myVehicles during
         Junction::moveFirst() */
     std::vector<MSVehicle*> myVehBuffer;
 
-    /// The list of allowed vehicle classes
-    SUMOVehicleClasses myAllowedClasses;
-
-    /// The list of disallowed vehicle classes
-    SUMOVehicleClasses myNotAllowedClasses;
+    /// The vClass permissions for this lane
+    SVCPermissions myPermissions;
 
     std::vector<IncomingLaneInfo> myIncomingLanes;
     mutable MSLane* myLogicalPredecessorLane;
@@ -736,9 +707,7 @@ private:
          * @param[in] v2 Second vehicle to compare
          * @return Whether the first vehicle is further on the lane than the second
          */
-        int operator()(MSVehicle* v1, MSVehicle* v2) const {
-            return v1->getPositionOnLane() > v2->getPositionOnLane();
-        }
+        int operator()(MSVehicle* v1, MSVehicle* v2) const;
 
     };
 
@@ -748,23 +717,10 @@ private:
     class by_connections_to_sorter {
     public:
         /// @brief constructor
-        explicit by_connections_to_sorter(const MSEdge* const e)
-            : myEdge(e), myLaneDir(e->getLanes()[0]->getShape().getBegLine().atan2PositiveAngle()) { }
+        explicit by_connections_to_sorter(const MSEdge* const e);
 
         /// @brief comparing operator
-        int operator()(const MSEdge* const e1, const MSEdge* const e2) const {
-            const std::vector<MSLane*>* ae1 = e1->allowedLanes(*myEdge);
-            const std::vector<MSLane*>* ae2 = e2->allowedLanes(*myEdge);
-            SUMOReal s1 = 0;
-            if (ae1 != 0 && ae1->size() != 0) {
-                s1 = (SUMOReal) ae1->size() + GeomHelper::getMinAngleDiff((*ae1)[0]->getShape().getBegLine().atan2PositiveAngle(), myLaneDir) / PI / 2.;
-            }
-            SUMOReal s2 = 0;
-            if (ae2 != 0 && ae2->size() != 0) {
-                s2 = (SUMOReal) ae2->size() + GeomHelper::getMinAngleDiff((*ae2)[0]->getShape().getBegLine().atan2PositiveAngle(), myLaneDir) / PI / 2.;
-            }
-            return s1 < s2;
-        }
+        int operator()(const MSEdge* const e1, const MSEdge* const e2) const;
 
     private:
         by_connections_to_sorter& operator=(const by_connections_to_sorter&); // just to avoid a compiler warning

@@ -11,6 +11,8 @@
     <GDAL_LIB>$(PROJ_GDAL)\lib\gdal_i.lib</GDAL_LIB>
     <FOX16_LIB>$(FOX16)\lib\FOXDLL-1.6.lib</FOX16_LIB>
     <FOX16_DEBUG_LIB>$(FOX16)\lib\FOXDLLD-1.6.lib</FOX16_DEBUG_LIB>
+    <OSG_LIB>$(OSG)\lib\osgUtil.lib;$(OSG)\lib\osgDB.lib;$(OSG)\lib\osgGA.lib;$(OSG)\lib\osg.lib;$(OSG)\lib\osgViewer.lib</OSG_LIB>
+    <OSG_DEBUG_LIB>$(OSG)\lib\osgUtild.lib;$(OSG)\lib\osgDBd.lib;$(OSG)\lib\osgGAd.lib;$(OSG)\lib\osgd.lib;$(OSG)\lib\osgViewerd.lib</OSG_DEBUG_LIB>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
@@ -19,7 +21,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(PROJ_GDAL)\include;$(FOX16)\include;$(XERCES)\include;..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(XERCES)\include;$(PROJ_GDAL)\include;$(FOX16)\include;$(OSG)\include;..\..\..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>HAVE_PROJ;HAVE_GDAL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>

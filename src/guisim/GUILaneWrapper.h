@@ -126,14 +126,11 @@ public:
 
 
     const PositionVector& getShape() const;
-    const DoubleVector& getShapeRotations() const;
-    const DoubleVector& getShapeLengths() const;
+    const std::vector<SUMOReal>& getShapeRotations() const;
+    const std::vector<SUMOReal>& getShapeLengths() const;
 
     SUMOReal firstWaitingTime() const;
 
-
-    /// Returns the fastest known lane speed
-    static SUMOReal getOverallMaxSpeed();
 
     /// Returns true if the given lane id the lane this wrapper wraps the geometry of
     bool forLane(const MSLane& lane) const;
@@ -195,10 +192,6 @@ public:
 
 
 protected:
-    /** the visualisation length; As sources and sinks may be shorter/longer
-        as their visualisation length, a second length information is necessary */
-    SUMOReal myVisLength;
-
     /// The assigned lane
     MSLane& myLane;
 
@@ -206,10 +199,10 @@ protected:
     const PositionVector& myShape;
 
     /// The rotations of the shape parts
-    DoubleVector myShapeRotations;
+    std::vector<SUMOReal> myShapeRotations;
 
     /// The lengths of the shape parts
-    DoubleVector myShapeLengths;
+    std::vector<SUMOReal> myShapeLengths;
 
     /// @brief Half of lane width, for speed-up
     SUMOReal myHalfLaneWidth;

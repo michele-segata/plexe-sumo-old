@@ -139,10 +139,16 @@ public:
 
 #ifdef HAVE_MESOSIM
     unsigned int getVehicleNo() const;
+    std::string getVehicleIDs() const;
     SUMOReal getOccupancy() const;
     SUMOReal getMeanSpeed() const;
     SUMOReal getAllowedSpeed() const;
+    /// @brief return flow based on meanSpead @note: may produced incorrect results when jammed
     SUMOReal getFlow() const;
+    /// @brief return flow based on headWay
+    SUMOReal getFlowAlternative() const;
+    /// @brief return meanSpead divided by allowedSpeed
+    SUMOReal getRelativeSpeed() const;
 
     /// @brief sets the color according to the currente settings
     void setColor(const GUIVisualizationSettings& s) const;

@@ -32,6 +32,8 @@
 #include <config.h>
 #endif
 
+#ifndef NO_TRACI
+
 #include <utils/common/StdDefs.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSEdge.h>
@@ -274,7 +276,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     const std::deque<MSVehicle*> &vehs = (*i)->getVehiclesSecure();
                     for (std::deque<MSVehicle*>::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
-                        lengthSum += (*j)->getVehicleType().getLengthWithGap();
+                        lengthSum += (*j)->getVehicleType().getLength();
                     }
                     noVehicles += (int) vehs.size();
                     (*i)->releaseVehicles();
@@ -322,11 +324,10 @@ TraCIServerAPI_Edge::processSet(TraCIServer& server, tcpip::Storage& inputStorag
                 server.writeStatusCmd(CMD_GET_EDGE_VARIABLE, RTYPE_ERR, "Allowed vehicle classes must be given as a list of strings.", outputStorage);
                 return false;
             }
-            SUMOVehicleClasses allowed;
-            parseVehicleClasses(inputStorage.readStringList(), allowed);
+            SVCPermissions permissions = parseVehicleClasses(inputStorage.readStringList());
             const std::vector<MSLane*> &lanes = e->getLanes();
             for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
-                (*i)->setAllowedClasses(allowed);
+                (*i)->setPermissions(permissions);
             }
             e->rebuildAllowedLanes();
         }
@@ -337,11 +338,10 @@ TraCIServerAPI_Edge::processSet(TraCIServer& server, tcpip::Storage& inputStorag
                 server.writeStatusCmd(CMD_GET_EDGE_VARIABLE, RTYPE_ERR, "Not allowed vehicle classes must be given as a list of strings.", outputStorage);
                 return false;
             }
-            SUMOVehicleClasses disallowed;
-            parseVehicleClasses(inputStorage.readStringList(), disallowed);
+            SVCPermissions permissions = ~parseVehicleClasses(inputStorage.readStringList()); // negation yields allowed
             const std::vector<MSLane*> &lanes = e->getLanes();
             for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
-                (*i)->setNotAllowedClasses(disallowed);
+                (*i)->setPermissions(permissions);
             }
             e->rebuildAllowedLanes();
         }
@@ -450,6 +450,8 @@ TraCIServerAPI_Edge::processSet(TraCIServer& server, tcpip::Storage& inputStorag
     return true;
 }
 
+
+#endif
 
 
 /****************************************************************************/

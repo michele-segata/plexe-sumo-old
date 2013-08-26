@@ -37,6 +37,7 @@
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/ToString.h>
+#include <utils/common/StringUtils.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/options/Option.h>
 #include <utils/common/StdDefs.h>
@@ -70,7 +71,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
     // parse file(s)
     std::vector<std::string> files = oc.getStringVector("osm-files");
     // load nodes, first
-    std::map<int, PCOSMNode*> nodes;
+    std::map<long, PCOSMNode*> nodes;
     NodesHandler nodesHandler(nodes);
     for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
         // nodes
@@ -103,7 +104,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
         }
         // compute shape
         PositionVector vec;
-        for (std::vector<int>::iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
+        for (std::vector<long>::iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
             PCOSMNode* n = nodes.find(*j)->second;
             Position pos(n->lon, n->lat);
             if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
@@ -143,6 +144,8 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
             if (oc.getBool("osm.keep-full-type")) {
                 type = e->myType;
             }
+            name = StringUtils::escapeXML(name);
+            type = StringUtils::escapeXML(type);
             Polygon* poly = new Polygon(name, type, color, vec, fill);
             if (!toFill.insert(name, poly, layer)) {
                 WRITE_ERROR("Polygon '" + name + "' could not been added.");
@@ -151,7 +154,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
         }
     }
     // instantiate pois
-    for (std::map<int, PCOSMNode*>::iterator i = nodes.begin(); i != nodes.end(); ++i) {
+    for (std::map<long, PCOSMNode*>::iterator i = nodes.begin(); i != nodes.end(); ++i) {
         PCOSMNode* n = (*i).second;
         if (!n->myIsAdditional) {
             continue;
@@ -194,6 +197,8 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
             if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for POI '" + name + "'.");
             }
+            name = StringUtils::escapeXML(name);
+            type = StringUtils::escapeXML(type);
             PointOfInterest* poi = new PointOfInterest(name, type, pos, color);
             if (!toFill.insert(name, poi, layer, ignorePrunning)) {
                 WRITE_ERROR("POI '" + name + "' could not been added.");
@@ -204,7 +209,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
 
 
     // delete nodes
-    for (std::map<int, PCOSMNode*>::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
+    for (std::map<long, PCOSMNode*>::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
         delete(*i).second;
     }
     // delete edges
@@ -218,7 +223,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
 // ---------------------------------------------------------------------------
 // definitions of PCLoaderOSM::NodesHandler-methods
 // ---------------------------------------------------------------------------
-PCLoaderOSM::NodesHandler::NodesHandler(std::map<int, PCOSMNode*> &toFill)
+PCLoaderOSM::NodesHandler::NodesHandler(std::map<long, PCOSMNode*> &toFill)
     : SUMOSAXHandler("osm - file"), myToFill(toFill), myLastNodeID(-1) {}
 
 
@@ -230,7 +235,7 @@ PCLoaderOSM::NodesHandler::myStartElement(int element, const SUMOSAXAttributes& 
     myParentElements.push_back(element);
     if (element == SUMO_TAG_NODE) {
         bool ok = true;
-        int id = attrs.getIntReporting(SUMO_ATTR_ID, 0, ok);
+        long id = attrs.getLongReporting(SUMO_ATTR_ID, 0, ok);
         if (!ok) {
             return;
         }
@@ -287,7 +292,7 @@ PCLoaderOSM::NodesHandler::myEndElement(int element) {
 // definitions of PCLoaderOSM::EdgesHandler-methods
 // ---------------------------------------------------------------------------
 PCLoaderOSM::EdgesHandler::EdgesHandler(
-    const std::map<int, PCOSMNode*> &osmNodes,
+    const std::map<long, PCOSMNode*> &osmNodes,
     std::map<std::string, PCOSMEdge*> &toFill)
     : SUMOSAXHandler("osm - file"),
       myOSMNodes(osmNodes), myEdgeMap(toFill) {
@@ -316,7 +321,7 @@ PCLoaderOSM::EdgesHandler::myStartElement(int element, const SUMOSAXAttributes& 
     // parse "nd" (node) elements
     if (element == SUMO_TAG_ND) {
         bool ok = true;
-        int ref = attrs.getIntReporting(SUMO_ATTR_REF, 0, ok);
+        long ref = attrs.getLongReporting(SUMO_ATTR_REF, 0, ok);
         if (ok) {
             if (myOSMNodes.find(ref) == myOSMNodes.end()) {
                 WRITE_WARNING("The referenced geometry information (ref='" + toString(ref) + "') is not known");

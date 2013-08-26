@@ -28,7 +28,6 @@
 #include <config.h>
 #endif
 
-#include <microsim/output/MSInstantInductLoop.h>
 #include <utils/gui/globjects/GUIGlObject.h>
 #include <utils/geom/PositionVector.h>
 #include "GUILaneWrapper.h"
@@ -38,6 +37,7 @@
 #include <utils/gui/div/GUIParameterTableWindow.h>
 #include <microsim/logging/FuncBinding_IntParam.h>
 #include <microsim/logging/FunctionBinding.h>
+#include <microsim/output/MSInstantInductLoop.h>
 #include <microsim/MSLane.h>
 #include "GUIEdge.h"
 
@@ -81,8 +81,6 @@ GUIInstantInductLoop::MyWrapper::MyWrapper(GUIInstantInductLoop& detector,
       myDetector(detector), myPosition(pos) {
     const PositionVector& v = wrapper.getShape();
     myFGPosition = v.positionAtLengthPosition(pos);
-    Line l(v.getBegin(), v.getEnd());
-    SUMOReal sgPos = pos / v.length() * l.length();
     myBoundary.add(myFGPosition.x() + (SUMOReal) 5.5, myFGPosition.y() + (SUMOReal) 5.5);
     myBoundary.add(myFGPosition.x() - (SUMOReal) 5.5, myFGPosition.y() - (SUMOReal) 5.5);
     myFGRotation = -v.rotationDegreeAtLengthPosition(pos);

@@ -2,6 +2,24 @@
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/netgenConfiguration.xsd">
 
+    <configuration>
+        <!-- Loads the named config on startup -->
+        <configuration-file value="" synonymes="c configuration" type="FILE"/>
+
+        <!-- Saves current configuration into FILE -->
+        <save-configuration value="" synonymes="save-config" type="FILE"/>
+
+        <!-- Saves a configuration template (empty) into FILE -->
+        <save-template value="" type="FILE"/>
+
+        <!-- Saves the configuration schema into FILE -->
+        <save-schema value="" type="FILE"/>
+
+        <!-- Adds comments to saved template, configuration, or schema -->
+        <save-commented value="" synonymes="save-template.commented" type="BOOL"/>
+
+    </configuration>
+
     <grid_network>
         <!-- Forces NETGEN to build a grid-like network -->
         <grid value="false" synonymes="g grid-net" type="BOOL"/>
@@ -99,6 +117,9 @@
         <!-- Prefix of files to write plain xml nodes, edges and connections to -->
         <plain-output-prefix value="" synonymes="plain plain-output" type="FILE"/>
 
+        <!-- Writes information about joined junctions to FILE (can be loaded as additional node-file to reproduce joins -->
+        <junctions.join-output value="" type="FILE"/>
+
         <!-- Writes joined edges information to FILE -->
         <map-output value="" synonymes="M" type="FILE"/>
 
@@ -162,7 +183,7 @@
         <!-- Only keep edges in FILE -->
         <keep-edges.input-file value="" type="FILE"/>
 
-        <!-- Only keep edges which are located within the given boundary -->
+        <!-- Only keep edges which are located within the given boundary (given either as CARTESIAN corner coordinates <xmin,ymin,xmax,ymax> or as polygon <x0,y0,x1,y1,...>) -->
         <keep-edges.in-boundary value="" type="STR"/>
 
     </edge_removal>
@@ -249,10 +270,10 @@
         <!-- Disables output of warnings -->
         <no-warnings value="false" synonymes="W suppress-warnings" type="BOOL"/>
 
-        <!-- Writes all messages to FILE -->
+        <!-- Writes all messages to FILE (implies verbose) -->
         <log value="" synonymes="l log-file" type="FILE"/>
 
-        <!-- Writes all non-error messages to FILE -->
+        <!-- Writes all non-error messages to FILE (implies verbose) -->
         <message-log value="" type="FILE"/>
 
         <!-- Writes all warnings and errors to FILE -->

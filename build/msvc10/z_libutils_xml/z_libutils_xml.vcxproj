@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\utils\xml\GenericSAXHandler.cpp" />
     <ClCompile Include="..\..\..\src\utils\xml\SAXWeightsHandler.cpp" />
+    <ClCompile Include="..\..\..\src\utils\xml\SUMORouteHandler.cpp" />
     <ClCompile Include="..\..\..\src\utils\xml\SUMOSAXAttributes.cpp" />
     <ClCompile Include="..\..\..\src\utils\xml\SUMOSAXAttributesImpl_Xerces.cpp" />
     <ClCompile Include="..\..\..\src\utils\xml\SUMOSAXHandler.cpp" />
@@ -157,18 +158,13 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\src\utils\xml\GenericSAXHandler.h" />
     <ClInclude Include="..\..\..\src\utils\xml\SAXWeightsHandler.h" />
+    <ClInclude Include="..\..\..\src\utils\xml\SUMORouteHandler.h" />
     <ClInclude Include="..\..\..\src\utils\xml\SUMOSAXAttributes.h" />
     <ClInclude Include="..\..\..\src\utils\xml\SUMOSAXAttributesImpl_Xerces.h" />
     <ClInclude Include="..\..\..\src\utils\xml\SUMOSAXHandler.h" />
     <ClInclude Include="..\..\..\src\utils\xml\SUMOVehicleParserHelper.h" />
     <ClInclude Include="..\..\..\src\utils\xml\SUMOXMLDefinitions.h" />
     <ClInclude Include="..\..\..\src\utils\xml\XMLSubSys.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\zz_foreign_nvwa\zz_foreign_nvwa.vcxproj">
-      <Project>{fc5b65e0-a0b1-40d7-8687-c2fc79e3da47}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

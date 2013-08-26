@@ -38,25 +38,13 @@
 #include <config.h>
 #endif
 
-#include "MSBaseVehicle.h"
-#include "MSEdge.h"
-#include "MSRoute.h"
-#include "MSGlobals.h"
 #include <list>
 #include <deque>
 #include <map>
 #include <string>
 #include <vector>
-#include <utils/common/MsgHandler.h>
-#include <utils/common/ToString.h>
-#include <utils/common/SUMOVehicle.h>
-#include <utils/common/SUMOVehicleClass.h>
 #include "MSVehicleType.h"
-#include <utils/common/SUMOAbstractRouter.h>
-
-#ifdef HAVE_MESOSIM
-#include <mesosim/MEVehicle.h>
-#endif
+#include "MSBaseVehicle.h"
 
 
 // ===========================================================================
@@ -237,7 +225,7 @@ public:
      * @return The gap between this vehicle and the leader (may be <0)
      */
     SUMOReal gap2pred(const MSVehicle& pred) const {
-        SUMOReal gap = pred.getPositionOnLane() - pred.getVehicleType().getLengthWithGap() - getPositionOnLane();
+        SUMOReal gap = pred.getPositionOnLane() - pred.getVehicleType().getLength() - getPositionOnLane() - getVehicleType().getMinGap();
         if (gap < 0 && gap > -1.0e-12) {
             gap = 0;
         }
@@ -973,7 +961,7 @@ protected:
 
     bool myHaveToWaitOnNextLink;
 
-private:
+protected:
     struct DriveProcessItem {
         MSLink* myLink;
         SUMOReal myVLinkPass;
@@ -993,6 +981,8 @@ private:
     /// Container for used Links/visited Lanes during lookForward.
     DriveItemVector myLFLinkLanes;
 
+
+private:
     /// @brief The vehicle's knowledge about edge efforts/travel times; @see MSEdgeWeightsStorage
     MSEdgeWeightsStorage* myEdgeWeights;
 

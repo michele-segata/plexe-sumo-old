@@ -64,9 +64,9 @@
 void
 MSFrame::fillOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
-    oc.addCallExample("-b 0 -e 1000 -n net.xml -r routes.xml");
-    oc.addCallExample("-c munich_config.cfg");
-    oc.addCallExample("--help");
+    oc.addCallExample("-b 0 -e 1000 -n net.xml -r routes.xml", "start a simulation from time 0 to 1000 with given net and routes");
+    oc.addCallExample("-c munich_config.cfg", "start with a configuration file");
+    oc.addCallExample("--help", "print help");
 
     // insert options sub-topics
     SystemFrame::addConfigurationOptions(oc); // fill this subtopic, too
@@ -164,8 +164,8 @@ MSFrame::fillOptions() {
 
 
     // register the processing options
-    oc.doRegister("route-steps", 's', new Option_Integer(200));
-    oc.addDescription("route-steps", "Processing", "Load routes for the next INT steps ahead");
+    oc.doRegister("route-steps", 's', new Option_String("200", "TIME"));
+    oc.addDescription("route-steps", "Processing", "Load routes for the next number of seconds ahead");
 
 #ifdef HAVE_INTERNAL_LANES
     oc.doRegister("no-internal-links", new Option_Bool(false));
@@ -265,8 +265,8 @@ MSFrame::fillOptions() {
     oc.doRegister("game", 'G', new Option_Bool(false));
     oc.addDescription("game", "GUI Only", "Start the GUI in gaming mode");
 
-    oc.doRegister("no-start", 'N', new Option_Bool(false));
-    oc.addDescription("no-start", "GUI Only", "Does not start the simulation after loading");
+    oc.doRegister("start", 'S', new Option_Bool(false));
+    oc.addDescription("start", "GUI Only", "Start the simulation after loading");
 
     oc.doRegister("disable-textures", 'T', new Option_Bool(false));
     oc.addDescription("disable-textures", "GUI Only", "Do not load background pictures");
@@ -332,19 +332,6 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
     MSGlobals::gStateLoaded = oc.isSet("load-state");
     MSGlobals::gUseMesoSim = oc.getBool("mesosim");
 #endif
-    for (unsigned int i = 0; i < 1000; i++) {
-        unsigned int num = i;
-        unsigned int den = 1000;
-        while (num % 2 == 0 && den % 2 == 0) {
-            num /= 2;
-            den /= 2;
-        }
-        while (num % 5 == 0 && den % 5 == 0) {
-            num /= 5;
-            den /= 5;
-        }
-        MSGlobals::gFractions[SUMOReal(i) / 1000.] = std::make_pair(num, den);
-    }
 
 #ifdef HAVE_SUBSECOND_TIMESTEPS
     DELTA_T = string2time(oc.getString("step-length"));

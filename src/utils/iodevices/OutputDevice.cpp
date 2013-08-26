@@ -39,7 +39,9 @@
 #include "OutputDevice.h"
 #include "OutputDevice_File.h"
 #include "OutputDevice_COUT.h"
+#include "OutputDevice_CERR.h"
 #include "OutputDevice_Network.h"
+#include "PlainXMLFormatter.h"
 #include <utils/common/TplConvert.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/FileHelpers.h>
@@ -54,7 +56,7 @@
 // ===========================================================================
 // static member definitions
 // ===========================================================================
-OutputDevice::DeviceMap OutputDevice::myOutputDevices;
+std::map<std::string, OutputDevice*> OutputDevice::myOutputDevices;
 
 
 // ===========================================================================
@@ -63,30 +65,36 @@ OutputDevice::DeviceMap OutputDevice::myOutputDevices;
 OutputDevice&
 OutputDevice::getDevice(const std::string& name,
                         const std::string& base) {
+    std::string internalName = name;
+    if (name == "-") {
+        internalName = "stdout";
+    }
     // check whether the device has already been aqcuired
-    if (myOutputDevices.find(name) != myOutputDevices.end()) {
-        return *myOutputDevices[name];
+    if (myOutputDevices.find(internalName) != myOutputDevices.end()) {
+        return *myOutputDevices[internalName];
     }
     // build the device
     OutputDevice* dev = 0;
     // check whether the device shall print to stdout
-    if (name == "stdout" || name == "-") {
-        dev = new OutputDevice_COUT();
-    } else if (FileHelpers::isSocket(name)) {
+    if (internalName == "stdout") {
+        dev = OutputDevice_COUT::getDevice();
+    } else if (internalName == "stderr") {
+        dev = OutputDevice_CERR::getDevice();
+    } else if (FileHelpers::isSocket(internalName)) {
         try {
-            int port = TplConvert<char>::_2int(name.substr(name.find(":") + 1).c_str());
-            dev = new OutputDevice_Network(name.substr(0, name.find(":")), port);
+            int port = TplConvert<char>::_2int(internalName.substr(internalName.find(":") + 1).c_str());
+            dev = new OutputDevice_Network(internalName.substr(0, internalName.find(":")), port);
         } catch (NumberFormatException&) {
-            throw IOError("Given port number '" + name.substr(name.find(":") + 1) + "' is not numeric.");
+            throw IOError("Given port number '" + internalName.substr(internalName.find(":") + 1) + "' is not numeric.");
         } catch (EmptyData&) {
             throw IOError("No port number given.");
         }
     } else {
-        dev = new OutputDevice_File(FileHelpers::checkForRelativity(name, base));
+        dev = new OutputDevice_File(FileHelpers::checkForRelativity(internalName, base), internalName.find(".sbx") != std::string::npos);
     }
     dev->setPrecision();
     dev->getOStream() << std::setiosflags(std::ios::fixed);
-    myOutputDevices[name] = dev;
+    myOutputDevices[internalName] = dev;
     return *dev;
 }
 
@@ -145,8 +153,18 @@ OutputDevice::realString(const SUMOReal v, const int precision) {
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-OutputDevice::OutputDevice(const unsigned int defaultIndentation)
-    : myDefaultIndentation(defaultIndentation) {
+OutputDevice::OutputDevice(const bool binary, const unsigned int defaultIndentation)
+    : myAmBinary(binary) {
+    if (binary) {
+        myFormatter = new BinaryFormatter();
+    } else {
+        myFormatter = new PlainXMLFormatter(defaultIndentation);
+    }
+}
+
+
+OutputDevice::~OutputDevice() {
+    delete myFormatter;
 }
 
 
@@ -159,7 +177,7 @@ OutputDevice::ok() {
 void
 OutputDevice::close() {
     while (closeTag()) {}
-    for (DeviceMap::iterator i = myOutputDevices.begin(); i != myOutputDevices.end(); ++i) {
+    for (std::map<std::string, OutputDevice*>::iterator i = myOutputDevices.begin(); i != myOutputDevices.end(); ++i) {
         if (i->second == this) {
             myOutputDevices.erase(i);
             break;
@@ -178,59 +196,37 @@ OutputDevice::setPrecision(unsigned int precision) {
 bool
 OutputDevice::writeXMLHeader(const std::string& rootElement, const std::string xmlParams,
                              const std::string& attrs, const std::string& comment) {
-    if (myXMLStack.empty()) {
-        OptionsCont::getOptions().writeXMLHeader(getOStream(), xmlParams);
-        if (comment != "") {
-            getOStream() << comment << "\n";
-        }
-        openTag(rootElement);
-        if (attrs != "") {
-            getOStream() << " " << attrs;
-        }
-        getOStream() << ">\n";
-        return true;
-    }
-    return false;
-}
-
-
-OutputDevice&
-OutputDevice::indent() {
-    getOStream() << std::string(4 * (myXMLStack.size() + myDefaultIndentation), ' ');
-    postWriteHook();
-    return *this;
+	return myFormatter->writeXMLHeader(getOStream(), rootElement, xmlParams, attrs, comment);
 }
 
 
 OutputDevice&
 OutputDevice::openTag(const std::string& xmlElement) {
-    getOStream() << std::string(4 * (myXMLStack.size() + myDefaultIndentation), ' ') << "<" << xmlElement;
-    postWriteHook();
-    myXMLStack.push_back(xmlElement);
+	myFormatter->openTag(getOStream(), xmlElement);
     return *this;
 }
 
 
 OutputDevice&
 OutputDevice::openTag(const SumoXMLTag& xmlElement) {
-    return openTag(toString(xmlElement));
+	myFormatter->openTag(getOStream(), xmlElement);
+    return *this;
+}
+
+
+void
+OutputDevice::closeOpener() {
+	myFormatter->closeOpener(getOStream());
 }
 
 
 bool
 OutputDevice::closeTag(bool abbreviated) {
-    if (!myXMLStack.empty()) {
-        if (abbreviated) {
-            getOStream() << "/>" << std::endl;
-        } else {
-            std::string indent(4 * (myXMLStack.size() + myDefaultIndentation - 1), ' ');
-            getOStream() << indent << "</" << myXMLStack.back() << ">" << std::endl;
-        }
-        myXMLStack.pop_back();
-        postWriteHook();
-        return true;
-    }
-    return false;
+	if (myFormatter->closeTag(getOStream(), abbreviated)) {
+		postWriteHook();
+		return true;
+	}
+	return false;
 }
 
 
@@ -239,15 +235,19 @@ OutputDevice::postWriteHook() {}
 
 
 void
-OutputDevice::inform(const std::string& msg) {
-    getOStream() << msg << '\n';
+OutputDevice::inform(const std::string& msg, const char progress) {
+    if (progress != 0) {
+        getOStream() << msg << progress;
+    } else {
+        getOStream() << msg << '\n';
+    }
     postWriteHook();
 }
 
 
 OutputDevice& 
 OutputDevice::writeAttr(std::string attr, std::string val) {
-    getOStream() << " " << attr << "=\"" << val << "\"";
+	myFormatter->writeAttr(getOStream(), attr, val);
     return *this;
 }
 

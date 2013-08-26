@@ -1,17 +1,5 @@
-# the standard structure for model tests
-circle
+# show that each model allows vehicles to follow each other around a circular track
+drive_in_circles
 
-# idm model test
-idm
-
-# idm model with memory test
-idmm
-
-# kerner model test
-kerner
-
-# original krauss model test
-krauss
-
-# wiedemann model test
-wiedemann
+# show that each model allows vehicles to stop at an exact position
+stop_at_position

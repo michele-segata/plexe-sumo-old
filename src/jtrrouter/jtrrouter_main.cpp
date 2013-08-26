@@ -147,7 +147,7 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
     // initialise the loader
     loader.openRoutes(net);
     // prepare the output
-    net.openOutput(oc.getString("output-file"), false);
+    net.openOutput(oc.getString("output-file"), false, oc.getString("vtype-output"));
     // build the router
     ROJTRRouter router(net, oc.getBool("ignore-errors"), oc.getBool("accept-all-destinations"),
                        (int)(((SUMOReal) net.getEdgeNo()) * OptionsCont::getOptions().getFloat("max-edges-factor")),
@@ -181,6 +181,7 @@ main(int argc, char** argv) {
         ROJTRFrame::fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
+            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }

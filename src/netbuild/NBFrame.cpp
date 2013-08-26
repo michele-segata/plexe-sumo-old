@@ -139,6 +139,12 @@ NBFrame::fillOptions(bool forNetgen) {
     if (!forNetgen) {
         oc.doRegister("junctions.join-exclude", new Option_String());
         oc.addDescription("junctions.join-exclude", "Processing", "Interprets STR as list of junctions to exclude from joining");
+
+        oc.doRegister("speed.offset", new Option_Float(0));
+        oc.addDescription("speed.offset", "Processing", "Modifies all edge speeds by adding FLOAT");
+
+        oc.doRegister("speed.factor", new Option_Float(1));
+        oc.addDescription("speed.factor", "Processing", "Modifies all edge speeds by multiplying FLOAT");
     }
 
     // tls setting options
@@ -219,7 +225,7 @@ NBFrame::fillOptions(bool forNetgen) {
     }
 
     oc.doRegister("keep-edges.in-boundary", new Option_String());
-    oc.addDescription("keep-edges.in-boundary", "Edge Removal", "Only keep edges which are located within the given boundary");
+    oc.addDescription("keep-edges.in-boundary", "Edge Removal", "Only keep edges which are located within the given boundary (given either as CARTESIAN corner coordinates <xmin,ymin,xmax,ymax> or as polygon <x0,y0,x1,y1,...>)");
 
     if (!forNetgen) {
         oc.doRegister("keep-edges.by-vclass", new Option_String());

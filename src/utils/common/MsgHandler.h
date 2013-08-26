@@ -44,13 +44,6 @@ class OutputDevice;
 
 
 // ===========================================================================
-// global variable definitions
-// ===========================================================================
-extern bool gSuppressWarnings;
-extern bool gSuppressMessages;
-
-
-// ===========================================================================
 // class definitions
 // ===========================================================================
 /**
@@ -81,7 +74,7 @@ public:
     /// Returns the instance to add errors to
     static MsgHandler* getErrorInstance();
 
-    static void initOutputOptions(bool gui = false);
+    static void initOutputOptions();
 
     /// Removes pending handler
     static void cleanupOnEnd();
@@ -101,12 +94,6 @@ public:
     /// Ends a process information
     void endProcessMsg(std::string msg);
 
-    /** @brief Writes a progress message
-     *
-     * Writes the message and closes it with a (char) 13
-     */
-    void progressMsg(std::string msg, bool addType = true);
-
     /// Clears information whether an error occured previously
     void clear();
 
@@ -115,12 +102,6 @@ public:
 
     /// Removes the retriever from the
     void removeRetriever(OutputDevice* retriever);
-
-    /// Sets the information whether stdout shall be used as output device
-    void report2cout(bool value);
-
-    /// Sets the information whether stderr shall be used as output device
-    void report2cerr(bool value);
 
     /// Returns the information whether any messages were added
     bool wasInformed() const;
@@ -134,13 +115,6 @@ public:
      */
     template <class T>
     MsgHandler& operator<<(const T& t) {
-        if (myReport2COUT) {
-            std::cout << t;
-        }
-        // report to cerr if wished
-        if (myReport2CERR) {
-            std::cerr << t;
-        }
         // inform all other receivers
         for (RetrieverVector::iterator i = myRetrievers.begin(); i != myRetrievers.end(); i++) {
             (*(*i)) << t;
@@ -200,12 +174,6 @@ private:
     /// information wehther an error occured at all
     bool myWasInformed;
 
-    /// Information whether stdout shall be used as output device, too
-    bool myReport2COUT;
-
-    /// Information whether stderr shall be used as output device, too
-    bool myReport2CERR;
-
     /// Definition of the list of retrievers to inform
     typedef std::vector<OutputDevice*> RetrieverVector;
 
@@ -227,7 +195,7 @@ private:
 // ===========================================================================
 #define WRITE_WARNING(msg) MsgHandler::getWarningInstance()->inform(msg);
 #define WRITE_MESSAGE(msg) MsgHandler::getMessageInstance()->inform(msg);
-#define PROGRESS_BEGIN_MESSAGE(msg) MsgHandler::getMessageInstance()->beginProcessMsg(msg + std::string("..."));
+#define PROGRESS_BEGIN_MESSAGE(msg) MsgHandler::getMessageInstance()->beginProcessMsg((msg) + std::string("..."));
 #define PROGRESS_DONE_MESSAGE() MsgHandler::getMessageInstance()->endProcessMsg("done.");
 #define PROGRESS_FAILED_MESSAGE() MsgHandler::getMessageInstance()->endProcessMsg("failed.");
 #define WRITE_ERROR(msg)   MsgHandler::getErrorInstance()->inform(msg);

@@ -39,11 +39,14 @@
 #include <limits>
 #include <algorithm>
 #include <iterator>
+#include <utils/common/ToString.h>
 #include <utils/common/InstancePool.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/StdDefs.h>
 #include "SUMOAbstractRouter.h"
 
+//#define DijkstraRouterTT_DEBUG_QUERY
+//#define DijkstraRouterTT_DEBUG_QUERY_PERF
 
 // ===========================================================================
 // class definitions
@@ -65,10 +68,15 @@
  */
 template<class E, class V, class PF>
 class DijkstraRouterTTBase : public SUMOAbstractRouter<E, V>, public PF {
+    using SUMOAbstractRouter<E, V>::startQuery;
+    using SUMOAbstractRouter<E, V>::endQuery;
+
 public:
     /// Constructor
     DijkstraRouterTTBase(size_t noE, bool unbuildIsWarning) :
-        myErrorMsgHandler(unbuildIsWarning ?  MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance()) {
+        SUMOAbstractRouter<E, V>("DijkstraRouterTT"),
+        myErrorMsgHandler(unbuildIsWarning ?  MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance()) 
+    {
         for (size_t i = 0; i < noE; i++) {
             myEdgeInfos.push_back(EdgeInfo(i));
         }
@@ -86,7 +94,7 @@ public:
     public:
         /// Constructor
         EdgeInfo(size_t id)
-            : edge(E::dictionary(id)), traveltime(0), prev(0), visited(false) {}
+            : edge(E::dictionary(id)), traveltime(std::numeric_limits<SUMOReal>::max()), prev(0), visited(false) {}
 
         /// The current edge
         const E* edge;
@@ -100,6 +108,10 @@ public:
         /// The previous edge
         bool visited;
 
+        inline void reset() {
+            traveltime = std::numeric_limits<SUMOReal>::max();
+            visited = false;
+        }
     };
 
     /**
@@ -120,32 +132,56 @@ public:
     virtual SUMOReal getEffort(const E* const e, const V* const v, SUMOReal t) const = 0;
 
 
-    /** @brief Builds the route between the given edges using the minimum afford at the given time
-        The definition of the afford depends on the wished routing scheme */
+    void init() {
+        // all EdgeInfos touched in the previous query are either in myFrontierList or myFound: clean those up
+        for (typename std::vector<EdgeInfo*>::iterator i = myFrontierList.begin(); i != myFrontierList.end(); i++) {
+            (*i)->reset();
+        }
+        myFrontierList.clear();
+        for (typename std::vector<EdgeInfo*>::iterator i = myFound.begin(); i != myFound.end(); i++) {
+            (*i)->reset();
+        }
+        myFound.clear();
+    }
+
+
+    /** @brief Builds the route between the given edges using the minimum effort at the given time
+        The definition of the effort depends on the wished routing scheme */
     virtual void compute(const E* from, const E* to, const V* const vehicle,
                          SUMOTime msTime, std::vector<const E*> &into) {
-        const SUMOReal time = STEPS2TIME(msTime);
-        for (typename std::vector<EdgeInfo>::iterator i = myEdgeInfos.begin(); i != myEdgeInfos.end(); i++) {
-            (*i).traveltime = std::numeric_limits<SUMOReal>::max();
-            (*i).visited = false;
-        }
         assert(from != 0 && to != 0);
-        myFrontierList.clear();
+        startQuery();
+        const SUMOReal time = STEPS2TIME(msTime);
+        init();
         // add begin node
         EdgeInfo* const fromInfo = &(myEdgeInfos[from->getNumericalID()]);
         fromInfo->traveltime = 0;
         fromInfo->prev = 0;
         myFrontierList.push_back(fromInfo);
         // loop
+        int num_visited = 0;
         while (!myFrontierList.empty()) {
+            num_visited += 1;
             // use the node with the minimal length
             EdgeInfo* const minimumInfo = myFrontierList.front();
             const E* const minEdge = minimumInfo->edge;
             pop_heap(myFrontierList.begin(), myFrontierList.end(), myComparator);
             myFrontierList.pop_back();
+            myFound.push_back(minimumInfo);
+#ifdef DijkstraRouterTT_DEBUG_QUERY
+            std::cout << "DEBUG: hit '" << minEdge->getID() << "' Q: ";
+            for (typename std::vector<EdgeInfo*>::iterator it = myFrontierList.begin(); it != myFrontierList.end(); it++) {
+                std::cout << (*it)->traveltime << "," << (*it)->edge->getID() << " ";
+            }
+            std::cout << "\n";
+#endif
             // check whether the destination node was already reached
             if (minEdge == to) {
                 buildPathFrom(minimumInfo, into);
+                endQuery(num_visited);
+#ifdef DijkstraRouterTT_DEBUG_QUERY_PERF
+                std::cout << "visited " + toString(num_visited) + " edges (final path length: " + toString(into.size()) + ")\n";
+#endif
                 return;
             }
             minimumInfo->visited = true;
@@ -175,6 +211,10 @@ public:
                 }
             }
         }
+        endQuery(num_visited);
+#ifdef DijkstraRouterTT_DEBUG_QUERY_PERF
+        std::cout << "visited " + toString(num_visited) + " edges (final path length: " + toString(into.size()) + ")\n";
+#endif
         myErrorMsgHandler->inform("No connection between '" + from->getID() + "' and '" + to->getID() + "' found.");
     }
 
@@ -208,12 +248,13 @@ protected:
 
     /// A container for reusage of the min edge heap
     std::vector<EdgeInfo*> myFrontierList;
+    /// @brief list of visited Edges (for resetting)
+    std::vector<EdgeInfo*> myFound;
 
     EdgeInfoByTTComparator myComparator;
 
     /// @brief the handler for routing errors
     MsgHandler* const myErrorMsgHandler;
-
 };
 
 

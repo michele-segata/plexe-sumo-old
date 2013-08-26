@@ -481,6 +481,7 @@ NBNodeCont::joinLoadedClusters(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLigh
         }
     }
     joinNodeClusters(clusters, dc, ec, tlc);
+    myClusters2Join.clear(); // make save for recompute
     return (int)clusters.size();
 }
 
@@ -491,20 +492,34 @@ NBNodeCont::joinJunctions(SUMOReal maxdist, NBDistrictCont& dc, NBEdgeCont& ec, 
     NodeClusters clusters;
     generateNodeClusters(maxdist, cands);
     for (NodeClusters::iterator i = cands.begin(); i != cands.end(); ++i) {
-        const std::set<NBNode*> &candCluster = (*i);
-        std::set<NBNode*> cluster;
-        // remove nodes with degree = 2 at fringe of the cluster (at least one edge leads to a non-cluster node)
-        for (std::set<NBNode*>::const_iterator j = candCluster.begin(); j != candCluster.end(); j++) {
-            NBNode* n = *j;
-            if (n->getIncomingEdges().size() == 1 &&
-                    n->getOutgoingEdges().size() == 1 &&
-                    (!cluster.count(n->getIncomingEdges()[0]->getFromNode()) ||
-                     !cluster.count(n->getOutgoingEdges()[0]->getToNode()))) {
-                continue;
-            } else if (myJoinExclusions.count(n->getID()) > 0) {
-                continue;
-            } else {
-                cluster.insert(n);
+        std::set<NBNode*> cluster = (*i);
+        // remove join exclusions
+        for (std::set<NBNode*>::iterator j = cluster.begin(); j != cluster.end();) {
+            std::set<NBNode*>::iterator check = j;
+            ++j;
+            if (myJoinExclusions.count((*check)->getID()) > 0) {
+                cluster.erase(check);
+            }
+        }
+        // iteratively remove the fringe
+        bool pruneFringe = true;
+        while(pruneFringe) {
+            pruneFringe = false;
+            for (std::set<NBNode*>::iterator j = cluster.begin(); j != cluster.end();) {
+                std::set<NBNode*>::iterator check = j;
+                NBNode* n = *check;
+                ++j;
+                // remove nodes with degree <= 2 at fringe of the cluster (at least one edge leads to a non-cluster node)
+                if (
+                        (n->getIncomingEdges().size() <= 1 && n->getOutgoingEdges().size() <= 1 ) &&
+                        ((n->getIncomingEdges().size() == 0 ||
+                          (n->getIncomingEdges().size() == 1) && cluster.count(n->getIncomingEdges()[0]->getFromNode()) == 0) || 
+                         (n->getOutgoingEdges().size() == 0 ||
+                          (n->getOutgoingEdges().size() == 1) && cluster.count(n->getOutgoingEdges()[0]->getToNode()) == 0))
+                   ) {
+                    cluster.erase(check);
+                    pruneFringe = true; // other nodes could belong to the fringe now
+                }
             }
         }
         if (cluster.size() > 1) {
@@ -581,7 +596,18 @@ NBNodeCont::joinNodeClusters(NodeClusters clusters,
                 e->addLane2LaneConnection((*k).fromLane, (*k).toEdge, (*k).toLane, NBEdge::L2L_USER, false, (*k).mayDefinitelyPass);
             }
         }
+        registerJoinedCluster(cluster);
     }
+}
+
+
+void 
+NBNodeCont::registerJoinedCluster(const std::set<NBNode*>& cluster) {
+    std::set<std::string> ids;
+    for (std::set<NBNode*>::const_iterator j = cluster.begin(); j != cluster.end(); j++) {
+        ids.insert((*j)->getID());
+    }
+    myJoinedClusters.push_back(ids);
 }
 
 
@@ -806,30 +832,6 @@ void
 NBNodeCont::computeLogics(const NBEdgeCont& ec, OptionsCont& oc) {
     for (NodeCont::iterator i = myNodes.begin(); i != myNodes.end(); i++) {
         (*i).second->computeLogic(ec, oc);
-    }
-}
-
-
-void
-NBNodeCont::sortNodesEdges(bool leftHand) {
-    for (NodeCont::iterator i = myNodes.begin(); i != myNodes.end(); i++) {
-        (*i).second->sortNodesEdges(leftHand);
-    }
-}
-
-
-void
-NBNodeCont::computeNodeTypes(const NBTypeCont& tc) {
-    for (NodeCont::iterator i = myNodes.begin(); i != myNodes.end(); i++) {
-        (*i).second->computeType(tc);
-    }
-}
-
-
-void
-NBNodeCont::computePriorities() {
-    for (NodeCont::iterator i = myNodes.begin(); i != myNodes.end(); i++) {
-        (*i).second->computePriorities();
     }
 }
 
@@ -1295,6 +1297,16 @@ NBNodeCont::getAllNames() const {
     return ret;
 }
 
+
+void 
+NBNodeCont::rename(NBNode* node, const std::string& newID) {
+    if (myNodes.count(newID) != 0) {
+        throw ProcessError("Attempt to rename node using existing id '" + newID + "'");
+    }
+    myNodes.erase(node->getID());
+    node->setID(newID);
+    myNodes[newID] = node;
+}
 
 
 /****************************************************************************/

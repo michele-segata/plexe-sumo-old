@@ -67,26 +67,12 @@ public:
     /// Constructor
     RORDLoader_SUMOBase(RONet& net,
                         SUMOTime begin, SUMOTime end,
-                        const SUMOReal beta, const SUMOReal gawronA, const SUMOReal logitGamma,
                         const int maxRouteNumber, const bool tryRepair, const bool withTaz,
                         const bool keepRoutes, const bool skipRouteCalculation,
-                        const std::string& file = "") ;
+                        const std::string& file = "");
 
     /// Destructor
     ~RORDLoader_SUMOBase() ;
-
-
-    /// @name inherited from ROAbstractRouteDefLoader
-    //@{
-
-    /** @brief Returns the time the current (last read) route starts at
-     *
-     * @return The least time step that was read by this reader
-     */
-    SUMOTime getLastReadTimeStep() const {
-        return myCurrentDepart;
-    }
-    /// @}
 
 
 protected:
@@ -133,29 +119,6 @@ protected:
     bool closeVehicle() ;
 
 
-
-    /// @name inherited from ROTypedXMLRoutesLoader
-    /// @{
-
-    /** Returns the information whether a route was read
-     *
-     * @return Whether a further route was read
-     * @see ROTypedXMLRoutesLoader::nextRouteRead
-     */
-    bool nextRouteRead() {
-        return myHaveNextRoute;
-    }
-
-
-    /** @brief Returns Initialises the reading of a further route
-     *
-     * @todo recheck/refactor
-     * @see ROTypedXMLRoutesLoader::beginNextRoute
-     */
-    void beginNextRoute() ;
-    //@}
-
-
 protected:
     /// @brief The parsed vehicle parameter
     SUMOVehicleParameter* myVehicleParameter;
@@ -169,9 +132,6 @@ protected:
     /// @brief Information whether the currently parsed alternatives set is valid
     bool myAltIsValid;
 
-    /// @brief Information whether a further route has been read
-    bool myHaveNextRoute;
-
     /// @brief The currently parsed route alternatives
     RORouteDef_Alternatives* myCurrentAlternatives;
 
@@ -180,15 +140,6 @@ protected:
 
     /// @brief The probability of the current alternative's usage
     SUMOReal myProbability;
-
-    /// @brief gawron or logit beta - value
-    const SUMOReal myBeta;
-
-    /// @brief gawron a - value
-    const SUMOReal myGawronA;
-
-    /// @brief logit gamma - value
-    const SUMOReal myLogitGamma;
 
     /// @brief The maximum route alternatives number
     int myMaxRouteNumber;
@@ -210,9 +161,6 @@ protected:
 
     /// @brief The name of the currently parsed route
     std::string myCurrentRouteName;
-
-    /// @brief The currently read vehicle's depart
-    SUMOTime myCurrentDepart;
 
     /// @brief The currently parsed vehicle type
     SUMOVTypeParameter* myCurrentVType;

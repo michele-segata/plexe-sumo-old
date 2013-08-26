@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(sumo, 0.14.0)
+AC_INIT(sumo, 0.15.0)
 AC_CONFIG_SRCDIR(src/sumo_main.cpp)
 AC_CANONICAL_SYSTEM
 
@@ -94,10 +94,10 @@ AM_CONDITIONAL(MESOSIM, test -d $srcdir/src/mesosim)
 m4_syscmd([test -d src/mesosim])
 m4_if(m4_sysval,[0],[
     AC_DEFINE([HAVE_MESOSIM], [1], [Define to enable mesoscopic simulation code.])
-    AC_CONFIG_FILES([src/mesogui/Makefile src/mesosim/Makefile src/netedit/Makefile src/internal/Makefile unittest/src/internal/Makefile])
-    MESO_DIRS="mesosim internal"
+    AC_CONFIG_FILES([src/mesogui/Makefile src/mesosim/Makefile src/netedit/Makefile src/osgview/Makefile src/marouter/Makefile src/internal/Makefile unittest/src/internal/Makefile])
+    MESO_DIRS="mesosim marouter internal"
     AC_SUBST([MESO_DIRS])
-    MESOGUI_DIRS="mesogui netedit"
+    MESOGUI_DIRS="mesogui netedit osgview"
     AC_SUBST([MESOGUI_DIRS])
     UNITTEST_INTERNAL_DIRS=internal
     AC_SUBST([UNITTEST_INTERNAL_DIRS])
@@ -390,6 +390,10 @@ else
     ac_disabled="$ac_disabled Python"
 fi
 
+if test x"$MESOGUI_DIRS" != x; then
+    AC_CHECK_HEADER([osg/Config], [AC_DEFINE([HAVE_OSG], [1], [defined if osg is available])
+    OSG_LIBS="-losg -losgGA -losgViewer -losgUtil -losgDB" AC_SUBST(OSG_LIBS)])
+fi
 
 AM_CPPFLAGS="-I$PWD/$srcdir/src $AM_CPPFLAGS"
 AC_SUBST(AM_CPPFLAGS)

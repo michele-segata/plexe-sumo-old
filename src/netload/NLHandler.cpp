@@ -470,13 +470,11 @@ NLHandler::addLane(const SUMOSAXAttributes& attrs) {
         myCurrentIsBroken = true;
         return;
     }
-    SUMOVehicleClasses allowedClasses;
-    SUMOVehicleClasses disallowedClasses;
-    parseVehicleClasses(allow, disallow, allowedClasses, disallowedClasses);
+    SVCPermissions permissions = parseVehicleClasses(allow, disallow);
     myCurrentIsBroken |= !ok;
     if (!myCurrentIsBroken) {
         try {
-            MSLane* lane = myEdgeControlBuilder.addLane(id, maxSpeed, length, shape, width, allowedClasses, disallowedClasses);
+            MSLane* lane = myEdgeControlBuilder.addLane(id, maxSpeed, length, shape, width, permissions);
             // insert the lane into the lane-dictionary, checking
             if (!MSLane::dictionary(id, lane)) {
                 delete lane;
@@ -855,18 +853,12 @@ NLHandler::addE1Detector(const SUMOSAXAttributes& attrs) {
         return;
     }
     // inform the user about deprecated values
-    SUMOTime frequency = attrs.getSUMOTimeReporting(SUMO_ATTR_FREQUENCY, id.c_str(), ok);
-    SUMOReal position = attrs.getSUMORealReporting(SUMO_ATTR_POSITION, id.c_str(), ok);
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
-        myHaveWarnedAboutDeprecatedFriendlyPos = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated, use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "' instead.");
-    }
-    bool friendlyPos = attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)
-                       ? attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS__DEPRECATED, id.c_str(), ok, false)
-                       : attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
-    bool splitByType = attrs.getOptBoolReporting(SUMO_ATTR_SPLIT_VTYPE, id.c_str(), ok, false);
-    std::string lane = attrs.getStringReporting(SUMO_ATTR_LANE, id.c_str(), ok);
-    std::string file = attrs.getStringReporting(SUMO_ATTR_FILE, id.c_str(), ok);
+    const SUMOTime frequency = attrs.getSUMOTimeReporting(SUMO_ATTR_FREQUENCY, id.c_str(), ok);
+    const SUMOReal position = attrs.getSUMORealReporting(SUMO_ATTR_POSITION, id.c_str(), ok);
+    const bool friendlyPos = attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
+    const bool splitByType = attrs.getOptBoolReporting(SUMO_ATTR_SPLIT_VTYPE, id.c_str(), ok, false);
+    const std::string lane = attrs.getStringReporting(SUMO_ATTR_LANE, id.c_str(), ok);
+    const std::string file = attrs.getStringReporting(SUMO_ATTR_FILE, id.c_str(), ok);
     if (!ok) {
         return;
     }
@@ -891,16 +883,10 @@ NLHandler::addInstantE1Detector(const SUMOSAXAttributes& attrs) {
         return;
     }
     // inform the user about deprecated values
-    SUMOReal position = attrs.getSUMORealReporting(SUMO_ATTR_POSITION, id.c_str(), ok);
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
-        myHaveWarnedAboutDeprecatedFriendlyPos = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated, use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "' instead.");
-    }
-    bool friendlyPos = attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)
-                       ? attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS__DEPRECATED, id.c_str(), ok, false)
-                       : attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
-    std::string lane = attrs.getStringReporting(SUMO_ATTR_LANE, id.c_str(), ok);
-    std::string file = attrs.getStringReporting(SUMO_ATTR_FILE, id.c_str(), ok);
+    const SUMOReal position = attrs.getSUMORealReporting(SUMO_ATTR_POSITION, id.c_str(), ok);
+    const bool friendlyPos = attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
+    const std::string lane = attrs.getStringReporting(SUMO_ATTR_LANE, id.c_str(), ok);
+    const std::string file = attrs.getStringReporting(SUMO_ATTR_FILE, id.c_str(), ok);
     if (!ok) {
         return;
     }
@@ -961,41 +947,15 @@ void
 NLHandler::addE2Detector(const SUMOSAXAttributes& attrs) {
     // check whether this is a detector connected to a tls an optionally to a link
     bool ok = true;
-    std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
-    std::string lsaid = attrs.getOptStringReporting(SUMO_ATTR_TLID, id.c_str(), ok, "<invalid>");
-    std::string toLane = attrs.getOptStringReporting(SUMO_ATTR_TO, id.c_str(), ok, "<invalid>");
-    //
-    if (attrs.hasAttribute(SUMO_ATTR_HALTING_TIME_THRESHOLD__DEPRECATED)) {
-        myHaveWarnedAboutDeprecatedTimeThreshold = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_HALTING_TIME_THRESHOLD__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_ATTR_HALTING_TIME_THRESHOLD) + "'.");
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_HALTING_SPEED_THRESHOLD__DEPRECATED)) {
-        myHaveWarnedAboutDeprecatedSpeedThreshold = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_HALTING_SPEED_THRESHOLD__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_ATTR_HALTING_SPEED_THRESHOLD) + "'.");
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_JAM_DIST_THRESHOLD__DEPRECATED)) {
-        myHaveWarnedAboutDeprecatedJamDistThreshold = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_JAM_DIST_THRESHOLD__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_ATTR_JAM_DIST_THRESHOLD) + "'.");
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
-        myHaveWarnedAboutDeprecatedFriendlyPos = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "'.");
-    }
-
-    const SUMOTime haltingTimeThreshold = attrs.hasAttribute(SUMO_ATTR_HALTING_TIME_THRESHOLD__DEPRECATED)
-                                          ? attrs.getOptSUMOTimeReporting(SUMO_ATTR_HALTING_TIME_THRESHOLD__DEPRECATED, id.c_str(), ok, TIME2STEPS(1))
-                                          : attrs.getOptSUMOTimeReporting(SUMO_ATTR_HALTING_TIME_THRESHOLD, id.c_str(), ok, TIME2STEPS(1));
-    const SUMOReal haltingSpeedThreshold = attrs.hasAttribute(SUMO_ATTR_HALTING_SPEED_THRESHOLD__DEPRECATED)
-                                           ? attrs.getOptSUMORealReporting(SUMO_ATTR_HALTING_SPEED_THRESHOLD__DEPRECATED, id.c_str(), ok, 5.0f / 3.6f)
-                                           : attrs.getOptSUMORealReporting(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, 5.0f / 3.6f);
-    const SUMOReal jamDistThreshold = attrs.hasAttribute(SUMO_ATTR_JAM_DIST_THRESHOLD__DEPRECATED)
-                                      ? attrs.getOptSUMORealReporting(SUMO_ATTR_JAM_DIST_THRESHOLD__DEPRECATED, id.c_str(), ok, 10.0f)
-                                      : attrs.getOptSUMORealReporting(SUMO_ATTR_JAM_DIST_THRESHOLD, id.c_str(), ok, 10.0f);
+    const std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
+    const std::string lsaid = attrs.getOptStringReporting(SUMO_ATTR_TLID, id.c_str(), ok, "<invalid>");
+    const std::string toLane = attrs.getOptStringReporting(SUMO_ATTR_TO, id.c_str(), ok, "<invalid>");
+    const SUMOTime haltingTimeThreshold = attrs.getOptSUMOTimeReporting(SUMO_ATTR_HALTING_TIME_THRESHOLD, id.c_str(), ok, TIME2STEPS(1));
+    const SUMOReal haltingSpeedThreshold = attrs.getOptSUMORealReporting(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, 5.0f / 3.6f);
+    const SUMOReal jamDistThreshold = attrs.getOptSUMORealReporting(SUMO_ATTR_JAM_DIST_THRESHOLD, id.c_str(), ok, 10.0f);
     const SUMOReal position = attrs.getSUMORealReporting(SUMO_ATTR_POSITION, id.c_str(), ok);
     const SUMOReal length = attrs.getSUMORealReporting(SUMO_ATTR_LENGTH, id.c_str(), ok);
-    const bool friendlyPos = attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)
-                             ? attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS__DEPRECATED, id.c_str(), ok, false)
-                             : attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
+    const bool friendlyPos = attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
     const bool cont = attrs.getOptBoolReporting(SUMO_ATTR_CONT, id.c_str(), ok, false);
     const std::string lane = attrs.getStringReporting(SUMO_ATTR_LANE, id.c_str(), ok);
     const std::string file = attrs.getStringReporting(SUMO_ATTR_FILE, id.c_str(), ok);
@@ -1076,14 +1036,8 @@ NLHandler::beginE3Detector(const SUMOSAXAttributes& attrs) {
 void
 NLHandler::addE3Entry(const SUMOSAXAttributes& attrs) {
     bool ok = true;
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
-        myHaveWarnedAboutDeprecatedFriendlyPos = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated, use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "' instead.");
-    }
     const SUMOReal position = attrs.getSUMORealReporting(SUMO_ATTR_POSITION, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
-    const bool friendlyPos = attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)
-                             ? attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS__DEPRECATED, myDetectorBuilder.getCurrentE3ID().c_str(), ok, false)
-                             : attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, myDetectorBuilder.getCurrentE3ID().c_str(), ok, false);
+    const bool friendlyPos = attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, myDetectorBuilder.getCurrentE3ID().c_str(), ok, false);
     const std::string lane = attrs.getStringReporting(SUMO_ATTR_LANE, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
     if (!ok) {
         return;
@@ -1096,13 +1050,7 @@ void
 NLHandler::addE3Exit(const SUMOSAXAttributes& attrs) {
     bool ok = true;
     const SUMOReal position = attrs.getSUMORealReporting(SUMO_ATTR_POSITION, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
-        myHaveWarnedAboutDeprecatedFriendlyPos = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated, use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "' instead.");
-    }
-    const bool friendlyPos = attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)
-                             ? attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS__DEPRECATED, myDetectorBuilder.getCurrentE3ID().c_str(), ok, false)
-                             : attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, myDetectorBuilder.getCurrentE3ID().c_str(), ok, false);
+    const bool friendlyPos = attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, myDetectorBuilder.getCurrentE3ID().c_str(), ok, false);
     const std::string lane = attrs.getStringReporting(SUMO_ATTR_LANE, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
     if (!ok) {
         return;
@@ -1118,7 +1066,7 @@ NLHandler::addEdgeLaneMeanData(const SUMOSAXAttributes& attrs, int objecttype) {
     const SUMOReal maxTravelTime = attrs.getOptSUMORealReporting(SUMO_ATTR_MAX_TRAVELTIME, id.c_str(), ok, 100000);
     const SUMOReal minSamples = attrs.getOptSUMORealReporting(SUMO_ATTR_MIN_SAMPLES, id.c_str(), ok, 0);
     const SUMOReal haltingSpeedThreshold = attrs.getOptSUMORealReporting(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, POSITION_EPS);
-    const bool excludeEmpty = attrs.getOptBoolReporting(SUMO_ATTR_EXCLUDE_EMPTY, id.c_str(), ok, false);
+    const std::string excludeEmpty = attrs.getOptStringReporting(SUMO_ATTR_EXCLUDE_EMPTY, id.c_str(), ok, "false");
     const bool withInternal = attrs.getOptBoolReporting(SUMO_ATTR_WITH_INTERNAL, id.c_str(), ok, false);
     const bool trackVehicles = attrs.getOptBoolReporting(SUMO_ATTR_TRACK_VEHICLES, id.c_str(), ok, false);
     const std::string file = attrs.getStringReporting(SUMO_ATTR_FILE, id.c_str(), ok);
@@ -1139,7 +1087,10 @@ NLHandler::addEdgeLaneMeanData(const SUMOSAXAttributes& attrs, int objecttype) {
     }
     try {
         myDetectorBuilder.createEdgeLaneMeanData(id, frequency, begin, end,
-                type, objecttype == SUMO_TAG_MEANDATA_LANE, !excludeEmpty, withInternal, trackVehicles,
+                type, objecttype == SUMO_TAG_MEANDATA_LANE,
+                // equivalent to TplConvert::_2bool used in SUMOSAXAttributes::getBool
+                excludeEmpty[0] != 't' && excludeEmpty[0] != 'T' && excludeEmpty[0] != '1' && excludeEmpty[0] != 'x',
+                excludeEmpty == "defaults", withInternal, trackVehicles,
                 maxTravelTime, minSamples, haltingSpeedThreshold, vtypes,
                 OutputDevice::getDevice(file, getFileName()));
     } catch (InvalidArgument& e) {
@@ -1409,13 +1360,13 @@ NLHandler::addDistrict(const SUMOSAXAttributes& attrs) {
             delete sink;
             throw InvalidArgument("Another edge with the id '" + myCurrentDistrictID + "-sink' exists.");
         }
-        sink->initialize(0, MSEdge::EDGEFUNCTION_DISTRICT);
+        sink->initialize(new std::vector<MSLane*>(), MSEdge::EDGEFUNCTION_DISTRICT);
         MSEdge* source = myEdgeControlBuilder.buildEdge(myCurrentDistrictID + "-source");
         if (!MSEdge::dictionary(myCurrentDistrictID + "-source", source)) {
             delete source;
             throw InvalidArgument("Another edge with the id '" + myCurrentDistrictID + "-source' exists.");
         }
-        source->initialize(0, MSEdge::EDGEFUNCTION_DISTRICT);
+        source->initialize(new std::vector<MSLane*>(), MSEdge::EDGEFUNCTION_DISTRICT);
         if (attrs.hasAttribute(SUMO_ATTR_EDGES)) {
             std::vector<std::string> desc = StringTokenizer(attrs.getString(SUMO_ATTR_EDGES)).getVector();
             for (std::vector<std::string>::const_iterator i = desc.begin(); i != desc.end(); ++i) {

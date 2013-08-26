@@ -53,8 +53,7 @@ NIVissimAbstractEdge::NIVissimAbstractEdge(int id,
     : myID(id), myNode(-1) 
 {
     // convert/publicate geometry
-    const PositionVector::ContType &geomC = geom.getCont();
-    for (PositionVector::ContType::const_iterator i = geomC.begin(); i != geomC.end(); ++i) {
+    for (PositionVector::ContType::const_iterator i = geom.begin(); i != geom.end(); ++i) {
         Position p = *i;
         if (!NILoader::transformCoordinates(p)) {
             WRITE_WARNING("Unable to project coordinates for edge '" + toString(id) + "'.");
@@ -139,7 +138,7 @@ SUMOReal
 NIVissimAbstractEdge::crossesAtPoint(const Position& p1,
                                      const Position& p2) const {
     // !!! not needed
-    Position p = GeomHelper::intersection_position(
+    Position p = GeomHelper::intersection_position2D(
                      myGeom.getBegin(), myGeom.getEnd(), p1, p2);
     return GeomHelper::nearest_position_on_line_to_point2D(
                myGeom.getBegin(), myGeom.getEnd(), p);
@@ -147,9 +146,9 @@ NIVissimAbstractEdge::crossesAtPoint(const Position& p1,
 
 
 
-IntVector
+std::vector<int>
 NIVissimAbstractEdge::getWithin(const AbstractPoly& p, SUMOReal offset) {
-    IntVector ret;
+    std::vector<int> ret;
     for (DictType::iterator i = myDict.begin(); i != myDict.end(); i++) {
         NIVissimAbstractEdge* e = (*i).second;
         if (e->overlapsWith(p, offset)) {
@@ -198,7 +197,7 @@ NIVissimAbstractEdge::addDisturbance(int disturbance) {
 }
 
 
-const IntVector&
+const std::vector<int>&
 NIVissimAbstractEdge::getDisturbances() const {
     return myDisturbances;
 }

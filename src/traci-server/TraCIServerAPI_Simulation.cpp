@@ -31,11 +31,14 @@
 #include <config.h>
 #endif
 
+#ifndef NO_TRACI
+
 #include <utils/common/StdDefs.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSEdgeControl.h>
 #include <microsim/MSInsertionControl.h>
+#include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
 #include "TraCIConstants.h"
@@ -221,7 +224,8 @@ TraCIServerAPI_Simulation::convertCartesianToRoadMap(Position pos) {
             }
         }
     }
-    result.second = result.first->getShape().nearest_position_on_line_to_point(pos, false);
+    // @todo this may be a place where 3D is required but 2D is delivered
+    result.second = result.first->getShape().nearest_position_on_line_to_point2D(pos, false);
     return result;
 }
 
@@ -461,3 +465,7 @@ TraCIServerAPI_Simulation::commandDistanceRequest(traci::TraCIServer& server, tc
     outputStorage.writeDouble(distance);
     return true;
 }
+
+#endif
+
+/****************************************************************************/

@@ -110,12 +110,14 @@ public:
      *
      * @param[in] step The current time step
      */
-    virtual void detectorUpdate(const SUMOTime step) { }
+    virtual void detectorUpdate(const SUMOTime step) {
+        UNUSED_PARAMETER(step);
+    }
 
 
     /** @brief Builds the graphical representation
      *
-     * Meant to be overridden by grahical versions of the detectors
+     * Meant to be overridden by graphical versions of the detectors
      * @return A wrapper for the detector which performs the user I/O within the GUI
      */
     virtual GUIDetectorWrapper* buildDetectorGUIRepresentation() {

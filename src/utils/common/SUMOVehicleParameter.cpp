@@ -68,11 +68,11 @@ SUMOVehicleParameter::defaultOptionOverrides(const OptionsCont& oc, const std::s
 void
 SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
                               const OptionsCont& oc) const {
-    dev.openTag(xmlElem) << " id=\"" << id << "\"";
+    dev.openTag(xmlElem).writeAttr(SUMO_ATTR_ID, id);
     if (wasSet(VEHPARS_VTYPE_SET)) {
-        dev << " type=\"" << vtypeid << "\"";
+        dev.writeAttr(SUMO_ATTR_TYPE, vtypeid);
     }
-    dev << " depart=\"" << time2string(depart) << "\"";
+    dev.writeAttr(SUMO_ATTR_DEPART, time2string(depart));
 
     // optional parameter
     //  departlane
@@ -98,9 +98,9 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
             default:
                 break;
         }
-        dev << " departLane=\"" << val << "\"";
+        dev.writeAttr(SUMO_ATTR_DEPARTLANE, val);
     } else if (oc.isSet("departlane")) {
-        dev << " departLane=\"" << oc.getString("departlane") << "\"";
+        dev.writeAttr(SUMO_ATTR_DEPARTLANE, oc.getString("departlane"));
     }
     //  departpos
     if (wasSet(VEHPARS_DEPARTPOS_SET) && !defaultOptionOverrides(oc, "departpos")) {
@@ -134,9 +134,9 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
             default:
                 break;
         }
-        dev << " departPos=\"" << val << "\"";
+        dev.writeAttr(SUMO_ATTR_DEPARTPOS, val);
     } else if (oc.isSet("departpos")) {
-        dev << " departPos=\"" << oc.getString("departpos") << "\"";
+        dev.writeAttr(SUMO_ATTR_DEPARTPOS, oc.getString("departpos"));
     }
     //  departspeed
     if (wasSet(VEHPARS_DEPARTSPEED_SET) && !defaultOptionOverrides(oc, "departspeed")) {
@@ -155,9 +155,9 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
             default:
                 break;
         }
-        dev << " departSpeed=\"" << val << "\"";
+        dev.writeAttr(SUMO_ATTR_DEPARTSPEED, val);
     } else if (oc.isSet("departspeed")) {
-        dev << " departSpeed=\"" << oc.getString("departspeed") << "\"";
+        dev.writeAttr(SUMO_ATTR_DEPARTSPEED, oc.getString("departspeed"));
     }
 
     //  arrivallane
@@ -174,9 +174,9 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
             default:
                 break;
         }
-        dev << " arrivalLane=\"" << val << "\"";
+        dev.writeAttr(SUMO_ATTR_ARRIVALLANE, val);
     } else if (oc.isSet("arrivallane")) {
-        dev << " arrivalLane=\"" << oc.getString("arrivallane") << "\"";
+        dev.writeAttr(SUMO_ATTR_ARRIVALLANE, oc.getString("arrivallane"));
     }
     //  arrivalpos
     if (wasSet(VEHPARS_ARRIVALPOS_SET) && !defaultOptionOverrides(oc, "arrivalpos")) {
@@ -195,9 +195,9 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
             default:
                 break;
         }
-        dev << " arrivalPos=\"" << val << "\"";
+        dev.writeAttr(SUMO_ATTR_ARRIVALPOS, val);
     } else if (oc.isSet("arrivalpos")) {
-        dev << " arrivalPos=\"" << oc.getString("arrivalpos") << "\"";
+        dev.writeAttr(SUMO_ATTR_ARRIVALPOS, oc.getString("arrivalpos"));
     }
     //  arrivalspeed
     if (wasSet(VEHPARS_ARRIVALSPEED_SET) && !defaultOptionOverrides(oc, "arrivalspeed")) {
@@ -213,33 +213,33 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
             default:
                 break;
         }
-        dev << " arrivalSpeed=\"" << val << "\"";
+        dev.writeAttr(SUMO_ATTR_ARRIVALSPEED, val);
     } else if (oc.isSet("arrivalspeed")) {
-        dev << " arrivalSpeed=\"" << oc.getString("arrivalspeed") << "\"";
+        dev.writeAttr(SUMO_ATTR_ARRIVALSPEED, oc.getString("arrivalspeed"));
     }
 
     // color
     if (wasSet(VEHPARS_COLOR_SET)) {
-        dev << " color=\"" << color << "\"";
+        dev.writeAttr(SUMO_ATTR_COLOR, color);
     }
     // repetition values
     if (wasSet(VEHPARS_PERIODNUM_SET)) {
-        dev << " repno=\"" << repetitionNumber << "\"";
+        dev.writeAttr(SUMO_ATTR_REPNUMBER, repetitionNumber);
     }
     if (wasSet(VEHPARS_PERIODFREQ_SET)) {
 #ifdef HAVE_SUBSECOND_TIMESTEPS
-        dev << " period=\"" << time2string(repetitionOffset) << "\"";
+        dev.writeAttr(SUMO_ATTR_PERIOD, time2string(repetitionOffset));
 #else
-        dev << " period=\"" << repetitionOffset << "\"";
+        dev.writeAttr(SUMO_ATTR_PERIOD, repetitionOffset);
 #endif
     }
     if (wasSet(VEHPARS_LINE_SET)) {
-        dev << " line=\"" << line << "\"";
+        dev.writeAttr(SUMO_ATTR_LINE, line);
     }
     if (wasSet(VEHPARS_TAZ_SET)) {
-        dev << " fromTaz=\"" << fromTaz << "\" toTaz=\"" << toTaz << "\"";
+        dev.writeAttr(SUMO_ATTR_FROM_TAZ, fromTaz).writeAttr(SUMO_ATTR_TO_TAZ, toTaz);
     }
-    dev << ">\n";
+    dev.closeOpener();
 }
 
 

@@ -105,7 +105,7 @@ void
 MSMeanData_Net::MSLaneMeanDataValues::notifyMoveInternal(SUMOVehicle& veh, SUMOReal timeOnLane, SUMOReal speed) {
     sampleSeconds += timeOnLane;
     travelledDistance += speed * timeOnLane;
-    vehLengthSum += veh.getVehicleType().getLengthWithGap() * timeOnLane;
+    vehLengthSum += veh.getVehicleType().getLength() * timeOnLane;
     if (myParent != 0 && speed < myParent->myHaltSpeed) {
         waitSeconds += timeOnLane;
     }
@@ -163,7 +163,7 @@ MSMeanData_Net::MSLaneMeanDataValues::isEmpty() const {
 
 void
 MSMeanData_Net::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime period,
-        const SUMOReal numLanes, const int numVehicles) const {
+        const SUMOReal numLanes, const SUMOReal defaultTravelTime, const int numVehicles) const {
     if (myParent == 0) {
         if (sampleSeconds > 0) {
             dev << "\" density=\"" << sampleSeconds / STEPS2TIME(period) *(SUMOReal) 1000 / myLaneLength <<
@@ -174,8 +174,8 @@ MSMeanData_Net::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime pe
         dev << "\" departed=\"" << nVehDeparted <<
             "\" arrived=\"" << nVehArrived <<
             "\" entered=\"" << nVehEntered <<
-            "\" left=\"" << nVehLeft <<
-            "\"/>\n";
+            "\" left=\"" << nVehLeft << "\"";
+		dev.closeTag(true);
         return;
     }
     if (sampleSeconds > myParent->myMinSamples) {
@@ -194,26 +194,34 @@ MSMeanData_Net::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime pe
                 "\" waitingTime=\"" << waitSeconds <<
                 "\" speed=\"" << travelledDistance / sampleSeconds;
         }
+    } else if (defaultTravelTime >= 0.) {
+        dev << "\" traveltime=\"" << defaultTravelTime <<
+            "\" speed=\"" << myLaneLength / defaultTravelTime;
     }
     dev << "\" departed=\"" << nVehDeparted <<
         "\" arrived=\"" << nVehArrived <<
         "\" entered=\"" << nVehEntered <<
         "\" left=\"" << nVehLeft <<
         "\" laneChangedFrom=\"" << nVehLaneChangeFrom <<
-        "\" laneChangedTo=\"" << nVehLaneChangeTo <<
-        "\"/>\n";
+        "\" laneChangedTo=\"" << nVehLaneChangeTo << "\"";
+	dev.closeTag(true);
 }
 
 // ---------------------------------------------------------------------------
 // MSMeanData_Net - methods
 // ---------------------------------------------------------------------------
 MSMeanData_Net::MSMeanData_Net(const std::string& id,
-                               const SUMOTime dumpBegin, const SUMOTime dumpEnd,
-                               const bool useLanes, const bool withEmpty, const bool withInternal,
+                               const SUMOTime dumpBegin,
+                               const SUMOTime dumpEnd, const bool useLanes,
+                               const bool withEmpty, const bool printDefaults,
+                               const bool withInternal,
                                const bool trackVehicles,
-                               const SUMOReal maxTravelTime, const SUMOReal minSamples,
-                               const SUMOReal haltSpeed, const std::set<std::string> vTypes)
-    : MSMeanData(id, dumpBegin, dumpEnd, useLanes, withEmpty, withInternal, trackVehicles, maxTravelTime, minSamples, vTypes),
+                               const SUMOReal maxTravelTime,
+                               const SUMOReal minSamples,
+                               const SUMOReal haltSpeed,
+                               const std::set<std::string> vTypes)
+      : MSMeanData(id, dumpBegin, dumpEnd, useLanes, withEmpty, printDefaults,
+                   withInternal, trackVehicles, maxTravelTime, minSamples, vTypes),
       myHaltSpeed(haltSpeed) {
 }
 

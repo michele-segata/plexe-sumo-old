@@ -225,11 +225,6 @@ void
 MSBaseVehicle::addPerson(MSPerson* /*person*/) {
 }
 
-bool
-MSBaseVehicle::isStopped() const {
-    return false;
-}
-
 
 bool
 MSBaseVehicle::hasValidRoute(std::string& msg) const {
@@ -287,6 +282,9 @@ MSBaseVehicle::calculateArrivalPos() {
     const SUMOReal lastLaneLength = (myRoute->getLastEdge()->getLanes())[0]->getLength();
     switch (myParameter->arrivalPosProcedure) {
         case ARRIVAL_POS_GIVEN:
+			if (fabs(myParameter->arrivalPos) > lastLaneLength) {
+				WRITE_WARNING("Vehicle '" + getID() + "' will not be able to arrive at the given position!");
+			}
             // Maybe we should warn the user about invalid inputs!
             myArrivalPos = MIN2(myParameter->arrivalPos, lastLaneLength);
             if (myArrivalPos < 0) {

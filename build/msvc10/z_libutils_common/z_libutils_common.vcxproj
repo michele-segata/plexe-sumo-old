@@ -156,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\utils\common\AbstractMutex.h" />
+    <ClInclude Include="..\..\..\src\utils\common\AStarRouter.h" />
     <ClInclude Include="..\..\..\src\utils\common\Command.h" />
     <ClInclude Include="..\..\..\src\utils\common\DijkstraRouterEffort.h" />
     <ClInclude Include="..\..\..\src\utils\common\DijkstraRouterTT.h" />
@@ -193,12 +194,6 @@
     <ClInclude Include="..\..\..\src\utils\common\ValueTimeLine.h" />
     <ClInclude Include="..\..\..\src\utils\common\VectorHelper.h" />
     <ClInclude Include="..\..\..\src\utils\common\WrappingCommand.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\zz_foreign_nvwa\zz_foreign_nvwa.vcxproj">
-      <Project>{fc5b65e0-a0b1-40d7-8687-c2fc79e3da47}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

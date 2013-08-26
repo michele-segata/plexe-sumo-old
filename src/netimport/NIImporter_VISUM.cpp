@@ -87,13 +87,11 @@ NIImporter_VISUM::NIImporter_VISUM(NBNetBuilder& nb,
     addParser("BEZIRK", &NIImporter_VISUM::parse_Districts);
     addParser("PUNKT", &NIImporter_VISUM::parse_Point);
 
-
     // set2
     // two types of "strecke"
     addParser("STRECKE", &NIImporter_VISUM::parse_Edges);
     addParser("STRECKEN", &NIImporter_VISUM::parse_Edges);
     addParser("KANTE", &NIImporter_VISUM::parse_Kante);
-
 
     // set3
     addParser("ANBINDUNG", &NIImporter_VISUM::parse_Connectors);
@@ -104,7 +102,6 @@ NIImporter_VISUM::NIImporter_VISUM(NBNetBuilder& nb,
     addParser("STRECKENPOLY", &NIImporter_VISUM::parse_EdgePolys);
     addParser("FAHRSTREIFEN", &NIImporter_VISUM::parse_Lanes);
     addParser("FLAECHENELEMENT", &NIImporter_VISUM::parse_PartOfArea);
-
 
     // set4
     // two types of lsa
@@ -117,7 +114,7 @@ NIImporter_VISUM::NIImporter_VISUM(NBNetBuilder& nb,
     // two types of signalgruppe
     addParser("LSASIGNALGRUPPE", &NIImporter_VISUM::parse_SignalGroups);
     addParser("SIGNALGRUPPE", &NIImporter_VISUM::parse_SignalGroups);
-    // two types of ABBZULSASIGNALGRUPPE
+    // three types of ABBZULSASIGNALGRUPPE
     addParser("ABBZULSASIGNALGRUPPE", &NIImporter_VISUM::parse_TurnsToSignalGroups);
     addParser("SIGNALGRUPPEZUABBIEGER", &NIImporter_VISUM::parse_TurnsToSignalGroups);
     addParser("SIGNALGRUPPEZUFSABBIEGER", &NIImporter_VISUM::parse_TurnsToSignalGroups);
@@ -134,7 +131,7 @@ NIImporter_VISUM::NIImporter_VISUM(NBNetBuilder& nb,
 
 
 NIImporter_VISUM::~NIImporter_VISUM() {
-    for (NIVisumTL_Map::iterator j = myNIVisumTLs.begin(); j != myNIVisumTLs.end(); j++) {
+    for (NIVisumTL_Map::iterator j = myTLS.begin(); j != myTLS.end(); j++) {
         delete j->second;
     }
 }
@@ -208,7 +205,7 @@ NIImporter_VISUM::load() {
         PROGRESS_DONE_MESSAGE();
     }
     // build traffic lights
-    for (NIVisumTL_Map::iterator j = myNIVisumTLs.begin(); j != myNIVisumTLs.end(); j++) {
+    for (NIVisumTL_Map::iterator j = myTLS.begin(); j != myTLS.end(); j++) {
         j->second->build(myNetBuilder.getTLLogicCont());
     }
     // build district shapes
@@ -590,7 +587,7 @@ NIImporter_VISUM::parse_Turns() {
         }
         // both edges found
         //  set them into the edge
-        src->setTurningDestination(dest);
+        src->addEdge2EdgeConnection(dest);
     }
 }
 
@@ -791,16 +788,16 @@ NIImporter_VISUM::parse_TrafficLights() {
                       ? TplConvert<char>::_2bool(myLineParser.get("PhasenBasiert").c_str())
                       : false;
     // add to the list
-    myNIVisumTLs[myCurrentID] = new NIVisumTL(myCurrentID, (SUMOTime) CycleTime, (SUMOTime) IntermediateTime, PhaseBased);
+    myTLS[myCurrentID] = new NIVisumTL(myCurrentID, (SUMOTime) CycleTime, (SUMOTime) IntermediateTime, PhaseBased);
 }
 
 
 void
 NIImporter_VISUM::parse_NodesToTrafficLights() {
-    std::string Node = myLineParser.get("KnotNr").c_str();
-    std::string TrafficLight = myLineParser.get("LsaNr").c_str();
+    std::string node = myLineParser.get("KnotNr").c_str();
+    std::string trafficLight = myLineParser.get("LsaNr").c_str();
     // add to the list
-    myNIVisumTLs[TrafficLight]->GetNodes()->push_back(myNetBuilder.getNodeCont().retrieve(Node));
+    myTLS[trafficLight]->addNode(myNetBuilder.getNodeCont().retrieve(node));
 }
 
 
@@ -810,15 +807,15 @@ NIImporter_VISUM::parse_SignalGroups() {
     myCurrentID = NBHelpers::normalIDRepresentation(myLineParser.get("Nr"));
     std::string LSAid = NBHelpers::normalIDRepresentation(myLineParser.get("LsaNr"));
     // StartTime
-    SUMOReal StartTime = getNamedFloat("GzStart", "GRUENANF");
+    SUMOReal startTime = getNamedFloat("GzStart", "GRUENANF");
     // EndTime
-    SUMOReal EndTime = getNamedFloat("GzEnd", "GRUENENDE");
+    SUMOReal endTime = getNamedFloat("GzEnd", "GRUENENDE");
     // add to the list
-    if (myNIVisumTLs.find(LSAid) == myNIVisumTLs.end()) {
+    if (myTLS.find(LSAid) == myTLS.end()) {
         WRITE_ERROR("Could not find TLS '" + LSAid + "' for setting the signal group.");
         return;
     }
-    (*myNIVisumTLs.find(LSAid)).second->AddSignalGroup(myCurrentID, (SUMOTime) StartTime, (SUMOTime) EndTime);
+    myTLS.find(LSAid)->second->addSignalGroup(myCurrentID, (SUMOTime) startTime, (SUMOTime) endTime);
 }
 
 
@@ -844,8 +841,7 @@ NIImporter_VISUM::parse_TurnsToSignalGroups() {
         edg2 = getEdge(via, to);
     }
     // add to the list
-    NIVisumTL::SignalGroup* SG;
-    SG = (*myNIVisumTLs.find(LSAid)).second->GetSignalGroup(SGid);
+    NIVisumTL::SignalGroup& SG = myTLS.find(LSAid)->second->getSignalGroup(SGid);
     if (edg1 != 0 && edg2 != 0) {
         if (!via->hasIncoming(edg1)) {
             std::string sid;
@@ -871,7 +867,7 @@ NIImporter_VISUM::parse_TurnsToSignalGroups() {
             }
             edg2 = getNamedEdgeContinuating(myNetBuilder.getEdgeCont().retrieve(sid),  via);
         }
-        SG->GetConnections()->push_back(NBConnection(edg1, edg2));
+        SG.connections().push_back(NBConnection(edg1, edg2));
     }
 }
 
@@ -934,7 +930,7 @@ NIImporter_VISUM::parse_Phases() {
     // EndTime
     SUMOReal EndTime = getNamedFloat("GzEnd", "GRUENENDE");
     // add to the list
-    (*myNIVisumTLs.find(LSAid)).second->AddPhase(Phaseid, (SUMOTime) StartTime, (SUMOTime) EndTime);
+    myTLS.find(LSAid)->second->addPhase(Phaseid, (SUMOTime) StartTime, (SUMOTime) EndTime);
 }
 
 
@@ -944,13 +940,10 @@ void NIImporter_VISUM::parse_SignalGroupsToPhases() {
     std::string LSAid = NBHelpers::normalIDRepresentation(myLineParser.get("LsaNr"));
     std::string SGid = NBHelpers::normalIDRepresentation(myLineParser.get("SGNR"));
     // insert
-    NIVisumTL::Phase* PH;
-    NIVisumTL::SignalGroup* SG;
-    NIVisumTL* LSA;
-    LSA = (*myNIVisumTLs.find(LSAid)).second;
-    SG = LSA->GetSignalGroup(SGid);
-    PH = (*LSA->GetPhases()->find(Phaseid)).second;
-    (*SG->GetPhases())[Phaseid] = PH;
+    NIVisumTL* LSA = myTLS.find(LSAid)->second;
+    NIVisumTL::SignalGroup& SG = LSA->getSignalGroup(SGid);
+    NIVisumTL::Phase* PH = LSA->getPhases().find(Phaseid)->second;
+    SG.phases()[Phaseid] = PH;
 }
 
 

@@ -106,6 +106,9 @@ FXDEFMAP(GUIApplicationWindow) GUIApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_LISTINTERNAL,       GUIApplicationWindow::onCmdListInternal),
     FXMAPFUNC(SEL_COMMAND,  MID_ABOUT,              GUIApplicationWindow::onCmdAbout),
     FXMAPFUNC(SEL_COMMAND,  MID_NEW_MICROVIEW,      GUIApplicationWindow::onCmdNewView),
+#ifdef HAVE_OSG
+    FXMAPFUNC(SEL_COMMAND,  MID_NEW_OSGVIEW,        GUIApplicationWindow::onCmdNewOSG),
+#endif
     FXMAPFUNC(SEL_COMMAND,  MID_START,              GUIApplicationWindow::onCmdStart),
     FXMAPFUNC(SEL_COMMAND,  MID_STOP,               GUIApplicationWindow::onCmdStop),
     FXMAPFUNC(SEL_COMMAND,  MID_STEP,               GUIApplicationWindow::onCmdStep),
@@ -115,7 +118,10 @@ FXDEFMAP(GUIApplicationWindow) GUIApplicationWindowMap[] = {
     FXMAPFUNC(SEL_UPDATE,   MID_OPEN_NETWORK,      GUIApplicationWindow::onUpdOpen),
     FXMAPFUNC(SEL_UPDATE,   MID_RELOAD,            GUIApplicationWindow::onUpdReload),
     FXMAPFUNC(SEL_UPDATE,   MID_RECENTFILE,        GUIApplicationWindow::onUpdOpenRecent),
-    FXMAPFUNC(SEL_UPDATE,   MID_NEW_MICROVIEW,     GUIApplicationWindow::onUpdAddMicro),
+    FXMAPFUNC(SEL_UPDATE,   MID_NEW_MICROVIEW,     GUIApplicationWindow::onUpdAddView),
+#ifdef HAVE_OSG
+    FXMAPFUNC(SEL_COMMAND,  MID_NEW_OSGVIEW,        GUIApplicationWindow::onUpdAddView),
+#endif
     FXMAPFUNC(SEL_UPDATE,   MID_START,             GUIApplicationWindow::onUpdStart),
     FXMAPFUNC(SEL_UPDATE,   MID_STOP,              GUIApplicationWindow::onUpdStop),
     FXMAPFUNC(SEL_UPDATE,   MID_STEP,              GUIApplicationWindow::onUpdStep),
@@ -212,8 +218,8 @@ GUIApplicationWindow::dependentBuild(bool game) {
         myMessageWindow->hide();
     }
     // build additional threads
-    myLoadThread = new GUILoadThread(this, myEvents, myLoadThreadEvent);
-    myRunThread = new GUIRunThread(this, *mySimDelayTarget, myEvents,
+    myLoadThread = new GUILoadThread(getApp(), this, myEvents, myLoadThreadEvent);
+    myRunThread = new GUIRunThread(getApp(), this, *mySimDelayTarget, myEvents,
                                    myRunThreadEvent);
     // set the status bar
     myStatusbar->getStatusLine()->setText("Ready.");
@@ -502,6 +508,11 @@ GUIApplicationWindow::buildToolBars() {
         new FXButton(myToolBar5, "\t\tOpen a new microscopic view.",
                      GUIIconSubSys::getIcon(ICON_MICROVIEW), this, MID_NEW_MICROVIEW,
                      ICON_ABOVE_TEXT | BUTTON_TOOLBAR | FRAME_RAISED | LAYOUT_TOP | LAYOUT_LEFT);
+#ifdef HAVE_OSG
+        new FXButton(myToolBar5,"\t\tOpen a new 3D view.",
+                     GUIIconSubSys::getIcon(ICON_MICROVIEW), this, MID_NEW_OSGVIEW,
+                     ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+#endif
     }
 }
 
@@ -638,7 +649,7 @@ GUIApplicationWindow::onUpdOpenRecent(FXObject* sender, FXSelector, void* ptr) {
 
 
 long
-GUIApplicationWindow::onUpdAddMicro(FXObject* sender, FXSelector, void* ptr) {
+GUIApplicationWindow::onUpdAddView(FXObject* sender, FXSelector, void* ptr) {
     sender->handle(this,
                    myAmLoading || !myRunThread->simulationAvailable()
                    ? FXSEL(SEL_COMMAND, ID_DISABLE) : FXSEL(SEL_COMMAND, ID_ENABLE),
@@ -773,9 +784,19 @@ GUIApplicationWindow::onCmdListInternal(FXObject*, FXSelector, void*) {
 
 long
 GUIApplicationWindow::onCmdNewView(FXObject*, FXSelector, void*) {
-    openNewView();
+    openNewView(GUISUMOViewParent::VIEW_2D_OPENGL);
     return 1;
 }
+
+
+#ifdef HAVE_OSG
+long
+GUIApplicationWindow::onCmdNewOSG(FXObject*,FXSelector,void*)
+{
+    openNewView(GUISUMOViewParent::VIEW_3D_OSG);
+    return 1;
+}
+#endif
 
 
 long
@@ -822,7 +843,9 @@ GUIApplicationWindow::eventOccured() {
                 handleEvent_SimulationLoaded(e);
                 break;
             case EVENT_SIMULATION_STEP:
-                handleEvent_SimulationStep(e);
+                if (myRunThread->simulationAvailable()) { // avoid race-condition related crash if reload was pressed
+                    handleEvent_SimulationStep(e);
+                }
                 break;
             case EVENT_MESSAGE_OCCURED:
             case EVENT_WARNING_OCCURED:
@@ -866,7 +889,7 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
     if (ec->myNet == 0) {
         // report failure
         setStatusBarText("Loading of '" + ec->myFile + "' failed!");
-        if (gQuitOnEnd) {
+        if (GUIGlobals::gQuitOnEnd) {
             closeAllWindows();
             getApp()->exit(1);
         }
@@ -906,7 +929,7 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
     }
     getApp()->endWaitCursor();
     // start if wished
-    if (myRunAtBegin && ec->myNet != 0 && myRunThread->simulationIsStartable()) {
+    if (GUIGlobals::gRunAfterLoad && ec->myNet != 0 && myRunThread->simulationIsStartable()) {
         onCmdStart(0, 0, 0);
     }
     update();
@@ -936,19 +959,15 @@ GUIApplicationWindow::handleEvent_Message(GUIEvent* e) {
 void
 GUIApplicationWindow::handleEvent_SimulationEnded(GUIEvent* e) {
     GUIEvent_SimulationEnded* ec = static_cast<GUIEvent_SimulationEnded*>(e);
-    if (!gQuitOnEnd) {
-        // build the text
-        std::stringstream text;
-        text << "The simulation has ended at time step " << time2string(ec->getTimeStep()) << ".\n";
-        text << "Reason: " << MSNet::getStateMessage(ec->getReason());
-        onCmdStop(0, 0, 0);
-        FXMessageBox::warning(this, MBOX_OK, "Simulation Ended", text.str().c_str());
-    } else {
-        onCmdStop(0, 0, 0);
-    }
-    if (gQuitOnEnd) {
+    onCmdStop(0, 0, 0);
+    if (GUIGlobals::gQuitOnEnd) {
         closeAllWindows();
         getApp()->exit(ec->getReason() == MSNet::SIMSTATE_ERROR_IN_SIM);
+    } else {
+        // build the text
+        const std::string text = "Simulation ended at time: " + time2string(ec->getTimeStep()) +
+                                 ".\nReason: " + MSNet::getStateMessage(ec->getReason());
+        FXMessageBox::warning(this, MBOX_OK, "Simulation ended", text.c_str());
     }
 }
 
@@ -971,20 +990,17 @@ GUIApplicationWindow::load(const std::string& file, bool isNet, bool isReload) {
 }
 
 
-
 GUISUMOAbstractView*
-GUIApplicationWindow::openNewView() {
+GUIApplicationWindow::openNewView(GUISUMOViewParent::ViewType vt) {
     if (!myRunThread->simulationAvailable()) {
         myStatusbar->getStatusLine()->setText("No simulation loaded!");
         return 0;
     }
     std::string caption = "View #" + toString(myViewNumber++);
     FXuint opts = MDI_TRACKING;
-    GUISUMOViewParent* w = new GUISUMOViewParent(myMDIClient,
-            myMDIMenu, FXString(caption.c_str()),
-            this, GUIIconSubSys::getIcon(ICON_APP),
-            opts, 10, 10, 300, 200);
-    GUISUMOAbstractView* v = w->init(getBuildGLCanvas(), myRunThread->getNet());
+    GUISUMOViewParent* w = new GUISUMOViewParent(myMDIClient, myMDIMenu, FXString(caption.c_str()),
+            this, GUIIconSubSys::getIcon(ICON_APP), opts, 10, 10, 300, 200);
+    GUISUMOAbstractView* v = w->init(getBuildGLCanvas(), myRunThread->getNet(), vt);
     w->create();
     if (myMDIClient->numChildren() == 1) {
         w->maximize();
@@ -1057,8 +1073,7 @@ GUIApplicationWindow::getCurrentSimTime() const {
 
 
 void
-GUIApplicationWindow::loadOnStartup(bool run) {
-    myRunAtBegin = run;
+GUIApplicationWindow::loadOnStartup() {
     load("", false);
 }
 

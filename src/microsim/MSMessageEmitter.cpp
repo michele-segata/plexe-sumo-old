@@ -37,6 +37,7 @@
 #include <iostream>
 #include "MSMessageEmitter.h"
 #include "MSLane.h"
+#include "MSEdge.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -334,17 +335,5 @@ MSMessageEmitter::setWriteEvents(std::string& events) {
             std::cout << "unknown event '" + tmp + "', skipping" << std::endl;
         }
     }
-}
-
-
-void
-MSMessageEmitter::setFile(const std::string& file) {
-#ifdef _DEBUG
-    std::cout << "Filename: '" + file + "'." << std::endl;
-#endif
-    myDev = OutputDevice::getDevice(file);
-#ifdef _DEBUG
-    std::cout << "done..." << std::endl;
-#endif
 }
 #endif

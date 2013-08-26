@@ -34,14 +34,14 @@
             <route cost="125.11" probability="1.00000000" edges="beg middle end rend"/>
         </routeDistribution>
     </vehicle>
-    <vType id="10" guiWidth="100.00"/>
+    <vType id="10" width="100.00"/>
     <vehicle id="10" type="10" depart="0.00">
         <routeDistribution last="0">
             <route cost="125.11" probability="1.00000000" edges="beg middle end rend"/>
         </routeDistribution>
     </vehicle>
     <vType id="2">
-        <carFollowing-Krauss sigma="100.00"/>
+        <carFollowing-Krauss sigma="1.00"/>
     </vType>
     <vehicle id="2" type="2" depart="0.00">
         <routeDistribution last="0">

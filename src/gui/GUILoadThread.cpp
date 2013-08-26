@@ -56,7 +56,7 @@
 #include <utils/gui/events/GUIEvent_Message.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/globjects/GUIGlObjectStorage.h>
-#include <utils/gui/windows/GUIAppGlobals.h>
+#include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/common/RandHelper.h>
 #include <ctime>
 
@@ -72,9 +72,9 @@
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-GUILoadThread::GUILoadThread(MFXInterThreadEventClient* mw,
+GUILoadThread::GUILoadThread(FXApp* app, MFXInterThreadEventClient* mw,
                              MFXEventQue& eq, FXEX::FXThreadEvent& ev)
-    : FXSingleEventThread(gFXApp, mw), myParent(mw), myEventQue(eq),
+    : FXSingleEventThread(app, mw), myParent(mw), myEventQue(eq),
       myEventThrow(ev) {
     myErrorRetriever = new MsgRetrievingFunction<GUILoadThread>(this, &GUILoadThread::retrieveMessage, MsgHandler::MT_ERROR);
     myMessageRetriever = new MsgRetrievingFunction<GUILoadThread>(this, &GUILoadThread::retrieveMessage, MsgHandler::MT_MESSAGE);
@@ -98,12 +98,9 @@ GUILoadThread::run() {
     OptionsCont& oc = OptionsCont::getOptions();
 
     // within gui-based applications, nothing is reported to the console
-    MsgHandler::getErrorInstance()->report2cout(false);
-    MsgHandler::getErrorInstance()->report2cerr(false);
-    MsgHandler::getWarningInstance()->report2cout(false);
-    MsgHandler::getWarningInstance()->report2cerr(false);
-    MsgHandler::getMessageInstance()->report2cout(false);
-    MsgHandler::getMessageInstance()->report2cerr(false);
+    MsgHandler::getMessageInstance()->removeRetriever(&OutputDevice::getDevice("stdout"));
+    MsgHandler::getWarningInstance()->removeRetriever(&OutputDevice::getDevice("stderr"));
+    MsgHandler::getErrorInstance()->removeRetriever(&OutputDevice::getDevice("stderr"));
     // register message callbacks
     MsgHandler::getMessageInstance()->addRetriever(myMessageRetriever);
     MsgHandler::getErrorInstance()->addRetriever(myErrorRetriever);
@@ -111,33 +108,39 @@ GUILoadThread::run() {
 
     // try to load the given configuration
     if (!initOptions()) {
-        // the options are not valid
+        // the options are not valid but maybe we want to quit
+	    GUIGlobals::gQuitOnEnd = oc.getBool("quit-on-end");
         submitEndAndCleanup(net, simStartTime, simEndTime);
         return 0;
     }
-    MsgHandler::initOutputOptions(true);
+    // do this once again to get parsed options
+    MsgHandler::initOutputOptions();
+    GUIGlobals::gRunAfterLoad = oc.getBool("start");
+    GUIGlobals::gQuitOnEnd = oc.getBool("quit-on-end");
     if (!MSFrame::checkOptions()) {
-        // the options are not valid
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         submitEndAndCleanup(net, simStartTime, simEndTime);
         return 0;
     }
 
+    // initialise global settings
     RandHelper::initRandGlobal();
-    // try to load
     MSFrame::setMSGlobals(oc);
+    gAllowTextures = !oc.getBool("disable-textures");
+    MSVehicleControl* vehControl = 0;
 #ifdef HAVE_MESOSIM
     GUIVisualizationSettings::UseMesoSim = MSGlobals::gUseMesoSim;
     if (MSGlobals::gUseMesoSim) {
-        net = new GUINet(new MEVehicleControl(), new GUIEventControl(),
-                         new GUIEventControl(), new GUIEventControl());
-    } else {
+        vehControl = new MEVehicleControl();
+    } else 
 #endif
-        net = new GUINet(new GUIVehicleControl(), new GUIEventControl(),
-                         new GUIEventControl(), new GUIEventControl());
-#ifdef HAVE_MESOSIM
-    }
-#endif
+        vehControl = new GUIVehicleControl();
+    
+    net = new GUINet(
+            vehControl,
+            new GUIEventControl(),
+            new GUIEventControl(), 
+            new GUIEventControl());
     GUIEdgeControlBuilder* eb = new GUIEdgeControlBuilder();
     GUIDetectorBuilder db(*net);
     NLJunctionControlBuilder jb(*net, db);

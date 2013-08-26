@@ -306,16 +306,6 @@ public:
     /// @name processing methods
     /// @{
 
-    /** @brief Computes the turn-around directions for all edges
-     *
-     * Calls "NBEdge::computeTurningDirections" for all edges within the container.
-     *
-     * @todo Recheck whether a visitor-pattern should be used herefor
-     * @see NBEdge::computeTurningDirections
-     */
-    void computeTurningDirections() ;
-
-
     /** @brief Sorts all lanes of all edges within the container by their direction
      *
      * Calls "NBEdge::sortOutgoingLanesConnections" for all edges within the container.
@@ -452,6 +442,10 @@ public:
         return myExtractedEdges.count(id) != 0;
     }
 
+    /** @brief Renames the edge. Throws exception if newID already exists
+     */
+    void rename(NBEdge* edge, const std::string& newID);
+
 
 private:
     /** @brief Returns the edges which have been built by splitting the edge of the given id
@@ -503,10 +497,10 @@ private:
     std::set<std::string> myEdges2Remove;
 
     /// @brief Set of vehicle types which must be allowed on edges in order to keep them
-    SUMOVehicleClasses myVehicleClasses2Keep;
+    SVCPermissions myVehicleClasses2Keep;
 
-    /// @brief Set of vehicle types which must not be disallowed on edges in order to keep them
-    SUMOVehicleClasses myVehicleClasses2Remove;
+    /// @brief Set of vehicle types which need not be supported (edges which allow ONLY these are removed)
+    SVCPermissions myVehicleClasses2Remove;
 
     /// @brief Set of edges types which shall be kept
     std::set<std::string> myTypes2Keep;

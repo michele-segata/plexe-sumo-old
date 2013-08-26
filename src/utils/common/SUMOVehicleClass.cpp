@@ -110,6 +110,8 @@ StringBijection<SUMOVehicleShape>::Entry sumoVehicleShapeStringInitializer[] = {
 StringBijection<SUMOVehicleShape> SumoVehicleShapeStrings(
     sumoVehicleShapeStringInitializer, SVS_UNKNOWN);
 
+const int SUMOVehicleClass_MAX = SVC_PEDESTRIAN;
+const SVCPermissions SVCFreeForAll = std::numeric_limits<SVCPermissions>::max(); // all bits set to 1
 
 // ===========================================================================
 // method definitions
@@ -133,18 +135,55 @@ getVehicleClassCompoundName(int id) {
 }
 
 
-std::string
-getVehicleClassNames(const SUMOVehicleClasses& ids) {
+std::string 
+getAllowedVehicleClassNames(SVCPermissions permissions) {
     std::ostringstream oss;
+    const std::vector<std::string> classNames = getAllowedVehicleClassNamesList(permissions);
     bool hadOne = false;
-    for (SUMOVehicleClasses::const_iterator i = ids.begin(); i != ids.end(); ++i) {
+    for (std::vector<std::string>::const_iterator it = classNames.begin(); it != classNames.end(); it++) {
         if (hadOne) {
             oss << ' ';
         }
-        oss << toString(*i);
+        oss << *it;
         hadOne = true;
     }
     return oss.str();
+}
+
+
+std::vector<std::string>
+getAllowedVehicleClassNamesList(SVCPermissions permissions) {
+    /// @todo cache values?
+    const std::vector<std::string> classNames = SumoVehicleClassStrings.getStrings();
+    std::vector<std::string> result;
+    for (std::vector<std::string>::const_iterator it = classNames.begin(); it != classNames.end(); it++) {
+        const int svc = (int)SumoVehicleClassStrings.get(*it);
+        if ((svc & permissions) == svc && svc != SVC_UNKNOWN) {
+            result.push_back(*it);
+        }
+    }
+    return result;
+}
+
+
+std::pair<std::string, bool> 
+getPermissionEncoding(SVCPermissions permissions) {
+    // shortcut the common cases
+    if (permissions == SVCFreeForAll) {
+        return std::pair<std::string, bool>("", false); // nothing disallowed
+    }
+    // figure out whether its shorter to write allow or disallow
+    size_t num_allowed = 0;
+    for(int mask = 1; mask < SUMOVehicleClass_MAX; mask = mask << 1) {
+        if ((mask & permissions) == mask) {
+            ++num_allowed;
+        }
+    }
+    if (num_allowed <= (SumoVehicleClassStrings.size() - num_allowed)) {
+        return std::pair<std::string, bool>(getAllowedVehicleClassNames(permissions), true);
+    } else {
+        return std::pair<std::string, bool>(getAllowedVehicleClassNames(~permissions), false);
+    }
 }
 
 
@@ -170,33 +209,50 @@ getVehicleClassCompoundID(const std::string& name) {
 }
 
 
-void
-parseVehicleClasses(
-    const std::string& classNames,
-    SUMOVehicleClasses& container) {
-    StringTokenizer sta(classNames, " ");
+SVCPermissions 
+parseVehicleClasses(const std::string& allowedS) {
+    SVCPermissions result = 0;
+    StringTokenizer sta(allowedS, " ");
     while (sta.hasNext()) {
-        container.insert(getVehicleClassID(sta.next()));
+        result |= getVehicleClassID(sta.next());
+    }
+    return result;
+}
+
+
+bool 
+canParseVehicleClasses(const std::string& classes) {
+    StringTokenizer sta(classes, " ");
+    while (sta.hasNext()) {
+        if (!SumoVehicleClassStrings.hasString(sta.next())) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+extern SVCPermissions parseVehicleClasses(const std::string& allowedS, const std::string& disallowedS) {
+    if (allowedS.size() == 0 && disallowedS.size() == 0) {
+        return SVCFreeForAll;
+    } else if (allowedS.size() > 0 && disallowedS.size() > 0) {
+        WRITE_WARNING("SVCPermissions must be specified either via 'allow' or 'disallow'. Ignoring 'disallow'");
+        return parseVehicleClasses(allowedS);
+    } else if (allowedS.size() > 0) {
+        return parseVehicleClasses(allowedS);
+    } else {
+        return ~parseVehicleClasses(disallowedS);
     }
 }
 
 
-void
-parseVehicleClasses(const std::string& allowedS,
-                    const std::string& disallowedS,
-                    SUMOVehicleClasses& allowed,
-                    SUMOVehicleClasses& disallowed) {
-    parseVehicleClasses(allowedS, allowed);
-    parseVehicleClasses(disallowedS, disallowed);
-}
-
-
-void
-parseVehicleClasses(const std::vector<std::string> &classesS,
-                    SUMOVehicleClasses& classes) {
-    for (std::vector<std::string>::const_iterator i = classesS.begin(); i != classesS.end(); ++i) {
-        classes.insert(getVehicleClassID(*i));
+SVCPermissions 
+parseVehicleClasses(const std::vector<std::string> &allowedS) {
+    SVCPermissions result = 0;
+    for (std::vector<std::string>::const_iterator i = allowedS.begin(); i != allowedS.end(); ++i) {
+        result |= getVehicleClassID(*i);
     }
+    return result;
 }
 
 
@@ -284,7 +340,8 @@ const SUMOVehicleClass DEFAULT_VEH_CLASS(SVC_UNKNOWN);
 const SUMOReal DEFAULT_VEH_PROB(1.);
 const SUMOReal DEFAULT_VEH_SPEEDFACTOR(1.);
 const SUMOReal DEFAULT_VEH_SPEEDDEV(0.);
-const SUMOReal DEFAULT_VEH_GUIWIDTH(2.);
+const SUMOReal DEFAULT_VEH_WIDTH(2.);
+const SUMOReal DEFAULT_VEH_HEIGHT(1.5);
 const SumoXMLTag DEFAULT_VEH_FOLLOW_MODEL(SUMO_TAG_CF_KRAUSS);
 const std::string DEFAULT_VEH_LANE_CHANGE_MODEL("dkrajzew2008");
 const SUMOVehicleShape DEFAULT_VEH_SHAPE(SVS_UNKNOWN);

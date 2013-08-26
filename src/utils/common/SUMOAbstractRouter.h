@@ -34,7 +34,11 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <assert.h>
+#include <utils/common/SysUtils.h>
+#include <utils/common/MsgHandler.h>
 #include <utils/common/SUMOTime.h>
+#include <utils/common/ToString.h>
 
 
 // ===========================================================================
@@ -47,43 +51,55 @@
 template<class E, class V>
 class SUMOAbstractRouter {
 public:
-    /**
-     * @class ROAbstractEdgeEffortRetriever
-     * This interface has to be implemented in order to get the real efforts of edges
-     */
-    class ROAbstractEdgeEffortRetriever {
-    public:
-        /// Constructor
-        ROAbstractEdgeEffortRetriever() { }
-
-        /// Destructor
-        virtual ~ROAbstractEdgeEffortRetriever() { }
-
-        /// This function should return the effort to use
-        virtual SUMOReal getEffort(const V* const, SUMOTime time, const E* const edge,
-                                   SUMOReal dist) const = 0;
-
-        /// Returns the name of this retriever
-        virtual const std::string& getID() const = 0;
-
-    };
-
-
-public:
     /// Constructor
-    SUMOAbstractRouter() { }
+    SUMOAbstractRouter(const std::string& type):
+        myType(type),
+        myQueryVisits(0),
+        myNumQueries(0),
+        myQueryStartTime(0),
+        myQueryTimeSum(0)
+    { }
 
     /// Destructor
-    virtual ~SUMOAbstractRouter() { }
+    virtual ~SUMOAbstractRouter() { 
+        if (myNumQueries > 0) {
+            WRITE_MESSAGE(myType + " answered " + toString(myNumQueries) + " queries and explored " + toString(double(myQueryVisits) / myNumQueries) +  " edges on average.");
+            WRITE_MESSAGE(myType + " spent " + toString(myQueryTimeSum) + " ms answering queries (" + toString(double(myQueryTimeSum) / myNumQueries) +  " ms on average).");
+        }
+    }
 
-    /** @brief Builds the route between the given edges using the minimum afford at the given time
-        The definition of the afford depends on the wished routing scheme */
+    /** @brief Builds the route between the given edges using the minimum effort at the given time
+        The definition of the effort depends on the wished routing scheme */
     virtual void compute(const E* from, const E* to, const V* const vehicle,
                          SUMOTime msTime, std::vector<const E*> &into) = 0;
 
     virtual SUMOReal recomputeCosts(const std::vector<const E*> &edges,
                                     const V* const v, SUMOTime msTime) const = 0;
 
+    // interface extension for BulkStarRouter
+    virtual void prepare(const E*, const V*, bool) {
+        assert(false);
+    }
+
+    inline void startQuery() {
+        myNumQueries++;
+        myQueryStartTime = SysUtils::getCurrentMillis();
+    }
+
+    inline void endQuery(int visits) {
+        myQueryVisits += visits;
+        myQueryTimeSum += (SysUtils::getCurrentMillis() - myQueryStartTime);
+    }
+
+private:
+    /// @brief the type of this router
+    const std::string myType;
+    /// @brief counters for performance logging
+    int myQueryVisits;
+    int myNumQueries;
+    /// @brief the time spent querying in milliseconds
+    long myQueryStartTime;
+    long myQueryTimeSum;
 };
 
 

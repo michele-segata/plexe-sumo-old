@@ -18,3 +18,5 @@ multimodal_edge
 # when a list of lane numbers is given, use the minimum value 
 # (larger values are probably short turning lanes)
 key_lanes_non_numerical
+way_with_with_insufficient_nodes
+way_with_selfloop

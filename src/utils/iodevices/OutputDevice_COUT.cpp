@@ -38,17 +38,44 @@
 
 
 // ===========================================================================
+// static member definitions
+// ===========================================================================
+OutputDevice* OutputDevice_COUT::myInstance = 0;
+
+
+// ===========================================================================
+// static method definitions
+// ===========================================================================
+OutputDevice*
+OutputDevice_COUT::getDevice() {
+    // check whether the device has already been aqcuired
+    if (myInstance == 0) {
+        myInstance = new OutputDevice_COUT();
+    }
+    return myInstance;
+}
+
+
+// ===========================================================================
 // method definitions
 // ===========================================================================
 OutputDevice_COUT::OutputDevice_COUT() {}
 
 
-OutputDevice_COUT::~OutputDevice_COUT() {}
+OutputDevice_COUT::~OutputDevice_COUT() {
+    myInstance = 0;
+}
 
 
 std::ostream&
 OutputDevice_COUT::getOStream() {
     return std::cout;
+}
+
+
+void
+OutputDevice_COUT::postWriteHook() {
+    std::cout.flush();
 }
 
 

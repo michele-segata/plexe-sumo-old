@@ -4,18 +4,18 @@ done.
 Parsing edges from osm-file 'osm.xml'... done.
 Removing duplicate edges... done.
  Import done:
-   1024 nodes loaded.
+   1026 nodes loaded.
    34 types loaded.
-   2647 edges loaded.
+   2651 edges loaded.
 Proj projection parameters used: '+proj=utm +zone=32 +ellps=WGS84 +datum=WGS84 +units=m +no_defs'.
-Removing self-loops... 
-done.
+Removing self-loops... done.
 Removing empty nodes... done.
    2 nodes removed.
 Joining similar edges... done.
 Moving network to origin... done.
 Assigning nodes to traffic lights... done.
-Computing turning directions... done.
+Computing turning directions... 
+done.
 Sorting nodes' edges... done.
 Computing node types... done.
 Computing priorities... done.
@@ -26,6 +26,7 @@ Processing turnarounds... done.
 Rechecking of lane endings... done.
 Computing node shapes... done.
 Computing edge shapes... 
+Lane '-27077598#1' has calculated shape length near zero. Revert it back to old shape.
 Lane '-27078849#1' has calculated shape length near zero. Revert it back to old shape.
 Lane '-27078867#2' has calculated shape length near zero. Revert it back to old shape.
 Lane '-27079229#0' has calculated shape length near zero. Revert it back to old shape.
@@ -34,6 +35,7 @@ Lane '-27456224#5' has calculated shape length near zero. Revert it back to old 
 Lane '-27875772#7' has calculated shape length near zero. Revert it back to old shape.
 Lane '-27875772#7' has calculated shape length near zero. Revert it back to old shape.
 Lane '-39271415' has calculated shape length near zero. Revert it back to old shape.
+Lane '27077598#1' has calculated shape length near zero. Revert it back to old shape.
 Lane '27078849#2' has calculated shape length near zero. Revert it back to old shape.
 Lane '27079229#0' has calculated shape length near zero. Revert it back to old shape.
 Lane '27456224#5' has calculated shape length near zero. Revert it back to old shape.
@@ -48,8 +50,8 @@ Computing traffic light logics... done.
 Summary:
  Node type statistics:
   Unregulated junctions       : 0
-  Priority junctions          : 859
-  Right-before-left junctions : 163
+  Priority junctions          : 881
+  Right-before-left junctions : 143
  Network boundaries:
   Original boundary  : 11.07,48.83,11.37,49.00
   Applied offset     : -651925.45,-5410956.58

@@ -38,6 +38,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <utils/geom/Boundary.h>
 #include <utils/geom/GeomHelper.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/ToString.h>
@@ -65,8 +66,12 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NBEdgeCont::NBEdgeCont(NBTypeCont& tc)
-    : myEdgesSplit(0), myTypeCont(tc) {}
+NBEdgeCont::NBEdgeCont(NBTypeCont& tc) : 
+    myEdgesSplit(0), 
+    myTypeCont(tc),
+    myVehicleClasses2Keep(0),
+    myVehicleClasses2Remove(0)
+{}
 
 
 NBEdgeCont::~NBEdgeCont() {
@@ -91,15 +96,13 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
     if (oc.exists("keep-edges.by-vclass") && oc.isSet("keep-edges.by-vclass")) {
         const std::vector<std::string> classes = oc.getStringVector("keep-edges.by-vclass");
         for (std::vector<std::string>::const_iterator i = classes.begin(); i != classes.end(); ++i) {
-            SUMOVehicleClass svc = getVehicleClassID(*i);
-            myVehicleClasses2Keep.insert(svc);
+            myVehicleClasses2Keep |= getVehicleClassID(*i);
         }
     }
     if (oc.exists("remove-edges.by-vclass") && oc.isSet("remove-edges.by-vclass")) {
         const std::vector<std::string> classes = oc.getStringVector("remove-edges.by-vclass");
         for (std::vector<std::string>::const_iterator i = classes.begin(); i != classes.end(); ++i) {
-            SUMOVehicleClass svc = getVehicleClassID(*i);
-            myVehicleClasses2Remove.insert(svc);
+            myVehicleClasses2Remove |= getVehicleClassID(*i);
         }
     }
     if (oc.exists("keep-edges.by-type") && oc.isSet("keep-edges.by-type")) {
@@ -118,7 +121,11 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
         for (std::vector<std::string>::iterator i = polyS.begin(); i != polyS.end(); ++i) {
             poly.push_back(TplConvert<char>::_2SUMOReal((*i).c_str())); // !!! may throw something anyhow...
         }
-        if (poly.size() == 4) {
+        if (poly.size() < 4) {
+            throw ProcessError("Invalid boundary: need at least 2 coordinates");
+        } else if (poly.size() % 2 != 0) {
+            throw ProcessError("Invalid boundary: malformed coordinate");
+        } else if (poly.size() == 4) {
             // prunning boundary (box)
             myPrunningBoundary.push_back(Position(poly[0], poly[1]));
             myPrunningBoundary.push_back(Position(poly[2], poly[1]));
@@ -193,36 +200,12 @@ NBEdgeCont::ignoreFilterMatch(NBEdge *edge) {
         }
     }
     // check whether the edge shall be removed because it does not allow any of the wished classes
-    if (myVehicleClasses2Keep.size() != 0) {
-        SUMOVehicleClasses allowed = edge->getAllowedVehicleClasses();
-        // @todo also check disallowed
-        if (allowed.size() > 0) {
-            int matching = 0;
-            for (SUMOVehicleClasses::const_iterator i = myVehicleClasses2Keep.begin(); i != myVehicleClasses2Keep.end(); ++i) {
-                if (allowed.count(*i)) {
-                    allowed.erase(*i);
-                    matching++;
-                }
-            }
-            if (matching == 0) {
-                return true;
-            }
-        }
+    if (myVehicleClasses2Keep != 0 && (myVehicleClasses2Keep & edge->getPermissions()) == 0) {
+        return true;
     }
     // check whether the edge shall be removed due to allowing unwished classes only
-    if (myVehicleClasses2Remove.size() != 0) {
-        int matching = 0;
-        SUMOVehicleClasses allowed = edge->getAllowedVehicleClasses();
-        for (SUMOVehicleClasses::const_iterator i = myVehicleClasses2Remove.begin(); i != myVehicleClasses2Remove.end(); ++i) {
-            if (allowed.count(*i)) {
-                allowed.erase(*i);
-                matching++;
-            }
-        }
-        // remove the edge if all allowed
-        if (allowed.size() == 0 && matching != 0) {
-            return true;
-        }
+    if (myVehicleClasses2Remove != 0 && (myVehicleClasses2Remove | edge->getPermissions()) == myVehicleClasses2Remove) {
+        return true;
     }
     // check whether the edge shall be removed because it does not have one of the requested types
     if (myTypes2Keep.size() != 0) {
@@ -366,6 +349,16 @@ NBEdgeCont::extract(NBDistrictCont& dc, NBEdge* edge, bool remember) {
 }
 
 
+void 
+NBEdgeCont::rename(NBEdge* edge, const std::string& newID) {
+    if (myEdges.count(newID) != 0) {
+        throw ProcessError("Attempt to rename edge using existing id '" + newID + "'");
+    }
+    myEdges.erase(edge->getID());
+    edge->setID(newID);
+    myEdges[newID] = edge;
+}
+
 
 // ----- explicit edge manipulation methods
 bool
@@ -381,7 +374,7 @@ NBEdgeCont::splitAt(NBDistrictCont& dc, NBEdge* edge, NBNode* node,
                     const std::string& secondEdgeName,
                     unsigned int noLanesFirstEdge, unsigned int noLanesSecondEdge) {
     SUMOReal pos;
-    pos = edge->getGeometry().nearest_position_on_line_to_point(node->getPosition());
+    pos = edge->getGeometry().nearest_position_on_line_to_point2D(node->getPosition());
     if (pos <= 0) {
         pos = GeomHelper::nearest_position_on_line_to_point2D(
                   edge->myFrom->getPosition(), edge->myTo->getPosition(),
@@ -514,14 +507,6 @@ NBEdgeCont::splitGeometry(NBNodeCont& nc) {
 
 
 // ----- processing methods
-void
-NBEdgeCont::computeTurningDirections() {
-    for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
-        (*i).second->computeTurningDirections();
-    }
-}
-
-
 void
 NBEdgeCont::clearControllingTLInformation() const {
     for (EdgeCont::const_iterator i = myEdges.begin(); i != myEdges.end(); i++) {
@@ -766,7 +751,6 @@ NBEdgeCont::guessRoundabouts(std::vector<std::set<NBEdge*> > &marked) {
                 noLoop = true;
                 break;
             }
-            sort(edges.begin(), edges.end(), NBContHelper::edge_by_junction_angle_sorter(e->getToNode()));
             EdgeVector::const_iterator me = find(edges.begin(), edges.end(), e);
             NBContHelper::nextCW(edges, me);
             NBEdge* left = *me;

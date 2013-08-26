@@ -62,14 +62,18 @@ ROVehicle::~ROVehicle() {}
 
 void
 ROVehicle::saveAllAsXML(SUMOAbstractRouter<ROEdge, ROVehicle> &router, OutputDevice& os,
-                        OutputDevice* const altos, bool withExitTimes) const {
+                        OutputDevice* const altos, OutputDevice* const typeos, bool withExitTimes) const {
     // check whether the vehicle's type was saved before
     if (myType != 0 && !myType->saved) {
         // ... save if not
-        myType->write(os);
-        if (altos != 0) {
-            myType->write(*altos);
-        }
+		if (typeos != 0) {
+	        myType->write(*typeos);
+		} else {
+			myType->write(os);
+			if (altos != 0) {
+				myType->write(*altos);
+			}
+		}
         myType->saved = true;
     }
 
@@ -90,6 +94,12 @@ ROVehicle::saveAllAsXML(SUMOAbstractRouter<ROEdge, ROVehicle> &router, OutputDev
     if (altos != 0) {
         altos->closeTag();
     }
+}
+
+
+SUMOReal 
+ROVehicle::getMaxSpeed() const {
+    return myType->maxSpeed;
 }
 
 

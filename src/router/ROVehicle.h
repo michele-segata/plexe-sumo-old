@@ -36,6 +36,7 @@
 #include <utils/common/SUMOTime.h>
 #include <utils/common/RGBColor.h>
 #include <utils/common/SUMOVehicleParameter.h>
+#include <utils/common/SUMOVTypeParameter.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/SUMOAbstractRouter.h>
 
@@ -114,20 +115,31 @@ public:
     }
 
 
+    /// @brief Returns the vehicle's maximum speed
+    SUMOReal getMaxSpeed() const;
+
+
+    inline SUMOVehicleClass getVClass() const {
+        return getType() != 0 ? getType()->vehicleClass : DEFAULT_VEH_CLASS;
+    }
+
+
     /** @brief Saves the complete vehicle description.
      *
      * Saves the vehicle type if it was not saved before.
      * Saves the vehicle route if it was not saved before.
      * Saves the vehicle itself.
      *
+     * @param[in] router the router for cost recomputation
      * @param[in] os The routes - output device to store the vehicle's description into
      * @param[in] altos The route alternatives - output device to store the vehicle's description into
-     * @param[in] route !!!describe
+     * @param[in] typeos The types - output device to store the vehicle types into
+     * @param[in] withExitTimes whether exit times for the edges shall be written
      * @exception IOError If something fails (not yet implemented)
-     * @todo What is the given route definition?
      */
     void saveAllAsXML(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
-                      OutputDevice& os, OutputDevice* const altos, bool withExitTimes) const;
+                      OutputDevice& os, OutputDevice* const altos,
+					  OutputDevice* const typeos, bool withExitTimes) const;
 
 
     /** @brief Returns a copy of the vehicle using a new id, departure time and route

@@ -61,9 +61,14 @@
 // ===========================================================================
 RONet::RONet()
     : myVehicleTypes(),
-      myRoutesOutput(0), myRouteAlternativesOutput(0),
+	  myRoutesOutput(0), myRouteAlternativesOutput(0), myTypesOutput(0),
       myReadRouteNo(0), myDiscardedRouteNo(0), myWrittenRouteNo(0),
-      myHaveRestrictions(false) {}
+      myHaveRestrictions(false), myDefaultVTypeMayBeDeleted(true) {
+    SUMOVTypeParameter* type = new SUMOVTypeParameter();
+    type->id = DEFAULT_VTYPE_ID;
+    type->onlyReferenced = true;
+    myVehicleTypes.add(type->id, type);
+}
 
 
 RONet::~RONet() {
@@ -102,7 +107,7 @@ RONet::addRouteDef(RORouteDef* def) {
 
 
 void
-RONet::openOutput(const std::string& filename, bool useAlternatives) {
+RONet::openOutput(const std::string& filename, bool useAlternatives, const std::string& typefilename) {
     myRoutesOutput = &OutputDevice::getDevice(filename);
     myRoutesOutput->writeXMLHeader("routes", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
     if (useAlternatives) {
@@ -114,6 +119,10 @@ RONet::openOutput(const std::string& filename, bool useAlternatives) {
         }
         myRouteAlternativesOutput->writeXMLHeader("route-alternatives", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
     }
+	if (typefilename != "") {
+		myTypesOutput = &OutputDevice::getDevice(typefilename);
+	    myTypesOutput->writeXMLHeader("routes", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
+	}
 }
 
 
@@ -127,6 +136,10 @@ RONet::closeOutput() {
     if (myRouteAlternativesOutput != 0) {
         myRouteAlternativesOutput->close();
     }
+    // only if opened
+    if (myTypesOutput != 0) {
+        myTypesOutput->close();
+    }
 }
 
 
@@ -135,13 +148,17 @@ SUMOVTypeParameter*
 RONet::getVehicleTypeSecure(const std::string& id) {
     // check whether the type was already known
     SUMOVTypeParameter* type = myVehicleTypes.get(id);
+    if (id == DEFAULT_VTYPE_ID) {
+        myDefaultVTypeMayBeDeleted = false;
+    }
     if (type != 0) {
         return type;
     }
     if (id == "") {
         // ok, no vehicle type was given within the user input
         //  return the default type
-        return 0;
+        myDefaultVTypeMayBeDeleted = false;
+		return myVehicleTypes.get(DEFAULT_VTYPE_ID);
     }
     // Assume, the user will define the type somewhere else
     //  return a type which contains the id only
@@ -155,6 +172,10 @@ RONet::getVehicleTypeSecure(const std::string& id) {
 
 bool
 RONet::addVehicleType(SUMOVTypeParameter* type) {
+    if (type->id == DEFAULT_VTYPE_ID && myDefaultVTypeMayBeDeleted) {
+		myVehicleTypes.remove(DEFAULT_VTYPE_ID);
+        myDefaultVTypeMayBeDeleted = false;
+    }
     if (!myVehicleTypes.add(type->id, type)) {
         WRITE_ERROR("The vehicle type '" + type->id + "' occurs at least twice.");
         delete type;
@@ -204,12 +225,12 @@ RONet::computeRoute(OptionsCont& options, SUMOAbstractRouter<ROEdge, ROVehicle> 
     // check whether we have to evaluate the route for not containing loops
     if (options.getBool("remove-loops")) {
         current->recheckForLoops();
-    }
-    // check whether the route is still valid
-    if (current->size() == 0) {
-        delete current;
-        mh->inform(noRouteMsg + " (after removing loops)");
-        return false;
+        // check whether the route is still valid
+        if (current->size() == 0) {
+            delete current;
+            mh->inform(noRouteMsg + " (after removing loops)");
+            return false;
+        }
     }
     // add built route
     routeDef->addAlternative(router, veh, current, veh->getDepartureTime());
@@ -243,7 +264,7 @@ RONet::saveAndRemoveRoutesUntil(OptionsCont& options, SUMOAbstractRouter<ROEdge,
         // ok, compute the route (try it)
         if (computeRoute(options, router, veh)) {
             // write the route
-            veh->saveAllAsXML(router, *myRoutesOutput, myRouteAlternativesOutput, options.getBool("exit-times"));
+            veh->saveAllAsXML(router, *myRoutesOutput, myRouteAlternativesOutput, myTypesOutput, options.getBool("exit-times"));
             myWrittenRouteNo++;
             // remove the route if it is not longer used
             /*

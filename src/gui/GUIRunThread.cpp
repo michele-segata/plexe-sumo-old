@@ -35,20 +35,19 @@
 #include <iostream>
 #include <algorithm>
 
-#include <utils/common/MsgRetrievingFunction.h>
-#include <utils/common/MsgHandler.h>
-#include <utils/common/UtilExceptions.h>
 #include <guisim/GUINet.h>
-#include <microsim/MSVehicleControl.h>
 #include <utils/gui/events/GUIEvent_Message.h>
 #include <utils/gui/events/GUIEvent_SimulationStep.h>
 #include "GUIEvent_SimulationEnded.h"
 #include "GUIApplicationWindow.h"
 #include "GUIRunThread.h"
 #include "GUIGlobals.h"
+#include <microsim/MSVehicleControl.h>
 #include <utils/options/OptionsCont.h>
-#include <utils/gui/windows/GUIAppGlobals.h>
 #include <utils/common/SysUtils.h>
+#include <utils/common/MsgRetrievingFunction.h>
+#include <utils/common/MsgHandler.h>
+#include <utils/common/UtilExceptions.h>
 #include <utils/iodevices/OutputDevice.h>
 
 #ifndef NO_TRACI
@@ -70,10 +69,10 @@ using namespace std;
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-GUIRunThread::GUIRunThread(MFXInterThreadEventClient* parent,
+GUIRunThread::GUIRunThread(FXApp* app, MFXInterThreadEventClient* parent,
                            FXRealSpinDial& simDelay, MFXEventQue& eq,
                            FXEX::FXThreadEvent& ev)
-    : FXSingleEventThread(gFXApp, parent),
+    : FXSingleEventThread(app, parent),
       myNet(0), myQuit(false), mySimulationInProgress(false), myOk(true),
       mySimDelay(simDelay), myEventQue(eq), myEventThrow(ev) {
     myErrorRetriever = new MsgRetrievingFunction<GUIRunThread>(this, &GUIRunThread::retrieveMessage, MsgHandler::MT_ERROR);
@@ -110,20 +109,19 @@ GUIRunThread::init(GUINet* net, SUMOTime start, SUMOTime end) {
 FXint
 GUIRunThread::run() {
     long beg = 0;
-    long end = 0;
-    long end2 = -1;
+    long end = -1;
     // perform an endless loop
     while (!myQuit) {
         // if the simulation shall be perfomed, do it
         if (!myHalting && myNet != 0 && myOk) {
             if (getNet().logSimulationDuration()) {
                 beg = SysUtils::getCurrentMillis();
-                if (end2 != -1) {
-                    getNet().setIdleDuration((int)(beg - end2));
+                if (end != -1) {
+                    getNet().setIdleDuration((int)(beg - end));
                 }
             }
             // check whether we shall stop at this step
-            bool haltAfter = find(gBreakpoints.begin(), gBreakpoints.end(), myNet->getCurrentTimeStep()) != gBreakpoints.end();
+            const bool haltAfter = find(GUIGlobals::gBreakpoints.begin(), GUIGlobals::gBreakpoints.end(), myNet->getCurrentTimeStep()) != GUIGlobals::gBreakpoints.end();
             // do the step
             makeStep();
             // stop if wished
@@ -131,15 +129,14 @@ GUIRunThread::run() {
                 stop();
             }
             // wait if wanted
-            long val = (long) mySimDelay.getValue();
+            long wait = (long) mySimDelay.getValue();
             if (getNet().logSimulationDuration()) {
                 end = SysUtils::getCurrentMillis();
                 getNet().setSimDuration((int)(end - beg));
-                end2 = SysUtils::getCurrentMillis();
-                val -= end2 - beg;
+                wait -= (end - beg);
             }
-            if (val > 0) {
-                sleep(val);
+            if (wait > 0) {
+                sleep(wait);
             }
         } else {
             // sleep if the simulation is not running
@@ -183,6 +180,8 @@ GUIRunThread::makeStep() {
             case MSNet::SIMSTATE_NO_FURTHER_VEHICLES:
             case MSNet::SIMSTATE_CONNECTION_CLOSED:
             case MSNet::SIMSTATE_TOO_MANY_VEHICLES:
+                WRITE_MESSAGE("Simulation ended at time: " + time2string(myNet->getCurrentTimeStep()));
+                WRITE_MESSAGE("Reason: " + MSNet::getStateMessage(state));
                 e = new GUIEvent_SimulationEnded(state, myNet->getCurrentTimeStep() - DELTA_T);
                 break;
             default:
@@ -242,6 +241,8 @@ GUIRunThread::singleStep() {
 
 void
 GUIRunThread::begin() {
+    // report the begin when wished
+    WRITE_MESSAGE("Simulation started with time: " + time2string(mySimStartTime));
     myOk = true;
 }
 

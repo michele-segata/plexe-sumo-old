@@ -53,8 +53,8 @@ SUMOVTypeParameter::SUMOVTypeParameter()
       defaultProbability(DEFAULT_VEH_PROB),
       speedFactor(DEFAULT_VEH_SPEEDFACTOR), speedDev(DEFAULT_VEH_SPEEDDEV),
       emissionClass(SVE_UNKNOWN), color(RGBColor::DEFAULT_COLOR),
-      vehicleClass(SVC_UNKNOWN), width(DEFAULT_VEH_GUIWIDTH),
-      shape(DEFAULT_VEH_SHAPE),
+      vehicleClass(SVC_UNKNOWN), width(DEFAULT_VEH_WIDTH),
+      height(DEFAULT_VEH_HEIGHT), shape(DEFAULT_VEH_SHAPE),
       cfModel(DEFAULT_VEH_FOLLOW_MODEL), lcModel(DEFAULT_VEH_LANE_CHANGE_MODEL),
       setParameter(0), saved(false), onlyReferenced(false) {
 }
@@ -95,10 +95,16 @@ SUMOVTypeParameter::write(OutputDevice& dev) const {
         dev.writeAttr(SUMO_ATTR_GUISHAPE, getVehicleShapeName(shape));
     }
     if (wasSet(VTYPEPARS_WIDTH_SET)) {
-        dev.writeAttr(SUMO_ATTR_GUIWIDTH, width);
+        dev.writeAttr(SUMO_ATTR_WIDTH, width);
+    }
+    if (wasSet(VTYPEPARS_HEIGHT_SET)) {
+        dev.writeAttr(SUMO_ATTR_HEIGHT, height);
     }
     if (wasSet(VTYPEPARS_COLOR_SET)) {
         dev.writeAttr(SUMO_ATTR_COLOR, color);
+    }
+    if (wasSet(VTYPEPARS_OSGFILE_SET)) {
+        dev.writeAttr(SUMO_ATTR_OSGFILE, osgFile);
     }
 
     if (cfParameter.size() != 0) {
@@ -116,6 +122,16 @@ SUMOVTypeParameter::write(OutputDevice& dev) const {
         dev.closeTag();
     } else {
         dev.closeTag(true);
+    }
+}
+
+
+SUMOReal
+SUMOVTypeParameter::get(const SumoXMLAttr attr, const SUMOReal defaultValue) const {
+    if (cfParameter.count(attr)) {
+        return cfParameter.find(attr)->second;
+    } else {
+        return defaultValue;
     }
 }
 

@@ -53,15 +53,13 @@
 // method definitions
 // ===========================================================================
 RORDLoader_SUMOBase::RORDLoader_SUMOBase(RONet& net,
-        SUMOTime begin, SUMOTime end,
-        const SUMOReal beta, const SUMOReal gawronA, const SUMOReal logitGamma,
-        const int maxRouteNumber, const bool tryRepair, const bool withTaz, const bool keepRoutes,
+        SUMOTime begin, SUMOTime end, const int maxRouteNumber, const bool tryRepair,
+        const bool withTaz, const bool keepRoutes,
         const bool skipRouteCalculation, const std::string& file)
     : ROTypedXMLRoutesLoader(net, begin, end, file),
-      myVehicleParameter(0), myCurrentIsOk(true), myAltIsValid(true), myHaveNextRoute(false),
-      myCurrentAlternatives(0),
-      myBeta(beta), myGawronA(gawronA), myLogitGamma(logitGamma), myMaxRouteNumber(maxRouteNumber),
-      myCurrentRoute(0), myCurrentDepart(-1), myTryRepair(tryRepair), myWithTaz(withTaz), myKeepRoutes(keepRoutes),
+      myVehicleParameter(0), myCurrentIsOk(true), myAltIsValid(true),
+      myCurrentAlternatives(0), myMaxRouteNumber(maxRouteNumber),
+      myCurrentRoute(0), myTryRepair(tryRepair), myWithTaz(withTaz), myKeepRoutes(keepRoutes),
       mySkipRouteCalculation(skipRouteCalculation), myColor(0), myCurrentVType(0),
       myHaveWarnedAboutDeprecatedVType(false), myHaveWarnedAboutDeprecatedRoute(false) {
 }
@@ -199,8 +197,8 @@ RORDLoader_SUMOBase::startAlternative(const SUMOSAXAttributes& attrs) {
         return;
     }
     // build the alternative cont
-    myCurrentAlternatives = new RORouteDef_Alternatives(id, index, myBeta, myGawronA, myLogitGamma,
-            myMaxRouteNumber, myKeepRoutes, mySkipRouteCalculation);
+    myCurrentAlternatives = new RORouteDef_Alternatives(id, index, 
+        myMaxRouteNumber, myKeepRoutes, mySkipRouteCalculation);
 }
 
 void
@@ -281,7 +279,7 @@ RORDLoader_SUMOBase::myEndElement(int element) {
                     myCurrentRoute = 0;
                 }
                 if (myVehicleParameter == 0) {
-                    myHaveNextRoute = true;
+                    myNextRouteRead = true;
                 }
                 myCurrentRoute = 0;
             }
@@ -291,7 +289,7 @@ RORDLoader_SUMOBase::myEndElement(int element) {
                 return;
             }
             if (myVehicleParameter == 0) {
-                myHaveNextRoute = true;
+                myNextRouteRead = true;
             }
             myNet.addRouteDef(myCurrentAlternatives);
             myCurrentRoute = 0;
@@ -301,7 +299,7 @@ RORDLoader_SUMOBase::myEndElement(int element) {
             closeVehicle();
             delete myVehicleParameter;
             myVehicleParameter = 0;
-            myHaveNextRoute = true;
+            myNextRouteRead = true;
             break;
         case SUMO_TAG_VTYPE__DEPRECATED:
         case SUMO_TAG_VTYPE: {
@@ -344,12 +342,6 @@ RORDLoader_SUMOBase::closeVehicle() {
         return true;
     }
     return false;
-}
-
-
-void
-RORDLoader_SUMOBase::beginNextRoute() {
-    myHaveNextRoute = false;
 }
 
 

@@ -49,12 +49,12 @@ bool MSGlobals::gCheck4Accidents;
 
 bool MSGlobals::gCheckRoutes;
 
-std::map<SUMOReal, std::pair<unsigned int, unsigned int> > MSGlobals::gFractions;
-
 #ifdef HAVE_MESOSIM
 bool MSGlobals::gStateLoaded;
 bool MSGlobals::gUseMesoSim;
 MELoop* MSGlobals::gMesoNet;
+#else
+const bool MSGlobals::gUseMesoSim = false;
 #endif
 
 

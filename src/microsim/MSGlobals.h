@@ -72,9 +72,6 @@ public:
     /** information whether the routes shall be checked for connectivity */
     static bool gCheckRoutes;
 
-    /** some floating point values as fractions */
-    static std::map<SUMOReal, std::pair<unsigned int, unsigned int> > gFractions;
-
 #ifdef HAVE_MESOSIM
     /// Information whether a state has been loaded
     static bool gStateLoaded;
@@ -84,6 +81,10 @@ public:
 
     /// mesoscopic simulation infrastructure
     static MELoop* gMesoNet;
+#else
+    /** Information whether mesosim shall be used = constant false */
+    const static bool gUseMesoSim;
+
 #endif
 
 };

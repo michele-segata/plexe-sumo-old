@@ -65,7 +65,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     }
     OutputDevice& device = OutputDevice::getDevice(oc.getString("output-file"));
     device.writeXMLHeader("net", SUMOSAXAttributes::ENCODING, NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/net_file.xsd\""); // street names may contain non-ascii chars
-    device << "\n";
+    device.lf();
     // get involved container
     const NBNodeCont& nc = nb.getNodeCont();
     const NBEdgeCont& ec = nb.getEdgeCont();
@@ -81,7 +81,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
             hadAny |= writeInternalEdges(device, *(*i).second);
         }
         if (hadAny) {
-            device << "\n";
+            device.lf();
         }
     }
 
@@ -90,7 +90,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     for (std::map<std::string, NBEdge*>::const_iterator i = ec.begin(); i != ec.end(); ++i) {
         writeEdge(device, *(*i).second, noNames);
     }
-    device << "\n";
+    device.lf();
 
     // write tls logics
     writeTrafficLights(device, nb.getTLLogicCont());
@@ -99,7 +99,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     for (std::map<std::string, NBNode*>::const_iterator i = nc.begin(); i != nc.end(); ++i) {
         writeJunction(device, *(*i).second);
     }
-    device << "\n";
+    device.lf();
     const bool includeInternal = !oc.getBool("no-internal-links");
     if (includeInternal) {
         // ... internal nodes if not unwanted
@@ -108,7 +108,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
             hadAny |= writeInternalNodes(device, *(*i).second);
         }
         if (hadAny) {
-            device << "\n";
+            device.lf();
         }
     }
 
@@ -124,7 +124,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         }
     }
     if (numConnections > 0) {
-        device << "\n";
+        device.lf();
     }
     if (includeInternal) {
         // ... internal successors if not unwanted
@@ -133,7 +133,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
             hadAny |= writeInternalConnections(device, *(*i).second);
         }
         if (hadAny) {
-            device << "\n";
+            device.lf();
         }
     }
     // write loaded prohibitions
@@ -147,7 +147,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         writeRoundabout(device, *i);
     }
     if (roundabouts.size() != 0) {
-        device << "\n";
+        device.lf();
     }
 
     // write the districts
@@ -155,7 +155,7 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         writeDistrict(device, *(*i).second);
     }
     if (dc.size() != 0) {
-        device << "\n";
+        device.lf();
     }
     device.close();
 }
@@ -187,8 +187,8 @@ NWWriter_SUMO::writeInternalEdge(OutputDevice& into, const std::string& id, SUMO
     SUMOReal length = MAX2(shape.length(), (SUMOReal)POSITION_EPS); // microsim needs positive length
     into.openTag(SUMO_TAG_EDGE);
     into.writeAttr(SUMO_ATTR_ID, id);
-    into.writeAttr(SUMO_ATTR_FUNCTION, toString(EDGEFUNC_INTERNAL));
-    into << ">\n";
+    into.writeAttr(SUMO_ATTR_FUNCTION, EDGEFUNC_INTERNAL);
+	into.closeOpener();
     into.openTag(SUMO_TAG_LANE);
     into.writeAttr(SUMO_ATTR_ID, id + "_0");
     into.writeAttr(SUMO_ATTR_INDEX, 0);
@@ -214,7 +214,7 @@ NWWriter_SUMO::writeEdge(OutputDevice& into, const NBEdge& e, bool noNames) {
         into.writeAttr(SUMO_ATTR_TYPE, e.getTypeName());
     }
     if (e.isMacroscopicConnector()) {
-        into.writeAttr(SUMO_ATTR_FUNCTION, "connector");
+        into.writeAttr(SUMO_ATTR_FUNCTION, EDGEFUNC_CONNECTOR);
     }
     // write the spread type if not default ("right")
     if (e.getLaneSpreadFunction() != LANESPREAD_RIGHT) {
@@ -226,7 +226,7 @@ NWWriter_SUMO::writeEdge(OutputDevice& into, const NBEdge& e, bool noNames) {
     if (!e.hasDefaultGeometry()) {
         into.writeAttr(SUMO_ATTR_SHAPE, e.getGeometry());
     }
-    into << ">\n";
+	into.closeOpener();
     // write the lanes
     const std::vector<NBEdge::Lane> &lanes = e.getLanes();
     SUMOReal length = e.getLoadedLength();
@@ -244,19 +244,12 @@ NWWriter_SUMO::writeEdge(OutputDevice& into, const NBEdge& e, bool noNames) {
 void
 NWWriter_SUMO::writeLane(OutputDevice& into, const std::string& eID, const std::string& lID, const NBEdge::Lane& lane, SUMOReal length, unsigned int index) {
     // output the lane's attributes
-    into.openTag(SUMO_TAG_LANE) << " id=\"" << lID << "\"";
+    into.openTag(SUMO_TAG_LANE).writeAttr(SUMO_ATTR_ID, lID);
     // the first lane of an edge will be the depart lane
-    into << " index=\"" << index << "\"";
+    into.writeAttr(SUMO_ATTR_INDEX, index);
     // write the list of allowed/disallowed vehicle classes
-    if (lane.allowed.size() > 0) {
-        into << " allow=\"" << getVehicleClassNames(lane.allowed) << '\"';
-    }
-    if (lane.notAllowed.size() > 0) {
-        into << " disallow=\"" << getVehicleClassNames(lane.notAllowed) << '\"';
-    }
-    if (lane.preferred.size() > 0) {
-        into << " prefer=\"" << getVehicleClassNames(lane.preferred) << '\"';
-    }
+    writePermissions(into, lane.permissions);
+    writePreferences(into, lane.preferred);
     // some further information
     if (lane.speed == 0) {
         WRITE_WARNING("Lane #" + toString(index) + " of edge '" + eID + "' has a maximum velocity of 0.");
@@ -269,16 +262,16 @@ NWWriter_SUMO::writeLane(OutputDevice& into, const std::string& eID, const std::
     into.writeAttr(SUMO_ATTR_SPEED, lane.speed);
     into.writeAttr(SUMO_ATTR_LENGTH, length);
     if (lane.offset > 0) {
-        into << " endOffset=\"" << lane.offset << '\"';
+        into.writeAttr(SUMO_ATTR_ENDOFFSET, lane.offset);
     }
     if (lane.width != NBEdge::UNSPECIFIED_WIDTH) {
-        into << " width=\"" << lane.width << '\"';
+        into.writeAttr(SUMO_ATTR_WIDTH, lane.width);
     }
     PositionVector shape = lane.shape;
     if (lane.offset > 0) {
         shape = shape.getSubpart(0, shape.length() - lane.offset);
     }
-    into << " shape=\"" << shape << "\"";
+    into.writeAttr(SUMO_ATTR_SHAPE, shape);
     into.closeTag(true);
 }
 
@@ -286,24 +279,24 @@ NWWriter_SUMO::writeLane(OutputDevice& into, const std::string& eID, const std::
 void
 NWWriter_SUMO::writeJunction(OutputDevice& into, const NBNode& n) {
     // write the attributes
-    into.openTag(SUMO_TAG_JUNCTION) << " id=\"" << n.getID() << '\"';
+    into.openTag(SUMO_TAG_JUNCTION).writeAttr(SUMO_ATTR_ID, n.getID());
     into.writeAttr(SUMO_ATTR_TYPE, n.getType());
     NWFrame::writePositionLong(n.getPosition(), into);
-    into << " incLanes=\"";
     // write the incoming lanes
+    std::string incLanes;
     const std::vector<NBEdge*> &incoming = n.getIncomingEdges();
     for (std::vector<NBEdge*>::const_iterator i = incoming.begin(); i != incoming.end(); ++i) {
         unsigned int noLanes = (*i)->getNumLanes();
         for (unsigned int j = 0; j < noLanes; j++) {
-            into << (*i)->getLaneID(j);
+            incLanes += (*i)->getLaneID(j);
             if (i != incoming.end() - 1 || j < noLanes - 1) {
-                into << ' ';
+                incLanes += ' ';
             }
         }
     }
-    into << "\"";
+    into.writeAttr(SUMO_ATTR_INCLANES, incLanes);
     // write the internal lanes
-    into << " intLanes=\"";
+    std::string intLanes;
     if (!OptionsCont::getOptions().getBool("no-internal-links")) {
         unsigned int l = 0;
         for (EdgeVector::const_iterator i = incoming.begin(); i != incoming.end(); i++) {
@@ -313,24 +306,24 @@ NWWriter_SUMO::writeJunction(OutputDevice& into, const NBNode& n) {
                     continue;
                 }
                 if (l != 0) {
-                    into << ' ';
+                    intLanes += ' ';
                 }
                 if (!(*k).haveVia) {
-                    into << (*k).id << "_0";
+                    intLanes += (*k).id + "_0";
                 } else {
-                    into << (*k).viaID << "_0";
+                    intLanes += (*k).viaID + "_0";
                 }
                 l++;
             }
         }
     }
-    into << "\"";
+    into.writeAttr(SUMO_ATTR_INTLANES, intLanes);
     // close writing
-    into << " shape=\"" << n.getShape() << "\"";
+    into.writeAttr(SUMO_ATTR_SHAPE, n.getShape());
     if (n.getType() == NODETYPE_DEAD_END) {
         into.closeTag(true);
     } else {
-        into <<  ">\n";
+		into.closeOpener();
         // write right-of-way logics
         n.writeLogic(into);
         into.closeTag();
@@ -349,17 +342,15 @@ NWWriter_SUMO::writeInternalNodes(OutputDevice& into, const NBNode& n) {
                 continue;
             }
             Position pos = (*k).shape[-1];
-            into.openTag(SUMO_TAG_JUNCTION) << " id=\"" << (*k).viaID << "_0\"";
-            into << " type=\"" << toString(NODETYPE_INTERNAL) << "\"";
+            into.openTag(SUMO_TAG_JUNCTION).writeAttr(SUMO_ATTR_ID, (*k).viaID + "_0");
+            into.writeAttr(SUMO_ATTR_TYPE, NODETYPE_INTERNAL);
             NWFrame::writePositionLong(pos, into);
-            into << " incLanes=\"";
-            std::string furtherIncoming = (*k).sourceNames;
-            into << (*k).id << "_0";
-            if (furtherIncoming.length() != 0) {
-                into << " " << furtherIncoming;
+            std::string incLanes = (*k).id + "_0";
+            if ((*k).foeIncomingLanes.length() != 0) {
+                incLanes += " " + (*k).foeIncomingLanes;
             }
-            into << "\"";
-            into << " intLanes=\"" << (*k).crossingNames << "\"";
+            into.writeAttr(SUMO_ATTR_INCLANES, incLanes);
+            into.writeAttr(SUMO_ATTR_INTLANES, (*k).foeInternalLanes);
             into.closeTag(true);
             ret = true;
         }
@@ -450,24 +441,18 @@ NWWriter_SUMO::writeInternalConnection(OutputDevice& into,
 
 void
 NWWriter_SUMO::writeRoundabout(OutputDevice& into, const std::set<NBEdge*> &r) {
-    std::vector<NBNode*> nodes;
+    std::set<std::string> nodes;
     for (std::set<NBEdge*>::const_iterator j = r.begin(); j != r.end(); ++j) {
-        NBNode* n = (*j)->getToNode();
-        if (find(nodes.begin(), nodes.end(), n) == nodes.end()) {
-            nodes.push_back(n);
-        }
+        nodes.insert((*j)->getToNode()->getID());
     }
-    sort(nodes.begin(), nodes.end(), NBNode::nodes_by_id_sorter());
-    into.openTag(SUMO_TAG_ROUNDABOUT) << " nodes=\"";
-    int k = 0;
-    for (std::vector<NBNode*>::iterator j = nodes.begin(); j != nodes.end(); ++j, ++k) {
-        if (k != 0) {
-            into << ' ';
+    std::string nodeString;
+    for (std::set<std::string>::const_iterator j = nodes.begin(); j != nodes.end(); ++j) {
+        if (j != nodes.begin()) {
+            nodeString += " ";
         }
-        into << (*j)->getID();
+        nodeString += *j;
     }
-    into << "\"";
-    into.closeTag(true);
+    into.openTag(SUMO_TAG_ROUNDABOUT).writeAttr(SUMO_ATTR_NODES, nodeString).closeTag(true);
 }
 
 
@@ -478,24 +463,24 @@ NWWriter_SUMO::writeDistrict(OutputDevice& into, const NBDistrict& d) {
     std::vector<SUMOReal> sinkW = d.getSinkWeights();
     VectorHelper<SUMOReal>::normaliseSum(sinkW, 1.0);
     // write the head and the id of the district
-    into.openTag(SUMO_TAG_TAZ) << " id=\"" << d.getID() << "\"";
+	into.openTag(SUMO_TAG_TAZ).writeAttr(SUMO_ATTR_ID, d.getID());
     if (d.getShape().size() > 0) {
-        into << " shape=\"" << d.getShape() << "\"";
+		into.writeAttr(SUMO_ATTR_SHAPE, d.getShape());
     }
-    into << ">\n";
+	into.closeOpener();
     size_t i;
     // write all sources
     const std::vector<NBEdge*> &sources = d.getSourceEdges();
     for (i = 0; i < sources.size(); i++) {
         // write the head and the id of the source
-        into.openTag(SUMO_TAG_TAZSOURCE) << " id=\"" << sources[i]->getID() << "\" weight=\"" << sourceW[i] << "\"";
+        into.openTag(SUMO_TAG_TAZSOURCE).writeAttr(SUMO_ATTR_ID, sources[i]->getID()).writeAttr(SUMO_ATTR_WEIGHT, sourceW[i]);
         into.closeTag(true);
     }
     // write all sinks
     const std::vector<NBEdge*> &sinks = d.getSinkEdges();
     for (i = 0; i < sinks.size(); i++) {
         // write the head and the id of the sink
-        into.openTag(SUMO_TAG_TAZSINK) << " id=\"" << sinks[i]->getID() << "\" weight=\"" << sinkW[i] << "\"";
+        into.openTag(SUMO_TAG_TAZSINK).writeAttr(SUMO_ATTR_ID, sinks[i]->getID()).writeAttr(SUMO_ATTR_WEIGHT, sinkW[i]);
         into.closeTag(true);
     }
     // write the tail
@@ -545,7 +530,7 @@ NWWriter_SUMO::writeTrafficLights(OutputDevice& into, const NBTrafficLightLogicC
         into.writeAttr(SUMO_ATTR_TYPE, toString(TLTYPE_STATIC));
         into.writeAttr(SUMO_ATTR_PROGRAMID, (*it)->getProgramID());
         into.writeAttr(SUMO_ATTR_OFFSET, writeSUMOTime((*it)->getOffset()));
-        into << ">\n";
+		into.closeOpener();
         // write the phases
         const std::vector<NBTrafficLightLogic::PhaseDefinition> &phases = (*it)->getPhases();
         for (std::vector<NBTrafficLightLogic::PhaseDefinition>::const_iterator j = phases.begin(); j != phases.end(); ++j) {
@@ -557,7 +542,7 @@ NWWriter_SUMO::writeTrafficLights(OutputDevice& into, const NBTrafficLightLogicC
         into.closeTag();
     }
     if (logics.size() > 0) {
-        into << "\n";
+        into.lf();
     }
 }
 
@@ -577,8 +562,36 @@ NWWriter_SUMO::writeLocation(OutputDevice& into) {
     } 
     into.writeAttr(SUMO_ATTR_ORIG_PROJ, geoConvHelper.getProjString());
     into.closeTag(true);
-    into << "\n";
+    into.lf();
 }
 
+
+void 
+NWWriter_SUMO::writePermissions(OutputDevice& into, SVCPermissions permissions) {
+    if (permissions == SVCFreeForAll) {
+        return;
+    } else if (permissions == 0) {
+        // special case: since all-empty encodes FreeForAll we must list all disallowed
+        into.writeAttr(SUMO_ATTR_DISALLOW, getAllowedVehicleClassNames(SVCFreeForAll));
+        return;
+    } else {
+        std::pair<std::string, bool> encoding = getPermissionEncoding(permissions);
+        if (encoding.second) {
+            into.writeAttr(SUMO_ATTR_ALLOW, encoding.first);
+        } else {
+            into.writeAttr(SUMO_ATTR_DISALLOW, encoding.first);
+        }
+    }
+}
+
+
+void 
+NWWriter_SUMO::writePreferences(OutputDevice& into, SVCPermissions preferred) {
+    if (preferred == SVCFreeForAll || preferred == 0) {
+        return;
+    } else {
+        into.writeAttr(SUMO_ATTR_PREFER, getAllowedVehicleClassNames(preferred));
+    }
+}
 /****************************************************************************/
 

@@ -51,6 +51,8 @@
 #include <utils/common/ToString.h>
 #include <utils/geom/GeoConvHelper.h>
 
+#include "NBAlgorithms.h"
+
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
@@ -141,13 +143,9 @@ NBNetBuilder::compute(OptionsCont& oc,
     //
     if (removeUnwishedNodes) {
         unsigned int no = 0;
-        if (oc.exists("geometry.remove") && oc.getBool("geometry.remove")) {
-            PROGRESS_BEGIN_MESSAGE("Removing empty nodes and geometry nodes");
-            no = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myJoinedEdges, myTLLCont, true);
-        } else {
-            PROGRESS_BEGIN_MESSAGE("Removing empty nodes");
-            no = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myJoinedEdges, myTLLCont, false);
-        }
+        const bool removeGeometryNodes = oc.exists("geometry.remove") && oc.getBool("geometry.remove");
+        PROGRESS_BEGIN_MESSAGE("Removing empty nodes" + std::string(removeGeometryNodes ? " and geometry nodes" : ""));
+        no = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myJoinedEdges, myTLLCont, removeGeometryNodes);
         PROGRESS_DONE_MESSAGE();
         WRITE_MESSAGE("   " + toString(no) + " nodes removed.");
     }
@@ -193,6 +191,18 @@ NBNetBuilder::compute(OptionsCont& oc,
     // @todo Why?
     myEdgeCont.recomputeLaneShapes();
 
+    // APPLY SPEED MODIFICATIONS
+    if (oc.exists("speed.offset")) {
+        const SUMOReal speedOffset = oc.getFloat("speed.offset");
+        const SUMOReal speedFactor = oc.getFloat("speed.factor");
+        if (speedOffset != 0 || speedFactor != 1) {
+            PROGRESS_BEGIN_MESSAGE("Applying speed modifications");
+            for (std::map<std::string, NBEdge*>::const_iterator i = myEdgeCont.begin(); i != myEdgeCont.end(); ++i) {
+                (*i).second->setSpeed(-1, (*i).second->getSpeed() * speedFactor + speedOffset);
+            }
+            PROGRESS_DONE_MESSAGE();
+        }
+    }
 
     // GUESS TLS POSITIONS
     PROGRESS_BEGIN_MESSAGE("Assigning nodes to traffic lights");
@@ -220,19 +230,19 @@ NBNetBuilder::compute(OptionsCont& oc,
     // CONNECTIONS COMPUTATION
     //
     PROGRESS_BEGIN_MESSAGE("Computing turning directions");
-    myEdgeCont.computeTurningDirections();
+    NBTurningDirectionsComputer::computeTurnDirections(myNodeCont);
     PROGRESS_DONE_MESSAGE();
     //
     PROGRESS_BEGIN_MESSAGE("Sorting nodes' edges");
-    myNodeCont.sortNodesEdges(oc.getBool("lefthand"));
+    NBNodesEdgesSorter::sortNodesEdges(myNodeCont, oc.getBool("lefthand"));
     PROGRESS_DONE_MESSAGE();
     //
     PROGRESS_BEGIN_MESSAGE("Computing node types");
-    myNodeCont.computeNodeTypes(myTypeCont);
+    NBNodeTypeComputer::computeNodeTypes(myNodeCont);
     PROGRESS_DONE_MESSAGE();
     //
     PROGRESS_BEGIN_MESSAGE("Computing priorities");
-    myNodeCont.computePriorities();
+    NBEdgePriorityComputer::computeEdgePriorities(myNodeCont);
     PROGRESS_DONE_MESSAGE();
     //
     if (oc.getBool("roundabouts.guess")) {
@@ -314,9 +324,7 @@ NBNetBuilder::compute(OptionsCont& oc,
     // report
     WRITE_MESSAGE("-----------------------------------------------------");
     WRITE_MESSAGE("Summary:");
-    if (!gSuppressMessages) {
-        myNodeCont.printBuiltNodesStatistics();
-    }
+    myNodeCont.printBuiltNodesStatistics();
     WRITE_MESSAGE(" Network boundaries:");
     WRITE_MESSAGE("  Original boundary  : " + toString(geoConvHelper.getOrigBoundary()));
     WRITE_MESSAGE("  Applied offset     : " + toString(geoConvHelper.getOffsetBase()));

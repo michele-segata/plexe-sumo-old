@@ -43,8 +43,11 @@ def validate(f):
         traceback.print_exc()
 
 def main(srcRoot, err):
-    toCheck = [ "*.edg.xml", "*.nod.xml", "*.con.xml", "*.typ.xml", "*.net.xml", "*.rou.xml", "*.????cfg",
-                "net.netgen", "net.netconvert", "routes.duarouter", "alts.duarouter", "routes.jtrrouter" ]
+    toCheck = [ "*.edg.xml", "*.nod.xml", "*.con.xml", "*.typ.xml",
+                "*.net.xml", "*.rou.xml", "*.add.xml", "*.????cfg",
+                "net.netgen", "net.netconvert",
+                "net.scenario", "tls.scenario",
+                "routes.duarouter", "alts.duarouter", "routes.jtrrouter" ]
     sax2count = "SAX2Count.exe"
     if 'XERCES_64' in os.environ:
         sax2count = os.path.join(os.environ['XERCES_64'], "bin", sax2count)
@@ -67,13 +70,15 @@ def main(srcRoot, err):
                 validate(srcRoot)
             elif os.name != "posix":
                 subprocess.call(sax2count + " -v=always -f " + srcRoot, stdout=open(os.devnull), stderr=err)
-    fail = 0
+    else:
+        print >> err, "cannot open", srcRoot
+        return 1
     if haveLxml:
         for scheme in schemes.itervalues():
             if scheme.error_log:
-                fail = 1
                 print >> err, scheme.error_log
-    return fail
+                return 1
+    return 0
 
 if __name__ == "__main__":
     if os.name == "posix" and not haveLxml:

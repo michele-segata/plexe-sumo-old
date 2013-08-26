@@ -215,6 +215,10 @@ MSNet::closeBuilding(MSEdgeControl* edges, MSJunctionControl* junctions,
 
 
 MSNet::~MSNet() {
+    // delete events first maybe they do some cleanup
+    delete myBeginOfTimestepEvents;
+    delete myEndOfTimestepEvents;
+    delete myInsertionEvents;
     // delete controls
     delete myJunctions;
     delete myDetectorControl;
@@ -232,15 +236,12 @@ MSNet::~MSNet() {
     myMsgEmitter.clear();
     msgEmitVec.clear();
 #endif
+    delete myEdgeWeights;
 #ifdef HAVE_MESOSIM
     if (MSGlobals::gUseMesoSim) {
         delete MSGlobals::gMesoNet;
     }
 #endif
-    delete myBeginOfTimestepEvents;
-    delete myEndOfTimestepEvents;
-    delete myInsertionEvents;
-    delete myEdgeWeights;
     clearAll();
     myInstance = 0;
 }
@@ -248,6 +249,8 @@ MSNet::~MSNet() {
 
 int
 MSNet::simulate(SUMOTime start, SUMOTime stop) {
+    // report the begin when wished
+    WRITE_MESSAGE("Simulation started with time: " + time2string(start));
     // the simulation loop
     MSNet::SimulationState state = SIMSTATE_RUNNING;
     myStep = start;
@@ -255,8 +258,9 @@ MSNet::simulate(SUMOTime start, SUMOTime stop) {
 #ifdef HAVE_PYTHON
     if (OptionsCont::getOptions().isSet("python-script")) {
         traci::TraCIServer::runEmbedded(OptionsCont::getOptions().getString("python-script"));
-        WRITE_MESSAGE("Simulation End: Script ended");
         closeSimulation(start);
+        WRITE_MESSAGE("Simulation ended at time: " + time2string(getCurrentTimeStep()));
+        WRITE_MESSAGE("Reason: Script ended");
         return 0;
     }
 #endif
@@ -278,7 +282,9 @@ MSNet::simulate(SUMOTime start, SUMOTime stop) {
         }
 #endif
     }
-    WRITE_MESSAGE("Simulation End: " + getStateMessage(state));
+    // report the end when wished
+    WRITE_MESSAGE("Simulation ended at time: " + time2string(getCurrentTimeStep()));
+    WRITE_MESSAGE("Reason: " + getStateMessage(state));
     // exit simulation loop
     closeSimulation(start);
     return 0;
@@ -292,13 +298,15 @@ MSNet::closeSimulation(SUMOTime start) {
         std::ostringstream msg;
         msg << "Performance: " << "\n" << " Duration: " << duration << " ms" << "\n";
         if (duration != 0) {
-            msg << " Real time factor: " << ((SUMOReal)(myStep - start) * 1000. / (SUMOReal)duration) << "\n";
+            msg << " Real time factor: " << (STEPS2TIME(myStep - start) * 1000. / (SUMOReal)duration) << "\n";
             msg.setf(std::ios::fixed , std::ios::floatfield);    // use decimal format
             msg.setf(std::ios::showpoint);    // print decimal point
             msg << " UPS: " << ((SUMOReal) myVehiclesMoved * 1000. / (SUMOReal) duration) << "\n";
         }
+        const std::string scaleNotice = ((myVehicleControl->getLoadedVehicleNo() != myVehicleControl->getDepartedVehicleNo()) ?
+                " (Loaded: " + toString(myVehicleControl->getLoadedVehicleNo()) + ")" : "");
         msg << "Vehicles: " << "\n"
-            << " Emitted: " << myVehicleControl->getDepartedVehicleNo() << "\n"
+            << " Emitted: " << myVehicleControl->getDepartedVehicleNo() << scaleNotice << "\n"
             << " Running: " << myVehicleControl->getRunningVehicleNo() << "\n"
             << " Waiting: " << myInserter->getWaitingVehicleNo() << "\n";
         WRITE_MESSAGE(msg.str());
@@ -571,7 +579,6 @@ MSNet::getWeightsStorage() {
 
 void
 MSNet::preSimStepOutput() const {
-    std::cout << std::setprecision(OUTPUT_ACCURACY);
     std::cout << "Step #" << time2string(myStep);
 }
 
@@ -579,7 +586,6 @@ MSNet::preSimStepOutput() const {
 void
 MSNet::postSimStepOutput() const {
     if (myLogExecutionTime) {
-        std::string msg;
         std::ostringstream oss;
         oss.setf(std::ios::fixed , std::ios::floatfield);    // use decimal format
         oss.setf(std::ios::showpoint);    // print decimal point
@@ -595,12 +601,10 @@ MSNet::postSimStepOutput() const {
             << " TOT " << myVehicleControl->getDepartedVehicleNo()
             << " ACT " << myVehicleControl->getRunningVehicleNo()
             << ")                                              ";
-        msg = oss.str();
         std::string prev = "Step #" + time2string(myStep - DELTA_T);
-        msg = msg.substr(0, 78 - prev.length());
-        std::cout << msg;
+        std::cout << oss.str().substr(0, 78 - prev.length());
     }
-    std::cout << (char) 13;
+    std::cout << '\r';
 }
 
 

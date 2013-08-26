@@ -101,6 +101,7 @@ enum {
 
     /// Open a new microscopic view
     MID_NEW_MICROVIEW,
+    /// Open a new microscopic 3D view
     MID_NEW_OSGVIEW,
     //@}
 
@@ -182,6 +183,8 @@ enum {
 
     /// GLCanvas - ID
     MID_GLCANVAS,
+    /// chore
+    MID_CHORE,
     //@}
 
 
@@ -238,6 +241,8 @@ enum {
     MID_START_TRACK,
     /// Stop to track a vehicle
     MID_STOP_TRACK,
+    MID_SHOW_LFLINKITEMS,
+    MID_HIDE_LFLINKITEMS,
     //@}
 
 
@@ -282,6 +287,8 @@ enum {
     MID_CHOOSER_TEXT,
     /// Object list
     MID_CHOOSER_LIST,
+    /// Filter selected
+    MID_CHOOSER_FILTER,
     //@}
 
 
@@ -357,6 +364,7 @@ enum {
     /// processing menu messages
     MID_GNE_COMPUTE_JUNCTIONS,
     MID_GNE_JOIN_JUNCTIONS,
+    MID_GNE_OPTIONS,
 
     /// tls mode messages
     /** replace program with a newly guessed program */
@@ -383,6 +391,7 @@ enum {
     MID_GNE_SAVE_NETWORK,
     MID_GNE_SAVE_AS_NETWORK,
     MID_GNE_SAVE_PLAIN_XML,
+    MID_GNE_SAVE_JOINED,
     /** insert contents of another network */
     MID_GNE_INSERT_NETWORK,
     /** attribute edited */

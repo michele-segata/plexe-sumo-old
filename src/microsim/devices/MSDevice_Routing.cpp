@@ -33,6 +33,7 @@
 #include "MSDevice_Routing.h"
 #include <microsim/MSNet.h>
 #include <microsim/MSLane.h>
+#include <microsim/MSEdge.h>
 #include <microsim/MSEdgeControl.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/common/WrappingCommand.h>
@@ -234,7 +235,7 @@ MSDevice_Routing::wrappedRerouteCommandExecute(SUMOTime currentTime) {
 SUMOReal
 MSDevice_Routing::getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal) const {
     if (myEdgeEfforts.find(e) != myEdgeEfforts.end()) {
-        return MAX2(myEdgeEfforts.find(e)->second, e->getLanes()[0]->getLength() / v->getMaxSpeed());
+        return MAX2(myEdgeEfforts.find(e)->second, e->getLength() / v->getMaxSpeed());
     }
     return 0;
 }

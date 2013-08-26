@@ -33,6 +33,7 @@
 #include "MSVehicleControl.h"
 #include "MSVehicle.h"
 #include "MSLane.h"
+#include "MSNet.h"
 #include <microsim/devices/MSDevice.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/common/RGBColor.h>
@@ -53,6 +54,7 @@ MSVehicleControl::MSVehicleControl() :
     myLoadedVehNo(0),
     myRunningVehNo(0),
     myEndedVehNo(0),
+    myDiscarded(0),
     myTotalDepartureDelay(0),
     myTotalTravelTime(0),
     myDefaultVTypeMayBeDeleted(true),
@@ -169,8 +171,11 @@ MSVehicleControl::getVehicle(const std::string& id) const {
 
 
 void
-MSVehicleControl::deleteVehicle(SUMOVehicle* veh) {
+MSVehicleControl::deleteVehicle(SUMOVehicle* veh, bool discard) {
     myEndedVehNo++;
+    if (discard) {
+        myDiscarded++;
+    }
     myVehicleDict.erase(veh->getID());
     delete veh;
 }
@@ -300,6 +305,16 @@ MSVehicleControl::abortWaiting() {
     for (VehicleDictType::iterator i = myVehicleDict.begin(); i != myVehicleDict.end(); ++i) {
         WRITE_WARNING("Vehicle " + i->first + " aborted waiting for a person that will never come.");
     }
+}
+
+
+bool 
+MSVehicleControl::isInQuota(const SUMOReal frac) const {
+    const unsigned int resolution = 1000;
+    const unsigned int intFrac = (unsigned int)floor(frac * resolution + 0.5);
+    // the vehicle in question has already been loaded, hence  the '-1'
+    // apply % twice to avoid integer overflow
+    return (((myLoadedVehNo - 1) % resolution) * intFrac) % resolution < intFrac;
 }
 
 /****************************************************************************/

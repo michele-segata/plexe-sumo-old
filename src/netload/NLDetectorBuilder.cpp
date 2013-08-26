@@ -36,6 +36,7 @@
 #include <iostream>
 #include <microsim/MSNet.h>
 #include <microsim/MSLane.h>
+#include <microsim/MSEdge.h>
 #include <microsim/output/MSInductLoop.h>
 #include <microsim/output/MSE2Collector.h>
 #include <microsim/output/MS_E2_ZS_CollectorOverLanes.h>
@@ -102,17 +103,15 @@ NLDetectorBuilder::buildInductLoop(const std::string& id,
     checkSampleInterval(splInterval, SUMO_TAG_E1DETECTOR, id);
     // get and check the lane
     MSLane* clane = getLaneChecking(lane, SUMO_TAG_E1DETECTOR, id);
-#ifdef HAVE_MESOSIM
     if (!MSGlobals::gUseMesoSim) {
-#endif
         // get and check the position
         pos = getPositionChecking(pos, clane, friendlyPos, id);
         // build the loop
         MSDetectorFileOutput* loop = createInductLoop(id, clane, pos, splitByType);
         // add the file output
         myNet.getDetectorControl().add(SUMO_TAG_INDUCTION_LOOP, loop, device, splInterval);
-#ifdef HAVE_MESOSIM
     } else {
+#ifdef HAVE_MESOSIM
         if (pos < 0) {
             pos = clane->getLength() + pos;
         }
@@ -135,8 +134,8 @@ NLDetectorBuilder::buildInductLoop(const std::string& id,
         MEInductLoop* loop =
             createMEInductLoop(id, prev, rpos);
         myNet.getDetectorControl().add(SUMO_TAG_INDUCTION_LOOP, loop, device, splInterval);
-    }
 #endif
+    }
 }
 
 
@@ -475,7 +474,8 @@ NLDetectorBuilder::getPositionChecking(SUMOReal pos, MSLane* lane, bool friendly
 void
 NLDetectorBuilder::createEdgeLaneMeanData(const std::string& id, SUMOTime frequency,
         SUMOTime begin, SUMOTime end, const std::string& type,
-        const bool useLanes, const bool withEmpty, const bool withInternal, const bool trackVehicles,
+        const bool useLanes, const bool withEmpty, const bool printDefaults,
+        const bool withInternal, const bool trackVehicles,
         const SUMOReal maxTravelTime, const SUMOReal minSamples,
         const SUMOReal haltSpeed, const std::string& vTypes,
         OutputDevice& device) throw(InvalidArgument) {
@@ -495,13 +495,16 @@ NLDetectorBuilder::createEdgeLaneMeanData(const std::string& id, SUMOTime freque
     }
     MSMeanData* det = 0;
     if (type == "" || type == "performance" || type == "traffic") {
-        det = new MSMeanData_Net(id, begin, end, useLanes, withEmpty, withInternal, trackVehicles,
+        det = new MSMeanData_Net(id, begin, end, useLanes, withEmpty,
+                                 printDefaults, withInternal, trackVehicles,
                                  maxTravelTime, minSamples, haltSpeed, vt);
     } else if (type == "hbefa") {
-        det = new MSMeanData_HBEFA(id, begin, end, useLanes, withEmpty, withInternal, trackVehicles,
+        det = new MSMeanData_HBEFA(id, begin, end, useLanes, withEmpty,
+                                   printDefaults, withInternal, trackVehicles,
                                    maxTravelTime, minSamples, vt);
     } else if (type == "harmonoise") {
-        det = new MSMeanData_Harmonoise(id, begin, end, useLanes, withEmpty, withInternal, trackVehicles,
+        det = new MSMeanData_Harmonoise(id, begin, end, useLanes, withEmpty,
+                                        printDefaults, withInternal, trackVehicles,
                                         maxTravelTime, minSamples, vt);
     } else {
         throw InvalidArgument("Invalid type '" + type + "' for meandata dump '" + id + "'.");

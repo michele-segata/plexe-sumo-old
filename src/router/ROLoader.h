@@ -45,7 +45,7 @@
 // ===========================================================================
 class OptionsCont;
 class RONet;
-class ROAbstractRouteDefLoader;
+class ROTypedXMLRoutesLoader;
 class ROAbstractEdgeBuilder;
 class GUIRouterRunThread;
 class ROVehicle;
@@ -84,17 +84,21 @@ public:
                      const std::string& measure, bool useLanes);
 
     /** @brief Builds and opens all route loaders
-        Route loaders are derived from ROAbstractRouteDefLoader */
+        Route loaders are derived from ROTypedXMLRoutesLoader */
     unsigned int openRoutes(RONet& net);
 
     /** @brief Loads routes stepwise
         This is done for all previously build route loaders */
-    virtual void processRoutesStepWise(SUMOTime start, SUMOTime end,
+    void processRoutesStepWise(SUMOTime start, SUMOTime end,
                                        RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
 
     /** @brief Loads all routes at once
         This is done for all previously build route loaders */
-    virtual void processAllRoutes(SUMOTime start, SUMOTime end,
+    void processAllRoutes(SUMOTime start, SUMOTime end,
+                                  RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
+
+    /** @brief Loads all routes and processes them with BulkStarRouter */
+    void processAllRoutesWithBulkRouter(SUMOTime start, SUMOTime end,
                                   RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
 
     bool makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
@@ -201,7 +205,7 @@ protected:
 
 
 protected:
-    ROAbstractRouteDefLoader* buildNamedHandler(const std::string& optionName,
+    ROTypedXMLRoutesLoader* buildNamedHandler(const std::string& optionName,
             const std::string& file, RONet& net) ;
 
 
@@ -217,7 +221,7 @@ protected:
     OptionsCont& myOptions;
 
     /// @brief Definition of route loader list
-    typedef std::vector<ROAbstractRouteDefLoader*> RouteLoaderCont;
+    typedef std::vector<ROTypedXMLRoutesLoader*> RouteLoaderCont;
 
     /// @brief List of route loaders
     RouteLoaderCont myHandler;
@@ -233,6 +237,8 @@ private:
     /// @brief Invalidated assignment operator
     ROLoader& operator=(const ROLoader& src);
 
+    /// @brief Information whether the routing steps should be logged
+    bool myLogSteps;
 };
 
 

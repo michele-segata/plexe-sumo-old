@@ -263,7 +263,9 @@ public:
     /// @}
 
 
-
+    /** @brief Renames the node. Throws exception if newID already exists
+     */
+    void rename(NBNode* node, const std::string& newID);
 
 
     /// divides the incoming lanes on outgoing lanes
@@ -271,15 +273,6 @@ public:
 
     /// build the list of outgoing edges and lanes
     void computeLogics(const NBEdgeCont& ec, OptionsCont& oc);
-
-    /// sorts the nodes' edges
-    void sortNodesEdges(bool leftHand);
-
-    /// computes the nodes' types
-    void computeNodeTypes(const NBTypeCont& tc);
-
-    /// computes priorities of edges based on junction types
-    void computePriorities();
 
     /** @brief Returns the number of known nodes
      * @return The number of nodes stored in this container
@@ -320,6 +313,14 @@ public:
      * @param[out] hasTLS Whether the new node has a traffic light
      */
     void analyzeCluster(std::set<NBNode*> cluster, std::string& id, Position& pos, bool& hasTLS);
+
+    /// @brief gets all joined clusters (see doc for myClusters2Join)
+    void registerJoinedCluster(const std::set<NBNode*>& cluster);
+
+    /// @brief gets all joined clusters (see doc for myClusters2Join)
+    const std::vector<std::set<std::string> >& getJoinedClusters() const {
+        return myJoinedClusters;
+    }
 
 
 private:
@@ -387,12 +388,13 @@ private:
     // @brief set of node ids which should not be joined
     std::set<std::string> myJoinExclusions;
 
-    // @brief loaded sets of node ids to join
+    // @brief loaded sets of node ids to join (cleared after use)
     std::vector<std::set<std::string> > myClusters2Join;
+    // @brief sets of node ids which were joined
+    std::vector<std::set<std::string> > myJoinedClusters;
 
     /// @brief ids found in loaded join clusters used for error checking
     std::set<std::string> myJoined;
-
 
 private:
     /// @brief invalidated copy constructor

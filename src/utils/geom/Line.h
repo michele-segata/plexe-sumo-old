@@ -59,8 +59,9 @@ public:
     const Position& p1() const;
     const Position& p2() const;
     Position getPositionAtDistance(SUMOReal offset) const;
+    Position getPositionAtDistance2D(SUMOReal offset) const;
     void move2side(SUMOReal amount);
-    DoubleVector intersectsAtLengths2D(const PositionVector& v);
+    std::vector<SUMOReal> intersectsAtLengths2D(const PositionVector& v);
 
     /// @brief returns distance between myP1 and intersection or -1 if line segments do not intersect
     SUMOReal intersectsAtLength2D(const Line& v);
@@ -77,7 +78,6 @@ public:
     void sub(SUMOReal x, SUMOReal y);
     Line& reverse();
     void rotateAtP1(SUMOReal rot);
-    void rotateAround(const Position& at, SUMOReal rot);
 
 private:
     Position myP1, myP2;

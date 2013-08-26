@@ -115,8 +115,11 @@ GeoConvHelper::operator=(const GeoConvHelper& orig) {
 #ifdef HAVE_PROJ
     if (myProjection != 0) {
         pj_free(myProjection);
+        myProjection = 0;
     }
-    myProjection = (orig.myProjectionMethod == PROJ ? pj_init_plus(orig.myProjString.c_str()) : 0);
+    if (orig.myProjection != 0) {
+        myProjection = pj_init_plus(orig.myProjString.c_str());
+    }
 #endif
     return *this;
 }
@@ -214,7 +217,7 @@ GeoConvHelper::usingInverseGeoProjection() const {
 
 void
 GeoConvHelper::cartesian2geo(Position& cartesian) const {
-    cartesian.sub(myOffset);
+    cartesian.sub(getOffsetBase());
     if (myProjectionMethod == NONE) {
         return;
     }

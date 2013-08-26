@@ -11,6 +11,7 @@ copy_test_path:input_districts.net.xml
 [collate_file]
 routes:routes.rou.xml
 alts:routes.rou.alt.xml
+vtypes:vtypes.rou.xml
 cfg:config.cfg
 log:log.txt
 
@@ -20,6 +21,9 @@ errors:The length does not include*{LINES 1}
 log:The length does not include*{LINES 1}
 routes:<!--{[->]}-->
 alts:<!--{[->]}-->
+vtypes:<!--{[->]}-->
+output:ms answering queries
+log:ms answering queries
 
 [floating_point_tolerance]
 alts:0.0000001
