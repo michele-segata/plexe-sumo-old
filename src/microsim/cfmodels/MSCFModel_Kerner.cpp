@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSCFModel_Kerner.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    03.04.2010
 /// @version $Id$
 ///
 // car-following model by B. Kerner
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -60,15 +63,15 @@ MSCFModel_Kerner::stopSpeed(const MSVehicle* const veh, SUMOReal gap) const {
 
 SUMOReal
 MSCFModel_Kerner::_v(SUMOReal speed, SUMOReal vfree, SUMOReal gap, SUMOReal predSpeed) const {
-    if (predSpeed==0&&gap<0.01) {
+    if (predSpeed == 0 && gap < 0.01) {
         return 0;
     }
     // !!! in the following, the prior step is not considered!!!
-    SUMOReal G = MAX2((SUMOReal) 0, (SUMOReal)(SPEED2DIST(myK*speed)+myPhi/myAccel*speed*(speed-predSpeed)));
-    SUMOReal vcond = gap>G ? speed+ACCEL2SPEED(myAccel) : speed+MAX2(ACCEL2SPEED(-myDecel), MIN2(ACCEL2SPEED(myAccel), predSpeed-speed));
-    SUMOReal vsafe = (SUMOReal)(-1. * myTauDecel + sqrt(myTauDecel*myTauDecel + (predSpeed*predSpeed) + (2. * myDecel * gap)));
+    SUMOReal G = MAX2((SUMOReal) 0, (SUMOReal)(SPEED2DIST(myK * speed) + myPhi / myAccel * speed * (speed - predSpeed)));
+    SUMOReal vcond = gap > G ? speed + ACCEL2SPEED(myAccel) : speed + MAX2(ACCEL2SPEED(-myDecel), MIN2(ACCEL2SPEED(myAccel), predSpeed - speed));
+    SUMOReal vsafe = (SUMOReal)(-1. * myTauDecel + sqrt(myTauDecel * myTauDecel + (predSpeed * predSpeed) + (2. * myDecel * gap)));
     SUMOReal va = MAX2((SUMOReal) 0, MIN3(vfree, vsafe, vcond)) + RandHelper::rand();
-    SUMOReal v = MAX2((SUMOReal) 0, MIN4(vfree, va, speed+ACCEL2SPEED(myAccel), vsafe));
+    SUMOReal v = MAX2((SUMOReal) 0, MIN4(vfree, va, speed + ACCEL2SPEED(myAccel), vsafe));
     return v;
 }
 

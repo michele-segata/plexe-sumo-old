@@ -7,12 +7,13 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -119,17 +120,17 @@ protected:
 
 public:
     enum {
-        ID_THREAD_EVENT=FXBaseObject::ID_LAST,
+        ID_THREAD_EVENT = FXBaseObject::ID_LAST,
         ID_LAST
     };
 
 public:
-    long onThreadSignal(FXObject*,FXSelector,void*);
-    long onThreadEvent(FXObject*,FXSelector,void*);
+    long onThreadSignal(FXObject*, FXSelector, void*);
+    long onThreadEvent(FXObject*, FXSelector, void*);
 
 public:
     /// Construct an object capable of signaling the main FOX event loop
-    FXThreadEvent(FXObject* tgt=NULL,FXSelector sel=0);
+    FXThreadEvent(FXObject* tgt = NULL, FXSelector sel = 0);
 
     /**
      * Signal the event - using the SEL_THREAD FXSelector type

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
 @file    routecompare.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
 @date    2008-03-25
 @version $Id$
 
@@ -12,7 +13,8 @@ It needs at least two parameters, which are the route sets to compare.
 Optionally a district file may be given, then only routes with
 the same origin and destination district are matched.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import sys, optparse, array

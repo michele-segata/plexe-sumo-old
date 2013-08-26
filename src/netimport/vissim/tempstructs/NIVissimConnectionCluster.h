@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimConnectionCluster.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -70,13 +72,13 @@ public:
     ~NIVissimConnectionCluster();
 
     /// Returns the information whether the given cluster overlaps the current
-    bool overlapsWith(NIVissimConnectionCluster* c, SUMOReal offset=0) const;
+    bool overlapsWith(NIVissimConnectionCluster* c, SUMOReal offset = 0) const;
 
     bool hasNodeCluster() const;
 
     NBNode* getNBNode() const;
 
-    bool around(const Position& p, SUMOReal offset=0) const;
+    bool around(const Position& p, SUMOReal offset = 0) const;
 
     SUMOReal getPositionForEdge(int edgeid) const;
 
@@ -120,7 +122,7 @@ private:
         void add(NIVissimConnection* c);
         void add(const NodeSubCluster& c);
         size_t size() const;
-        bool overlapsWith(const NodeSubCluster& c, SUMOReal offset=0);
+        bool overlapsWith(const NodeSubCluster& c, SUMOReal offset = 0);
         IntVector getConnectionIDs() const;
         friend class NIVissimConnectionCluster;
     public:
@@ -142,9 +144,9 @@ private:
         /// comparing operation
         int operator()(NIVissimConnection* c1, NIVissimConnection* c2) const {
             return
-                fabs(c1->getGeometry().beginEndAngle()-myAngle)
+                fabs(c1->getGeometry().beginEndAngle() - myAngle)
                 <
-                fabs(c2->getGeometry().beginEndAngle()-myAngle);
+                fabs(c2->getGeometry().beginEndAngle() - myAngle);
         }
     };
 

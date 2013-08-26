@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    NBNetBuilder.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 // Instance responsible for building networks
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -63,8 +67,8 @@ class OutputDevice;
  * @addtogroup netbuild
  * @{
  *
- * -# Removing dummy edges
- *  \n Removes edges which end at the node they start at using NBNodeCont::removeDummyEdges().
+ * -# Removing self loops
+ *  \n Removes edges which end at the node they start at using NBNodeCont::removeSelfLoops().
  * -# Joining double connections
  *  \n Joins edges between same nodes using NBNodeCont::recheckEdges().
  * -# Finding isolated roads (optional)
@@ -110,10 +114,10 @@ class NBNetBuilder {
 
 public:
     /// @brief Constructor
-    NBNetBuilder() throw();
+    NBNetBuilder() ;
 
     /// @brief Destructor
-    ~NBNetBuilder() throw();
+    ~NBNetBuilder() ;
 
 
     /** @brief Initialises the storage by applying given options
@@ -124,7 +128,7 @@ public:
      * @param[in] oc The options container to read options from
      * @exception ProcessError If something fails (message is included)
      */
-    void applyOptions(OptionsCont& oc) throw(ProcessError);
+    void applyOptions(OptionsCont& oc) ;
 
 
     /** @brief Performs the network building steps
@@ -135,8 +139,8 @@ public:
      * @exception ProcessError (recheck)
      */
     void compute(OptionsCont& oc,
-                 const std::set<std::string> &explicitTurnarounds=std::set<std::string>(),
-                 bool removeUnwishedNodes=true);
+                 const std::set<std::string> &explicitTurnarounds = std::set<std::string>(),
+                 bool removeUnwishedNodes = true);
 
 
 
@@ -146,7 +150,7 @@ public:
     /** @brief Returns the edge container
      * @return The edge container (reference)
      */
-    NBEdgeCont& getEdgeCont() throw() {
+    NBEdgeCont& getEdgeCont() {
         return myEdgeCont;
     }
 
@@ -154,7 +158,7 @@ public:
     /** @brief Returns the node container
      * @return The node container (reference)
      */
-    NBNodeCont& getNodeCont() throw() {
+    NBNodeCont& getNodeCont() {
         return myNodeCont;
     }
 
@@ -162,7 +166,7 @@ public:
     /** @brief Returns the type container
      * @return The type container (reference)
      */
-    NBTypeCont& getTypeCont() throw() {
+    NBTypeCont& getTypeCont() {
         return myTypeCont;
     }
 
@@ -170,7 +174,7 @@ public:
     /** @brief Returns the traffic light logics container
      * @return The traffic light logics container (reference)
      */
-    NBTrafficLightLogicCont& getTLLogicCont() throw() {
+    NBTrafficLightLogicCont& getTLLogicCont() {
         return myTLLCont;
     }
 
@@ -178,7 +182,7 @@ public:
     /** @brief Returns the districts container
      * @return The districts container (reference)
      */
-    NBDistrictCont& getDistrictCont() throw() {
+    NBDistrictCont& getDistrictCont() {
         return myDistrictCont;
     }
 
@@ -211,7 +215,7 @@ protected:
         explicit by_id_sorter() { }
 
         int operator()(const NBNode* n1, const NBNode* n2) const {
-            return n1->getID()<n2->getID();
+            return n1->getID() < n2->getID();
         }
 
     };

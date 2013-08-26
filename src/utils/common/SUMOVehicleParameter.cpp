@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    SUMOVehicleParameter.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 31.03.2009
 /// @version $Id$
 ///
 // Structure representing possible vehicle parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -42,7 +45,7 @@
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-SUMOVehicleParameter::SUMOVehicleParameter() throw()
+SUMOVehicleParameter::SUMOVehicleParameter()
     : vtypeid(DEFAULT_VTYPE_ID), color(RGBColor::DEFAULT_COLOR),
       depart(-1), departProcedure(DEPART_GIVEN),
       departLane(0), departLaneProcedure(DEPART_LANE_DEFAULT),
@@ -57,14 +60,14 @@ SUMOVehicleParameter::SUMOVehicleParameter() throw()
 
 
 bool
-SUMOVehicleParameter::defaultOptionOverrides(const OptionsCont& oc, const std::string& optionName) const throw() {
+SUMOVehicleParameter::defaultOptionOverrides(const OptionsCont& oc, const std::string& optionName) const {
     return oc.isSet(optionName) && oc.getBool("defaults-override");
 }
 
 
 void
 SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
-                              const OptionsCont& oc) const throw(IOError) {
+                              const OptionsCont& oc) const {
     dev.openTag(xmlElem) << " id=\"" << id << "\"";
     if (wasSet(VEHPARS_VTYPE_SET)) {
         dev << " type=\"" << vtypeid << "\"";
@@ -76,24 +79,24 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
     if (wasSet(VEHPARS_DEPARTLANE_SET) && !defaultOptionOverrides(oc, "departlane")) {
         std::string val;
         switch (departLaneProcedure) {
-        case DEPART_LANE_GIVEN:
-            val = toString(departLane);
-            break;
-        case DEPART_LANE_RANDOM:
-            val = "random";
-            break;
-        case DEPART_LANE_FREE:
-            val = "free";
-            break;
-        case DEPART_LANE_ALLOWED_FREE:
-            val = "allowed";
-            break;
-        case DEPART_LANE_BEST_FREE:
-            val = "best";
-            break;
-        case DEPART_LANE_DEFAULT:
-        default:
-            break;
+            case DEPART_LANE_GIVEN:
+                val = toString(departLane);
+                break;
+            case DEPART_LANE_RANDOM:
+                val = "random";
+                break;
+            case DEPART_LANE_FREE:
+                val = "free";
+                break;
+            case DEPART_LANE_ALLOWED_FREE:
+                val = "allowed";
+                break;
+            case DEPART_LANE_BEST_FREE:
+                val = "best";
+                break;
+            case DEPART_LANE_DEFAULT:
+            default:
+                break;
         }
         dev << " departLane=\"" << val << "\"";
     } else if (oc.isSet("departlane")) {
@@ -103,33 +106,33 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
     if (wasSet(VEHPARS_DEPARTPOS_SET) && !defaultOptionOverrides(oc, "departpos")) {
         std::string val;
         switch (departPosProcedure) {
-        case DEPART_POS_GIVEN:
-            val = toString(departPos);
-            break;
-        case DEPART_POS_RANDOM:
-            val = "random";
-            break;
-        case DEPART_POS_RANDOM_FREE:
-            val = "random_free";
-            break;
-        case DEPART_POS_FREE:
-            val = "free";
-            break;
-        case DEPART_POS_PWAG_SIMPLE:
-            val = "pwagSimple";
-            break;
-        case DEPART_POS_PWAG_GENERIC:
-            val = "pwagGeneric";
-            break;
-        case DEPART_POS_MAX_SPEED_GAP:
-            val = "maxSpeedGap";
-            break;
-        case DEPART_POS_BASE:
-            val = "base";
-            break;
-        case DEPART_POS_DEFAULT:
-        default:
-            break;
+            case DEPART_POS_GIVEN:
+                val = toString(departPos);
+                break;
+            case DEPART_POS_RANDOM:
+                val = "random";
+                break;
+            case DEPART_POS_RANDOM_FREE:
+                val = "random_free";
+                break;
+            case DEPART_POS_FREE:
+                val = "free";
+                break;
+            case DEPART_POS_PWAG_SIMPLE:
+                val = "pwagSimple";
+                break;
+            case DEPART_POS_PWAG_GENERIC:
+                val = "pwagGeneric";
+                break;
+            case DEPART_POS_MAX_SPEED_GAP:
+                val = "maxSpeedGap";
+                break;
+            case DEPART_POS_BASE:
+                val = "base";
+                break;
+            case DEPART_POS_DEFAULT:
+            default:
+                break;
         }
         dev << " departPos=\"" << val << "\"";
     } else if (oc.isSet("departpos")) {
@@ -139,18 +142,18 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
     if (wasSet(VEHPARS_DEPARTSPEED_SET) && !defaultOptionOverrides(oc, "departspeed")) {
         std::string val;
         switch (departSpeedProcedure) {
-        case DEPART_SPEED_GIVEN:
-            val = toString(departSpeed);
-            break;
-        case DEPART_SPEED_RANDOM:
-            val = "random";
-            break;
-        case DEPART_SPEED_MAX:
-            val = "max";
-            break;
-        case DEPART_SPEED_DEFAULT:
-        default:
-            break;
+            case DEPART_SPEED_GIVEN:
+                val = toString(departSpeed);
+                break;
+            case DEPART_SPEED_RANDOM:
+                val = "random";
+                break;
+            case DEPART_SPEED_MAX:
+                val = "max";
+                break;
+            case DEPART_SPEED_DEFAULT:
+            default:
+                break;
         }
         dev << " departSpeed=\"" << val << "\"";
     } else if (oc.isSet("departspeed")) {
@@ -161,15 +164,15 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
     if (wasSet(VEHPARS_ARRIVALLANE_SET) && !defaultOptionOverrides(oc, "arrivallane")) {
         std::string val;
         switch (arrivalLaneProcedure) {
-        case ARRIVAL_LANE_GIVEN:
-            val = toString(arrivalLane);
-            break;
-        case ARRIVAL_LANE_CURRENT:
-            val = "current";
-            break;
-        case ARRIVAL_LANE_DEFAULT:
-        default:
-            break;
+            case ARRIVAL_LANE_GIVEN:
+                val = toString(arrivalLane);
+                break;
+            case ARRIVAL_LANE_CURRENT:
+                val = "current";
+                break;
+            case ARRIVAL_LANE_DEFAULT:
+            default:
+                break;
         }
         dev << " arrivalLane=\"" << val << "\"";
     } else if (oc.isSet("arrivallane")) {
@@ -179,18 +182,18 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
     if (wasSet(VEHPARS_ARRIVALPOS_SET) && !defaultOptionOverrides(oc, "arrivalpos")) {
         std::string val;
         switch (arrivalPosProcedure) {
-        case ARRIVAL_POS_GIVEN:
-            val = toString(arrivalPos);
-            break;
-        case ARRIVAL_POS_RANDOM:
-            val = "random";
-            break;
-        case ARRIVAL_POS_MAX:
-            val = "max";
-            break;
-        case ARRIVAL_POS_DEFAULT:
-        default:
-            break;
+            case ARRIVAL_POS_GIVEN:
+                val = toString(arrivalPos);
+                break;
+            case ARRIVAL_POS_RANDOM:
+                val = "random";
+                break;
+            case ARRIVAL_POS_MAX:
+                val = "max";
+                break;
+            case ARRIVAL_POS_DEFAULT:
+            default:
+                break;
         }
         dev << " arrivalPos=\"" << val << "\"";
     } else if (oc.isSet("arrivalpos")) {
@@ -200,15 +203,15 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
     if (wasSet(VEHPARS_ARRIVALSPEED_SET) && !defaultOptionOverrides(oc, "arrivalspeed")) {
         std::string val;
         switch (arrivalSpeedProcedure) {
-        case ARRIVAL_SPEED_GIVEN:
-            val = toString(arrivalSpeed);
-            break;
-        case ARRIVAL_SPEED_CURRENT:
-            val = "current";
-            break;
-        case ARRIVAL_SPEED_DEFAULT:
-        default:
-            break;
+            case ARRIVAL_SPEED_GIVEN:
+                val = toString(arrivalSpeed);
+                break;
+            case ARRIVAL_SPEED_CURRENT:
+                val = "current";
+                break;
+            case ARRIVAL_SPEED_DEFAULT:
+            default:
+                break;
         }
         dev << " arrivalSpeed=\"" << val << "\"";
     } else if (oc.isSet("arrivalspeed")) {
@@ -241,8 +244,8 @@ SUMOVehicleParameter::writeAs(const std::string& xmlElem, OutputDevice& dev,
 
 
 bool
-SUMOVehicleParameter::departlaneValidate(const std::string& val) throw() {
-    if (val=="random"||val=="free"||val=="departlane"||val=="allowed"||val=="best") {
+SUMOVehicleParameter::departlaneValidate(const std::string& val) {
+    if (val == "random" || val == "free" || val == "departlane" || val == "allowed" || val == "best") {
         return true;
     }
     try {
@@ -257,8 +260,8 @@ SUMOVehicleParameter::departlaneValidate(const std::string& val) throw() {
 
 
 bool
-SUMOVehicleParameter::departposValidate(const std::string& val) throw() {
-    if (val=="random"||val=="free"||val=="random_free"||val=="base"||val=="pwagSimple"||val=="pwagGeneric"||val=="maxSpeedGap") {
+SUMOVehicleParameter::departposValidate(const std::string& val) {
+    if (val == "random" || val == "free" || val == "random_free" || val == "base" || val == "pwagSimple" || val == "pwagGeneric" || val == "maxSpeedGap") {
         return true;
     }
     try {
@@ -273,8 +276,8 @@ SUMOVehicleParameter::departposValidate(const std::string& val) throw() {
 
 
 bool
-SUMOVehicleParameter::departspeedValidate(const std::string& val) throw() {
-    if (val=="random"||val=="max") {
+SUMOVehicleParameter::departspeedValidate(const std::string& val) {
+    if (val == "random" || val == "max") {
         return true;
     }
     try {
@@ -289,8 +292,8 @@ SUMOVehicleParameter::departspeedValidate(const std::string& val) throw() {
 
 
 bool
-SUMOVehicleParameter::arrivallaneValidate(const std::string& val) throw() {
-    if (val=="current") {
+SUMOVehicleParameter::arrivallaneValidate(const std::string& val) {
+    if (val == "current") {
         return true;
     }
     try {
@@ -305,8 +308,8 @@ SUMOVehicleParameter::arrivallaneValidate(const std::string& val) throw() {
 
 
 bool
-SUMOVehicleParameter::arrivalposValidate(const std::string& val) throw() {
-    if (val=="random"||val=="max") {
+SUMOVehicleParameter::arrivalposValidate(const std::string& val) {
+    if (val == "random" || val == "max") {
         return true;
     }
     try {
@@ -321,8 +324,8 @@ SUMOVehicleParameter::arrivalposValidate(const std::string& val) throw() {
 
 
 bool
-SUMOVehicleParameter::arrivalspeedValidate(const std::string& val) throw() {
-    if (val=="current") {
+SUMOVehicleParameter::arrivalspeedValidate(const std::string& val) {
+    if (val == "current") {
         return true;
     }
     try {

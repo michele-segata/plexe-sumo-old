@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    NLHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Clemens Honomichl
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The XML-Handler for network loading
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -82,11 +86,11 @@ public:
     NLHandler(const std::string& file, MSNet& net,
               NLDetectorBuilder& detBuilder, NLTriggerBuilder& triggerBuilder,
               NLEdgeControlBuilder& edgeBuilder,
-              NLJunctionControlBuilder& junctionBuilder) throw();
+              NLJunctionControlBuilder& junctionBuilder) ;
 
 
     /// @brief Destructor
-    virtual ~NLHandler() throw();
+    virtual ~NLHandler() ;
 
 
 protected:
@@ -102,7 +106,7 @@ protected:
      * @todo Refactor/describe
      */
     virtual void myStartElement(int element,
-                                const SUMOSAXAttributes& attrs) throw(ProcessError);
+                                const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when a closing tag occurs
@@ -112,7 +116,7 @@ protected:
      * @see GenericSAXHandler::myEndElement
      * @todo Refactor/describe
      */
-    virtual void myEndElement(int element) throw(ProcessError);
+    virtual void myEndElement(int element) ;
     //@}
 
 
@@ -241,7 +245,7 @@ private:
      * @param[in] attrs The attributes (of the "district"-element) to parse
      * @exception ProcessError If an edge given in district@edges is not known
      */
-    void addDistrict(const SUMOSAXAttributes& attrs) throw(ProcessError);
+    void addDistrict(const SUMOSAXAttributes& attrs) ;
 
 
     /** @begin Parses a district edge and connects it to the district

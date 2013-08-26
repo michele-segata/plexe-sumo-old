@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    OptionsIO.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 17 Dec 2001
 /// @version $Id$
 ///
 // Helper for parsing command line arguments and reading configuration files
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,15 +50,25 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+// ===========================================================================
+// static member definitions
+// ===========================================================================
+int OptionsIO::myArgC;
+char** OptionsIO::myArgV;
+
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
 void
-OptionsIO::getOptions(bool loadConfig, int argc, char** argv) throw(ProcessError) {
+OptionsIO::getOptions(bool loadConfig, int argc, char** argv) {
     // preparse the options
     //  (maybe another configuration file was chosen)
-    if (!OptionsParser::parse(argc, argv)) {
+    if (argc > 0) {
+        myArgC = argc;
+        myArgV = argv;
+    }
+    if (!OptionsParser::parse(myArgC, myArgV)) {
         throw ProcessError("Could not parse commandline options.");
     }
     // check whether to use the command line parameters only
@@ -69,12 +81,12 @@ OptionsIO::getOptions(bool loadConfig, int argc, char** argv) throw(ProcessError
     // reparse the options
     //  (overwrite the settings from the configuration file)
     OptionsCont::getOptions().resetWritable();
-    OptionsParser::parse(argc, argv);
+    OptionsParser::parse(myArgC, myArgV);
 }
 
 
 void
-OptionsIO::loadConfiguration() throw(ProcessError) {
+OptionsIO::loadConfiguration() {
     OptionsCont& oc = OptionsCont::getOptions();
     if (!oc.exists("configuration-file") || !oc.isSet("configuration-file")) {
         return;

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    PCTypeDefHandler.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // A handler for loading polygon type maps
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -46,18 +49,18 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-PCTypeDefHandler::PCTypeDefHandler(OptionsCont& oc, PCTypeMap& con) throw()
+PCTypeDefHandler::PCTypeDefHandler(OptionsCont& oc, PCTypeMap& con)
     : SUMOSAXHandler("Detector-Defintion"),
       myOptions(oc),  myContainer(con) {}
 
 
-PCTypeDefHandler::~PCTypeDefHandler() throw() {}
+PCTypeDefHandler::~PCTypeDefHandler() {}
 
 
 void
 PCTypeDefHandler::myStartElement(int element,
-                                 const SUMOSAXAttributes& attrs) throw(ProcessError) {
-    if (element==SUMO_TAG_POLYTYPE||element==SUMO_TAG_POLYTYPE__DEPRECATED) {
+                                 const SUMOSAXAttributes& attrs) {
+    if (element == SUMO_TAG_POLYTYPE || element == SUMO_TAG_POLYTYPE__DEPRECATED) {
         bool ok = true;
         // get the id, report an error if not given or empty...
         std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    MSDevice.h
-/// @author  Michael Behrisch, Daniel Krajzewicz
+/// @author  Michael Behrisch
+/// @author  Daniel Krajzewicz
 /// @date    Tue, 04 Dec 2007
 /// @version $Id$
 ///
 // Abstract in-vehicle device
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -67,20 +69,20 @@ public:
      * @param[in] holder The vehicle that holds this device
      * @param[in] id The ID of the device
      */
-    MSDevice(SUMOVehicle& holder, const std::string& id) throw()
+    MSDevice(SUMOVehicle& holder, const std::string& id)
         : Named(id), myHolder(holder) {
     }
 
 
     /// @brief Destructor
-    virtual ~MSDevice() throw() { }
+    virtual ~MSDevice() { }
 
 
     /** @brief Returns the vehicle that holds this device
      *
      * @return The vehicle that holds this device
      */
-    SUMOVehicle& getHolder() const throw() {
+    SUMOVehicle& getHolder() const {
         return myHolder;
     }
 
@@ -97,7 +99,7 @@ public:
      * @param[in] os The stream to write the information into
      * @exception IOError not yet implemented
      */
-    virtual void generateOutput() const throw(IOError) {
+    virtual void generateOutput() const {
     }
 
 

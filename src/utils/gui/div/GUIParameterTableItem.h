@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIParameterTableItem.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date
 /// @version $Id$
 ///
 // A single line in a parameter window
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -62,7 +64,7 @@
 class GUIParameterTableItemInterface {
 public:
     /// @brief Destructor
-    virtual ~GUIParameterTableItemInterface()  throw() {}
+    virtual ~GUIParameterTableItemInterface()  {}
 
 
     /// @name Methods to be implemented by derived classes
@@ -72,26 +74,26 @@ public:
      *
      * @return Whether the value changes over simulation time
      */
-    virtual bool dynamic() const throw() = 0;
+    virtual bool dynamic() const = 0;
 
 
     /** @brief Forces an update of the value
      */
-    virtual void update() throw() = 0;
+    virtual void update() = 0;
 
 
     /** @brief Returns a SUMOReal-typed copy of the value-source
      *
      * @return A SUMOReal-typed copy of the value-source
      */
-    virtual ValueSource<SUMOReal> *getSUMORealSourceCopy() const throw() = 0;
+    virtual ValueSource<SUMOReal> *getSUMORealSourceCopy() const = 0;
 
 
     /** @brief Returns the name of the value
      *
      * @return The name of the value
      */
-    virtual const std::string& getName() const throw() = 0;
+    virtual const std::string& getName() const = 0;
     /// @}
 
 };
@@ -129,7 +131,7 @@ public:
      */
     GUIParameterTableItem(FXTable* table, unsigned pos,
                           const std::string& name, bool dynamic,
-                          ValueSource<T> *src) throw()
+                          ValueSource<T> *src)
         : myAmDynamic(dynamic), myName(name), myTablePosition((FXint) pos), mySource(src),
           myValue(src->getValue()), myTable(table) {
         init(dynamic, toString<T>(src->getValue()));
@@ -149,7 +151,7 @@ public:
      */
     GUIParameterTableItem(FXTable* table, unsigned pos,
                           const std::string& name, bool dynamic,
-                          T value) throw()
+                          T value)
         : myAmDynamic(dynamic), myName(name), myTablePosition((FXint) pos), mySource(0),
           myValue(value), myTable(table) {
         init(dynamic, toString<T>(value));
@@ -169,7 +171,7 @@ public:
      */
     GUIParameterTableItem(FXTable* table, unsigned pos,
                           const std::string& name, bool dynamic,
-                          std::string value) throw()
+                          std::string value)
         : myAmDynamic(dynamic), myName(name), myTablePosition((FXint) pos), mySource(0),
           myValue(0), myTable(table) {
         init(dynamic, value);
@@ -177,7 +179,7 @@ public:
 
 
     /// @brief Destructor
-    ~GUIParameterTableItem() throw() {
+    ~GUIParameterTableItem() {
         delete mySource;
     }
 
@@ -190,7 +192,7 @@ public:
      * @param[in] dynamic Information whether this value changes over time
      * @param[in] value The current (initial) value
      */
-    void init(bool dynamic, std::string value) throw() {
+    void init(bool dynamic, std::string value) {
         myTable->setItemText(myTablePosition, 0, myName.c_str());
         myTable->setItemText(myTablePosition, 1, value.c_str());
         if (dynamic) {
@@ -198,7 +200,7 @@ public:
         } else {
             myTable->setItemIcon(myTablePosition, 2, GUIIconSubSys::getIcon(ICON_NO));
         }
-        myTable->setItemJustify(myTablePosition, 2, FXTableItem::CENTER_X|FXTableItem::CENTER_Y);
+        myTable->setItemJustify(myTablePosition, 2, FXTableItem::CENTER_X | FXTableItem::CENTER_Y);
     }
 
 
@@ -207,7 +209,7 @@ public:
      *
      * @return Whether this item changes over time
      */
-    bool dynamic() const throw() {
+    bool dynamic() const {
         return myAmDynamic;
     }
 
@@ -216,7 +218,7 @@ public:
      *
      * @return The name of this value
      */
-    const std::string& getName() const throw() {
+    const std::string& getName() const {
         return myName;
     }
 
@@ -228,12 +230,12 @@ public:
      *  it is stored in myValue and set as the current value text within the
      *  according table cell.
      */
-    void update() throw() {
-        if (!dynamic()||mySource==0) {
+    void update() {
+        if (!dynamic() || mySource == 0) {
             return;
         }
         T value = mySource->getValue();
-        if (value!=myValue) {
+        if (value != myValue) {
             myValue = value;
             myTable->setItemText(myTablePosition, 1, toString<T>(myValue).c_str());
         }
@@ -244,8 +246,8 @@ public:
      *
      * @return A copy of the value source
      */
-    ValueSource<T> *getSourceCopy() const throw() {
-        if (mySource==0) {
+    ValueSource<T> *getSourceCopy() const {
+        if (mySource == 0) {
             return 0;
         }
         return mySource->copy();
@@ -256,8 +258,8 @@ public:
      *
      * @return A SUMOReal-typed copy of the value source
      */
-    ValueSource<SUMOReal> *getSUMORealSourceCopy() const throw() {
-        if (mySource==0) {
+    ValueSource<SUMOReal> *getSUMORealSourceCopy() const {
+        if (mySource == 0) {
             return 0;
         }
         return mySource->makeSUMORealReturningCopy();

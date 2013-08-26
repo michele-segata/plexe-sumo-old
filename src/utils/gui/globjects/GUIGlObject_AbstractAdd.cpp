@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIGlObject_AbstractAdd.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    2004
 /// @version $Id$
 ///
 // Base class for additional objects (detectors etc.)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -55,13 +58,13 @@ GUIGlObject_AbstractAdd::GUIGlObject_AbstractAdd(const std::string& prefix, GUIG
 }
 
 
-GUIGlObject_AbstractAdd::~GUIGlObject_AbstractAdd() throw() {}
+GUIGlObject_AbstractAdd::~GUIGlObject_AbstractAdd() {}
 
 
 void
 GUIGlObject_AbstractAdd::clearDictionary() {
     std::map<std::string, GUIGlObject_AbstractAdd*>::iterator i;
-    for (i=myObjects.begin(); i!=myObjects.end(); i++) {
+    for (i = myObjects.begin(); i != myObjects.end(); i++) {
 //!!!        delete (*i).second;
     }
     myObjects.clear();
@@ -72,7 +75,7 @@ GUIGlObject_AbstractAdd::clearDictionary() {
 GUIGlObject_AbstractAdd*
 GUIGlObject_AbstractAdd::get(const std::string& name) {
     std::map<std::string, GUIGlObject_AbstractAdd*>::iterator i = myObjects.find(name);
-    if (i==myObjects.end()) {
+    if (i == myObjects.end()) {
         return 0;
     }
     return (*i).second;
@@ -88,7 +91,7 @@ GUIGlObject_AbstractAdd::getObjectList() {
 std::vector<GUIGlID>
 GUIGlObject_AbstractAdd::getIDList() {
     std::vector<GUIGlID> ret;
-    for (std::vector<GUIGlObject_AbstractAdd*>::iterator i=myObjectList.begin(); i!=myObjectList.end(); ++i) {
+    for (std::vector<GUIGlObject_AbstractAdd*>::iterator i = myObjectList.begin(); i != myObjectList.end(); ++i) {
         ret.push_back((*i)->getGlID());
     }
     return ret;

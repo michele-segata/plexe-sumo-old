@@ -1,14 +1,17 @@
 # -*- coding: Latin-1 -*-
 """
 @file    TaxisPerEdge.py
-@author  Sascha.Krieg@dlr.de
+@author  Sascha Krieg
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-04-08
 
 Counts for every edge in the given FCD-file the number of Taxis which used this edge.
 After that this information can be visualized with an script called mpl_dump_onNet from Daniel.
 
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

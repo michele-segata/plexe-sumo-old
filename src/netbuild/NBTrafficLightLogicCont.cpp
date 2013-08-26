@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NBTrafficLightLogicCont.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A container for traffic light definitions and built programs
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -51,16 +54,16 @@ const NBTrafficLightLogicCont::Program2Def NBTrafficLightLogicCont::EmptyDefinit
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NBTrafficLightLogicCont::NBTrafficLightLogicCont() throw() {}
+NBTrafficLightLogicCont::NBTrafficLightLogicCont() {}
 
 
-NBTrafficLightLogicCont::~NBTrafficLightLogicCont() throw() {
+NBTrafficLightLogicCont::~NBTrafficLightLogicCont() {
     clear();
 }
 
 
 void
-NBTrafficLightLogicCont::applyOptions(OptionsCont& oc) throw() {
+NBTrafficLightLogicCont::applyOptions(OptionsCont& oc) {
     // check whether any offsets shall be manipulated by setting
     //  them to half of the duration
     if (oc.isSet("tls.half-offset")) {
@@ -77,7 +80,7 @@ NBTrafficLightLogicCont::applyOptions(OptionsCont& oc) throw() {
 
 
 bool
-NBTrafficLightLogicCont::insert(NBTrafficLightDefinition* logic, bool forceInsert) throw() {
+NBTrafficLightLogicCont::insert(NBTrafficLightDefinition* logic, bool forceInsert) {
     myExtracted.erase(logic);
     if (myDefinitions.count(logic->getID())) {
         if (myDefinitions[logic->getID()].count(logic->getProgramID())) {
@@ -169,17 +172,17 @@ NBTrafficLightLogicCont::computeSingleLogic(NBEdgeCont& ec, OptionsCont& oc, NBT
     const std::string& programID = def->getProgramID();
     // build program
     NBTrafficLightLogic* built = def->compute(ec, oc);
-    if (built==0) {
+    if (built == 0) {
         WRITE_WARNING("Could not build program '" + programID + "' for traffic light '" + id + "'");
         return false;
     }
     // compute offset
     SUMOTime T = built->getDuration();
     if (myHalfOffsetTLS.count(id)) {
-        built->setOffset((SUMOTime)(T/2.));
+        built->setOffset((SUMOTime)(T / 2.));
     }
     if (myQuarterOffsetTLS.count(id)) {
-        built->setOffset((SUMOTime)(T/4.));
+        built->setOffset((SUMOTime)(T / 4.));
     }
     // and insert the result after computation
     // make sure we don't leak memory if computeSingleLogic is called externally
@@ -192,7 +195,7 @@ NBTrafficLightLogicCont::computeSingleLogic(NBEdgeCont& ec, OptionsCont& oc, NBT
 
 
 void
-NBTrafficLightLogicCont::clear() throw() {
+NBTrafficLightLogicCont::clear() {
     Definitions definitions = getDefinitions();
     for (Definitions::iterator it = definitions.begin(); it != definitions.end(); it++) {
         delete *it;
@@ -212,7 +215,7 @@ NBTrafficLightLogicCont::clear() throw() {
 
 void
 NBTrafficLightLogicCont::remapRemoved(NBEdge* removed, const EdgeVector& incoming,
-                                      const EdgeVector& outgoing) throw() {
+                                      const EdgeVector& outgoing) {
     Definitions definitions = getDefinitions();
     for (Definitions::iterator it = definitions.begin(); it != definitions.end(); it++) {
         (*it)->remapRemoved(removed, incoming, outgoing);
@@ -222,7 +225,7 @@ NBTrafficLightLogicCont::remapRemoved(NBEdge* removed, const EdgeVector& incomin
 
 void
 NBTrafficLightLogicCont::replaceRemoved(NBEdge* removed, int removedLane,
-                                        NBEdge* by, int byLane) throw() {
+                                        NBEdge* by, int byLane) {
     Definitions definitions = getDefinitions();
     for (Definitions::iterator it = definitions.begin(); it != definitions.end(); it++) {
         (*it)->replaceRemoved(removed, removedLane, by, byLane);
@@ -232,8 +235,8 @@ NBTrafficLightLogicCont::replaceRemoved(NBEdge* removed, int removedLane,
 
 NBTrafficLightDefinition*
 NBTrafficLightLogicCont::getDefinition(const std::string& id, const std::string& programID) const {
-    Id2Defs::const_iterator i=myDefinitions.find(id);
-    if (i!=myDefinitions.end()) {
+    Id2Defs::const_iterator i = myDefinitions.find(id);
+    if (i != myDefinitions.end()) {
         Program2Def programs = i->second;
         Program2Def::const_iterator i2 = programs.find(programID);
         if (i2 != programs.end()) {
@@ -256,8 +259,8 @@ NBTrafficLightLogicCont::getPrograms(const std::string& id) const {
 
 NBTrafficLightLogic*
 NBTrafficLightLogicCont::getLogic(const std::string& id, const std::string& programID) const {
-    Id2Logics::const_iterator i=myComputed.find(id);
-    if (i!=myComputed.end()) {
+    Id2Logics::const_iterator i = myComputed.find(id);
+    if (i != myComputed.end()) {
         Program2Logic programs = i->second;
         Program2Logic::const_iterator i2 = programs.find(programID);
         if (i2 != programs.end()) {
@@ -269,7 +272,7 @@ NBTrafficLightLogicCont::getLogic(const std::string& id, const std::string& prog
 
 
 void
-NBTrafficLightLogicCont::setTLControllingInformation(const NBEdgeCont& ec) throw() {
+NBTrafficLightLogicCont::setTLControllingInformation(const NBEdgeCont& ec) {
     Definitions definitions = getDefinitions();
     // set the information about all participants, first
     for (Definitions::iterator it = definitions.begin(); it != definitions.end(); it++) {

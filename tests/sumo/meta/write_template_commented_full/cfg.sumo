@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/sumoConfiguration.xsd">
 
@@ -188,6 +188,18 @@
     <gui_only>
         <!-- Load visualisation settings from FILE -->
         <gui-settings-file value="" type="FILE"/>
+
+        <!-- Quits the GUI when the simulation stops -->
+        <quit-on-end value="false" synonymes="Q" type="BOOL"/>
+
+        <!-- Start the GUI in gaming mode -->
+        <game value="false" synonymes="G" type="BOOL"/>
+
+        <!-- Does not start the simulation after loading -->
+        <no-start value="false" synonymes="N" type="BOOL"/>
+
+        <!-- Do not load background pictures -->
+        <disable-textures value="false" synonymes="T" type="BOOL"/>
 
     </gui_only>
 

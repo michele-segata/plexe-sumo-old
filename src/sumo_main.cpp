@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    sumo_main.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Axel Wegener
+/// @author  Thimor Bohn
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Main for SUMO
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -130,7 +135,7 @@ main(int argc, char** argv) {
         RandHelper::initRandGlobal();
         // load the net
         net = load(oc);
-        if (net!=0) {
+        if (net != 0) {
             SUMOTime begin = string2time(oc.getString("begin"));
             SUMOTime end = string2time(oc.getString("end"));
             // report the begin when wished
@@ -141,7 +146,7 @@ main(int argc, char** argv) {
             WRITE_MESSAGE("Simulation ended at time: " + time2string(net->getCurrentTimeStep()));
         }
     } catch (ProcessError& e) {
-        if (std::string(e.what())!=std::string("Process Error") && std::string(e.what())!=std::string("")) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);

@@ -2,12 +2,14 @@
 """
 @file    runner.py
 @author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2007-10-25
 @version $Id$
 
 This script is a test runner for the San Pablo Dam scenario.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

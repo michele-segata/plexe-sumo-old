@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GeomHelper.h
 /// @author  Daniel Krajzewicz
+/// @author  Friedemann Wesner
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Some geometrical helpers
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -46,14 +50,26 @@
  */
 class GeomHelper {
 public:
-    static bool intersects(SUMOReal x1b, SUMOReal y1b, SUMOReal x1e, SUMOReal y1e,
-                           SUMOReal x2b, SUMOReal y2b, SUMOReal x2e, SUMOReal y2e);
+    /** @brief return whether the line segments defined by Line (x1,y1),(x2,y2)
+     * and Line (x3,y3),(x4,y4) intersect
+     */
+    static bool intersects(
+            SUMOReal x1, SUMOReal y1, SUMOReal x2, SUMOReal y2,
+            SUMOReal x3, SUMOReal y3, SUMOReal x4, SUMOReal y4);
 
+    /** @brief return whether the line segments defined by 
+     * Line p11,p12 and Line p21,p22 intersect
+     */
     static bool intersects(const Position& p11, const Position& p12,
                            const Position& p21, const Position& p22);
 
-    static Position intersection_position(const Position& p11,
-                                          const Position& p12, const Position& p21, const Position& p22);
+    /** @brief returns the intersection point 
+     * of the (infinite) lines p11,p12 and p21,p22.
+     * If the given lines are parallel the result will contain NAN-values
+     */
+    static Position intersection_position(
+            const Position& p11, const Position& p12, 
+            const Position& p21, const Position& p22);
 
     static SUMOReal Angle2D(SUMOReal x1, SUMOReal y1, SUMOReal x2, SUMOReal y2);
 
@@ -66,9 +82,9 @@ public:
     static Position extrapolate_second(const Position& p1,
                                        const Position& p2, SUMOReal length);
 
-    static SUMOReal nearest_position_on_line_to_point(
+    static SUMOReal nearest_position_on_line_to_point2D(
         const Position& l1, const Position& l2,
-        const Position& p, bool perpendicular=true);
+        const Position& p, bool perpendicular = true);
 
     /** by Damian Coventry */
     static SUMOReal distancePointLine(const Position& point,
@@ -101,7 +117,7 @@ public:
      * @param[in] angle2 The second angle
      * @return Angle (counter-clockwise) starting from first to second angle
      */
-    static SUMOReal getCCWAngleDiff(SUMOReal angle1, SUMOReal angle2) throw();
+    static SUMOReal getCCWAngleDiff(SUMOReal angle1, SUMOReal angle2) ;
 
 
     /** @brief Returns the distance of second angle from first angle clockwise
@@ -109,7 +125,7 @@ public:
      * @param[in] angle2 The second angle
      * @return Angle (clockwise) starting from first to second angle
      */
-    static SUMOReal getCWAngleDiff(SUMOReal angle1, SUMOReal angle2) throw();
+    static SUMOReal getCWAngleDiff(SUMOReal angle1, SUMOReal angle2) ;
 
 
     /** @brief Returns the minimum distance (clockwise/counter-clockwise) between both angles
@@ -117,7 +133,7 @@ public:
      * @param[in] angle2 The second angle
      * @return The minimum distance between both angles
      */
-    static SUMOReal getMinAngleDiff(SUMOReal angle1, SUMOReal angle2) throw();
+    static SUMOReal getMinAngleDiff(SUMOReal angle1, SUMOReal angle2) ;
 
 
     /** @brief Returns the maximum distance (clockwise/counter-clockwise) between both angles
@@ -125,7 +141,7 @@ public:
      * @param[in] angle2 The second angle
      * @return The maximum distance between both angles
      */
-    static SUMOReal getMaxAngleDiff(SUMOReal angle1, SUMOReal angle2) throw();
+    static SUMOReal getMaxAngleDiff(SUMOReal angle1, SUMOReal angle2) ;
 
 
 };

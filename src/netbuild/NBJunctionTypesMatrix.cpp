@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NBJunctionTypesMatrix.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Definition of a junction's type in dependence
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,12 +51,12 @@ NBJunctionTypesMatrix::NBJunctionTypesMatrix() {
     myMap['x'] = NODETYPE_NOJUNCTION;
     myMap['p'] = NODETYPE_PRIORITY_JUNCTION;
     myMap['r'] = NODETYPE_RIGHT_BEFORE_LEFT;
-    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(0./3.6), (SUMOReal)(10./3.6)));
-    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(10./3.6), (SUMOReal)(30./3.6)));
-    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(30./3.6), (SUMOReal)(50./3.6)));
-    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(50./3.6), (SUMOReal)(70./3.6)));
-    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(70./3.6), (SUMOReal)(100./3.6)));
-    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(100./3.6), (SUMOReal)(999999./3.6)));
+    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(0. / 3.6), (SUMOReal)(10. / 3.6)));
+    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(10. / 3.6), (SUMOReal)(30. / 3.6)));
+    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(30. / 3.6), (SUMOReal)(50. / 3.6)));
+    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(50. / 3.6), (SUMOReal)(70. / 3.6)));
+    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(70. / 3.6), (SUMOReal)(100. / 3.6)));
+    myRanges.push_back(std::pair<SUMOReal, SUMOReal>((SUMOReal)(100. / 3.6), (SUMOReal)(999999. / 3.6)));
     //                 00001x
     //                 13570x
     //                 00000x
@@ -81,7 +84,7 @@ NBJunctionTypesMatrix::getType(SUMOReal speed1, SUMOReal speed2) const {
 char
 NBJunctionTypesMatrix::getNameAt(size_t pos1, size_t pos2) const {
     std::string str = myValues[pos1];
-    if (str[pos2]==' ') {
+    if (str[pos2] == ' ') {
         return getNameAt(pos2, pos1);
     }
     return str[pos2];

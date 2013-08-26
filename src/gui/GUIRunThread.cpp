@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIRunThread.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The thread that runs the simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -87,7 +90,7 @@ GUIRunThread::~GUIRunThread() {
     delete myMessageRetriever;
     delete myWarningRetriever;
     // wait for the thread
-    while (mySimulationInProgress||myNet!=0);
+    while (mySimulationInProgress || myNet != 0);
 }
 
 
@@ -112,15 +115,15 @@ GUIRunThread::run() {
     // perform an endless loop
     while (!myQuit) {
         // if the simulation shall be perfomed, do it
-        if (!myHalting&&myNet!=0&&myOk) {
+        if (!myHalting && myNet != 0 && myOk) {
             if (getNet().logSimulationDuration()) {
                 beg = SysUtils::getCurrentMillis();
-                if (end2!=-1) {
-                    getNet().setIdleDuration((int)(beg-end2));
+                if (end2 != -1) {
+                    getNet().setIdleDuration((int)(beg - end2));
                 }
             }
             // check whether we shall stop at this step
-            bool haltAfter = find(gBreakpoints.begin(), gBreakpoints.end(), myNet->getCurrentTimeStep())!=gBreakpoints.end();
+            bool haltAfter = find(gBreakpoints.begin(), gBreakpoints.end(), myNet->getCurrentTimeStep()) != gBreakpoints.end();
             // do the step
             makeStep();
             // stop if wished
@@ -131,11 +134,11 @@ GUIRunThread::run() {
             long val = (long) mySimDelay.getValue();
             if (getNet().logSimulationDuration()) {
                 end = SysUtils::getCurrentMillis();
-                getNet().setSimDuration((int)(end-beg));
+                getNet().setSimDuration((int)(end - beg));
                 end2 = SysUtils::getCurrentMillis();
                 val -= end2 - beg;
             }
-            if (val>0) {
+            if (val > 0) {
                 sleep(val);
             }
         } else {
@@ -150,7 +153,7 @@ GUIRunThread::run() {
 
 
 void
-GUIRunThread::makeStep() throw() {
+GUIRunThread::makeStep() {
     GUIEvent* e = 0;
     // simulation is being perfomed
     mySimulationInProgress = true;
@@ -169,23 +172,23 @@ GUIRunThread::makeStep() throw() {
         e = 0;
         MSNet::SimulationState state = myNet->simulationState(mySimEndTime);
 #ifndef NO_TRACI
-        if (state!=MSNet::SIMSTATE_RUNNING) {
-            if (OptionsCont::getOptions().getInt("remote-port")!=0&&!traci::TraCIServer::wasClosed()) {
+        if (state != MSNet::SIMSTATE_RUNNING) {
+            if (OptionsCont::getOptions().getInt("remote-port") != 0 && !traci::TraCIServer::wasClosed()) {
                 state = MSNet::SIMSTATE_RUNNING;
             }
         }
 #endif
         switch (state) {
-        case MSNet::SIMSTATE_END_STEP_REACHED:
-        case MSNet::SIMSTATE_NO_FURTHER_VEHICLES:
-        case MSNet::SIMSTATE_CONNECTION_CLOSED:
-        case MSNet::SIMSTATE_TOO_MANY_VEHICLES:
-            e = new GUIEvent_SimulationEnded(state, myNet->getCurrentTimeStep()-DELTA_T);
-            break;
-        default:
-            break;
+            case MSNet::SIMSTATE_END_STEP_REACHED:
+            case MSNet::SIMSTATE_NO_FURTHER_VEHICLES:
+            case MSNet::SIMSTATE_CONNECTION_CLOSED:
+            case MSNet::SIMSTATE_TOO_MANY_VEHICLES:
+                e = new GUIEvent_SimulationEnded(state, myNet->getCurrentTimeStep() - DELTA_T);
+                break;
+            default:
+                break;
         }
-        if (e!=0) {
+        if (e != 0) {
             myEventQue.add(e);
             myEventThrow.signal();
             myHalting = true;
@@ -198,7 +201,7 @@ GUIRunThread::makeStep() throw() {
         // simulation step is over
         mySimulationInProgress = false;
     } catch (ProcessError& e2) {
-        if (string(e2.what())!=string("Process Error") && std::string(e2.what())!=string("")) {
+        if (string(e2.what()) != string("Process Error") && std::string(e2.what()) != string("")) {
             WRITE_ERROR(e2.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
@@ -252,7 +255,7 @@ GUIRunThread::stop() {
 
 bool
 GUIRunThread::simulationAvailable() const {
-    return myNet!=0;
+    return myNet != 0;
 }
 
 
@@ -265,7 +268,7 @@ GUIRunThread::deleteSim() {
     MsgHandler::getMessageInstance()->removeRetriever(myMessageRetriever);
     //
     mySimulationLock.lock();
-    if (myNet!=0) {
+    if (myNet != 0) {
         myNet->closeSimulation(mySimStartTime);
     }
     while (mySimulationInProgress);
@@ -301,19 +304,19 @@ GUIRunThread::retrieveMessage(const MsgHandler::MsgType type, const std::string&
 
 bool
 GUIRunThread::simulationIsStartable() const {
-    return myNet!=0&&myHalting;
+    return myNet != 0 && myHalting;
 }
 
 
 bool
 GUIRunThread::simulationIsStopable() const {
-    return myNet!=0&&(!myHalting);
+    return myNet != 0 && (!myHalting);
 }
 
 
 bool
 GUIRunThread::simulationIsStepable() const {
-    return myNet!=0&&myHalting;
+    return myNet != 0 && myHalting;
 }
 
 

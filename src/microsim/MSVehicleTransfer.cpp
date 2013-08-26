@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSVehicleTransfer.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sep 2003
 /// @version $Id$
 ///
 // A mover of vehicles that got stucked due to grid locks
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -51,7 +54,7 @@ MSVehicleTransfer* MSVehicleTransfer::myInstance = 0;
 // member method definitions
 // ===========================================================================
 void
-MSVehicleTransfer::addVeh(const SUMOTime t, MSVehicle* veh) throw() {
+MSVehicleTransfer::addVeh(const SUMOTime t, MSVehicle* veh) {
     // get the current edge of the vehicle
     const MSEdge* e = veh->getEdge();
     if (veh->isParking()) {
@@ -70,9 +73,9 @@ MSVehicleTransfer::addVeh(const SUMOTime t, MSVehicle* veh) throw() {
 
 
 void
-MSVehicleTransfer::checkInsertions(SUMOTime time) throw() {
+MSVehicleTransfer::checkInsertions(SUMOTime time) {
     // go through vehicles
-    for (VehicleInfVector::iterator i=myVehicles.begin(); i!=myVehicles.end();) {
+    for (VehicleInfVector::iterator i = myVehicles.begin(); i != myVehicles.end();) {
         // get the vehicle information
         VehicleInformation& desc = *i;
 
@@ -109,7 +112,7 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) throw() {
                 i = myVehicles.erase(i);
             } else {
                 // could not insert. maybe we should proceed in virtual space
-                if (desc.myProceedTime<time) {
+                if (desc.myProceedTime < time) {
                     // get the lanes of the next edge (the one the vehicle wiil be
                     //  virtually on after all these computations)
                     desc.myVeh->leaveLane(MSMoveReminder::NOTIFICATION_TELEPORT);
@@ -117,8 +120,8 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) throw() {
                     // !!! only move reminders are called but the edge is not advanced
                     const MSEdge* nextEdge = desc.myVeh->succEdge(1);
                     // let the vehicle move to the next edge
-                    if (nextEdge==0) {
-                        WRITE_WARNING("Vehicle '" + desc.myVeh->getID()+ "' ends teleporting on end edge '" + e->getID()+ "'.");
+                    if (nextEdge == 0) {
+                        WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' ends teleporting on end edge '" + e->getID() + "'.");
                         MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(desc.myVeh);
                         i = myVehicles.erase(i);
                         continue;
@@ -134,24 +137,24 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) throw() {
 
 
 bool
-MSVehicleTransfer::hasPending() const throw() {
+MSVehicleTransfer::hasPending() const {
     return !myVehicles.empty();
 }
 
 
 MSVehicleTransfer*
-MSVehicleTransfer::getInstance() throw() {
-    if (myInstance==0) {
+MSVehicleTransfer::getInstance() {
+    if (myInstance == 0) {
         myInstance = new MSVehicleTransfer();
     }
     return myInstance;
 }
 
 
-MSVehicleTransfer::MSVehicleTransfer() throw() {}
+MSVehicleTransfer::MSVehicleTransfer() {}
 
 
-MSVehicleTransfer::~MSVehicleTransfer() throw() {
+MSVehicleTransfer::~MSVehicleTransfer() {
     myInstance = 0;
 }
 

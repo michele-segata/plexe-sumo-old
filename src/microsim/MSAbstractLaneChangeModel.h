@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSAbstractLaneChangeModel.h
 /// @author  Daniel Krajzewicz
+/// @author  Friedemann Wesner
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 // Interface for lane-change models
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -108,7 +112,7 @@ public:
          * @param[in] neighLead The leader on the lane the vehicle want to change to
          * @param[in] neighFollow The follower on the lane the vehicle want to change to
          */
-        MSLCMessager(MSVehicle* leader,  MSVehicle* neighLead, MSVehicle* neighFollow) throw()
+        MSLCMessager(MSVehicle* leader,  MSVehicle* neighLead, MSVehicle* neighFollow)
             : myLeader(leader), myNeighLeader(neighLead),
               myNeighFollower(neighFollow) { }
 
@@ -122,8 +126,8 @@ public:
          * @param[in] sender The sending vehicle (the lane changing vehicle)
          * @return Something!?
          */
-        void* informLeader(void* info, MSVehicle* sender) throw() {
-            assert(myLeader!=0);
+        void* informLeader(void* info, MSVehicle* sender) {
+            assert(myLeader != 0);
             return myLeader->getLaneChangeModel().inform(info, sender);
         }
 
@@ -133,8 +137,8 @@ public:
          * @param[in] sender The sending vehicle (the lane changing vehicle)
          * @return Something!?
          */
-        void* informNeighLeader(void* info, MSVehicle* sender) throw() {
-            assert(myNeighLeader!=0);
+        void* informNeighLeader(void* info, MSVehicle* sender) {
+            assert(myNeighLeader != 0);
             return myNeighLeader->getLaneChangeModel().inform(info, sender);
         }
 
@@ -144,8 +148,8 @@ public:
          * @param[in] sender The sending vehicle (the lane changing vehicle)
          * @return Something!?
          */
-        void* informNeighFollower(void* info, MSVehicle* sender) throw() {
-            assert(myNeighFollower!=0);
+        void* informNeighFollower(void* info, MSVehicle* sender) {
+            assert(myNeighFollower != 0);
             return myNeighFollower->getLaneChangeModel().inform(info, sender);
         }
 
@@ -165,7 +169,7 @@ public:
     /** @brief Constructor
      * @param[in] v The vehicle this lane-changer belongs to
      */
-    MSAbstractLaneChangeModel(MSVehicle& v) throw()
+    MSAbstractLaneChangeModel(MSVehicle& v)
         : myVehicle(v), myOwnState(0),
 #ifndef NO_TRACI
           myChangeRequest(MSVehicle::REQUEST_NONE),
@@ -257,7 +261,7 @@ public:
 
 protected:
     virtual bool congested(const MSVehicle* const neighLeader) {
-        if (neighLeader==0) {
+        if (neighLeader == 0) {
             return false;
         }
         // Congested situation are relevant only on highways (maxSpeed > 70km/h)
@@ -274,11 +278,11 @@ protected:
     }
 
     virtual bool predInteraction(const MSVehicle* const leader) {
-        if (leader==0) {
+        if (leader == 0) {
             return false;
         }
         // let's check it on highways only
-        if (leader->getSpeed()<(80.0/3.6)) {
+        if (leader->getSpeed() < (80.0 / 3.6)) {
             return false;
         }
         SUMOReal gap = leader->getPositionOnLane() - leader->getVehicleType().getLengthWithGap() - myVehicle.getPositionOnLane();

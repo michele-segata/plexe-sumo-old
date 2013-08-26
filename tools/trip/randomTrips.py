@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 """
 @file    randomTrips.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
 @date    2010-03-06
 @version $Id$
 
 Generates random trips for the given network.
 
-Copyright (C) 2010-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2010-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

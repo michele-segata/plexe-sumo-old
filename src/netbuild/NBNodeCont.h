@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    NBNodeCont.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Yun-Pang Wang
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Container for nodes during the netbuilding process
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,11 +63,11 @@ class NBJoinedEdgesMap;
 class NBNodeCont {
 public:
     /// @brief Constructor
-    NBNodeCont() throw();
+    NBNodeCont() ;
 
 
     /// @brief Destructor
-    ~NBNodeCont() throw();
+    ~NBNodeCont() ;
 
 
 
@@ -76,7 +81,7 @@ public:
      * @return Whether the node could be added (no other with the same id or position is stored)
      */
     bool insert(const std::string& id, const Position& position,
-                NBDistrict* district) throw();
+                NBDistrict* district) ;
 
 
     /** @brief Inserts a node into the map
@@ -84,28 +89,28 @@ public:
      * @param[in] position The node's position
      * @return Whether the node could be added (no other with the same id or position is stored)
      */
-    bool insert(const std::string& id, const Position& position) throw();
+    bool insert(const std::string& id, const Position& position) ;
 
 
     /** @brief Inserts a node into the map
      * @param[in] id The node's id
      * @return Whether the node could be added (no other with the same id is stored)
      */
-    Position insert(const std::string& id) throw();
+    Position insert(const std::string& id) ;
 
 
     /** @brief Inserts a node into the map
      * @param[in] node The node to insert
      * @return Whether the node could be added (no other with the same id or position is stored)
      */
-    bool insert(NBNode* node) throw();
+    bool insert(NBNode* node) ;
 
 
     /** @brief Removes the given node, deleting it
      * @param[in] node The node to delete and remove
      * @return Whether the node could be removed (existed)
      */
-    bool erase(NBNode* node) throw();
+    bool erase(NBNode* node) ;
 
 
     /** @brief Removes the given node but does not delete it
@@ -113,13 +118,13 @@ public:
      * @param[in] remember Whether to keep the node for future reference
      * @return Whether the node could be removed (existed)
      */
-    bool extract(NBNode* node, bool remember=false) throw();
+    bool extract(NBNode* node, bool remember = false) ;
 
     /** @brief Returns the node with the given name
      * @param[in] id The id of the node to retrieve
      * @return The node with the given id, or 0 if no such node exists
      */
-    NBNode* retrieve(const std::string& id) const throw();
+    NBNode* retrieve(const std::string& id) const ;
 
 
     /** @brief Returns the node with the given coordinates
@@ -127,7 +132,7 @@ public:
      * @param[in] offset An offset which can be applied in the case positions are blurred
      * @return The node at the given position, or 0 if no such node exists
      */
-    NBNode* retrieve(const Position& position, SUMOReal offset=0.) const throw();
+    NBNode* retrieve(const Position& position, SUMOReal offset = 0.) const ;
 
 
     /** @brief Returns the pointer to the begin of the stored nodes
@@ -156,7 +161,7 @@ public:
      * @param[in] check Whether to check if these nodes are known
      * @note checking is off by default because all nodes may not have been loaded yet
      */
-    void addJoinExclusion(const std::vector<std::string> &ids, bool check=false);
+    void addJoinExclusion(const std::vector<std::string> &ids, bool check = false);
 
 
     /** @brief add ids of nodes which shall be joined into a single node
@@ -176,16 +181,17 @@ public:
     /// @}
 
 
+
     /// @name Adapting the input
     /// @{
 
-    /** @brief Removes dummy edges (edges lying completely within a node)
+    /** @brief Removes self-loop edges (edges where the source and the destination node are the same)
      * @param[in, opt. changed] dc The districts container to update
      * @param[in, opt. changed] ec The edge container to remove the edges from
      * @param[in, opt. changed] tc The traffic lights container to update
      * @post Each edge is a uni-directional connection between two different nodes
      */
-    void removeDummyEdges(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tc);
+    void removeSelfLoops(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tc);
 
 
     /** @brief Joins edges connecting the same nodes
@@ -194,7 +200,7 @@ public:
      * @param[in, opt. changed] tc The traffic lights container to update
      * @post No two edges with same geometry connecting same nodes exist
      */
-    void joinDoubleNodeConnections(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc);
+    void joinSimilarEdges(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc);
 
 
     /** @brief Removes sequences of edges that are not connected with a junction.
@@ -253,7 +259,7 @@ public:
      * @param[in] id The id of the tls to add
      * @todo Recheck exception handling
      */
-    void setAsTLControlled(NBNode* node, NBTrafficLightLogicCont& tlc, std::string id="");
+    void setAsTLControlled(NBNode* node, NBTrafficLightLogicCont& tlc, std::string id = "");
     /// @}
 
 
@@ -278,7 +284,7 @@ public:
     /** @brief Returns the number of known nodes
      * @return The number of nodes stored in this container
      */
-    unsigned int size() const throw() {
+    unsigned int size() const {
         return (unsigned int) myNodes.size();
     }
 
@@ -300,11 +306,11 @@ public:
      * Goes through stored nodes, computes the numbers of unregulated, priority and right-before-left
      *  junctions and prints them.
      */
-    void printBuiltNodesStatistics() const throw();
+    void printBuiltNodesStatistics() const ;
 
 
     /// @brief get all node names
-    std::vector<std::string> getAllNames() const throw();
+    std::vector<std::string> getAllNames() const ;
 
 
     /* @brief analyzes a cluster of nodes which shall be joined
@@ -345,12 +351,7 @@ private:
      */
     void generateNodeClusters(SUMOReal maxDist, NodeClusters& into) const;
 
-    // @brief merges two nodes using name and position of target
-    void merge(NBNode* moved, NBNode* target, NBDistrictCont& dc, NBEdgeCont& ec);
-
-    // @brief replaces oldEdge by an edge between from and to, keeping all attributes
-    void remapEdge(NBEdge* oldEdge, NBNode* from, NBNode* to, NBDistrictCont& dc, NBEdgeCont& ec);
-
+ 
     // @brief joins the given node clusters
     void joinNodeClusters(NodeClusters clusters,
                           NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc);

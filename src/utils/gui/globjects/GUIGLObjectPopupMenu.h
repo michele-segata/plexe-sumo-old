@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIGLObjectPopupMenu.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The popup menu of a globject
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -60,37 +63,37 @@ public:
      * @param[in] o The object of interest
      */
     GUIGLObjectPopupMenu(GUIMainWindow& app,
-                         GUISUMOAbstractView& parent, GUIGlObject& o) throw();
+                         GUISUMOAbstractView& parent, GUIGlObject& o) ;
 
 
     /// @brief Destructor
-    virtual ~GUIGLObjectPopupMenu() throw();
+    virtual ~GUIGLObjectPopupMenu() ;
 
 
 public:
     /// Called if the assigned objects shall be centered
-    long onCmdCenter(FXObject*,FXSelector,void*);
+    long onCmdCenter(FXObject*, FXSelector, void*);
 
     /// Called if the name shall be copied to clipboard
-    long onCmdCopyName(FXObject*,FXSelector,void*);
+    long onCmdCopyName(FXObject*, FXSelector, void*);
 
     /// Called if the typed name shall be copied to clipboard
-    long onCmdCopyTypedName(FXObject*,FXSelector,void*);
+    long onCmdCopyTypedName(FXObject*, FXSelector, void*);
 
     /// Called if the cursor position shall be copied to clipboard
-    long onCmdCopyCursorPosition(FXObject*,FXSelector,void*);
+    long onCmdCopyCursorPosition(FXObject*, FXSelector, void*);
 
     /// Called if the cursor geo-position shall be copied to clipboard
-    long onCmdCopyCursorGeoPosition(FXObject*,FXSelector,void*);
+    long onCmdCopyCursorGeoPosition(FXObject*, FXSelector, void*);
 
     /// Called if the parameter of this object shall be shown
-    long onCmdShowPars(FXObject*,FXSelector,void*);
+    long onCmdShowPars(FXObject*, FXSelector, void*);
 
     /// Called if the object shall be added to the list of selected objects
-    long onCmdAddSelected(FXObject*,FXSelector,void*);
+    long onCmdAddSelected(FXObject*, FXSelector, void*);
 
     /// Called if the object shall be removed from the list of selected objects
-    long onCmdRemoveSelected(FXObject*,FXSelector,void*);
+    long onCmdRemoveSelected(FXObject*, FXSelector, void*);
 
     /// @brief return the real owner of this popup
     inline GUISUMOAbstractView* getParentView() {

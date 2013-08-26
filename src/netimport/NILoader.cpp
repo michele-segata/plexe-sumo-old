@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    NILoader.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Perfoms network import
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -72,11 +76,11 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NILoader::NILoader(NBNetBuilder& nb) throw()
+NILoader::NILoader(NBNetBuilder& nb)
     : myNetBuilder(nb) {}
 
 
-NILoader::~NILoader() throw() {}
+NILoader::~NILoader() {}
 
 
 void
@@ -106,27 +110,27 @@ NILoader::load(OptionsCont& oc) {
     NIImporter_ITSUMO::loadNetwork(oc, myNetBuilder);
     loadXML(oc);
     // check the loaded structures
-    if (myNetBuilder.getNodeCont().size()==0) {
+    if (myNetBuilder.getNodeCont().size() == 0) {
         throw ProcessError("No nodes loaded.");
     }
-    if (myNetBuilder.getEdgeCont().size()==0) {
+    if (myNetBuilder.getEdgeCont().size() == 0) {
         throw ProcessError("No edges loaded.");
     }
     // report loaded structures
     WRITE_MESSAGE(" Import done:");
-    if (myNetBuilder.getDistrictCont().size()>0) {
+    if (myNetBuilder.getDistrictCont().size() > 0) {
         WRITE_MESSAGE("   " + toString(myNetBuilder.getDistrictCont().size()) + " districts loaded.");
     }
     WRITE_MESSAGE("   " + toString(myNetBuilder.getNodeCont().size()) + " nodes loaded.");
-    if (myNetBuilder.getTypeCont().size()>0) {
+    if (myNetBuilder.getTypeCont().size() > 0) {
         WRITE_MESSAGE("   " + toString(myNetBuilder.getTypeCont().size()) + " types loaded.");
     }
     WRITE_MESSAGE("   " + toString(myNetBuilder.getEdgeCont().size()) + " edges loaded.");
-    if (myNetBuilder.getEdgeCont().getNoEdgeSplits()>0) {
-        WRITE_MESSAGE("The split of edges was performed "+ toString(myNetBuilder.getEdgeCont().getNoEdgeSplits()) + " times.");
+    if (myNetBuilder.getEdgeCont().getNoEdgeSplits() > 0) {
+        WRITE_MESSAGE("The split of edges was performed " + toString(myNetBuilder.getEdgeCont().getNoEdgeSplits()) + " times.");
     }
-    if (GeoConvHelper::getDefaultInstance().usingGeoProjection()) {
-        WRITE_MESSAGE("Proj projection parameters used: '" + GeoConvHelper::getDefaultInstance().getProjString() + "'.");
+    if (GeoConvHelper::getProcessing().usingGeoProjection()) {
+        WRITE_MESSAGE("Proj projection parameters used: '" + GeoConvHelper::getProcessing().getProjString() + "'.");
     }
 }
 
@@ -164,7 +168,7 @@ NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string> &f
     std::string exceptMsg = "";
     // start the parsing
     try {
-        for (std::vector<std::string>::const_iterator file=files.begin(); file!=files.end(); ++file) {
+        for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
             if (!FileHelpers::exists(*file)) {
                 WRITE_ERROR("Could not open " + type + "-file '" + *file + "'.");
                 exceptMsg = "Process Error";
@@ -194,7 +198,7 @@ NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string> &f
 bool
 NILoader::transformCoordinates(Position& from, bool includeInBoundary, GeoConvHelper* from_srs) {
     Position orig(from);
-    bool ok = GeoConvHelper::getDefaultInstance().x2cartesian(from, includeInBoundary);
+    bool ok = GeoConvHelper::getProcessing().x2cartesian(from, includeInBoundary);
 #ifdef HAVE_MESOSIM
     if (ok) {
         const HeightMapper& hm = HeightMapper::get();
@@ -217,16 +221,16 @@ NILoader::transformCoordinates(PositionVector& from, bool includeInBoundary, Geo
     if (maxLength > 0 && from.size() > 1) {
         // transformation to cartesian coordinates must happen before we can check segment length
         PositionVector copy = from;
-        for (int i=0; i<(int) from.size(); i++) {
+        for (int i = 0; i < (int) from.size(); i++) {
             transformCoordinates(copy[i], false);
         }
         // check lengths and insert new points where needed (in the original
         // coordinate system)
         int inserted = 0;
-        for (int i=0; i<(int)copy.size()-1; i++) {
+        for (int i = 0; i < (int)copy.size() - 1; i++) {
             Position start = from[i + inserted];
             Position end = from[i + inserted + 1];
-            SUMOReal length = copy[i].distanceTo(copy[i+1]);
+            SUMOReal length = copy[i].distanceTo(copy[i + 1]);
             const Position step = (end - start) * (maxLength / length);
             int steps = 0;
             while (length > maxLength) {
@@ -240,7 +244,7 @@ NILoader::transformCoordinates(PositionVector& from, bool includeInBoundary, Geo
         // performed for the new points
     }
     bool ok = true;
-    for (int i=0; i<(int) from.size(); i++) {
+    for (int i = 0; i < (int) from.size(); i++) {
         ok = ok && transformCoordinates(from[i], includeInBoundary, from_srs);
     }
     return ok;

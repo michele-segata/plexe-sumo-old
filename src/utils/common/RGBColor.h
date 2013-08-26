@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RGBColor.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A RGB-color definition
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -45,7 +48,7 @@ class RGBColor {
 public:
     /** @brief Constructor
      */
-    RGBColor() throw();
+    RGBColor() ;
 
 
     /** @brief Constructor
@@ -53,23 +56,23 @@ public:
      * @param[in] green The green component's value
      * @param[in] blue The blue component's value
      */
-    RGBColor(SUMOReal red, SUMOReal green, SUMOReal blue) throw();
+    RGBColor(SUMOReal red, SUMOReal green, SUMOReal blue) ;
 
 
     /** @brief Copy constructor
      */
-    RGBColor(const RGBColor& col) throw();
+    RGBColor(const RGBColor& col) ;
 
 
     /// @brief Destructor
-    ~RGBColor() throw();
+    ~RGBColor() ;
 
 
 
     /** @brief Returns the red-amount of the color
      * @return The red component's value
      */
-    SUMOReal red() const throw() {
+    SUMOReal red() const {
         return myRed;
     }
 
@@ -77,7 +80,7 @@ public:
     /** @brief Returns the green-amount of the color
      * @return The red component's value
      */
-    SUMOReal green() const throw() {
+    SUMOReal green() const {
         return myGreen;
     }
 
@@ -85,7 +88,7 @@ public:
     /** @brief Returns the blue-amount of the color
      * @return The red component's value
      */
-    SUMOReal blue() const throw() {
+    SUMOReal blue() const {
         return myBlue;
     }
 
@@ -95,7 +98,7 @@ public:
      * @param[in] g The green component's value
      * @param[in] b The blue component's value
      */
-    void set(SUMOReal r, SUMOReal g, SUMOReal b) throw();
+    void set(SUMOReal r, SUMOReal g, SUMOReal b) ;
 
 
     /** @brief Writes the color to the given stream
@@ -143,13 +146,13 @@ public:
      * @exception NumberFormatException If one of the components is not numeric
      */
     static RGBColor parseColorReporting(const std::string& coldef, const std::string& objecttype,
-                                        const char* objectid, bool report, bool& ok) throw();
+                                        const char* objectid, bool report, bool& ok) ;
 
 
     /** @brief Returns the default color by parsing DEFAULT_COLOR_STRING
      * @return The default color
      */
-    static RGBColor getDefaultColor() throw();
+    static RGBColor getDefaultColor() ;
 
 
     /** @brief Interpolates between two colors
@@ -162,7 +165,7 @@ public:
      * @param[in] weight The weight of the first color
      * @return The interpolated color
      */
-    static RGBColor interpolate(const RGBColor& minColor, const RGBColor& maxColor, SUMOReal weight) throw();
+    static RGBColor interpolate(const RGBColor& minColor, const RGBColor& maxColor, SUMOReal weight) ;
 
 
     /** @brief Converts the given hsv-triplet to rgb
@@ -172,7 +175,7 @@ public:
      * @return The color as RGB
      * @author Alvy Ray Smith (http://www.alvyray.com/default.htm)
      */
-    static RGBColor fromHSV(SUMOReal h, SUMOReal s, SUMOReal v) throw();
+    static RGBColor fromHSV(SUMOReal h, SUMOReal s, SUMOReal v) ;
 
 
     /// @brief The string description of the default color

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIDialog_Breakpoints.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Thu, 17 Jun 2004
 /// @version $Id$
 ///
 // Editor for simulation breakpoints
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,10 +60,10 @@ public:
     /** @brief Constructor
      * @param[in] parent The parent window
      */
-    GUIDialog_Breakpoints(GUIMainWindow* parent) throw();
+    GUIDialog_Breakpoints(GUIMainWindow* parent) ;
 
     /// @brief Destructor
-    ~GUIDialog_Breakpoints() throw();
+    ~GUIDialog_Breakpoints() ;
 
 
 
@@ -69,30 +71,30 @@ public:
     /// @{
 
     /// @brief Called when the user presses the Load-button
-    long onCmdLoad(FXObject*,FXSelector,void*);
+    long onCmdLoad(FXObject*, FXSelector, void*);
 
     /// @brief Called when the user presses the Save-button
-    long onCmdSave(FXObject*,FXSelector,void*);
+    long onCmdSave(FXObject*, FXSelector, void*);
 
     /// @brief Called when the user presses the Clear-button
-    long onCmdClear(FXObject*,FXSelector,void*);
+    long onCmdClear(FXObject*, FXSelector, void*);
 
     /// @brief Called when the user presses the Close-button
-    long onCmdClose(FXObject*,FXSelector,void*);
+    long onCmdClose(FXObject*, FXSelector, void*);
 
     /// @brief Called when the table was changed
-    long onCmdEditTable(FXObject*,FXSelector,void*);
+    long onCmdEditTable(FXObject*, FXSelector, void*);
     /// @}
 
 
 private:
     /// @brief Rebuilds the entire list
-    void rebuildList() throw();
+    void rebuildList() ;
 
     /** @brief Builds a text representation of the items in the list
      * @return Breakpoints encoded as a string
      */
-    std::string encode2TXT() throw();
+    std::string encode2TXT() ;
 
 
 private:

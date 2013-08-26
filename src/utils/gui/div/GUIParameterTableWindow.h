@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIParameterTableWindow.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The window that holds the table of an object's parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -71,11 +73,11 @@ public:
      * @param[in] noRows Number of rows to allocate
      */
     GUIParameterTableWindow(GUIMainWindow& app,
-                            GUIGlObject& o, size_t noRows) throw();
+                            GUIGlObject& o, size_t noRows) ;
 
 
     /// @brief Destructor
-    ~GUIParameterTableWindow() throw();
+    ~GUIParameterTableWindow() ;
 
 
     /** @brief Closes the building of the table
@@ -86,14 +88,14 @@ public:
      *
      * @see GUIMainWindow::addChild
      */
-    void closeBuilding() throw();
+    void closeBuilding() ;
 
 
 
     /** @brief Lets this window know the object shown is being deleted
      * @param[in] o The deleted (shown) object
      */
-    void removeObject(GUIGlObject* const o) throw();
+    void removeObject(GUIGlObject* const o) ;
 
 
 
@@ -106,7 +108,7 @@ public:
      * @param[in] dynamic Information whether the entry is dynamic
      * @param[in] src The value source to use
      */
-    void mkItem(const char* name, bool dynamic, ValueSource<unsigned> *src) throw();
+    void mkItem(const char* name, bool dynamic, ValueSource<unsigned> *src) ;
 
 
     /** @brief Adds a row which obtains its value from an SUMOReal-ValueSource
@@ -115,7 +117,7 @@ public:
      * @param[in] dynamic Information whether the entry is dynamic
      * @param[in] src The value source to use
      */
-    void mkItem(const char* name, bool dynamic, ValueSource<SUMOReal> *src) throw();
+    void mkItem(const char* name, bool dynamic, ValueSource<SUMOReal> *src) ;
 
 
 #ifndef HAVE_SUBSECOND_TIMESTEPS
@@ -125,7 +127,7 @@ public:
      * @param[in] dynamic Information whether the entry is dynamic
      * @param[in] src The value source to use
      */
-    void mkItem(const char* name, bool dynamic, ValueSource<SUMOTime> *src) throw();
+    void mkItem(const char* name, bool dynamic, ValueSource<SUMOTime> *src) ;
 #endif
 
     /** @brief Adds a row which shows a string-value
@@ -135,7 +137,7 @@ public:
      * @param[in] value The value to show
      * @todo the dynamic-parameter is obsolete(?)
      */
-    void mkItem(const char* name, bool dynamic, std::string value) throw();
+    void mkItem(const char* name, bool dynamic, std::string value) ;
 
 
     /** @brief Adds a row which shows a unsigned-value
@@ -145,7 +147,7 @@ public:
      * @param[in] value The value to show
      * @todo the dynamic-parameter is obsolete
      */
-    void mkItem(const char* name, bool dynamic, unsigned value) throw();
+    void mkItem(const char* name, bool dynamic, unsigned value) ;
 
 
     /** @brief Adds a row which shows a SUMOReal-value
@@ -155,7 +157,7 @@ public:
      * @param[in] value The value to show
      * @todo the dynamic-parameter is obsolete
      */
-    void mkItem(const char* name, bool dynamic, SUMOReal value) throw();
+    void mkItem(const char* name, bool dynamic, SUMOReal value) ;
 
 
 #ifndef HAVE_SUBSECOND_TIMESTEPS
@@ -166,7 +168,7 @@ public:
      * @param[in] value The value to show
      * @todo the dynamic-parameter is obsolete
      */
-    void mkItem(const char* name, bool dynamic, SUMOTime value) throw();
+    void mkItem(const char* name, bool dynamic, SUMOTime value) ;
 #endif
     /// @}
 
@@ -176,17 +178,17 @@ public:
     /// @{
 
     /** @brief Updates the table due to a simulation step */
-    long onSimStep(FXObject*,FXSelector,void*);
+    long onSimStep(FXObject*, FXSelector, void*);
 
     /** @brief Does nothing
      * @todo Recheck whether this is needed (to override FXTable-behaviour?)
      */
-    long onTableSelected(FXObject*,FXSelector,void*);
+    long onTableSelected(FXObject*, FXSelector, void*);
 
     /** @brief Does nothing
      * @todo Recheck whether this is needed (to override FXTable-behaviour?)
      */
-    long onTableDeselected(FXObject*,FXSelector,void*);
+    long onTableDeselected(FXObject*, FXSelector, void*);
 
     /** @brief Shows a popup
      *
@@ -197,7 +199,7 @@ public:
      * @see GUIParameterTableItemInterface
      * @see GUIParam_PopupMenuInterface
      */
-    long onRightButtonPress(FXObject*,FXSelector,void*);
+    long onRightButtonPress(FXObject*, FXSelector, void*);
     /// @}
 
 
@@ -208,7 +210,7 @@ protected:
      *
      * @see GUIParameterTableItemInterface::update
      */
-    void updateTable() throw();
+    void updateTable() ;
 
 
 private:

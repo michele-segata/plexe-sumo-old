@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIDanielPerspectiveChanger.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A class that allows to steer the visual output in dependence to
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,7 +67,7 @@ GUIDanielPerspectiveChanger::move(int xdiff, int ydiff) {
 
 void
 GUIDanielPerspectiveChanger::zoom(SUMOReal factor) {
-    if (myCallback.getApp()->reg().readIntEntry("gui","zoomAtCenter", 1)) {
+    if (myCallback.getApp()->reg().readIntEntry("gui", "zoomAtCenter", 1)) {
         myZoomBase = myViewPort.getCenter();
     }
     if (factor > 0) {
@@ -173,9 +176,9 @@ void
 GUIDanielPerspectiveChanger::onMouseWheel(void* data) {
     FXEvent* e = (FXEvent*) data;
     SUMOReal diff = 0.1;
-    if (e->state&CONTROLMASK) {
+    if (e->state & CONTROLMASK) {
         diff /= 2;
-    } else if (e->state&SHIFTMASK) {
+    } else if (e->state & SHIFTMASK) {
         diff *= 2;
     }
     if (e->code < 0) {
@@ -193,31 +196,31 @@ GUIDanielPerspectiveChanger::onMouseMove(void* data) {
     myCallback.setWindowCursorPosition(e->win_x, e->win_y);
     const int xdiff = myMouseXPosition - e->win_x;
     const int ydiff = myMouseYPosition - e->win_y;
-    const bool moved = xdiff!=0 || ydiff!=0;
+    const bool moved = xdiff != 0 || ydiff != 0;
     const bool pastDelay = FXThread::time() > (myMouseDownTime + myDragDelay);
     switch (myMouseButtonState) {
-    case MOUSEBTN_LEFT:
-        if (pastDelay) {
-            move(xdiff, ydiff);
-            if (moved) {
-                myMoveOnClick = true;
+        case MOUSEBTN_LEFT:
+            if (pastDelay) {
+                move(xdiff, ydiff);
+                if (moved) {
+                    myMoveOnClick = true;
+                }
             }
-        }
-        break;
-    case MOUSEBTN_RIGHT:
-        if (pastDelay) {
-            zoom(1 + 10.0 * ydiff / myCallback.getWidth());
-            rotate(xdiff);
-            if (moved) {
-                myMoveOnClick = true;
+            break;
+        case MOUSEBTN_RIGHT:
+            if (pastDelay) {
+                zoom(1 + 10.0 * ydiff / myCallback.getWidth());
+                rotate(xdiff);
+                if (moved) {
+                    myMoveOnClick = true;
+                }
             }
-        }
-        break;
-    default:
-        if (moved) {
-            myCallback.updateToolTip();
-        }
-        break;
+            break;
+        default:
+            if (moved) {
+                myCallback.updateToolTip();
+            }
+            break;
     }
     myMouseXPosition = e->win_x;
     myMouseYPosition = e->win_y;

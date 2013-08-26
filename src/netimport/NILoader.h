@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NILoader.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Perfoms network import
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,11 +62,11 @@ public:
     /** @brief Constructor
      * @param[in] nb The network builder to fill with loaded data
      */
-    NILoader(NBNetBuilder& nb) throw();
+    NILoader(NBNetBuilder& nb) ;
 
 
     /// @brief Destructor
-    ~NILoader() throw();
+    ~NILoader() ;
 
 
     /** loads data from the files specified in the given option container */
@@ -76,8 +79,8 @@ public:
      * @param[in] includeInBoundary Whether to patch the convex boundary of the GeoConvHelper default instance
      * @param[in] from_srs The spatial reference system of the input coordinate
      */
-    static bool transformCoordinates(Position& from, bool includeInBoundary=true, GeoConvHelper* from_srs=0);
-    static bool transformCoordinates(PositionVector& from, bool includeInBoundary=true, GeoConvHelper* from_srs=0);
+    static bool transformCoordinates(Position& from, bool includeInBoundary = true, GeoConvHelper* from_srs = 0);
+    static bool transformCoordinates(PositionVector& from, bool includeInBoundary = true, GeoConvHelper* from_srs = 0);
 
 private:
     /** loads data from sumo-files */

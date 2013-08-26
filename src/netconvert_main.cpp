@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    netconvert_main.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Main for NETCONVERT
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -78,7 +81,7 @@ fillOptions() {
 
     NIFrame::fillOptions();
     NBFrame::fillOptions(false);
-    NWFrame::fillOptions();
+    NWFrame::fillOptions(false);
     RandHelper::insertRandOptions();
 }
 
@@ -130,7 +133,7 @@ main(int argc, char** argv) {
         nb.compute(oc);
         NWFrame::writeNetwork(oc, nb);
     } catch (ProcessError& e) {
-        if (std::string(e.what())!=std::string("Process Error") && std::string(e.what())!=std::string("")) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
@@ -145,7 +148,7 @@ main(int argc, char** argv) {
     OutputDevice::closeAll();
     SystemFrame::close();
     // report about ending
-    if (ret==0) {
+    if (ret == 0) {
         std::cout << "Success." << std::endl;
     }
     return ret;

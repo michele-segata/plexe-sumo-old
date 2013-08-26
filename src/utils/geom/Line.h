@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    Line.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -43,7 +46,7 @@ class PositionVector;
 // class definitions
 // ===========================================================================
 /**
- *
+ * Class for line segments
  */
 class Line {
 public:
@@ -57,14 +60,18 @@ public:
     const Position& p2() const;
     Position getPositionAtDistance(SUMOReal offset) const;
     void move2side(SUMOReal amount);
-    DoubleVector intersectsAtLengths(const PositionVector& v);
-    SUMOReal intersectsAtLength(const Line& v);
+    DoubleVector intersectsAtLengths2D(const PositionVector& v);
+
+    /// @brief returns distance between myP1 and intersection or -1 if line segments do not intersect
+    SUMOReal intersectsAtLength2D(const Line& v);
+
     SUMOReal atan2Angle() const;
     SUMOReal atan2DegreeAngle() const;
     SUMOReal atan2PositiveAngle() const;
     bool intersects(const Line& l) const;
     Position intersectsAt(const Line& l) const;
     SUMOReal length() const;
+    SUMOReal length2D() const;
     void add(SUMOReal x, SUMOReal y);
     void add(const Position& p);
     void sub(SUMOReal x, SUMOReal y);

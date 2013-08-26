@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 """
 @file    cadytsIterate.py
-@author  Yun-Pang.Wang@dlr.de
+@author  Yun-Pang Wang
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2010-09-15
 @version $Id$
 
 Run cadyts to calibrate the simulation with given routes and traffic measurements.
 Respective traffic zones information has to exist in the given route files.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, sys, subprocess, types
@@ -95,9 +98,9 @@ def main():
         firstRoute = options.routes.split(",")[0]
         routname = os.path.basename(firstRoute)
         if '_' in routname:
-            output = "%s_%s.cal.xml" % (routname[:routname.rfind('_')], step)
+            output = "%s_%03i.cal.xml" % (routname[:routname.rfind('_')], step)
         else:
-            output = "%s_%s.cal.xml" % (routname[:routname.find('.')], step)
+            output = "%s_%03i.cal.xml" % (routname[:routname.find('.')], step)
 
         call(calibrator + ["CHOICE", "-choicesetfile", options.routes, "-choicefile", "%s" % output], log)
         files.append(output)
@@ -107,7 +110,7 @@ def main():
         btime = datetime.now()
         print ">>> Begin time: %s" % btime
         writeSUMOConf(step, options, ",".join(files))
-        retCode = call([sumoBinary, "-c", "iteration_%s.sumo.cfg" % step], log)
+        retCode = call([sumoBinary, "-c", "iteration_%03i.sumocfg" % step], log)
         etime = datetime.now()
         print ">>> End time: %s" % etime
         print ">>> Duration: %s" % (etime-btime)
@@ -115,9 +118,9 @@ def main():
         
         # calibration update
         if evalprefix:
-            call(calibrator + ["UPDATE", "-netfile", "dump_%s_%s.xml" % (step, options.aggregation), "-flowfile", "%s_%s.txt" % (evalprefix, step)], log)
+            call(calibrator + ["UPDATE", "-netfile", "dump_%03i_%s.xml" % (step, options.aggregation), "-flowfile", "%s_%03i.txt" % (evalprefix, step)], log)
         else:
-            call(calibrator + ["UPDATE", "-netfile", "dump_%s_%s.xml" % (step, options.aggregation)], log)
+            call(calibrator + ["UPDATE", "-netfile", "dump_%03i_%s.xml" % (step, options.aggregation)], log)
         print "< Step %s ended (duration: %s)" % (step, datetime.now() - btime)
         print "------------------\n"
         log.flush()

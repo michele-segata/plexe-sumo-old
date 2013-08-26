@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSPersonControl.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Mon, 9 Jul 2001
 /// @version $Id$
 ///
 // Stores all persons in the net and handles their waiting for cars.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -73,7 +77,7 @@ public:
     void checkArrivedPersons(MSNet* net, const SUMOTime time);
 
     /// adds a person to the list of persons waiting for a vehicle on the specified edge
-    void addWaiting(const MSEdge* edge, MSPerson* person) throw();
+    void addWaiting(const MSEdge* edge, MSPerson* person) ;
 
     /** @brief board any applicable persons
      * Boards any people who wait on that edge for the given vehicle and removes them from myWaiting
@@ -81,16 +85,16 @@ public:
      * @param[in] the vehicle which is taking on passengers
      * @return Whether any persons have been boarded
      */
-    bool boardAnyWaiting(const MSEdge* edge, MSVehicle* vehicle) throw();
+    bool boardAnyWaiting(const MSEdge* edge, MSVehicle* vehicle) ;
 
     /// checks whether any person waits to finish her plan
-    bool hasPersons() const throw();
+    bool hasPersons() const ;
 
     /// checks whether any person is still engaged in walking / stopping
-    bool hasPedestrians() const throw();
+    bool hasPedestrians() const ;
 
     /// aborts the plan for any person that is still waiting for a ride
-    void abortWaiting() throw();
+    void abortWaiting() ;
 
 private:
     /// all persons by id

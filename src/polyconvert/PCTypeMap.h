@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    PCTypeMap.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 05 Dec 2005
 /// @version $Id$
 ///
 // A storage for type mappings
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -46,11 +48,11 @@
 class PCTypeMap {
 public:
     /// @brief Constructor
-    PCTypeMap() throw();
+    PCTypeMap() ;
 
 
     /// @brief Destructor
-    ~PCTypeMap() throw();
+    ~PCTypeMap() ;
 
 
     /**
@@ -86,7 +88,7 @@ public:
      * @return Whether the type could been added (was not known before)
      */
     bool add(const std::string& id, const std::string& newid, const std::string& color,
-             const std::string& prefix, int layer, bool discard, bool allowFill) throw();
+             const std::string& prefix, int layer, bool discard, bool allowFill) ;
 
 
     /** @brief Returns a type definition
@@ -96,14 +98,14 @@ public:
      * @param[in] id The id of the type to get the definitions of
      * @return Definition of the named type
      */
-    const TypeDef& get(const std::string& id) throw();
+    const TypeDef& get(const std::string& id) ;
 
 
     /** @brief Returns the information whether the named type is known
      * @param[in] id The id of the type
      * @return Whether a definition of the named type was added before
      */
-    bool has(const std::string& id) throw();
+    bool has(const std::string& id) ;
 
 
 protected:

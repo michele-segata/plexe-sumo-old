@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """
 @file    generateTripsXml.py
-@author  Yun-Pang.Wang@dlr.de
+@author  Yun-Pang Wang
+@author  Michael Behrisch
 @date    2009-02-09
 @version $Id$
 
 This script generate a trip file as input data in sumo
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, string, sys, operator, math, datetime, random, bz2, StringIO

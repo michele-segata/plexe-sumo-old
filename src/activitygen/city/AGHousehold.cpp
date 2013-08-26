@@ -1,6 +1,9 @@
 /****************************************************************************/
 /// @file    AGHousehold.cpp
 /// @author  Piotr Woznica
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    July 2010
 /// @version $Id$
 ///
@@ -8,14 +11,15 @@
 // families with their address, cars, adults and possibly children
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -122,7 +126,7 @@ AGHousehold::regenerate() {
     //only allocation of work or school to people will change
     std::list<AGChild>::iterator itC;
     std::list<AGAdult>::iterator itA;
-    for (itC=children.begin() ; itC != children.end() ; ++itC) {
+    for (itC = children.begin() ; itC != children.end() ; ++itC) {
         if (itC->haveASchool()) {
             if (itC->leaveSchool()) {
                 itC->alocateASchool(&(myCity->schools), getPosition());
@@ -131,13 +135,13 @@ AGHousehold::regenerate() {
             itC->alocateASchool(&(myCity->schools), getPosition());
         }
     }
-    for (itA=adults.begin() ; itA!=adults.end() ; ++itA) {
+    for (itA = adults.begin() ; itA != adults.end() ; ++itA) {
         if (itA->isWorking()) {
             itA->resignFromWorkPosition();
         }
 
         if (myCity->statData.workPositions > 0) {
-            itA->tryToWork(1-myCity->statData.unemployement, &(myCity->workPositions));
+            itA->tryToWork(1 - myCity->statData.unemployement, &(myCity->workPositions));
 
         } else {
             std::cout << "Not enough work positions in AGHousehold::regenerate. Should not happen!" << std::endl;
@@ -161,13 +165,13 @@ AGHousehold::allocateChildrenSchool() {
 bool
 AGHousehold::allocateAdultsWork() {
     std::list<AGAdult>::iterator it;
-    for (it=adults.begin() ; it!=adults.end() ; ++it) {
+    for (it = adults.begin() ; it != adults.end() ; ++it) {
         if (myCity->statData.workPositions <= 0) {
             std::cout << "Not enough free work positions in AGHousehold::allocateAdultsWork. Should not happen." << std::endl;
             return false;
 
         } else {
-            it->tryToWork(1-myCity->statData.unemployement, &(myCity->workPositions));
+            it->tryToWork(1 - myCity->statData.unemployement, &(myCity->workPositions));
         }
     }
     return true;
@@ -175,7 +179,7 @@ AGHousehold::allocateAdultsWork() {
 
 bool
 AGHousehold::decisionProba(SUMOReal p) {
-    return (RandHelper::rand()<p);
+    return (RandHelper::rand() < p);
 }
 
 AGPosition

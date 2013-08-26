@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIDialog_AppSettings.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 08.03.2004
 /// @version $Id$
 ///
 // The application-settings dialog
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,10 +50,10 @@ public:
      *
      * @param[in] parent The parent window
      */
-    GUIDialog_AppSettings(FXMainWindow* parent) throw();
+    GUIDialog_AppSettings(FXMainWindow* parent) ;
 
     /// @brief Destructor
-    ~GUIDialog_AppSettings() throw();
+    ~GUIDialog_AppSettings() ;
 
 
 
@@ -59,16 +61,16 @@ public:
     /// @{
 
     /// @brief Called on OK-button pressure
-    long onCmdOk(FXObject*,FXSelector,void*);
+    long onCmdOk(FXObject*, FXSelector, void*);
 
     /// @brief Called on Cancel-button pressure
-    long onCmdCancel(FXObject*,FXSelector,void*);
+    long onCmdCancel(FXObject*, FXSelector, void*);
 
     /// @brief Called on "Quit on end"-button change
-    long onCmdQuitOnEnd(FXObject*,FXSelector,void*);
+    long onCmdQuitOnEnd(FXObject*, FXSelector, void*);
 
     /// @brief Called on "Allow textures"-button change
-    long onCmdAllowTextures(FXObject*,FXSelector,void*);
+    long onCmdAllowTextures(FXObject*, FXSelector, void*);
     /// @}
 
 

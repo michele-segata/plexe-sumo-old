@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GUIColorer.h
 /// @author  Michael Behrisch
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Laura Bieker
 /// @date    Mon, 20.07.2009
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,7 +63,7 @@ public:
 
     /// @brief Fills the given combobox with the names of available colorings
     void fill(FXComboBox& cb) {
-        for (std::vector<GUIColorScheme>::iterator i=mySchemes.begin(); i!=mySchemes.end(); ++i) {
+        for (std::vector<GUIColorScheme>::iterator i = mySchemes.begin(); i != mySchemes.end(); ++i) {
             cb.appendItem((*i).getName().c_str());
         }
         cb.setCurrentItem((FXint)myActiveScheme);
@@ -84,7 +88,7 @@ public:
     }
 
     GUIColorScheme* getSchemeByName(std::string name) {
-        for (std::vector<GUIColorScheme>::iterator i=mySchemes.begin(); i!=mySchemes.end(); ++i) {
+        for (std::vector<GUIColorScheme>::iterator i = mySchemes.begin(); i != mySchemes.end(); ++i) {
             if ((*i).getName() == name) {
                 return &(*i);
             }
@@ -93,7 +97,7 @@ public:
     }
 
     void save(OutputDevice& dev) const {
-        for (std::vector<GUIColorScheme>::const_iterator i = mySchemes.begin(); i!=mySchemes.end(); ++i) {
+        for (std::vector<GUIColorScheme>::const_iterator i = mySchemes.begin(); i != mySchemes.end(); ++i) {
             i->save(dev);
         }
     }

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    MSNoLogicJunction.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Thu, 06 Jun 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -56,7 +58,7 @@ MSNoLogicJunction::MSNoLogicJunction(const std::string& id,
 #ifdef HAVE_INTERNAL_LANES
                                      , std::vector<MSLane*> internal
 #endif
-                                    ) throw()
+                                    )
     : MSJunction(id, position, shape),
       myIncomingLanes(incoming)
 #ifdef HAVE_INTERNAL_LANES
@@ -70,18 +72,18 @@ MSNoLogicJunction::~MSNoLogicJunction() {}
 
 
 void
-MSNoLogicJunction::postloadInit() throw(ProcessError) {
+MSNoLogicJunction::postloadInit() {
     std::vector<MSLane*>::iterator i;
     // inform links where they have to report approaching vehicles to
-    for (i=myIncomingLanes.begin(); i!=myIncomingLanes.end(); ++i) {
+    for (i = myIncomingLanes.begin(); i != myIncomingLanes.end(); ++i) {
         const MSLinkCont& links = (*i)->getLinkCont();
-        for (MSLinkCont::const_iterator j=links.begin(); j!=links.end(); j++) {
+        for (MSLinkCont::const_iterator j = links.begin(); j != links.end(); j++) {
             (*j)->setRequestInformation(0, 0, false, false, std::vector<MSLink*>(), std::vector<MSLane*>());
         }
     }
 #ifdef HAVE_INTERNAL_LANES
     // set information for the internal lanes
-    for (i=myInternalLanes.begin(); i!=myInternalLanes.end(); ++i) {
+    for (i = myInternalLanes.begin(); i != myInternalLanes.end(); ++i) {
         // ... set information about participation
         static_cast<MSInternalLane*>(*i)->setParentJunctionInformation(&myDump, 0);
     }

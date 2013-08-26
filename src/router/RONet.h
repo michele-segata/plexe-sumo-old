@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    RONet.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The router's network representation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -66,11 +68,11 @@ class OutputDevice;
 class RONet {
 public:
     /// @brief Constructor
-    RONet() throw();
+    RONet() ;
 
 
     /// @brief Destructor
-    virtual ~RONet() throw();
+    virtual ~RONet() ;
 
 
     /// @name Insertion and retrieval of graph parts
@@ -85,7 +87,7 @@ public:
      * @param[in] edge The edge to add
      * @return Whether the edge was added (if not, it was deleted, too)
      */
-    virtual bool addEdge(ROEdge* edge) throw();
+    virtual bool addEdge(ROEdge* edge) ;
 
 
     /** @brief Retrieves an edge from the network
@@ -97,7 +99,7 @@ public:
      * @return The named edge if known, otherwise 0
      * @todo Check whether a const pointer may be returned
      */
-    ROEdge* getEdge(const std::string& name) const throw() {
+    ROEdge* getEdge(const std::string& name) const {
         return myEdges.get(name);
     }
 
@@ -110,7 +112,7 @@ public:
      *
      * @param[in] node The node to add
      */
-    void addNode(RONode* node) throw();
+    void addNode(RONode* node) ;
 
 
     /** @brief Retrieves an node from the network
@@ -119,7 +121,7 @@ public:
      * @return The named node if known, otherwise 0
      * @todo Check whether a const pointer may be returned
      */
-    RONode* getNode(const std::string& id) const throw() {
+    RONode* getNode(const std::string& id) const {
         return myNodes.get(id);
     }
     //@}
@@ -138,7 +140,7 @@ public:
      * @param[in] def The vehicle type to add
      * @return Whether the vehicle type could be added
      */
-    virtual bool addVehicleType(SUMOVTypeParameter* type) throw();
+    virtual bool addVehicleType(SUMOVTypeParameter* type) ;
 
 
     /** @brief Retrieves the named vehicle type
@@ -153,7 +155,7 @@ public:
      * @return The named vehicle type
      * @todo Check whether a const pointer may be returned
      */
-    SUMOVTypeParameter* getVehicleTypeSecure(const std::string& id) throw();
+    SUMOVTypeParameter* getVehicleTypeSecure(const std::string& id) ;
 
 
     /* @brief Adds a route definition to the network
@@ -166,7 +168,7 @@ public:
      * @return Whether the route definition could be added
      * @todo Rename myRoutes to myRouteDefinitions
      */
-    bool addRouteDef(RORouteDef* def) throw();
+    bool addRouteDef(RORouteDef* def) ;
 
 
     /** @brief Returns the named route definition
@@ -176,7 +178,7 @@ public:
      * @todo Check whether a const pointer may be returned
      * @todo Rename myRoutes to myRouteDefinitions
      */
-    RORouteDef* getRouteDef(const std::string& name) const throw() {
+    RORouteDef* getRouteDef(const std::string& name) const {
         return myRoutes.get(name);
     }
 
@@ -192,7 +194,7 @@ public:
      * @param[in] veh The vehicle to add
      * @return Whether the vehicle could be added
      */
-    virtual bool addVehicle(const std::string& id, ROVehicle* veh) throw();
+    virtual bool addVehicle(const std::string& id, ROVehicle* veh) ;
     // @}
 
 
@@ -212,7 +214,7 @@ public:
      * @return The last seen departure time>=time
      */
     SUMOTime saveAndRemoveRoutesUntil(OptionsCont& options,
-                                      SUMOAbstractRouter<ROEdge,ROVehicle> &router, SUMOTime time);
+                                      SUMOAbstractRouter<ROEdge, ROVehicle> &router, SUMOTime time);
 
 
     /// Returns the information whether further vehicles are stored
@@ -233,11 +235,11 @@ public:
      * @param[in] filename The (base) name of the file(s) to create
      * @param[in] useAlternatives Whether a file for writing alternatives shall be created
      */
-    void openOutput(const std::string& filename, bool useAlternatives) throw(IOError);
+    void openOutput(const std::string& filename, bool useAlternatives);
 
 
     /** @brief closes the file output for computed routes */
-    void closeOutput() throw();
+    void closeOutput() ;
 
 
 
@@ -248,7 +250,7 @@ public:
      *  it is tried to be built, first.
      * @return A random edge from the list of edges with no predecessor
      */
-    ROEdge* getRandomSource() throw();
+    ROEdge* getRandomSource() ;
 
 
     /** @brief Returns a random edge which may be used as a starting point
@@ -257,7 +259,7 @@ public:
      *  it is tried to be built, first.
      * @return A random edge from the list of edges with no predecessor
      */
-    const ROEdge* getRandomSource() const throw();
+    const ROEdge* getRandomSource() const ;
 
 
     /** @brief Returns a random edge which may be used as an ending point
@@ -266,7 +268,7 @@ public:
      *  it is tried to be built, first.
      * @return A random edge from the list of edges with no successor
      */
-    ROEdge* getRandomDestination() throw();
+    ROEdge* getRandomDestination() ;
 
 
     /** @brief Returns a random edge which may be used as an ending point
@@ -275,7 +277,7 @@ public:
      *  it is tried to be built, first.
      * @return A random edge from the list of edges with no successor
      */
-    const ROEdge* getRandomDestination() const throw();
+    const ROEdge* getRandomDestination() const ;
 
 
     /// Returns the number of edges thenetwork contains
@@ -290,7 +292,7 @@ public:
 
 protected:
     bool computeRoute(OptionsCont& options,
-                      SUMOAbstractRouter<ROEdge,ROVehicle> &router, const ROVehicle* const veh);
+                      SUMOAbstractRouter<ROEdge, ROVehicle> &router, const ROVehicle* const veh);
 
     /// Initialises the lists of source and destination edges
     void checkSourceAndDestinations() const;

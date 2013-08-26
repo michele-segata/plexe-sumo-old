@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 """
 @file    timingStats.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
 @date    2010-10-15
 @version $Id$
 
 This script executes a config repeatedly and measures the execution time,
  computes the mean values and deviation.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, sys, subprocess, numpy

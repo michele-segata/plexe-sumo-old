@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    PCLoaderOSM.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Christoph Sommer
+/// @author  Michael Behrisch
 /// @date    Wed, 19.11.2008
 /// @version $Id$
 ///
 // A reader of pois and polygons stored in OSM-format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,7 +63,7 @@
 // ---------------------------------------------------------------------------
 void
 PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
-                       PCTypeMap& tm) throw(ProcessError) {
+                       PCTypeMap& tm) {
     if (!oc.isSet("osm-files")) {
         return;
     }
@@ -68,7 +72,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
     // load nodes, first
     std::map<int, PCOSMNode*> nodes;
     NodesHandler nodesHandler(nodes);
-    for (std::vector<std::string>::const_iterator file=files.begin(); file!=files.end(); ++file) {
+    for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
         // nodes
         if (!FileHelpers::exists(*file)) {
             WRITE_ERROR("Could not open osm-file '" + *file + "'.");
@@ -83,7 +87,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
     // load edges, then
     std::map<std::string, PCOSMEdge*> edges;
     EdgesHandler edgesHandler(nodes, edges);
-    for (std::vector<std::string>::const_iterator file=files.begin(); file!=files.end(); ++file) {
+    for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
         // edges
         PROGRESS_BEGIN_MESSAGE("Parsing edges from osm-file '" + *file + "'");
         XMLSubSys::runParser(edgesHandler, *file);
@@ -92,26 +96,26 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
     // build all
     RGBColor c = RGBColor::parseColor(oc.getString("color"));
     // instatiate polygons
-    for (std::map<std::string, PCOSMEdge*>::iterator i=edges.begin(); i!=edges.end(); ++i) {
+    for (std::map<std::string, PCOSMEdge*>::iterator i = edges.begin(); i != edges.end(); ++i) {
         PCOSMEdge* e = (*i).second;
         if (!e->myIsAdditional) {
             continue;
         }
         // compute shape
         PositionVector vec;
-        for (std::vector<int>::iterator j=e->myCurrentNodes.begin(); j!=e->myCurrentNodes.end(); ++j) {
+        for (std::vector<int>::iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
             PCOSMNode* n = nodes.find(*j)->second;
             Position pos(n->lon, n->lat);
-            if (!GeoConvHelper::getDefaultInstance().x2cartesian(pos)) {
+            if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for polygon '" + e->id + "'.");
             }
             vec.push_back_noDoublePos(pos);
         }
         // set type etc.
-        std::string name = oc.getBool("osm.use-name")&&e->name!="" ? e->name : e->id;
+        std::string name = oc.getBool("osm.use-name") && e->name != "" ? e->name : e->id;
         std::string type;
         RGBColor color;
-        bool fill = vec.getBegin()==vec.getEnd();
+        bool fill = vec.getBegin() == vec.getEnd();
         bool discard = oc.getBool("discard");
         int layer = oc.getInt("layer");
         if (tm.has(e->myType)) {
@@ -122,7 +126,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
             fill = fill && def.allowFill;
             discard = def.discard;
             layer = def.layer;
-        } else if (e->myType.find(".")!=std::string::npos&&tm.has(e->myType.substr(0, e->myType.find(".")))) {
+        } else if (e->myType.find(".") != std::string::npos && tm.has(e->myType.substr(0, e->myType.find(".")))) {
             const PCTypeMap::TypeDef& def = tm.get(e->myType.substr(0, e->myType.find(".")));
             name = def.prefix + name;
             type = def.id;
@@ -147,7 +151,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
         }
     }
     // instantiate pois
-    for (std::map<int, PCOSMNode*>::iterator i=nodes.begin(); i!=nodes.end(); ++i) {
+    for (std::map<int, PCOSMNode*>::iterator i = nodes.begin(); i != nodes.end(); ++i) {
         PCOSMNode* n = (*i).second;
         if (!n->myIsAdditional) {
             continue;
@@ -166,7 +170,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
             color = RGBColor::parseColor(def.color);
             discard = def.discard;
             layer = def.layer;
-        } else if (type.find(".")!=std::string::npos&&tm.has(type.substr(0, type.find(".")))) {
+        } else if (type.find(".") != std::string::npos && tm.has(type.substr(0, type.find(".")))) {
             const PCTypeMap::TypeDef& def = tm.get(type.substr(0, type.find(".")));
             name = def.prefix + name;
             type = def.id;
@@ -187,7 +191,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
                 ignorePrunning = true;
             }
             Position pos(n->lon, n->lat);
-            if (!GeoConvHelper::getDefaultInstance().x2cartesian(pos)) {
+            if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for POI '" + name + "'.");
             }
             PointOfInterest* poi = new PointOfInterest(name, type, pos, color);
@@ -200,11 +204,11 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
 
 
     // delete nodes
-    for (std::map<int, PCOSMNode*>::const_iterator i=nodes.begin(); i!=nodes.end(); ++i) {
+    for (std::map<int, PCOSMNode*>::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
         delete(*i).second;
     }
     // delete edges
-    for (std::map<std::string, PCOSMEdge*>::iterator i=edges.begin(); i!=edges.end(); ++i) {
+    for (std::map<std::string, PCOSMEdge*>::iterator i = edges.begin(); i != edges.end(); ++i) {
         delete(*i).second;
     }
 }
@@ -214,24 +218,24 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
 // ---------------------------------------------------------------------------
 // definitions of PCLoaderOSM::NodesHandler-methods
 // ---------------------------------------------------------------------------
-PCLoaderOSM::NodesHandler::NodesHandler(std::map<int, PCOSMNode*> &toFill) throw()
+PCLoaderOSM::NodesHandler::NodesHandler(std::map<int, PCOSMNode*> &toFill)
     : SUMOSAXHandler("osm - file"), myToFill(toFill), myLastNodeID(-1) {}
 
 
-PCLoaderOSM::NodesHandler::~NodesHandler() throw() {}
+PCLoaderOSM::NodesHandler::~NodesHandler() {}
 
 
 void
-PCLoaderOSM::NodesHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError) {
+PCLoaderOSM::NodesHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
     myParentElements.push_back(element);
-    if (element==SUMO_TAG_NODE) {
+    if (element == SUMO_TAG_NODE) {
         bool ok = true;
         int id = attrs.getIntReporting(SUMO_ATTR_ID, 0, ok);
         if (!ok) {
             return;
         }
         myLastNodeID = -1;
-        if (myToFill.find(id)==myToFill.end()) {
+        if (myToFill.find(id) == myToFill.end()) {
             myLastNodeID = id;
             // assume we are loading multiple files...
             //  ... so we won't report duplicate nodes
@@ -248,22 +252,22 @@ PCLoaderOSM::NodesHandler::myStartElement(int element, const SUMOSAXAttributes& 
             myToFill[toAdd->id] = toAdd;
         }
     }
-    if (element==SUMO_TAG_TAG&&myParentElements.size()>2&&myParentElements[myParentElements.size()-2]==SUMO_TAG_NODE) {
+    if (element == SUMO_TAG_TAG && myParentElements.size() > 2 && myParentElements[myParentElements.size() - 2] == SUMO_TAG_NODE) {
         bool ok = true;
         std::string key = attrs.getStringReporting(SUMO_ATTR_K, toString(myLastNodeID).c_str(), ok);
         std::string value = attrs.getOptStringReporting(SUMO_ATTR_V, toString(myLastNodeID).c_str(), ok, "");
         if (!ok) {
             return;
         }
-        if (key=="waterway"||key=="aeroway"||key=="aerialway"||key=="power"||key=="man_made"||key=="building"
-                ||key=="leisure"||key=="amenity"||key=="shop"||key=="tourism"||key=="historic"||key=="landuse"
-                ||key=="natural"||key=="military"||key=="boundary"||key=="sport"||key=="polygon") {
-            if (myLastNodeID>=0) {
+        if (key == "waterway" || key == "aeroway" || key == "aerialway" || key == "power" || key == "man_made" || key == "building"
+                || key == "leisure" || key == "amenity" || key == "shop" || key == "tourism" || key == "historic" || key == "landuse"
+                || key == "natural" || key == "military" || key == "boundary" || key == "sport" || key == "polygon") {
+            if (myLastNodeID >= 0) {
                 myToFill[myLastNodeID]->myType = key + "." + value;
                 myToFill[myLastNodeID]->myIsAdditional = true;
             }
         }
-        if (key=="name"&&myLastNodeID!=-1) {
+        if (key == "name" && myLastNodeID != -1) {
             myToFill[myLastNodeID]->myType = key + "." + value;
         }
     }
@@ -271,8 +275,8 @@ PCLoaderOSM::NodesHandler::myStartElement(int element, const SUMOSAXAttributes& 
 
 
 void
-PCLoaderOSM::NodesHandler::myEndElement(int element) throw(ProcessError) {
-    if (element==SUMO_TAG_NODE) {
+PCLoaderOSM::NodesHandler::myEndElement(int element) {
+    if (element == SUMO_TAG_NODE) {
         myLastNodeID = -1;
     }
     myParentElements.pop_back();
@@ -284,21 +288,21 @@ PCLoaderOSM::NodesHandler::myEndElement(int element) throw(ProcessError) {
 // ---------------------------------------------------------------------------
 PCLoaderOSM::EdgesHandler::EdgesHandler(
     const std::map<int, PCOSMNode*> &osmNodes,
-    std::map<std::string, PCOSMEdge*> &toFill) throw()
+    std::map<std::string, PCOSMEdge*> &toFill)
     : SUMOSAXHandler("osm - file"),
       myOSMNodes(osmNodes), myEdgeMap(toFill) {
 }
 
 
-PCLoaderOSM::EdgesHandler::~EdgesHandler() throw() {
+PCLoaderOSM::EdgesHandler::~EdgesHandler() {
 }
 
 
 void
-PCLoaderOSM::EdgesHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError) {
+PCLoaderOSM::EdgesHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
     myParentElements.push_back(element);
     // parse "way" elements
-    if (element==SUMO_TAG_WAY) {
+    if (element == SUMO_TAG_WAY) {
         bool ok = true;
         std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
         if (!ok) {
@@ -310,11 +314,11 @@ PCLoaderOSM::EdgesHandler::myStartElement(int element, const SUMOSAXAttributes& 
         myCurrentEdge->myIsClosed = false;
     }
     // parse "nd" (node) elements
-    if (element==SUMO_TAG_ND) {
+    if (element == SUMO_TAG_ND) {
         bool ok = true;
         int ref = attrs.getIntReporting(SUMO_ATTR_REF, 0, ok);
         if (ok) {
-            if (myOSMNodes.find(ref)==myOSMNodes.end()) {
+            if (myOSMNodes.find(ref) == myOSMNodes.end()) {
                 WRITE_WARNING("The referenced geometry information (ref='" + toString(ref) + "') is not known");
                 return;
             }
@@ -322,20 +326,20 @@ PCLoaderOSM::EdgesHandler::myStartElement(int element, const SUMOSAXAttributes& 
         }
     }
     // parse values
-    if (element==SUMO_TAG_TAG&&myParentElements.size()>2&&myParentElements[myParentElements.size()-2]==SUMO_TAG_WAY) {
+    if (element == SUMO_TAG_TAG && myParentElements.size() > 2 && myParentElements[myParentElements.size() - 2] == SUMO_TAG_WAY) {
         bool ok = true;
         std::string key = attrs.getStringReporting(SUMO_ATTR_K, toString(myCurrentEdge->id).c_str(), ok);
         std::string value = attrs.getStringReporting(SUMO_ATTR_V, toString(myCurrentEdge->id).c_str(), ok);
         if (!ok) {
             return;
         }
-        if (key=="waterway"||key=="aeroway"||key=="aerialway"||key=="power"||key=="man_made"
-                ||key=="building"||key=="leisure"||key=="amenity"||key=="shop"||key=="tourism"
-                ||key=="historic"||key=="landuse"||key=="natural"||key=="military"||key=="boundary"
-                ||key=="sport"||key=="polygon") {
+        if (key == "waterway" || key == "aeroway" || key == "aerialway" || key == "power" || key == "man_made"
+                || key == "building" || key == "leisure" || key == "amenity" || key == "shop" || key == "tourism"
+                || key == "historic" || key == "landuse" || key == "natural" || key == "military" || key == "boundary"
+                || key == "sport" || key == "polygon") {
             myCurrentEdge->myType = key + "." + value;
             myCurrentEdge->myIsAdditional = true;
-        } else if (key=="name") {
+        } else if (key == "name") {
             myCurrentEdge->name = value;
         }
     }
@@ -343,9 +347,9 @@ PCLoaderOSM::EdgesHandler::myStartElement(int element, const SUMOSAXAttributes& 
 
 
 void
-PCLoaderOSM::EdgesHandler::myEndElement(int element) throw(ProcessError) {
+PCLoaderOSM::EdgesHandler::myEndElement(int element) {
     myParentElements.pop_back();
-    if (element==SUMO_TAG_WAY) {
+    if (element == SUMO_TAG_WAY) {
         if (myCurrentEdge->myIsAdditional) {
             myEdgeMap[myCurrentEdge->id] = myCurrentEdge;
         } else {

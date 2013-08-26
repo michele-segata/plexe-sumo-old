@@ -7,12 +7,13 @@
 // Intermediate class for storing visum traffic lights during their import
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -130,12 +131,12 @@ NIVisumTL::NIVisumTL(const std::string& Name, SUMOTime CycleTime,
       myPhaseDefined(PhaseDefined) {}
 
 NIVisumTL::~NIVisumTL() {
-    for (NIVisumTL::PhaseMap::iterator i=myPhases.begin();
-            i!=myPhases.end(); i++) {
+    for (NIVisumTL::PhaseMap::iterator i = myPhases.begin();
+            i != myPhases.end(); i++) {
         delete(i->second);
     }
-    for (NIVisumTL::SignalGroupMap::iterator k=mySignalGroups.begin();
-            k!=mySignalGroups.end(); k++) {
+    for (NIVisumTL::SignalGroupMap::iterator k = mySignalGroups.begin();
+            k != mySignalGroups.end(); k++) {
         delete(k->second);
     }
 }
@@ -210,7 +211,7 @@ NIVisumTL::build(NBTrafficLightLogicCont& tlc) {
             def->setSignalYellowTimes(GroupName, myIntermediateTime, myIntermediateTime);
             // phases
             if (myPhaseDefined) {
-                for (PhaseMap::iterator pi = SG.GetPhases()->begin(); pi!= SG.GetPhases()->end(); pi++) {
+                for (PhaseMap::iterator pi = SG.GetPhases()->begin(); pi != SG.GetPhases()->end(); pi++) {
                     NIVisumTL::Phase& PH = *(*pi).second;
                     def->addSignalGroupPhaseBegin(GroupName, PH.GetStartTime(), NBTrafficLightDefinition::TLCOLOR_GREEN);
                     def->addSignalGroupPhaseBegin(GroupName, PH.GetEndTime(), NBTrafficLightDefinition::TLCOLOR_RED);

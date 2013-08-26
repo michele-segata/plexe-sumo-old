@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 @file    inductionloop.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
 @date    2011-03-16
 @version $Id$
 
 Python implementation of the TraCI interface.
 
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
 Copyright (C) 2011 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """

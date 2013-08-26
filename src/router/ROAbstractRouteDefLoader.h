@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    ROAbstractRouteDefLoader.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The abstract base class for loading routes or route definitions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -60,11 +62,11 @@ public:
      * @param[in] begin Vehicles departing before this time shall not be loaded
      * @param[in] end Vehicles departing after this time shall not be loaded
      */
-    ROAbstractRouteDefLoader(RONet& net, SUMOTime begin, SUMOTime end) throw();
+    ROAbstractRouteDefLoader(RONet& net, SUMOTime begin, SUMOTime end) ;
 
 
     /// @brief Destructor
-    virtual ~ROAbstractRouteDefLoader() throw();
+    virtual ~ROAbstractRouteDefLoader() ;
 
 
     /// @name Methods to be implemented
@@ -81,21 +83,21 @@ public:
      * @return Whether any errors occured
      * @todo Recheck usage of exceptions vs. return value
      */
-    virtual bool readRoutesAtLeastUntil(SUMOTime time, bool skipping) throw(ProcessError) = 0;
+    virtual bool readRoutesAtLeastUntil(SUMOTime time, bool skipping) = 0;
 
 
     /** @brief Returns the time the current (last read) route starts at
      *
      * @return The least time step that was read by this reader
      */
-    virtual SUMOTime getLastReadTimeStep() const throw() = 0;
+    virtual SUMOTime getLastReadTimeStep() const = 0;
 
 
     /** @brief Returns the information whether no routes are available from this loader anymore
      *
      * @return Whether the whole input has been processed
      */
-    virtual bool ended() const throw() = 0;
+    virtual bool ended() const = 0;
     /// @}
 
 

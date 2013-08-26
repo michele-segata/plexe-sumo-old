@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/netconvertConfiguration.xsd">
 
@@ -55,7 +55,7 @@
         <output-file value="" synonymes="o output sumo-output" type="FILE"/>
 
         <!-- Prefix of files to write plain xml nodes, edges and connections to -->
-        <plain-output-prefix value="" synonymes="plain-output" type="FILE"/>
+        <plain-output-prefix value="" synonymes="plain plain-output" type="FILE"/>
 
         <!-- Writes joined edges information to FILE -->
         <map-output value="" synonymes="M" type="FILE"/>
@@ -89,6 +89,9 @@
 
         <!-- Inverses projection -->
         <proj.inverse value="false" type="BOOL"/>
+
+        <!-- Write geo coordinates in plain-xml -->
+        <proj.plain-geo value="false" type="BOOL"/>
 
     </projection>
 
@@ -150,29 +153,35 @@
     </ramp_guessing>
 
     <edge_removal>
-        <!-- Remove edges with speed < FLOAT -->
+        <!-- Only keep edges with speed > FLOAT -->
         <keep-edges.min-speed value="" synonymes="edges-min-speed" type="FLOAT"/>
 
         <!-- Remove edges in STR -->
         <remove-edges.explicit value="" synonymes="remove-edges" type="STR"/>
 
-        <!-- Remove edges not in STR -->
+        <!-- Only keep edges in STR -->
         <keep-edges.explicit value="" synonymes="keep-edges" type="STR"/>
 
-        <!-- Removed edges not in FILE -->
+        <!-- Only keep edges in FILE -->
         <keep-edges.input-file value="" type="FILE"/>
 
         <!-- Remove edges after joining -->
         <keep-edges.postload value="false" type="BOOL"/>
 
-        <!-- Keeps edges which are located within the given boundary -->
+        <!-- Only keep edges which are located within the given boundary -->
         <keep-edges.in-boundary value="" type="STR"/>
 
-        <!-- Keep edges that allow any of the vclasss in STR -->
+        <!-- Only keep edges which allow one of the vclasss in STR -->
         <keep-edges.by-vclass value="" type="STR"/>
 
-        <!-- Remove edges where vclass def is not in STR -->
+        <!-- Remove edges which allow only vclasses from STR -->
         <remove-edges.by-vclass value="" type="STR"/>
+
+        <!-- Only keep edges where type is in STR -->
+        <keep-edges.by-type value="" type="STR"/>
+
+        <!-- Remove edges where type is in STR -->
+        <remove-edges.by-type value="" type="STR"/>
 
         <!-- Removes isolated edges -->
         <remove-edges.isolated value="false" synonymes="remove-isolated" type="BOOL"/>
@@ -180,7 +189,7 @@
     </edge_removal>
 
     <unregulated_nodes>
-        <!-- All nodes will be not regulated -->
+        <!-- All nodes will be unregulated -->
         <keep-nodes-unregulated value="false" synonymes="keep-unregulated" type="BOOL"/>
 
         <!-- Do not regulate nodes in STR -->
@@ -294,7 +303,7 @@
         <!-- Splits edges across geometry nodes -->
         <geometry.split value="false" synonymes="split-geometry" type="BOOL"/>
 
-        <!-- Removes geometry information from edges -->
+        <!-- Replace nodes which only define edge geometry by geometry points (joins edges) -->
         <geometry.remove value="false" synonymes="R remove-geometry" type="BOOL"/>
 
         <!-- splits geometry to restrict segment length -->

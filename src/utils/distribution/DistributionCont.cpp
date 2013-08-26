@@ -7,12 +7,13 @@
 // A container for distributions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -44,15 +45,15 @@ DistributionCont::TypedDistDict DistributionCont::myDict;
 bool
 DistributionCont::dictionary(const std::string& type, const std::string& id,
                              Distribution* d) {
-    TypedDistDict::iterator i=myDict.find(type);
+    TypedDistDict::iterator i = myDict.find(type);
 
-    if (i==myDict.end()) {
+    if (i == myDict.end()) {
         myDict[type][id] = d;
         return true;
     }
     DistDict& dict = (*i).second;
-    DistDict::iterator j=dict.find(id);
-    if (j==dict.end()) {
+    DistDict::iterator j = dict.find(id);
+    if (j == dict.end()) {
         myDict[type][id] = d;
         return true;
     }
@@ -63,13 +64,13 @@ DistributionCont::dictionary(const std::string& type, const std::string& id,
 Distribution*
 DistributionCont::dictionary(const std::string& type,
                              const std::string& id) {
-    TypedDistDict::iterator i=myDict.find(type);
-    if (i==myDict.end()) {
+    TypedDistDict::iterator i = myDict.find(type);
+    if (i == myDict.end()) {
         return 0;
     }
     DistDict& dict = (*i).second;
-    DistDict::iterator j=dict.find(id);
-    if (j==dict.end()) {
+    DistDict::iterator j = dict.find(id);
+    if (j == dict.end()) {
         return 0;
     }
     return (*j).second;

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIDialog_AboutSUMO.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 // The application's "About" - dialog
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,11 +50,11 @@ public:
      * @param[in] x x-position of the window to use
      * @param[in] y y-position of the window to use
      */
-    GUIDialog_AboutSUMO(FXWindow* parent,  const char* name, int x, int y) throw();
+    GUIDialog_AboutSUMO(FXWindow* parent,  const char* name, int x, int y) ;
 
 
     /// @brief Destructor
-    ~GUIDialog_AboutSUMO() throw();
+    ~GUIDialog_AboutSUMO() ;
 
 
     /** @brief Creates the widget (and the icons)

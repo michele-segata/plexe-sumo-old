@@ -1,20 +1,23 @@
 /****************************************************************************/
 /// @file    AGActivityGen.h
 /// @author  Piotr Woznica
+/// @author  Daniel Krajzewicz
+/// @author  Walter Bamberger
 /// @date    July 2010
 /// @version $Id$
 ///
 // Main class that handles City, Activities and Trips
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -78,7 +81,7 @@ public:
      * EXAMPLE: if days=1, endTime=0, beginTime=0: The duration
      * will be 24 hours from 12am to 12amof the next day
      */
-    void makeActivityTrips(int days=1, int beginTime=0, int endTime=0);
+    void makeActivityTrips(int days = 1, int beginTime = 0, int endTime = 0);
 
 protected:
     // @brief xml files: statistics on the city and generated routes

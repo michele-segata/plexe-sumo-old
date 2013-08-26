@@ -25,6 +25,7 @@ net:net.net.xml
 plain_nodes:plain.nod.xml
 plain_edges:plain.edg.xml
 plain_connections:plain.con.xml
+plain_tllogic:plain.tll.xml
 foreign:foreign.net
 cfg:config.cfg
 log:log.txt
@@ -34,6 +35,7 @@ output:\r{REPLACE \n}
 plain_nodes:<!--{[->]}-->
 plain_edges:<!--{[->]}-->
 plain_connections:<!--{[->]}-->
+plain_tllogic:<!--{[->]}-->
 net:<!--{[->]}-->
 errors:Leaked object at 
 errors:*** 9 leaks found

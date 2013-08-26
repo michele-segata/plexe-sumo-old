@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIImporter_Vissim.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Importer for networks stored in Vissim format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -99,14 +101,14 @@ public:
 
         /// as myRead, but returns "DATAEND" when the current field has ended
         std::string readEndSecure(std::istream& from,
-                                  const std::string& excl="");
+                                  const std::string& excl = "");
 
         std::string readEndSecure(std::istream& from,
                                   const std::vector<std::string> &excl);
 
         /// overrides the optional label definition; returns the next tag as done by readEndSecure
         std::string overrideOptionalLabel(std::istream& from,
-                                          const std::string& tag="");
+                                          const std::string& tag = "");
 
         /// returns the 2d-position saved as next within the stream
         Position getPosition(std::istream& from);
@@ -125,7 +127,7 @@ public:
 
         /** @brief Overreads the named parameter (if) given and skips the rest until "DATAEND"
          */
-        bool skipOverreading(std::istream& from, const std::string& name="");
+        bool skipOverreading(std::istream& from, const std::string& name = "");
 
         /// Reads from the stream until the keywor occurs
         void readUntil(std::istream& from, const std::string& name);

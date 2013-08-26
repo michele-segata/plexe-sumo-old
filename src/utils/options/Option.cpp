@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    Option.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 17 Dec 2001
 /// @version $Id$
 ///
 // A class representing a single program option
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -62,7 +65,7 @@ Option::~Option() {}
 
 Option&
 Option::operator=(const Option& s) {
-    if (this==&s) {
+    if (this == &s) {
         return *this;
     }
     myAmSet = s.myAmSet;
@@ -194,7 +197,7 @@ Option_Integer::Option_Integer(const Option_Integer& s)
 
 Option_Integer&
 Option_Integer::operator=(const Option_Integer& s) {
-    if (this==&s) {
+    if (this == &s) {
         return *this;
     }
     Option::operator=(s);
@@ -256,7 +259,7 @@ Option_String::Option_String(const Option_String& s)
 
 Option_String&
 Option_String::operator=(const Option_String& s) {
-    if (this==&s) {
+    if (this == &s) {
         return *this;
     }
     Option::operator=(s);
@@ -311,7 +314,7 @@ Option_Float::Option_Float(const Option_Float& s)
 
 Option_Float&
 Option_Float::operator=(const Option_Float& s) {
-    if (this==&s) {
+    if (this == &s) {
         return *this;
     }
     Option::operator=(s);
@@ -373,7 +376,7 @@ Option_Bool::Option_Bool(const Option_Bool& s)
 
 Option_Bool&
 Option_Bool::operator=(const Option_Bool& s) {
-    if (this==&s) {
+    if (this == &s) {
         return *this;
     }
     Option::operator=(s);
@@ -392,9 +395,9 @@ bool
 Option_Bool::set(const std::string& v) {
     std::string value = v;
     std::transform(value.begin(), value.end(), value.begin(), tolower);
-    if (value=="1"||value=="yes"||value=="true"||value=="on"||value=="x") {
+    if (value == "1" || value == "yes" || value == "true" || value == "on" || value == "x") {
         myValue = true;
-    } else if (value=="0"||value=="no"||value=="false"||value=="off") {
+    } else if (value == "0" || value == "no" || value == "false" || value == "off") {
         myValue = false;
     } else {
         throw ProcessError("Invalid boolean value for option.");
@@ -495,7 +498,7 @@ bool
 Option_IntVector::set(const std::string& v) {
     myValue.clear();
     try {
-        if (v.find(';')!=std::string::npos) {
+        if (v.find(';') != std::string::npos) {
             WRITE_WARNING("Please note that using ';' as list separator is deprecated.\n From 1.0 onwards, only ',' will be accepted.");
         }
         StringTokenizer st(v, ";,", true);
@@ -514,8 +517,8 @@ Option_IntVector::set(const std::string& v) {
 std::string
 Option_IntVector::getValueString() const {
     std::ostringstream s;
-    for (IntVector::const_iterator i=myValue.begin(); i!=myValue.end(); i++) {
-        if (i!=myValue.begin()) {
+    for (IntVector::const_iterator i = myValue.begin(); i != myValue.end(); i++) {
+        if (i != myValue.begin()) {
             s << ',';
         }
         s << (*i);

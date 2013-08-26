@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimExtendedEdgePoint.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -42,7 +44,7 @@
 // ===========================================================================
 NIVissimExtendedEdgePoint::NIVissimExtendedEdgePoint(
     int edgeid, const IntVector& lanes, SUMOReal position,
-    const IntVector& assignedVehicles) throw()
+    const IntVector& assignedVehicles)
     : myEdgeID(edgeid), myLanes(lanes), myPosition(position),
       myAssignedVehicles(assignedVehicles) {}
 
@@ -76,11 +78,11 @@ NIVissimExtendedEdgePoint::getLanes() const {
 
 
 void
-NIVissimExtendedEdgePoint::recheckLanes(const NBEdge* const edge) throw() {
+NIVissimExtendedEdgePoint::recheckLanes(const NBEdge* const edge) {
     // check whether an "all" indicator is there
     bool hadAll = false;
-    for (IntVector::const_iterator i=myLanes.begin(); !hadAll&&i!=myLanes.end(); ++i) {
-        if ((*i)==-1) {
+    for (IntVector::const_iterator i = myLanes.begin(); !hadAll && i != myLanes.end(); ++i) {
+        if ((*i) == -1) {
             hadAll = true;
         }
     }
@@ -90,7 +92,7 @@ NIVissimExtendedEdgePoint::recheckLanes(const NBEdge* const edge) throw() {
     }
     // patch lane indices
     myLanes.clear();
-    for (int i=0; i<(int) edge->getNumLanes(); ++i) {
+    for (int i = 0; i < (int) edge->getNumLanes(); ++i) {
         myLanes.push_back(i);
     }
 }

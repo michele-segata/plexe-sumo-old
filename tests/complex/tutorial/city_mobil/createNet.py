@@ -2,14 +2,16 @@
 # -*- coding: utf-8 -*-
 """
 @file    createNet.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
 @date    2008-07-04
 @version $Id$
 
 Create the XML input files for the generation of the SUMO network
 of the CityMobil parking lot.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, random
@@ -199,7 +201,7 @@ for period in range(5, 50, 5):
     print >> routes, "</routes>"
     routes.close()
 
-    config = open("%s%02i.sumo.cfg" % (PREFIX, period), "w")
+    config = open("%s%02i.sumocfg" % (PREFIX, period), "w")
     print >> config, """<configuration>
     <input>
         <net-file value="%s.net.xml"/>
@@ -214,7 +216,7 @@ for period in range(5, 50, 5):
     print >> bat, "simpleManager.py -d %s" % period
     print >> breakbat, "simpleManager.py -b 120 -d %s" % period
 
-    config = open("%s%02i_cyber.sumo.cfg" % (PREFIX, period), "w")
+    config = open("%s%02i_cyber.sumocfg" % (PREFIX, period), "w")
     print >> config, """<configuration>
     <input>
         <net-file value="%s.net.xml"/>

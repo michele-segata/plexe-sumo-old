@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    bezier.cpp
 /// @author  unknown_author
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    2003-11-19
 /// @version $Id$
 ///
 // missing_desc
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -56,9 +59,9 @@
 /* function to calculate the factorial */
 
 SUMOReal factrl(int n) {
-    static int ntop=6;
-    static SUMOReal a[33]= {
-        1.0,1.0,2.0,6.0,24.0,120.0,720.0
+    static int ntop = 6;
+    static SUMOReal a[33] = {
+        1.0, 1.0, 2.0, 6.0, 24.0, 120.0, 720.0
     }
     ; /* fill in the first few values */
     int j1;
@@ -72,24 +75,24 @@ SUMOReal factrl(int n) {
 
     while (ntop < n) { /* use the precalulated value for n = 0....6 */
         j1 = ntop++;
-        a[ntop]=a[j1]*ntop;
+        a[ntop] = a[j1] * ntop;
     }
     return a[n]; /* returns the value n! as a SUMOReal */
 }
 
 /* function to calculate the factorial function for Bernstein basis */
 
-SUMOReal Ni(int n,int i) {
-    return factrl(n)/(factrl(i)*factrl(n-i));
+SUMOReal Ni(int n, int i) {
+    return factrl(n) / (factrl(i) * factrl(n - i));
 }
 
 /* function to calculate the Bernstein basis */
 
-SUMOReal Basis(int n,int i,SUMOReal t) {
+SUMOReal Basis(int n, int i, SUMOReal t) {
     /* handle the special cases to avoid domain problem with pow */
     const SUMOReal ti = (i == 0) ? 1.0 : pow(t, i); /* this is t^i */
-    const SUMOReal tni = (n == i) ? 1.0 : pow(1-t, n-i); /* this is (1-t)^(n-i) */
-    return Ni(n,i) * ti * tni;
+    const SUMOReal tni = (n == i) ? 1.0 : pow(1 - t, n - i); /* this is (1-t)^(n-i) */
+    return Ni(n, i) * ti * tni;
 }
 
 /* Bezier curve subroutine */
@@ -101,7 +104,7 @@ bezier(int npts, SUMOReal b[], int cpts, SUMOReal p[]) {
     int icount;
     int jcount;
 
-    const SUMOReal step = (SUMOReal) 1.0/(cpts -1);
+    const SUMOReal step = (SUMOReal) 1.0 / (cpts - 1);
     SUMOReal t;
 
     /*    calculate the points on the Bezier curve */
@@ -109,7 +112,7 @@ bezier(int npts, SUMOReal b[], int cpts, SUMOReal p[]) {
     icount = 0;
     t = 0;
 
-    for (i1 = 1; i1<=cpts; i1++) { /* main loop */
+    for (i1 = 1; i1 <= cpts; i1++) { /* main loop */
 
         if ((1.0 - t) < 5e-6) {
             t = 1.0;
@@ -117,9 +120,9 @@ bezier(int npts, SUMOReal b[], int cpts, SUMOReal p[]) {
 
         for (j = 1; j <= 3; j++) { /* generate a point on the curve */
             jcount = j;
-            p[icount+j] = 0.;
+            p[icount + j] = 0.;
             for (i = 1; i <= npts; i++) { /* Do x,y,z components */
-                p[icount + j] = p[icount + j] + Basis(npts-1,i-1,t)*b[jcount];
+                p[icount + j] = p[icount + j] + Basis(npts - 1, i - 1, t) * b[jcount];
                 jcount = jcount + 3;
             }
         }

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    SUMOAbstractRouter.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    25.Jan 2006
 /// @version $Id$
 ///
 // The dijkstra-router
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,7 +61,7 @@ public:
 
         /// This function should return the effort to use
         virtual SUMOReal getEffort(const V* const, SUMOTime time, const E* const edge,
-                                   SUMOReal dist) = 0;
+                                   SUMOReal dist) const = 0;
 
         /// Returns the name of this retriever
         virtual const std::string& getID() const = 0;
@@ -77,10 +79,10 @@ public:
     /** @brief Builds the route between the given edges using the minimum afford at the given time
         The definition of the afford depends on the wished routing scheme */
     virtual void compute(const E* from, const E* to, const V* const vehicle,
-                         SUMOTime time, std::vector<const E*> &into) = 0;
+                         SUMOTime msTime, std::vector<const E*> &into) = 0;
 
     virtual SUMOReal recomputeCosts(const std::vector<const E*> &edges,
-                                    const V* const v, SUMOTime time) throw() = 0;
+                                    const V* const v, SUMOTime msTime) const = 0;
 
 };
 
@@ -88,8 +90,8 @@ public:
 template<class E, class V>
 struct prohibited_withRestrictions {
 public:
-    inline bool operator()(const E* edge, const V* vehicle) {
-        if (std::find(myProhibited.begin(), myProhibited.end(), edge)!=myProhibited.end()) {
+    inline bool operator()(const E* edge, const V* vehicle) const {
+        if (std::find(myProhibited.begin(), myProhibited.end(), edge) != myProhibited.end()) {
             return true;
         }
         return edge->prohibits(vehicle);
@@ -107,7 +109,7 @@ protected:
 template<class E, class V>
 struct prohibited_noRestrictions {
 public:
-    inline bool operator()(const E*, const V*) {
+    inline bool operator()(const E*, const V*) const {
         return false;
     }
 };

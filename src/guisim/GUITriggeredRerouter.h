@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUITriggeredRerouter.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 25.07.2005
 /// @version $Id$
 ///
 // Reroutes vehicles passing an edge (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -62,7 +65,7 @@ public:
 
 
     /// @brief Destructor
-    ~GUITriggeredRerouter() throw();
+    ~GUITriggeredRerouter() ;
 
 
 
@@ -77,7 +80,7 @@ public:
      * @see GUIGlObject::getPopUpMenu
      */
     GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
-                                       GUISUMOAbstractView& parent) throw();
+                                       GUISUMOAbstractView& parent) ;
 
 
     /** @brief Returns an own parameter window
@@ -88,7 +91,7 @@ public:
      * @see GUIGlObject::getParameterWindow
      */
     GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app,
-            GUISUMOAbstractView& parent) throw();
+            GUISUMOAbstractView& parent) ;
 
 
     /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -96,14 +99,14 @@ public:
      * @return The boundary the object is within
      * @see GUIGlObject::getCenteringBoundary
      */
-    Boundary getCenteringBoundary() const throw();
+    Boundary getCenteringBoundary() const ;
 
 
     /** @brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const throw();
+    void drawGL(const GUIVisualizationSettings& s) const ;
     //@}
 
 
@@ -119,10 +122,10 @@ public:
         GUITriggeredRerouterPopupMenu(GUIMainWindow& app,
                                       GUISUMOAbstractView& parent, GUIGlObject& o);
 
-        ~GUITriggeredRerouterPopupMenu() throw();
+        ~GUITriggeredRerouterPopupMenu() ;
 
         /** @brief Called if the object's manipulator shall be shown */
-        long onCmdOpenManip(FXObject*,FXSelector,void*);
+        long onCmdOpenManip(FXObject*, FXSelector, void*);
 
     protected:
         GUITriggeredRerouterPopupMenu() { }
@@ -148,11 +151,11 @@ public:
         /// Destructor
         virtual ~GUIManip_TriggeredRerouter();
 
-        long onCmdOverride(FXObject*,FXSelector,void*);
-        long onCmdClose(FXObject*,FXSelector,void*);
-        long onCmdUserDef(FXObject*,FXSelector,void*);
-        long onUpdUserDef(FXObject*,FXSelector,void*);
-        long onCmdChangeOption(FXObject*,FXSelector,void*);
+        long onCmdOverride(FXObject*, FXSelector, void*);
+        long onCmdClose(FXObject*, FXSelector, void*);
+        long onCmdUserDef(FXObject*, FXSelector, void*);
+        long onUpdUserDef(FXObject*, FXSelector, void*);
+        long onCmdChangeOption(FXObject*, FXSelector, void*);
 
     private:
         GUIMainWindow* myParent;

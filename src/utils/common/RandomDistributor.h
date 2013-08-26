@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    RandomDistributor.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    2005-09-15
 /// @version $Id$
 ///
 // Represents a generic random distribution
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -67,12 +69,12 @@ public:
      * @param[in] prob The probability assigned to the value
      * @param[in] val The value to add to the distribution
      */
-    void add(SUMOReal prob, T val, bool checkDuplicates=true) {
-        assert(prob>=0);
+    void add(SUMOReal prob, T val, bool checkDuplicates = true) {
+        assert(prob >= 0);
         myProb += prob;
         if (checkDuplicates) {
-            for (size_t i=0; i<myVals.size(); i++) {
-                if (val==myVals[i]) {
+            for (size_t i = 0; i < myVals.size(); i++) {
+                if (val == myVals[i]) {
                     myProbs[i] += prob;
                     return;
                 }
@@ -89,12 +91,12 @@ public:
      * @return the drawn member
      */
     T get() const {
-        if (myProb==0) {
+        if (myProb == 0) {
             throw OutOfBoundsException();
         }
         SUMOReal prob = RandHelper::rand(myProb);
-        for (size_t i=0; i<myVals.size(); i++) {
-            if (prob<myProbs[i]) {
+        for (size_t i = 0; i < myVals.size(); i++) {
+            if (prob < myProbs[i]) {
                 return myVals[i];
             }
             prob -= myProbs[i];

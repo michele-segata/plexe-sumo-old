@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUINet.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A MSNet extended by some values for usage within the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -92,11 +95,11 @@ public:
      * @exception ProcessError If a network was already constructed
      */
     GUINet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
-           MSEventControl* endOfTimestepEvents, MSEventControl* insertionEvents) throw(ProcessError);
+           MSEventControl* endOfTimestepEvents, MSEventControl* insertionEvents) ;
 
 
     /// @brief Destructor
-    ~GUINet() throw();
+    ~GUINet() ;
 
 
 
@@ -111,7 +114,7 @@ public:
      * @see GUIGlObject::getPopUpMenu
      */
     GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
-                                       GUISUMOAbstractView& parent) throw();
+                                       GUISUMOAbstractView& parent) ;
 
 
     /** @brief Returns an own parameter window
@@ -122,7 +125,7 @@ public:
      * @see GUIGlObject::getParameterWindow
      */
     GUIParameterTableWindow* getParameterWindow(
-        GUIMainWindow& app, GUISUMOAbstractView& parent) throw();
+        GUIMainWindow& app, GUISUMOAbstractView& parent) ;
 
 
     /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -130,14 +133,14 @@ public:
      * @return The boundary the object is within
      * @see GUIGlObject::getCenteringBoundary
      */
-    Boundary getCenteringBoundary() const throw();
+    Boundary getCenteringBoundary() const ;
 
 
     /** @brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const throw();
+    void drawGL(const GUIVisualizationSettings& s) const ;
     //@}
 
 
@@ -163,13 +166,13 @@ public:
     /** @brief Returns the duration of the last step (sim+visualisation+idle) (in ms)
      * @return How long it took to compute and display the last step
      */
-    unsigned int getWholeDuration() const throw();
+    unsigned int getWholeDuration() const ;
 
 
     /** @brief Returns the duration of the last step's simulation part (in ms)
      * @return How long it took to compute the last step
      */
-    unsigned int getSimDuration() const throw();
+    unsigned int getSimDuration() const ;
 
 
     /// Returns the simulation speed as a factor to real time
@@ -188,7 +191,7 @@ public:
     //int getVisDuration() const;
 
     /// Returns the duration of the last step's idle part (in ms)
-    unsigned int getIdleDuration() const throw();
+    unsigned int getIdleDuration() const ;
 
     /// Sets the duration of the last step's simulation part
     void setSimDuration(int val);
@@ -230,7 +233,7 @@ public:
     /** @brief Returns the RTree used for visualisation speed-up
      * @return The visualisation speed-up
      */
-    SUMORTree& getVisualisationSpeedUp() throw() {
+    SUMORTree& getVisualisationSpeedUp() {
         return myGrid;
     }
 
@@ -238,7 +241,7 @@ public:
     /** @brief Returns the RTree used for visualisation speed-up
      * @return The visualisation speed-up
      */
-    const SUMORTree& getVisualisationSpeedUp() const throw() {
+    const SUMORTree& getVisualisationSpeedUp() const {
         return myGrid;
     }
 

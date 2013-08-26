@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIMainWindow.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -44,15 +47,15 @@ public:
     GUIMainWindow(FXApp* a);
     virtual ~GUIMainWindow();
     /// Adds a further child window to the list
-    void addChild(FXMDIChild* child, bool updateOnSimStep=true);
-    void addChild(FXMainWindow* child, bool updateOnSimStep=true);
+    void addChild(FXMDIChild* child, bool updateOnSimStep = true);
+    void addChild(FXMainWindow* child, bool updateOnSimStep = true);
 
     /// removes the given child window from the list
     void removeChild(FXMDIChild* child);
     void removeChild(FXMainWindow*  child);
 
-    std::vector<std::string> getViewIDs() const throw();
-    FXMDIChild* getViewByID(const std::string& id) const throw();
+    std::vector<std::string> getViewIDs() const ;
+    FXMDIChild* getViewByID(const std::string& id) const ;
 
     void updateChildren();
 

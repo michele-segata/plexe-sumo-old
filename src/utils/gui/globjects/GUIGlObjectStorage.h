@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIGlObjectStorage.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Oct 2002
 /// @version $Id$
 ///
 // A storage for displayed objects via their numerical id
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -57,11 +60,11 @@
 class GUIGlObjectStorage {
 public:
     /// @brief Constructor
-    GUIGlObjectStorage() throw();
+    GUIGlObjectStorage() ;
 
 
     /// @brief Destructor
-    ~GUIGlObjectStorage() throw();
+    ~GUIGlObjectStorage() ;
 
 
     /** @brief Registers an object
@@ -73,7 +76,7 @@ public:
      * @param[in] fullName The full name of the object to register
      * @return the GUIGlObject under which the object has been registered
      */
-    GUIGlID registerObject(GUIGlObject* object, const std::string& fullName) throw();
+    GUIGlID registerObject(GUIGlObject* object, const std::string& fullName) ;
 
 
     /** @brief Returns the object from the container locking it
@@ -84,7 +87,7 @@ public:
      * @param[in] id The id of the object to return
      * @return The object with the given id or 0 if no such object is known
      */
-    GUIGlObject* getObjectBlocking(GUIGlID id) throw();
+    GUIGlObject* getObjectBlocking(GUIGlID id) ;
 
 
     /** @brief Returns the object from the container locking it
@@ -95,7 +98,7 @@ public:
      * @param[in] id The id of the object to return
      * @return The object with the given id or 0 if no such object is known
      */
-    GUIGlObject* getObjectBlocking(const std::string& fullName) throw();
+    GUIGlObject* getObjectBlocking(const std::string& fullName) ;
 
 
     /** @brief Removes the named object from this container
@@ -107,14 +110,14 @@ public:
      * @param[in] id The id of the object to remove
      * @return Whether the object could be removed (and may be deleted)
      */
-    bool remove(GUIGlID id) throw();
+    bool remove(GUIGlID id) ;
 
 
     /** @brief Clears this container
      *
      * The objects are not deleted.
      */
-    void clear() throw();
+    void clear() ;
 
 
     /** @brief Marks an object as unblocked
@@ -122,13 +125,13 @@ public:
      * The object is moved from "myBlocked" to "myMap".
      * @param[in] id The id of the object to unblock
      */
-    void unblockObject(GUIGlID id) throw();
+    void unblockObject(GUIGlID id) ;
 
 
     /** @brief Sets the given object as the "network" object
      * @param[in] object The object to set as network object
      */
-    void setNetObject(GUIGlObject* object) throw() {
+    void setNetObject(GUIGlObject* object) {
         myNetObject = object;
     }
 
@@ -136,7 +139,7 @@ public:
     /** @brief Returns the network object
      * @return The network object
      */
-    GUIGlObject* getNetObject() const throw() {
+    GUIGlObject* getNetObject() const {
         return myNetObject;
     }
 

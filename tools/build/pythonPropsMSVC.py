@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 """
 @file    pythonPropsMSVC.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
+@author  Jakob Erdmann
 @date    2011
 @version $Id$
 
 This script rebuilds "../../build/msvc/python.props", the file which
 gives information about the python includes and library.
 
-Copyright (C) 2011-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2011-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -25,10 +28,8 @@ print >> props, """<?xml version="1.0" encoding="utf-8"?>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>%s""" % (sys.prefix, sys.version[0], sys.version[2],
-                                             distutils.sysconfig.get_config_var('INCLUDEPY')),
-print >> props, """;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>HAVE_PYTHON;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>%s;%%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_PYTHON;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -36,5 +37,6 @@ print >> props, """;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectorie
       <Value>$(PYTHON_LIB)</Value>
     </BuildMacro>
   </ItemGroup>
-</Project>"""
+</Project>""" % (sys.prefix, sys.version[0], sys.version[2],
+			distutils.sysconfig.get_config_var('INCLUDEPY'))
 props.close()

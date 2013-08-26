@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RORouteDef_Complete.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A complete route definition (with all passed edges being known)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,45 +55,45 @@
 RORouteDef_Complete::RORouteDef_Complete(const std::string& id,
         const RGBColor* const color,
         const std::vector<const ROEdge*> &edges,
-        bool tryRepair) throw()
+        bool tryRepair)
     : RORouteDef(id, color), myEdges(edges), myTryRepair(tryRepair) {
 }
 
 
-RORouteDef_Complete::~RORouteDef_Complete() throw() {}
+RORouteDef_Complete::~RORouteDef_Complete() {}
 
 
 RORoute*
-RORouteDef_Complete::buildCurrentRoute(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+RORouteDef_Complete::buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                                        SUMOTime begin, const ROVehicle& veh) const {
     if (myTryRepair) {
         const std::vector<const ROEdge*> &oldEdges = myEdges;
-        if (oldEdges.size()==0) {
+        if (oldEdges.size() == 0) {
             MsgHandler* m = OptionsCont::getOptions().getBool("ignore-errors") ? MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance();
             m->inform("Could not repair empty route of vehicle '" + veh.getID() + "'.");
             return new RORoute(myID, 0, 1, std::vector<const ROEdge*>(), copyColorIfGiven());
         }
         std::vector<const ROEdge*> newEdges;
         newEdges.push_back(*(oldEdges.begin()));
-        for (std::vector<const ROEdge*>::const_iterator i=oldEdges.begin()+1; i!=oldEdges.end(); ++i) {
-            if ((*(i-1))->isConnectedTo(*i)) {
+        for (std::vector<const ROEdge*>::const_iterator i = oldEdges.begin() + 1; i != oldEdges.end(); ++i) {
+            if ((*(i - 1))->isConnectedTo(*i)) {
                 newEdges.push_back(*i);
             } else {
                 std::vector<const ROEdge*> edges;
-                router.compute(*(i-1), *i, &veh, begin, edges);
-                if (edges.size()==0) {
+                router.compute(*(i - 1), *i, &veh, begin, edges);
+                if (edges.size() == 0) {
                     return 0;
                 }
-                std::copy(edges.begin()+1, edges.end(), back_inserter(newEdges));
+                std::copy(edges.begin() + 1, edges.end(), back_inserter(newEdges));
             }
         }
-        if (myEdges!=newEdges) {
+        if (myEdges != newEdges) {
             WRITE_WARNING("Repaired route of vehicle '" + veh.getID() + "'.");
         }
         myEdges = newEdges;
     }
     SUMOReal costs = router.recomputeCosts(myEdges, &veh, begin);
-    if (costs<0) {
+    if (costs < 0) {
         throw ProcessError("Route '" + getID() + "' (vehicle '" + veh.getID() + "') is not valid.");
     }
     return new RORoute(myID, 0, 1, myEdges, copyColorIfGiven());
@@ -98,7 +101,7 @@ RORouteDef_Complete::buildCurrentRoute(SUMOAbstractRouter<ROEdge,ROVehicle> &rou
 
 
 void
-RORouteDef_Complete::addAlternative(SUMOAbstractRouter<ROEdge,ROVehicle> &,
+RORouteDef_Complete::addAlternative(SUMOAbstractRouter<ROEdge, ROVehicle> &,
                                     const ROVehicle* const, RORoute* current, SUMOTime begin) {
     myStartTime = begin;
     myEdges = current->getEdgeVector();
@@ -113,7 +116,7 @@ RORouteDef_Complete::copy(const std::string& id) const {
 
 
 OutputDevice&
-RORouteDef_Complete::writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+RORouteDef_Complete::writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                                         OutputDevice& dev, const ROVehicle* const veh,
                                         bool asAlternatives, bool withExitTimes) const {
     // (optional) alternatives header
@@ -126,7 +129,7 @@ RORouteDef_Complete::writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &ro
         dev << " cost=\"" << router.recomputeCosts(myEdges, veh, veh->getDepartureTime());
         dev << "\" probability=\"1.00\"";
     }
-    if (myColor!=0) {
+    if (myColor != 0) {
         dev << " color=\"" << *myColor << "\"";
     }
     dev << " edges=\"" << myEdges;
@@ -134,7 +137,7 @@ RORouteDef_Complete::writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &ro
         SUMOReal time = STEPS2TIME(veh->getDepartureTime());
         dev << "\" exitTimes=\"";
         std::vector<const ROEdge*>::const_iterator i = myEdges.begin();
-        for (; i!=myEdges.end(); ++i) {
+        for (; i != myEdges.end(); ++i) {
             if (i != myEdges.begin()) {
                 dev << " ";
             }

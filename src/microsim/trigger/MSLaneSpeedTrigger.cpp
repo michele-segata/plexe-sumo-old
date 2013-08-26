@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    MSLaneSpeedTrigger.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Changes the speed allowed on a set of lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -72,13 +77,13 @@ void
 MSLaneSpeedTrigger::init() {
     // set it to the right value
     // assert there is at least one
-    if (myLoadedSpeeds.size()==0) {
+    if (myLoadedSpeeds.size() == 0) {
         myLoadedSpeeds.push_back(std::make_pair(100000, myCurrentSpeed));
     }
     // set the process to the begin
     myCurrentEntry = myLoadedSpeeds.begin();
     // pass previous time steps
-    while ((*myCurrentEntry).first<MSNet::getInstance()->getCurrentTimeStep()&&myCurrentEntry!=myLoadedSpeeds.end()) {
+    while ((*myCurrentEntry).first < MSNet::getInstance()->getCurrentTimeStep() && myCurrentEntry != myLoadedSpeeds.end()) {
         processCommand(true, MSNet::getInstance()->getCurrentTimeStep());
     }
 
@@ -104,11 +109,11 @@ MSLaneSpeedTrigger::processCommand(bool move2next, SUMOTime currentTime) {
     UNUSED_PARAMETER(currentTime);
     std::vector<MSLane*>::iterator i;
     const SUMOReal speed = getCurrentSpeed();
-    for (i=myDestLanes.begin(); i!=myDestLanes.end(); ++i) {
+    for (i = myDestLanes.begin(); i != myDestLanes.end(); ++i) {
 #ifdef HAVE_MESOSIM
         if (MSGlobals::gUseMesoSim) {
             MESegment* first = MSGlobals::gMesoNet->getSegmentForEdge((*i)->getEdge());
-            while (first!=0) {
+            while (first != 0) {
                 first->setSpeed(speed, currentTime);
                 first = first->getNextSegment();
             }
@@ -121,11 +126,11 @@ MSLaneSpeedTrigger::processCommand(bool move2next, SUMOTime currentTime) {
         // changed from the gui
         return 0;
     }
-    if (myCurrentEntry!=myLoadedSpeeds.end()) {
+    if (myCurrentEntry != myLoadedSpeeds.end()) {
         ++myCurrentEntry;
     }
-    if (myCurrentEntry!=myLoadedSpeeds.end()) {
-        return ((*myCurrentEntry).first)-((*(myCurrentEntry-1)).first);
+    if (myCurrentEntry != myLoadedSpeeds.end()) {
+        return ((*myCurrentEntry).first) - ((*(myCurrentEntry - 1)).first);
     } else {
         return 0;
     }
@@ -136,7 +141,7 @@ void
 MSLaneSpeedTrigger::myStartElement(int element,
                                    const SUMOSAXAttributes& attrs) {
     // check whether the correct tag is read
-    if (element!=SUMO_TAG_STEP) {
+    if (element != SUMO_TAG_STEP) {
         return;
     }
     // extract the values
@@ -144,16 +149,16 @@ MSLaneSpeedTrigger::myStartElement(int element,
     SUMOTime next = attrs.getSUMOTimeReporting(SUMO_ATTR_TIME, getID().c_str(), ok);
     SUMOReal speed = attrs.getOptSUMORealReporting(SUMO_ATTR_SPEED, getID().c_str(), ok, -1);
     // check the values
-    if (next<0) {
+    if (next < 0) {
         WRITE_ERROR("Wrong time in vss '" + getID() + "'.");
         return;
     }
-    if (speed<0) {
+    if (speed < 0) {
         WRITE_ERROR("Wrong speed in vss '" + getID() + "'.");
         return;
     }
     // set the values for the next step if they are valid
-    if (myLoadedSpeeds.size()!=0&&myLoadedSpeeds.back().first==next) {
+    if (myLoadedSpeeds.size() != 0 && myLoadedSpeeds.back().first == next) {
         WRITE_WARNING("Time " + time2string(next) + " was set twice for vss '" + getID() + "'; replacing first entry.");
         myLoadedSpeeds.back().second = speed;
     } else {
@@ -164,7 +169,7 @@ MSLaneSpeedTrigger::myStartElement(int element,
 
 void
 MSLaneSpeedTrigger::myEndElement(int element) {
-    if (element==SUMO_TAG_VSS && !myDidInit) {
+    if (element == SUMO_TAG_VSS && !myDidInit) {
         init();
     }
 }
@@ -192,8 +197,8 @@ MSLaneSpeedTrigger::setOverridingValue(SUMOReal val) {
 
 SUMOReal
 MSLaneSpeedTrigger::getLoadedSpeed() {
-    if (myCurrentEntry!=myLoadedSpeeds.begin()) {
-        return (*(myCurrentEntry-1)).second;
+    if (myCurrentEntry != myLoadedSpeeds.begin()) {
+        return (*(myCurrentEntry - 1)).second;
     } else {
         return (*myCurrentEntry).second;
     }
@@ -206,14 +211,14 @@ MSLaneSpeedTrigger::getCurrentSpeed() const {
         return mySpeedOverrideValue;
     } else {
         // ok, maybe the first shall not yet be the valid one
-        if (myCurrentEntry==myLoadedSpeeds.begin()&&(*myCurrentEntry).first>MSNet::getInstance()->getCurrentTimeStep()) {
+        if (myCurrentEntry == myLoadedSpeeds.begin() && (*myCurrentEntry).first > MSNet::getInstance()->getCurrentTimeStep()) {
             return myDefaultSpeed;
         }
         // try the loaded
-        if (myCurrentEntry!=myLoadedSpeeds.end()&&(*myCurrentEntry).first<=MSNet::getInstance()->getCurrentTimeStep()) {
+        if (myCurrentEntry != myLoadedSpeeds.end() && (*myCurrentEntry).first <= MSNet::getInstance()->getCurrentTimeStep()) {
             return (*myCurrentEntry).second;
         } else {
-            return (*(myCurrentEntry-1)).second;
+            return (*(myCurrentEntry - 1)).second;
         }
     }
 }

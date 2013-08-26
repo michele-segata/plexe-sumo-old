@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    ROLane.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A single lane the router may use
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,20 +60,20 @@ public:
      */
     ROLane(const std::string& id, SUMOReal length, SUMOReal maxSpeed,
            const SUMOVehicleClasses& allowed,
-           const SUMOVehicleClasses& disallowed) throw()
+           const SUMOVehicleClasses& disallowed)
         : Named(id), myLength(length), myMaxSpeed(maxSpeed),
           myAllowedClasses(allowed), myNotAllowedClasses(disallowed) {
     }
 
 
     /// @brief Destructor
-    ~ROLane() throw() { }
+    ~ROLane() { }
 
 
     /** @brief Returns the length of the lane
      * @return The length of this lane
      */
-    SUMOReal getLength() const throw() {
+    SUMOReal getLength() const {
         return myLength;
     }
 
@@ -79,7 +81,7 @@ public:
     /** @brief Returns the maximum speed allowed on this lane
      * @return The maximum speed allowed on this lane
      */
-    SUMOReal getSpeed() const throw() {
+    SUMOReal getSpeed() const {
         return myMaxSpeed;
     }
 
@@ -87,7 +89,7 @@ public:
     /** @brief Returns the list of allowed vehicle classes
      * @return The list of vehicle classes allowed on this lane
      */
-    const SUMOVehicleClasses& getAllowedClasses() const throw() {
+    const SUMOVehicleClasses& getAllowedClasses() const {
         return myAllowedClasses;
     }
 
@@ -95,7 +97,7 @@ public:
     /** @brief Returns the list of not allowed vehicle classes
      * @return The list of vehicle classes not allowed on this lane
      */
-    const SUMOVehicleClasses& getNotAllowedClasses() const throw() {
+    const SUMOVehicleClasses& getNotAllowedClasses() const {
         return myNotAllowedClasses;
     }
 

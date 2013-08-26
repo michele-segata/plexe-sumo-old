@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    MSTLLogicControl.h
 /// @author  Daniel Krajzewicz
+/// @author  Julia Ringel
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Friedemann Wesner
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A class that stores and controls tls and switching of their programs
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -105,7 +110,7 @@ public:
          * @param[in] isNewDefault Whether this logic shall be treated as the currently active logic
          */
         bool addLogic(const std::string& programID, MSTrafficLightLogic* logic, bool netWasLoaded,
-                      bool isNewDefault=true);
+                      bool isNewDefault = true);
 
 
 
@@ -250,7 +255,7 @@ public:
      * @return true if the tls program could be added, false otherwise
      */
     bool add(const std::string& id, const std::string& programID,
-             MSTrafficLightLogic* logic, bool newDefault=true);
+             MSTrafficLightLogic* logic, bool newDefault = true);
 
 
 

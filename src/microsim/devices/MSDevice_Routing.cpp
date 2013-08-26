@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSDevice_Routing.cpp
-/// @author  Michael Behrisch, Daniel Krajzewicz
+/// @author  Michael Behrisch
+/// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Christoph Sommer
 /// @date    Tue, 04 Dec 2007
 /// @version $Id$
 ///
 // A device that performs vehicle rerouting based on current edge speeds
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,7 +62,7 @@ std::map<std::pair<const MSEdge*, const MSEdge*>, const MSRoute*> MSDevice_Routi
 // static initialisation methods
 // ---------------------------------------------------------------------------
 void
-MSDevice_Routing::insertOptions() throw() {
+MSDevice_Routing::insertOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
     oc.addOptionSubTopic("Routing");
 
@@ -100,10 +104,10 @@ MSDevice_Routing::insertOptions() throw() {
 
 
 void
-MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) throw() {
+MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) {
     OptionsCont& oc = OptionsCont::getOptions();
     bool needRerouting = v.getParameter().wasSet(VEHPARS_FORCE_REROUTE);
-    if (!needRerouting && oc.getFloat("device.rerouting.probability")==0 && !oc.isSet("device.rerouting.explicit")) {
+    if (!needRerouting && oc.getFloat("device.rerouting.probability") == 0 && !oc.isSet("device.rerouting.explicit")) {
         // no route computation is modelled
         return;
     }
@@ -112,25 +116,25 @@ MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &in
     if (oc.getBool("device.rerouting.deterministic")) {
         haveByNumber = MSNet::getInstance()->getVehicleControl().isInQuota(oc.getFloat("device.rerouting.probability"));
     } else {
-        haveByNumber = RandHelper::rand()<=oc.getFloat("device.rerouting.probability");
+        haveByNumber = RandHelper::rand() <= oc.getFloat("device.rerouting.probability");
     }
     bool haveByName = oc.isSet("device.rerouting.explicit") && OptionsCont::getOptions().isInStringVector("device.rerouting.explicit", v.getID());
     myWithTaz = oc.getBool("device.rerouting.with-taz");
-    if (needRerouting||haveByNumber||haveByName) {
+    if (needRerouting || haveByNumber || haveByName) {
         // build the device
         MSDevice_Routing* device = new MSDevice_Routing(v, "routing_" + v.getID(),
                 string2time(oc.getString("device.rerouting.period")),
                 string2time(oc.getString("device.rerouting.pre-period")));
         into.push_back(device);
         // initialise edge efforts if not done before
-        if (myEdgeEfforts.size()==0) {
+        if (myEdgeEfforts.size() == 0) {
             const std::vector<MSEdge*> &edges = MSNet::getInstance()->getEdgeControl().getEdges();
-            for (std::vector<MSEdge*>::const_iterator i=edges.begin(); i!=edges.end(); ++i) {
+            for (std::vector<MSEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
                 myEdgeEfforts[*i] = (*i)->getCurrentTravelTime();
             }
         }
         // make the weights be updated
-        if (myEdgeWeightSettingCommand==0) {
+        if (myEdgeWeightSettingCommand == 0) {
             myEdgeWeightSettingCommand = new StaticCommand< MSDevice_Routing >(&MSDevice_Routing::adaptEdgeEfforts);
             MSNet::getInstance()->getEndOfTimestepEvents().addEvent(
                 myEdgeWeightSettingCommand, 0, MSEventControl::ADAPT_AFTER_EXECUTION);
@@ -138,11 +142,11 @@ MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &in
             myAdaptationInterval = string2time(oc.getString("device.rerouting.adaptation-interval"));
         }
         if (myWithTaz) {
-            if (MSEdge::dictionary(v.getParameter().fromTaz+"-source") == 0) {
+            if (MSEdge::dictionary(v.getParameter().fromTaz + "-source") == 0) {
                 WRITE_ERROR("Source district '" + v.getParameter().fromTaz + "' not known when rerouting '" + v.getID() + "'!");
                 return;
             }
-            if (MSEdge::dictionary(v.getParameter().toTaz+"-sink") == 0) {
+            if (MSEdge::dictionary(v.getParameter().toTaz + "-sink") == 0) {
                 WRITE_ERROR("Destination district '" + v.getParameter().toTaz + "' not known when rerouting '" + v.getID() + "'!");
                 return;
             }
@@ -155,7 +159,7 @@ MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &in
 // MSDevice_Routing-methods
 // ---------------------------------------------------------------------------
 MSDevice_Routing::MSDevice_Routing(SUMOVehicle& holder, const std::string& id,
-                                   SUMOTime period, SUMOTime preInsertionPeriod) throw()
+                                   SUMOTime period, SUMOTime preInsertionPeriod)
     : MSDevice(holder, id), myPeriod(period), myPreInsertionPeriod(preInsertionPeriod), myRerouteCommand(0) {
     if (myWithTaz) {
         myRerouteCommand = new WrappingCommand< MSDevice_Routing >(this, &MSDevice_Routing::preInsertionReroute);
@@ -166,18 +170,18 @@ MSDevice_Routing::MSDevice_Routing(SUMOVehicle& holder, const std::string& id,
 }
 
 
-MSDevice_Routing::~MSDevice_Routing() throw() {
+MSDevice_Routing::~MSDevice_Routing() {
     // make the rerouting command invalid if there is one
-    if (myRerouteCommand!=0) {
+    if (myRerouteCommand != 0) {
         myRerouteCommand->deschedule();
     }
 }
 
 
 bool
-MSDevice_Routing::notifyEnter(SUMOVehicle& /*veh*/, MSMoveReminder::Notification reason) throw() {
+MSDevice_Routing::notifyEnter(SUMOVehicle& /*veh*/, MSMoveReminder::Notification reason) {
     if (reason == MSMoveReminder::NOTIFICATION_DEPARTED) {
-        if (myRerouteCommand!=0) { // clean up pre depart rerouting
+        if (myRerouteCommand != 0) { // clean up pre depart rerouting
             if (myPreInsertionPeriod > 0) {
                 myRerouteCommand->deschedule();
             }
@@ -187,10 +191,10 @@ MSDevice_Routing::notifyEnter(SUMOVehicle& /*veh*/, MSMoveReminder::Notification
             wrappedRerouteCommandExecute(MSNet::getInstance()->getCurrentTimeStep());
         }
         // build repetition trigger if routing shall be done more often
-        if (myPeriod>0) {
+        if (myPeriod > 0) {
             myRerouteCommand = new WrappingCommand< MSDevice_Routing >(this, &MSDevice_Routing::wrappedRerouteCommandExecute);
             MSNet::getInstance()->getBeginOfTimestepEvents().addEvent(
-                myRerouteCommand, myPeriod+MSNet::getInstance()->getCurrentTimeStep(),
+                myRerouteCommand, myPeriod + MSNet::getInstance()->getCurrentTimeStep(),
                 MSEventControl::ADAPT_AFTER_EXECUTION);
         }
     }
@@ -199,9 +203,9 @@ MSDevice_Routing::notifyEnter(SUMOVehicle& /*veh*/, MSMoveReminder::Notification
 
 
 SUMOTime
-MSDevice_Routing::preInsertionReroute(SUMOTime currentTime) throw(ProcessError) {
-    const MSEdge* source = MSEdge::dictionary(myHolder.getParameter().fromTaz+"-source");
-    const MSEdge* dest = MSEdge::dictionary(myHolder.getParameter().toTaz+"-sink");
+MSDevice_Routing::preInsertionReroute(SUMOTime currentTime) {
+    const MSEdge* source = MSEdge::dictionary(myHolder.getParameter().fromTaz + "-source");
+    const MSEdge* dest = MSEdge::dictionary(myHolder.getParameter().toTaz + "-sink");
     if (source && dest) {
         const std::pair<const MSEdge*, const MSEdge*> key = std::make_pair(source, dest);
         if (myCachedRoutes.find(key) == myCachedRoutes.end()) {
@@ -219,7 +223,7 @@ MSDevice_Routing::preInsertionReroute(SUMOTime currentTime) throw(ProcessError) 
 
 
 SUMOTime
-MSDevice_Routing::wrappedRerouteCommandExecute(SUMOTime currentTime) throw(ProcessError) {
+MSDevice_Routing::wrappedRerouteCommandExecute(SUMOTime currentTime) {
     DijkstraRouterTT_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle>, MSDevice_Routing>
     router(MSEdge::dictSize(), true, this, &MSDevice_Routing::getEffort);
     myHolder.reroute(currentTime, router);
@@ -230,14 +234,14 @@ MSDevice_Routing::wrappedRerouteCommandExecute(SUMOTime currentTime) throw(Proce
 SUMOReal
 MSDevice_Routing::getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal) const {
     if (myEdgeEfforts.find(e) != myEdgeEfforts.end()) {
-        return MAX2(myEdgeEfforts.find(e)->second, e->getLanes()[0]->getLength()/v->getMaxSpeed());
+        return MAX2(myEdgeEfforts.find(e)->second, e->getLanes()[0]->getLength() / v->getMaxSpeed());
     }
     return 0;
 }
 
 
 SUMOTime
-MSDevice_Routing::adaptEdgeEfforts(SUMOTime /*currentTime*/) throw(ProcessError) {
+MSDevice_Routing::adaptEdgeEfforts(SUMOTime /*currentTime*/) {
     std::map<std::pair<const MSEdge*, const MSEdge*>, const MSRoute*>::iterator it = myCachedRoutes.begin();
     for (; it != myCachedRoutes.end(); ++it) {
         it->second->release();
@@ -245,7 +249,7 @@ MSDevice_Routing::adaptEdgeEfforts(SUMOTime /*currentTime*/) throw(ProcessError)
     myCachedRoutes.clear();
     SUMOReal newWeight = (SUMOReal)(1. - myAdaptationWeight);
     const std::vector<MSEdge*> &edges = MSNet::getInstance()->getEdgeControl().getEdges();
-    for (std::vector<MSEdge*>::const_iterator i=edges.begin(); i!=edges.end(); ++i) {
+    for (std::vector<MSEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
         myEdgeEfforts[*i] = myEdgeEfforts[*i] * myAdaptationWeight + (*i)->getCurrentTravelTime() * newWeight;
     }
     return myAdaptationInterval;

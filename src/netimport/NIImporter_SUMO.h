@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NIImporter_SUMO.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 14.04.2008
 /// @version $Id$
 ///
 // Importer for networks stored in SUMO format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -77,6 +80,9 @@ public:
     /// adds a phase to the traffic lights logic currently build
     static void addPhase(const SUMOSAXAttributes& attrs, NBLoadedSUMOTLDef* currentTL);
 
+    /// Parses network location description and registers it with GeoConveHelper::setLoaded
+    static GeoConvHelper* loadLocation(const SUMOSAXAttributes& attrs);
+
 
 protected:
     /** @brief Constructor
@@ -86,7 +92,7 @@ protected:
 
 
     /// @brief Destructor
-    ~NIImporter_SUMO() throw();
+    ~NIImporter_SUMO() ;
 
 
 
@@ -104,7 +110,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when characters occure
@@ -115,7 +121,7 @@ protected:
      * @see GenericSAXHandler::myCharacters
      */
     void myCharacters(int element,
-                      const std::string& chars) throw(ProcessError);
+                      const std::string& chars) ;
 
 
     /** @brief Called when a closing tag occurs
@@ -124,7 +130,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int element) throw(ProcessError);
+    void myEndElement(int element) ;
     //@}
 
 
@@ -177,8 +183,6 @@ private:
      */
     void addProhibition(const SUMOSAXAttributes& attrs);
 
-    /// Parses network location description
-    void setLocation(const SUMOSAXAttributes& attrs);
     //@}
 
 
@@ -241,6 +245,8 @@ private:
         std::string toNode;
         /// @brief This edges's shape
         PositionVector shape;
+        /// @brief The length of the edge if set explicitly
+        SUMOReal length;
         /// @brief This edge's priority
         int priority;
         /// @brief The maximum velocity allowed on this edge (!!!)

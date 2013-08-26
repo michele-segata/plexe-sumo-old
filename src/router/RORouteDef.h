@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    RORouteDef.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Base class for a vehicle's route definition
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -66,23 +68,23 @@ public:
      * @param[in] id The id of the route
      * @param[in] color The color of the route
      */
-    RORouteDef(const std::string& id, const RGBColor* const color) throw();
+    RORouteDef(const std::string& id, const RGBColor* const color) ;
 
 
     /// @brief Destructor
-    virtual ~RORouteDef() throw();
+    virtual ~RORouteDef() ;
 
 
     /** @brief Builds the complete route
      *
      * (or chooses her from the list of alternatives, when existing) */
-    virtual RORoute* buildCurrentRoute(SUMOAbstractRouter<ROEdge,ROVehicle> &router, SUMOTime begin,
+    virtual RORoute* buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router, SUMOTime begin,
                                        const ROVehicle& veh) const = 0;
 
     /** @brief Adds an alternative to the list of routes
     *
      * (This may be the new route) */
-    virtual void addAlternative(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+    virtual void addAlternative(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                                 const ROVehicle* const, RORoute* current, SUMOTime begin) = 0;
 
     /** @brief Returns a copy of the route definition */
@@ -102,12 +104,12 @@ public:
      * @param[in] asAlternatives Whether the route shall be saved as route alternatives
      * @return The same device for further usage
      */
-    virtual OutputDevice& writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+    virtual OutputDevice& writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
             OutputDevice& dev, const ROVehicle* const veh,
             bool asAlternatives, bool withExitTimes) const = 0;
 
 protected:
-    const RGBColor* copyColorIfGiven() const throw();
+    const RGBColor* copyColorIfGiven() const ;
 
 protected:
     /// The color the route shall have

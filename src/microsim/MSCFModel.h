@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSCFModel.h
 /// @author  Tobias Mayer
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 27 Jul 2009
 /// @version $Id$
 ///
 // The car-following model abstraction
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -79,9 +83,10 @@ public:
     virtual SUMOReal moveHelper(MSVehicle* const veh, SUMOReal vPos) const;
 
 
-    /** @brief Computes the vehicle's safe speed (no dawdling)
+    /** @brief Computes the vehicle's safe speed without a leader
      *
-     * Returns the velocity of the vehicle in dependence to the vehicle's and its leader's values and the distance between them.
+     * Returns the velocity of the vehicle in dependence to the length of the free street and the target
+	 *  velocity at the end of the free range.
      * @param[in] veh The vehicle (EGO)
      * @param[in] speed The vehicle's speed
      * @param[in] seen The look ahead distance
@@ -233,7 +238,7 @@ public:
       */
     SUMOReal getSecureGap(const SUMOReal speed, const SUMOReal leaderSpeed, const SUMOReal leaderMaxDecel) const {
         const int leaderSteps = int(leaderSpeed / ACCEL2SPEED(leaderMaxDecel));
-        const SUMOReal leaderBreak = SPEED2DIST(leaderSteps * leaderSpeed - ACCEL2SPEED(leaderMaxDecel) * leaderSteps * (leaderSteps+1) / 2);
+        const SUMOReal leaderBreak = SPEED2DIST(leaderSteps * leaderSpeed - ACCEL2SPEED(leaderMaxDecel) * leaderSteps * (leaderSteps + 1) / 2);
         return MAX2((SUMOReal) 0, brakeGap(speed) - leaderBreak);
     }
 

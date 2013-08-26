@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIDialog_EditViewport.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    2005-05-04
 /// @version $Id$
 ///
 // A dialog to change the viewport
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -70,11 +72,11 @@ public:
      * @param[in] y y-position to show the dialog at
      */
     GUIDialog_EditViewport(GUISUMOAbstractView* parent,  const char* name,
-                           SUMOReal zoom, SUMOReal xoff, SUMOReal yoff, int x, int y) throw();
+                           SUMOReal zoom, SUMOReal xoff, SUMOReal yoff, int x, int y) ;
 
 
     /// @brief Destructor
-    ~GUIDialog_EditViewport() throw();
+    ~GUIDialog_EditViewport() ;
 
 
 
@@ -82,19 +84,19 @@ public:
     /// @{
 
     /// Called when the user changes the viewport
-    long onCmdChanged(FXObject*,FXSelector,void*);
+    long onCmdChanged(FXObject*, FXSelector, void*);
 
     /// Called when the user wants to keep the viewport
-    long onCmdOk(FXObject*,FXSelector,void*);
+    long onCmdOk(FXObject*, FXSelector, void*);
 
     /// Called when the user wants to restore the viewport
-    long onCmdCancel(FXObject*,FXSelector,void*);
+    long onCmdCancel(FXObject*, FXSelector, void*);
 
     /// Called when the user wants to load a viewport
-    long onCmdLoad(FXObject*,FXSelector,void*);
+    long onCmdLoad(FXObject*, FXSelector, void*);
 
     /// Called when the user wants to save a viewport
-    long onCmdSave(FXObject*,FXSelector,void*);
+    long onCmdSave(FXObject*, FXSelector, void*);
     /// @}
 
 
@@ -104,7 +106,7 @@ public:
      * @param[in] xoff Current view's x-offset
      * @param[in] yoff Current view's y-offset
      */
-    void setValues(SUMOReal zoom, SUMOReal xoff, SUMOReal yoff) throw();
+    void setValues(SUMOReal zoom, SUMOReal xoff, SUMOReal yoff) ;
 
 
     /** @brief Resets old values
@@ -112,13 +114,13 @@ public:
      * @param[in] xoff Current view's x-offset
      * @param[in] yoff Current view's y-offset
      */
-    void setOldValues(SUMOReal zoom, SUMOReal xoff, SUMOReal yoff) throw();
+    void setOldValues(SUMOReal zoom, SUMOReal xoff, SUMOReal yoff) ;
 
 
     /** @brief Returns the information whether one of the spin dialers is grabbed
      * @return Whether the spin dialers are currently used
      */
-    bool haveGrabbed() const throw();
+    bool haveGrabbed() const ;
 
 
 protected:

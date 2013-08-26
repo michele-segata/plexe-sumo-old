@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimNodeDef_Edges.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -55,7 +57,7 @@ NIVissimNodeDef_Edges::NIVissimNodeDef_Edges(int id,
 
 
 NIVissimNodeDef_Edges::~NIVissimNodeDef_Edges() {
-    for (NIVissimNodeParticipatingEdgeVector::iterator i=myEdges.begin(); i!=myEdges.end(); i++) {
+    for (NIVissimNodeParticipatingEdgeVector::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
         delete(*i);
     }
     myEdges.clear();
@@ -79,19 +81,19 @@ NIVissimNodeDef_Edges::searchAndSetConnections() {
     IntVector connections;
     IntVector edges;
     Boundary boundary;
-    for (NIVissimNodeParticipatingEdgeVector::const_iterator i=myEdges.begin(); i!=myEdges.end(); i++) {
+    for (NIVissimNodeParticipatingEdgeVector::const_iterator i = myEdges.begin(); i != myEdges.end(); i++) {
         NIVissimNodeParticipatingEdge* edge = *i;
         NIVissimConnection* c =
             NIVissimConnection::dictionary(edge->getID());
         NIVissimEdge* e =
             NIVissimEdge::dictionary(edge->getID());
-        if (c!=0) {
+        if (c != 0) {
             connections.push_back(edge->getID());
             boundary.add(c->getFromGeomPosition());
             boundary.add(c->getToGeomPosition());
             c->setNodeCluster(myID);
         }
-        if (e!=0) {
+        if (e != 0) {
             edges.push_back(edge->getID());
             boundary.add(e->getGeomPosition(edge->getFromPos()));
             boundary.add(e->getGeomPosition(edge->getToPos()));
@@ -99,7 +101,7 @@ NIVissimNodeDef_Edges::searchAndSetConnections() {
     }
     NIVissimConnectionCluster* c =
         new NIVissimConnectionCluster(connections, boundary, myID, edges);
-    for (IntVector::iterator j=edges.begin(); j!=edges.end(); j++) {
+    for (IntVector::iterator j = edges.begin(); j != edges.end(); j++) {
         NIVissimEdge* edge = NIVissimEdge::dictionary(*j);
         edge->myConnectionClusters.push_back(c);
     }
@@ -109,9 +111,9 @@ NIVissimNodeDef_Edges::searchAndSetConnections() {
 
 SUMOReal
 NIVissimNodeDef_Edges::getEdgePosition(int edgeid) const {
-    for (NIVissimNodeParticipatingEdgeVector::const_iterator i=myEdges.begin(); i!=myEdges.end(); i++) {
+    for (NIVissimNodeParticipatingEdgeVector::const_iterator i = myEdges.begin(); i != myEdges.end(); i++) {
         NIVissimNodeParticipatingEdge* edge = *i;
-        if (edge->getID()==edgeid) {
+        if (edge->getID() == edgeid) {
             return (edge->getFromPos() + edge->getToPos()) / (SUMOReal) 2.0;
         }
     }

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    PCTypeDefHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // A handler for loading polygon type maps
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -54,11 +57,11 @@ public:
      * @param[in] oc The options used while loading the type map
      * @param[out] con The container to fill
      */
-    PCTypeDefHandler(OptionsCont& oc, PCTypeMap& con) throw();
+    PCTypeDefHandler(OptionsCont& oc, PCTypeMap& con) ;
 
 
     /// @brief Destructor
-    virtual ~PCTypeDefHandler() throw();
+    virtual ~PCTypeDefHandler() ;
 
 
 protected:
@@ -74,7 +77,7 @@ protected:
      * @todo Completely unsecure currently (invalid values may force abortion with no error message)
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
     //@}
 
 

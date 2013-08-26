@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    OptionsLoader.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 17 Dec 2001
 /// @version $Id$
 ///
 // A SAX-Handler for loading options
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -71,7 +74,7 @@ void OptionsLoader::startElement(const XMLCh* const name,
 
 void OptionsLoader::setValue(const std::string& key,
                              std::string& value) {
-    if (value.length()>0) {
+    if (value.length() > 0) {
         try {
             if (!setSecure(key, value)) {
                 WRITE_ERROR("Could not set option '" + key + "' (probably defined twice).");
@@ -104,10 +107,10 @@ OptionsLoader::setSecure(const std::string& name,
 
 void
 OptionsLoader::endElement(const XMLCh* const /*name*/) {
-    if (myItem.length()==0 || myValue.length()==0) {
+    if (myItem.length() == 0 || myValue.length() == 0) {
         return;
     }
-    if (myValue.find_first_not_of("\n\t \a")==std::string::npos) {
+    if (myValue.find_first_not_of("\n\t \a") == std::string::npos) {
         return;
     }
     setValue(myItem, myValue);
@@ -120,7 +123,7 @@ void
 OptionsLoader::warning(const SAXParseException& exception) {
     WRITE_WARNING(TplConvert<XMLCh>::_2str(exception.getMessage()));
     WRITE_WARNING(" (At line/column " \
-                  + toString(exception.getLineNumber()+1) + '/' \
+                  + toString(exception.getLineNumber() + 1) + '/' \
                   + toString(exception.getColumnNumber()) + ").");
     myError = true;
 }
@@ -132,7 +135,7 @@ OptionsLoader::error(const SAXParseException& exception) {
         TplConvert<XMLCh>::_2str(exception.getMessage()));
     WRITE_ERROR(
         " (At line/column "
-        + toString(exception.getLineNumber()+1) + '/'
+        + toString(exception.getLineNumber() + 1) + '/'
         + toString(exception.getColumnNumber()) + ").");
     myError = true;
 }
@@ -144,7 +147,7 @@ OptionsLoader::fatalError(const SAXParseException& exception) {
         TplConvert<XMLCh>::_2str(exception.getMessage()));
     WRITE_ERROR(
         " (At line/column "
-        + toString(exception.getLineNumber()+1) + '/'
+        + toString(exception.getLineNumber() + 1) + '/'
         + toString(exception.getColumnNumber()) + ").");
     myError = true;
 }

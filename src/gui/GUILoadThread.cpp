@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUILoadThread.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Class describing the thread that performs the loading of a simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -92,10 +95,8 @@ GUILoadThread::run() {
     GUINet* net = 0;
     int simStartTime = 0;
     int simEndTime = 0;
-
-    // remove old options
     OptionsCont& oc = OptionsCont::getOptions();
-    oc.clear();
+
     // within gui-based applications, nothing is reported to the console
     MsgHandler::getErrorInstance()->report2cout(false);
     MsgHandler::getErrorInstance()->report2cerr(false);
@@ -156,7 +157,7 @@ GUILoadThread::run() {
             simEndTime = string2time(oc.getString("end"));
         }
     } catch (ProcessError& e) {
-        if (std::string(e.what())!=std::string("Process Error") && std::string(e.what())!=std::string("")) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
@@ -169,7 +170,7 @@ GUILoadThread::run() {
         net = 0;
 #endif
     }
-    if (net==0) {
+    if (net == 0) {
         MSNet::clearAll();
     }
     delete eb;
@@ -201,15 +202,19 @@ GUILoadThread::initOptions() {
         OptionsCont& oc = OptionsCont::getOptions();
         oc.clear();
         MSFrame::fillOptions();
-        if (myLoadNet) {
-            oc.set("net-file", myFile);
+        if (myFile != "") {
+            if (myLoadNet) {
+                oc.set("net-file", myFile);
+            } else {
+                oc.set("configuration-file", myFile);
+            }
+            OptionsIO::getOptions(true, 1, 0);
         } else {
-            oc.set("configuration-file", myFile);
+            OptionsIO::getOptions(true);
         }
-        OptionsIO::getOptions(true, 1, 0);
         return true;
     } catch (ProcessError& e) {
-        if (std::string(e.what())!=std::string("Process Error") && std::string(e.what())!=std::string("")) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);

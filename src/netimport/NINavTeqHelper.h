@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NINavTeqHelper.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Jul 2006
 /// @version $Id$
 ///
 // Some parser methods shared around several formats containing NavTeq-Nets
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -66,7 +69,7 @@ public:
      * @exception ProcessError If the given speed class definition is not a number or if it is not known
      */
     static SUMOReal getSpeed(const std::string& id,
-                             const std::string& speedClassS) throw(ProcessError);
+                             const std::string& speedClassS) ;
 
 
     /** @brief Returns the lane number evaluating the given Navteq-description
@@ -78,7 +81,7 @@ public:
      * @exception ProcessError If the given lane number definition is not a number or if it is not known
      */
     static unsigned int getLaneNumber(const std::string& id,
-                                      const std::string& laneNoS, SUMOReal speed) throw(ProcessError);
+                                      const std::string& laneNoS, SUMOReal speed) ;
 
 
     /** @brief Adds vehicle classes parsing the given list of allowed vehicles

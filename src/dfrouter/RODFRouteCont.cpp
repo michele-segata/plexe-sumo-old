@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RODFRouteCont.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // A container for routes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -44,17 +47,17 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-RODFRouteCont::RODFRouteCont() throw() {}
+RODFRouteCont::RODFRouteCont() {}
 
 
-RODFRouteCont::~RODFRouteCont() throw() {
+RODFRouteCont::~RODFRouteCont() {
 }
 
 
 void
-RODFRouteCont::addRouteDesc(RODFRouteDesc& desc) throw() {
+RODFRouteCont::addRouteDesc(RODFRouteDesc& desc) {
     // routes may be duplicate as in-between routes may have different starting points
-    if (find_if(myRoutes.begin(), myRoutes.end(), route_finder(desc))==myRoutes.end()) {
+    if (find_if(myRoutes.begin(), myRoutes.end(), route_finder(desc)) == myRoutes.end()) {
         // compute route id
         setID(desc);
         myRoutes.push_back(desc);
@@ -66,9 +69,9 @@ RODFRouteCont::addRouteDesc(RODFRouteDesc& desc) throw() {
 
 
 bool
-RODFRouteCont::removeRouteDesc(RODFRouteDesc& desc) throw() {
+RODFRouteCont::removeRouteDesc(RODFRouteDesc& desc) {
     std::vector<RODFRouteDesc>::const_iterator j = find_if(myRoutes.begin(), myRoutes.end(), route_finder(desc));
-    if (j==myRoutes.end()) {
+    if (j == myRoutes.end()) {
         return false;
     }
     return true;
@@ -77,18 +80,18 @@ RODFRouteCont::removeRouteDesc(RODFRouteDesc& desc) throw() {
 
 bool
 RODFRouteCont::save(std::vector<std::string> &saved,
-                    const std::string& prependix, OutputDevice& out) throw(IOError) {
+                    const std::string& prependix, OutputDevice& out) {
     bool haveSavedOneAtLeast = false;
-    for (std::vector<RODFRouteDesc>::const_iterator j=myRoutes.begin(); j!=myRoutes.end(); ++j) {
+    for (std::vector<RODFRouteDesc>::const_iterator j = myRoutes.begin(); j != myRoutes.end(); ++j) {
         const RODFRouteDesc& desc = (*j);
-        if (find(saved.begin(), saved.end(), desc.routename)!=saved.end()) {
+        if (find(saved.begin(), saved.end(), desc.routename) != saved.end()) {
             continue;
         }
         saved.push_back((*j).routename);
-        assert(desc.edges2Pass.size()>=1);
+        assert(desc.edges2Pass.size() >= 1);
         out << "   <route id=\"" << prependix << desc.routename << "\" edges=\"";
-        for (std::vector<ROEdge*>::const_iterator k=desc.edges2Pass.begin(); k!=desc.edges2Pass.end(); k++) {
-            if (k!=desc.edges2Pass.begin()) {
+        for (std::vector<ROEdge*>::const_iterator k = desc.edges2Pass.begin(); k != desc.edges2Pass.end(); k++) {
+            if (k != desc.edges2Pass.begin()) {
                 out << ' ';
             }
             out << (*k)->getID();
@@ -101,22 +104,22 @@ RODFRouteCont::save(std::vector<std::string> &saved,
 
 
 void
-RODFRouteCont::sortByDistance() throw() {
+RODFRouteCont::sortByDistance() {
     sort(myRoutes.begin(), myRoutes.end(), by_distance_sorter());
 }
 
 
 void
-RODFRouteCont::removeIllegal(const std::vector<std::vector<ROEdge*> > &illegals) throw() {
-    for (std::vector<RODFRouteDesc>::iterator i=myRoutes.begin(); i!=myRoutes.end();) {
+RODFRouteCont::removeIllegal(const std::vector<std::vector<ROEdge*> > &illegals) {
+    for (std::vector<RODFRouteDesc>::iterator i = myRoutes.begin(); i != myRoutes.end();) {
         RODFRouteDesc& desc = *i;
         bool remove = false;
-        for (std::vector<std::vector<ROEdge*> >::const_iterator j=illegals.begin(); !remove&&j!=illegals.end(); ++j) {
+        for (std::vector<std::vector<ROEdge*> >::const_iterator j = illegals.begin(); !remove && j != illegals.end(); ++j) {
             int noFound = 0;
-            for (std::vector<ROEdge*>::const_iterator k=(*j).begin(); !remove&&k!=(*j).end(); ++k) {
-                if (find(desc.edges2Pass.begin(), desc.edges2Pass.end(), *k)!=desc.edges2Pass.end()) {
+            for (std::vector<ROEdge*>::const_iterator k = (*j).begin(); !remove && k != (*j).end(); ++k) {
+                if (find(desc.edges2Pass.begin(), desc.edges2Pass.end(), *k) != desc.edges2Pass.end()) {
                     noFound++;
-                    if (noFound>1) {
+                    if (noFound > 1) {
                         remove = true;
                     }
                 }
@@ -132,16 +135,16 @@ RODFRouteCont::removeIllegal(const std::vector<std::vector<ROEdge*> > &illegals)
 
 
 void
-RODFRouteCont::addAllEndFollower() throw() {
+RODFRouteCont::addAllEndFollower() {
     std::vector<RODFRouteDesc> newRoutes;
-    for (std::vector<RODFRouteDesc>::iterator i=myRoutes.begin(); i!=myRoutes.end(); ++i) {
+    for (std::vector<RODFRouteDesc>::iterator i = myRoutes.begin(); i != myRoutes.end(); ++i) {
         RODFRouteDesc& desc = *i;
-        ROEdge* last = *(desc.edges2Pass.end()-1);
-        if (last->getNoFollowing()==0) {
+        ROEdge* last = *(desc.edges2Pass.end() - 1);
+        if (last->getNoFollowing() == 0) {
             newRoutes.push_back(desc);
             continue;
         }
-        for (unsigned int j=0; j<last->getNoFollowing(); ++j) {
+        for (unsigned int j = 0; j < last->getNoFollowing(); ++j) {
             RODFRouteDesc ndesc(desc);
             ndesc.edges2Pass.push_back(last->getFollower(j));
             setID(ndesc);
@@ -153,10 +156,10 @@ RODFRouteCont::addAllEndFollower() throw() {
 
 
 void
-RODFRouteCont::setID(RODFRouteDesc& desc) const throw() {
+RODFRouteCont::setID(RODFRouteDesc& desc) const {
     std::pair<ROEdge*, ROEdge*> c(desc.edges2Pass[0], desc.edges2Pass.back());
     desc.routename = c.first->getID() + "_to_" + c.second->getID();
-    if (myConnectionOccurences.find(c)==myConnectionOccurences.end()) {
+    if (myConnectionOccurences.find(c) == myConnectionOccurences.end()) {
         myConnectionOccurences[c] = 0;
     } else {
         myConnectionOccurences[c] = myConnectionOccurences[c] + 1;

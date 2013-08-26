@@ -1,7 +1,9 @@
 # -*- coding: Latin-1 -*-
 """
 @file    GenerateRawFCD.py
-@author  Sascha.Krieg@dlr.de
+@author  Sascha Krieg
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-07-26
 
 Creates files with a comparison of speeds for each edge between the taxis and the average speed from the current edge.
@@ -14,7 +16,8 @@ Needed files (have a look at Path.py):
     FQvtypePickle
     FQvehPickle
     FQoutput
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

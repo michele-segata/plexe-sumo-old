@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimSingleTypeParser_Streckendefinition.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Wed, 18 Dec 2002
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -63,13 +65,13 @@ NIVissimSingleTypeParser_Streckendefinition::parse(std::istream& from) {
     //  followed by the mandatory "Laenge"
     std::string name, label, type;
     SUMOReal length = -1;
-    while (length<0) {
+    while (length < 0) {
         tag = overrideOptionalLabel(from);
-        if (tag=="name") {
+        if (tag == "name") {
             name = readName(from);
-        } else if (tag=="typ") {
+        } else if (tag == "typ") {
             type = myRead(from);
-        } else if (tag=="laenge") {
+        } else if (tag == "laenge") {
             from >> length; // type-checking is missing!
         }
     }
@@ -81,19 +83,19 @@ NIVissimSingleTypeParser_Streckendefinition::parse(std::istream& from) {
     //  occurs
     SUMOReal zuschlag1, zuschlag2;
     zuschlag1 = zuschlag2 = 0;
-    while (tag!="von") {
+    while (tag != "von") {
         tag = myRead(from);
-        if (tag=="zuschlag") {
+        if (tag == "zuschlag") {
             from >> zuschlag1; // type-checking is missing!
             tag = myRead(from);
-            if (tag=="zuschlag") {
+            if (tag == "zuschlag") {
                 from >> zuschlag2; // type-checking is missing!
             }
         }
     }
     // Read the geometry information
     PositionVector geom;
-    while (tag!="nach") {
+    while (tag != "nach") {
         geom.push_back_noDoublePos(getPosition(from));
         tag = myRead(from);
         try {
@@ -106,12 +108,12 @@ NIVissimSingleTypeParser_Streckendefinition::parse(std::istream& from) {
     NIVissimClosedLanesVector clv;
     // check whether a next close lane definition can be found
     tag = readEndSecure(from);
-    while (tag!="DATAEND") {
-        if (tag=="keinspurwechsel") {
-            while (tag!="DATAEND") {
+    while (tag != "DATAEND") {
+        if (tag == "keinspurwechsel") {
+            while (tag != "DATAEND") {
                 tag = readEndSecure(from);
             }
-        } else if (tag=="spur") {
+        } else if (tag == "spur") {
             // get the lane number
             int laneNo;
             from >> laneNo; // type-checking is missing!
@@ -119,7 +121,7 @@ NIVissimSingleTypeParser_Streckendefinition::parse(std::istream& from) {
             IntVector assignedVehicles;
             tag = myRead(from);
             tag = myRead(from);
-            while (tag!="DATAEND"&&tag!="spur"&&tag!="keinspurwechsel") {
+            while (tag != "DATAEND" && tag != "spur" && tag != "keinspurwechsel") {
                 int classes = TplConvert<char>::_2int(tag.c_str());
                 assignedVehicles.push_back(classes);
                 tag = readEndSecure(from);

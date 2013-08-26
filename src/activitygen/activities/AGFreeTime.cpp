@@ -1,6 +1,8 @@
 /****************************************************************************/
 /// @file    AGFreeTime.cpp
 /// @author  Piotr Woznica
+/// @author  Daniel Krajzewicz
+/// @author  Walter Bamberger
 /// @date    July 2010
 /// @version $Id$
 ///
@@ -8,14 +10,15 @@
 // like visiting the family or party.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -44,12 +47,12 @@ const int AGFreeTime::DAY = 1;
 const int AGFreeTime::EVENING = 2;
 const int AGFreeTime::NIGHT = 4;
 
-const int AGFreeTime::TB_DAY = (new AGTime(0,8,0))->getTime();
-const int AGFreeTime::TE_DAY = (new AGTime(0,18,0))->getTime();
-const int AGFreeTime::TB_EVENING = (new AGTime(0,19,0))->getTime();
-const int AGFreeTime::TE_EVENING = (new AGTime(0,23,59))->getTime();
-const int AGFreeTime::TB_NIGHT = (new AGTime(0,23,0))->getTime();
-const int AGFreeTime::TE_NIGHT = (new AGTime(1,5,0))->getTime();
+const int AGFreeTime::TB_DAY = (new AGTime(0, 8, 0))->getTime();
+const int AGFreeTime::TE_DAY = (new AGTime(0, 18, 0))->getTime();
+const int AGFreeTime::TB_EVENING = (new AGTime(0, 19, 0))->getTime();
+const int AGFreeTime::TE_EVENING = (new AGTime(0, 23, 59))->getTime();
+const int AGFreeTime::TB_NIGHT = (new AGTime(0, 23, 0))->getTime();
+const int AGFreeTime::TE_NIGHT = (new AGTime(1, 5, 0))->getTime();
 
 
 // ===========================================================================
@@ -102,7 +105,7 @@ int
 AGFreeTime::possibleTypeOfTrip() {
     int val = 0;
     if (hh->adults.front().getAge() >= ds->limitAgeRetirement && tReady == 0) {
-        val += DAY+EVENING;
+        val += DAY + EVENING;
     } else {
         if (hh->getPeopleNbr() > hh->getAdultNbr()) {
             val += NIGHT;
@@ -110,7 +113,7 @@ AGFreeTime::possibleTypeOfTrip() {
 
         std::list<AGAdult>::iterator itA;
         bool noBodyWorks = true;
-        for (itA=hh->adults.begin() ; itA!=hh->adults.end() ; ++itA) {
+        for (itA = hh->adults.begin() ; itA != hh->adults.end() ; ++itA) {
             if (itA->isWorking()) {
                 noBodyWorks = false;
             }
@@ -119,7 +122,7 @@ AGFreeTime::possibleTypeOfTrip() {
             val += DAY;
         }
 
-        if (tReady < (*(new AGTime(0,22,0))).getTime()) {
+        if (tReady < (*(new AGTime(0, 22, 0))).getTime()) {
             val += EVENING;
         }
     }
@@ -133,7 +136,7 @@ AGFreeTime::typeFromHomeDay(int day) {
         return true;
     }
     AGPosition destination(hh->getTheCity()->getRandomStreet());
-    int depTime = randomTimeBetween(MAX2(backHome, TB_DAY), (TB_DAY+TE_DAY)/2);
+    int depTime = randomTimeBetween(MAX2(backHome, TB_DAY), (TB_DAY + TE_DAY) / 2);
     int arrTime = this->arrHour(hh->getPosition(), destination, depTime);
     int retTime = randomTimeBetween(arrTime, TE_DAY);
     if (depTime < 0 || retTime < 0) {
@@ -190,12 +193,12 @@ AGFreeTime::typeFromHomeNight(int day) {
     AGTime departureTime(depTime);
     nextDay = departureTime.getDay();
     departureTime.setDay(0);
-    AGTrip depTrip(hh->getPosition(), destination, hh->cars.front().getName(), departureTime.getTime(), day+nextDay);
+    AGTrip depTrip(hh->getPosition(), destination, hh->cars.front().getName(), departureTime.getTime(), day + nextDay);
 
     AGTime returnTime(depTime);
     nextDay = returnTime.getDay();
     returnTime.setDay(0);
-    AGTrip retTrip(destination, hh->getPosition(), hh->cars.front().getName(), returnTime.getTime(), day+nextDay);
+    AGTrip retTrip(destination, hh->getPosition(), hh->cars.front().getName(), returnTime.getTime(), day + nextDay);
 
     this->partialActivityTrips.push_back(depTrip);
     this->partialActivityTrips.push_back(retTrip);
@@ -208,7 +211,7 @@ AGFreeTime::generateTrips() {
     possibleType = possibleTypeOfTrip();
     int type;
 
-    for (int day=1 ; day <= nbrDays ; ++day) {
+    for (int day = 1 ; day <= nbrDays ; ++day) {
         type = decideTypeOfTrip();
         if (type == 0) {
             continue;
@@ -235,7 +238,7 @@ AGFreeTime::whenBackHome() {
     int timeBack = 0;
     if (!this->previousTrips->empty()) {
         std::list<AGTrip>::iterator itT;
-        for (itT=previousTrips->begin() ; itT!=previousTrips->end() ; ++itT) {
+        for (itT = previousTrips->begin() ; itT != previousTrips->end() ; ++itT) {
             if (timeBack < itT->getArrTime(this->timePerKm) && itT->isDaily()) {
                 timeBack = itT->getArrTime(this->timePerKm);
             }
@@ -249,7 +252,7 @@ AGFreeTime::whenBackHomeThisDay(int day) {
     int timeBack = 0;
     if (!this->previousTrips->empty()) {
         std::list<AGTrip>::iterator itT;
-        for (itT=previousTrips->begin() ; itT!=previousTrips->end() ; ++itT) {
+        for (itT = previousTrips->begin() ; itT != previousTrips->end() ; ++itT) {
             if (timeBack < itT->getArrTime(this->timePerKm) && (itT->getDay() == day || itT->isDaily())) {
                 timeBack = itT->getArrTime(this->timePerKm);
             }
@@ -260,11 +263,11 @@ AGFreeTime::whenBackHomeThisDay(int day) {
 
 int
 AGFreeTime::whenBeginActivityNextDay(int day) {
-    AGTime timeBack(1,0,0);
+    AGTime timeBack(1, 0, 0);
     if (!this->previousTrips->empty()) {
         std::list<AGTrip>::iterator itT;
-        for (itT=previousTrips->begin() ; itT!=previousTrips->end() ; ++itT) {
-            if (timeBack.getTime() > itT->getTime() && (itT->getDay() == (day+1) || itT->isDaily())) {
+        for (itT = previousTrips->begin() ; itT != previousTrips->end() ; ++itT) {
+            if (timeBack.getTime() > itT->getTime() && (itT->getDay() == (day + 1) || itT->isDaily())) {
                 timeBack.setTime(itT->getTime());
             }
         }

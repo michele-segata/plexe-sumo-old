@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NGFrame.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    06.05.2011
 /// @version $Id$
 ///
 // Sets and checks options for netgen
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -138,7 +140,7 @@ NGFrame::fillOptions() {
     oc.addSynonyme("rand.min-distance", "min-dist");
     oc.addDescription("rand.min-distance", "Random Network", "");
 
-    oc.doRegister("rand.min-angle", new Option_Float((SUMOReal)(45.0/180.0*PI)));
+    oc.doRegister("rand.min-angle", new Option_Float((SUMOReal)(45.0 / 180.0 * PI)));
     oc.addSynonyme("rand.min-angle", "rand-min-anglee", true);
     oc.addSynonyme("rand.min-angle", "min-angle");
     oc.addDescription("rand.min-angle", "Random Network", "");
@@ -200,11 +202,11 @@ NGFrame::checkOptions() {
     if (oc.getBool("rand")) {
         no++;
     }
-    if (no==0) {
+    if (no == 0) {
         WRITE_ERROR("You have to specify the type of network to generate.");
         ok = false;
     }
-    if (no>1) {
+    if (no > 1) {
         WRITE_ERROR("You may specify only one type of network to generate at once.");
         ok = false;
     }

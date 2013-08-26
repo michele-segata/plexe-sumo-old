@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSInternalLane.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2003
 /// @version $Id$
 ///
 // Representation of a lane over a junction
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,32 +61,32 @@ MSInternalLane::MSInternalLane(const std::string& id, SUMOReal maxSpeed,
                                SUMOReal length, MSEdge* const edge, unsigned int numericalID,
                                const PositionVector& shape, SUMOReal width,
                                const SUMOVehicleClasses& allowed,
-                               const SUMOVehicleClasses& disallowed) throw()
+                               const SUMOVehicleClasses& disallowed)
     : MSLane(id, maxSpeed, length, edge, numericalID, shape, width, allowed, disallowed),
       myFoesIndex(-1) {}
 
 
-MSInternalLane::~MSInternalLane() throw() {}
+MSInternalLane::~MSInternalLane() {}
 
 
 void
 MSInternalLane::setParentJunctionInformation(MSLogicJunction::InnerState* const foescont,
-        unsigned int foesIdx) throw() {
+        unsigned int foesIdx) {
     myFoesCont = foescont;
     myFoesIndex = (int) foesIdx;
 }
 
 
 void
-MSInternalLane::setPassPosition(SUMOReal passPos) throw() {
+MSInternalLane::setPassPosition(SUMOReal passPos) {
     myPassPosition = passPos;
 }
 
 
 bool
 MSInternalLane::moveCritical(SUMOTime t) {
-    assert(myVehicles.size()>0);
-    if (myFoesIndex>=0) {
+    assert(myVehicles.size() > 0);
+    if (myFoesIndex >= 0) {
         (*myFoesCont)[myFoesIndex] = true;
     }
     return MSLane::moveCritical(t);

@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSBitSetLogic.h
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Wed, 12 Dez 2001
 /// @version $Id$
 ///
 //	»missingDescription«
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -78,20 +82,20 @@ public:
 
 
     /// Returns the foes of the given link
-    const MSLogicJunction::LinkFoes& getFoesFor(unsigned int linkIndex) const throw() {
+    const MSLogicJunction::LinkFoes& getFoesFor(unsigned int linkIndex) const {
         return (*myLogic)[linkIndex];
     }
 
-    const std::bitset<64> &getInternalFoesFor(unsigned int linkIndex) const throw() {
+    const std::bitset<64> &getInternalFoesFor(unsigned int linkIndex) const {
         return (*myInternalLinksFoes)[linkIndex];
     }
 
-    bool getIsCont(unsigned int linkIndex) const throw() {
+    bool getIsCont(unsigned int linkIndex) const {
         return myConts.test(linkIndex);
     }
 
-    virtual bool isCrossing() const throw() {
-        for (typename Logic::const_iterator i=myLogic->begin(); i!=myLogic->end(); ++i) {
+    virtual bool isCrossing() const {
+        for (typename Logic::const_iterator i = myLogic->begin(); i != myLogic->end(); ++i) {
             if ((*i).any()) {
                 return true;
             }

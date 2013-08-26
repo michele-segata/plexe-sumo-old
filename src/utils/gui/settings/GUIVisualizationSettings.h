@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIVisualizationSettings.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Stores the information about how to visualize structures
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -82,7 +85,7 @@ class GUIVisualizationSettings {
 public:
 
     /// @brief constructor
-    GUIVisualizationSettings() throw();
+    GUIVisualizationSettings() ;
 
     /// @brief The name of this setting
     std::string name;
@@ -146,6 +149,8 @@ public:
     bool showBlinker;
     /// @brief Information whether the lane change preference shall be drawn
     bool drawLaneChangePreference;
+    /// @brief Information whether the minimum gap shall be drawn
+    bool drawMinGap;
     // Setting bundles for optional drawing vehicle names
     GUIVisualizationTextSettings vehicleName;
     //@}
@@ -212,7 +217,7 @@ public:
     /** @brief Writes the settings into an output device
      * @param[in] dev The device to write the settings into
      */
-    void save(OutputDevice& dev) const throw(IOError);
+    void save(OutputDevice& dev) const;
 
     /** @brief Returns the number of the active lane (edge) coloring schme
      * @return number of the active scheme

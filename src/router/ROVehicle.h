@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    ROVehicle.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A vehicle as used by router
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,11 +67,11 @@ public:
      * @todo Why is the vehicle builder given?
      */
     ROVehicle(const SUMOVehicleParameter& pars,
-              RORouteDef* route, SUMOVTypeParameter* type) throw();
+              RORouteDef* route, SUMOVTypeParameter* type) ;
 
 
     /// @brief Destructor
-    virtual ~ROVehicle() throw();
+    virtual ~ROVehicle() ;
 
 
     /** @brief Returns the definition of the route the vehicle takes
@@ -78,7 +80,7 @@ public:
      *
      * @todo Why not return a reference?
      */
-    RORouteDef* getRouteDefinition() const throw() {
+    RORouteDef* getRouteDefinition() const {
         return myRoute;
     }
 
@@ -89,7 +91,7 @@ public:
      *
      * @todo Why not return a reference?
      */
-    const SUMOVTypeParameter* getType() const throw() {
+    const SUMOVTypeParameter* getType() const {
         return myType;
     }
 
@@ -98,7 +100,7 @@ public:
      *
      * @return The id of the vehicle
      */
-    const std::string& getID() const throw() {
+    const std::string& getID() const {
         return myParameter.id;
     }
 
@@ -107,7 +109,7 @@ public:
      *
      * @return The vehicle's depart time
      */
-    SUMOTime getDepartureTime() const throw() {
+    SUMOTime getDepartureTime() const {
         return myParameter.depart;
     }
 
@@ -124,8 +126,8 @@ public:
      * @exception IOError If something fails (not yet implemented)
      * @todo What is the given route definition?
      */
-    void saveAllAsXML(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
-                      OutputDevice& os, OutputDevice* const altos, bool withExitTimes) const throw(IOError);
+    void saveAllAsXML(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
+                      OutputDevice& os, OutputDevice* const altos, bool withExitTimes) const;
 
 
     /** @brief Returns a copy of the vehicle using a new id, departure time and route
@@ -137,7 +139,7 @@ public:
      *
      * @todo Is this used? What for if everything is replaced?
      */
-    virtual ROVehicle* copy(const std::string& id, unsigned int depTime, RORouteDef* newRoute) throw();
+    virtual ROVehicle* copy(const std::string& id, unsigned int depTime, RORouteDef* newRoute) ;
 
 
 protected:

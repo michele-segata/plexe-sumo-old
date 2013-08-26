@@ -1,18 +1,24 @@
 /****************************************************************************/
 /// @file    MSFrame.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Eric Nicolay
+/// @author  Jakob Erdmann
+/// @author  Axel Wegener
+/// @author  Thimor Bohn
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Sets and checks options for microsim; inits global outputs and settings
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -247,15 +253,29 @@ MSFrame::fillOptions() {
     // add rand options
     RandHelper::insertRandOptions();
 
+    // add GUI options
+    // the reason that we include them in vanilla sumo as well is to make reusing config files easy
     oc.addOptionSubTopic("GUI Only");
     oc.doRegister("gui-settings-file", new Option_FileName());
     oc.addDescription("gui-settings-file", "GUI Only", "Load visualisation settings from FILE");
+
+    oc.doRegister("quit-on-end", 'Q', new Option_Bool(false));
+    oc.addDescription("quit-on-end", "GUI Only", "Quits the GUI when the simulation stops");
+
+    oc.doRegister("game", 'G', new Option_Bool(false));
+    oc.addDescription("game", "GUI Only", "Start the GUI in gaming mode");
+
+    oc.doRegister("no-start", 'N', new Option_Bool(false));
+    oc.addDescription("no-start", "GUI Only", "Does not start the simulation after loading");
+
+    oc.doRegister("disable-textures", 'T', new Option_Bool(false));
+    oc.addDescription("disable-textures", "GUI Only", "Do not load background pictures");
 
 }
 
 
 void
-MSFrame::buildStreams() throw(IOError) {
+MSFrame::buildStreams() {
     // standard outputs
     OutputDevice::createDeviceByOption("netstate-dump", "sumo-netstate");
     OutputDevice::createDeviceByOption("summary-output", "summary");
@@ -305,7 +325,7 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
     MSGlobals::gUsingInternalLanes = false;
 #endif
     // set the grid lock time
-    MSGlobals::gTimeToGridlock = string2time(oc.getString("time-to-teleport"))<0 ? 0 : string2time(oc.getString("time-to-teleport"));
+    MSGlobals::gTimeToGridlock = string2time(oc.getString("time-to-teleport")) < 0 ? 0 : string2time(oc.getString("time-to-teleport"));
     MSGlobals::gCheck4Accidents = !oc.getBool("ignore-accidents");
     MSGlobals::gCheckRoutes = !oc.getBool("ignore-route-errors");
 #ifdef HAVE_MESOSIM
@@ -323,7 +343,7 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
             num /= 5;
             den /= 5;
         }
-        MSGlobals::gFractions[SUMOReal(i)/1000.] = std::make_pair(num, den);
+        MSGlobals::gFractions[SUMOReal(i) / 1000.] = std::make_pair(num, den);
     }
 
 #ifdef HAVE_SUBSECOND_TIMESTEPS

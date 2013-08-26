@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIImporter_MATSim.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Tue, 26.04.2011
 /// @version $Id$
 ///
 // Importer for networks stored in MATSim format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -83,11 +85,11 @@ private:
         /** @brief Contructor
          * @param[in] toFill The nodes container to fill
          */
-        NodesHandler(NBNodeCont& toFill) throw();
+        NodesHandler(NBNodeCont& toFill) ;
 
 
         /// @brief Destructor
-        ~NodesHandler() throw();
+        ~NodesHandler() ;
 
 
     protected:
@@ -101,7 +103,7 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myStartElement
          */
-        void myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError);
+        void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
         //@}
 
 
@@ -137,11 +139,11 @@ private:
          */
         EdgesHandler(const NBNodeCont& nc, NBEdgeCont& toFill,
                      bool keepEdgeLengths, bool lanesFromCapacity,
-                     NBCapacity2Lanes capacity2Lanes) throw();
+                     NBCapacity2Lanes capacity2Lanes) ;
 
 
         /// @brief Destructor
-        ~EdgesHandler() throw();
+        ~EdgesHandler() ;
 
 
     protected:
@@ -155,7 +157,7 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myStartElement
          */
-        void myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError);
+        void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
         //@}
 
 

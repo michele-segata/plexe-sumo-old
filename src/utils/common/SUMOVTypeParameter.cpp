@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    SUMOVTypeParameter.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    10.09.2009
 /// @version $Id$
 ///
 // Structure representing possible vehicle parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -44,7 +47,7 @@
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-SUMOVTypeParameter::SUMOVTypeParameter() throw()
+SUMOVTypeParameter::SUMOVTypeParameter()
     : id(DEFAULT_VTYPE_ID), length(DEFAULT_VEH_LENGTH),
       minGap(DEFAULT_VEH_MINGAP), maxSpeed(DEFAULT_VEH_MAXSPEED),
       defaultProbability(DEFAULT_VEH_PROB),
@@ -58,7 +61,7 @@ SUMOVTypeParameter::SUMOVTypeParameter() throw()
 
 
 void
-SUMOVTypeParameter::write(OutputDevice& dev) const throw(IOError) {
+SUMOVTypeParameter::write(OutputDevice& dev) const {
     if (onlyReferenced) {
         return;
     }
@@ -98,15 +101,15 @@ SUMOVTypeParameter::write(OutputDevice& dev) const throw(IOError) {
         dev.writeAttr(SUMO_ATTR_COLOR, color);
     }
 
-    if (cfParameter.size()!=0) {
+    if (cfParameter.size() != 0) {
         dev << ">\n";
         dev.openTag(cfModel);
         std::vector<SumoXMLAttr> attrs;
-        for (CFParams::const_iterator i=cfParameter.begin(); i!=cfParameter.end(); ++i) {
+        for (CFParams::const_iterator i = cfParameter.begin(); i != cfParameter.end(); ++i) {
             attrs.push_back(i->first);
         }
         std::sort(attrs.begin(), attrs.end());
-        for (std::vector<SumoXMLAttr>::const_iterator i=attrs.begin(); i!=attrs.end(); ++i) {
+        for (std::vector<SumoXMLAttr>::const_iterator i = attrs.begin(); i != attrs.end(); ++i) {
             dev.writeAttr(*i, cfParameter.find(*i)->second);
         }
         dev.closeTag(true);

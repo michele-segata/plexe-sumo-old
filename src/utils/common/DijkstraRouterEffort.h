@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    DijkstraRouterEffort.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 25 July 2005
 /// @version $Id$
 ///
 // Dijkstra shortest path algorithm using other values
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -115,31 +118,29 @@ public:
             if (nod1->effort == nod2->effort) {
                 return nod1->edge->getNumericalID() > nod2->edge->getNumericalID();
             }
-            return nod1->effort>nod2->effort;
+            return nod1->effort > nod2->effort;
         }
     };
 
-    virtual SUMOReal getEffort(const E* const e, const V* const v, SUMOReal t) = 0;
-    virtual SUMOReal getTravelTime(const E* const e, const V* const v, SUMOReal t) = 0;
+    virtual SUMOReal getEffort(const E* const e, const V* const v, SUMOReal t) const = 0;
+    virtual SUMOReal getTravelTime(const E* const e, const V* const v, SUMOReal t) const = 0;
 
 
     /** @brief Builds the route between the given edges using the minimum afford at the given time
         The definition of the afford depends on the wished routing scheme */
     virtual void compute(const E* from, const E* to, const V* const vehicle,
                          SUMOTime msTime, std::vector<const E*> &into) {
-
-        SUMOReal time = (SUMOReal) msTime / 1000.;
-        for (typename std::vector<EdgeInfo>::iterator i=myEdgeInfos.begin(); i!=myEdgeInfos.end(); i++) {
+        for (typename std::vector<EdgeInfo>::iterator i = myEdgeInfos.begin(); i != myEdgeInfos.end(); i++) {
             (*i).effort = std::numeric_limits<SUMOReal>::max();
             (*i).visited = false;
         }
-        assert(from!=0&&to!=0);
+        assert(from != 0 && to != 0);
         myFrontierList.clear();
         // add begin node
         EdgeInfo* const fromInfo = &(myEdgeInfos[from->getNumericalID()]);
         fromInfo->effort = 0;
         fromInfo->prev = 0;
-        fromInfo->leaveTime = (SUMOReal) time;
+        fromInfo->leaveTime = STEPS2TIME(msTime);
         myFrontierList.push_back(fromInfo);
         // loop
         while (!myFrontierList.empty()) {
@@ -154,12 +155,12 @@ public:
                 return;
             }
             minimumInfo->visited = true;
-            const SUMOReal effort = minimumInfo->effort + getEffort(minEdge, vehicle, (SUMOTime) minimumInfo->leaveTime);
-            const SUMOReal leaveTime = minimumInfo->leaveTime + getTravelTime(minEdge, vehicle, (SUMOTime)minimumInfo->leaveTime);
+            const SUMOReal effort = minimumInfo->effort + getEffort(minEdge, vehicle, minimumInfo->leaveTime);
+            const SUMOReal leaveTime = minimumInfo->leaveTime + getTravelTime(minEdge, vehicle, minimumInfo->leaveTime);
             // check all ways from the node with the minimal length
             unsigned int i = 0;
-            unsigned int length_size = minEdge->getNoFollowing();
-            for (i=0; i<length_size; i++) {
+            const unsigned int length_size = minEdge->getNoFollowing();
+            for (i = 0; i < length_size; i++) {
                 const E* const follower = minEdge->getFollower(i);
                 EdgeInfo* const followerInfo = &(myEdgeInfos[follower->getNumericalID()]);
                 // check whether it can be used
@@ -186,16 +187,15 @@ public:
     }
 
 
-    SUMOReal recomputeCosts(const std::vector<const E*> &edges, const V* const v, SUMOTime msTime) throw() {
-        SUMOReal time = (SUMOReal) msTime / 1000.;
+    SUMOReal recomputeCosts(const std::vector<const E*> &edges, const V* const v, SUMOTime msTime) const {
         SUMOReal costs = 0;
-        SUMOReal t = (SUMOReal) time;
-        for (typename std::vector<const E*>::const_iterator i=edges.begin(); i!=edges.end(); ++i) {
+        SUMOReal t = STEPS2TIME(msTime);
+        for (typename std::vector<const E*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
             if (PF::operator()(*i, v)) {
                 return -1;
             }
-            costs += getEffort(*i, v, (SUMOTime) t);
-            t += getTravelTime(*i, v, (SUMOTime) t);
+            costs += getEffort(*i, v, t);
+            t += getTravelTime(*i, v, t);
         }
         return costs;
     }
@@ -204,7 +204,7 @@ public:
     /// Builds the path from marked edges
     void buildPathFrom(EdgeInfo* rbegin, std::vector<const E*> &edges) {
         std::deque<const E*> tmp;
-        while (rbegin!=0) {
+        while (rbegin != 0) {
             tmp.push_front((E*) rbegin->edge);  // !!!
             rbegin = rbegin->prev;
         }
@@ -236,11 +236,11 @@ public:
         : DijkstraRouterEffortBase<E, V, PF>(noE, unbuildIsWarningOnly),
           myReceiver(receiver), myEffortOperation(effortOperation), myTTOperation(ttOperation) {}
 
-    inline SUMOReal getEffort(const E* const e, const V* const v, SUMOReal t) {
+    inline SUMOReal getEffort(const E* const e, const V* const v, SUMOReal t) const {
         return (myReceiver->*myEffortOperation)(e, v, t);
     }
 
-    inline SUMOReal getTravelTime(const E* const e, const V* const v, SUMOReal t) {
+    inline SUMOReal getTravelTime(const E* const e, const V* const v, SUMOReal t) const {
         return (myReceiver->*myTTOperation)(e, v, t);
     }
 
@@ -267,11 +267,11 @@ public:
         : DijkstraRouterEffortBase<E, V, PF>(noE, unbuildIsWarningOnly),
           myEffortOperation(effortOperation), myTTOperation(ttOperation) {}
 
-    inline SUMOReal getEffort(const E* const e, const V* const v, SUMOReal t) {
+    inline SUMOReal getEffort(const E* const e, const V* const v, SUMOReal t) const {
         return (e->*myEffortOperation)(v, t);
     }
 
-    inline SUMOReal getTravelTime(const E* const e, const V* const v, SUMOReal t) {
+    inline SUMOReal getTravelTime(const E* const e, const V* const v, SUMOReal t) const {
         return (e->*myTTOperation)(v, t);
     }
 

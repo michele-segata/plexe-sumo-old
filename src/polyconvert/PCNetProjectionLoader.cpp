@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    PCNetProjectionLoader.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Thu, 02.11.2006
 /// @version $Id$
 ///
 // A reader for a SUMO network's projection description
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -61,7 +64,7 @@ void
 PCNetProjectionLoader::loadIfSet(OptionsCont& oc,
                                  Position& netOffset, Boundary& origNetBoundary,
                                  Boundary& convNetBoundary,
-                                 std::string& projParameter) throw(ProcessError) {
+                                 std::string& projParameter) {
     if (!oc.isSet("net")) {
         return;
     }
@@ -97,7 +100,7 @@ PCNetProjectionLoader::loadIfSet(OptionsCont& oc,
 // ---------------------------------------------------------------------------
 PCNetProjectionLoader::PCNetProjectionLoader(Position& netOffset,
         Boundary& origNetBoundary, Boundary& convNetBoundary,
-        std::string& projParameter) throw()
+        std::string& projParameter)
     : SUMOSAXHandler("sumo-network"), myNetOffset(netOffset),
       myOrigNetBoundary(origNetBoundary), myConvNetBoundary(convNetBoundary),
       myProjParameter(projParameter),
@@ -105,13 +108,13 @@ PCNetProjectionLoader::PCNetProjectionLoader(Position& netOffset,
       myFoundConvNetBoundary(false), myFoundProj(false) {}
 
 
-PCNetProjectionLoader::~PCNetProjectionLoader() throw() {}
+PCNetProjectionLoader::~PCNetProjectionLoader() {}
 
 
 void
 PCNetProjectionLoader::myStartElement(int element,
-                                      const SUMOSAXAttributes& attrs) throw(ProcessError) {
-    if (element!=SUMO_TAG_LOCATION) {
+                                      const SUMOSAXAttributes& attrs) {
+    if (element != SUMO_TAG_LOCATION) {
         return;
     }
     bool ok = true;
@@ -134,15 +137,15 @@ PCNetProjectionLoader::myStartElement(int element,
 
 void
 PCNetProjectionLoader::myCharacters(int element,
-                                    const std::string& chars) throw(ProcessError) {
+                                    const std::string& chars) {
     UNUSED_PARAMETER(element);
     UNUSED_PARAMETER(chars);
 }
 
 
 bool
-PCNetProjectionLoader::hasReadAll() const throw() {
-    return myFoundOffset&&myFoundOrigNetBoundary&&myFoundConvNetBoundary&&myFoundProj;
+PCNetProjectionLoader::hasReadAll() const {
+    return myFoundOffset && myFoundOrigNetBoundary && myFoundConvNetBoundary && myFoundProj;
 }
 
 

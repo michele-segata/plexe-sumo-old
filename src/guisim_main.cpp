@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    guisim_main.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Felix Brack
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Main for GUISIM
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -36,6 +40,7 @@
 #include <iostream>
 #include <fx.h>
 #include <fx3d.h>
+#include <microsim/MSFrame.h>
 #include <microsim/MSNet.h>
 #include <utils/options/Option.h>
 #include <utils/options/OptionsCont.h>
@@ -64,43 +69,6 @@
 // methods
 // ===========================================================================
 /* -------------------------------------------------------------------------
- * options initialisation
- * ----------------------------------------------------------------------- */
-void
-fillOptions() {
-    OptionsCont& oc = OptionsCont::getOptions();
-    oc.addCallExample("");
-    oc.addCallExample("-c <CONFIGURATION>");
-
-    // insert options sub-topics
-    oc.addOptionSubTopic("Process");
-    oc.addOptionSubTopic("Visualisation");
-
-    oc.doRegister("configuration-file", 'c', new Option_FileName());
-    oc.addSynonyme("configuration-file", "configuration");
-    oc.addDescription("configuration-file", "Process", "Loads the named config on startup");
-
-    oc.doRegister("help", '?', new Option_Bool(false));
-    oc.addDescription("help", "Process", "Prints this screen");
-
-    oc.doRegister("version", 'V', new Option_Bool(false));
-    oc.addDescription("version", "Process", "Prints the current version");
-
-    oc.doRegister("quit-on-end", 'Q', new Option_Bool(false));
-    oc.addDescription("quit-on-end", "Process", "Quits the gui when the simulation stops");
-
-    oc.doRegister("game", 'G', new Option_Bool(false));
-    oc.addDescription("game", "Process", "Start the GUI in gaming mode");
-
-    oc.doRegister("no-start", 'N', new Option_Bool(false));
-    oc.addDescription("no-start", "Process", "Does not start the simulation after loading");
-
-    oc.doRegister("disable-textures", 'T', new Option_Bool(false)); // !!!
-    oc.addDescription("disable-textures", "Visualisation", "");
-}
-
-
-/* -------------------------------------------------------------------------
  * main
  * ----------------------------------------------------------------------- */
 int
@@ -121,7 +89,7 @@ main(int argc, char** argv) {
 #endif
         // initialise subsystems
         XMLSubSys::init(false);
-        fillOptions();
+        MSFrame::fillOptions();
         OptionsIO::getOptions(false, argc, argv);
         if (oc.processMetaOptions(false)) {
             SystemFrame::close();
@@ -138,7 +106,7 @@ main(int argc, char** argv) {
         FXApp application("SUMO GUISimulation", "DLR");
         gFXApp = &application;
         // Open display
-        application.init(argc,argv);
+        application.init(argc, argv);
         int minor, major;
         if (!FXGLVisual::supported(&application, major, minor)) {
             throw ProcessError("This system has no OpenGL support. Exiting.");
@@ -149,16 +117,15 @@ main(int argc, char** argv) {
 
         // build the main window
         GUIApplicationWindow* window =
-        new GUIApplicationWindow(&application, "*.sumo.cfg");
+        new GUIApplicationWindow(&application, "*.sumo.cfg,*.sumocfg");
         window->dependentBuild(oc.getBool("game"));
         gSchemeStorage.init(&application);
         // Create app
-        application.addSignal(SIGINT,window, MID_QUIT);
+        application.addSignal(SIGINT, window, MID_QUIT);
         application.create();
         // Load configuration given on command line
-        if (oc.isSet("configuration-file")) {
-            window->loadOnStartup(oc.getString("configuration-file"),
-            !oc.getBool("no-start"));
+        if (oc.isSet("configuration-file") || oc.isSet("net-file")) {
+            window->loadOnStartup(!oc.getBool("no-start"));
         }
         // Run
         ret = application.run();

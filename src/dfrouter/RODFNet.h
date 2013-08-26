@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RODFNet.h
 /// @author  Daniel Krajzewicz
+/// @author  Eric Nicolay
+/// @author  Michael Behrisch
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // A DFROUTER-network
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -50,11 +53,11 @@ public:
     /** @brief Constructor
      * @param[in] amInHighwayMode Whether search for following edges shall stop at slow edges
      */
-    RODFNet(bool amInHighwayMode) throw();
+    RODFNet(bool amInHighwayMode) ;
 
 
     /// @brief Destructor
-    ~RODFNet() throw();
+    ~RODFNet() ;
 
 
     void buildApproachList();
@@ -143,7 +146,7 @@ protected:
 
         /// Comparing method
         bool operator()(const RODFRouteDesc& nod1, const RODFRouteDesc& nod2) const {
-            return nod1.duration_2>nod2.duration_2;
+            return nod1.duration_2 > nod2.duration_2;
         }
     };
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
 @file    networkStatistics.py
-@author  Yun-Pang.Wang@dlr.de
+@author  Yun-Pang Wang
+@author  Michael Behrisch
 @date    2007-02-27
 @version $Id$
 
@@ -16,7 +17,8 @@ The analyzed parameters include:
 - travel speed
 - stop time
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

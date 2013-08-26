@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    ROLoader.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
+/// @author  Christian Roessel
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Loader for networks and route imports
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,12 +69,12 @@
 // ---------------------------------------------------------------------------
 void
 ROLoader::EdgeFloatTimeLineRetriever_EdgeTravelTime::addEdgeWeight(const std::string& id,
-        SUMOReal val, SUMOReal beg, SUMOReal end) const throw() {
+        SUMOReal val, SUMOReal beg, SUMOReal end) const {
     ROEdge* e = myNet.getEdge(id);
-    if (e!=0) {
+    if (e != 0) {
         e->addTravelTime(val, beg, end);
     } else {
-        if (id[0]!=':') {
+        if (id[0] != ':') {
             WRITE_ERROR("Trying to set a weight for the unknown edge '" + id + "'.");
         }
     }
@@ -81,12 +86,12 @@ ROLoader::EdgeFloatTimeLineRetriever_EdgeTravelTime::addEdgeWeight(const std::st
 // ---------------------------------------------------------------------------
 void
 ROLoader::EdgeFloatTimeLineRetriever_EdgeWeight::addEdgeWeight(const std::string& id,
-        SUMOReal val, SUMOReal beg, SUMOReal end) const throw() {
+        SUMOReal val, SUMOReal beg, SUMOReal end) const {
     ROEdge* e = myNet.getEdge(id);
-    if (e!=0) {
+    if (e != 0) {
         e->addEffort(val, beg, end);
     } else {
-        if (id[0]!=':') {
+        if (id[0] != ':') {
             WRITE_ERROR("Trying to set a weight for the unknown edge '" + id + "'.");
         }
     }
@@ -96,7 +101,7 @@ ROLoader::EdgeFloatTimeLineRetriever_EdgeWeight::addEdgeWeight(const std::string
 // ---------------------------------------------------------------------------
 // ROLoader - methods
 // ---------------------------------------------------------------------------
-ROLoader::ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed) throw()
+ROLoader::ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed)
     : myOptions(oc), myEmptyDestinationsAllowed(emptyDestinationsAllowed) {}
 
 
@@ -108,7 +113,7 @@ ROLoader::~ROLoader() {
 void
 ROLoader::loadNet(RONet& toFill, ROAbstractEdgeBuilder& eb) {
     std::string file = myOptions.getString("net-file");
-    if (file=="") {
+    if (file == "") {
         throw ProcessError("Missing definition of network to load!");
     }
     if (!FileHelpers::exists(file)) {
@@ -152,13 +157,13 @@ ROLoader::openRoutes(RONet& net) {
     // load the amount definitions if wished
     ok &= openTypedRoutes("flow-files", net);
     // check
-    if (ok&&myHandler.size()==0) {
+    if (ok && myHandler.size() == 0) {
         throw ProcessError("No route input specified.");
     }
     // skip routes prior to the begin time
-    if (ok&&!myOptions.getBool("unsorted-input")) {
+    if (ok && !myOptions.getBool("unsorted-input")) {
         WRITE_MESSAGE("Skipping...");
-        for (RouteLoaderCont::iterator i=myHandler.begin(); ok&&i!=myHandler.end(); i++) {
+        for (RouteLoaderCont::iterator i = myHandler.begin(); ok && i != myHandler.end(); i++) {
             ok &= (*i)->readRoutesAtLeastUntil(string2time(myOptions.getString("begin")), true);
         }
         WRITE_MESSAGE("Skipped until: " + time2string(getMinTimeStep()));
@@ -174,22 +179,22 @@ ROLoader::openRoutes(RONet& net) {
 
 void
 ROLoader::processRoutesStepWise(SUMOTime start, SUMOTime end,
-                                RONet& net, SUMOAbstractRouter<ROEdge,ROVehicle> &router) {
+                                RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router) {
     SUMOTime absNo = end - start;
     // skip routes that begin before the simulation's begin
     // loop till the end
     bool endReached = false;
     bool errorOccured = false;
-    SUMOTime time = myHandler.size()!=0 ? getMinTimeStep() : start;
+    SUMOTime time = myHandler.size() != 0 ? getMinTimeStep() : start;
     SUMOTime firstStep = time;
     SUMOTime lastStep = time;
-    for (; time<end&&!errorOccured&&!endReached; time+=DELTA_T) {
+    for (; time < end && !errorOccured && !endReached; time += DELTA_T) {
         writeStats(time, start, absNo);
         makeSingleStep(time, net, router);
         // check whether further data exist
         endReached = !net.furtherStored();
         lastStep = time;
-        for (RouteLoaderCont::iterator i=myHandler.begin(); endReached&&i!=myHandler.end(); i++) {
+        for (RouteLoaderCont::iterator i = myHandler.begin(); endReached && i != myHandler.end(); i++) {
             if (!(*i)->ended()) {
                 endReached = false;
             }
@@ -201,11 +206,11 @@ ROLoader::processRoutesStepWise(SUMOTime start, SUMOTime end,
 
 
 bool
-ROLoader::makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge,ROVehicle> &router) {
+ROLoader::makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router) {
     RouteLoaderCont::iterator i;
     // go through all handlers
-    if (myHandler.size()!= 0) {
-        for (i=myHandler.begin(); i!=myHandler.end(); i++) {
+    if (myHandler.size() != 0) {
+        for (i = myHandler.begin(); i != myHandler.end(); i++) {
             // load routes until the time point is reached
             if ((*i)->readRoutesAtLeastUntil(end, false)) {
                 // save the routes
@@ -222,13 +227,13 @@ ROLoader::makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge,ROV
 
 
 SUMOTime
-ROLoader::getMinTimeStep() const throw() {
-    RouteLoaderCont::const_iterator i=myHandler.begin();
+ROLoader::getMinTimeStep() const {
+    RouteLoaderCont::const_iterator i = myHandler.begin();
     SUMOTime ret = (*i)->getLastReadTimeStep();
     ++i;
-    for (; i!=myHandler.end(); i++) {
+    for (; i != myHandler.end(); i++) {
         SUMOTime akt = (*i)->getLastReadTimeStep();
-        if (akt<ret) {
+        if (akt < ret) {
             ret = akt;
         }
     }
@@ -238,18 +243,18 @@ ROLoader::getMinTimeStep() const throw() {
 
 void
 ROLoader::processAllRoutes(SUMOTime start, SUMOTime end,
-                           RONet& net, SUMOAbstractRouter<ROEdge,ROVehicle> &router) {
+                           RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router) {
     long absNo = end - start;
     bool ok = true;
-    for (RouteLoaderCont::iterator i=myHandler.begin(); ok&&i!=myHandler.end(); i++) {
+    for (RouteLoaderCont::iterator i = myHandler.begin(); ok && i != myHandler.end(); i++) {
         ok &= (*i)->readRoutesAtLeastUntil(SUMOTime_MAX, false);
     }
     // save the routes
     SUMOTime time = start;
-    for (; time<end;) {
+    for (; time < end;) {
         writeStats(time, start, absNo);
         time = net.saveAndRemoveRoutesUntil(myOptions, router, time);
-        if (time<0) {
+        if (time < 0) {
             time = end;
         }
     }
@@ -258,7 +263,7 @@ ROLoader::processAllRoutes(SUMOTime start, SUMOTime end,
 
 bool
 ROLoader::openTypedRoutes(const std::string& optionName,
-                          RONet& net) throw() {
+                          RONet& net) {
     // check whether the current loader is known
     //  (not all routers import all route formats)
     if (!myOptions.exists(optionName)) {
@@ -271,7 +276,7 @@ ROLoader::openTypedRoutes(const std::string& optionName,
     }
     bool ok = true;
     std::vector<std::string> files = myOptions.getStringVector(optionName);
-    for (std::vector<std::string>::const_iterator fileIt=files.begin(); fileIt!=files.end(); ++fileIt) {
+    for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
         // build the instance when everything's all right
         try {
             ROAbstractRouteDefLoader* instance = buildNamedHandler(optionName, *fileIt, net);
@@ -279,7 +284,7 @@ ROLoader::openTypedRoutes(const std::string& optionName,
         } catch (ProcessError& e) {
             std::string msg = "The loader for " + optionName + " from file '" + *fileIt + "' could not be initialised;";
             std::string reason = e.what();
-            if (reason!="Process Error"&&reason!="") {
+            if (reason != "Process Error" && reason != "") {
                 msg = msg + "\n Reason: " + reason + ".";
             } else {
                 msg = msg + "\n (unknown reason).";
@@ -295,8 +300,8 @@ ROLoader::openTypedRoutes(const std::string& optionName,
 ROAbstractRouteDefLoader*
 ROLoader::buildNamedHandler(const std::string& optionName,
                             const std::string& file,
-                            RONet& net) throw(ProcessError) {
-    if (optionName=="route-files" || optionName=="alternative-files") {
+                            RONet& net) {
+    if (optionName == "route-files" || optionName == "alternative-files") {
         const SUMOReal beta = myOptions.getBool("logit")
                               ? myOptions.getFloat("logit.beta")
                               : myOptions.getFloat("gawron.beta");
@@ -310,12 +315,12 @@ ROLoader::buildNamedHandler(const std::string& optionName,
                                        myOptions.getBool("with-taz"), myOptions.getBool("keep-all-routes"),
                                        myOptions.getBool("skip-new-routes"), file);
     }
-    if (optionName=="trip-files") {
+    if (optionName == "trip-files") {
         return new RORDLoader_TripDefs(net,
                                        string2time(myOptions.getString("begin")), string2time(myOptions.getString("end")),
                                        myEmptyDestinationsAllowed, myOptions.getBool("with-taz"), file);
     }
-    if (optionName=="flow-files") {
+    if (optionName == "flow-files") {
         return new RORDGenerator_ODAmounts(net,
                                            string2time(myOptions.getString("begin")), string2time(myOptions.getString("end")),
                                            myEmptyDestinationsAllowed, myOptions.getBool("randomize-flows"), file);
@@ -338,9 +343,9 @@ ROLoader::loadWeights(RONet& net, const std::string& optionName,
     retrieverDefs.push_back(new SAXWeightsHandler::ToRetrieveDefinition("traveltime", !useLanes, ttRetriever));
     //  the measure to use, then
     EdgeFloatTimeLineRetriever_EdgeWeight eRetriever(net);
-    if (measure!="traveltime") {
+    if (measure != "traveltime") {
         std::string umeasure = measure;
-        if (measure=="CO"||measure=="CO2"||measure=="HC"||measure=="PMx"||measure=="NOx"||measure=="fuel") {
+        if (measure == "CO" || measure == "CO2" || measure == "HC" || measure == "PMx" || measure == "NOx" || measure == "fuel") {
             umeasure = measure + "_perVeh";
         }
         retrieverDefs.push_back(new SAXWeightsHandler::ToRetrieveDefinition(umeasure, !useLanes, eRetriever));
@@ -349,7 +354,7 @@ ROLoader::loadWeights(RONet& net, const std::string& optionName,
     SAXWeightsHandler handler(retrieverDefs, "");
     // go through files
     std::vector<std::string> files = myOptions.getStringVector(optionName);
-    for (std::vector<std::string>::const_iterator fileIt=files.begin(); fileIt!=files.end(); ++fileIt) {
+    for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
         PROGRESS_BEGIN_MESSAGE("Loading precomputed net weights from '" + *fileIt + "'");
         if (XMLSubSys::runParser(handler, *fileIt)) {
             PROGRESS_DONE_MESSAGE();
@@ -360,7 +365,7 @@ ROLoader::loadWeights(RONet& net, const std::string& optionName,
     }
     // build edge-internal time lines
     const std::map<std::string, ROEdge*> &edges = net.getEdgeMap();
-    for (std::map<std::string, ROEdge*>::const_iterator i=edges.begin(); i!=edges.end(); ++i) {
+    for (std::map<std::string, ROEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
         (*i).second->buildTimeLines(measure);
     }
     return true;
@@ -368,20 +373,20 @@ ROLoader::loadWeights(RONet& net, const std::string& optionName,
 
 
 void
-ROLoader::writeStats(SUMOTime time, SUMOTime start, int absNo) throw() {
+ROLoader::writeStats(SUMOTime time, SUMOTime start, int absNo) {
     if (myOptions.getBool("verbose")) {
-        SUMOReal perc = (SUMOReal)(time-start) / (SUMOReal) absNo;
+        SUMOReal perc = (SUMOReal)(time - start) / (SUMOReal) absNo;
         std::cout.setf(std::ios::fixed, std::ios::floatfield); // use decimal format
         std::cout.setf(std::ios::showpoint); // print decimal point
         std::cout << std::setprecision(OUTPUT_ACCURACY);
-        MsgHandler::getMessageInstance()->progressMsg("Reading time step: " + time2string(time) + "  (" + time2string(time-start) + "/" + time2string(absNo) + " = " + toString(perc * 100) + "% done)       ");
+        MsgHandler::getMessageInstance()->progressMsg("Reading time step: " + time2string(time) + "  (" + time2string(time - start) + "/" + time2string(absNo) + " = " + toString(perc * 100) + "% done)       ");
     }
 }
 
 
 void
-ROLoader::destroyHandlers() throw() {
-    for (RouteLoaderCont::const_iterator i=myHandler.begin(); i!=myHandler.end(); ++i) {
+ROLoader::destroyHandlers() {
+    for (RouteLoaderCont::const_iterator i = myHandler.begin(); i != myHandler.end(); ++i) {
         delete *i;
     }
     myHandler.clear();

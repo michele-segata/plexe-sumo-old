@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUILane.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Representation of a lane in the micro simulation (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,11 +55,11 @@ GUILane::GUILane(const std::string& id, SUMOReal maxSpeed, SUMOReal length,
                  MSEdge* const edge, unsigned int numericalID,
                  const PositionVector& shape, SUMOReal width,
                  const SUMOVehicleClasses& allowed,
-                 const SUMOVehicleClasses& disallowed) throw()
+                 const SUMOVehicleClasses& disallowed)
     : MSLane(id, maxSpeed, length, edge, numericalID, shape, width, allowed, disallowed) {}
 
 
-GUILane::~GUILane() throw() {
+GUILane::~GUILane() {
     // just to quit cleanly on a failure
     if (myLock.locked()) {
         myLock.unlock();
@@ -68,7 +71,7 @@ GUILane::~GUILane() throw() {
 void
 GUILane::incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed,
                             const MSLane::VehCont::iterator& at,
-                            MSMoveReminder::Notification notification) throw(ProcessError) {
+                            MSMoveReminder::Notification notification) {
     myLock.lock();
     try {
         MSLane::incorporateVehicle(veh, pos, speed, at, notification);
@@ -82,14 +85,14 @@ GUILane::incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed,
 
 // ------ Access to vehicles ------
 const MSLane::VehCont&
-GUILane::getVehiclesSecure() const throw() {
+GUILane::getVehiclesSecure() const {
     myLock.lock();
     return myVehicles;
 }
 
 
 void
-GUILane::releaseVehicles() const throw() {
+GUILane::releaseVehicles() const {
     myLock.unlock();
 }
 

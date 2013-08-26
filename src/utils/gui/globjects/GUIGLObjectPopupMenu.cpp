@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIGLObjectPopupMenu.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The popup menu of a globject
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -47,7 +50,7 @@
 // ===========================================================================
 // FOX callback mapping
 // ===========================================================================
-FXDEFMAP(GUIGLObjectPopupMenu) GUIGLObjectPopupMenuMap[]= {
+FXDEFMAP(GUIGLObjectPopupMenu) GUIGLObjectPopupMenuMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_CENTER,                  GUIGLObjectPopupMenu::onCmdCenter),
     FXMAPFUNC(SEL_COMMAND,  MID_COPY_NAME,               GUIGLObjectPopupMenu::onCmdCopyName),
     FXMAPFUNC(SEL_COMMAND,  MID_COPY_TYPED_NAME,         GUIGLObjectPopupMenu::onCmdCopyTypedName),
@@ -67,17 +70,17 @@ FXIMPLEMENT(GUIGLObjectPopupMenu, FXMenuPane, GUIGLObjectPopupMenuMap, ARRAYNUMB
 // ===========================================================================
 GUIGLObjectPopupMenu::GUIGLObjectPopupMenu(GUIMainWindow& app,
         GUISUMOAbstractView& parent,
-        GUIGlObject& o) throw()
+        GUIGlObject& o)
     : FXMenuPane(&parent), myParent(&parent), myObject(&o),
       myApplication(&app), myNetworkPosition(parent.getPositionInformation()) {
 }
 
 
-GUIGLObjectPopupMenu::~GUIGLObjectPopupMenu() throw() {}
+GUIGLObjectPopupMenu::~GUIGLObjectPopupMenu() {}
 
 
 long
-GUIGLObjectPopupMenu::onCmdCenter(FXObject*,FXSelector,void*) {
+GUIGLObjectPopupMenu::onCmdCenter(FXObject*, FXSelector, void*) {
     // we already know where the object is since we clicked on it -> zoom on Boundary
     myParent->centerTo(myObject->getGlID(), true, -1);
     return 1;
@@ -85,30 +88,30 @@ GUIGLObjectPopupMenu::onCmdCenter(FXObject*,FXSelector,void*) {
 
 
 long
-GUIGLObjectPopupMenu::onCmdCopyName(FXObject*,FXSelector,void*) {
+GUIGLObjectPopupMenu::onCmdCopyName(FXObject*, FXSelector, void*) {
     GUIUserIO::copyToClipboard(*myParent->getApp(), myObject->getMicrosimID());
     return 1;
 }
 
 
 long
-GUIGLObjectPopupMenu::onCmdCopyTypedName(FXObject*,FXSelector,void*) {
+GUIGLObjectPopupMenu::onCmdCopyTypedName(FXObject*, FXSelector, void*) {
     GUIUserIO::copyToClipboard(*myParent->getApp(), myObject->getFullName());
     return 1;
 }
 
 
 long
-GUIGLObjectPopupMenu::onCmdCopyCursorPosition(FXObject*,FXSelector,void*) {
+GUIGLObjectPopupMenu::onCmdCopyCursorPosition(FXObject*, FXSelector, void*) {
     GUIUserIO::copyToClipboard(*myParent->getApp(), toString(myNetworkPosition));
     return 1;
 }
 
 
 long
-GUIGLObjectPopupMenu::onCmdCopyCursorGeoPosition(FXObject*,FXSelector,void*) {
+GUIGLObjectPopupMenu::onCmdCopyCursorGeoPosition(FXObject*, FXSelector, void*) {
     Position pos = myNetworkPosition;
-    GeoConvHelper::getDefaultInstance().cartesian2geo(pos);
+    GeoConvHelper::getFinal().cartesian2geo(pos);
     // formated for pasting into google maps
     const std::string posString = toString(pos.y(), GEO_OUTPUT_ACCURACY) + ", " + toString(pos.x(), GEO_OUTPUT_ACCURACY);
     GUIUserIO::copyToClipboard(*myParent->getApp(), posString);
@@ -117,14 +120,14 @@ GUIGLObjectPopupMenu::onCmdCopyCursorGeoPosition(FXObject*,FXSelector,void*) {
 
 
 long
-GUIGLObjectPopupMenu::onCmdShowPars(FXObject*,FXSelector,void*) {
+GUIGLObjectPopupMenu::onCmdShowPars(FXObject*, FXSelector, void*) {
     myObject->getParameterWindow(*myApplication, *myParent); // !!! showParameterWindow would be more appropriate
     return 1;
 }
 
 
 long
-GUIGLObjectPopupMenu::onCmdAddSelected(FXObject*,FXSelector,void*) {
+GUIGLObjectPopupMenu::onCmdAddSelected(FXObject*, FXSelector, void*) {
     gSelected.select(myObject->getGlID());
     myParent->update();
     return 1;
@@ -132,7 +135,7 @@ GUIGLObjectPopupMenu::onCmdAddSelected(FXObject*,FXSelector,void*) {
 
 
 long
-GUIGLObjectPopupMenu::onCmdRemoveSelected(FXObject*,FXSelector,void*) {
+GUIGLObjectPopupMenu::onCmdRemoveSelected(FXObject*, FXSelector, void*) {
     gSelected.deselect(myObject->getGlID());
     myParent->update();
     return 1;

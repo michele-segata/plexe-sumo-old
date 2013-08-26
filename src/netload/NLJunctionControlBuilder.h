@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NLJunctionControlBuilder.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 9 Jul 2001
 /// @version $Id$
 ///
 // Builder of microsim-junctions and tls
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -76,7 +79,7 @@ public:
      * @param[in] net The network to fill
      * @param[in] db The detector builder to use
      */
-    NLJunctionControlBuilder(MSNet& net, NLDetectorBuilder& db) throw();
+    NLJunctionControlBuilder(MSNet& net, NLDetectorBuilder& db) ;
 
 
     /** @brief Destructor
@@ -84,7 +87,7 @@ public:
      * Deletes previously allocated "myLogicControl" and "myJunctions" if
      *  they were not previously returned (this may happen if an error occured).
      */
-    virtual ~NLJunctionControlBuilder() throw();
+    virtual ~NLJunctionControlBuilder() ;
 
 
     /** @brief Begins the processing of the named junction
@@ -129,13 +132,13 @@ public:
      *
      * @return The built junction control
      */
-    MSJunctionControl* build() const throw();
+    MSJunctionControl* build() const ;
 
 
     /** @brief Initialises a junction logic
      * @param[in] id The id of the row-logic
      */
-    void initJunctionLogic(const std::string& id) throw();
+    void initJunctionLogic(const std::string& id) ;
 
 
     /** @brief Adds a logic item
@@ -163,7 +166,7 @@ public:
      * @todo Recheck, describe usage of detectorOffset (where does the information come from?)
      */
     void initTrafficLightLogic(const std::string& id, const std::string& programID,
-                               TrafficLightType type, SUMOTime offset) throw();
+                               TrafficLightType type, SUMOTime offset) ;
 
 
     /** @brief Adds a phase to the currently built traffic lights logic
@@ -176,7 +179,7 @@ public:
      * @todo min/max: maybe only one type of a phase definition should be built
      */
     void addPhase(SUMOTime duration, const std::string& state,
-                  int min, int max) throw();
+                  int min, int max) ;
 
 
     /** @brief Returns a previously build tls logic
@@ -198,7 +201,7 @@ public:
      * @exception ProcessError If the traffic lights were not correct
      * @see MSTLLogicControl::closeNetworkReading
      */
-    MSTLLogicControl* buildTLLogics() const throw(ProcessError);
+    MSTLLogicControl* buildTLLogics() const ;
 
 
     /** @brief Ends the building of a traffic lights logic
@@ -232,19 +235,19 @@ public:
      * @todo Where are these parameter used? Describe!
      * @todo Can a parameter be overwritten?
      */
-    void addParam(const std::string& key, const std::string& value) throw();
+    void addParam(const std::string& key, const std::string& value) ;
 
 
     /** @brief Returns the active key
      * @return The active key
      */
-    const std::string& getActiveKey() const throw();
+    const std::string& getActiveKey() const ;
 
 
     /** @brief Returns the active sub key
      * @return The active sub key
      */
-    const std::string& getActiveSubKey() const throw();
+    const std::string& getActiveSubKey() const ;
 
 
     /** @brief Returns the used tls control
@@ -254,7 +257,7 @@ public:
      *
      * @return The tls control to use
      */
-    MSTLLogicControl& getTLLogicControlToUse() const throw();
+    MSTLLogicControl& getTLLogicControlToUse() const ;
 
 
 protected:
@@ -280,7 +283,7 @@ protected:
      *
      * @return The built junction
      */
-    virtual MSJunction* buildNoLogicJunction() throw();
+    virtual MSJunction* buildNoLogicJunction() ;
 
 
     /** @brief Builds a junction with a logic
@@ -301,7 +304,7 @@ protected:
      *
      * @return The built junction
      */
-    virtual MSJunction* buildInternalJunction() throw();
+    virtual MSJunction* buildInternalJunction() ;
 #endif
     /// @}
 

@@ -4,7 +4,8 @@
 
 This file exists for backward compatiblity only.
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 from constants import *

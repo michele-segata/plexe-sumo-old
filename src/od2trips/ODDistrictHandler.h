@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    ODDistrictHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // An XML-Handler for districts
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,11 +62,11 @@ public:
      * @param[in] cont The container of districts to fill
      * @param[in] file The file that will be processed
      */
-    ODDistrictHandler(ODDistrictCont& cont, const std::string& file) throw();
+    ODDistrictHandler(ODDistrictCont& cont, const std::string& file) ;
 
 
     /// @brief Destructor
-    ~ODDistrictHandler() throw();
+    ~ODDistrictHandler() ;
 
 
 protected:
@@ -81,7 +84,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when a closing tag occurs
@@ -91,7 +94,7 @@ protected:
      * @param[in] element ID of the currently opened element
      * @exception ProcessError If an error within the parsed file occurs
      */
-    void myEndElement(int element) throw(ProcessError);
+    void myEndElement(int element) ;
     //@}
 
 
@@ -104,7 +107,7 @@ private:
      *
      * @param[in] attrs Attributes of the currently opened element
      */
-    void openDistrict(const SUMOSAXAttributes& attrs) throw();
+    void openDistrict(const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Adds a read source to the current district
@@ -118,7 +121,7 @@ private:
      * @param[in] attrs Attributes of the currently opened element
      * @todo Checking whether myCurrentDistrict is valid through getValues is not quite nice
      */
-    void addSource(const SUMOSAXAttributes& attrs) throw();
+    void addSource(const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Adds a read sink to the current district
@@ -132,14 +135,14 @@ private:
      * @param[in] attrs Attributes of the currently opened element
      * @todo Checking whether myCurrentDistrict is valid through getValues is not quite nice
      */
-    void addSink(const SUMOSAXAttributes& attrs) throw();
+    void addSink(const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Closes the processing of the current district
      *
      * Adds myCurrentDistrict to myContainer.
      */
-    void closeDistrict() throw();
+    void closeDistrict() ;
 
 
     /** @brief Returns the id and weight for a sink/source
@@ -157,7 +160,7 @@ private:
      * @param[in] type The type of the currntly processed connection (sink/source)
      * @return The id and the weight of a connection
      */
-    std::pair<std::string, SUMOReal> parseConnection(const SUMOSAXAttributes& attrs) throw();
+    std::pair<std::string, SUMOReal> parseConnection(const SUMOSAXAttributes& attrs) ;
 
 private:
     /// The container to add read districts to

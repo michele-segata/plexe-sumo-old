@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    Boundary.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A class that stores the 2D geometrical boundary
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -101,7 +104,7 @@ Boundary::add(const Boundary& p) {
 
 Position
 Boundary::getCenter() const {
-    return Position((myXmin+myXmax)/(SUMOReal) 2.0, (myYmin+myYmax)/(SUMOReal) 2.0);
+    return Position((myXmin + myXmax) / (SUMOReal) 2.0, (myYmin + myYmax) / (SUMOReal) 2.0);
 }
 
 
@@ -144,8 +147,8 @@ Boundary::getHeight() const {
 bool
 Boundary::around(const Position& p, SUMOReal offset) const {
     return
-        (p.x()<=myXmax+offset && p.x()>=myXmin-offset) &&
-        (p.y()<=myYmax+offset && p.y()>=myYmin-offset);
+        (p.x() <= myXmax + offset && p.x() >= myXmin - offset) &&
+        (p.y() <= myYmax + offset && p.y() >= myYmin - offset);
 }
 
 
@@ -160,13 +163,13 @@ Boundary::overlapsWith(const AbstractPoly& p, SUMOReal offset) const {
     }
     // check whether the bounderies cross
     return
-        p.crosses(Position(myXmax+offset, myYmax+offset), Position(myXmin-offset, myYmax+offset))
+        p.crosses(Position(myXmax + offset, myYmax + offset), Position(myXmin - offset, myYmax + offset))
         ||
-        p.crosses(Position(myXmin-offset, myYmax+offset), Position(myXmin-offset, myYmin-offset))
+        p.crosses(Position(myXmin - offset, myYmax + offset), Position(myXmin - offset, myYmin - offset))
         ||
-        p.crosses(Position(myXmin-offset, myYmin-offset), Position(myXmax+offset, myYmin-offset))
+        p.crosses(Position(myXmin - offset, myYmin - offset), Position(myXmax + offset, myYmin - offset))
         ||
-        p.crosses(Position(myXmax+offset, myYmin-offset), Position(myXmax+offset, myYmax+offset));
+        p.crosses(Position(myXmax + offset, myYmin - offset), Position(myXmax + offset, myYmax + offset));
 }
 
 

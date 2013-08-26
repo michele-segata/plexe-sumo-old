@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 """
 @file    createRoundaboutConnections.py
-@author  Laura.Bieker@dlr.de
+@author  Laura Bieker
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2007-02-21
 @version $Id$
 
 This script reads in the network given as
  first parameter and generates additional connections for roundabouts.
 
-Copyright (C) 2010-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2010-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

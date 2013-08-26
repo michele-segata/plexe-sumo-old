@@ -2,12 +2,14 @@
 """
 @file    runner.py
 @author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2007-10-25
 @version $Id$
 
 This script is a test runner for the broken networks.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -185,7 +187,7 @@ netconvertBinary = checkBinary('netconvert')
 
 # build the correct network, first
 print ">>> Building the correct network"
-retcode = subprocess.call([netconvertBinary, "-c", "netconvert.netc.cfg"], stdout=sys.stdout, stderr=sys.stderr)
+retcode = subprocess.call([netconvertBinary, "-c", "netconvert.netccfg"], stdout=sys.stdout, stderr=sys.stderr)
 print ">>> Trying the correct network"
 call.append("-n")
 call.append("correct.net.xml")

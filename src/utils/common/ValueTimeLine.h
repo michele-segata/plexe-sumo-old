@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    ValueTimeLine.h
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A list of time ranges with assigned values
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,8 +67,8 @@ public:
      * @param[in] value the value to store
      */
     void add(SUMOReal begin, SUMOReal end, T value) {
-        assert(begin>=0);
-        assert(begin<end);
+        assert(begin >= 0);
+        assert(begin < end);
         // inserting strictly before the first or after the last interval (includes empty case)
         if (myValues.upper_bound(begin) == myValues.end() ||
                 myValues.upper_bound(end) == myValues.begin()) {
@@ -98,7 +101,7 @@ public:
      * @return the value for the time
      */
     T getValue(SUMOReal time) const {
-        assert(myValues.size()!=0);
+        assert(myValues.size() != 0);
         typename TimedValueMap::const_iterator it = myValues.upper_bound(time);
         assert(it != myValues.begin());
         --it;
@@ -149,7 +152,7 @@ public:
      * @param[in] value the value to store
      * @param[in] extendOverBoundaries whether the first/last value should be valid for later / earlier times as well
      */
-    void fillGaps(T value, bool extendOverBoundaries=false) {
+    void fillGaps(T value, bool extendOverBoundaries = false) {
         for (typename TimedValueMap::iterator it = myValues.begin(); it != myValues.end(); ++it) {
             if (!it->second.first) {
                 it->second.second = value;

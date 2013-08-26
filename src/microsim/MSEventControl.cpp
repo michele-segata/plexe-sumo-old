@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    MSEventControl.cpp
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Matthias Heppner
 /// @date    Mon, 12 Mar 2001
 /// @version $Id$
 ///
 // Stores time-dependant events and executes them at the proper time
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -74,7 +79,7 @@ MSEventControl::execute(SUMOTime execTime) {
     // Execute all events that are scheduled for execTime.
     for (; !myEvents.empty();) {
         Event currEvent = myEvents.top();
-        if (currEvent.second == execTime || currEvent.second<execTime+DELTA_T) {
+        if (currEvent.second == execTime || currEvent.second < execTime + DELTA_T) {
             Command* command = currEvent.first;
             myEvents.pop();
             SUMOTime time = 0;
@@ -88,7 +93,7 @@ MSEventControl::execute(SUMOTime execTime) {
             // Delete nonrecurring events, reinsert recurring ones
             // with new execution time = execTime + returned offset.
             if (time <= 0) {
-                if (time<0) {
+                if (time < 0) {
                     WRITE_WARNING("Command returned negative repeat number; will be deleted.");
                 }
                 delete currEvent.first;

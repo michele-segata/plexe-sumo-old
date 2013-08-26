@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GeomHelper.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Friedemann Wesner
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Some geometrical helpers
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -33,6 +37,7 @@
 #include "GeomHelper.h"
 #include <utils/common/StdDefs.h>
 #include <utils/common/ToString.h>
+#include <utils/geom/Line.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -62,7 +67,7 @@ GeomHelper::intersects(SUMOReal x1, SUMOReal y1, SUMOReal x2, SUMOReal y2,
      */
     if (r3 != 0 &&
             r4 != 0 &&
-            ((r3<0&&r4<0)||(r3>0&&r4>0))) {
+            ((r3 < 0 && r4 < 0) || (r3 > 0 && r4 > 0))) {
         return (false);
     }
 
@@ -81,7 +86,7 @@ GeomHelper::intersects(SUMOReal x1, SUMOReal y1, SUMOReal x2, SUMOReal y2,
      */
     if (r1 != 0 &&
             r2 != 0 &&
-            ((r1<0&&r2<0)||(r1>0&&r2>0))) {
+            ((r1 < 0 && r2 < 0) || (r1 > 0 && r2 > 0))) {
         return (false);
     }
 
@@ -123,21 +128,21 @@ GeomHelper::intersection_position(const Position& p11,
     //applies the math, but we don't need speed since this is a
     //pre-processing step
 
-    double a1,b1,c1, // constants of linear equations
-           a2,b2,c2,
+    double a1, b1, c1, // constants of linear equations
+           a2, b2, c2,
            det_inv, m1, m2;  // the inverse of the determinant of the coefficient
 
     // compute slopes, note the cludge for infinity, however, this will
     // be close enough
 
-    if ((p12.x()-p11.x())!=0) {
-        m1 = (p12.y()-p11.y())/(p12.x()-p11.x());
+    if ((p12.x() - p11.x()) != 0) {
+        m1 = (p12.y() - p11.y()) / (p12.x() - p11.x());
     } else {
         m1 = (SUMOReal)1e+10;    // close enough to infinity
     }
 
-    if ((p22.x()-p21.x())!=0) {
-        m2 = (p22.y()-p21.y())/(p22.x()-p21.x());
+    if ((p22.x() - p21.x()) != 0) {
+        m2 = (p22.y() - p21.y()) / (p22.x() - p21.x());
     } else {
         m2 = (SUMOReal)1e+10;    // close enough to infinity
     }
@@ -150,16 +155,16 @@ GeomHelper::intersection_position(const Position& p11,
     b1 = -1;
     b2 = -1;
 
-    c1 = (p11.y()-m1*p11.x());
-    c2 = (p21.y()-m2*p21.x());
+    c1 = (p11.y() - m1 * p11.x());
+    c2 = (p21.y() - m2 * p21.x());
 
     // compute the inverse of the determinate
-    det_inv = 1/(a1*b2 - a2*b1);
+    det_inv = 1 / (a1 * b2 - a2 * b1);
 
     // use Kramers rule to compute xi and yi
     return Position(
-               ((b1*c2 - b2*c1)*det_inv),
-               ((a2*c1 - a1*c2)*det_inv));
+               ((b1 * c2 - b2 * c1) * det_inv),
+               ((a2 * c1 - a1 * c2) * det_inv));
 }
 
 
@@ -171,12 +176,12 @@ GeomHelper::intersection_position(const Position& p11,
 */
 SUMOReal
 GeomHelper::Angle2D(SUMOReal x1, SUMOReal y1, SUMOReal x2, SUMOReal y2) {
-    SUMOReal dtheta = atan2(y2,x2) - atan2(y1,x1);
+    SUMOReal dtheta = atan2(y2, x2) - atan2(y1, x1);
     while (dtheta > (SUMOReal) PI) {
-        dtheta -= (SUMOReal)(2.0*PI);
+        dtheta -= (SUMOReal)(2.0 * PI);
     }
-    while (dtheta < (SUMOReal) -PI) {
-        dtheta += (SUMOReal)(2.0*PI);
+    while (dtheta < (SUMOReal) - PI) {
+        dtheta += (SUMOReal)(2.0 * PI);
     }
     return dtheta;
 }
@@ -213,22 +218,29 @@ GeomHelper::extrapolate_second(const Position& p1,
 
 
 SUMOReal
-GeomHelper::nearest_position_on_line_to_point(const Position& LineStart,
+GeomHelper::nearest_position_on_line_to_point2D(const Position& LineStart,
         const Position& LineEnd,
         const Position& Point, bool perpendicular) {
-    SUMOReal u = (((Point.x() - LineStart.x()) * (LineEnd.x() - LineStart.x())) +
-                  ((Point.y() - LineStart.y()) * (LineEnd.y() - LineStart.y()))
-                 ) / LineStart.distanceSquaredTo(LineEnd);
-    if (u < 0.0f || u > 1.0f) {  // closest point does not fall within the line segment
-        if (perpendicular) {
-            return -1;
+    const SUMOReal lineLength2D = LineStart.distanceTo2D(LineEnd);
+    if (lineLength2D == 0.0f) {
+        return 0.0f;
+    } else {
+        // scalar product equals length of orthogonal projection times length of vector being projected onto
+        // dividing the scalar product by the square of the distance gives the relative position
+        const SUMOReal u = (((Point.x() - LineStart.x()) * (LineEnd.x() - LineStart.x())) +
+                      ((Point.y() - LineStart.y()) * (LineEnd.y() - LineStart.y()))
+                     ) / (lineLength2D * lineLength2D);
+        if (u < 0.0f || u > 1.0f) {  // closest point does not fall within the line segment
+            if (perpendicular) {
+                return -1;
+            }
+            if (u < 0.0f) {
+                return 0.0f;
+            }
+            return lineLength2D;
         }
-        if (u < 0.0f) {
-            return 0.0f;
-        }
-        return LineStart.distanceTo(LineEnd);
+        return u * lineLength2D;
     }
-    return u * LineStart.distanceTo(LineEnd);
 }
 
 
@@ -236,18 +248,24 @@ SUMOReal
 GeomHelper::distancePointLine(const Position& point,
                               const Position& lineStart,
                               const Position& lineEnd) {
-    SUMOReal u = (((point.x() - lineStart.x()) * (lineEnd.x() - lineStart.x())) +
-                  ((point.y() - lineStart.y()) * (lineEnd.y() - lineStart.y()))
-                 ) / lineStart.distanceSquaredTo(lineEnd);
-    if (u < 0.0f || u > 1.0f) {
-        return -1;    // closest point does not fall within the line segment
+    const SUMOReal lineLengthSquared = lineStart.distanceSquaredTo(lineEnd);
+    if (lineLengthSquared == 0.0f) {
+        return point.distanceTo(lineStart);
+    } else {
+        // scalar product equals length of orthogonal projection times length of vector being projected onto
+        // dividing the scalar product by the square of the distance gives the relative position
+        SUMOReal u = (((point.x() - lineStart.x()) * (lineEnd.x() - lineStart.x())) +
+                ((point.y() - lineStart.y()) * (lineEnd.y() - lineStart.y()))
+                ) / lineLengthSquared;
+        if (u < 0.0f || u > 1.0f) {
+            return -1;    // closest point does not fall within the line segment
+        }
+        Position intersection(
+                lineStart.x() + u * (lineEnd.x() - lineStart.x()),
+                lineStart.y() + u * (lineEnd.y() - lineStart.y()));
+        return point.distanceTo(intersection);
     }
-    Position intersection(
-        lineStart.x() + u *(lineEnd.x() - lineStart.x()),
-        lineStart.y() + u *(lineEnd.y() - lineStart.y()));
-    return point.distanceTo(intersection);
 }
-
 
 
 SUMOReal
@@ -255,28 +273,9 @@ GeomHelper::closestDistancePointLine(const Position& point,
                                      const Position& lineStart,
                                      const Position& lineEnd,
                                      Position& outIntersection) {
-    Position directVec(lineEnd.x()-lineStart.x(), lineEnd.y()-lineStart.y());
-    SUMOReal u = (((point.x() - lineStart.x()) * directVec.x()) +
-                  ((point.y() - lineStart.y()) * directVec.y())) /
-                 (directVec.x() * directVec.x() +
-                  directVec.y() * directVec.y());
-
-    // if closest point does not fall within the line segment
-    // return line start or line end
-
-    if (u >= 0.0f && u <= 1.0f) {
-        outIntersection.set(
-            lineStart.x() + u * directVec.x(),
-            lineStart.y() + u * directVec.y());
-    } else {
-        if (u < 0.0f) {
-            outIntersection = lineStart;
-        }
-        if (u > 1.0f) {
-            outIntersection = lineEnd;
-        }
-    }
-    return point.distanceTo(outIntersection);
+    const SUMOReal length = nearest_position_on_line_to_point2D(lineStart, lineEnd, point, false);
+    outIntersection.set(Line(lineStart, lineEnd).getPositionAtDistance(length));
+    return point.distanceTo2D(outIntersection);
 }
 
 
@@ -288,9 +287,9 @@ GeomHelper::transfer_to_side(Position& p,
                              SUMOReal amount) {
     const SUMOReal dx = lineBeg.x() - lineEnd.x();
     const SUMOReal dy = lineBeg.y() - lineEnd.y();
-    const SUMOReal length = sqrt(dx*dx + dy*dy);
+    const SUMOReal length = sqrt(dx * dx + dy * dy);
     if (length > 0) {
-        p.add(dy*amount/length, -dx*amount/length);
+        p.add(dy * amount / length, -dx * amount / length);
     }
     return p;
 }
@@ -326,8 +325,7 @@ std::pair<SUMOReal, SUMOReal>
 GeomHelper::getNormal90D_CW(const Position& beg,
                             const Position& end,
                             SUMOReal wanted_offset) {
-    const SUMOReal length = sqrt((beg.x()-end.x())*(beg.x()-end.x()) + (beg.y()-end.y())*(beg.y()-end.y()));
-    return getNormal90D_CW(beg, end, length, wanted_offset);
+    return getNormal90D_CW(beg, end, beg.distanceTo2D(end), wanted_offset);
 }
 
 
@@ -339,14 +337,14 @@ GeomHelper::getNormal90D_CW(const Position& beg,
         throw InvalidArgument("same points at " + toString(beg));
     }
     return std::pair<SUMOReal, SUMOReal>
-           ((beg.y()-end.y())*wanted_offset/length, (end.x()-beg.x())*wanted_offset/length);
+           ((beg.y() - end.y()) * wanted_offset / length, (end.x() - beg.x()) * wanted_offset / length);
 }
 
 
 SUMOReal
-GeomHelper::getCCWAngleDiff(SUMOReal angle1, SUMOReal angle2) throw() {
+GeomHelper::getCCWAngleDiff(SUMOReal angle1, SUMOReal angle2) {
     SUMOReal v = angle2 - angle1;
-    if (v<0) {
+    if (v < 0) {
         v = 360 + v;
     }
     return v;
@@ -354,9 +352,9 @@ GeomHelper::getCCWAngleDiff(SUMOReal angle1, SUMOReal angle2) throw() {
 
 
 SUMOReal
-GeomHelper::getCWAngleDiff(SUMOReal angle1, SUMOReal angle2) throw() {
+GeomHelper::getCWAngleDiff(SUMOReal angle1, SUMOReal angle2) {
     SUMOReal v = angle1 - angle2;
-    if (v<0) {
+    if (v < 0) {
         v = 360 + v;
     }
     return v;
@@ -364,13 +362,13 @@ GeomHelper::getCWAngleDiff(SUMOReal angle1, SUMOReal angle2) throw() {
 
 
 SUMOReal
-GeomHelper::getMinAngleDiff(SUMOReal angle1, SUMOReal angle2) throw() {
+GeomHelper::getMinAngleDiff(SUMOReal angle1, SUMOReal angle2) {
     return MIN2(getCWAngleDiff(angle1, angle2), getCCWAngleDiff(angle1, angle2));
 }
 
 
 SUMOReal
-GeomHelper::getMaxAngleDiff(SUMOReal angle1, SUMOReal angle2) throw() {
+GeomHelper::getMaxAngleDiff(SUMOReal angle1, SUMOReal angle2) {
     return MAX2(getCWAngleDiff(angle1, angle2), getCCWAngleDiff(angle1, angle2));
 }
 

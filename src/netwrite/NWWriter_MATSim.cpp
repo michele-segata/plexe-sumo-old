@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NWWriter_MATSim.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Tue, 04.05.2011
 /// @version $Id$
 ///
 // Exporter writing networks using the MATSim format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -61,7 +63,7 @@ NWWriter_MATSim::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     // write nodes
     device << "   <nodes>\n";
     NBNodeCont& nc = nb.getNodeCont();
-    for (std::map<std::string, NBNode*>::const_iterator i=nc.begin(); i!=nc.end(); ++i) {
+    for (std::map<std::string, NBNode*>::const_iterator i = nc.begin(); i != nc.end(); ++i) {
         device << "      <node id=\"" << (*i).first
                << "\" x=\"" << (*i).second->getPosition().x()
                << "\" y=\"" << (*i).second->getPosition().y()
@@ -71,12 +73,12 @@ NWWriter_MATSim::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     // write edges
     device << "   <links capperiod=\"01:00:00\">\n";
     NBEdgeCont& ec = nb.getEdgeCont();
-    for (std::map<std::string, NBEdge*>::const_iterator i=ec.begin(); i!=ec.end(); ++i) {
+    for (std::map<std::string, NBEdge*>::const_iterator i = ec.begin(); i != ec.end(); ++i) {
         device << "      <link id=\"" << (*i).first
                << "\" from=\"" << (*i).second->getFromNode()->getID()
                << "\" to=\"" << (*i).second->getToNode()->getID()
                << "\" length=\"" << (*i).second->getLoadedLength()
-               << "\" capacity=\"" << (oc.getFloat("lanes-from-capacity.norm")*(*i).second->getNumLanes())
+               << "\" capacity=\"" << (oc.getFloat("lanes-from-capacity.norm") * (*i).second->getNumLanes())
                << "\" freespeed=\"" << (*i).second->getSpeed()
                << "\" permlanes=\"" << (*i).second->getNumLanes()
                << "\"/>\n";

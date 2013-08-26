@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIDialog_GLChosenEditor.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Thu, 11.03.2004
 /// @version $Id$
 ///
 // Editor for the list of chosen objects
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,19 +67,19 @@ public:
      * @param[in] str The storage of object selections to use
      */
     GUIDialog_GLChosenEditor(GUIMainWindow* parent,
-                             GUISelectedStorage* str) throw();
+                             GUISelectedStorage* str) ;
 
 
     /** @brief Destructor
      *
      * Notifies both the parent and the storage about being destroyed.
      */
-    ~GUIDialog_GLChosenEditor() throw();
+    ~GUIDialog_GLChosenEditor() ;
 
 
     /** @brief Rebuilds the entire list
      */
-    void rebuildList() throw();
+    void rebuildList() ;
 
 
     /// @name FOX-callbacks
@@ -91,7 +93,7 @@ public:
      *
      * @todo Recheck loading/saving of selections
      */
-    long onCmdLoad(FXObject*,FXSelector,void*);
+    long onCmdLoad(FXObject*, FXSelector, void*);
 
 
     /** @brief Called when the user presses the Save-button
@@ -103,28 +105,28 @@ public:
      *
      * @todo Recheck loading/saving of selections
      */
-    long onCmdSave(FXObject*,FXSelector,void*);
+    long onCmdSave(FXObject*, FXSelector, void*);
 
     /** @brief Called when the user presses the Deselect-button
      *
      * Determines which items were chosen and calls GUISelectedStorage::deselect
      *  for each.
      */
-    long onCmdDeselect(FXObject*,FXSelector,void*);
+    long onCmdDeselect(FXObject*, FXSelector, void*);
 
     /** @brief Called when the user presses the Clear-button
      *
      * Clear the internal list and calls GUISelectedStorage::clear.
      * Repaints itself
      */
-    long onCmdClear(FXObject*,FXSelector,void*);
+    long onCmdClear(FXObject*, FXSelector, void*);
 
 
     /** @brief Called when the user presses the Close-button
      *
      * Closes itself.
      */
-    long onCmdClose(FXObject*,FXSelector,void*);
+    long onCmdClose(FXObject*, FXSelector, void*);
     /// @}
 
 

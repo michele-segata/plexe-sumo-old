@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIDialog_GLObjChooser.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Class for the window that allows to choose a street, junction or vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -72,13 +75,13 @@ public:
 
 
     /// @brief Destructor
-    ~GUIDialog_GLObjChooser() throw();
+    ~GUIDialog_GLObjChooser() ;
 
 
     /** @brief Returns the chosen (selected) object
      * @return The selected object
      */
-    GUIGlObject* getObject() const throw() {
+    GUIGlObject* getObject() const {
         return static_cast<GUIGlObject*>(mySelected);
     }
 
@@ -88,19 +91,19 @@ public:
     /// @{
 
     /// @brief Callback: The selected item shall be centered within the calling view
-    long onCmdCenter(FXObject*,FXSelector,void*);
+    long onCmdCenter(FXObject*, FXSelector, void*);
 
     /// @brief Callback: The dialog shall be closed
-    long onCmdClose(FXObject*,FXSelector,void*);
+    long onCmdClose(FXObject*, FXSelector, void*);
 
     /// @brief Callback: Something has been typed into the the field
-    long onChgText(FXObject*,FXSelector,void*);
+    long onChgText(FXObject*, FXSelector, void*);
 
     /// @brief Callback: Selects to current item if enter is pressed
-    long onCmdText(FXObject*,FXSelector,void*);
+    long onCmdText(FXObject*, FXSelector, void*);
 
     /// @brief Callback: Selects to current item if enter is pressed
-    long onListKeyPress(FXObject*,FXSelector,void*);
+    long onListKeyPress(FXObject*, FXSelector, void*);
     /// @}
 
 

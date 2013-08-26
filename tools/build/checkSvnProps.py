@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 """
 @file    checkSvnProps.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
 @date    2010
 @version $Id$
 
 Checks svn property settings for all files.
 
-Copyright (C) 2010-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2010-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -15,7 +16,10 @@ import os, subprocess, sys, xml.sax
 from optparse import OptionParser
 
 _SOURCE_EXT = [".h", ".cpp", ".py", ".pl", ".java", ".am"]
-_TESTDATA_EXT = [".xml", ".cfg", ".prog", ".complex", ".dfrouter", ".duarouter", ".jtrrouter", ".netconvert", ".netgen", ".od2trips", ".polyconvert", ".sumo", ".meso", ".tools", ".traci", ".activitygen", ".scenario"]
+_TESTDATA_EXT = [".xml", ".prog", ".complex", ".dfrouter", ".duarouter", ".jtrrouter",
+                 ".netconvert", ".netgen", ".od2trips", ".polyconvert", ".sumo",
+                 ".meso", ".tools", ".traci", ".activitygen", ".scenario",
+                 ".sumocfg", ".netccfg", ".netgcfg"]
 _VS_EXT = [".vsprops", ".sln", ".vcproj", ".bat", ".props", ".vcxproj", ".filters"]
 _KEYWORDS = "HeadURL Id LastChangedBy LastChangedDate LastChangedRevision"
 

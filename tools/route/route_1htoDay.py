@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 """
 @file    route_1htoDay.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    11.09.2009
 @version $Id$
 
 Uses "route_departOffset.py" for building 24 route files which describe
  a whole day assuming the given route files describes an hour.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

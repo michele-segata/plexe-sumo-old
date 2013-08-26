@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    ROJTRTurnDefLoader.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Jan 2004
 /// @version $Id$
 ///
 // Loader for the of turning percentages and source/sink definitions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -62,11 +65,11 @@ public:
      *
      * @param[in] net The net to add loaded turning percentages into
      */
-    ROJTRTurnDefLoader(RONet& net) throw();
+    ROJTRTurnDefLoader(RONet& net) ;
 
 
     /// @brief Destructor
-    ~ROJTRTurnDefLoader() throw();
+    ~ROJTRTurnDefLoader() ;
 
 
 protected:
@@ -81,7 +84,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when characters occure
@@ -92,7 +95,7 @@ protected:
      * @see GenericSAXHandler::myCharacters
      */
     void myCharacters(int element,
-                      const std::string& chars) throw(ProcessError);
+                      const std::string& chars) ;
     //@}
 
 
@@ -107,7 +110,7 @@ private:
      *
      * @param[in] attrs The SAX-attributes to parse incoming edge from
      */
-    void beginFromEdge(const SUMOSAXAttributes& attrs) throw();
+    void beginFromEdge(const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Parses the probability to use a certain outgoing edge
@@ -123,7 +126,7 @@ private:
      *
      * @param[in] attrs The SAX-attributes to parse the destination edge and the probability to use it from
      */
-    void addToEdge(const SUMOSAXAttributes& attrs) throw();
+    void addToEdge(const SUMOSAXAttributes& attrs) ;
 
 
 private:

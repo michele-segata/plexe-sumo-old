@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 @file    simulation.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
 @date    2011-03-15
 @version $Id$
 
 Python implementation of the TraCI interface.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import traci, struct

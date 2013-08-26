@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/netconvertConfiguration.xsd">
 
@@ -22,7 +22,7 @@
 
     <output>
         <output-file value="" synonymes="o output sumo-output" type="FILE" help="The generated net will be written to FILE"/>
-        <plain-output-prefix value="" synonymes="plain-output" type="FILE" help="Prefix of files to write plain xml nodes, edges and connections to"/>
+        <plain-output-prefix value="" synonymes="plain plain-output" type="FILE" help="Prefix of files to write plain xml nodes, edges and connections to"/>
         <map-output value="" synonymes="M" type="FILE" help="Writes joined edges information to FILE"/>
         <matsim-output value="" type="FILE" help="The generated net will be written to FILE using MATsim format."/>
         <opendrive-output value="" type="FILE" help="The generated net will be written to FILE using openDRIVE format."/>
@@ -36,6 +36,7 @@
         <proj.dhdn value="false" type="BOOL" help="Determine the DHDN zone (for a transversal mercator projection based on the bessel ellipsoid)"/>
         <proj value="!" type="STR" help="Uses STR as proj.4 definition for projection"/>
         <proj.inverse value="false" type="BOOL" help="Inverses projection"/>
+        <proj.plain-geo value="false" type="BOOL" help="Write geo coordinates in plain-xml"/>
     </projection>
 
     <tls_building>
@@ -62,19 +63,21 @@
     </ramp_guessing>
 
     <edge_removal>
-        <keep-edges.min-speed value="" synonymes="edges-min-speed" type="FLOAT" help="Remove edges with speed < FLOAT"/>
+        <keep-edges.min-speed value="" synonymes="edges-min-speed" type="FLOAT" help="Only keep edges with speed > FLOAT"/>
         <remove-edges.explicit value="" synonymes="remove-edges" type="STR" help="Remove edges in STR"/>
-        <keep-edges.explicit value="" synonymes="keep-edges" type="STR" help="Remove edges not in STR"/>
-        <keep-edges.input-file value="" type="FILE" help="Removed edges not in FILE"/>
+        <keep-edges.explicit value="" synonymes="keep-edges" type="STR" help="Only keep edges in STR"/>
+        <keep-edges.input-file value="" type="FILE" help="Only keep edges in FILE"/>
         <keep-edges.postload value="false" type="BOOL" help="Remove edges after joining"/>
-        <keep-edges.in-boundary value="" type="STR" help="Keeps edges which are located within the given boundary"/>
-        <keep-edges.by-vclass value="" type="STR" help="Keep edges that allow any of the vclasss in STR"/>
-        <remove-edges.by-vclass value="" type="STR" help="Remove edges where vclass def is not in STR"/>
+        <keep-edges.in-boundary value="" type="STR" help="Only keep edges which are located within the given boundary"/>
+        <keep-edges.by-vclass value="" type="STR" help="Only keep edges which allow one of the vclasss in STR"/>
+        <remove-edges.by-vclass value="" type="STR" help="Remove edges which allow only vclasses from STR"/>
+        <keep-edges.by-type value="" type="STR" help="Only keep edges where type is in STR"/>
+        <remove-edges.by-type value="" type="STR" help="Remove edges where type is in STR"/>
         <remove-edges.isolated value="false" synonymes="remove-isolated" type="BOOL" help="Removes isolated edges"/>
     </edge_removal>
 
     <unregulated_nodes>
-        <keep-nodes-unregulated value="false" synonymes="keep-unregulated" type="BOOL" help="All nodes will be not regulated"/>
+        <keep-nodes-unregulated value="false" synonymes="keep-unregulated" type="BOOL" help="All nodes will be unregulated"/>
         <keep-nodes-unregulated.explicit value="" synonymes="keep-unregulated.explicit keep-unregulated.nodes" type="STR" help="Do not regulate nodes in STR"/>
         <keep-nodes-unregulated.district-nodes value="false" synonymes="keep-unregulated.district-nodes" type="BOOL" help="Do not regulate district nodes"/>
     </unregulated_nodes>
@@ -114,7 +117,7 @@
         <no-turnarounds.tls value="false" synonymes="no-tls-turnarounds" type="BOOL" help="Disables building turnarounds at tls-controlled junctions"/>
         <no-left-connections value="false" type="BOOL" help="Disables building connections to left"/>
         <geometry.split value="false" synonymes="split-geometry" type="BOOL" help="Splits edges across geometry nodes"/>
-        <geometry.remove value="false" synonymes="R remove-geometry" type="BOOL" help="Removes geometry information from edges"/>
+        <geometry.remove value="false" synonymes="R remove-geometry" type="BOOL" help="Replace nodes which only define edge geometry by geometry points (joins edges)"/>
         <geometry.max-segment-length value="0" type="FLOAT" help="splits geometry to restrict segment length"/>
         <offset.disable-normalization value="false" synonymes="disable-normalize-node-positions" type="BOOL" help="Turn off normalizing node positions"/>
         <offset.x value="0" synonymes="x-offset-to-apply" type="FLOAT" help="Adds FLOAT to net x-positions"/>

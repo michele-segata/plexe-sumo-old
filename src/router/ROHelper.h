@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    ROHelper.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Some helping methods for router
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,10 +50,10 @@
 class ROVehicleByDepartureComperator : public std::less<ROVehicle*> {
 public:
     /// @brief Constructor
-    explicit ROVehicleByDepartureComperator() throw() { }
+    explicit ROVehicleByDepartureComperator() { }
 
     /// @brief Destructor
-    ~ROVehicleByDepartureComperator() throw() { }
+    ~ROVehicleByDepartureComperator() { }
 
     /** @brief Comparing operator
      *
@@ -64,11 +66,11 @@ public:
      * @return Whether the first vehicle departs later than the second
      * @todo Check whether both vehicles can be const
      */
-    bool operator()(ROVehicle* veh1, ROVehicle* veh2) const throw() {
-        if (veh1->getDepartureTime()==veh2->getDepartureTime()) {
-            return veh1->getID()>veh2->getID();
+    bool operator()(ROVehicle* veh1, ROVehicle* veh2) const {
+        if (veh1->getDepartureTime() == veh2->getDepartureTime()) {
+            return veh1->getID() > veh2->getID();
         }
-        return veh1->getDepartureTime()>veh2->getDepartureTime();
+        return veh1->getDepartureTime() > veh2->getDepartureTime();
     }
 };
 
@@ -89,14 +91,14 @@ namespace ROHelper {
 /*
 SUMOReal recomputeCosts(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
                     const std::vector<const ROEdge*> &edges,
-                    const ROVehicle * const v, SUMOTime time) throw();
+                    const ROVehicle * const v, SUMOTime time) ;
 */
 
 /** @brief Checks whether the given edge list contains loops and removes them
  *
  * @param[in] edges The list of edges to remove loops from
  */
-void recheckForLoops(std::vector<const ROEdge*> &edges) throw();
+void recheckForLoops(std::vector<const ROEdge*> &edges) ;
 
 }
 

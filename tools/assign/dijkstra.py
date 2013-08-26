@@ -1,6 +1,8 @@
 """
 @file    dijkstra.py
-@author  Yun-Pang.Wang@dlr.de
+@author  Yun-Pang Wang
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2007-10-25
 @version $Id$
 
@@ -10,7 +12,8 @@ The Dijkstra algorithm is used for searching the respective shortest paths.
 the link information about the shortest paths and the corresponding travel times   
 will be stored in the lists P and D respectively.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 class priorityDictionary(dict):
@@ -121,8 +124,8 @@ def dijkstraPlain(start, targets):
         if targets.discard(v):
             if len(targets) == 0:
                 return (D, P)
-        for edge in v.outEdges:
-            w = edge.target
+        for edge in v.getOutgoing():
+            w = edge._to
             vwLength = D[v] + edge.helpacttime
 
             if w not in D and (w not in Q or vwLength < Q[w]):

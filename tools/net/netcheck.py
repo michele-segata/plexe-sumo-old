@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
 @file    netcheck.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
+@author  Laura Bieker
 @date    2007-03-20
 @version $Id$
 
@@ -9,7 +11,8 @@ This script does simple check for the network.
 It tests whether the network is (weakly) connected.
 It needs one parameter, the SUMO net (.net.xml).
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, sys

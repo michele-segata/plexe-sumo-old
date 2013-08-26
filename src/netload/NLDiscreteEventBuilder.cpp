@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    NLDiscreteEventBuilder.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Sep, 2003
 /// @version $Id$
 ///
 // }
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,25 +69,25 @@ NLDiscreteEventBuilder::addAction(const SUMOSAXAttributes& attrs,
     bool ok = true;
     const std::string type = attrs.getOptStringReporting(SUMO_ATTR_TYPE, 0, ok, "");
     // check whether the type was given
-    if (type==""||!ok) {
+    if (type == "" || !ok) {
         throw InvalidArgument("An action's type is not given.");
     }
     // get the numerical representation
     KnownActions::iterator i = myActions.find(type);
-    if (i==myActions.end()) {
+    if (i == myActions.end()) {
         throw InvalidArgument("The action type '" + type + "' is not known.");
     }
     // build the action
     switch ((*i).second) {
-    case EV_SAVETLSTATE:
-        buildSaveTLStateCommand(attrs, basePath);
-        break;
-    case EV_SAVETLSWITCHES:
-        buildSaveTLSwitchesCommand(attrs, basePath);
-        break;
-    case EV_SAVETLSWITCHSTATES:
-        buildSaveTLSwitchStatesCommand(attrs, basePath);
-        break;
+        case EV_SAVETLSTATE:
+            buildSaveTLStateCommand(attrs, basePath);
+            break;
+        case EV_SAVETLSWITCHES:
+            buildSaveTLSwitchesCommand(attrs, basePath);
+            break;
+        case EV_SAVETLSWITCHSTATES:
+            buildSaveTLSwitchStatesCommand(attrs, basePath);
+            break;
     }
 }
 
@@ -95,7 +99,7 @@ NLDiscreteEventBuilder::buildSaveTLStateCommand(const SUMOSAXAttributes& attrs,
     const std::string dest = attrs.getOptStringReporting(SUMO_ATTR_DEST, 0, ok, "");
     const std::string source = attrs.getOptStringReporting(SUMO_ATTR_SOURCE, 0, ok, "");
     // check the parameter
-    if (dest==""||!ok) {
+    if (dest == "" || !ok) {
         throw InvalidArgument("Incomplete description of an 'SaveTLSState'-action occured.");
     }
     if (source == "") {
@@ -123,7 +127,7 @@ NLDiscreteEventBuilder::buildSaveTLSwitchesCommand(const SUMOSAXAttributes& attr
     const std::string dest = attrs.getOptStringReporting(SUMO_ATTR_DEST, 0, ok, "");
     const std::string source = attrs.getOptStringReporting(SUMO_ATTR_SOURCE, 0, ok, "");
     // check the parameter
-    if (dest==""||!ok) {
+    if (dest == "" || !ok) {
         throw InvalidArgument("Incomplete description of an 'SaveTLSSwitchTimes'-action occured.");
     }
     if (source == "") {
@@ -151,7 +155,7 @@ NLDiscreteEventBuilder::buildSaveTLSwitchStatesCommand(const SUMOSAXAttributes& 
     const std::string dest = attrs.getOptStringReporting(SUMO_ATTR_DEST, 0, ok, "");
     const std::string source = attrs.getOptStringReporting(SUMO_ATTR_SOURCE, 0, ok, "");
     // check the parameter
-    if (dest==""||!ok) {
+    if (dest == "" || !ok) {
         throw InvalidArgument("Incomplete description of an 'SaveTLSSwitchStates'-action occured.");
     }
     if (source == "") {

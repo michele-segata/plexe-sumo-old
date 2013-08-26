@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    TraCIServerAPI_Route.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    07.05.2009
 /// @version $Id$
 ///
 // APIs for getting/setting route values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -55,7 +58,7 @@ TraCIServerAPI_Route::processGet(TraCIServer& server, tcpip::Storage& inputStora
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
     // check variable
-    if (variable!=ID_LIST&&variable!=VAR_EDGES&&variable!=ID_COUNT) {
+    if (variable != ID_LIST && variable != VAR_EDGES && variable != ID_COUNT) {
         server.writeStatusCmd(CMD_GET_ROUTE_VARIABLE, RTYPE_ERR, "Get Route Variable: unsupported variable specified", outputStorage);
         return false;
     }
@@ -66,32 +69,32 @@ TraCIServerAPI_Route::processGet(TraCIServer& server, tcpip::Storage& inputStora
     tempMsg.writeUnsignedByte(variable);
     tempMsg.writeString(id);
     // process request
-    if (variable==ID_LIST) {
+    if (variable == ID_LIST) {
         std::vector<std::string> ids;
         MSRoute::insertIDs(ids);
         tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
         tempMsg.writeStringList(ids);
-    } else if (variable==ID_COUNT) {
+    } else if (variable == ID_COUNT) {
         std::vector<std::string> ids;
         MSRoute::insertIDs(ids);
         tempMsg.writeUnsignedByte(TYPE_INTEGER);
         tempMsg.writeInt((int) ids.size());
     } else {
         const MSRoute* r = MSRoute::dictionary(id);
-        if (r==0) {
+        if (r == 0) {
             server.writeStatusCmd(CMD_GET_ROUTE_VARIABLE, RTYPE_ERR, "Route '" + id + "' is not known", outputStorage);
             return false;
         }
         switch (variable) {
-        case VAR_EDGES:
-            tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
-            tempMsg.writeInt(r->size());
-            for (MSRouteIterator i=r->begin(); i!=r->end(); ++i) {
-                tempMsg.writeString((*i)->getID());
-            }
-            break;
-        default:
-            break;
+            case VAR_EDGES:
+                tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
+                tempMsg.writeInt(r->size());
+                for (MSRouteIterator i = r->begin(); i != r->end(); ++i) {
+                    tempMsg.writeString((*i)->getID());
+                }
+                break;
+            default:
+                break;
         }
     }
     server.writeStatusCmd(CMD_GET_ROUTE_VARIABLE, RTYPE_OK, warning, outputStorage);
@@ -106,7 +109,7 @@ TraCIServerAPI_Route::processSet(TraCIServer& server, tcpip::Storage& inputStora
     std::string warning = ""; // additional description for response
     // variable
     int variable = inputStorage.readUnsignedByte();
-    if (variable!=ADD) {
+    if (variable != ADD) {
         server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "Change Route State: unsupported variable specified", outputStorage);
         return false;
     }
@@ -115,31 +118,31 @@ TraCIServerAPI_Route::processSet(TraCIServer& server, tcpip::Storage& inputStora
     // process
     int valueDataType = inputStorage.readUnsignedByte();
     switch (variable) {
-    case ADD: {
-        if (valueDataType!=TYPE_STRINGLIST) {
-            server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "A string list is needed for adding a new route.", outputStorage);
-            return false;
-        }
-        //read itemNo
-        int numEdges = inputStorage.readInt();
-        MSEdgeVector edges;
-        while (numEdges--) {
-            MSEdge* edge = MSEdge::dictionary(inputStorage.readString());
-            if (edge==0) {
-                server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "Unknown edge in route.", outputStorage);
+        case ADD: {
+            if (valueDataType != TYPE_STRINGLIST) {
+                server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "A string list is needed for adding a new route.", outputStorage);
                 return false;
             }
-            edges.push_back(edge);
+            //read itemNo
+            int numEdges = inputStorage.readInt();
+            MSEdgeVector edges;
+            while (numEdges--) {
+                MSEdge* edge = MSEdge::dictionary(inputStorage.readString());
+                if (edge == 0) {
+                    server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "Unknown edge in route.", outputStorage);
+                    return false;
+                }
+                edges.push_back(edge);
+            }
+            const std::vector<SUMOVehicleParameter::Stop> stops;
+            if (!MSRoute::dictionary(id, new MSRoute(id, edges, 1, RGBColor::DEFAULT_COLOR, stops))) {
+                server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "Could not add route.", outputStorage);
+                return false;
+            }
         }
-        const std::vector<SUMOVehicleParameter::Stop> stops;
-        if (!MSRoute::dictionary(id, new MSRoute(id, edges, 1, RGBColor::DEFAULT_COLOR, stops))) {
-            server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "Could not add route.", outputStorage);
-            return false;
-        }
-    }
-    break;
-    default:
         break;
+        default:
+            break;
     }
     server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_OK, warning, outputStorage);
     return true;

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    SUMOSAXAttributesImpl_Xerces.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Fri, 30 Mar 2007
 /// @version $Id$
 ///
 // Encapsulated Xerces-SAX-attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,11 +67,11 @@ public:
     SUMOSAXAttributesImpl_Xerces(const Attributes& attrs,
                                  const std::map<int, XMLCh*> &predefinedTags,
                                  const std::map<int, std::string> &predefinedTagsMML,
-                                 const std::string& objectType) throw();
+                                 const std::string& objectType) ;
 
 
     /// @brief Destructor
-    virtual ~SUMOSAXAttributesImpl_Xerces() throw();
+    virtual ~SUMOSAXAttributesImpl_Xerces() ;
 
 
 
@@ -81,7 +84,7 @@ public:
      * @param[in] id The id of the searched attribute
      * @return Whether the attribute is within the attributes
      */
-    bool hasAttribute(int id) const throw();
+    bool hasAttribute(int id) const ;
 
 
     /**
@@ -225,7 +228,7 @@ public:
     /**
      * @brief Returns the information whether the named attribute is within the current list
      */
-    bool hasAttribute(const std::string& id) const throw();
+    bool hasAttribute(const std::string& id) const ;
 
 
     /**
@@ -256,7 +259,7 @@ public:
      * @return The attribute's value as a string, if it could be read and parsed
      */
     std::string getStringSecure(const std::string& id,
-                                const std::string& def) const throw();
+                                const std::string& def) const ;
     //}
 
 
@@ -267,7 +270,7 @@ public:
      * @param[in] attr The id of the attribute to return the name of
      * @return The name of the described attribute
      */
-    std::string getName(int attr) const throw();
+    std::string getName(int attr) const ;
 
 
 private:
@@ -277,7 +280,7 @@ private:
      * @param[in] id The id of the attribute to retrieve the vale of
      * @return The xerces-value of the attribute
      */
-    const XMLCh* getAttributeValueSecure(int id) const throw();
+    const XMLCh* getAttributeValueSecure(int id) const ;
 
 
 private:

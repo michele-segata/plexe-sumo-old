@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NIXMLEdgesHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Importer for network edges stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -75,11 +78,11 @@ public:
      * @param[in] options The options to use while building edges
      */
     NIXMLEdgesHandler(NBNodeCont& nc, NBEdgeCont& ec,
-                      NBTypeCont& tc, NBDistrictCont& dc, OptionsCont& options) throw();
+                      NBTypeCont& tc, NBDistrictCont& dc, OptionsCont& options) ;
 
 
     /// @brief Destructor
-    ~NIXMLEdgesHandler() throw();
+    ~NIXMLEdgesHandler() ;
 
 
 protected:
@@ -94,7 +97,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when a closing tag occurs
@@ -103,7 +106,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int element) throw(ProcessError);
+    void myEndElement(int element) ;
     //@}
 
 
@@ -115,7 +118,7 @@ private:
      * @param[in] attrs The attributes to read the shape from
      * @return The edge's shape
      */
-    PositionVector tryGetShape(const SUMOSAXAttributes& attrs) throw();
+    PositionVector tryGetShape(const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Tries to parse the spread type
@@ -130,7 +133,7 @@ private:
      * @param[in] attrs The SAX-attributes to parse the nodes from
      * @return Whether valid nodes exist
      */
-    bool setNodes(const SUMOSAXAttributes& attrs) throw();
+    bool setNodes(const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief tries to parse one of the node's positions
@@ -192,6 +195,7 @@ private:
 
     /// @brief Information about how to spread the lanes
     SUMOVehicleClasses myNotAllowed;
+
     /// @}
 
 
@@ -263,7 +267,7 @@ private:
 
         /// @brief Comparing operator
         bool operator()(const Split& e) {
-            return e.pos==myPosition;
+            return e.pos == myPosition;
         }
 
     private:

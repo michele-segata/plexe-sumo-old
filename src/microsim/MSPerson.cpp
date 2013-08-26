@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSPerson.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    Mon, 9 Jul 2001
 /// @version $Id$
 ///
 // The class for modelling person-movements
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -108,7 +112,7 @@ MSPerson::MSPersonStage_Walking::proceed(MSNet* net,
 
 
 void
-MSPerson::MSPersonStage_Walking::tripInfoOutput(OutputDevice& os) const throw(IOError) {
+MSPerson::MSPersonStage_Walking::tripInfoOutput(OutputDevice& os) const {
     (os.openTag("walk") <<
      " arrival=\"" << time2string(myArrived) <<
      "\"").closeTag(true);
@@ -150,7 +154,7 @@ MSPerson::MSPersonStage_Driving::isWaitingFor(const std::string& line) const {
 
 
 void
-MSPerson::MSPersonStage_Driving::tripInfoOutput(OutputDevice& os) const throw(IOError) {
+MSPerson::MSPersonStage_Driving::tripInfoOutput(OutputDevice& os) const {
     (os.openTag("ride") <<
      " depart=\"" << time2string(myDeparted) <<
      "\" arrival=\"" << time2string(myArrived) <<
@@ -179,7 +183,7 @@ MSPerson::MSPersonStage_Waiting::proceed(MSNet* net,
 
 
 void
-MSPerson::MSPersonStage_Waiting::tripInfoOutput(OutputDevice& os) const throw(IOError) {
+MSPerson::MSPersonStage_Waiting::tripInfoOutput(OutputDevice& os) const {
     (os.openTag("stop") <<
      " arrival=\"" << time2string(myArrived) <<
      "\"").closeTag(true);
@@ -196,7 +200,7 @@ MSPerson::MSPerson(const SUMOVehicleParameter* pars, MSPersonPlan* plan)
 
 
 MSPerson::~MSPerson() {
-    for (MSPersonPlan::const_iterator i=myPlan->begin(); i!=myPlan->end(); ++i) {
+    for (MSPersonPlan::const_iterator i = myPlan->begin(); i != myPlan->end(); ++i) {
         delete *i;
     }
     delete myPlan;
@@ -205,7 +209,7 @@ MSPerson::~MSPerson() {
 
 
 const std::string&
-MSPerson::getID() const throw() {
+MSPerson::getID() const {
     return myParameter->id;
 }
 
@@ -224,7 +228,7 @@ MSPerson::proceed(MSNet* net, SUMOTime time) {
 
 
 SUMOTime
-MSPerson::getDesiredDepart() const throw() {
+MSPerson::getDesiredDepart() const {
     return myParameter->depart;
 }
 
@@ -242,8 +246,8 @@ MSPerson::getDestination() const {
 
 
 void
-MSPerson::tripInfoOutput(OutputDevice& os) const throw(IOError) {
-    for (MSPersonPlan::const_iterator i=myPlan->begin(); i!=myPlan->end(); ++i) {
+MSPerson::tripInfoOutput(OutputDevice& os) const {
+    for (MSPersonPlan::const_iterator i = myPlan->begin(); i != myPlan->end(); ++i) {
         (*i)->tripInfoOutput(os);
     }
 }

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIEdgeControlBuilder.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Derivation of NLEdgeControlBuilder which build gui-edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,11 +51,11 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-GUIEdgeControlBuilder::GUIEdgeControlBuilder() throw()
+GUIEdgeControlBuilder::GUIEdgeControlBuilder()
     : NLEdgeControlBuilder() {}
 
 
-GUIEdgeControlBuilder::~GUIEdgeControlBuilder() throw() {}
+GUIEdgeControlBuilder::~GUIEdgeControlBuilder() {}
 
 
 MSEdge*
@@ -72,17 +75,17 @@ GUIEdgeControlBuilder::addLane(const std::string& id,
                                const SUMOVehicleClasses& disallowed) {
     MSLane* lane = 0;
     switch (myFunction) {
-    case MSEdge::EDGEFUNCTION_INTERNAL:
-        lane = new GUIInternalLane(id, maxSpeed, length, myActiveEdge,
-                                   myCurrentNumericalLaneID++, shape, width, allowed, disallowed);
-        break;
-    case MSEdge::EDGEFUNCTION_NORMAL:
-    case MSEdge::EDGEFUNCTION_CONNECTOR:
-        lane = new GUILane(id, maxSpeed, length, myActiveEdge,
-                           myCurrentNumericalLaneID++, shape, width, allowed, disallowed);
-        break;
-    default:
-        throw InvalidArgument("A lane with an unknown type occured (" + toString(myFunction) + ")");
+        case MSEdge::EDGEFUNCTION_INTERNAL:
+            lane = new GUIInternalLane(id, maxSpeed, length, myActiveEdge,
+                                       myCurrentNumericalLaneID++, shape, width, allowed, disallowed);
+            break;
+        case MSEdge::EDGEFUNCTION_NORMAL:
+        case MSEdge::EDGEFUNCTION_CONNECTOR:
+            lane = new GUILane(id, maxSpeed, length, myActiveEdge,
+                               myCurrentNumericalLaneID++, shape, width, allowed, disallowed);
+            break;
+        default:
+            throw InvalidArgument("A lane with an unknown type occured (" + toString(myFunction) + ")");
     }
     myLaneStorage->push_back(lane);
     return lane;
@@ -91,7 +94,7 @@ GUIEdgeControlBuilder::addLane(const std::string& id,
 
 
 MSEdge*
-GUIEdgeControlBuilder::buildEdge(const std::string& id, const std::string& streetName) throw() {
+GUIEdgeControlBuilder::buildEdge(const std::string& id, const std::string& streetName) {
     return new GUIEdge(id, myCurrentNumericalEdgeID++, streetName);
 }
 

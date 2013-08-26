@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    ODMatrix.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    05. Apr. 2006
 /// @version $Id$
 ///
 // An O/D (origin/destination) matrix
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -73,11 +75,11 @@ public:
      *
      * @param[in] dc The district container to obtain referenced distrivts from
      */
-    ODMatrix(const ODDistrictCont& dc) throw();
+    ODMatrix(const ODDistrictCont& dc) ;
 
 
     /// Destructor
-    ~ODMatrix() throw();
+    ~ODMatrix() ;
 
 
     /** @brief Builds a single cell from the given values, verifying them
@@ -103,7 +105,7 @@ public:
      */
     void add(SUMOReal vehicleNumber, SUMOTime begin,
              SUMOTime end, const std::string& origin, const std::string& destination,
-             const std::string& vehicleType) throw();
+             const std::string& vehicleType) ;
 
 
     /** @brief Writes the vehicles stored in the matrix assigning the sources and sinks
@@ -131,7 +133,7 @@ public:
      */
     void write(SUMOTime begin, SUMOTime end,
                OutputDevice& dev, bool uniform, bool noVtype,
-               const std::string& prefix) throw();
+               const std::string& prefix) ;
 
 
     /** @brief Returns the number of loaded vehicles
@@ -140,7 +142,7 @@ public:
      *
      * @return The number of loaded vehicles
      */
-    SUMOReal getNoLoaded() const throw();
+    SUMOReal getNoLoaded() const ;
 
 
     /** @brief Returns the number of written vehicles
@@ -149,7 +151,7 @@ public:
      *
      * @return The number of written vehicles
      */
-    SUMOReal getNoWritten() const throw();
+    SUMOReal getNoWritten() const ;
 
 
     /** @brief Returns the number of discarded vehicles
@@ -158,13 +160,13 @@ public:
      *
      * @return The number of discarded vehicles
      */
-    SUMOReal getNoDiscarded() const throw();
+    SUMOReal getNoDiscarded() const ;
 
 
     /** @brief Splits the stored cells dividing them on the given time line
      * @todo Describe
      */
-    void applyCurve(const Distribution_Points& ps) throw();
+    void applyCurve(const Distribution_Points& ps) ;
 
 
 protected:
@@ -217,7 +219,7 @@ protected:
      */
     SUMOReal computeDeparts(ODCell* cell,
                             size_t& vehName, std::vector<ODVehicle> &into, bool uniform,
-                            const std::string& prefix) throw();
+                            const std::string& prefix) ;
 
 
     /** @brief Splits the given cell dividing it on the given time line and
@@ -236,7 +238,7 @@ protected:
      * @todo describe better!!!
      */
     void applyCurve(const Distribution_Points& ps, ODCell* cell,
-                    CellVector& newCells) throw();
+                    CellVector& newCells) ;
 
 
 protected:
@@ -283,7 +285,7 @@ protected:
                 }
                 return p1->origin < p2->origin;
             }
-            return p1->begin<p2->begin;
+            return p1->begin < p2->begin;
         }
 
     };
@@ -311,10 +313,10 @@ protected:
          * @return Whether the departure time of the first vehicle is larger than the one of the second
          */
         bool operator()(const ODVehicle& p1, const ODVehicle& p2) const {
-            if (p1.depart==p2.depart) {
-                return p1.id>p2.id;
+            if (p1.depart == p2.depart) {
+                return p1.id > p2.id;
             }
-            return p1.depart>p2.depart;
+            return p1.depart > p2.depart;
         }
 
     };

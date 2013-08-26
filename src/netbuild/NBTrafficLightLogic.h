@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NBTrafficLightLogic.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A SUMO-compliant built logic for a traffic light
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -70,17 +73,17 @@ public:
          * @param[in] durationArg The duration of the phase
          * @param[in] stateArg Signals per link
          */
-        PhaseDefinition(SUMOTime durationArg, const std::string& stateArg) throw()
+        PhaseDefinition(SUMOTime durationArg, const std::string& stateArg)
             : duration(durationArg), state(stateArg) { }
 
         /// @brief Destructor
-        ~PhaseDefinition() throw() { }
+        ~PhaseDefinition() { }
 
         /** @brief Comparison operator
          * @param[in] pd A second phase
          * @return Whether this and the given phases are same
          */
-        bool operator!=(const PhaseDefinition& pd) const throw() {
+        bool operator!=(const PhaseDefinition& pd) const {
             return pd.duration != duration || pd.state != state;
         }
 
@@ -92,7 +95,7 @@ public:
      * @param[in] subid The id of the program
      * @param[in] noLinks Number of links that are controlled by this tls. 0 means the value is not known beforehand
      */
-    NBTrafficLightLogic(const std::string& id, const std::string& subid, unsigned int noLinks) throw();
+    NBTrafficLightLogic(const std::string& id, const std::string& subid, unsigned int noLinks) ;
 
 
     /** @brief Copy Constructor
@@ -102,7 +105,7 @@ public:
 
 
     /// @brief Destructor
-    ~NBTrafficLightLogic() throw();
+    ~NBTrafficLightLogic() ;
 
 
     /** @brief Adds a phase to the logic
@@ -113,7 +116,7 @@ public:
      * @note: the length of the state has to match the number of links
      *        and the length given in previous calls to addStep (throws ProcessError)
      */
-    void addStep(SUMOTime duration, const std::string& state, int index=-1);
+    void addStep(SUMOTime duration, const std::string& state, int index = -1);
 
 
     /** @brief Modifies the state for an existing phase (used by NETEDIT)
@@ -142,19 +145,19 @@ public:
      *
      * Joins equal steps.
      */
-    void closeBuilding() throw();
+    void closeBuilding() ;
 
 
     /** @brief Returns the duration of the complete cycle
      * @return The duration of this logic's cycle
      */
-    SUMOTime getDuration() const throw();
+    SUMOTime getDuration() const ;
 
 
     /** @brief Sets the offset of this tls
      * @param[in] offset The offset of this cycle
      */
-    void setOffset(SUMOTime offset) throw() {
+    void setOffset(SUMOTime offset) {
         myOffset = offset;
     }
 

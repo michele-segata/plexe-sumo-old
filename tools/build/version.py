@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
 @file    version.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
+@author  Jakob Erdmann
 @date    2007
 @version $Id$
 
@@ -10,7 +12,8 @@ This script rebuilds "../../src/version.h", the file which
 If a version file exists, it is kept, otherwise the current
  SVN revision is used as version information.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

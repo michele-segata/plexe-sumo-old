@@ -7,12 +7,13 @@
 // A lane area vehicles can halt at
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -42,61 +43,61 @@
 MSBusStop::MSBusStop(const std::string& id,
                      const std::vector<std::string> &lines,
                      MSLane& lane,
-                     SUMOReal begPos, SUMOReal endPos) throw()
+                     SUMOReal begPos, SUMOReal endPos)
     : MSTrigger(id), myLines(lines), myLane(lane),
       myBegPos(begPos), myEndPos(endPos), myLastFreePos(endPos) {
     computeLastFreePos();
 }
 
 
-MSBusStop::~MSBusStop() throw() {}
+MSBusStop::~MSBusStop() {}
 
 
 const MSLane&
-MSBusStop::getLane() const throw() {
+MSBusStop::getLane() const {
     return myLane;
 }
 
 
 SUMOReal
-MSBusStop::getBeginLanePosition() const throw() {
+MSBusStop::getBeginLanePosition() const {
     return myBegPos;
 }
 
 
 SUMOReal
-MSBusStop::getEndLanePosition() const throw() {
+MSBusStop::getEndLanePosition() const {
     return myEndPos;
 }
 
 
 void
-MSBusStop::enter(void* what, SUMOReal beg, SUMOReal end) throw() {
+MSBusStop::enter(void* what, SUMOReal beg, SUMOReal end) {
     myEndPositions[what] = std::pair<SUMOReal, SUMOReal>(beg, end);
     computeLastFreePos();
 }
 
 
 SUMOReal
-MSBusStop::getLastFreePos() const throw() {
+MSBusStop::getLastFreePos() const {
     return myLastFreePos;
 }
 
 
 void
-MSBusStop::leaveFrom(void* what) throw() {
-    assert(myEndPositions.find(what)!=myEndPositions.end());
+MSBusStop::leaveFrom(void* what) {
+    assert(myEndPositions.find(what) != myEndPositions.end());
     myEndPositions.erase(myEndPositions.find(what));
     computeLastFreePos();
 }
 
 
 void
-MSBusStop::computeLastFreePos() throw() {
+MSBusStop::computeLastFreePos() {
     myLastFreePos = myEndPos;
     std::map<void*, std::pair<SUMOReal, SUMOReal> >::iterator i;
-    for (i=myEndPositions.begin(); i!=myEndPositions.end(); i++) {
-        if (myLastFreePos>(*i).second.second) {
+    for (i = myEndPositions.begin(); i != myEndPositions.end(); i++) {
+        if (myLastFreePos > (*i).second.second) {
             myLastFreePos = (*i).second.second;
         }
     }

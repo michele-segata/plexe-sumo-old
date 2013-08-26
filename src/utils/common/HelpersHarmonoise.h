@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    HelpersHarmonoise.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 10.05.2004
 /// @version $Id$
 ///
 // Helper methods for Harmonoise-based noise emission computation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -56,7 +58,7 @@ public:
      * @param[in] a The vehicle's current acceleration
      * @return The noise produced by the vehicle of the given class running with v and a
      */
-    static SUMOReal computeNoise(SUMOEmissionClass c, double v, double a) throw();
+    static SUMOReal computeNoise(SUMOEmissionClass c, double v, double a) ;
 
 
     /** @brief Computes the resulting noise
@@ -64,7 +66,7 @@ public:
      * @param[in] val The sum of converted vehicle noises ( pow(10., (<NOISE>/10.)) )
      * @return The resulting sum
      */
-    inline static SUMOReal sum(SUMOReal val) throw() {
+    inline static SUMOReal sum(SUMOReal val) {
         return SUMOReal(10. * log10(val));
     }
 

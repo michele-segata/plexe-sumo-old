@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    SUMOVehicleParserHelper.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    Mon, 07.04.2008
 /// @version $Id$
 ///
 // Helper methods for parsing vehicle attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -60,7 +64,7 @@ public:
      * @exception ProcessError If an attribute's value is invalid
      * @note: the caller is responsible for deleting the returned pointer
      */
-    static SUMOVehicleParameter* parseFlowAttributes(const SUMOSAXAttributes& attrs) throw(ProcessError);
+    static SUMOVehicleParameter* parseFlowAttributes(const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Parses a vehicle's attributes
@@ -76,7 +80,7 @@ public:
      * @note: the caller is responsible for deleting the returned pointer
      */
     static SUMOVehicleParameter* parseVehicleAttributes(const SUMOSAXAttributes& attrs,
-            bool skipID=false, bool skipDepart=false) throw(ProcessError);
+            bool skipID = false, bool skipDepart = false) ;
 
 
     /** @brief Starts to parse a vehicle type
@@ -86,7 +90,7 @@ public:
      * @see SUMOVTypeParameter
      * @note: the caller is responsible for deleting the returned pointer
      */
-    static SUMOVTypeParameter* beginVTypeParsing(const SUMOSAXAttributes& attrs) throw(ProcessError);
+    static SUMOVTypeParameter* beginVTypeParsing(const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Parses an element embedded in vtype definition
@@ -100,7 +104,7 @@ public:
      */
     static void parseVTypeEmbedded(SUMOVTypeParameter& into,
                                    int element, const SUMOSAXAttributes& attrs,
-                                   bool fromVType=false) throw(ProcessError);
+                                   bool fromVType = false) ;
 
 
     /** @brief Closes parsing of the vehicle type
@@ -175,7 +179,7 @@ private:
      * @exception ProcessError If an attribute's value is invalid
      */
     static void parseCommonAttributes(const SUMOSAXAttributes& attrs,
-                                      SUMOVehicleParameter* ret, std::string element) throw(ProcessError);
+                                      SUMOVehicleParameter* ret, std::string element) ;
 
 
     typedef std::map<SumoXMLTag, std::set<SumoXMLAttr> > CFAttrMap;

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    StdDefs.h
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -40,7 +43,7 @@ const SUMOReal SUMO_const_halfLaneWidth = (SUMOReal) 1.6;
 const SUMOReal SUMO_const_quarterLaneWidth = (SUMOReal) 0.8;
 const SUMOReal SUMO_const_laneOffset = (SUMOReal) .1;
 const SUMOReal SUMO_const_laneWidthAndOffset = (SUMOReal) 3.3;
-const SUMOReal SUMO_const_halfLaneAndOffset = (SUMOReal)(3.2/2.+.1);
+const SUMOReal SUMO_const_halfLaneAndOffset = (SUMOReal)(3.2 / 2. + .1);
 
 
 /* -------------------------------------------------------------------------
@@ -49,41 +52,41 @@ const SUMOReal SUMO_const_halfLaneAndOffset = (SUMOReal)(3.2/2.+.1);
 template<typename T>
 inline T
 MIN2(T a, T b) {
-    return a<b?a:b;
+    return a < b ? a : b;
 }
 
 template<typename T>
 inline T
 MAX2(T a, T b) {
-    return a>b?a:b;
+    return a > b ? a : b;
 }
 
 
 template<typename T>
 inline T
 MIN3(T a, T b, T c) {
-    return MIN2(c, a<b?a:b);
+    return MIN2(c, a < b ? a : b);
 }
 
 
 template<typename T>
 inline T
 MAX3(T a, T b, T c) {
-    return MAX2(c, a>b?a:b);
+    return MAX2(c, a > b ? a : b);
 }
 
 
 template<typename T>
 inline T
 MIN4(T a, T b, T c, T d) {
-    return MIN2(MIN2(a,b),MIN2(c,d));
+    return MIN2(MIN2(a, b), MIN2(c, d));
 }
 
 
 template<typename T>
 inline T
 MAX4(T a, T b, T c, T d) {
-    return MAX2(MAX2(a,b),MAX2(c,d));
+    return MAX2(MAX2(a, b), MAX2(c, d));
 }
 
 

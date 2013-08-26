@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    RODFDetectorHandler.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Eric Nicolay
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // A handler for loading detector descriptions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -54,17 +58,17 @@ RODFDetectorHandler::RODFDetectorHandler(RODFNet* optNet, bool ignoreErrors, ROD
       myHaveWarnedAboutDeprecatedDetectorDefinition(false) {}
 
 
-RODFDetectorHandler::~RODFDetectorHandler() throw() {}
+RODFDetectorHandler::~RODFDetectorHandler() {}
 
 
 void
 RODFDetectorHandler::myStartElement(int element,
-                                    const SUMOSAXAttributes& attrs) throw(ProcessError) {
-    if (element==SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED&&!myHaveWarnedAboutDeprecatedDetectorDefinition) {
+                                    const SUMOSAXAttributes& attrs) {
+    if (element == SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED && !myHaveWarnedAboutDeprecatedDetectorDefinition) {
         myHaveWarnedAboutDeprecatedDetectorDefinition = true;
         WRITE_WARNING("Using '" + toString(SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED) + "' is deprecated. Please use '" + toString(SUMO_TAG_DETECTOR_DEFINITION) + "' instead.");
     }
-    if (element==SUMO_TAG_DETECTOR_DEFINITION||element==SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED) {
+    if (element == SUMO_TAG_DETECTOR_DEFINITION || element == SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED) {
         try {
             bool ok = true;
             // get the id, report an error if not given or empty...
@@ -77,7 +81,7 @@ RODFDetectorHandler::myStartElement(int element,
                 throw ProcessError();
             }
             ROEdge* edge = myNet->getEdge(lane.substr(0, lane.rfind('_')));
-            unsigned int laneIndex = TplConvertSec<char>::_2intSec(lane.substr(lane.rfind('_')+1).c_str(), INT_MAX);
+            unsigned int laneIndex = TplConvertSec<char>::_2intSec(lane.substr(lane.rfind('_') + 1).c_str(), INT_MAX);
             if (edge == 0 || laneIndex >= edge->getLaneNo()) {
                 throw ProcessError("Unknown lane '" + lane + "' for detector '" + id + "' in '" + getFileName() + "'.");
             }
@@ -87,11 +91,11 @@ RODFDetectorHandler::myStartElement(int element,
                 throw ProcessError();
             }
             RODFDetectorType type = TYPE_NOT_DEFINED;
-            if (mml_type=="between") {
+            if (mml_type == "between") {
                 type = BETWEEN_DETECTOR;
-            } else if (mml_type=="source"||mml_type=="highway_source") { // !!! highway-source is legacy (removed accoring output on 06.08.2007)
+            } else if (mml_type == "source" || mml_type == "highway_source") { // !!! highway-source is legacy (removed accoring output on 06.08.2007)
                 type = SOURCE_DETECTOR;
-            } else if (mml_type=="sink") {
+            } else if (mml_type == "sink") {
                 type = SINK_DETECTOR;
             }
             RODFDetector* detector = new RODFDetector(id, lane, pos, type);

@@ -1,20 +1,23 @@
 /****************************************************************************/
 /// @file    AGActivityTripWriter.cpp
 /// @author  Piotr Woznica
+/// @author  Daniel Krajzewicz
+/// @author  Walter Bamberger
 /// @date    July 2010
 /// @version $Id$
 ///
 // Class for writing Trip objects in a SUMO-route file.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -57,7 +60,7 @@ AGActivityTripWriter::vtypes() {
 void
 AGActivityTripWriter::addTrip(AGTrip trip) {
     std::list<AGPosition>::iterator it;
-    int time = (trip.getDay()-1)*86400 + trip.getTime();
+    int time = (trip.getDay() - 1) * 86400 + trip.getTime();
 
     //the vehicle:
     routes << "    <vehicle"
@@ -73,7 +76,7 @@ AGActivityTripWriter::addTrip(AGTrip trip) {
 
     //the route
     routes << "        <route edges=\"" << trip.getDep().getStreet().getName();
-    for (it=trip.getPassed()->begin() ; it!=trip.getPassed()->end() ; ++it) {
+    for (it = trip.getPassed()->begin() ; it != trip.getPassed()->end() ; ++it) {
         routes << " " << it->getStreet().getName();
     }
     routes << " " << trip.getArr().getStreet().getName();

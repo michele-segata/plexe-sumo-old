@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSOffTrafficLightLogic.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    08.05.2007
 /// @version $Id$
 ///
 // A traffic lights logic which represents a tls in an off-mode
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -50,7 +53,7 @@ MSOffTrafficLightLogic::MSOffTrafficLightLogic(MSTLLogicControl& tlcontrol,
 
 
 MSOffTrafficLightLogic::~MSOffTrafficLightLogic() {
-    for (MSTrafficLightLogic::Phases::const_iterator i=myPhaseDefinition.begin(); i!=myPhaseDefinition.end(); ++i) {
+    for (MSTrafficLightLogic::Phases::const_iterator i = myPhaseDefinition.begin(); i != myPhaseDefinition.end(); ++i) {
         delete *i;
     }
 }
@@ -74,11 +77,11 @@ void
 MSOffTrafficLightLogic::rebuildPhase() {
     size_t no = getLinks().size();
     std::string state;
-    for (unsigned int i=0; i<no; ++i) {
+    for (unsigned int i = 0; i < no; ++i) {
         // !!! no brake mask!
         state += 'o';
     }
-    for (MSTrafficLightLogic::Phases::const_iterator i=myPhaseDefinition.begin(); i!=myPhaseDefinition.end(); ++i) {
+    for (MSTrafficLightLogic::Phases::const_iterator i = myPhaseDefinition.begin(); i != myPhaseDefinition.end(); ++i) {
         delete *i;
     }
     myPhaseDefinition.clear();

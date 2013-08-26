@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """
 @file    route_departOffset.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    11.09.2009
 @version $Id$
 
 Applies a given offset to the given route's departure time
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import sys, optparse, array

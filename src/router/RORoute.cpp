@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    RORoute.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A complete router's route
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -47,51 +49,51 @@
 // ===========================================================================
 RORoute::RORoute(const std::string& id, SUMOReal costs, SUMOReal prop,
                  const std::vector<const ROEdge*> &route,
-                 const RGBColor* const color) throw()
+                 const RGBColor* const color)
     : Named(StringUtils::convertUmlaute(id)), myCosts(costs),
       myProbability(prop), myRoute(route), myColor(color) {}
 
 
-RORoute::RORoute(const RORoute& src) throw()
+RORoute::RORoute(const RORoute& src)
     : Named(src.myID), myCosts(src.myCosts),
       myProbability(src.myProbability), myRoute(src.myRoute), myColor(0) {
-    if (src.myColor!=0) {
+    if (src.myColor != 0) {
         myColor = new RGBColor(*src.myColor);
     }
 }
 
 
-RORoute::~RORoute() throw() {
+RORoute::~RORoute() {
     delete myColor;
 }
 
 
 void
-RORoute::add(ROEdge* edge) throw() {
+RORoute::add(ROEdge* edge) {
     myRoute.push_back(edge);
 }
 
 
 void
-RORoute::setCosts(SUMOReal costs) throw() {
+RORoute::setCosts(SUMOReal costs) {
     myCosts = costs;
 }
 
 
 void
-RORoute::setProbability(SUMOReal prob) throw() {
+RORoute::setProbability(SUMOReal prob) {
     myProbability = prob;
 }
 
 
 void
-RORoute::recheckForLoops() throw() {
+RORoute::recheckForLoops() {
     ROHelper::recheckForLoops(myRoute);
 }
 
 
 OutputDevice&
-RORoute::writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+RORoute::writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                             OutputDevice& dev, const ROVehicle* const veh, bool asAlternatives, bool withExitTimes) const {
     UNUSED_PARAMETER(router);
     // (optional) alternatives header
@@ -106,7 +108,7 @@ RORoute::writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
         dev << "\" probability=\"" << myProbability << "\"";
         dev.setPrecision();
     }
-    if (myColor!=0) {
+    if (myColor != 0) {
         dev << " color=\"" << *myColor << "\"";
     }
     dev << " edges=\"" << myRoute;
@@ -114,7 +116,7 @@ RORoute::writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
         SUMOReal time = STEPS2TIME(veh->getDepartureTime());
         dev << "\" exitTimes=\"";
         std::vector<const ROEdge*>::const_iterator i = myRoute.begin();
-        for (; i!=myRoute.end(); ++i) {
+        for (; i != myRoute.end(); ++i) {
             if (i != myRoute.begin()) {
                 dev << " ";
             }

@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    MSPhaseDefinition.h
 /// @author  Daniel Krajzewicz
+/// @author  Julia Ringel
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Jan 2004
 /// @version $Id$
 ///
 // The definition of a single phase of a tls logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -85,8 +90,8 @@ public:
         : duration(durationArg),
           myLastSwitch(0), state(stateArg) {
         myLastSwitch = string2time(OptionsCont::getOptions().getString("begin"));
-        minDuration = minDurationArg<0 ? durationArg : minDurationArg;
-        maxDuration = maxDurationArg<0 ? durationArg : maxDurationArg;
+        minDuration = minDurationArg < 0 ? durationArg : minDurationArg;
+        maxDuration = maxDurationArg < 0 ? durationArg : maxDurationArg;
     }
 
 
@@ -110,10 +115,10 @@ public:
      * @return Whether this phase is a "pure green" phase
      */
     bool isGreenPhase() const {
-        if (state.find_first_of("gG")==std::string::npos) {
+        if (state.find_first_of("gG") == std::string::npos) {
             return false;
         }
-        if (state.find_first_of("yY")!=std::string::npos) {
+        if (state.find_first_of("yY") != std::string::npos) {
             return false;
         }
         return true;
@@ -136,7 +141,7 @@ public:
      * @return Whether the given phase definition differs
      */
     bool operator!=(const MSPhaseDefinition& pd) {
-        return state!=pd.state;
+        return state != pd.state;
     }
 
 

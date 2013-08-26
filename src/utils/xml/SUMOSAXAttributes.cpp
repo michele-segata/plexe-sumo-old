@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    SUMOSAXAttributes.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Fri, 30 Mar 2007
 /// @version $Id$
 ///
 // Encapsulated SAX-Attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -43,18 +46,19 @@
 // static members
 // ===========================================================================
 bool SUMOSAXAttributes::myHaveInformedAboutDeprecatedDivider = false;
+const std::string SUMOSAXAttributes::ENCODING = " encoding=\"UTF-8\"";
 
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
-SUMOSAXAttributes::SUMOSAXAttributes(const std::string& objectType) throw():
+SUMOSAXAttributes::SUMOSAXAttributes(const std::string& objectType):
     myObjectType(objectType) {}
 
 
 int
 SUMOSAXAttributes::getIntReporting(int attr, const char* objectid,
-                                   bool& ok, bool report) const throw() {
+                                   bool& ok, bool report) const {
     if (!hasAttribute(attr)) {
         if (report) {
             emitUngivenError(getName(attr), objectid);
@@ -80,7 +84,7 @@ SUMOSAXAttributes::getIntReporting(int attr, const char* objectid,
 
 int
 SUMOSAXAttributes::getOptIntReporting(int attr, const char* objectid,
-                                      bool& ok, int defaultValue, bool report) const throw() {
+                                      bool& ok, int defaultValue, bool report) const {
     if (!hasAttribute(attr)) {
         return defaultValue;
     }
@@ -102,7 +106,7 @@ SUMOSAXAttributes::getOptIntReporting(int attr, const char* objectid,
 
 SUMOReal
 SUMOSAXAttributes::getSUMORealReporting(int attr, const char* objectid,
-                                        bool& ok, bool report) const throw() {
+                                        bool& ok, bool report) const {
     if (!hasAttribute(attr)) {
         if (report) {
             emitUngivenError(getName(attr), objectid);
@@ -122,13 +126,13 @@ SUMOSAXAttributes::getSUMORealReporting(int attr, const char* objectid,
         }
     }
     ok = false;
-    return (SUMOReal) -1;
+    return (SUMOReal) - 1;
 }
 
 
 SUMOReal
 SUMOSAXAttributes::getOptSUMORealReporting(int attr, const char* objectid,
-        bool& ok, SUMOReal defaultValue, bool report) const throw() {
+        bool& ok, SUMOReal defaultValue, bool report) const {
     if (!hasAttribute(attr)) {
         return defaultValue;
     }
@@ -144,13 +148,13 @@ SUMOSAXAttributes::getOptSUMORealReporting(int attr, const char* objectid,
         }
     }
     ok = false;
-    return (SUMOReal) -1;
+    return (SUMOReal) - 1;
 }
 
 
 bool
 SUMOSAXAttributes::getBoolReporting(int attr, const char* objectid,
-                                    bool& ok, bool report) const throw() {
+                                    bool& ok, bool report) const {
     if (!hasAttribute(attr)) {
         if (report) {
             emitUngivenError(getName(attr), objectid);
@@ -176,7 +180,7 @@ SUMOSAXAttributes::getBoolReporting(int attr, const char* objectid,
 
 bool
 SUMOSAXAttributes::getOptBoolReporting(int attr, const char* objectid,
-                                       bool& ok, bool defaultValue, bool report) const throw() {
+                                       bool& ok, bool defaultValue, bool report) const {
     if (!hasAttribute(attr)) {
         return defaultValue;
     }
@@ -198,7 +202,7 @@ SUMOSAXAttributes::getOptBoolReporting(int attr, const char* objectid,
 
 std::string
 SUMOSAXAttributes::getStringReporting(int attr, const char* objectid,
-                                      bool& ok, bool report) const throw() {
+                                      bool& ok, bool report) const {
     if (!hasAttribute(attr)) {
         if (report) {
             emitUngivenError(getName(attr), objectid);
@@ -208,6 +212,9 @@ SUMOSAXAttributes::getStringReporting(int attr, const char* objectid,
     }
     try {
         std::string ret = getString(attr);
+        if (ret == "") {
+            throw EmptyData();
+        }
         return ret;
     } catch (EmptyData&) {
         if (report) {
@@ -221,7 +228,7 @@ SUMOSAXAttributes::getStringReporting(int attr, const char* objectid,
 
 std::string
 SUMOSAXAttributes::getOptStringReporting(int attr, const char* objectid,
-        bool& ok, const std::string& defaultValue, bool report) const throw() {
+        bool& ok, const std::string& defaultValue, bool report) const {
     if (!hasAttribute(attr)) {
         return defaultValue;
     }
@@ -260,7 +267,7 @@ SUMOSAXAttributes::getSUMOTimeReporting(int attr, const char* objectid,
         }
     }
     ok = false;
-    return (SUMOTime) -1;
+    return (SUMOTime) - 1;
 #else
     return getIntReporting(attr, objectid, ok, report);
 #endif
@@ -269,13 +276,13 @@ SUMOSAXAttributes::getSUMOTimeReporting(int attr, const char* objectid,
 
 SUMOTime
 SUMOSAXAttributes::getOptSUMOTimeReporting(int attr, const char* objectid,
-        bool& ok, SUMOTime defaultValue, bool report) const throw() {
+        bool& ok, SUMOTime defaultValue, bool report) const {
 #ifdef HAVE_SUBSECOND_TIMESTEPS
     if (!hasAttribute(attr)) {
         return defaultValue;
     }
     try {
-        return (SUMOTime)(getFloat(attr)*1000.);
+        return (SUMOTime)(getFloat(attr) * 1000.);
     } catch (NumberFormatException&) {
         if (report) {
             emitFormatError(getName(attr), "a real number", objectid);
@@ -286,7 +293,7 @@ SUMOSAXAttributes::getOptSUMOTimeReporting(int attr, const char* objectid,
         }
     }
     ok = false;
-    return (SUMOTime) -1;
+    return (SUMOTime) - 1;
 #else
     return getOptIntReporting(attr, objectid, ok, defaultValue, report);
 #endif
@@ -297,14 +304,14 @@ SUMOSAXAttributes::getOptSUMOTimeReporting(int attr, const char* objectid,
 
 
 void
-SUMOSAXAttributes::emitUngivenError(const std::string& attrname, const char* objectid) const throw() {
+SUMOSAXAttributes::emitUngivenError(const std::string& attrname, const char* objectid) const {
     std::ostringstream oss;
     oss << "Attribute '" << attrname << "' is missing in definition of ";
-    if (objectid==0) {
+    if (objectid == 0) {
         oss << "a ";
     }
     oss << myObjectType;
-    if (objectid!=0) {
+    if (objectid != 0) {
         oss << " '" << objectid << "'";
     }
     oss << ".";
@@ -313,14 +320,14 @@ SUMOSAXAttributes::emitUngivenError(const std::string& attrname, const char* obj
 
 
 void
-SUMOSAXAttributes::emitEmptyError(const std::string& attrname, const char* objectid) const throw() {
+SUMOSAXAttributes::emitEmptyError(const std::string& attrname, const char* objectid) const {
     std::ostringstream oss;
     oss << "Attribute '" << attrname << "' in definition of ";
-    if (objectid==0) {
+    if (objectid == 0) {
         oss << "a ";
     }
     oss << myObjectType;
-    if (objectid!=0) {
+    if (objectid != 0) {
         oss << " '" << objectid << "'";
     }
     oss << " is empty.";
@@ -329,14 +336,14 @@ SUMOSAXAttributes::emitEmptyError(const std::string& attrname, const char* objec
 
 
 void
-SUMOSAXAttributes::emitFormatError(const std::string& attrname, const std::string& type, const char* objectid) const throw() {
+SUMOSAXAttributes::emitFormatError(const std::string& attrname, const std::string& type, const char* objectid) const {
     std::ostringstream oss;
     oss << "Attribute '" << attrname << "' in definition of ";
-    if (objectid==0) {
+    if (objectid == 0) {
         oss << "a ";
     }
     oss << myObjectType;
-    if (objectid!=0) {
+    if (objectid != 0) {
         oss << " '" << objectid << "'";
     }
     oss << " is not " << type << ".";
@@ -345,8 +352,8 @@ SUMOSAXAttributes::emitFormatError(const std::string& attrname, const std::strin
 
 
 void
-SUMOSAXAttributes::parseStringVector(const std::string& def, std::vector<std::string> &into) throw() {
-    if (def.find(';')!=std::string::npos||def.find(',')!=std::string::npos) {
+SUMOSAXAttributes::parseStringVector(const std::string& def, std::vector<std::string> &into) {
+    if (def.find(';') != std::string::npos || def.find(',') != std::string::npos) {
         if (!myHaveInformedAboutDeprecatedDivider) {
             WRITE_WARNING("Please note that using ';' and ',' as XML list separators is deprecated.\n From 1.0 onwards, only ' ' will be accepted.");
             myHaveInformedAboutDeprecatedDivider = true;

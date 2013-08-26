@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NBTrafficLightLogic.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A SUMO-compliant built logic for a traffic light
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,7 +68,7 @@ const std::string NBTrafficLightLogic::ALLOWED_STATES(NBTrafficLightLogic::allow
 // member method definitions
 // ===========================================================================
 NBTrafficLightLogic::NBTrafficLightLogic(const std::string& id,
-        const std::string& subid, unsigned int noLinks) throw() :
+        const std::string& subid, unsigned int noLinks) :
     Named(id), myNumLinks(noLinks), mySubID(subid),
     myOffset(0) {}
 
@@ -77,7 +80,7 @@ NBTrafficLightLogic::NBTrafficLightLogic(const NBTrafficLightLogic* logic) :
     myPhases(logic->myPhases.begin(), logic->myPhases.end()) {}
 
 
-NBTrafficLightLogic::~NBTrafficLightLogic() throw() {}
+NBTrafficLightLogic::~NBTrafficLightLogic() {}
 
 
 void
@@ -122,9 +125,9 @@ NBTrafficLightLogic::resetPhases() {
 
 
 SUMOTime
-NBTrafficLightLogic::getDuration() const throw() {
+NBTrafficLightLogic::getDuration() const {
     SUMOTime duration = 0;
-    for (PhaseDefinitionVector::const_iterator i=myPhases.begin(); i!=myPhases.end(); ++i) {
+    for (PhaseDefinitionVector::const_iterator i = myPhases.begin(); i != myPhases.end(); ++i) {
         duration += (*i).duration;
     }
     return duration;
@@ -132,14 +135,14 @@ NBTrafficLightLogic::getDuration() const throw() {
 
 
 void
-NBTrafficLightLogic::closeBuilding() throw() {
-    for (unsigned int i=0; i<myPhases.size()-1;) {
-        if (myPhases[i].state!=myPhases[i+1].state) {
+NBTrafficLightLogic::closeBuilding() {
+    for (unsigned int i = 0; i < myPhases.size() - 1;) {
+        if (myPhases[i].state != myPhases[i + 1].state) {
             ++i;
             continue;
         }
-        myPhases[i].duration += myPhases[i+1].duration;
-        myPhases.erase(myPhases.begin()+i+1);
+        myPhases[i].duration += myPhases[i + 1].duration;
+        myPhases.erase(myPhases.begin() + i + 1);
     }
 }
 

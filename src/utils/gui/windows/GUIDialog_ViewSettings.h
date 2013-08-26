@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIDialog_ViewSettings.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Wed, 21. Dec 2005
 /// @version $Id$
 ///
 // The dialog to change the view (gui) settings.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -80,17 +83,17 @@ public:
     GUIDialog_ViewSettings(GUISUMOAbstractView* parent,
                            GUIVisualizationSettings* settings,
                            std::vector<GUISUMOAbstractView::Decal> *decals,
-                           MFXMutex* decalsLock) throw();
+                           MFXMutex* decalsLock) ;
 
 
     /// @brief Destructor
-    ~GUIDialog_ViewSettings() throw();
+    ~GUIDialog_ViewSettings() ;
 
 
     /** @brief Sets current settings (called if reopened)
      * @param[in, out] settings The current settings that can be changed
      */
-    void setCurrent(GUIVisualizationSettings* settings) throw();
+    void setCurrent(GUIVisualizationSettings* settings) ;
 
 
 
@@ -98,44 +101,44 @@ public:
     /// @{
 
     /// @brief Called if the OK-button was pressed
-    long onCmdOk(FXObject*,FXSelector,void*);
+    long onCmdOk(FXObject*, FXSelector, void*);
 
     /// @brief Called if the Cancel-button was pressed
-    long onCmdCancel(FXObject*,FXSelector,void*);
+    long onCmdCancel(FXObject*, FXSelector, void*);
 
     /// @brief Called if something (color, width, etc.) has been changed
-    long onCmdColorChange(FXObject*,FXSelector,void*);
+    long onCmdColorChange(FXObject*, FXSelector, void*);
 
     /// @brief Called if the decals-table was changed
-    long onCmdEditTable(FXObject*,FXSelector,void* data);
+    long onCmdEditTable(FXObject*, FXSelector, void* data);
 
     /// @brief Called if the name of the scheme was changed
-    long onCmdNameChange(FXObject*,FXSelector,void*);
+    long onCmdNameChange(FXObject*, FXSelector, void*);
 
     /// @brief Called if the settings shall be saved into the registry
-    long onCmdSaveSetting(FXObject*,FXSelector,void* data);
+    long onCmdSaveSetting(FXObject*, FXSelector, void* data);
     /// @brief Called when updating the button that allows to save the settings into the registry
-    long onUpdSaveSetting(FXObject*,FXSelector,void* data);
+    long onUpdSaveSetting(FXObject*, FXSelector, void* data);
 
     /// @brief Called if the settings shall be deleted
-    long onCmdDeleteSetting(FXObject*,FXSelector,void* data);
+    long onCmdDeleteSetting(FXObject*, FXSelector, void* data);
     /// @brief Called when updating the button that allows to delete settings
-    long onUpdDeleteSetting(FXObject*,FXSelector,void* data);
+    long onUpdDeleteSetting(FXObject*, FXSelector, void* data);
 
     /// @brief Called if the settings shall be exported into a file
-    long onCmdExportSetting(FXObject*,FXSelector,void* data);
+    long onCmdExportSetting(FXObject*, FXSelector, void* data);
     /// @brief Called when updating the button that allows to export settings into a file
-    long onUpdExportSetting(FXObject*,FXSelector,void* data);
+    long onUpdExportSetting(FXObject*, FXSelector, void* data);
 
     /// @brief Called if the settings shall be read from a file
-    long onCmdImportSetting(FXObject*,FXSelector,void* data);
+    long onCmdImportSetting(FXObject*, FXSelector, void* data);
     /// @brief Called when updating the button that allows to read settings from a file
-    long onUpdImportSetting(FXObject*,FXSelector,void* data);
+    long onUpdImportSetting(FXObject*, FXSelector, void* data);
 
     /// @brief Called if the decals shall be loaded from a file
-    long onCmdLoadDecals(FXObject*,FXSelector,void* data);
+    long onCmdLoadDecals(FXObject*, FXSelector, void* data);
     /// @brief Called if the decals shall be saved to a file
-    long onCmdSaveDecals(FXObject*,FXSelector,void* data);
+    long onCmdSaveDecals(FXObject*, FXSelector, void* data);
     /// @}
 
 
@@ -143,13 +146,13 @@ public:
     /** @brief Returns the name of the currently chosen scheme
      * @return The name of the edited (chosen) scheme)
      */
-    std::string getCurrentScheme() const throw();
+    std::string getCurrentScheme() const ;
 
 
     /** @brief Sets the named scheme as the current
      * @param[in] The name of the scheme that shall be set as current
      */
-    void setCurrentScheme(const std::string&) throw();
+    void setCurrentScheme(const std::string&) ;
 
 
     /** @brief Converts a FOX-color into a RGBColor
@@ -171,29 +174,29 @@ protected:
     /** @brief Rebuilds color changing dialogs after choosing another coloring scheme
      * @param[in] doCreate Whether "create" shall be called (only if built the first time)
      */
-    void rebuildColorMatrices(bool doCreate=false) throw();
+    void rebuildColorMatrices(bool doCreate = false) ;
 
 
     /** @brief Rebuilds the decals table */
-    void rebuildList() throw();
+    void rebuildList() ;
 
 
     /** @brief Loads a scheme from a file
      * @param[in] file The name of the file to read the settings from
      */
-    void loadSettings(const std::string& file) throw();
+    void loadSettings(const std::string& file) ;
 
 
     /** @brief Writes the currently used decals into a file
      * @param[in] file The name of the file to write the decals into
      */
-    void saveDecals(const std::string& file) const throw();
+    void saveDecals(const std::string& file) const ;
 
 
     /** @brief Loads decals from a file
      * @param[in] file The name of the file to read the decals from
      */
-    void loadDecals(const std::string& file) throw();
+    void loadDecals(const std::string& file) ;
 
 
 private:
@@ -240,7 +243,7 @@ private:
     std::vector<FXButton*> myVehicleButtons;
     FXCheckButton* myVehicleColorInterpolation;
     FXRealSpinDial* myVehicleMinSizeDialer, *myVehicleUpscaleDialer;
-    FXCheckButton* myShowBlinker; /* *myShowLaneChangePreference,*/
+    FXCheckButton* myShowBlinker, *myShowMinGap; /* *myShowLaneChangePreference,*/
 
     FXCheckButton* myShowTLIndex, *myShowJunctionIndex;
 

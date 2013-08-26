@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    OutputDevice.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    2004
 /// @version $Id$
 ///
 // Static storage of an output device and its base (abstract) implementation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -82,7 +85,7 @@ public:
      * @exception IOError If the output could not be built for any reason (error message is supplied)
      */
     static OutputDevice& getDevice(const std::string& name,
-                                   const std::string& base="") throw(IOError);
+                                   const std::string& base = "");
 
 
     /** @brief Creates the device using the output definition stored in the named option
@@ -102,7 +105,7 @@ public:
      * @exception IOError If the output could not be built for any reason (error message is supplied)
      */
     static bool createDeviceByOption(const std::string& optionName,
-                                     const std::string& rootElement="") throw(IOError);
+                                     const std::string& rootElement = "");
 
 
     /** @brief Returns the device described by the option
@@ -122,14 +125,14 @@ public:
 
     /**  Closes all registered devices
      */
-    static void closeAll() throw();
+    static void closeAll() ;
     /// @}
 
 
     /** @brief Abstract output operator
      * @return The OutputDevice for further processing
      */
-    static std::string realString(const SUMOReal v, const int precision=OUTPUT_ACCURACY);
+    static std::string realString(const SUMOReal v, const int precision = OUTPUT_ACCURACY);
 
 
 
@@ -138,28 +141,28 @@ public:
     /// @{
 
     /// @brief Constructor
-    OutputDevice(const unsigned int defaultIndentation=0) throw(IOError);
+    OutputDevice(const unsigned int defaultIndentation = 0);
 
 
     /// @brief Destructor
-    virtual ~OutputDevice() throw() { }
+    virtual ~OutputDevice() { }
 
 
     /** @brief returns the information whether one can write into the device
      * @return Whether the device can be used (stream is good)
      */
-    virtual bool ok() throw();
+    virtual bool ok() ;
 
 
     /** @brief Closes the device and removes it from the dictionary
      */
-    void close() throw();
+    void close() ;
 
 
     /** @brief Sets the precison or resets it to default
      * @param[in] precision The accuracy (number of digits behind '.') to set
      */
-    void setPrecision(unsigned int precision=OUTPUT_ACCURACY) throw();
+    void setPrecision(unsigned int precision = OUTPUT_ACCURACY) ;
 
 
     /** @brief Writes an XML header with optional configuration
@@ -175,9 +178,9 @@ public:
      * @todo Describe what is saved
      */
     bool writeXMLHeader(const std::string& rootElement,
-                        const std::string xmlParams="",
-                        const std::string& attrs="",
-                        const std::string& comment="") throw();
+                        const std::string xmlParams = "",
+                        const std::string& attrs = "",
+                        const std::string& comment = "") ;
 
 
     /** @brief Adds indentation
@@ -186,7 +189,7 @@ public:
      *
      * @returns The OutputDevice for further processing
      */
-    OutputDevice& indent() throw();
+    OutputDevice& indent() ;
 
 
     /** @brief Opens an XML tag
@@ -198,7 +201,7 @@ public:
      * @param[in] xmlElement Name of element to open
      * @returns The OutputDevice for further processing
      */
-    OutputDevice& openTag(const std::string& xmlElement) throw();
+    OutputDevice& openTag(const std::string& xmlElement) ;
 
 
     /** @brief Opens an XML tag
@@ -208,7 +211,7 @@ public:
      * @param[in] xmlElement Id of the element to open
      * @returns The OutputDevice for further processing
      */
-    OutputDevice& openTag(const SumoXMLTag& xmlElement) throw();
+    OutputDevice& openTag(const SumoXMLTag& xmlElement) ;
 
 
     /** @brief Closes the most recently opened tag
@@ -221,17 +224,15 @@ public:
      * @returns Whether a further element existed in the stack and could be closed
      * @todo it is not verified that the topmost element was closed
      */
-    bool closeTag(bool abbreviated=false) throw();
+    bool closeTag(bool abbreviated = false) ;
 
     /** @brief writes an arbitrary attribute
      *
      * @param[in] attr The attribute (name)
      * @param[in] val The attribute value
      */
-    OutputDevice& writeAttr(std::string attr, std::string val) {
-        getOStream() << " " << attr << "=\"" << val << "\"";
-        return *this;
-    }
+    OutputDevice& writeAttr(std::string attr, std::string val);
+
 
     /** @brief writes an named attribute
      *
@@ -240,7 +241,7 @@ public:
      */
     template <class T>
     OutputDevice& writeAttr(const SumoXMLAttr attr, const T& val) {
-        return writeAttr(toString(attr), toString(val));
+        return writeAttr(toString(attr), toString(val, getOStream().precision()));
     }
 
 
@@ -265,14 +266,14 @@ public:
 
 protected:
     /// @brief Returns the associated ostream
-    virtual std::ostream& getOStream() throw() = 0;
+    virtual std::ostream& getOStream() = 0;
 
 
     /** @brief Called after every write access.
      *
      * Default implementation does nothing.
      */
-    virtual void postWriteHook() throw();
+    virtual void postWriteHook() ;
 
 
 private:

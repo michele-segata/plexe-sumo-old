@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSPerson.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Mon, 9 Jul 2001
 /// @version $Id$
 ///
 // The class for modelling person-movements
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -87,7 +91,7 @@ public:
          * @param[in] os The stream to write the information into
          * @exception IOError not yet implemented
          */
-        virtual void tripInfoOutput(OutputDevice& os) const throw(IOError) = 0;
+        virtual void tripInfoOutput(OutputDevice& os) const = 0;
 
 
     protected:
@@ -130,7 +134,7 @@ public:
          * @param[in] os The stream to write the information into
          * @exception IOError not yet implemented
          */
-        virtual void tripInfoOutput(OutputDevice& os) const throw(IOError);
+        virtual void tripInfoOutput(OutputDevice& os) const;
 
     private:
         /// the time the person is walking
@@ -169,7 +173,7 @@ public:
          * @param[in] os The stream to write the information into
          * @exception IOError not yet implemented
          */
-        virtual void tripInfoOutput(OutputDevice& os) const throw(IOError);
+        virtual void tripInfoOutput(OutputDevice& os) const;
 
     private:
         /// the lines  to choose from
@@ -203,7 +207,7 @@ public:
          * @param[in] os The stream to write the information into
          * @exception IOError not yet implemented
          */
-        virtual void tripInfoOutput(OutputDevice& os) const throw(IOError);
+        virtual void tripInfoOutput(OutputDevice& os) const;
 
     private:
         /// the time the person is waiting
@@ -243,13 +247,13 @@ public:
     ~MSPerson();
 
     /// returns the person id
-    const std::string& getID() const throw();
+    const std::string& getID() const ;
 
     /// proceeds to the next step of the route
     void proceed(MSNet* net, SUMOTime time);
 
     /// Returns the desired departure time.
-    SUMOTime getDesiredDepart() const throw();
+    SUMOTime getDesiredDepart() const ;
 
     /// logs end of the step
     void setDeparted(SUMOTime now);
@@ -262,7 +266,7 @@ public:
      * @param[in] os The stream to write the information into
      * @exception IOError not yet implemented
      */
-    void tripInfoOutput(OutputDevice& os) const throw(IOError);
+    void tripInfoOutput(OutputDevice& os) const;
 
     /// Whether the person waits for a vehicle of the line specified.
     bool isWaitingFor(const std::string& line) const;

@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 """
 @file    osmGet.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Jakob Erdmann
+@author  Michael Behrisch
 @date    2009-08-01
 @version $Id$
 
 Retrieves an area from OpenStreetMap.
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -18,7 +21,7 @@ netconvert = path.join(os.environ.get('SUMO_BINDIR', ''), 'netconvert')
 polyconvert = path.join(os.environ.get('SUMO_BINDIR', ''), 'polyconvert')
 
 vclassRemove = {"passenger" : " --remove-edges.by-vclass hov,taxi,bus,delivery,transport,lightrail,cityrail,rail_slow,rail_fast,motorcycle,bicycle,pedestrian",
-                "road" : " --remove-edges.by-vclass rail_slow,rail_fast,bicycle,pedestrian",
+                "road" : " --remove-edges.by-vclass rail_slow,rail_fast,lightrail,cityrail,bicycle,pedestrian",
                 "all" : "" }
 possibleVClassOptions = '|'.join(vclassRemove.keys())
 
@@ -49,7 +52,7 @@ def build(args=None):
         optParser.error('output directory "%s" does not exist' % options.output_directory) 
 
     netconvertOpts = ' ' + ' '.join(options.netconvert_options.split(',')) + ' --osm-files '
-    polyconvertOpts = ' ' + ' '.join(options.polyconvert_options.split(',')) + ' --typemap %s --osm-files ' % options.typemap
+    polyconvertOpts = ' ' + ' '.join(options.polyconvert_options.split(',')) + ' --type-file %s --osm-files ' % options.typemap
 
     prefix = options.oldapi_prefix
     if prefix: # used old API

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    LineHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Fri, 19 Jul 2002
 /// @version $Id$
 ///
 // Interface definition for a class which retrieves lines from a LineHandler
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -50,11 +52,11 @@
 class LineHandler {
 public:
     /// @brief constructor
-    LineHandler() throw() { }
+    LineHandler() { }
 
 
     /// @brief (virtual) destructor
-    virtual ~LineHandler() throw() { }
+    virtual ~LineHandler() { }
 
 
     /** @brief Method that obatins a line read by the LineReader
@@ -64,7 +66,7 @@ public:
      * @param[in] result The read line
      * @return Whether the caller shall continue with reading
      */
-    virtual bool report(const std::string& result) throw(ProcessError) = 0;
+    virtual bool report(const std::string& result) = 0;
 
 };
 

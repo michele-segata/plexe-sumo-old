@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimSingleTypeParser_Parkplatzdefinition.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Wed, 18 Dec 2002
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -72,12 +74,12 @@ NIVissimSingleTypeParser_Parkplatzdefinition::parse(std::istream& from) {
     IntVector districts;
     DoubleVector percentages;
     readUntil(from, "bezirke"); // "Bezirke"
-    while (tag!="ort") {
+    while (tag != "ort") {
         SUMOReal perc = -1;
         int districtid;
         from >> districtid;
         tag = myRead(from);
-        if (tag=="anteil") {
+        if (tag == "anteil") {
             from >> perc;
         }
         districts.push_back(districtid);
@@ -101,13 +103,13 @@ NIVissimSingleTypeParser_Parkplatzdefinition::parse(std::istream& from) {
     from >> tag; // "Kapazität"-value
 
     tag = myRead(from);
-    if (tag=="belegung") {
+    if (tag == "belegung") {
         from >> tag;
         tag = myRead(from); // "fahrzeugklasse"
     }
 
     std::vector<std::pair<int, int> > assignedVehicles;
-    while (tag!="default") {
+    while (tag != "default") {
         int vclass;
         from >> vclass;
         from >> tag; // "vwunsch"

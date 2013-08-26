@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSDevice_Person.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Fri, 30.01.2009
 /// @version $Id$
 ///
 // A device which is used to keep track of Persons riding with a vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -60,7 +63,7 @@ public:
      * @param[in] v The vehicle for which a device may be built
      * @param[in, filled] into The vector to store the built device in
      */
-    static MSDevice_Person* buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) throw();
+    static MSDevice_Person* buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) ;
 
 
 public:
@@ -77,7 +80,7 @@ public:
      * @see MSMoveReminder::notifyMove
      * @see HelpersHBEFA
      */
-    bool notifyMove(SUMOVehicle& veh, SUMOReal oldPos, SUMOReal newPos, SUMOReal newSpeed) throw();
+    bool notifyMove(SUMOVehicle& veh, SUMOReal oldPos, SUMOReal newPos, SUMOReal newSpeed) ;
 
 
     /** @brief Adds passengers on vehicle insertion
@@ -88,7 +91,7 @@ public:
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) throw();
+    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) ;
 
 
     /** @brief Passengers leaving on arrival
@@ -101,7 +104,7 @@ public:
      * @return True if it did not leave the net.
      */
     bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos,
-                     MSMoveReminder::Notification reason) throw();
+                     MSMoveReminder::Notification reason) ;
     /// @}
 
 
@@ -109,11 +112,11 @@ public:
      *
      * @param[in] person The passenger to add.
      */
-    void addPerson(MSPerson* person) throw();
+    void addPerson(MSPerson* person) ;
 
 
     /// @brief Destructor.
-    ~MSDevice_Person() throw();
+    ~MSDevice_Person() ;
 
 private:
     /** @brief Constructor
@@ -121,7 +124,7 @@ private:
      * @param[in] holder The vehicle that holds this device
      * @param[in] id The ID of the device
      */
-    MSDevice_Person(SUMOVehicle& holder, const std::string& id) throw();
+    MSDevice_Person(SUMOVehicle& holder, const std::string& id) ;
 
 
 private:

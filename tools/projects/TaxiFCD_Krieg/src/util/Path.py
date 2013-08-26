@@ -1,12 +1,15 @@
 # -*- coding: Latin-1 -*-
 """
 @file    Path.py
-@author  Sascha.Krieg@dlr.de
+@author  Sascha Krieg
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-04-17
 
 Contains paths which are needed frequently
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

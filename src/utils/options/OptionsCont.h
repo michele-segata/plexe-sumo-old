@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    OptionsCont.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    Mon, 17 Dec 2001
 /// @version $Id$
 ///
 // A storage for options (typed value containers)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -211,7 +215,7 @@ public:
      * @param[in] os The stream to write the header into
      * @param[in] xmlParams Additional parameters (such as encoding) to include in the <?xml> declaration
      */
-    void writeXMLHeader(std::ostream& os, const std::string xmlParams="");
+    void writeXMLHeader(std::ostream& os, const std::string xmlParams = "");
     /// @}
 
 
@@ -256,7 +260,7 @@ public:
      * @param[in] isDeprecated whether the synonyme is considered deprecated
      * @exception InvalidArgument If none of the synonymes or both synonymes with different options were registered before
      */
-    void addSynonyme(const std::string& name1, const std::string& name2, bool isDeprecated=false);
+    void addSynonyme(const std::string& name1, const std::string& name2, bool isDeprecated = false);
 
 
     /** @brief Adds a description for an option
@@ -303,7 +307,7 @@ public:
      * @return true if the option has a valid value, false otherwise
      * @exception InvalidArgument If the named option is not known
      */
-    bool isSet(const std::string& name, bool failOnNonExistant=true) const;
+    bool isSet(const std::string& name, bool failOnNonExistant = true) const;
 
 
     /** @brief Returns the information whether the named option has still the default value
@@ -582,7 +586,7 @@ public:
      * @return Whether the application shall stop
      * @exception ProcessError If the configuration file could not be saved
      */
-    bool processMetaOptions(bool missingOptions) throw(ProcessError);
+    bool processMetaOptions(bool missingOptions) ;
 
 
     /// @brief return the list of subtopics
@@ -700,7 +704,7 @@ private:
          * @return Whether the length of the option name is 1
          */
         bool operator()(const std::string& s) {
-            return s.length()==1;
+            return s.length() == 1;
         }
     };
 

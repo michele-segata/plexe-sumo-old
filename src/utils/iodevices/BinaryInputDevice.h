@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    BinaryInputDevice.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    2005-09-15
 /// @version $Id$
 ///
 // Encapsulates binary reading operations on a file
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -57,18 +59,18 @@ public:
      *
      * @param[in] name The name of the file to open for reading
      */
-    BinaryInputDevice(const std::string& name) throw();
+    BinaryInputDevice(const std::string& name) ;
 
 
     /// @brief Destructor
-    ~BinaryInputDevice() throw();
+    ~BinaryInputDevice() ;
 
 
     /** @brief Returns whether the file can be used (is good())
      *
      * @return Whether the file is good
      */
-    bool good() const throw();
+    bool good() const ;
 
 
     /** @brief Reads an int from the file (input operator)
@@ -77,7 +79,7 @@ public:
      * @param[in] i The int to store the read value into
      * @return The used BinaryInputDevice for further processing
      */
-    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, int& i) throw();
+    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, int& i) ;
 
 
     /** @brief Reads an unsigned int from the file (input operator)
@@ -86,7 +88,7 @@ public:
      * @param[in] i The unsigned int to store the read value into
      * @return The used BinaryInputDevice for further processing
      */
-    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, unsigned int& i) throw();
+    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, unsigned int& i) ;
 
 
     /** @brief Reads a SUMOReal from the file (input operator)
@@ -95,7 +97,7 @@ public:
      * @param[in] i The SUMOReal to store the read value into
      * @return The used BinaryInputDevice for further processing
      */
-    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, SUMOReal& f) throw();
+    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, SUMOReal& f) ;
 
 
     /** @brief Reads a bool from the file (input operator)
@@ -104,7 +106,7 @@ public:
      * @param[in] i The bool to store the read value into
      * @return The used BinaryInputDevice for further processing
      */
-    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, bool& b) throw();
+    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, bool& b) ;
 
 
     /** @brief Reads a string from the file (input operator)
@@ -119,7 +121,7 @@ public:
      * @return The used BinaryInputDevice for further processing
      * @todo Use either a buffer with a flexible size or report an error if the buffer is too small!
      */
-    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, std::string& s) throw();
+    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, std::string& s) ;
 
 
     /** @brief Reads a long from the file (input operator)
@@ -128,7 +130,7 @@ public:
      * @param[in] i The int to store the read value into
      * @return The used BinaryInputDevice for further processing
      */
-    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, long& l) throw();
+    friend BinaryInputDevice& operator>>(BinaryInputDevice& os, long& l) ;
 
 
 private:

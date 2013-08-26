@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    RORouteDef_Complete.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A complete route definition (with all passed edges being known)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -56,26 +58,26 @@ public:
     /// Constructor
     RORouteDef_Complete(const std::string& id, const RGBColor* const color,
                         const std::vector<const ROEdge*> &edges,
-                        bool tryRepair) throw();
+                        bool tryRepair) ;
 
     /// Destructor
-    virtual ~RORouteDef_Complete() throw();
+    virtual ~RORouteDef_Complete() ;
 
     /// Builds the route
-    RORoute* buildCurrentRoute(SUMOAbstractRouter<ROEdge,ROVehicle> &router, SUMOTime begin,
+    RORoute* buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router, SUMOTime begin,
                                const ROVehicle& veh) const;
 
     /** @brief Adds an route alternative (see further comments)
     *
      * Here, as in most cases, the alternative is the route that was build
      * as last and will stay the only route known */
-    void addAlternative(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+    void addAlternative(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                         const ROVehicle* const, RORoute* current, SUMOTime begin);
 
     /** @brief Returns a copy of the route definition */
     RORouteDef* copy(const std::string& id) const;
 
-    virtual OutputDevice& writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+    virtual OutputDevice& writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
             OutputDevice& dev, const ROVehicle* const veh, bool asAlternatives, bool withExitTimes) const;
 
 protected:

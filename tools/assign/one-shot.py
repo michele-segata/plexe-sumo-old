@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 """
 @file    one-shot.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Jakob Erdmann
+@author  Yun-Pang Wang
+@author  Michael Behrisch
 @date    2008-03-10
 @version $Id$
 
 This script does multiple sumo runs with different rerouting intervals.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, sys, subprocess
@@ -25,7 +29,7 @@ def call(command, log):
         sys.exit(retCode) 
 
 def writeSUMOConf(step, options, files):
-    fd = open("one_shot_" + str(step) + ".sumo.cfg", "w")
+    fd = open("one_shot_" + str(step) + ".sumocfg", "w")
     print >> fd, """<configuration>
     <files>
         <net-file value="%s"/>
@@ -124,7 +128,7 @@ for step in options.frequencies.split(","):
     btime = datetime.now()
     print ">> Begin time %s" % btime
     writeSUMOConf(step, options, options.trips)
-    call([sumoBinary, "-c", "one_shot_%s.sumo.cfg" % step], log)
+    call([sumoBinary, "-c", "one_shot_%s.sumocfg" % step], log)
     etime = datetime.now()
     print ">> End time %s" % etime
     print "< Step %s ended (duration: %s)" % (step, etime-btime)

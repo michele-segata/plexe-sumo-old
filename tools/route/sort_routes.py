@@ -1,12 +1,14 @@
 #!/usr/bin/python
 """
 @file    sort_routes.py
-@author  Jakob.Erdmann@dlr.de
+@author  Jakob Erdmann
+@author  Michael Behrisch
 @date    2011-07-14
 @version $Id$
 
 This script sorts the vehicles in the given route file by their depart time
-Copyright (C) 2007-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2007-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import sys

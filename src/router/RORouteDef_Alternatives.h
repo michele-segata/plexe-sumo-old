@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    RORouteDef_Alternatives.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A route with alternative routes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -53,21 +55,21 @@ public:
     /// Constructor
     RORouteDef_Alternatives(const std::string& id, unsigned int lastUsed, const SUMOReal beta,
                             const SUMOReal gawronA, const SUMOReal logitGamma, const int maxRoutes,
-                            const bool keepRoutes, const bool skipRouteCalculation) throw();
+                            const bool keepRoutes, const bool skipRouteCalculation) ;
 
     /// Destructor
-    virtual ~RORouteDef_Alternatives() throw();
+    virtual ~RORouteDef_Alternatives() ;
 
     /** @brief Adds an alternative loaded from the file
         An alternative may also be generated whicle DUA */
     virtual void addLoadedAlternative(RORoute* alternative);
 
     /// Build the next route
-    RORoute* buildCurrentRoute(SUMOAbstractRouter<ROEdge,ROVehicle> &router, SUMOTime begin,
+    RORoute* buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router, SUMOTime begin,
                                const ROVehicle& veh) const;
 
     /// Adds a build alternative
-    void addAlternative(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+    void addAlternative(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                         const ROVehicle* const, RORoute* current, SUMOTime begin);
 
     /** @brief Returns a copy of the route definition */
@@ -77,7 +79,7 @@ public:
 
     void removeLast();
 
-    virtual OutputDevice& writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+    virtual OutputDevice& writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
             OutputDevice& dev, const ROVehicle* const veh,
             bool asAlternatives, bool withExitTimes) const;
 

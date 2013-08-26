@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSLaneChanger.h
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Fri, 01 Feb 2002
 /// @version $Id$
 ///
 // Performs lane changing of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -99,7 +102,7 @@ protected:
 
     /** @brief Check if there is a single change-candidate in the changer.
         Returns true if there is one. */
-    bool vehInChanger() const throw() {
+    bool vehInChanger() const {
         // If there is at least one valid vehicle under the veh's in myChanger
         // return true.
         for (ConstChangerIt ce = myChanger.begin(); ce != myChanger.end(); ++ce) {
@@ -112,7 +115,7 @@ protected:
 
     /** Returns a pointer to the changer-element-iterator vehicle, or 0 if
         there is none. */
-    MSVehicle* veh(ConstChangerIt ce) const throw() {
+    MSVehicle* veh(ConstChangerIt ce) const {
         // If ce has a valid vehicle, return it. Otherwise return 0.
         if (ce->veh != ce->lane->myVehicles.rend()) {
             return *(ce->veh);
@@ -140,33 +143,33 @@ protected:
         const std::pair<MSVehicle* const, SUMOReal> &leader,
         const std::pair<MSVehicle* const, SUMOReal> &rLead,
         const std::pair<MSVehicle* const, SUMOReal> &rFollow,
-        const std::vector<MSVehicle::LaneQ> &preb) const throw();
+        const std::vector<MSVehicle::LaneQ> &preb) const ;
 
     int change2left(
         const std::pair<MSVehicle* const, SUMOReal> &leader,
         const std::pair<MSVehicle* const, SUMOReal> &rLead,
         const std::pair<MSVehicle* const, SUMOReal> &rFollow,
-        const std::vector<MSVehicle::LaneQ> &preb) const throw();
+        const std::vector<MSVehicle::LaneQ> &preb) const ;
 
 
 
 
     /** Returns true if candidate overlaps with a vehicle, that
         already changed the lane.*/
-    bool overlapWithHopped(ChangerIt target) const throw() {
+    bool overlapWithHopped(ChangerIt target) const {
         MSVehicle* v1 = target->hoppedVeh;
         MSVehicle* v2 = veh(myCandi);
-        if (v1!=0 && v2!=0) {
+        if (v1 != 0 && v2 != 0) {
             return MSVehicle::overlap(v1, v2);
         }
         return false;
     }
 
-    std::pair<MSVehicle* const, SUMOReal> getRealThisLeader(const ChangerIt& target) const throw();
+    std::pair<MSVehicle* const, SUMOReal> getRealThisLeader(const ChangerIt& target) const ;
 
-    std::pair<MSVehicle* const, SUMOReal> getRealFollower(const ChangerIt& target) const throw();
+    std::pair<MSVehicle* const, SUMOReal> getRealFollower(const ChangerIt& target) const ;
 
-    std::pair<MSVehicle* const, SUMOReal> getRealLeader(const ChangerIt& target) const throw();
+    std::pair<MSVehicle* const, SUMOReal> getRealLeader(const ChangerIt& target) const ;
 
 protected:
     /// Container for ChangeElemements, one for every lane in the edge.

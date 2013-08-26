@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RORDLoader_TripDefs.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The basic class for loading trip definitions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,7 +55,7 @@
 RORDLoader_TripDefs::RORDLoader_TripDefs(RONet& net,
         SUMOTime begin, SUMOTime end,
         bool emptyDestinationsAllowed, bool withTaz,
-        const std::string& fileName) throw(ProcessError)
+        const std::string& fileName)
     : ROTypedXMLRoutesLoader(net, begin, end, fileName),
       myEmptyDestinationsAllowed(emptyDestinationsAllowed),
       myWithTaz(withTaz),
@@ -60,18 +63,18 @@ RORDLoader_TripDefs::RORDLoader_TripDefs(RONet& net,
       myParameter(0), myHaveWarnedAboutDeprecatedTripDef(false) {}
 
 
-RORDLoader_TripDefs::~RORDLoader_TripDefs() throw() {}
+RORDLoader_TripDefs::~RORDLoader_TripDefs() {}
 
 
 void
 RORDLoader_TripDefs::myStartElement(int element,
-                                    const SUMOSAXAttributes& attrs) throw(ProcessError) {
-    if (element==SUMO_TAG_TRIP__DEPRECATED&&!myHaveWarnedAboutDeprecatedTripDef) {
+                                    const SUMOSAXAttributes& attrs) {
+    if (element == SUMO_TAG_TRIP__DEPRECATED && !myHaveWarnedAboutDeprecatedTripDef) {
         myHaveWarnedAboutDeprecatedTripDef = true;
         WRITE_WARNING("'" + toString(SUMO_TAG_TRIP__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_TRIP) + "'.");
     }
     // check whether a trip definition shall be parsed
-    if (element==SUMO_TAG_TRIP||element==SUMO_TAG_TRIP__DEPRECATED) {
+    if (element == SUMO_TAG_TRIP || element == SUMO_TAG_TRIP__DEPRECATED) {
         bool ok = true;
         // get the vehicle id, the edges, the speed and position and
         //  the departure time and other information
@@ -90,15 +93,15 @@ RORDLoader_TripDefs::myStartElement(int element,
         if (!ok) {
             return;
         }
-        if (myDepartureTime<0) {
+        if (myDepartureTime < 0) {
             WRITE_ERROR("The departure time must be positive.");
             return;
         }
     }
     // check whether a vehicle type shall be parsed
-    if (element==SUMO_TAG_VTYPE||element==SUMO_TAG_VTYPE__DEPRECATED) {
+    if (element == SUMO_TAG_VTYPE || element == SUMO_TAG_VTYPE__DEPRECATED) {
         myCurrentVehicleType = SUMOVehicleParserHelper::beginVTypeParsing(attrs);
-    } else if (myCurrentVehicleType!=0) {
+    } else if (myCurrentVehicleType != 0) {
         SUMOVehicleParserHelper::parseVTypeEmbedded(*myCurrentVehicleType, element, attrs);
     }
 }
@@ -133,7 +136,7 @@ RORDLoader_TripDefs::getEdge(const SUMOSAXAttributes& attrs,
         id += "-sink";
     }
     ROEdge* e = myNet.getEdge(id);
-    if (e==0 && !emptyAllowed) {
+    if (e == 0 && !emptyAllowed) {
         WRITE_ERROR("The edge '" + id + "' is not known.\n Vehicle id='" + vid + "'.");
     }
     return e;
@@ -141,11 +144,11 @@ RORDLoader_TripDefs::getEdge(const SUMOSAXAttributes& attrs,
 
 
 void
-RORDLoader_TripDefs::myEndElement(int element) throw(ProcessError) {
-    if ((element==SUMO_TAG_TRIP||element==SUMO_TAG_TRIP__DEPRECATED) &&
+RORDLoader_TripDefs::myEndElement(int element) {
+    if ((element == SUMO_TAG_TRIP || element == SUMO_TAG_TRIP__DEPRECATED) &&
             !MsgHandler::getErrorInstance()->wasInformed()) {
 
-        if (myDepartureTime<myBegin||myDepartureTime>=myEnd) {
+        if (myDepartureTime < myBegin || myDepartureTime >= myEnd) {
             delete myParameter;
             return;
         }
@@ -168,7 +171,7 @@ RORDLoader_TripDefs::myEndElement(int element) throw(ProcessError) {
         delete myParameter;
         myParameter = 0;
     }
-    if (element==SUMO_TAG_VTYPE||element==SUMO_TAG_VTYPE__DEPRECATED) {
+    if (element == SUMO_TAG_VTYPE || element == SUMO_TAG_VTYPE__DEPRECATED) {
         SUMOVehicleParserHelper::closeVTypeParsing(*myCurrentVehicleType);
         myNet.addVehicleType(myCurrentVehicleType);
         myCurrentVehicleType = 0;
@@ -177,7 +180,7 @@ RORDLoader_TripDefs::myEndElement(int element) throw(ProcessError) {
 
 
 void
-RORDLoader_TripDefs::beginNextRoute() throw() {
+RORDLoader_TripDefs::beginNextRoute() {
     myNextRouteRead = false;
 }
 

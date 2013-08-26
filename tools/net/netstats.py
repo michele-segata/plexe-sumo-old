@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """
 @file    netstats.py
-@author  Daniel.Krajzewicz@dlr.de 
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-08-13
 @version $Id$
 
 Prints some information about a given network
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, string, sys, StringIO

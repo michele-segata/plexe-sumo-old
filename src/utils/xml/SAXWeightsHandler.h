@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    SAXWeightsHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Fri, 30 Mar 2007
 /// @version $Id$
 ///
 // An XML-handler for network weights
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -79,10 +82,10 @@ public:
     class EdgeFloatTimeLineRetriever {
     public:
         /// @brief Constructor
-        EdgeFloatTimeLineRetriever() throw() { }
+        EdgeFloatTimeLineRetriever() { }
 
         /// @brief Destructor
-        virtual ~EdgeFloatTimeLineRetriever() throw() { }
+        virtual ~EdgeFloatTimeLineRetriever() { }
 
         /** @brief Adds a weight for a given edge and time period
          *
@@ -92,7 +95,7 @@ public:
          * @param[in] end The end of the interval the weight is valid for
          */
         virtual void addEdgeWeight(const std::string& id,
-                                   SUMOReal val, SUMOReal beg, SUMOReal end) const throw() = 0;
+                                   SUMOReal val, SUMOReal beg, SUMOReal end) const = 0;
 
     private:
         EdgeFloatTimeLineRetriever& operator=(const EdgeFloatTimeLineRetriever&); // just to avoid a compiler warning
@@ -159,7 +162,7 @@ public:
 
 
     /// Destructor
-    ~SAXWeightsHandler() throw();
+    ~SAXWeightsHandler() ;
 
 
 protected:
@@ -174,7 +177,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when a closing tag occurs
@@ -183,7 +186,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int elemente) throw();
+    void myEndElement(int elemente) ;
     //@}
 
 

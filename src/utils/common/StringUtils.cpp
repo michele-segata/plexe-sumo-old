@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    StringUtils.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    unknown
 /// @version $Id$
 ///
 // Some static methods for string processing
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -62,8 +65,8 @@ StringUtils::prune(std::string str) {
 
 std::string
 StringUtils::to_lower_case(std::string str) {
-    for (size_t i=0; i<str.length(); i++) {
-        if (str[i]>='A'&&str[i]<='Z') {
+    for (size_t i = 0; i < str.length(); i++) {
+        if (str[i] >= 'A' && str[i] <= 'Z') {
             str[i] = str[i] + 'a' - 'A';
         }
     }
@@ -115,12 +118,12 @@ StringUtils::toTimeString(int time) {
         time = -time;
     }
     char buffer[10];
-    sprintf(buffer, "%02i:",(time/3600));
+    sprintf(buffer, "%02i:", (time / 3600));
     oss << buffer;
-    time=time%3600;
-    sprintf(buffer, "%02i:",(time/60));
+    time = time % 3600;
+    sprintf(buffer, "%02i:", (time / 60));
     oss << buffer;
-    time=time%60;
+    time = time % 60;
     sprintf(buffer, "%02i", time);
     oss << buffer;
     return oss.str();
@@ -128,7 +131,7 @@ StringUtils::toTimeString(int time) {
 
 
 std::string
-StringUtils::escapeXML(const std::string& orig) throw() {
+StringUtils::escapeXML(const std::string& orig) {
     std::string result = replace(orig, "&", "&amp;");
     result = replace(result, ">", "&gt;");
     result = replace(result, "<", "&lt;");

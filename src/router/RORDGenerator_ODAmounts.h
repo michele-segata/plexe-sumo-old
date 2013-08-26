@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RORDGenerator_ODAmounts.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Wed, 21 Jan 2004
 /// @version $Id$
 ///
 // Class for loading trip amount definitions and route generation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -53,10 +56,10 @@ public:
     /// Constructor
     RORDGenerator_ODAmounts(RONet& net,
                             SUMOTime begin, SUMOTime end, bool emptyDestinationsAllowed,
-                            bool randomize, const std::string& file="") throw(ProcessError);
+                            bool randomize, const std::string& file = "") ;
 
     /// Destructor
-    ~RORDGenerator_ODAmounts() throw();
+    ~RORDGenerator_ODAmounts() ;
 
 
     /// @name inherited from ROAbstractRouteDefLoader
@@ -70,7 +73,7 @@ public:
      * @exception ProcessError If a major error occured
      * @see ROAbstractRouteDefLoader::readRoutesAtLeastUntil
      */
-    bool readRoutesAtLeastUntil(SUMOTime until, bool skipping) throw(ProcessError);
+    bool readRoutesAtLeastUntil(SUMOTime until, bool skipping) ;
     /// @}
 
 
@@ -86,7 +89,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when a closing tag occurs
@@ -95,14 +98,14 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int element) throw(ProcessError);
+    void myEndElement(int element) ;
     //@}
 
     /// Parses the interval information
     void parseInterval(const SUMOSAXAttributes& attrs);
 
     /// Parses the trip amount definition
-    void parseFlowAmountDef(const SUMOSAXAttributes& attrs) throw(ProcessError);
+    void parseFlowAmountDef(const SUMOSAXAttributes& attrs) ;
 
     /// Closes the current embedding interval
     void myEndInterval();
@@ -168,10 +171,10 @@ protected:
 
 private:
     /// Builds the routes between the current time step and the one given
-    void buildRoutes(SUMOTime until) throw();
+    void buildRoutes(SUMOTime until) ;
 
     /// Builds the routes for the given time step
-    void buildForTimeStep(SUMOTime time) throw();
+    void buildForTimeStep(SUMOTime time) ;
 
 private:
     /// The begin of the interval current read

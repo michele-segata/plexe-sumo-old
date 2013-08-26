@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSTrafficLightLogic.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The parent class for traffic light logics
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -69,7 +72,7 @@ MSTrafficLightLogic::SwitchCommand::execute(SUMOTime t) {
     size_t step1 = myTLLogic->getCurrentPhaseIndex();
     SUMOTime next = myTLLogic->trySwitch(isActive);
     size_t step2 = myTLLogic->getCurrentPhaseIndex();
-    if (step1!=step2) {
+    if (step1 != step2) {
         if (isActive) {
             // execute any action connected to this tls
             const MSTLLogicControl::TLSLogicVariants& vars = myTLControl.get(myTLLogic->getID());
@@ -86,7 +89,7 @@ MSTrafficLightLogic::SwitchCommand::execute(SUMOTime t) {
 
 void
 MSTrafficLightLogic::SwitchCommand::deschedule(MSTrafficLightLogic* tlLogic) {
-    if (tlLogic==myTLLogic) {
+    if (tlLogic == myTLLogic) {
         myAmValid = false;
         myAssumedNextSwitch = -1;
     }
@@ -121,14 +124,14 @@ MSTrafficLightLogic::~MSTrafficLightLogic() {
 void
 MSTrafficLightLogic::addLink(MSLink* link, MSLane* lane, unsigned int pos) {
     // !!! should be done within the loader (checking necessary)
-    myLinks.reserve(pos+1);
-    while (myLinks.size()<=pos) {
+    myLinks.reserve(pos + 1);
+    while (myLinks.size() <= pos) {
         myLinks.push_back(LinkVector());
     }
     myLinks[pos].push_back(link);
     //
-    myLanes.reserve(pos+1);
-    while (myLanes.size()<=pos) {
+    myLanes.reserve(pos + 1);
+    while (myLanes.size() <= pos) {
         myLanes.push_back(LaneVector());
     }
     myLanes[pos].push_back(lane);
@@ -146,9 +149,9 @@ MSTrafficLightLogic::adaptLinkInformationFrom(const MSTrafficLightLogic& logic) 
 std::map<MSLink*, LinkState>
 MSTrafficLightLogic::collectLinkStates() const {
     std::map<MSLink*, LinkState> ret;
-    for (LinkVectorVector::const_iterator i1=myLinks.begin(); i1!=myLinks.end(); ++i1) {
+    for (LinkVectorVector::const_iterator i1 = myLinks.begin(); i1 != myLinks.end(); ++i1) {
         const LinkVector& l = (*i1);
-        for (LinkVector::const_iterator i2=l.begin(); i2!=l.end(); ++i2) {
+        for (LinkVector::const_iterator i2 = l.begin(); i2 != l.end(); ++i2) {
             ret[*i2] = (*i2)->getState();
         }
     }
@@ -161,10 +164,10 @@ MSTrafficLightLogic::setTrafficLightSignals(SUMOTime t) const {
     // get the current traffic light signal combination
     const std::string& state = getCurrentPhaseDef().getState();
     // go through the links
-    for (size_t i=0; i<myLinks.size(); i++) {
+    for (size_t i = 0; i < myLinks.size(); i++) {
         const LinkVector& currGroup = myLinks[i];
         LinkState ls = (LinkState) state[i];
-        for (LinkVector::const_iterator j=currGroup.begin(); j!=currGroup.end(); j++) {
+        for (LinkVector::const_iterator j = currGroup.begin(); j != currGroup.end(); j++) {
             (*j)->setTLState(ls, t);
         }
     }
@@ -174,10 +177,10 @@ MSTrafficLightLogic::setTrafficLightSignals(SUMOTime t) const {
 
 void
 MSTrafficLightLogic::resetLinkStates(const std::map<MSLink*, LinkState> &vals) const {
-    for (LinkVectorVector::const_iterator i1=myLinks.begin(); i1!=myLinks.end(); ++i1) {
+    for (LinkVectorVector::const_iterator i1 = myLinks.begin(); i1 != myLinks.end(); ++i1) {
         const LinkVector& l = (*i1);
-        for (LinkVector::const_iterator i2=l.begin(); i2!=l.end(); ++i2) {
-            assert(vals.find(*i2)!=vals.end());
+        for (LinkVector::const_iterator i2 = l.begin(); i2 != l.end(); ++i2) {
+            assert(vals.find(*i2) != vals.end());
             (*i2)->setTLState(vals.find(*i2)->second, MSNet::getInstance()->getCurrentTimeStep());
         }
     }
@@ -188,10 +191,10 @@ MSTrafficLightLogic::resetLinkStates(const std::map<MSLink*, LinkState> &vals) c
 int
 MSTrafficLightLogic::getLinkIndex(const MSLink* const link) const {
     int index = 0;
-    for (LinkVectorVector::const_iterator i1=myLinks.begin(); i1!=myLinks.end(); ++i1, ++index) {
+    for (LinkVectorVector::const_iterator i1 = myLinks.begin(); i1 != myLinks.end(); ++i1, ++index) {
         const LinkVector& l = (*i1);
-        for (LinkVector::const_iterator i2=l.begin(); i2!=l.end(); ++i2) {
-            if ((*i2)==link) {
+        for (LinkVector::const_iterator i2 = l.begin(); i2 != l.end(); ++i2) {
+            if ((*i2) == link) {
                 return index;
             }
         }
@@ -204,7 +207,7 @@ MSTrafficLightLogic::getLinkIndex(const MSLink* const link) const {
 // ----------- Dynamic Information Retrieval
 SUMOTime
 MSTrafficLightLogic::getNextSwitchTime() const {
-    return mySwitchCommand!=0 ? mySwitchCommand->getNextSwitchTime() : -1;
+    return mySwitchCommand != 0 ? mySwitchCommand->getNextSwitchTime() : -1;
 }
 
 
@@ -232,7 +235,7 @@ MSTrafficLightLogic::setParameter(const std::map<std::string, std::string> &para
 
 std::string
 MSTrafficLightLogic::getParameterValue(const std::string& key) const {
-    if (myParameter.find(key)==myParameter.end()) {
+    if (myParameter.find(key) == myParameter.end()) {
         return "";
     }
     return myParameter.find(key)->second;

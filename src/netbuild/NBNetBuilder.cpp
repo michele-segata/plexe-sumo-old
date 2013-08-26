@@ -1,18 +1,24 @@
 /****************************************************************************/
 /// @file    NBNetBuilder.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Thimor Bohn
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    20 Nov 2001
 /// @version $Id$
 ///
 // Instance responsible for building networks
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -53,15 +59,15 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NBNetBuilder::NBNetBuilder() throw()
+NBNetBuilder::NBNetBuilder()
     : myEdgeCont(myTypeCont) {}
 
 
-NBNetBuilder::~NBNetBuilder() throw() {}
+NBNetBuilder::~NBNetBuilder() {}
 
 
 void
-NBNetBuilder::applyOptions(OptionsCont& oc) throw(ProcessError) {
+NBNetBuilder::applyOptions(OptionsCont& oc) {
     // we possibly have to load the edges to keep
     if (oc.isSet("keep-edges.input-file")) {
         std::ifstream strm(oc.getString("keep-edges.input-file").c_str());
@@ -94,8 +100,12 @@ void
 NBNetBuilder::compute(OptionsCont& oc,
                       const std::set<std::string> &explicitTurnarounds,
                       bool removeUnwishedNodes) {
-    GeoConvHelper& geoConvHelper = GeoConvHelper::getDefaultInstance();
+    GeoConvHelper& geoConvHelper = GeoConvHelper::getProcessing();
+
+
+    // MODIFYING THE SETS OF NODES AND EDGES
     // join junctions
+
     if (oc.exists("junctions.join-exclude") && oc.isSet("junctions.join-exclude")) {
         myNodeCont.addJoinExclusion(oc.getStringVector("junctions.join-exclude"));
     }
@@ -110,16 +120,9 @@ NBNetBuilder::compute(OptionsCont& oc,
         WRITE_MESSAGE(" Joined " + toString(numJoined) + " junction cluster(s).");
     }
 
-
-    // ADAPTING THE INPUT
     // Removes edges that are connecting the same node
-    PROGRESS_BEGIN_MESSAGE("Removing dummy edges");
-    myNodeCont.removeDummyEdges(myDistrictCont, myEdgeCont, myTLLCont);
-    PROGRESS_DONE_MESSAGE();
-    //
-    PROGRESS_BEGIN_MESSAGE("Joining double connections");
-    myJoinedEdges.init(myEdgeCont);
-    myNodeCont.joinDoubleNodeConnections(myDistrictCont, myEdgeCont, myTLLCont);
+    PROGRESS_BEGIN_MESSAGE("Removing self-loops");
+    myNodeCont.removeSelfLoops(myDistrictCont, myEdgeCont, myTLLCont);
     PROGRESS_DONE_MESSAGE();
     //
     if (oc.exists("remove-edges.isolated") && oc.getBool("remove-edges.isolated")) {
@@ -138,7 +141,7 @@ NBNetBuilder::compute(OptionsCont& oc,
     //
     if (removeUnwishedNodes) {
         unsigned int no = 0;
-        if (oc.exists("geometry.remove")&&oc.getBool("geometry.remove")) {
+        if (oc.exists("geometry.remove") && oc.getBool("geometry.remove")) {
             PROGRESS_BEGIN_MESSAGE("Removing empty nodes and geometry nodes");
             no = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myJoinedEdges, myTLLCont, true);
         } else {
@@ -148,52 +151,56 @@ NBNetBuilder::compute(OptionsCont& oc,
         PROGRESS_DONE_MESSAGE();
         WRITE_MESSAGE("   " + toString(no) + " nodes removed.");
     }
+    // @note: removing geometry can create similar edges so "Joining" must come afterwards
+    // @note: likewise splitting can destroy similarities so "Joining" must come before 
+    PROGRESS_BEGIN_MESSAGE("Joining similar edges");
+    myJoinedEdges.init(myEdgeCont);
+    myNodeCont.joinSimilarEdges(myDistrictCont, myEdgeCont, myTLLCont);
+    PROGRESS_DONE_MESSAGE();
     //
     if (oc.exists("geometry.split") && oc.getBool("geometry.split")) {
         PROGRESS_BEGIN_MESSAGE("Splitting geometry edges");
         myEdgeCont.splitGeometry(myNodeCont);
         PROGRESS_DONE_MESSAGE();
     }
-
-
-    // MOVE TO ORIGIN
-    //
-    if (!oc.getBool("offset.disable-normalization") && oc.isDefault("offset.x") && oc.isDefault("offset.y")) {
-        PROGRESS_BEGIN_MESSAGE("Moving network to origin");
-        const SUMOReal x = -geoConvHelper.getConvBoundary().xmin();
-        const SUMOReal y = -geoConvHelper.getConvBoundary().ymin();
-        for (std::map<std::string, NBNode*>::const_iterator i=myNodeCont.begin(); i!=myNodeCont.end(); ++i) {
-            (*i).second->reshiftPosition(x, y);
-        }
-        for (std::map<std::string, NBEdge*>::const_iterator i=myEdgeCont.begin(); i!=myEdgeCont.end(); ++i) {
-            (*i).second->reshiftPosition(x, y);
-        }
-        for (std::map<std::string, NBDistrict*>::const_iterator i=myDistrictCont.begin(); i!=myDistrictCont.end(); ++i) {
-            (*i).second->reshiftPosition(x, y);
-        }
-        geoConvHelper.moveConvertedBy(x, y);
-        PROGRESS_DONE_MESSAGE();
-    }
-
-    // @todo Why?
-    myEdgeCont.recomputeLaneShapes();
-
-
-    // GUESS RAMPS
-    if ((oc.exists("ramps.guess")&&oc.getBool("ramps.guess"))||(oc.exists("ramps.set")&&oc.isSet("ramps.set"))) {
+    // guess ramps
+    if ((oc.exists("ramps.guess") && oc.getBool("ramps.guess")) || (oc.exists("ramps.set") && oc.isSet("ramps.set"))) {
         PROGRESS_BEGIN_MESSAGE("Guessing and setting on-/off-ramps");
         myNodeCont.guessRamps(oc, myEdgeCont, myDistrictCont);
         PROGRESS_DONE_MESSAGE();
     }
 
 
+    // MOVE TO ORIGIN
+    if (!oc.getBool("offset.disable-normalization") && oc.isDefault("offset.x") && oc.isDefault("offset.y")) {
+        PROGRESS_BEGIN_MESSAGE("Moving network to origin");
+        const SUMOReal x = -geoConvHelper.getConvBoundary().xmin();
+        const SUMOReal y = -geoConvHelper.getConvBoundary().ymin();
+        for (std::map<std::string, NBNode*>::const_iterator i = myNodeCont.begin(); i != myNodeCont.end(); ++i) {
+            (*i).second->reshiftPosition(x, y);
+        }
+        for (std::map<std::string, NBEdge*>::const_iterator i = myEdgeCont.begin(); i != myEdgeCont.end(); ++i) {
+            (*i).second->reshiftPosition(x, y);
+        }
+        for (std::map<std::string, NBDistrict*>::const_iterator i = myDistrictCont.begin(); i != myDistrictCont.end(); ++i) {
+            (*i).second->reshiftPosition(x, y);
+        }
+        geoConvHelper.moveConvertedBy(x, y);
+        PROGRESS_DONE_MESSAGE();
+    }
+    geoConvHelper.computeFinal(); // information needed for location element fixed at this point
+
+    // @todo Why?
+    myEdgeCont.recomputeLaneShapes();
+
+
     // GUESS TLS POSITIONS
     PROGRESS_BEGIN_MESSAGE("Assigning nodes to traffic lights");
     if (oc.isSet("tls.set")) {
         std::vector<std::string> tlControlledNodes = oc.getStringVector("tls.set");
-        for (std::vector<std::string>::const_iterator i=tlControlledNodes.begin(); i!=tlControlledNodes.end(); ++i) {
+        for (std::vector<std::string>::const_iterator i = tlControlledNodes.begin(); i != tlControlledNodes.end(); ++i) {
             NBNode* node = myNodeCont.retrieve(*i);
-            if (node==0) {
+            if (node == 0) {
                 WRITE_WARNING("Building a tl-logic for node '" + *i + "' is not possible." + "\n The node '" + *i + "' is not known.");
             } else {
                 myNodeCont.setAsTLControlled(node, myTLLCont);
@@ -210,6 +217,7 @@ NBNetBuilder::compute(OptionsCont& oc,
     }
 
 
+    // CONNECTIONS COMPUTATION
     //
     PROGRESS_BEGIN_MESSAGE("Computing turning directions");
     myEdgeCont.computeTurningDirections();
@@ -257,6 +265,9 @@ NBNetBuilder::compute(OptionsCont& oc,
     PROGRESS_BEGIN_MESSAGE("Rechecking of lane endings");
     myEdgeCont.recheckLanes();
     PROGRESS_DONE_MESSAGE();
+
+
+    // GEOMETRY COMPUTATION
     //
     PROGRESS_BEGIN_MESSAGE("Computing node shapes");
     myNodeCont.computeNodeShapes(oc.getBool("lefthand"));
@@ -265,6 +276,9 @@ NBNetBuilder::compute(OptionsCont& oc,
     PROGRESS_BEGIN_MESSAGE("Computing edge shapes");
     myEdgeCont.computeEdgeShapes();
     PROGRESS_DONE_MESSAGE();
+
+
+    // COMPUTING RIGHT-OF-WAY AND TRAFFIC LIGHT PROGRAMS
     //
     PROGRESS_BEGIN_MESSAGE("Computing traffic light control information");
     myTLLCont.setTLControllingInformation(myEdgeCont);
@@ -282,16 +296,20 @@ NBNetBuilder::compute(OptionsCont& oc,
         progCount = "(" + toString(numbers.second) + " programs) ";
     }
     WRITE_MESSAGE(" " + toString(numbers.first) + " traffic light(s) " + progCount + "computed.");
+
+
+    // FINISHING INNER EDGES
     if (!oc.getBool("no-internal-links")) {
         PROGRESS_BEGIN_MESSAGE("Building inner edges");
-        for (std::map<std::string, NBEdge*>::const_iterator i=myEdgeCont.begin(); i!=myEdgeCont.end(); ++i) {
+        for (std::map<std::string, NBEdge*>::const_iterator i = myEdgeCont.begin(); i != myEdgeCont.end(); ++i) {
             (*i).second->sortOutgoingConnectionsByIndex();
         }
-        for (std::map<std::string, NBNode*>::const_iterator i=myNodeCont.begin(); i!=myNodeCont.end(); ++i) {
+        for (std::map<std::string, NBNode*>::const_iterator i = myNodeCont.begin(); i != myNodeCont.end(); ++i) {
             (*i).second->buildInnerEdges();
         }
         PROGRESS_DONE_MESSAGE();
     }
+
 
     // report
     WRITE_MESSAGE("-----------------------------------------------------");

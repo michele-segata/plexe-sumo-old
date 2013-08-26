@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    TplConvertSec.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sun, 09 Jun 2002
 /// @version $Id$
 ///
 // Some conversion methods (from strings to other)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -102,7 +104,7 @@ public:
         returns the default value if the data is empty */
     static std::string _2strSec(const E* const data, int length,
                                 const std::string& def) {
-        if (data==0||length==0) {
+        if (data == 0 || length == 0) {
             return def;
         }
         return TplConvert<E>::_2str(data, length);
@@ -113,7 +115,7 @@ public:
             by it considering the given length
         returns the default value if the data is empty */
     static int _2intSec(const E* const data, int length, int def) {
-        if (data==0||length==0||data[0]==0) {
+        if (data == 0 || length == 0 || data[0] == 0) {
             return def;
         }
         return TplConvert<E>::_2int(data, length);
@@ -124,7 +126,7 @@ public:
             by it considering the given length
         returns the default value if the data is empty */
     static long _2longSec(const E* const data, int length, long def) {
-        if (data==0||length==0||data[0]==0) {
+        if (data == 0 || length == 0 || data[0] == 0) {
             return def;
         }
         return TplConvert<E>::_2long(data, length);
@@ -135,7 +137,7 @@ public:
             by it considering the given length
         returns the default value if the data is empty */
     static SUMOReal _2SUMORealSec(const E* const data, int length, SUMOReal def) {
-        if (data==0||length==0||data[0]==0) {
+        if (data == 0 || length == 0 || data[0] == 0) {
             return def;
         }
         return TplConvert<E>::_2SUMOReal(data, length);
@@ -146,7 +148,7 @@ public:
             by it considering the given length
         returns the default value if the data is empty */
     static bool _2boolSec(const E* const data, int length, bool def) {
-        if (data==0||length==0||data[0]==0) {
+        if (data == 0 || length == 0 || data[0] == 0) {
             return def;
         }
         return TplConvert<E>::_2bool(data, length);
@@ -157,7 +159,7 @@ public:
             c-char-string considering the given length
         returns the default value if the data is empty */
     static char* _2charpSec(const E* const data, int length, char* def) {
-        if (data==0||length==0) {
+        if (data == 0 || length == 0) {
             return TplConvert<E>::copy(def);
         }
         return TplConvert<E>::_2charp(data, length);

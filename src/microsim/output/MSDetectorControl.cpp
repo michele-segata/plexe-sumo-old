@@ -1,18 +1,24 @@
 /****************************************************************************/
 /// @file    MSDetectorControl.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Clemens Honomichl
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    2005-09-15
 /// @version $Id$
 ///
 // Detectors container; responsible for string and output generation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -46,15 +52,15 @@
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-MSDetectorControl::MSDetectorControl() throw() {
+MSDetectorControl::MSDetectorControl() {
 }
 
 
-MSDetectorControl::~MSDetectorControl() throw() {
-    for (std::map<SumoXMLTag, NamedObjectCont<MSDetectorFileOutput*> >::iterator i=myDetectors.begin(); i!=myDetectors.end(); ++i) {
+MSDetectorControl::~MSDetectorControl() {
+    for (std::map<SumoXMLTag, NamedObjectCont<MSDetectorFileOutput*> >::iterator i = myDetectors.begin(); i != myDetectors.end(); ++i) {
         (*i).second.clear();
     }
-    for (std::vector<MSMeanData*>::const_iterator i=myMeanData.begin(); i!=myMeanData.end(); ++i) {
+    for (std::vector<MSMeanData*>::const_iterator i = myMeanData.begin(); i != myMeanData.end(); ++i) {
         delete *i;
     }
 }
@@ -70,8 +76,8 @@ MSDetectorControl::close(SUMOTime step) {
 
 
 void
-MSDetectorControl::add(SumoXMLTag type, MSDetectorFileOutput* d, OutputDevice& device, int splInterval, SUMOTime begin) throw(ProcessError) {
-    if (myDetectors.find(type)==myDetectors.end()) {
+MSDetectorControl::add(SumoXMLTag type, MSDetectorFileOutput* d, OutputDevice& device, int splInterval, SUMOTime begin) {
+    if (myDetectors.find(type) == myDetectors.end()) {
         myDetectors[type] = NamedObjectCont<MSDetectorFileOutput*>();
     }
     NamedObjectCont<MSDetectorFileOutput*> &m = myDetectors.find(type)->second;
@@ -85,8 +91,8 @@ MSDetectorControl::add(SumoXMLTag type, MSDetectorFileOutput* d, OutputDevice& d
 
 
 void
-MSDetectorControl::add(SumoXMLTag type, MSDetectorFileOutput* d) throw(ProcessError) {
-    if (myDetectors.find(type)==myDetectors.end()) {
+MSDetectorControl::add(SumoXMLTag type, MSDetectorFileOutput* d) {
+    if (myDetectors.find(type) == myDetectors.end()) {
         myDetectors[type] = NamedObjectCont<MSDetectorFileOutput*>();
     }
     NamedObjectCont<MSDetectorFileOutput*> &m = myDetectors.find(type)->second;
@@ -100,7 +106,7 @@ MSDetectorControl::add(SumoXMLTag type, MSDetectorFileOutput* d) throw(ProcessEr
 
 void
 MSDetectorControl::add(MSMeanData* mn, OutputDevice& device,
-                       SUMOTime frequency, SUMOTime begin) throw() {
+                       SUMOTime frequency, SUMOTime begin) {
     myMeanData.push_back(mn);
     addDetectorAndInterval(mn, &device, frequency, begin);
     if (begin == string2time(OptionsCont::getOptions().getString("begin"))) {
@@ -110,8 +116,8 @@ MSDetectorControl::add(MSMeanData* mn, OutputDevice& device,
 
 
 const NamedObjectCont<MSDetectorFileOutput*> &
-MSDetectorControl::getTypedDetectors(SumoXMLTag type) const throw() {
-    if (myDetectors.find(type)==myDetectors.end()) {
+MSDetectorControl::getTypedDetectors(SumoXMLTag type) const {
+    if (myDetectors.find(type) == myDetectors.end()) {
         return myEmptyContainer;//myDetectors[type] = NamedObjectCont<MSDetectorFileOutput*>();
     }
     return myDetectors.find(type)->second;
@@ -119,28 +125,28 @@ MSDetectorControl::getTypedDetectors(SumoXMLTag type) const throw() {
 
 
 void
-MSDetectorControl::updateDetectors(const SUMOTime step) throw() {
-    for (std::map<SumoXMLTag, NamedObjectCont<MSDetectorFileOutput*> >::const_iterator i=myDetectors.begin(); i!=myDetectors.end(); ++i) {
+MSDetectorControl::updateDetectors(const SUMOTime step) {
+    for (std::map<SumoXMLTag, NamedObjectCont<MSDetectorFileOutput*> >::const_iterator i = myDetectors.begin(); i != myDetectors.end(); ++i) {
         const std::map<std::string, MSDetectorFileOutput*> &dets = getTypedDetectors((*i).first).getMyMap();
-        for (std::map<std::string, MSDetectorFileOutput*>::const_iterator j=dets.begin(); j!=dets.end(); ++j) {
+        for (std::map<std::string, MSDetectorFileOutput*>::const_iterator j = dets.begin(); j != dets.end(); ++j) {
             (*j).second->detectorUpdate(step);
         }
     }
-    for (std::vector<MSMeanData*>::const_iterator i=myMeanData.begin(); i!=myMeanData.end(); ++i) {
+    for (std::vector<MSMeanData*>::const_iterator i = myMeanData.begin(); i != myMeanData.end(); ++i) {
         (*i)->detectorUpdate(step);
     }
 }
 
 
 void
-MSDetectorControl::writeOutput(SUMOTime step, bool closing) throw(IOError) {
-    for (Intervals::iterator i=myIntervals.begin(); i!=myIntervals.end(); ++i) {
+MSDetectorControl::writeOutput(SUMOTime step, bool closing) {
+    for (Intervals::iterator i = myIntervals.begin(); i != myIntervals.end(); ++i) {
         IntervalsKey interval = (*i).first;
         if (myLastCalls[interval] + interval.first <= step || (closing && myLastCalls[interval] < step)) {
             DetectorFileVec dfVec = (*i).second;
             SUMOTime startTime = myLastCalls[interval];
             // check whether at the end the output was already generated
-            for (DetectorFileVec::iterator it = dfVec.begin(); it!=dfVec.end(); ++it) {
+            for (DetectorFileVec::iterator it = dfVec.begin(); it != dfVec.end(); ++it) {
                 MSDetectorFileOutput* det = it->first;
                 det->writeXMLOutput(*(it->second), startTime, step);
             }
@@ -154,7 +160,7 @@ void
 MSDetectorControl::addDetectorAndInterval(MSDetectorFileOutput* det,
         OutputDevice* device,
         SUMOTime interval,
-        SUMOTime begin) throw() {
+        SUMOTime begin) {
     if (begin == -1) {
         begin = string2time(OptionsCont::getOptions().getString("begin"));
     }

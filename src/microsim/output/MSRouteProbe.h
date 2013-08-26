@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSRouteProbe.h
 /// @author  Michael Behrisch
+/// @author  Daniel Krajzewicz
+/// @author  Tino Morenz
 /// @date    Thu, 04.12.2008
 /// @version $Id$
 ///
 // Writes route distributions at a certain edge
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -72,11 +75,11 @@ public:
      */
     MSRouteProbe(const std::string& id,
                  const MSEdge* edge,
-                 SUMOTime begin) throw();
+                 SUMOTime begin) ;
 
 
     /// @brief Destructor
-    virtual ~MSRouteProbe() throw();
+    virtual ~MSRouteProbe() ;
 
 
     /// @name Methods inherited from MSMoveReminder
@@ -93,7 +96,7 @@ public:
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) throw();
+    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) ;
     /// @}
 
 
@@ -114,7 +117,7 @@ public:
      * @exception IOError If an error on writing occurs (!!! not yet implemented)
      */
     void writeXMLOutput(OutputDevice& dev,
-                        SUMOTime startTime, SUMOTime stopTime) throw(IOError);
+                        SUMOTime startTime, SUMOTime stopTime);
 
 
     /** @brief Opens the XML-output using "detector" as root element
@@ -124,7 +127,7 @@ public:
      * @todo What happens with the additional information if several detectors use the same output?
      * @exception IOError If an error on writing occurs (!!! not yet implemented)
      */
-    void writeXMLDetectorProlog(OutputDevice& dev) const throw(IOError);
+    void writeXMLDetectorProlog(OutputDevice& dev) const;
     /// @}
 
 private:

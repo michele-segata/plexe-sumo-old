@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    NLDetectorBuilder.h
 /// @author  Daniel Krajzewicz
+/// @author  Clemens Honomichl
+/// @author  Christian Roessel
+/// @author  Michael Behrisch
 /// @date    Mon, 15 Apr 2002
 /// @version $Id$
 ///
 // Builds detectors for microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,11 +68,11 @@ public:
      *
      * @param[in] net The network to which's detector control built detector shall be added
      */
-    NLDetectorBuilder(MSNet& net) throw();
+    NLDetectorBuilder(MSNet& net) ;
 
 
     /// @brief Destructor
-    virtual ~NLDetectorBuilder() throw();
+    virtual ~NLDetectorBuilder() ;
 
 
     /// @name Value parsing and detector building methods
@@ -278,7 +282,7 @@ public:
      *
      * @return The id of the currently processed e3 detector
      */
-    std::string getCurrentE3ID() const throw();
+    std::string getCurrentE3ID() const ;
 
 
     /** @brief Builds a vTypeProbe and adds it to the net
@@ -335,7 +339,7 @@ public:
      * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
      */
     virtual MSDetectorFileOutput* createInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, bool splitByType) throw();
+            MSLane* lane, SUMOReal pos, bool splitByType) ;
 
 
     /** @brief Creates an instance of an e1 detector using the given values
@@ -348,7 +352,7 @@ public:
      * @param[in] od The output device the loop shall use
      */
     virtual MSDetectorFileOutput* createInstantInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, OutputDevice& od) throw();
+            MSLane* lane, SUMOReal pos, OutputDevice& od) ;
 
 #ifdef HAVE_MESOSIM
     /** @brief Creates an instance of a mesoscopic e1 detector using the given values
@@ -361,7 +365,7 @@ public:
      * @todo Position is not used, herein!?
      */
     virtual MEInductLoop* createMEInductLoop(const std::string& id,
-            MESegment* s, SUMOReal pos) throw();
+            MESegment* s, SUMOReal pos) ;
 #endif
 
 
@@ -381,7 +385,7 @@ public:
             DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold,
             SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold) throw();
+            SUMOReal jamDistThreshold) ;
 
 
     /** @brief Creates an instance of an e2ol-detector using the given values
@@ -400,7 +404,7 @@ public:
     virtual MSDetectorFileOutput* createMultiLaneE2Detector(
         const std::string& id, DetectorUsage usage, MSLane* lane, SUMOReal pos,
         SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-        SUMOReal jamDistThreshold) throw();
+        SUMOReal jamDistThreshold) ;
 
 
     /** @brief Creates an instance of an e3 detector using the given values
@@ -415,7 +419,7 @@ public:
      */
     virtual MSDetectorFileOutput* createE3Detector(const std::string& id,
             const CrossSectionVector& entries, const CrossSectionVector& exits,
-            SUMOReal haltingSpeedThreshold, SUMOTime haltingTimeThreshold) throw();
+            SUMOReal haltingSpeedThreshold, SUMOTime haltingTimeThreshold) ;
 
 
     /** @brief Creates edge based mean data collector using the given specification
@@ -460,7 +464,7 @@ public:
     MSDetectorFileOutput* buildSingleLaneE2Det(const std::string& id,
             DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold) throw();
+            SUMOReal jamDistThreshold) ;
 
 
     /** @brief Builds an e2 detector that continues on preceeding lanes
@@ -477,7 +481,7 @@ public:
      */
     MSDetectorFileOutput* buildMultiLaneE2Det(const std::string& id, DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold) throw();
+            SUMOReal jamDistThreshold) ;
 
 
 
@@ -498,10 +502,10 @@ protected:
          */
         E3DetectorDefinition(const std::string& id,
                              OutputDevice& device, SUMOReal haltingSpeedThreshold,
-                             SUMOTime haltingTimeThreshold, int splInterval) throw();
+                             SUMOTime haltingTimeThreshold, int splInterval) ;
 
         /// @brief Destructor
-        ~E3DetectorDefinition() throw();
+        ~E3DetectorDefinition() ;
 
         /// @brief The id of the detector
         std::string myID;

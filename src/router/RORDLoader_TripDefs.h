@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RORDLoader_TripDefs.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The basic class for loading trip definitions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,10 +55,10 @@ public:
     /// Constructor
     RORDLoader_TripDefs(RONet& net, SUMOTime begin, SUMOTime end,
                         bool emptyDestinationsAllowed, bool withTaz,
-                        const std::string& file="") throw(ProcessError);
+                        const std::string& file = "") ;
 
     /// Destructor
-    ~RORDLoader_TripDefs() throw();
+    ~RORDLoader_TripDefs() ;
 
 
     /// @name inherited from ROAbstractRouteDefLoader
@@ -65,7 +68,7 @@ public:
      *
      * @return The least time step that was read by this reader
      */
-    SUMOTime getLastReadTimeStep() const throw() {
+    SUMOTime getLastReadTimeStep() const {
         return myDepartureTime;
     }
     /// @}
@@ -83,7 +86,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when a closing tag occurs
@@ -92,7 +95,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int element) throw(ProcessError);
+    void myEndElement(int element) ;
     //@}
 
 
@@ -105,7 +108,7 @@ protected:
      * @return Whether a further route was read
      * @see ROTypedXMLRoutesLoader::nextRouteRead
      */
-    bool nextRouteRead() throw() {
+    bool nextRouteRead() {
         return myNextRouteRead;
     }
 
@@ -115,7 +118,7 @@ protected:
      * @todo recheck/refactor
      * @see ROTypedXMLRoutesLoader::beginNextRoute
      */
-    void beginNextRoute() throw();
+    void beginNextRoute() ;
     //@}
 
 

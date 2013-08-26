@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GUI_E2_ZS_Collector.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    Okt 2003
 /// @version $Id$
 ///
 // The gui-version of the MS_E2_ZS_Collector
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,13 +62,13 @@
 GUI_E2_ZS_Collector::GUI_E2_ZS_Collector(const std::string& id, DetectorUsage usage,
         MSLane* const lane, SUMOReal startPos, SUMOReal detLength,
         SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-        SUMOReal jamDistThreshold) throw()
+        SUMOReal jamDistThreshold)
     : MSE2Collector(id, usage, lane, startPos, detLength, haltingTimeThreshold,
                     haltingSpeedThreshold, jamDistThreshold) {}
 
 
 
-GUI_E2_ZS_Collector::~GUI_E2_ZS_Collector() throw() {}
+GUI_E2_ZS_Collector::~GUI_E2_ZS_Collector() {}
 
 
 GUIDetectorWrapper*
@@ -77,7 +81,7 @@ GUI_E2_ZS_Collector::buildDetectorGUIRepresentation() {
 /* -------------------------------------------------------------------------
  * GUI_E2_ZS_Collector::MyWrapper-methods
  * ----------------------------------------------------------------------- */
-GUI_E2_ZS_Collector::MyWrapper::MyWrapper(GUI_E2_ZS_Collector& detector) throw()
+GUI_E2_ZS_Collector::MyWrapper::MyWrapper(GUI_E2_ZS_Collector& detector)
     : GUIDetectorWrapper("E2 detector", detector.getID()),
       myDetector(detector) {
     GUILaneWrapper& lw = static_cast<GUIEdge&>(detector.getLane()->getEdge()).getLaneGeometry(detector.getLane());
@@ -86,25 +90,25 @@ GUI_E2_ZS_Collector::MyWrapper::MyWrapper(GUI_E2_ZS_Collector& detector) throw()
     // build geometry
     myFullGeometry = v.getSubpart(detector.getStartPos(), detector.getEndPos());
     //
-    myShapeRotations.reserve(myFullGeometry.size()-1);
-    myShapeLengths.reserve(myFullGeometry.size()-1);
+    myShapeRotations.reserve(myFullGeometry.size() - 1);
+    myShapeLengths.reserve(myFullGeometry.size() - 1);
     int e = (int) myFullGeometry.size() - 1;
-    for (int i=0; i<e; ++i) {
+    for (int i = 0; i < e; ++i) {
         const Position& f = myFullGeometry[i];
-        const Position& s = myFullGeometry[i+1];
+        const Position& s = myFullGeometry[i + 1];
         myShapeLengths.push_back(f.distanceTo(s));
-        myShapeRotations.push_back((SUMOReal) atan2((s.x()-f.x()), (f.y()-s.y()))*(SUMOReal) 180.0/(SUMOReal) PI);
+        myShapeRotations.push_back((SUMOReal) atan2((s.x() - f.x()), (f.y() - s.y())) * (SUMOReal) 180.0 / (SUMOReal) PI);
     }
     //
     myBoundary = myFullGeometry.getBoxBoundary();
 }
 
 
-GUI_E2_ZS_Collector::MyWrapper::~MyWrapper() throw() {}
+GUI_E2_ZS_Collector::MyWrapper::~MyWrapper() {}
 
 
 Boundary
-GUI_E2_ZS_Collector::MyWrapper::getCenteringBoundary() const throw() {
+GUI_E2_ZS_Collector::MyWrapper::getCenteringBoundary() const {
     Boundary b(myBoundary);
     b.grow(20);
     return b;
@@ -113,12 +117,12 @@ GUI_E2_ZS_Collector::MyWrapper::getCenteringBoundary() const throw() {
 
 GUIParameterTableWindow*
 GUI_E2_ZS_Collector::MyWrapper::getParameterWindow(GUIMainWindow& app,
-        GUISUMOAbstractView&) throw() {
+        GUISUMOAbstractView&) {
     GUIParameterTableWindow* ret =
         new GUIParameterTableWindow(app, *this, 13);
     // add items
     // parameter
-    ret->mkItem("length [m]", false, myDetector.getEndPos()-myDetector.getStartPos());
+    ret->mkItem("length [m]", false, myDetector.getEndPos() - myDetector.getStartPos());
     ret->mkItem("position [m]", false, myDetector.getStartPos());
     ret->mkItem("lane", false, myDetector.getLane()->getID());
     // values
@@ -149,24 +153,24 @@ GUI_E2_ZS_Collector::MyWrapper::getParameterWindow(GUIMainWindow& app,
 
 
 void
-GUI_E2_ZS_Collector::MyWrapper::drawGL(const GUIVisualizationSettings& s) const throw() {
+GUI_E2_ZS_Collector::MyWrapper::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     glPushMatrix();
     glTranslated(0, 0, getType());
     SUMOReal dwidth = 1;
-    if (myDetector.getUsageType()==DU_TL_CONTROL) {
+    if (myDetector.getUsageType() == DU_TL_CONTROL) {
         dwidth = (SUMOReal) 0.3;
         glColor3d(0, (SUMOReal) .6, (SUMOReal) .8);
     } else {
         glColor3d(0, (SUMOReal) .8, (SUMOReal) .8);
     }
-    SUMOReal width=2; // !!!
-    if (width*s.addExaggeration>1.0) {
+    SUMOReal width = 2; // !!!
+    if (width * s.addExaggeration > 1.0) {
         glScaled(s.addExaggeration, s.addExaggeration, 1);
         GLHelper::drawBoxLines(myFullGeometry, myShapeRotations, myShapeLengths, dwidth);
     } else {
         int e = (int) myFullGeometry.size() - 1;
-        for (int i=0; i<e; ++i) {
+        for (int i = 0; i < e; ++i) {
             GLHelper::drawLine(myFullGeometry[i], myShapeRotations[i], myShapeLengths[i]);
         }
     }

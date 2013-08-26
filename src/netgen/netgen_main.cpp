@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    netgen_main.cpp
 /// @author  Markus Hartinger
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mar, 2003
 /// @version $Id$
 ///
 // Main for NETGEN
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -87,7 +91,7 @@ fillOptions() {
 
     NGFrame::fillOptions();
     NBFrame::fillOptions(true);
-    NWFrame::fillOptions();
+    NWFrame::fillOptions(true);
     oc.doRegister("default-junction-type", 'j', new Option_String());
     oc.addSynonyme("default-junction-type", "junctions");
     oc.addDescription("default-junction-type", "Building Defaults", "[traffic_light|priority|right_before_left] Determines the type of the build junctions");
@@ -140,29 +144,29 @@ buildNetwork(NBNetBuilder& nb) {
         SUMOReal xLength = oc.getFloat("grid.x-length");
         SUMOReal yLength = oc.getFloat("grid.y-length");
         SUMOReal attachLength = oc.getFloat("grid.attach-length");
-        if (oc.isDefault("grid.x-number")&&!oc.isDefault("grid.number")) {
+        if (oc.isDefault("grid.x-number") && !oc.isDefault("grid.number")) {
             xNo = oc.getInt("grid.number");
         }
-        if (oc.isDefault("grid.y-number")&&!oc.isDefault("grid.number")) {
+        if (oc.isDefault("grid.y-number") && !oc.isDefault("grid.number")) {
             yNo = oc.getInt("grid.number");
         }
-        if (oc.isDefault("grid.x-length")&&!oc.isDefault("grid.length")) {
+        if (oc.isDefault("grid.x-length") && !oc.isDefault("grid.length")) {
             xLength = oc.getFloat("grid.length");
         }
-        if (oc.isDefault("grid.y-length")&&!oc.isDefault("grid.length")) {
+        if (oc.isDefault("grid.y-length") && !oc.isDefault("grid.length")) {
             yLength = oc.getFloat("grid.length");
         }
         // check values
         bool hadError = false;
-        if (xNo<2 || yNo<2) {
+        if (xNo < 2 || yNo < 2) {
             WRITE_ERROR("The number of nodes must be at least 2 in both directions.");
             hadError = true;
         }
-        if (xLength<10. || yLength<10.) {
+        if (xLength < 10. || yLength < 10.) {
             WRITE_ERROR("The distance between nodes must be at least 10m in both directions.");
             hadError = true;
         }
-        if (attachLength != 0.0 && attachLength<10.) {
+        if (attachLength != 0.0 && attachLength < 10.) {
             WRITE_ERROR("The length of attached streets must be at least 10m.");
             hadError = true;
         }
@@ -233,7 +237,7 @@ main(int argc, char** argv) {
         nb.compute(oc);
         NWFrame::writeNetwork(oc, nb);
     } catch (ProcessError& e) {
-        if (std::string(e.what())!=std::string("Process Error") && std::string(e.what())!=std::string("")) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
@@ -246,7 +250,7 @@ main(int argc, char** argv) {
     }
     OutputDevice::closeAll();
     SystemFrame::close();
-    if (ret==0) {
+    if (ret == 0) {
         std::cout << "Success." << std::endl;
     }
     return ret;

@@ -7,12 +7,13 @@
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -63,8 +64,8 @@ NIVissimVehicleType::dictionary(int id,
 
 bool
 NIVissimVehicleType::dictionary(int id, NIVissimVehicleType* o) {
-    DictType::iterator i=myDict.find(id);
-    if (i==myDict.end()) {
+    DictType::iterator i = myDict.find(id);
+    if (i == myDict.end()) {
         myDict[id] = o;
         return true;
     }
@@ -74,8 +75,8 @@ NIVissimVehicleType::dictionary(int id, NIVissimVehicleType* o) {
 
 NIVissimVehicleType*
 NIVissimVehicleType::dictionary(int id) {
-    DictType::iterator i=myDict.find(id);
-    if (i==myDict.end()) {
+    DictType::iterator i = myDict.find(id);
+    if (i == myDict.end()) {
         return 0;
     }
     return (*i).second;
@@ -83,7 +84,7 @@ NIVissimVehicleType::dictionary(int id) {
 
 void
 NIVissimVehicleType::clearDict() {
-    for (DictType::iterator i=myDict.begin(); i!=myDict.end(); i++) {
+    for (DictType::iterator i = myDict.begin(); i != myDict.end(); i++) {
         delete(*i).second;
     }
     myDict.clear();

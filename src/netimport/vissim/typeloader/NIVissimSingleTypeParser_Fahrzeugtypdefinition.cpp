@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimSingleTypeParser_Fahrzeugtypdefinition.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Wed, 18 Dec 2002
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -67,11 +69,11 @@ NIVissimSingleTypeParser_Fahrzeugtypdefinition::parse(std::istream& from) {
     // color (optional) and length
     RGBColor color;
     tag = myRead(from);
-    while (tag!="laenge") {
-        if (tag=="farbe") {
+    while (tag != "laenge") {
+        if (tag == "farbe") {
             std::string colorName = myRead(from);
-            NIImporter_Vissim::ColorMap::iterator i=myColorMap.find(colorName);
-            if (i!=myColorMap.end()) {
+            NIImporter_Vissim::ColorMap::iterator i = myColorMap.find(colorName);
+            if (i != myColorMap.end()) {
                 color = (*i).second;
             } else {
                 int r, g, b;
@@ -89,21 +91,21 @@ NIVissimSingleTypeParser_Fahrzeugtypdefinition::parse(std::istream& from) {
     SUMOReal length;
     from >> length;
     // overread until "Maxbeschleunigung"
-    while (tag!="maxbeschleunigung") {
+    while (tag != "maxbeschleunigung") {
         tag = myRead(from);
     }
     SUMOReal amax;
     from >> amax; // type-checking is missing!
     // overread until "Maxverzoegerung"
-    while (tag!="maxverzoegerung") {
+    while (tag != "maxverzoegerung") {
         tag = myRead(from);
     }
     SUMOReal dmax;
     from >> dmax; // type-checking is missing!
-    while (tag!="besetzungsgrad") {
+    while (tag != "besetzungsgrad") {
         tag = myRead(from);
     }
-    while (tag!="DATAEND") {
+    while (tag != "DATAEND") {
         tag = readEndSecure(from, "verlustzeit");
     }
     return NIVissimVehicleType::dictionary(id, name,

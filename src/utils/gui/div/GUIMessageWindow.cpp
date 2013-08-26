@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIMessageWindow.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Tue, 25 Nov 2003
 /// @version $Id$
 ///
 // A logging window for the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -38,7 +40,7 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-GUIMessageWindow::GUIMessageWindow(FXComposite* parent) throw()
+GUIMessageWindow::GUIMessageWindow(FXComposite* parent)
     : FXText(parent, 0, 0, 0, 0, 0, 0, 50),
       myStyles(0) {
     setStyled(true);
@@ -85,38 +87,38 @@ GUIMessageWindow::GUIMessageWindow(FXComposite* parent) throw()
 }
 
 
-GUIMessageWindow::~GUIMessageWindow() throw() {
+GUIMessageWindow::~GUIMessageWindow() {
     delete[] myStyles;
 }
 
 
 void
-GUIMessageWindow::appendText(GUIEventType eType, const std::string& msg) throw() {
+GUIMessageWindow::appendText(GUIEventType eType, const std::string& msg) {
     if (!isEnabled()) {
         show();
     }
     // build the styled message
     FXint style = 1;
     switch (eType) {
-    case EVENT_ERROR_OCCURED:
-        // color: red
-        style = 2;
-        break;
-    case EVENT_WARNING_OCCURED:
-        // color: yellow
-        style = 3;
-        break;
-    case EVENT_MESSAGE_OCCURED:
-        // color: green
-        style = 1;
-        break;
-    default:
-        assert(false);
+        case EVENT_ERROR_OCCURED:
+            // color: red
+            style = 2;
+            break;
+        case EVENT_WARNING_OCCURED:
+            // color: yellow
+            style = 3;
+            break;
+        case EVENT_MESSAGE_OCCURED:
+            // color: green
+            style = 1;
+            break;
+        default:
+            assert(false);
     }
     // insert message to buffer
-    FXText::appendStyledText(msg.c_str(), (FXint) msg.length(), style+1, true);
-    FXText::setCursorPos(getLength()-1);
-    FXText::setBottomLine(getLength()-1);
+    FXText::appendStyledText(msg.c_str(), (FXint) msg.length(), style + 1, true);
+    FXText::setCursorPos(getLength() - 1);
+    FXText::setBottomLine(getLength() - 1);
     if (isEnabled()) {
         layout();
         update();
@@ -125,11 +127,11 @@ GUIMessageWindow::appendText(GUIEventType eType, const std::string& msg) throw()
 
 
 void
-GUIMessageWindow::addSeparator() throw() {
+GUIMessageWindow::addSeparator() {
     std::string msg = "----------------------------------------------------------------------------------------\n";
     FXText::appendStyledText(msg.c_str(), (FXint) msg.length(), 1, true);
-    FXText::setCursorPos(getLength()-1);
-    FXText::setBottomLine(getLength()-1);
+    FXText::setCursorPos(getLength() - 1);
+    FXText::setBottomLine(getLength() - 1);
     if (isEnabled()) {
         layout();
         update();
@@ -138,11 +140,11 @@ GUIMessageWindow::addSeparator() throw() {
 
 
 void
-GUIMessageWindow::clear() throw() {
-    if (getLength()==0) {
+GUIMessageWindow::clear() {
+    if (getLength() == 0) {
         return;
     }
-    FXText::removeText(0, getLength()-1, true);
+    FXText::removeText(0, getLength() - 1, true);
     if (isEnabled()) {
         layout();
         update();

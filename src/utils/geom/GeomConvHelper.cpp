@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GeomConvHelper.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2003
 /// @version $Id$
 ///
 // Some helping functions for geometry parsing
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -45,8 +48,8 @@
 // ===========================================================================
 PositionVector
 GeomConvHelper::parseShapeReporting(const std::string& shpdef, const std::string& objecttype,
-                                    const char* objectid, bool& ok, bool allowEmpty, bool report) throw() {
-    if (shpdef=="") {
+                                    const char* objectid, bool& ok, bool allowEmpty, bool report) {
+    if (shpdef == "") {
         if (!allowEmpty) {
             emitError(report, "Shape", objecttype, objectid, "the shape is empty");
             ok = false;
@@ -57,7 +60,7 @@ GeomConvHelper::parseShapeReporting(const std::string& shpdef, const std::string
     PositionVector shape;
     while (st.hasNext()) {
         StringTokenizer pos(st.next(), ",");
-        if (pos.size()!=2 && pos.size()!=3) {
+        if (pos.size() != 2 && pos.size() != 3) {
             emitError(report, "Shape", objecttype, objectid, "the position is neither x,y nor x,y,z");
             ok = false;
             return PositionVector();
@@ -65,7 +68,7 @@ GeomConvHelper::parseShapeReporting(const std::string& shpdef, const std::string
         try {
             SUMOReal x = TplConvert<char>::_2SUMOReal(pos.next().c_str());
             SUMOReal y = TplConvert<char>::_2SUMOReal(pos.next().c_str());
-            if (pos.size()==2) {
+            if (pos.size() == 2) {
                 shape.push_back(Position(x, y));
             } else {
                 SUMOReal z = TplConvert<char>::_2SUMOReal(pos.next().c_str());
@@ -87,9 +90,9 @@ GeomConvHelper::parseShapeReporting(const std::string& shpdef, const std::string
 
 Boundary
 GeomConvHelper::parseBoundaryReporting(const std::string& def, const std::string& objecttype,
-                                       const char* objectid, bool& ok, bool report) throw() {
+                                       const char* objectid, bool& ok, bool report) {
     StringTokenizer st(def, ",");
-    if (st.size()!=4) {
+    if (st.size() != 4) {
         emitError(report, "Bounding box", objecttype, objectid, "mismatching entry number");
         ok = false;
         return Boundary();
@@ -112,17 +115,17 @@ GeomConvHelper::parseBoundaryReporting(const std::string& def, const std::string
 
 void
 GeomConvHelper::emitError(bool report, const std::string& what, const std::string& objecttype,
-                          const char* objectid, const std::string& desc) throw() {
+                          const char* objectid, const std::string& desc) {
     if (!report) {
         return;
     }
     std::ostringstream oss;
     oss << what << " of ";
-    if (objectid==0) {
+    if (objectid == 0) {
         oss << "a(n) ";
     }
     oss << objecttype;
-    if (objectid!=0) {
+    if (objectid != 0) {
         oss << " '" << objectid << "'";
     }
     oss << " is broken: " << desc << ".";

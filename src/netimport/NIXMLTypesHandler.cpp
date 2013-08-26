@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    NIXMLTypesHandler.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Importer for edge type information stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -55,13 +59,13 @@ NIXMLTypesHandler::NIXMLTypesHandler(NBTypeCont& tc)
       myTypeCont(tc), myHaveWarnedAboutDeprecatedNoLanes(false) {}
 
 
-NIXMLTypesHandler::~NIXMLTypesHandler() throw() {}
+NIXMLTypesHandler::~NIXMLTypesHandler() {}
 
 
 void
 NIXMLTypesHandler::myStartElement(int element,
-                                  const SUMOSAXAttributes& attrs) throw(ProcessError) {
-    if (element!=SUMO_TAG_TYPE) {
+                                  const SUMOSAXAttributes& attrs) {
+    if (element != SUMO_TAG_TYPE) {
         return;
     }
     bool ok = true;
@@ -82,7 +86,7 @@ NIXMLTypesHandler::myStartElement(int element,
     std::string disallowS = attrs.getOptStringReporting(SUMO_ATTR_DISALLOW, id.c_str(), ok, "");
     bool oneway = attrs.getOptBoolReporting(SUMO_ATTR_ONEWAY, id.c_str(), ok, false);
     bool discard = attrs.getOptBoolReporting(SUMO_ATTR_DISCARD, id.c_str(), ok, false);
-    SUMOReal width = attrs.getOptSUMORealReporting(SUMO_ATTR_WIDTH, id.c_str(), ok, (SUMOReal) -1);
+    SUMOReal width = attrs.getOptSUMORealReporting(SUMO_ATTR_WIDTH, id.c_str(), ok, (SUMOReal) - 1);
     if (!ok) {
         return;
     }

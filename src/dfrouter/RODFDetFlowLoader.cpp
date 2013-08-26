@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    RODFDetFlowLoader.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Eric Nicolay
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // A loader for detector flows
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -49,14 +53,14 @@
 RODFDetFlowLoader::RODFDetFlowLoader(const RODFDetectorCon& dets,
                                      RODFDetectorFlows& into,
                                      SUMOTime startTime, SUMOTime endTime,
-                                     SUMOTime timeOffset, SUMOTime timeScale) throw()
+                                     SUMOTime timeOffset, SUMOTime timeScale)
     : myStorage(into), myTimeOffset(timeOffset), myTimeScale(timeScale),
       myStartTime(startTime), myEndTime(endTime), myDetectorContainer(dets),
       myHaveWarnedAboutOverridingBoundaries(false), myHaveWarnedAboutPartialDefs(false) {}
 
 
 
-RODFDetFlowLoader::~RODFDetFlowLoader() throw() {}
+RODFDetFlowLoader::~RODFDetFlowLoader() {}
 
 
 void
@@ -67,7 +71,7 @@ RODFDetFlowLoader::read(const std::string& file) throw(IOError, ProcessError) {
     // parse values
     while (lr.hasMore()) {
         std::string line = lr.readLine();
-        if (line.find(';')==std::string::npos) {
+        if (line.find(';') == std::string::npos) {
             continue;
         }
         myLineHandler.parseLine(line);
@@ -77,7 +81,7 @@ RODFDetFlowLoader::read(const std::string& file) throw(IOError, ProcessError) {
                 continue;
             }
             const SUMOTime time = TplConvert<char>::_2int((myLineHandler.get("time").c_str())) * myTimeScale - myTimeOffset;
-            if (time<myStartTime||time>myEndTime) {
+            if (time < myStartTime || time > myEndTime) {
                 if (!myHaveWarnedAboutOverridingBoundaries) {
                     myHaveWarnedAboutOverridingBoundaries = true;
                     WRITE_WARNING("At least one value lies beyond given time boundaries.");
@@ -96,10 +100,10 @@ RODFDetFlowLoader::read(const std::string& file) throw(IOError, ProcessError) {
             if (myLineHandler.know("vLKW")) {
                 fd.vLKW = TplConvert<char>::_2SUMOReal(myLineHandler.get("vlkw").c_str());
             }
-            if (fd.qLKW<0) {
+            if (fd.qLKW < 0) {
                 fd.qLKW = 0;
             }
-            if (fd.qPKW<0) {
+            if (fd.qPKW < 0) {
                 fd.qPKW = 0;
             }
             myStorage.addFlow(detName, time, fd);

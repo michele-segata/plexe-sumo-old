@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GUIAppEnum.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Andreas Gaubatz
 /// @date    Mon, 08.03.2004
 /// @version $Id$
 ///
 // Message and object IDs used by the FOX-version of the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -40,7 +44,7 @@
  */
 enum {
     /// Show about - dialog
-    ID_ABOUT=FXMainWindow::ID_LAST,
+    ID_ABOUT = FXMainWindow::ID_LAST,
 
     /// @name application specific
     //@{
@@ -373,6 +377,7 @@ enum {
     /// misc messages
     MID_GNE_NEW_NETWORK,
     MID_GNE_OPEN_FOREIGN,
+    MID_GNE_VIS_HEIGHT,
     // MID_GNE_WIZARD,
     /** save network*/
     MID_GNE_SAVE_NETWORK,

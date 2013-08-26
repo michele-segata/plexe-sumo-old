@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 @file    xmlnodes_applyOffset.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
 @date    2009-08-01
 @version $Id$
 
@@ -9,7 +9,8 @@ Applies a given offset to edges given in an xml-node-file.
 The results are written into <XMLNODES>.mod.xml.
 Call: xmlnodes_applyOffset.py <XMLNODES> <X-OFFSET> <Y-OFFSET>
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

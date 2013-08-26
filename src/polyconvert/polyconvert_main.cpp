@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    polyconvert_main.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Christoph Sommer
+/// @author  Michael Behrisch
 /// @date    Mon, 05 Dec 2005
 /// @version $Id$
 ///
 // Main for POLYCONVERT
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,7 +68,7 @@
 // method definitions
 // ===========================================================================
 void
-fillOptions() throw() {
+fillOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
     oc.addCallExample("-c <CONFIGURATION>");
 
@@ -243,10 +247,10 @@ main(int argc, char** argv) {
             // !!! no proper error handling
             Boundary offsets = GeomConvHelper::parseBoundaryReporting(oc.getString("prune.in-net.offsets"), "--prune.on-net.offsets", 0, ok);
             pruningBoundary = Boundary(
-                                  pruningBoundary.xmin()+offsets.xmin(),
-                                  pruningBoundary.ymin()+offsets.ymin(),
-                                  pruningBoundary.xmax()+offsets.xmax(),
-                                  pruningBoundary.ymax()+offsets.ymax());
+                                  pruningBoundary.xmin() + offsets.xmin(),
+                                  pruningBoundary.ymin() + offsets.ymin(),
+                                  pruningBoundary.xmax() + offsets.xmax(),
+                                  pruningBoundary.ymax() + offsets.ymax());
             prune = true;
         }
         if (oc.isSet("prune.boundary")) {
@@ -282,7 +286,7 @@ main(int argc, char** argv) {
             throw ProcessError();
         }
     } catch (ProcessError& e) {
-        if (std::string(e.what())!=std::string("Process Error") && std::string(e.what())!=std::string("")) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
@@ -295,7 +299,7 @@ main(int argc, char** argv) {
     }
     SystemFrame::close();
     // report about ending
-    if (ret==0) {
+    if (ret == 0) {
         std::cout << "Success." << std::endl;
     }
     return ret;

@@ -7,12 +7,13 @@
 // Importer for traffic lights stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,11 +59,11 @@ public:
     /** @brief Constructor
      * @param[in] ec The traffic light container into which to load logics
      */
-    NIXMLTrafficLightsHandler(NBTrafficLightLogicCont& tlCont, NBEdgeCont& ec) throw();
+    NIXMLTrafficLightsHandler(NBTrafficLightLogicCont& tlCont, NBEdgeCont& ec) ;
 
 
     /// @brief Destructor
-    ~NIXMLTrafficLightsHandler() throw();
+    ~NIXMLTrafficLightsHandler() ;
 
 
 protected:
@@ -76,7 +77,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myStartElement
      */
-    void myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError);
+    void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
 
 
     /** @brief Called when a closing tag occurs
@@ -85,7 +86,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int element) throw(ProcessError);
+    void myEndElement(int element) ;
     //@}
 
 

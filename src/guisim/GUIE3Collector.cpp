@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIE3Collector.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Jan 2004
 /// @version $Id$
 ///
 // The gui-version of a MSE3Collector
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,18 +55,18 @@
 /* -------------------------------------------------------------------------
  * GUIE3Collector::MyWrapper-methods
  * ----------------------------------------------------------------------- */
-GUIE3Collector::MyWrapper::MyWrapper(GUIE3Collector& detector) throw()
+GUIE3Collector::MyWrapper::MyWrapper(GUIE3Collector& detector)
     : GUIDetectorWrapper("E3 detector", detector.getID()),
       myDetector(detector) {
     const CrossSectionVector& entries = detector.getEntries();
     const CrossSectionVector& exits = detector.getExits();
     CrossSectionVectorConstIt i;
-    for (i=entries.begin(); i!=entries.end(); ++i) {
+    for (i = entries.begin(); i != entries.end(); ++i) {
         SingleCrossingDefinition def = buildDefinition(*i);
         myBoundary.add(def.myFGPosition);
         myEntryDefinitions.push_back(def);
     }
-    for (i=exits.begin(); i!=exits.end(); ++i) {
+    for (i = exits.begin(); i != exits.end(); ++i) {
         SingleCrossingDefinition def = buildDefinition(*i);
         myBoundary.add(def.myFGPosition);
         myExitDefinitions.push_back(def);
@@ -71,7 +74,7 @@ GUIE3Collector::MyWrapper::MyWrapper(GUIE3Collector& detector) throw()
 }
 
 
-GUIE3Collector::MyWrapper::~MyWrapper() throw() {}
+GUIE3Collector::MyWrapper::~MyWrapper() {}
 
 
 GUIE3Collector::MyWrapper::SingleCrossingDefinition
@@ -89,7 +92,7 @@ GUIE3Collector::MyWrapper::buildDefinition(const MSCrossSection& section) {
 
 GUIParameterTableWindow*
 GUIE3Collector::MyWrapper::getParameterWindow(GUIMainWindow& app,
-        GUISUMOAbstractView&) throw() {
+        GUISUMOAbstractView&) {
     GUIParameterTableWindow* ret =
         new GUIParameterTableWindow(app, *this, 3);
     // add items
@@ -107,18 +110,18 @@ GUIE3Collector::MyWrapper::getParameterWindow(GUIMainWindow& app,
 
 
 void
-GUIE3Collector::MyWrapper::drawGL(const GUIVisualizationSettings& s) const throw() {
+GUIE3Collector::MyWrapper::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     glPushMatrix();
     glTranslated(0, 0, getType());
     typedef std::vector<SingleCrossingDefinition> CrossingDefinitions;
     CrossingDefinitions::const_iterator i;
     glColor3d(0, .8, 0);
-    for (i=myEntryDefinitions.begin(); i!=myEntryDefinitions.end(); ++i) {
+    for (i = myEntryDefinitions.begin(); i != myEntryDefinitions.end(); ++i) {
         drawSingleCrossing((*i).myFGPosition, (*i).myFGRotation, s.addExaggeration);
     }
     glColor3d(.8, 0, 0);
-    for (i=myExitDefinitions.begin(); i!=myExitDefinitions.end(); ++i) {
+    for (i = myExitDefinitions.begin(); i != myExitDefinitions.end(); ++i) {
         drawSingleCrossing((*i).myFGPosition, (*i).myFGRotation, s.addExaggeration);
     }
     glPopMatrix();
@@ -157,7 +160,7 @@ GUIE3Collector::MyWrapper::drawSingleCrossing(const Position& pos,
 
 
 Boundary
-GUIE3Collector::MyWrapper::getCenteringBoundary() const throw() {
+GUIE3Collector::MyWrapper::getCenteringBoundary() const {
     Boundary b(myBoundary);
     b.grow(20);
     return b;
@@ -176,11 +179,11 @@ GUIE3Collector::MyWrapper::getDetector() {
 GUIE3Collector::GUIE3Collector(const std::string& id,
                                const CrossSectionVector& entries,  const CrossSectionVector& exits,
                                SUMOReal haltingSpeedThreshold,
-                               SUMOTime haltingTimeThreshold) throw()
+                               SUMOTime haltingTimeThreshold)
     : MSE3Collector(id, entries,  exits, haltingSpeedThreshold, haltingTimeThreshold) {}
 
 
-GUIE3Collector::~GUIE3Collector() throw() {}
+GUIE3Collector::~GUIE3Collector() {}
 
 
 const CrossSectionVector&

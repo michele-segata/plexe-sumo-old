@@ -1,6 +1,8 @@
 /****************************************************************************/
 /// @file    Helper_ConvexHull.cpp
 /// @author  unknown_author
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    2004-11-23
 /// @version $Id$
 ///
@@ -12,12 +14,13 @@
 // Users of this code must verify correctness for their application.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -47,59 +50,59 @@
 //    Position with coordinates {SUMOReal x, y;}
 PositionVector
 simpleHull_2D(const PositionVector& V) {
-    if (V.size()<3) {
+    if (V.size() < 3) {
         throw ProcessError();
     }
     // initialize a deque D[] from bottom to top so that the
     // 1st three vertices of V[] are a counterclockwise triangle
     int n = (int) V.size();
-    std::vector<Position> D(2*n+1);
-    int bot = n-2, top = bot+3;   // initial bottom and top deque indices
+    std::vector<Position> D(2 * n + 1);
+    int bot = n - 2, top = bot + 3; // initial bottom and top deque indices
     D[bot] = D[top] = V[2];       // 3rd vertex is at both bot and top
     if (isLeft(V[0], V[1], V[2]) > 0) {
-        D[bot+1] = V[0];
-        D[bot+2] = V[1];          // ccw vertices are: 2,0,1,2
+        D[bot + 1] = V[0];
+        D[bot + 2] = V[1];        // ccw vertices are: 2,0,1,2
     } else {
-        D[bot+1] = V[1];
-        D[bot+2] = V[0];          // ccw vertices are: 2,1,0,2
+        D[bot + 1] = V[1];
+        D[bot + 2] = V[0];        // ccw vertices are: 2,1,0,2
     }
 
     // compute the hull on the deque D[]
-    for (int i=3; i < n; i++) {   // process the rest of vertices
+    for (int i = 3; i < n; i++) { // process the rest of vertices
         // test if next vertex is inside the deque hull
-        if (bot>=(int) D.size()||top-1>=(int) D.size()||i>=(int) V.size()) {
+        if (bot >= (int) D.size() || top - 1 >= (int) D.size() || i >= (int) V.size()) {
             throw ProcessError();
         }
-        if ((isLeft(D[bot], D[bot+1], V[i]) > 0) &&
-                (isLeft(D[top-1], D[top], V[i]) > 0)) {
+        if ((isLeft(D[bot], D[bot + 1], V[i]) > 0) &&
+                (isLeft(D[top - 1], D[top], V[i]) > 0)) {
             continue;    // skip an interior vertex
         }
 
         // incrementally add an exterior vertex to the deque hull
         // get the rightmost tangent at the deque bot
-        while (isLeft(D[bot], D[bot+1], V[i]) <= 0) {
+        while (isLeft(D[bot], D[bot + 1], V[i]) <= 0) {
             ++bot;                // remove bot of deque
-            if (bot>=(int) D.size()) {
+            if (bot >= (int) D.size()) {
                 throw ProcessError();
             }
         }
-        if (bot==0) {
+        if (bot == 0) {
             throw ProcessError();
         }
         D[--bot] = V[i];          // insert V[i] at bot of deque
 
-        if (top==0||top>=(int) D.size()) {
+        if (top == 0 || top >= (int) D.size()) {
             throw ProcessError();
         }
         // get the leftmost tangent at the deque top
-        while (isLeft(D[top-1], D[top], V[i]) <= 0) {
+        while (isLeft(D[top - 1], D[top], V[i]) <= 0) {
             --top;                // pop top of deque
-            if (top==0||top>=(int) D.size()) {
+            if (top == 0 || top >= (int) D.size()) {
                 throw ProcessError();
             }
         }
 
-        if (top+1>=(int) D.size()) {
+        if (top + 1 >= (int) D.size()) {
             throw ProcessError();
         }
         D[++top] = V[i];          // push V[i] onto top of deque
@@ -108,8 +111,8 @@ simpleHull_2D(const PositionVector& V) {
     // transcribe deque D[] to the output hull array H[]
     int h;        // hull vertex counter
     PositionVector H;
-    for (h=0; h <= (top-bot); h++) {
-        if (bot + h>=(int) D.size()) {
+    for (h = 0; h <= (top - bot); h++) {
+        if (bot + h >= (int) D.size()) {
             throw ProcessError();
         }
         H.push_back_noDoublePos(D[bot + h]);

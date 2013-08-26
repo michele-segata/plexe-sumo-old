@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GeoConvHelper.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    2006-08-01
 /// @version $Id$
 ///
 // static methods for processing the coordinates conversion for the current net
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -63,7 +66,7 @@ public:
     /** @brief Constructor
      */
     GeoConvHelper(const std::string& proj, const Position& offset,
-                  const Boundary& orig, const Boundary& conv, int shift=0, bool inverse=false, bool baseFound=false);
+                  const Boundary& orig, const Boundary& conv, int shift = 0, bool inverse = false, bool baseFound = false);
 
 
     /// @brief Destructor
@@ -77,39 +80,57 @@ public:
      */
     static void addProjectionOptions(OptionsCont& oc);
 
-    /// Initialises the default and the output instance using the given options
+    /// Initialises the processing and the final instance using the given options
     static bool init(OptionsCont& oc);
 
-    /// Initialises the default and the output instance using the given proj.4-definition and complete network parameter
+    /// Initialises the processing and the final instance using the given proj.4-definition and complete network parameter
     static void init(const std::string& proj,
                      const Position& offset,
                      const Boundary& orig,
                      const Boundary& conv);
 
-    /** @brief the coordinate transformation to use for input conversion
+    /** @brief the coordinate transformation to use for input conversion and processing
      * @note instance is modified during use: boundary may adapt to new coordinates
      */
-    static GeoConvHelper& getDefaultInstance() {
-        return myDefault;
+    static GeoConvHelper& getProcessing() {
+        return myProcessing;
     }
+
+
+    /** @brief compute the location attributes which will be used for output
+     * based on the loaded location data, the given options and the transformations applied during processing
+     */
+    static void computeFinal();
 
 
     /** @brief the coordinate transformation for writing the location element
+     * and for tracking the original coordinate system
      */
-    static const GeoConvHelper& getOutputInstance();
+    static const GeoConvHelper& getFinal() {
+        return myFinal;
+    }
+
 
     /** @brief sets the coordinate transformation loaded from a location element
      */
-    static void setLoaded(const GeoConvHelper& loaded) {
-        myLoaded = loaded;
-        myNumLoaded++;
-    }
+    static void setLoaded(const GeoConvHelper& loaded);
+
+
+    /** @brief resets loaded location elements
+     */
+    static void resetLoaded();
 
     /// Converts the given cartesian (shifted) position to its geo (lat/long) representation
-    void cartesian2geo(Position& cartesian);
+    void cartesian2geo(Position& cartesian) const;
+
+    /** Converts the given coordinate into a cartesian 
+     * and optionally update myConvBoundary
+     * @note: initializes UTM / DHDN projection on first use (select zone)
+     */
+    bool x2cartesian(Position& from, bool includeInBoundary = true);
 
     /// Converts the given coordinate into a cartesian using the previous initialisation
-    bool x2cartesian(Position& from, bool includeInBoundary=true);
+    bool x2cartesian_const(Position& from) const;
 
     /// Returns whether a transformation from geo to metric coordinates will be performed
     bool usingGeoProjection() const;
@@ -176,19 +197,14 @@ private:
     /// The boundary after conversion (x2cartesian)
     Boundary myConvBoundary;
 
-#ifdef HAVE_PROJ
-    /// initi projection based on the known type and a given position
-    void initProjection(double x, double y);
-#endif
-
-    /// @brief coordinate transformation to use for input conversion
-    static GeoConvHelper myDefault;
+    /// @brief coordinate transformation to use for input conversion and processing
+    static GeoConvHelper myProcessing;
 
     /// @brief coordinate transformation loaded from a location element
     static GeoConvHelper myLoaded;
 
-    /// @brief coordinate transformation to use for writing location element
-    static GeoConvHelper myOutput;
+    /// @brief coordinate transformation to use for writing the location element and for tracking the original coordinate system
+    static GeoConvHelper myFinal;
 
     /// @brief the numer of coordinate transformations loaded from location elements
     static int myNumLoaded;

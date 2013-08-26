@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUISelectedStorage.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Jun 2004
 /// @version $Id$
 ///
 // Storage for "selected" objects
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -101,12 +104,12 @@ GUISelectedStorage::~GUISelectedStorage() {}
 bool
 GUISelectedStorage::isSelected(GUIGlObjectType type, GUIGlID id) {
     switch (type) {
-    case GLO_NETWORK:
-        return false;
-    case GLO_ADDITIONAL:
-        return isSelected(GLO_TRIGGER, id) || isSelected(GLO_DETECTOR, id);
-    default:
-        return mySelections[type].isSelected(id);
+        case GLO_NETWORK:
+            return false;
+        case GLO_ADDITIONAL:
+            return isSelected(GLO_TRIGGER, id) || isSelected(GLO_DETECTOR, id);
+        default:
+            return mySelections[type].isSelected(id);
     }
 }
 
@@ -198,7 +201,7 @@ GUISelectedStorage::loadIDs(const std::string& filename, std::string& msgOut, GU
     while (strm.good()) {
         std::string line;
         strm >> line;
-        if (line.length()==0) {
+        if (line.length() == 0) {
             continue;
         }
 
@@ -261,9 +264,9 @@ GUISelectedStorage::remove2Update() {
 void
 GUISelectedStorage::save(const std::string& filename, const std::set<GUIGlID>& ids) {
     OutputDevice& dev = OutputDevice::getDevice(filename);
-    for (std::set<GUIGlID>::const_iterator i=ids.begin(); i!=ids.end(); ++i) {
+    for (std::set<GUIGlID>::const_iterator i = ids.begin(); i != ids.end(); ++i) {
         GUIGlObject* object = GUIGlObjectStorage::gIDStorage.getObjectBlocking(*i);
-        if (object!=0) {
+        if (object != 0) {
             std::string name = object->getFullName();
             dev << name << "\n";
             GUIGlObjectStorage::gIDStorage.unblockObject(*i);

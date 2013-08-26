@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimSingleTypeParser_Fahrzeugklassendefinition.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Wed, 18 Dec 2002
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,8 +67,8 @@ NIVissimSingleTypeParser_Fahrzeugklassendefinition::parse(std::istream& from) {
     from >> tag;
     std::string colorName = myRead(from);
     RGBColor color;
-    NIImporter_Vissim::ColorMap::iterator i=myColorMap.find(colorName);
-    if (i!=myColorMap.end()) {
+    NIImporter_Vissim::ColorMap::iterator i = myColorMap.find(colorName);
+    if (i != myColorMap.end()) {
         color = (*i).second;
     } else {
         int r, g, b;
@@ -80,7 +82,7 @@ NIVissimSingleTypeParser_Fahrzeugklassendefinition::parse(std::istream& from) {
     }
     // types
     from >> tag;
-    if (tag=="ANM_ID") {
+    if (tag == "ANM_ID") {
         readName(from);
         from >> tag;
     }
@@ -89,7 +91,7 @@ NIVissimSingleTypeParser_Fahrzeugklassendefinition::parse(std::istream& from) {
     do {
         types.push_back(TplConvert<char>::_2int(tag.c_str()));
         tag = readEndSecure(from);
-    } while (tag!="DATAEND");
+    } while (tag != "DATAEND");
     return NIVissimVehTypeClass::dictionary(id, name, color, types);
 }
 

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIInternalLane.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Thu, 04.09.2003
 /// @version $Id$
 ///
 // Lane within junctions, derived from the normal lane
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -53,11 +56,11 @@ GUIInternalLane::GUIInternalLane(const std::string& id,
                                  MSEdge* const edge, unsigned int numericalID,
                                  const PositionVector& shape, SUMOReal width,
                                  const SUMOVehicleClasses& allowed,
-                                 const SUMOVehicleClasses& disallowed) throw()
+                                 const SUMOVehicleClasses& disallowed)
     : MSInternalLane(id, maxSpeed, length, edge, numericalID, shape, width, allowed, disallowed) {}
 
 
-GUIInternalLane::~GUIInternalLane() throw() {
+GUIInternalLane::~GUIInternalLane() {
     // just to quit cleanly on a failure
     if (myLock.locked()) {
         myLock.unlock();
@@ -69,7 +72,7 @@ GUIInternalLane::~GUIInternalLane() throw() {
 void
 GUIInternalLane::incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed,
                                     const MSLane::VehCont::iterator& at,
-                                    MSMoveReminder::Notification notification) throw(ProcessError) {
+                                    MSMoveReminder::Notification notification) {
     myLock.lock();
     try {
         MSInternalLane::incorporateVehicle(veh, pos, speed, at, notification);
@@ -83,14 +86,14 @@ GUIInternalLane::incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed
 
 // ------ Access to vehicles ------
 const MSLane::VehCont&
-GUIInternalLane::getVehiclesSecure() const throw() {
+GUIInternalLane::getVehiclesSecure() const {
     myLock.lock();
     return myVehicles;
 }
 
 
 void
-GUIInternalLane::releaseVehicles() const throw() {
+GUIInternalLane::releaseVehicles() const {
     myLock.unlock();
 }
 

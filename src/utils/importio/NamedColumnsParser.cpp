@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NamedColumnsParser.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Fri, 19 Jul 2002
 /// @version $Id$
 ///
 // A parser to retrieve information from a table with known column
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -41,26 +43,26 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NamedColumnsParser::NamedColumnsParser() throw() {}
+NamedColumnsParser::NamedColumnsParser() {}
 
 
 NamedColumnsParser::NamedColumnsParser(const std::string& def,
                                        const std::string& defDelim,
                                        const std::string& lineDelim,
-                                       bool prune, bool ignoreCase) throw()
+                                       bool prune, bool ignoreCase)
     : myLineDelimiter(lineDelim), myAmCaseInsensitive(ignoreCase) {
     reinitMap(def, defDelim, prune);
 }
 
 
-NamedColumnsParser::~NamedColumnsParser() throw() {}
+NamedColumnsParser::~NamedColumnsParser() {}
 
 
 void
 NamedColumnsParser::reinit(const std::string& def,
                            const std::string& defDelim,
                            const std::string& lineDelim,
-                           bool prune, bool ignoreCase) throw() {
+                           bool prune, bool ignoreCase) {
     myAmCaseInsensitive = ignoreCase;
     reinitMap(def, defDelim, prune);
     myLineDelimiter = lineDelim;
@@ -68,7 +70,7 @@ NamedColumnsParser::reinit(const std::string& def,
 
 
 void
-NamedColumnsParser::parseLine(const std::string& line) throw() {
+NamedColumnsParser::parseLine(const std::string& line) {
     myLineParser = StringTokenizer(line, myLineDelimiter);
 }
 
@@ -76,16 +78,16 @@ NamedColumnsParser::parseLine(const std::string& line) throw() {
 std::string
 NamedColumnsParser::get(const std::string& name, bool prune) const throw(UnknownElement, OutOfBoundsException) {
     PosMap::const_iterator i = myDefinitionsMap.find(name);
-    if (i==myDefinitionsMap.end()) {
+    if (i == myDefinitionsMap.end()) {
         if (myAmCaseInsensitive) {
             i = myDefinitionsMap.find(StringUtils::to_lower_case(name));
         }
-        if (i==myDefinitionsMap.end()) {
+        if (i == myDefinitionsMap.end()) {
             throw UnknownElement(name);
         }
     }
     size_t pos = (*i).second;
-    if (myLineParser.size()<=pos) {
+    if (myLineParser.size() <= pos) {
         throw OutOfBoundsException();
     }
     std::string ret = myLineParser.get(pos);
@@ -95,23 +97,23 @@ NamedColumnsParser::get(const std::string& name, bool prune) const throw(Unknown
 
 
 bool
-NamedColumnsParser::know(const std::string& name) const throw() {
+NamedColumnsParser::know(const std::string& name) const {
     PosMap::const_iterator i = myDefinitionsMap.find(name);
-    if (i==myDefinitionsMap.end()) {
+    if (i == myDefinitionsMap.end()) {
         if (myAmCaseInsensitive) {
             i = myDefinitionsMap.find(StringUtils::to_lower_case(name));
         }
     }
-    if (i==myDefinitionsMap.end()) {
+    if (i == myDefinitionsMap.end()) {
         return false;
     }
     size_t pos = (*i).second;
-    return myLineParser.size()>pos;
+    return myLineParser.size() > pos;
 }
 
 
 bool
-NamedColumnsParser::hasFullDefinition() const throw() {
+NamedColumnsParser::hasFullDefinition() const {
     return myDefinitionsMap.size() == myLineParser.size();
 }
 
@@ -119,7 +121,7 @@ NamedColumnsParser::hasFullDefinition() const throw() {
 void
 NamedColumnsParser::reinitMap(std::string s,
                               const std::string& delim,
-                              bool prune) throw() {
+                              bool prune) {
     if (myAmCaseInsensitive) {
         s = StringUtils::to_lower_case(s);
     }
@@ -135,17 +137,17 @@ NamedColumnsParser::reinitMap(std::string s,
 
 
 void
-NamedColumnsParser::checkPrune(std::string& str, bool prune) const throw() {
+NamedColumnsParser::checkPrune(std::string& str, bool prune) const {
     if (!prune) {
         return;
     }
     size_t idx = str.find_first_not_of(" ");
-    if (idx!=std::string::npos) {
+    if (idx != std::string::npos) {
         str = str.substr(idx);
     }
     idx = str.find_last_not_of(" ");
-    if (idx!=std::string::npos&&idx!=str.length()-1) {
-        str = str.substr(0, idx+1);
+    if (idx != std::string::npos && idx != str.length() - 1) {
+        str = str.substr(0, idx + 1);
     }
 }
 

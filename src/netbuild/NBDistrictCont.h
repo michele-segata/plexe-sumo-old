@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NBDistrictCont.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A container for districts
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,11 +60,11 @@ class OutputDevice;
 class NBDistrictCont {
 public:
     /// @brief Constructor
-    NBDistrictCont() throw();
+    NBDistrictCont() ;
 
 
     /// @brief Destructor
-    ~NBDistrictCont() throw();
+    ~NBDistrictCont() ;
 
 
     /** @brief Adds a district to the dictionary
@@ -70,7 +72,7 @@ public:
      * @param[in] district The district to add
      * @return false if the districts already was in the dictionary
      */
-    bool insert(NBDistrict* const district) throw();
+    bool insert(NBDistrict* const district) ;
 
 
     /** @brief Returns the districts with the given id
@@ -78,7 +80,7 @@ public:
      * @param[in] id The id of the district to retrieve
      * @return The district with the given id if there was one having it, 0 otherwise
      */
-    NBDistrict* retrieve(const std::string& id) const throw();
+    NBDistrict* retrieve(const std::string& id) const ;
 
 
     /** @brief Returns the pointer to the begin of the stored districts
@@ -98,7 +100,7 @@ public:
 
 
     /** @brief Returns the number of districts inside the container */
-    size_t size() const throw();
+    size_t size() const ;
 
 
     /** @brief Adds a source to the named district
@@ -114,7 +116,7 @@ public:
      * @return Whether the source could be added (the district exists and the suorce was not added to it before)
      */
     bool addSource(const std::string& dist, NBEdge* const source,
-                   SUMOReal weight) throw();
+                   SUMOReal weight) ;
 
 
     /** @brief Adds a sink to the named district
@@ -130,7 +132,7 @@ public:
      * @return Whether the source could be added (the district exists and the suorce was not added to it before)
      */
     bool addSink(const std::string& dist, NBEdge* const destination,
-                 SUMOReal weight) throw();
+                 SUMOReal weight) ;
 
 
     /** @brief Removes the given edge from the lists of sources and sinks in all stored districts
@@ -141,7 +143,7 @@ public:
      * @see NBDistrict::removeFromSinksAndSources
      * @param[in] e The edge to remove from sinks/sources
      */
-    void removeFromSinksAndSources(NBEdge* const e) throw();
+    void removeFromSinksAndSources(NBEdge* const e) ;
 
 
 private:

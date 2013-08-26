@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSJunction.h
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Wed, 12 Dez 2001
 /// @version $Id$
 ///
 // The base class for an intersection
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -60,11 +64,11 @@ public:
      * @param[in] shape The shape of the junction
      */
     MSJunction(const std::string& id, const Position& position,
-               const PositionVector& shape) throw();
+               const PositionVector& shape) ;
 
     /** performs some initialisation after the loading
         (e.g., link map computation) */
-    virtual void postloadInit() throw(ProcessError);
+    virtual void postloadInit() ;
 
 
     /** returns the junction's position */
@@ -76,15 +80,15 @@ public:
     /** @brief Returns this junction's shape
      * @return The shape of this junction
      */
-    const PositionVector& getShape() const throw() {
+    const PositionVector& getShape() const {
         return myShape;
     }
 
-    virtual const std::vector<MSLink*> &getFoeLinks(const MSLink* const /*srcLink*/) const throw() {
+    virtual const std::vector<MSLink*> &getFoeLinks(const MSLink* const /*srcLink*/) const {
         return myEmptyLinks;
     }
 
-    virtual const std::vector<MSLane*> &getFoeInternalLanes(const MSLink* const /*srcLink*/) const throw() {
+    virtual const std::vector<MSLane*> &getFoeInternalLanes(const MSLink* const /*srcLink*/) const {
         return myEmptyLanes;
     }
 

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIGlChildWindow.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,23 +51,23 @@ class GUIGlChildWindow : public FXMDIChild {
 public:
     GUIGlChildWindow(FXMDIClient* p, GUIMainWindow* parentWindow,
                      FXMDIMenu* mdimenu, const FXString& name,
-                     FXIcon* ic=NULL,FXuint opts=0,FXint x=0,FXint y=0,FXint w=0,FXint h=0);
+                     FXIcon* ic = NULL, FXuint opts = 0, FXint x = 0, FXint y = 0, FXint w = 0, FXint h = 0);
 
     virtual ~GUIGlChildWindow();
 
     virtual FXGLCanvas* getBuildGLCanvas() const;
     virtual void create();
 
-    GUISUMOAbstractView* getView() const throw() {
+    GUISUMOAbstractView* getView() const {
         return myView;
     }
 
-    long onCmdRecenterView(FXObject*,FXSelector,void*);
-    long onCmdEditViewport(FXObject*,FXSelector,void*);
-    long onCmdEditViewScheme(FXObject*,FXSelector,void*);
-    long onCmdShowToolTips(FXObject* sender,FXSelector,void*);
-    long onCmdZoomStyle(FXObject* sender,FXSelector,void*);
-    long onCmdChangeColorScheme(FXObject*,FXSelector sel,void*);
+    long onCmdRecenterView(FXObject*, FXSelector, void*);
+    long onCmdEditViewport(FXObject*, FXSelector, void*);
+    long onCmdEditViewScheme(FXObject*, FXSelector, void*);
+    long onCmdShowToolTips(FXObject* sender, FXSelector, void*);
+    long onCmdZoomStyle(FXObject* sender, FXSelector, void*);
+    long onCmdChangeColorScheme(FXObject*, FXSelector sel, void*);
 
     virtual void buildNavigationToolBar();
     virtual void buildColoringToolBar();
@@ -84,7 +87,7 @@ public:
     /** @brief Returns the main window
      * @return This view's parent
      */
-    GUIMainWindow* getParent() throw() {
+    GUIMainWindow* getParent() {
         return myParent;
     }
 

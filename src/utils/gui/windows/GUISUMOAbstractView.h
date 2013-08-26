@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GUISUMOAbstractView.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Andreas Gaubatz
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The base class for a view
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -88,8 +92,9 @@ public:
      * @param[in] id The id of the artifact to center to
      * @param[in] applyZoom Whether to zoom in
      * @param[in] zoomDist The distance in m to use for the zoom, values < 0 means: use the centeringBoundary
+     * @note caller is responsible for calling update
      */
-    void centerTo(GUIGlID id, bool applyZoom, SUMOReal zoomDist=20);
+    void centerTo(GUIGlID id, bool applyZoom, SUMOReal zoomDist = 20);
 
     /// centers to the chosen artifact
     void centerTo(const Boundary& bound);
@@ -121,18 +126,18 @@ public:
 
     Boundary getVisibleBoundary() const;
 
-    long onConfigure(FXObject*,FXSelector,void*);
-    long onPaint(FXObject*,FXSelector,void*);
-    virtual long onLeftBtnPress(FXObject*,FXSelector,void*);
-    virtual long onLeftBtnRelease(FXObject*,FXSelector,void*);
-    virtual long onRightBtnPress(FXObject*,FXSelector,void*);
-    virtual long onRightBtnRelease(FXObject*,FXSelector,void*);
-    virtual long onMouseWheel(FXObject*,FXSelector,void*);
-    virtual long onMouseMove(FXObject*,FXSelector,void*);
-    virtual long onMouseLeft(FXObject*,FXSelector,void*);
+    long onConfigure(FXObject*, FXSelector, void*);
+    long onPaint(FXObject*, FXSelector, void*);
+    virtual long onLeftBtnPress(FXObject*, FXSelector, void*);
+    virtual long onLeftBtnRelease(FXObject*, FXSelector, void*);
+    virtual long onRightBtnPress(FXObject*, FXSelector, void*);
+    virtual long onRightBtnRelease(FXObject*, FXSelector, void*);
+    virtual long onMouseWheel(FXObject*, FXSelector, void*);
+    virtual long onMouseMove(FXObject*, FXSelector, void*);
+    virtual long onMouseLeft(FXObject*, FXSelector, void*);
 
-    long onKeyPress(FXObject* o,FXSelector sel,void* data);
-    long onKeyRelease(FXObject* o,FXSelector sel,void* data);
+    long onKeyPress(FXObject* o, FXSelector sel, void* data);
+    long onKeyRelease(FXObject* o, FXSelector sel, void* data);
 
 
     virtual void openObjectDialog();
@@ -328,7 +333,7 @@ protected:
     // the canvas. If fixRatio is true, this boundary will be enlarged to
     // prevent anisotropic stretching. (this should be set to false when doing
     // selections)
-    void applyGLTransform(bool fixRatio=true);
+    void applyGLTransform(bool fixRatio = true);
 
 protected:
     /// @brief The application

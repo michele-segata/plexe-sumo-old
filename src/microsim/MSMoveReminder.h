@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSMoveReminder.h
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    2003-05-21
 /// @version $Id$
 ///
 // Something on a lane to be noticed about vehicle movement
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -68,19 +72,19 @@ public:
      * @param[in] lane Lane on which the reminder will work.
      * @param[in] doAdd whether to add the reminder to the lane
      */
-    MSMoveReminder(MSLane* const lane=0, const bool doAdd=true) throw();
+    MSMoveReminder(MSLane* const lane = 0, const bool doAdd = true) ;
 
 
     /** @brief Destructor
      */
-    virtual ~MSMoveReminder() throw() {}
+    virtual ~MSMoveReminder() {}
 
 
     /** @brief Returns the lane the reminder works on.
      *
      * @return The lane the reminder works on.
      */
-    const MSLane* getLane() const throw() {
+    const MSLane* getLane() const {
         return myLane;
     }
 
@@ -121,7 +125,7 @@ public:
      * @return True if vehicle enters the reminder.
      * @see Notification
      */
-    virtual bool notifyEnter(SUMOVehicle& veh, Notification reason) throw() {
+    virtual bool notifyEnter(SUMOVehicle& veh, Notification reason) {
         UNUSED_PARAMETER(reason);
         UNUSED_PARAMETER(&veh);
         return true;
@@ -144,7 +148,7 @@ public:
     virtual bool notifyMove(SUMOVehicle& veh,
                             SUMOReal oldPos,
                             SUMOReal newPos,
-                            SUMOReal newSpeed) throw() {
+                            SUMOReal newSpeed) {
         UNUSED_PARAMETER(oldPos);
         UNUSED_PARAMETER(newPos);
         UNUSED_PARAMETER(newSpeed);
@@ -167,7 +171,7 @@ public:
      * @return True if the reminder wants to receive further info.
      */
     virtual bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos,
-                             Notification reason) throw() {
+                             Notification reason) {
         UNUSED_PARAMETER(reason);
         UNUSED_PARAMETER(lastPos);
         UNUSED_PARAMETER(&veh);
@@ -177,7 +181,7 @@ public:
 
 #ifdef HAVE_MESOSIM
     void updateDetector(SUMOVehicle& veh, SUMOReal entryPos, SUMOReal leavePos,
-                        SUMOTime entryTime, SUMOTime currentTime, SUMOTime leaveTime) throw();
+                        SUMOTime entryTime, SUMOTime currentTime, SUMOTime leaveTime) ;
 #endif
 
     /// @}
@@ -195,7 +199,7 @@ public:
      */
     virtual void notifyMoveInternal(SUMOVehicle& veh,
                                     SUMOReal timeOnLane,
-                                    SUMOReal speed) throw() {
+                                    SUMOReal speed) {
         UNUSED_PARAMETER(speed);
         UNUSED_PARAMETER(timeOnLane);
         UNUSED_PARAMETER(&veh);

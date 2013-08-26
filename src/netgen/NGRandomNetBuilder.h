@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NGRandomNetBuilder.h
 /// @author  Markus Hartinger
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mar, 2003
 /// @version $Id$
 ///
 // Additional structures for building random nets
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -50,7 +53,7 @@ public:
      * @param[in] numNeighbours The number of neighbors this item shall describe
      * @param[in] ratio The probability of this number of neighbors
      */
-    void add(int numNeighbours, SUMOReal ratio) throw();
+    void add(int numNeighbours, SUMOReal ratio) ;
 
 
     /**
@@ -58,7 +61,7 @@ public:
      *
      * @return A random number of neighbors
      */
-    int num() throw();
+    int num() ;
 
 
 private:
@@ -87,7 +90,7 @@ public:
      * @todo check meanings of connectivity/numTries
      */
     NGRandomNetBuilder(NGNet& net, SUMOReal minAngle, SUMOReal minDistance, SUMOReal maxDistance, SUMOReal connectivity,
-                       int numTries, const TNeighbourDistribution& neighborDist) throw();
+                       int numTries, const TNeighbourDistribution& neighborDist) ;
 
 
 
@@ -96,7 +99,7 @@ public:
      * @param[in] numNodes Number of iterations (node insertions) to perform
      * @todo Describe the algorithm
      */
-    void createNet(int numNodes) throw();
+    void createNet(int numNodes) ;
 
 
 private:
@@ -104,7 +107,7 @@ private:
      *
      * @param[in] node The node to remove
      */
-    void removeOuterNode(NGNode* node) throw();
+    void removeOuterNode(NGNode* node) ;
 
 
     /** @brief Checks whether the angle of this node's connections are valid
@@ -114,7 +117,7 @@ private:
      * @param[in] node The node to check connections of
      * @return Whether the settings allow to connect both nodes
      */
-    bool checkAngles(NGNode* node) throw();
+    bool checkAngles(NGNode* node) ;
 
 
     /** @brief Checks whether connecting the given two nodes complies with the set restrictions
@@ -126,7 +129,7 @@ private:
      * @param[in] newNode The second node of the combination to check
      * @return Whether the settings allow to connect both nodes
      */
-    bool canConnect(NGNode* baseNode, NGNode* newNode) throw();
+    bool canConnect(NGNode* baseNode, NGNode* newNode) ;
 
 
     /** @brief Creates new random node
@@ -136,7 +139,7 @@ private:
      * @param[in] baseNode ?
      * @todo Describe better
      */
-    bool createNewNode(NGNode* baseNode) throw();
+    bool createNewNode(NGNode* baseNode) ;
 
 
     /** @brief finds possible connections between Node and OuterNodes complying with restrictions
@@ -144,7 +147,7 @@ private:
      * @param[in] node ?
      * @todo Describe better
      */
-    void findPossibleOuterNodes(NGNode* node) throw();
+    void findPossibleOuterNodes(NGNode* node) ;
 
 
 private:

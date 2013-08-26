@@ -1,12 +1,15 @@
 """
 @file    sumonet.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Laura Bieker
+@author  Michael Behrisch
 @date    2008-03-27
 @version $Id$
 
 Deprecated version of sumolib/net.py.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

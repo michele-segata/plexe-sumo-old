@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIParam_PopupMenu.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mai 2003
 /// @version $Id$
 ///
 // A popup-menu for dynamic patameter table entries
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -45,7 +47,7 @@
 // ===========================================================================
 // FOX callback mapping
 // ===========================================================================
-FXDEFMAP(GUIParam_PopupMenuInterface) GUIParam_PopupMenuInterfaceMap[]= {
+FXDEFMAP(GUIParam_PopupMenuInterface) GUIParam_PopupMenuInterfaceMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_OPENTRACKER, GUIParam_PopupMenuInterface::onCmdOpenTracker),
 };
 
@@ -58,19 +60,19 @@ FXIMPLEMENT(GUIParam_PopupMenuInterface, FXMenuPane, GUIParam_PopupMenuInterface
 // ===========================================================================
 GUIParam_PopupMenuInterface::GUIParam_PopupMenuInterface(GUIMainWindow& app,
         GUIParameterTableWindow& parentWindow, GUIGlObject& o, const std::string& varName,
-        ValueSource<SUMOReal> *src) throw()
+        ValueSource<SUMOReal> *src)
     : FXMenuPane(&parentWindow), myObject(&o), myParentWindow(&parentWindow),
       myApplication(&app), myVarName(varName), mySource(src) {
 }
 
 
-GUIParam_PopupMenuInterface::~GUIParam_PopupMenuInterface() throw() {
+GUIParam_PopupMenuInterface::~GUIParam_PopupMenuInterface() {
     delete mySource;
 }
 
 
 long
-GUIParam_PopupMenuInterface::onCmdOpenTracker(FXObject*,FXSelector,void*) {
+GUIParam_PopupMenuInterface::onCmdOpenTracker(FXObject*, FXSelector, void*) {
     std::string trackerName = myVarName + " from " + myObject->getFullName();
     GUIParameterTracker* tr = new GUIParameterTracker(*myApplication, trackerName);
     TrackerValueDesc* newTracked = new TrackerValueDesc(myVarName, RGBColor(0, 0, 0), myApplication->getCurrentSimTime());

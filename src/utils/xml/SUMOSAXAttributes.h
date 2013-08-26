@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    SUMOSAXAttributes.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Fri, 30 Mar 2007
 /// @version $Id$
 ///
 // Encapsulated SAX-Attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -51,11 +54,11 @@ public:
     /* @brief Constructor
      * @param[in] tagName The name of the parsed object type; used for error message generation
      */
-    SUMOSAXAttributes(const std::string& objectType) throw();
+    SUMOSAXAttributes(const std::string& objectType) ;
 
 
     /// @brief Destructor
-    virtual ~SUMOSAXAttributes() throw() { }
+    virtual ~SUMOSAXAttributes() { }
 
 
     /** @brief Tries to read given attribute assuming it is an int
@@ -72,7 +75,7 @@ public:
      * @return The read value if given and correct; -1 if an error occured
      */
     int getIntReporting(int attr, const char* objectid, bool& ok,
-                        bool report=true) const throw();
+                        bool report = true) const ;
 
 
     /** @brief Tries to read given attribute assuming it is an int
@@ -91,7 +94,7 @@ public:
      * @return The read value if given and correct; the default value if the attribute does not exist;  -1 if an error occured
      */
     int getOptIntReporting(int attr, const char* objectid, bool& ok,
-                           int defaultValue, bool report=true) const throw();
+                           int defaultValue, bool report = true) const ;
 
 
 
@@ -109,7 +112,7 @@ public:
      * @return The read value if given and correct; -1 if an error occured
      */
     SUMOReal getSUMORealReporting(int attr, const char* objectid, bool& ok,
-                                  bool report=true) const throw();
+                                  bool report = true) const ;
 
 
 
@@ -129,7 +132,7 @@ public:
      * @return The read value if given and correct; the default value if the attribute does not exist;  -1 if an error occured
      */
     SUMOReal getOptSUMORealReporting(int attr, const char* objectid, bool& ok,
-                                     SUMOReal defaultValue, bool report=true) const throw();
+                                     SUMOReal defaultValue, bool report = true) const ;
 
 
 
@@ -147,7 +150,7 @@ public:
      * @return The read value if given and correct; false if an error occured
      */
     bool getBoolReporting(int attr,  const char* objectid, bool& ok,
-                          bool report=true) const throw();
+                          bool report = true) const ;
 
 
 
@@ -167,7 +170,7 @@ public:
      * @return The read value if given and correct; the default value if the attribute does not exist; false if an error occured
      */
     bool getOptBoolReporting(int attr, const char* objectid, bool& ok,
-                             bool defaultValue, bool report=true) const throw();
+                             bool defaultValue, bool report = true) const ;
 
 
 
@@ -185,7 +188,7 @@ public:
      * @return The read value if given and not empty; "" if an error occured
      */
     std::string getStringReporting(int attr, const char* objectid, bool& ok,
-                                   bool report=true) const throw();
+                                   bool report = true) const ;
 
 
 
@@ -205,7 +208,7 @@ public:
      * @return The read value if given and not empty; the default value if the attribute does not exist; "" if an error occured
      */
     std::string getOptStringReporting(int attr, const char* objectid, bool& ok,
-                                      const std::string& defaultValue, bool report=true) const throw();
+                                      const std::string& defaultValue, bool report = true) const ;
 
 
 
@@ -226,7 +229,7 @@ public:
      * @return The read value if given and correct; -1 if an error occured
      */
     SUMOTime getSUMOTimeReporting(int attr, const char* objectid, bool& ok,
-                                  bool report=true) const throw();
+                                  bool report = true) const throw();
 
 
 
@@ -249,7 +252,7 @@ public:
      * @return The read value if given and correct; the default value if the attribute does not exist;  -1 if an error occured
      */
     SUMOTime getOptSUMOTimeReporting(int attr, const char* objectid, bool& ok,
-                                     SUMOTime defaultValue, bool report=true) const throw();
+                                     SUMOTime defaultValue, bool report = true) const ;
 
 
 
@@ -266,7 +269,7 @@ public:
      * @param[in] id The id of the attribute to search for
      * @return Whether the attribute is within the attributes
      */
-    virtual bool hasAttribute(int id) const throw() = 0;
+    virtual bool hasAttribute(int id) const = 0;
 
 
     /** @brief Returns the information whether the named attribute is within the current list
@@ -274,7 +277,7 @@ public:
      * @param[in] id The name of the attribute to search for
      * @return Whether the named attribute is within the attributes
      */
-    virtual bool hasAttribute(const std::string& id) const throw() = 0;
+    virtual bool hasAttribute(const std::string& id) const = 0;
 
 
     /**
@@ -445,7 +448,7 @@ public:
      * @return The attribute's value as a string, if it could be read and parsed
      */
     virtual std::string getStringSecure(const std::string& id,
-                                        const std::string& def) const throw() = 0;
+                                        const std::string& def) const = 0;
     //}
 
 
@@ -454,7 +457,7 @@ public:
      * @param[in] attr The id of the attribute to return the name of
      * @return The name of the described attribute
      */
-    virtual std::string getName(int attr) const throw() = 0;
+    virtual std::string getName(int attr) const = 0;
 
 
     /** @brief Splits the given string
@@ -465,7 +468,7 @@ public:
      * @param[in] def The string to split
      * @param[out] into The vector to fill
      */
-    static void parseStringVector(const std::string& def, std::vector<std::string> &into) throw();
+    static void parseStringVector(const std::string& def, std::vector<std::string> &into) ;
 
 
     /// @brief return the objecttype to which these attributes belong
@@ -474,10 +477,14 @@ public:
     }
 
 
+    /** @brief The encoding of parsed strings */
+    static const std::string ENCODING;
+
+
 protected:
-    void emitUngivenError(const std::string& attrname, const char* objectid) const throw();
-    void emitEmptyError(const std::string& attrname, const char* objectid) const throw();
-    void emitFormatError(const std::string& attrname, const std::string& type, const char* objectid) const throw();
+    void emitUngivenError(const std::string& attrname, const char* objectid) const ;
+    void emitEmptyError(const std::string& attrname, const char* objectid) const ;
+    void emitFormatError(const std::string& attrname, const std::string& type, const char* objectid) const ;
 
 private:
     /// @brief Information whether the usage of a deprecated divider was reported

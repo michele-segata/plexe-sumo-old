@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    XMLSubSys.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 1 Jul 2002
 /// @version $Id$
 ///
 // Utility methods for initialising, closing and using the XML-subsystem
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,7 +55,7 @@ bool XMLSubSys::myEnableValidation;
 // method definitions
 // ===========================================================================
 void
-XMLSubSys::init(bool enableValidation) throw(ProcessError) {
+XMLSubSys::init(bool enableValidation) {
     myEnableValidation = enableValidation;
     try {
         XMLPlatformUtils::Initialize();
@@ -65,8 +68,8 @@ XMLSubSys::init(bool enableValidation) throw(ProcessError) {
 
 
 void
-XMLSubSys::close() throw() {
-    for (std::vector<SAX2XMLReader*>::iterator i=myReaders.begin(); i!=myReaders.end(); ++i) {
+XMLSubSys::close() {
+    for (std::vector<SAX2XMLReader*>::iterator i = myReaders.begin(); i != myReaders.end(); ++i) {
         delete *i;
     }
     myReaders.clear();
@@ -75,9 +78,9 @@ XMLSubSys::close() throw() {
 
 
 SAX2XMLReader*
-XMLSubSys::getSAXReader(SUMOSAXHandler& handler) throw() {
+XMLSubSys::getSAXReader(SUMOSAXHandler& handler) {
     SAX2XMLReader* reader = getSAXReader();
-    if (reader==0) {
+    if (reader == 0) {
         return 0;
     }
     reader->setContentHandler(&handler);
@@ -88,14 +91,14 @@ XMLSubSys::getSAXReader(SUMOSAXHandler& handler) throw() {
 
 void
 XMLSubSys::setHandler(GenericSAXHandler& handler) {
-    myReaders[myNextFreeReader-1]->setContentHandler(&handler);
-    myReaders[myNextFreeReader-1]->setErrorHandler(&handler);
+    myReaders[myNextFreeReader - 1]->setContentHandler(&handler);
+    myReaders[myNextFreeReader - 1]->setErrorHandler(&handler);
 }
 
 
 bool
 XMLSubSys::runParser(GenericSAXHandler& handler,
-                     const std::string& file) throw() {
+                     const std::string& file) {
     try {
         if (myNextFreeReader == myReaders.size()) {
             myReaders.push_back(getSAXReader());
@@ -104,11 +107,11 @@ XMLSubSys::runParser(GenericSAXHandler& handler,
         setHandler(handler);
         std::string prevFile = handler.getFileName();
         handler.setFileName(file);
-        myReaders[myNextFreeReader-1]->parse(file.c_str());
+        myReaders[myNextFreeReader - 1]->parse(file.c_str());
         handler.setFileName(prevFile);
         myNextFreeReader--;
     } catch (ProcessError& e) {
-        if (std::string(e.what())!=std::string("Process Error") && std::string(e.what())!=std::string("")) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         return false;
@@ -121,9 +124,9 @@ XMLSubSys::runParser(GenericSAXHandler& handler,
 
 
 SAX2XMLReader*
-XMLSubSys::getSAXReader() throw() {
+XMLSubSys::getSAXReader() {
     SAX2XMLReader* reader = XMLReaderFactory::createXMLReader();
-    if (reader==0) {
+    if (reader == 0) {
         WRITE_ERROR("The XML-parser could not be build");
         return 0;
     }
@@ -141,7 +144,7 @@ XMLSubSys::getSAXReader() throw() {
 
 void
 XMLSubSys::setFeature(XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader& reader,
-                      const std::string& feature, bool value) throw() {
+                      const std::string& feature, bool value) {
     XMLCh* xmlFeature = XMLString::transcode(feature.c_str());
     reader.setFeature(xmlFeature, value);
     XMLString::release(&xmlFeature);

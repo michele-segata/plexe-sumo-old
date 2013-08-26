@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    NIImporter_OpenStreetMap.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    Mon, 14.04.2008
 /// @version $Id$
 ///
 // Importer for networks stored in OpenStreetMap format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -96,7 +100,7 @@ protected:
         std::string streetName;
         /// @brief number of lanes, or -1 if unknown
         int myNoLanes;
-        /// @brief maximum speed in km/h, or -1 if unknown
+        /// @brief maximum speed in km/h, or MAXSPEED_UNGIVEN
         double myMaxSpeed;
         /// @brief The type, stored in "highway" key
         std::string myHighWayType;
@@ -116,16 +120,31 @@ protected:
     void _loadNetwork(const OptionsCont& oc, NBNetBuilder& nb);
 
 private:
+    /** @brief Functor which compares two NIOSMNodes according
+     * to their coordinates
+     */
+    class CompareNodes {
+        public:
+            bool operator()(const NIOSMNode* n1, const NIOSMNode* n2) const {
+                return (n1->lat > n2->lat) || (n1->lat == n2->lat && n1->lon > n2->lon);
+            }
+    };
+
 
     /// @brief The separator within newly created compound type names
     static const std::string compoundTypeSeparator;
 
-    class CompareNodes;
-    class SubstituteNode;
-    class SimilarEdge;
+    class CompareEdges;
 
-    /// we are responsible for ultimate cleanup
+    /** @brief the map from OSM node ids to actual nodes
+     * @note: NIOSMNodes may appear multiple times due to substition
+     */
     std::map<int, NIOSMNode*> myOSMNodes;
+
+    /// @brief the set of unique nodes used in NodesHandler, used when freeing memory
+    std::set<NIOSMNode*, CompareNodes> myUniqueNodes;
+
+
     std::map<std::string, Edge*> myEdges;
 
     /** @brief Builds an NBNode
@@ -161,22 +180,27 @@ private:
                     const std::vector<int> &passed, NBEdgeCont& ec, NBTypeCont& tc);
 
 
+    protected:
+        static const SUMOReal MAXSPEED_UNGIVEN;
 
     /**
      * @class NodesHandler
      * @brief A class which extracts OSM-nodes from a parsed OSM-file
      */
+    friend class NodesHandler;
     class NodesHandler : public SUMOSAXHandler {
     public:
         /** @brief Contructor
          * @param[in, out] toFill The nodes container to fill
+         * @param[in, out] uniqueNodes The nodes container for ensuring uniqueness
          * @param[in] options The options to use
          */
-        NodesHandler(std::map<int, NIOSMNode*> &toFill) throw();
+        NodesHandler(std::map<int, NIOSMNode*> &toFill, 
+                std::set<NIOSMNode*, CompareNodes> &uniqueNodes);
 
 
         /// @brief Destructor
-        ~NodesHandler() throw();
+        ~NodesHandler() ;
 
 
     protected:
@@ -190,7 +214,7 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myStartElement
          */
-        void myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError);
+        void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
 
 
         /** @brief Called when a closing tag occurs
@@ -199,11 +223,12 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myEndElement
          */
-        void myEndElement(int element) throw(ProcessError);
+        void myEndElement(int element) ;
         //@}
 
 
     private:
+
         /// @brief The nodes container to fill
         std::map<int, NIOSMNode*> &myToFill;
 
@@ -215,6 +240,9 @@ private:
 
         /// @brief The current hierarchy level
         int myHierarchyLevel;
+
+        /// @brief the set of unique nodes (used for duplicate detection/substitution)
+        std::set<NIOSMNode*, CompareNodes> &myUniqueNodes;
 
 
     private:
@@ -240,11 +268,11 @@ private:
          * @param[in, out] toFill The edges container to fill with read edges
          */
         EdgesHandler(const std::map<int, NIOSMNode*> &osmNodes,
-                     std::map<std::string, Edge*> &toFill) throw();
+                     std::map<std::string, Edge*> &toFill) ;
 
 
         /// @brief Destructor
-        ~EdgesHandler() throw();
+        ~EdgesHandler() ;
 
 
     protected:
@@ -258,7 +286,7 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myStartElement
          */
-        void myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError);
+        void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
 
 
         /** @brief Called when a closing tag occurs
@@ -267,7 +295,7 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myEndElement
          */
-        void myEndElement(int element) throw(ProcessError);
+        void myEndElement(int element) ;
         //@}
 
 

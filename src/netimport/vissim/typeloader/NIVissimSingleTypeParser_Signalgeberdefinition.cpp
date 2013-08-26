@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimSingleTypeParser_Signalgeberdefinition.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Wed, 18 Dec 2002
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -60,7 +62,7 @@ NIVissimSingleTypeParser_Signalgeberdefinition::parse(std::istream& from) {
     //
     std::string tag, name;
     tag = myRead(from);
-    if (tag=="name") {
+    if (tag == "name") {
         name = readName(from);
         tag = myRead(from);
     }
@@ -69,7 +71,7 @@ NIVissimSingleTypeParser_Signalgeberdefinition::parse(std::istream& from) {
     //
     int lsaid;
     IntVector groupids;
-    if (tag=="lsa") {
+    if (tag == "lsa") {
         int groupid;
         from >> lsaid; // type-checking is missing!
         from >> tag; // "Gruppe"
@@ -77,14 +79,14 @@ NIVissimSingleTypeParser_Signalgeberdefinition::parse(std::istream& from) {
             from >> groupid;
             groupids.push_back(groupid);
             tag = myRead(from);
-        } while (tag=="oder");
+        } while (tag == "oder");
         //
     } else {
         from >> tag; // strecke
         WRITE_WARNING("Omitting unknown traffic light.");
         return true;
     }
-    if (tag=="typ") {
+    if (tag == "typ") {
         from >> tag; // typ-value
         from >> tag; // "ort"
     }
@@ -102,7 +104,7 @@ NIVissimSingleTypeParser_Signalgeberdefinition::parse(std::istream& from) {
     int position;
     from >> position;
     //
-    while (tag!="fahrzeugklassen") {
+    while (tag != "fahrzeugklassen") {
         tag = myRead(from);
     }
     IntVector assignedVehicleTypes = parseAssignedVehicleTypes(from, "N/A");

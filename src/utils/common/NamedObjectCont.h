@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NamedObjectCont.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A map of named object pointers
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -51,12 +53,12 @@ template<class T>
 class NamedObjectCont {
 public:
     /// @brief Constructor
-    NamedObjectCont() throw() : myHaveChanged(false) { }
+    NamedObjectCont() : myHaveChanged(false) { }
 
 
     ///@brief  Destructor
-    virtual ~NamedObjectCont() throw() {
-        for (typename IDMap::iterator i=myMap.begin(); i!=myMap.end(); i++) {
+    virtual ~NamedObjectCont() {
+        for (typename IDMap::iterator i = myMap.begin(); i != myMap.end(); i++) {
             delete(*i).second;
         }
     }
@@ -71,8 +73,8 @@ public:
      * @param[in] item The item to add
      * @return If the item could been added (no item with the same id was within the container before)
      */
-    virtual bool add(const std::string& id, T item) throw() {
-        if (myMap.find(id)!=myMap.end()) {
+    virtual bool add(const std::string& id, T item) {
+        if (myMap.find(id) != myMap.end()) {
             return false;
         }
         myMap.insert(std::make_pair(id, item));
@@ -85,8 +87,8 @@ public:
      * @param[in] id The id of the item to remove
      * @return If the item could been removed (an item with the id was within the container before)
      */
-    virtual bool remove(const std::string& id) throw() {
-        if (myMap.find(id)==myMap.end()) {
+    virtual bool remove(const std::string& id) {
+        if (myMap.find(id) == myMap.end()) {
             return false;
         }
         typename std::map<std::string, T>::iterator i = myMap.find(id);
@@ -104,9 +106,9 @@ public:
      * @param[in] id The id of the item to retrieve
      * @return The item stored under the given id, or 0 if no such item exists
      */
-    T get(const std::string& id) const throw() {
+    T get(const std::string& id) const {
         typename std::map<std::string, T>::const_iterator i = myMap.find(id);
-        if (i==myMap.end()) {
+        if (i == myMap.end()) {
             return 0;
         }
         return (*i).second;
@@ -114,8 +116,8 @@ public:
 
 
     /** @brief Removes all items from the container (deletes them, too) */
-    void clear() throw() {
-        for (typename IDMap::iterator i=myMap.begin(); i!=myMap.end(); i++) {
+    void clear() {
+        for (typename IDMap::iterator i = myMap.begin(); i != myMap.end(); i++) {
             delete(*i).second;
         }
         myMap.clear();
@@ -128,7 +130,7 @@ public:
      *
      * @return The number of stored items
      */
-    unsigned int size() const throw() {
+    unsigned int size() const {
         return (unsigned int) myMap.size();
     }
 
@@ -142,9 +144,9 @@ public:
      * @param[in] id The id of the item to delete
      * @return Whether the object could be deleted (was within the map)
      */
-    bool erase(const std::string& id) throw() {
-        typename IDMap::iterator i=myMap.find(id);
-        if (i==myMap.end()) {
+    bool erase(const std::string& id) {
+        typename IDMap::iterator i = myMap.find(id);
+        if (i == myMap.end()) {
             return false;
         }
         T o = (*i).second;
@@ -153,7 +155,7 @@ public:
         typename ObjectVector::iterator i2 =
             find(myVector.begin(), myVector.end(), o);
         myHaveChanged = true;
-        if (i2!=myVector.end()) {
+        if (i2 != myVector.end()) {
             myVector.erase(i2);
         }
         delete o;
@@ -170,11 +172,11 @@ public:
      *
      * @return Reference to a saved vector of objects within the map
      */
-    const std::vector<T> &buildAndGetStaticVector() const throw() {
+    const std::vector<T> &buildAndGetStaticVector() const {
         if (myHaveChanged) {
             myVector.clear();
             typename IDMap::const_iterator i;
-            for (i=myMap.begin(); i!=myMap.end(); ++i) {
+            for (i = myMap.begin(); i != myMap.end(); ++i) {
                 myVector.push_back((*i).second);
             }
             myHaveChanged = false;
@@ -190,10 +192,10 @@ public:
      *
      * @return A vector of objects within the map
      */
-    std::vector<T> getTempVector() const throw() {
+    std::vector<T> getTempVector() const {
         std::vector<T> ret;
         typename IDMap::const_iterator i;
-        for (i=myMap.begin(); i!=myMap.end(); ++i) {
+        for (i = myMap.begin(); i != myMap.end(); ++i) {
             ret.push_back((*i).second);
         }
         return ret;
@@ -203,9 +205,9 @@ public:
     /* @brief Fills the given vector with the stored objects' ids
      * @param[in] into The container to fill
      */
-    void insertIDs(std::vector<std::string> &into) const throw() {
+    void insertIDs(std::vector<std::string> &into) const {
         typename IDMap::const_iterator i;
-        for (i=myMap.begin(); i!=myMap.end(); ++i) {
+        for (i = myMap.begin(); i != myMap.end(); ++i) {
             into.push_back((*i).first);
         }
     }
@@ -215,7 +217,7 @@ public:
      *
      * @return A reference to the internal map
      */
-    const std::map<std::string, T> &getMyMap() const throw() {
+    const std::map<std::string, T> &getMyMap() const {
         return myMap;
     }
 

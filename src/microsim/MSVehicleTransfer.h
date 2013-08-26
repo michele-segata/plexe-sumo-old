@@ -1,6 +1,7 @@
 /****************************************************************************/
 /// @file    MSVehicleTransfer.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sep 2003
 /// @version $Id$
 ///
@@ -8,12 +9,13 @@
 // This class also serves as container for parking vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -62,7 +64,7 @@ class MSEdge;
 class MSVehicleTransfer {
 public:
     /// @brief Destructor
-    virtual ~MSVehicleTransfer() throw();
+    virtual ~MSVehicleTransfer() ;
 
 
     /** @brief Adds a vehicle to this transfer object
@@ -73,7 +75,7 @@ public:
      *
      * @param[in] veh The vehicle to add
      */
-    void addVeh(const SUMOTime t, MSVehicle* veh) throw();
+    void addVeh(const SUMOTime t, MSVehicle* veh) ;
 
 
     /** @brief Checks "movement" of stored vehicles
@@ -84,25 +86,25 @@ public:
      *
      * @param[in] time The current simulation time
      */
-    void checkInsertions(SUMOTime time) throw();
+    void checkInsertions(SUMOTime time) ;
 
 
     /** @brief Checks whether stored vehicles are present
      *
      * @return whether any vehicles wait for transfer
      */
-    bool hasPending() const throw();
+    bool hasPending() const ;
 
 
     /** @brief Returns the instance of this object
      * @return The singleton instance
      */
-    static MSVehicleTransfer* getInstance() throw();
+    static MSVehicleTransfer* getInstance() ;
 
 
 private:
     /// @brief Constructor
-    MSVehicleTransfer() throw();
+    MSVehicleTransfer() ;
 
 
 protected:
@@ -123,7 +125,7 @@ protected:
          * @param[in] insertTime The time the vehicle was inserted at
          * @param[in] proceedTime The time at which the vehicle should be moved virtually one edge further
          */
-        VehicleInformation(MSVehicle* veh, SUMOTime proceedTime, bool parking) throw()
+        VehicleInformation(MSVehicle* veh, SUMOTime proceedTime, bool parking)
             : myVeh(veh), myProceedTime(proceedTime), myParking(parking) { }
 
     };

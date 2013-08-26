@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 """
 @file    schemaCheck.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    03.12.2009
 @version $Id$
 
 Checks schema for files matching certain file names using either
 lxml or SAX2Count.exe depending on availability.
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -41,7 +43,7 @@ def validate(f):
         traceback.print_exc()
 
 def main(srcRoot, err):
-    toCheck = [ "*.edg.xml", "*.nod.xml", "*.con.xml", "*.typ.xml", "*.net.xml", "*.rou.xml", "*.cfg",
+    toCheck = [ "*.edg.xml", "*.nod.xml", "*.con.xml", "*.typ.xml", "*.net.xml", "*.rou.xml", "*.????cfg",
                 "net.netgen", "net.netconvert", "routes.duarouter", "alts.duarouter", "routes.jtrrouter" ]
     sax2count = "SAX2Count.exe"
     if 'XERCES_64' in os.environ:

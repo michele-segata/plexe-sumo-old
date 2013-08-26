@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    PCLoaderDlrNavteq.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Thu, 02.11.2006
 /// @version $Id$
 ///
 // A reader of pois and polygons stored in DLR-Navteq (Elmar)-format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -72,7 +74,7 @@ public:
      * @exception ProcessError if something fails
      */
     static void loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
-                          PCTypeMap& tm) throw(ProcessError);
+                          PCTypeMap& tm) ;
 
 
 protected:
@@ -87,7 +89,7 @@ protected:
      * @exception ProcessError if something fails
      */
     static void loadPOIFiles(OptionsCont& oc, PCPolyContainer& toFill,
-                             PCTypeMap& tm) throw(ProcessError);
+                             PCTypeMap& tm) ;
 
 
     /** @brief Loads polygons assumed to be stored as according DLR-Navteq (Elmar)-files
@@ -101,7 +103,7 @@ protected:
      * @exception ProcessError if something fails
      */
     static void loadPolyFiles(OptionsCont& oc, PCPolyContainer& toFill,
-                              PCTypeMap& tm) throw(ProcessError);
+                              PCTypeMap& tm) ;
 
 
     /** @brief Loads DLR-Navteq (Elmar)-pois from the given file
@@ -113,7 +115,7 @@ protected:
      */
     static void loadPOIFile(const std::string& file,
                             OptionsCont& oc, PCPolyContainer& toFill,
-                            PCTypeMap& tm) throw(ProcessError);
+                            PCTypeMap& tm) ;
 
 
     /** @brief Loads DLR-Navteq (Elmar)-polygons from the given file
@@ -125,7 +127,7 @@ protected:
      */
     static void loadPolyFile(const std::string& file,
                              OptionsCont& oc, PCPolyContainer& toFill,
-                             PCTypeMap& tm) throw(ProcessError);
+                             PCTypeMap& tm) ;
 
 
 };

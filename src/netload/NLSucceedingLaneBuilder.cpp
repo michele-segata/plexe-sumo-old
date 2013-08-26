@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NLSucceedingLaneBuilder.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 22 Oct 2001
 /// @version $Id$
 ///
 // Temporary storage for a lanes succeeding lanes while parsing them
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,20 +55,20 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NLSucceedingLaneBuilder::NLSucceedingLaneBuilder(NLJunctionControlBuilder& jb) throw()
+NLSucceedingLaneBuilder::NLSucceedingLaneBuilder(NLJunctionControlBuilder& jb)
     : myJunctionControlBuilder(jb) {
     mySuccLanes = new MSLinkCont();
     mySuccLanes->reserve(10);
 }
 
 
-NLSucceedingLaneBuilder::~NLSucceedingLaneBuilder() throw() {
+NLSucceedingLaneBuilder::~NLSucceedingLaneBuilder() {
     delete mySuccLanes;
 }
 
 
 void
-NLSucceedingLaneBuilder::openSuccLane(const std::string& laneId) throw() {
+NLSucceedingLaneBuilder::openSuccLane(const std::string& laneId) {
     myCurrentLane = laneId;
 }
 
@@ -80,7 +83,7 @@ NLSucceedingLaneBuilder::addSuccLane(const std::string& laneId,
                                      LinkState state,
                                      const std::string& tlid, unsigned int linkNo) throw(InvalidArgument) {
     // check whether the link is a dead link
-    if (laneId=="SUMO_NO_DESTINATION") {
+    if (laneId == "SUMO_NO_DESTINATION") {
         // build the dead link and add it to the container
 #ifdef HAVE_INTERNAL_LANES
         MSLink* link = new MSLink(0, 0, LINKDIR_NODIR, LINKSTATE_DEADEND, 0.);
@@ -88,10 +91,10 @@ NLSucceedingLaneBuilder::addSuccLane(const std::string& laneId,
         MSLink* link = new MSLink(0, LINKDIR_NODIR, LINKSTATE_DEADEND, 0.);
 #endif
         mySuccLanes->push_back(link);
-        if (tlid!="") {
+        if (tlid != "") {
             MSTLLogicControl::TLSLogicVariants& logics = myJunctionControlBuilder.getTLLogic(tlid);
             MSLane* current = MSLane::dictionary(myCurrentLane);
-            if (current==0) {
+            if (current == 0) {
                 throw InvalidArgument("An unknown lane ('" + myCurrentLane + "') should be assigned to a tl-logic.");
             }
             logics.addLink(link, current, linkNo);
@@ -101,33 +104,33 @@ NLSucceedingLaneBuilder::addSuccLane(const std::string& laneId,
 
     // get the lane the link belongs to
     MSLane* lane = MSLane::dictionary(laneId);
-    if (lane==0) {
+    if (lane == 0) {
         throw InvalidArgument("An unknown lane ('" + laneId + "') should be set as a follower for lane '" + myCurrentLane + "'.");
     }
 #ifdef HAVE_INTERNAL_LANES
     MSLane* via = 0;
-    if (viaID!="" && MSGlobals::gUsingInternalLanes) {
+    if (viaID != "" && MSGlobals::gUsingInternalLanes) {
         via = MSLane::dictionary(viaID);
-        if (via==0) {
+        if (via == 0) {
             throw InvalidArgument("An unknown lane ('" + viaID + "') should be set as a via-lane for lane '" + myCurrentLane + "'.");
         }
     }
-    if (pass>=0) {
+    if (pass >= 0) {
         static_cast<MSInternalLane*>(lane)->setPassPosition(pass);
     }
 #endif
     MSLane* orig = MSLane::dictionary(myCurrentLane);
-    if (orig==0) {
+    if (orig == 0) {
         return;
     }
 
 
     // build the link
-    SUMOReal length = orig!=0&&lane!=0
+    SUMOReal length = orig != 0 && lane != 0
                       ? orig->getShape()[-1].distanceTo(lane->getShape()[0])
                       : 0;
 #ifdef HAVE_INTERNAL_LANES
-    if (via!=0) {
+    if (via != 0) {
         length = via->getLength();
     }
     MSLink* link = new MSLink(lane, via, dir, state, length);
@@ -136,9 +139,9 @@ NLSucceedingLaneBuilder::addSuccLane(const std::string& laneId,
 #endif
 
     MSLane* clane = MSLane::dictionary(myCurrentLane);
-    if (clane!=0) {
+    if (clane != 0) {
 #ifdef HAVE_INTERNAL_LANES
-        if (via!=0) {
+        if (via != 0) {
             via->addIncomingLane(clane, link);
         } else {
             lane->addIncomingLane(clane, link);
@@ -150,10 +153,10 @@ NLSucceedingLaneBuilder::addSuccLane(const std::string& laneId,
     }
     // if a traffic light is responsible for it, inform the traffic light
     // check whether this link is controlled by a traffic light
-    if (tlid!="") {
+    if (tlid != "") {
         MSTLLogicControl::TLSLogicVariants& logics = myJunctionControlBuilder.getTLLogic(tlid);
         MSLane* current = MSLane::dictionary(myCurrentLane);
-        if (current==0) {
+        if (current == 0) {
             throw InvalidArgument("An unknown lane ('" + myCurrentLane + "') should be assigned to a tl-logic.");
         }
         logics.addLink(link, current, linkNo);
@@ -166,7 +169,7 @@ NLSucceedingLaneBuilder::addSuccLane(const std::string& laneId,
 void
 NLSucceedingLaneBuilder::closeSuccLane() throw(InvalidArgument) {
     MSLane* current = MSLane::dictionary(myCurrentLane);
-    if (current==0) {
+    if (current == 0) {
         throw InvalidArgument("Trying to close connections of an unknown lane ('" + myCurrentLane + "').");
     }
     MSLinkCont* cont = new MSLinkCont();
@@ -178,7 +181,7 @@ NLSucceedingLaneBuilder::closeSuccLane() throw(InvalidArgument) {
 
 
 const std::string&
-NLSucceedingLaneBuilder::getCurrentLaneName() const throw() {
+NLSucceedingLaneBuilder::getCurrentLaneName() const {
     return myCurrentLane;
 }
 

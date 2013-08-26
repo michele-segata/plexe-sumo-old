@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    HelpersHarmonoise.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 10.05.2004
 /// @version $Id$
 ///
 // Noise data collector for edges/lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -101,16 +104,16 @@ mySurfaceCorrection[27] = { 0.7, 0.2, 3.6, -1.0, -1.8, -0.1, -0.9, -0.7, -1.1, -
 // method definitions
 // ===========================================================================
 SUMOReal
-HelpersHarmonoise::computeNoise(SUMOEmissionClass c, double v, double a) throw() {
+HelpersHarmonoise::computeNoise(SUMOEmissionClass c, double v, double a) {
     double* alphaT, *betaT, *alphaR, *betaR;
     double ac = 0;
-    if (c>=SVE_HDV_3_1 && c<=SVE_HDV_12_12) {
+    if (c >= SVE_HDV_3_1 && c <= SVE_HDV_12_12) {
         alphaT = myT_A_C3_Parameter;
         betaT = myT_B_C3_Parameter;
         alphaR = myR_A_C3_Parameter;
         betaR = myR_B_C3_Parameter;
         ac = 5.6;
-    } else if (c!=SVE_ZERO_EMISSIONS) {
+    } else if (c != SVE_ZERO_EMISSIONS) {
         alphaT = myT_A_C1_Parameter;
         betaT = myT_B_C1_Parameter;
         alphaR = myR_A_C1_Parameter;
@@ -124,21 +127,21 @@ HelpersHarmonoise::computeNoise(SUMOEmissionClass c, double v, double a) throw()
     double L_high = 0;
     v = v * 3.6;
     double s = -30.;//
-    for (unsigned int i=0; i<27; ++i) {
-        double crc_low = alphaR[i] + betaR[i]*log10(v/70.) + 10.*log10(.8);// + mySurfaceCorrection[i];
-        double ctc_low = alphaT[i] + betaT[i]*((v-70.)/70.) + a*ac + 10.*log10(.2);
-        double Li_low = 10. * log10(pow(10., (crc_low/10.)) + pow(10., (ctc_low/10.)));
+    for (unsigned int i = 0; i < 27; ++i) {
+        double crc_low = alphaR[i] + betaR[i] * log10(v / 70.) + 10.*log10(.8); // + mySurfaceCorrection[i];
+        double ctc_low = alphaT[i] + betaT[i] * ((v - 70.) / 70.) + a * ac + 10.*log10(.2);
+        double Li_low = 10. * log10(pow(10., (crc_low / 10.)) + pow(10., (ctc_low / 10.)));
         Li_low += s;
-        double crc_high = alphaR[i] + betaR[i]*log10(v/70.) + 10.*log10(.2);// + mySurfaceCorrection[i];
-        double ctc_high = alphaT[i] + betaT[i]*((v-70.)/70.) + a*ac + 10.*log10(.8);
-        double Li_high = 10. * log10(pow(10., (crc_high/10.)) + pow(10., (ctc_high/10.)));
+        double crc_high = alphaR[i] + betaR[i] * log10(v / 70.) + 10.*log10(.2); // + mySurfaceCorrection[i];
+        double ctc_high = alphaT[i] + betaT[i] * ((v - 70.) / 70.) + a * ac + 10.*log10(.8);
+        double Li_high = 10. * log10(pow(10., (crc_high / 10.)) + pow(10., (ctc_high / 10.)));
         Li_high += s;
-        L_low += pow(10., (Li_low+myAOctaveBandCorrection[i])/10.);
-        L_high += pow(10., (Li_high+myAOctaveBandCorrection[i])/10.);
+        L_low += pow(10., (Li_low + myAOctaveBandCorrection[i]) / 10.);
+        L_high += pow(10., (Li_high + myAOctaveBandCorrection[i]) / 10.);
     }
     L_low = (10. * log10(L_low));
     L_high = (10. * log10(L_high));
-    SUMOReal v1 = (SUMOReal)(10. * log10(pow(10., L_low/10.) + pow(10., L_high/10.)));
+    SUMOReal v1 = (SUMOReal)(10. * log10(pow(10., L_low / 10.) + pow(10., L_high / 10.)));
     return v1;
 }
 

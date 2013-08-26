@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    OutputDevice_Network.h
 /// @author  Michael Behrisch
+/// @author  Daniel Krajzewicz
+/// @author  Felix Brack
 /// @date    2006
 /// @version $Id$
 ///
 // An output device for TCP/IP Network connections
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -60,11 +63,11 @@ public:
      * @exception IOError If the connection could not been established
      */
     OutputDevice_Network(const std::string& host,
-                         const int port) throw(IOError);
+                         const int port);
 
 
     /// @brief Destructor
-    ~OutputDevice_Network() throw();
+    ~OutputDevice_Network() ;
 
 
 protected:
@@ -79,7 +82,7 @@ protected:
      * @return The used stream
      * @see postWriteHook
      */
-    std::ostream& getOStream() throw();
+    std::ostream& getOStream() ;
 
 
     /** @brief Sends the data which was written to the string stream over the socket.
@@ -87,7 +90,7 @@ protected:
      * Converts the stored message into a vector of chars and sends them via to
      *  the socket implementation. Resets the message, afterwards.
      */
-    virtual void postWriteHook() throw();
+    virtual void postWriteHook() ;
     /// @}
 
 private:

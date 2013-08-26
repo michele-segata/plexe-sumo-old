@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSTriggeredRerouter.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 25 July 2005
 /// @version $Id$
 ///
 // Reroutes vehicles passing an edge
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -75,7 +78,7 @@ MSTriggeredRerouter::MSTriggeredRerouter(const std::string& id,
         throw ProcessError();
     }
     // build actors
-    for (std::vector<MSEdge*>::const_iterator j=edges.begin(); j!=edges.end(); ++j) {
+    for (std::vector<MSEdge*>::const_iterator j = edges.begin(); j != edges.end(); ++j) {
 #ifdef HAVE_MESOSIM
         if (MSGlobals::gUseMesoSim) {
             MESegment* s = MSGlobals::gMesoNet->getSegmentForEdge(**j);
@@ -84,7 +87,7 @@ MSTriggeredRerouter::MSTriggeredRerouter(const std::string& id,
         }
 #endif
         const std::vector<MSLane*> &destLanes = (*j)->getLanes();
-        for (std::vector<MSLane*>::const_iterator i=destLanes.begin(); i!=destLanes.end(); ++i) {
+        for (std::vector<MSLane*>::const_iterator i = destLanes.begin(); i != destLanes.end(); ++i) {
             (*i)->addMoveReminder(this);
         }
     }
@@ -95,32 +98,32 @@ MSTriggeredRerouter::MSTriggeredRerouter(const std::string& id,
 }
 
 
-MSTriggeredRerouter::~MSTriggeredRerouter() throw() {
+MSTriggeredRerouter::~MSTriggeredRerouter() {
 }
 
 // ------------ loading begin
 void
 MSTriggeredRerouter::myStartElement(int element,
-                                    const SUMOSAXAttributes& attrs) throw(ProcessError) {
-    if (element==SUMO_TAG_INTERVAL) {
+                                    const SUMOSAXAttributes& attrs) {
+    if (element == SUMO_TAG_INTERVAL) {
         bool ok = true;
         myCurrentIntervalBegin = attrs.getOptSUMOTimeReporting(SUMO_ATTR_BEGIN, 0, ok, -1);
         myCurrentIntervalEnd = attrs.getOptSUMOTimeReporting(SUMO_ATTR_END, 0, ok, -1);
     }
 
-    if (element==SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED&&!myHaveWarnedAboutDeprecatedDestProbReroute) {
+    if (element == SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED && !myHaveWarnedAboutDeprecatedDestProbReroute) {
         myHaveWarnedAboutDeprecatedDestProbReroute = true;
         WRITE_WARNING("'" + toString(SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_DEST_PROB_REROUTE) + "'.");
     }
-    if (element==SUMO_TAG_DEST_PROB_REROUTE||element==SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED) {
+    if (element == SUMO_TAG_DEST_PROB_REROUTE || element == SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED) {
         // by giving probabilities of new destinations
         // get the destination edge
         std::string dest = attrs.getStringSecure(SUMO_ATTR_ID, "");
-        if (dest=="") {
+        if (dest == "") {
             throw ProcessError("MSTriggeredRerouter " + getID() + ": No destination edge id given.");
         }
         MSEdge* to = MSEdge::dictionary(dest);
-        if (to==0) {
+        if (to == 0) {
             throw ProcessError("MSTriggeredRerouter " + getID() + ": Destination edge '" + dest + "' is not known.");
         }
         // get the probability to reroute
@@ -129,39 +132,39 @@ MSTriggeredRerouter::myStartElement(int element,
         if (!ok) {
             throw ProcessError();
         }
-        if (prob<0) {
+        if (prob < 0) {
             throw ProcessError("MSTriggeredRerouter " + getID() + ": Attribute 'probability' for destination '" + dest + "' is negative (must not).");
         }
         // add
         myCurrentEdgeProb.add(prob, to);
     }
 
-    if (element==SUMO_TAG_CLOSING_REROUTE__DEPRECATED&&!myHaveWarnedAboutDeprecatedClosingReroute) {
+    if (element == SUMO_TAG_CLOSING_REROUTE__DEPRECATED && !myHaveWarnedAboutDeprecatedClosingReroute) {
         myHaveWarnedAboutDeprecatedClosingReroute = true;
         WRITE_WARNING("'" + toString(SUMO_TAG_CLOSING_REROUTE__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_CLOSING_REROUTE) + "'.");
     }
-    if (element==SUMO_TAG_CLOSING_REROUTE||element==SUMO_TAG_CLOSING_REROUTE) {
+    if (element == SUMO_TAG_CLOSING_REROUTE || element == SUMO_TAG_CLOSING_REROUTE) {
         // by closing
         std::string closed_id = attrs.getStringSecure(SUMO_ATTR_ID, "");
-        if (closed_id=="") {
+        if (closed_id == "") {
             throw ProcessError("MSTriggeredRerouter " + getID() + ": closed edge id given.");
         }
         MSEdge* closed = MSEdge::dictionary(closed_id);
-        if (closed==0) {
+        if (closed == 0) {
             throw ProcessError("MSTriggeredRerouter " + getID() + ": Edge '" + closed_id + "' to close is not known.");
         }
         myCurrentClosed.push_back(closed);
     }
 
-    if (element==SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED&&!myHaveWarnedAboutDeprecatedRouteReroute) {
+    if (element == SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED && !myHaveWarnedAboutDeprecatedRouteReroute) {
         myHaveWarnedAboutDeprecatedRouteReroute = true;
         WRITE_WARNING("'" + toString(SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_ROUTE_PROB_REROUTE) + "'.");
     }
-    if (element==SUMO_TAG_ROUTE_PROB_REROUTE||element==SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED) {
+    if (element == SUMO_TAG_ROUTE_PROB_REROUTE || element == SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED) {
         // by explicit rerouting using routes
         // check if route exists
         std::string routeStr = attrs.getStringSecure(SUMO_ATTR_ID, "");
-        if (routeStr=="") {
+        if (routeStr == "") {
             throw ProcessError("MSTriggeredRerouter " + getID() + ": No route id given.");
         }
         const MSRoute* route = MSRoute::dictionary(routeStr);
@@ -175,7 +178,7 @@ MSTriggeredRerouter::myStartElement(int element,
         if (!ok) {
             throw ProcessError();
         }
-        if (prob<0) {
+        if (prob < 0) {
             throw ProcessError("MSTriggeredRerouter " + getID() + ": Attribute 'probability' for route '" + routeStr + "' is negative (must not).");
         }
         // add
@@ -185,8 +188,8 @@ MSTriggeredRerouter::myStartElement(int element,
 
 
 void
-MSTriggeredRerouter::myEndElement(int element) throw(ProcessError) {
-    if (element==SUMO_TAG_INTERVAL) {
+MSTriggeredRerouter::myEndElement(int element) {
+    if (element == SUMO_TAG_INTERVAL) {
         RerouteInterval ri;
         ri.begin = myCurrentIntervalBegin;
         ri.end = myCurrentIntervalEnd;
@@ -208,9 +211,9 @@ bool
 MSTriggeredRerouter::hasCurrentReroute(SUMOTime time, SUMOVehicle& veh) const {
     std::vector<RerouteInterval>::const_iterator i = myIntervals.begin();
     const MSRoute& route = veh.getRoute();
-    while (i!=myIntervals.end()) {
-        if ((*i).begin<=time && (*i).end>=time) {
-            if ((*i).edgeProbs.getOverallProb()!=0||(*i).routeProbs.getOverallProb()!=0||route.containsAnyOf((*i).closed)) {
+    while (i != myIntervals.end()) {
+        if ((*i).begin <= time && (*i).end >= time) {
+            if ((*i).edgeProbs.getOverallProb() != 0 || (*i).routeProbs.getOverallProb() != 0 || route.containsAnyOf((*i).closed)) {
                 return true;
             }
         }
@@ -223,9 +226,9 @@ MSTriggeredRerouter::hasCurrentReroute(SUMOTime time, SUMOVehicle& veh) const {
 bool
 MSTriggeredRerouter::hasCurrentReroute(SUMOTime time) const {
     std::vector<RerouteInterval>::const_iterator i = myIntervals.begin();
-    while (i!=myIntervals.end()) {
-        if ((*i).begin<=time && (*i).end>=time) {
-            if ((*i).edgeProbs.getOverallProb()!=0||(*i).routeProbs.getOverallProb()!=0||(*i).closed.size()!=0) {
+    while (i != myIntervals.end()) {
+        if ((*i).begin <= time && (*i).end >= time) {
+            if ((*i).edgeProbs.getOverallProb() != 0 || (*i).routeProbs.getOverallProb() != 0 || (*i).closed.size() != 0) {
                 return true;
             }
         }
@@ -239,9 +242,9 @@ const MSTriggeredRerouter::RerouteInterval&
 MSTriggeredRerouter::getCurrentReroute(SUMOTime time, SUMOVehicle& veh) const {
     std::vector<RerouteInterval>::const_iterator i = myIntervals.begin();
     const MSRoute& route = veh.getRoute();
-    while (i!=myIntervals.end()) {
-        if ((*i).begin<=time && (*i).end>=time) {
-            if ((*i).edgeProbs.getOverallProb()!=0||(*i).routeProbs.getOverallProb()!=0||route.containsAnyOf((*i).closed)) {
+    while (i != myIntervals.end()) {
+        if ((*i).begin <= time && (*i).end >= time) {
+            if ((*i).edgeProbs.getOverallProb() != 0 || (*i).routeProbs.getOverallProb() != 0 || route.containsAnyOf((*i).closed)) {
                 return *i;
             }
         }
@@ -254,8 +257,8 @@ MSTriggeredRerouter::getCurrentReroute(SUMOTime time, SUMOVehicle& veh) const {
 const MSTriggeredRerouter::RerouteInterval&
 MSTriggeredRerouter::getCurrentReroute(SUMOTime) const {
     std::vector<RerouteInterval>::const_iterator i = myIntervals.begin();
-    while (i!=myIntervals.end()) {
-        if ((*i).edgeProbs.getOverallProb()!=0||(*i).routeProbs.getOverallProb()!=0||(*i).closed.size()!=0) {
+    while (i != myIntervals.end()) {
+        if ((*i).edgeProbs.getOverallProb() != 0 || (*i).routeProbs.getOverallProb() != 0 || (*i).closed.size() != 0) {
             return *i;
         }
         i++;
@@ -266,7 +269,7 @@ MSTriggeredRerouter::getCurrentReroute(SUMOTime) const {
 
 
 bool
-MSTriggeredRerouter::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) throw() {
+MSTriggeredRerouter::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) {
     if (reason == MSMoveReminder::NOTIFICATION_LANE_CHANGE) {
         return false;
     }
@@ -286,15 +289,15 @@ MSTriggeredRerouter::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification 
     const MSEdge* lastEdge = route.getLastEdge();
     // get rerouting params
     const MSTriggeredRerouter::RerouteInterval& rerouteDef = getCurrentReroute(time, veh);
-    const MSRoute* newRoute = rerouteDef.routeProbs.getOverallProb()>0 ? rerouteDef.routeProbs.get() : 0;
+    const MSRoute* newRoute = rerouteDef.routeProbs.getOverallProb() > 0 ? rerouteDef.routeProbs.get() : 0;
     // we will use the route if given rather than calling our own dijsktra...
-    if (newRoute!=0) {
+    if (newRoute != 0) {
         veh.replaceRoute(newRoute);
         return false;
     }
     // ok, try using a new destination
-    const MSEdge* newEdge = rerouteDef.edgeProbs.getOverallProb()>0 ? rerouteDef.edgeProbs.get() : route.getLastEdge();
-    if (newEdge==0) {
+    const MSEdge* newEdge = rerouteDef.edgeProbs.getOverallProb() > 0 ? rerouteDef.edgeProbs.get() : route.getLastEdge();
+    if (newEdge == 0) {
         newEdge = lastEdge;
     }
 

@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 """
 @file    addSchema.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2010
 @version $Id$
 
 Inserts XML schema references.
 
-Copyright (C) 2010-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2010-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

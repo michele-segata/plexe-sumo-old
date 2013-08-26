@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NLEdgeControlBuilder.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 9 Jul 2001
 /// @version $Id$
 ///
 // Interface for building edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -88,17 +91,17 @@ NLEdgeControlBuilder::addLane(const std::string& id,
                               const SUMOVehicleClasses& disallowed) {
     MSLane* lane = 0;
     switch (myFunction) {
-    case MSEdge::EDGEFUNCTION_INTERNAL:
-        lane = new MSInternalLane(id, maxSpeed, length, myActiveEdge,
-                                  myCurrentNumericalLaneID++, shape, width, allowed, disallowed);
-        break;
-    case MSEdge::EDGEFUNCTION_NORMAL:
-    case MSEdge::EDGEFUNCTION_CONNECTOR:
-        lane = new MSLane(id, maxSpeed, length, myActiveEdge,
-                          myCurrentNumericalLaneID++, shape, width, allowed, disallowed);
-        break;
-    default:
-        throw InvalidArgument("Unrecognised edge type.");
+        case MSEdge::EDGEFUNCTION_INTERNAL:
+            lane = new MSInternalLane(id, maxSpeed, length, myActiveEdge,
+                                      myCurrentNumericalLaneID++, shape, width, allowed, disallowed);
+            break;
+        case MSEdge::EDGEFUNCTION_NORMAL:
+        case MSEdge::EDGEFUNCTION_CONNECTOR:
+            lane = new MSLane(id, maxSpeed, length, myActiveEdge,
+                              myCurrentNumericalLaneID++, shape, width, allowed, disallowed);
+            break;
+        default:
+            throw InvalidArgument("Unrecognised edge type.");
     }
     myLaneStorage->push_back(lane);
     return lane;
@@ -118,7 +121,7 @@ NLEdgeControlBuilder::closeEdge() {
 
 MSEdgeControl*
 NLEdgeControlBuilder::build() {
-    for (EdgeCont::iterator i1=myEdges.begin(); i1!=myEdges.end(); i1++) {
+    for (EdgeCont::iterator i1 = myEdges.begin(); i1 != myEdges.end(); i1++) {
         (*i1)->closeBuilding();
 #ifdef HAVE_MESOSIM
         if (MSGlobals::gUseMesoSim) {
@@ -131,7 +134,7 @@ NLEdgeControlBuilder::build() {
 
 
 MSEdge*
-NLEdgeControlBuilder::buildEdge(const std::string& id, const std::string& streetName) throw() {
+NLEdgeControlBuilder::buildEdge(const std::string& id, const std::string& streetName) {
     return new MSEdge(id, myCurrentNumericalEdgeID++, streetName);
 }
 

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NBDistrictCont.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // A container for districts
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -43,11 +45,11 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NBDistrictCont::NBDistrictCont() throw() {}
+NBDistrictCont::NBDistrictCont() {}
 
 
-NBDistrictCont::~NBDistrictCont() throw() {
-    for (DistrictCont::iterator i=myDistricts.begin(); i!=myDistricts.end(); i++) {
+NBDistrictCont::~NBDistrictCont() {
+    for (DistrictCont::iterator i = myDistricts.begin(); i != myDistricts.end(); i++) {
         delete((*i).second);
     }
     myDistricts.clear();
@@ -55,9 +57,9 @@ NBDistrictCont::~NBDistrictCont() throw() {
 
 
 bool
-NBDistrictCont::insert(NBDistrict* const district) throw() {
+NBDistrictCont::insert(NBDistrict* const district) {
     DistrictCont::const_iterator i = myDistricts.find(district->getID());
-    if (i!=myDistricts.end()) {
+    if (i != myDistricts.end()) {
         return false;
     }
     myDistricts.insert(DistrictCont::value_type(district->getID(), district));
@@ -66,9 +68,9 @@ NBDistrictCont::insert(NBDistrict* const district) throw() {
 
 
 NBDistrict*
-NBDistrictCont::retrieve(const std::string& id) const throw() {
+NBDistrictCont::retrieve(const std::string& id) const {
     DistrictCont::const_iterator i = myDistricts.find(id);
-    if (i==myDistricts.end()) {
+    if (i == myDistricts.end()) {
         return 0;
     }
     return (*i).second;
@@ -76,16 +78,16 @@ NBDistrictCont::retrieve(const std::string& id) const throw() {
 
 
 size_t
-NBDistrictCont::size() const throw() {
+NBDistrictCont::size() const {
     return myDistricts.size();
 }
 
 
 bool
 NBDistrictCont::addSource(const std::string& dist, NBEdge* const source,
-                          SUMOReal weight) throw() {
+                          SUMOReal weight) {
     NBDistrict* o = retrieve(dist);
-    if (o==0) {
+    if (o == 0) {
         return false;
     }
     return o->addSource(source, weight);
@@ -94,9 +96,9 @@ NBDistrictCont::addSource(const std::string& dist, NBEdge* const source,
 
 bool
 NBDistrictCont::addSink(const std::string& dist, NBEdge* const destination,
-                        SUMOReal weight) throw() {
+                        SUMOReal weight) {
     NBDistrict* o = retrieve(dist);
-    if (o==0) {
+    if (o == 0) {
         return false;
     }
     return o->addSink(destination, weight);
@@ -104,8 +106,8 @@ NBDistrictCont::addSink(const std::string& dist, NBEdge* const destination,
 
 
 void
-NBDistrictCont::removeFromSinksAndSources(NBEdge* const e) throw() {
-    for (DistrictCont::iterator i=myDistricts.begin(); i!=myDistricts.end(); i++) {
+NBDistrictCont::removeFromSinksAndSources(NBEdge* const e) {
+    for (DistrictCont::iterator i = myDistricts.begin(); i != myDistricts.end(); i++) {
         (*i).second->removeFromSinksAndSources(e);
     }
 }

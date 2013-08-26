@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GUIInductLoop.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Aug 2003
 /// @version $Id$
 ///
 // The gui-version of the MSInductLoop, together with the according
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -63,11 +67,11 @@ public:
      * @param[in] position Position of the detector within the lane
      * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
      */
-    GUIInductLoop(const std::string& id, MSLane* const lane, SUMOReal position, bool splitByType) throw();
+    GUIInductLoop(const std::string& id, MSLane* const lane, SUMOReal position, bool splitByType) ;
 
 
     /// @brief Destructor
-    ~GUIInductLoop() throw();
+    ~GUIInductLoop() ;
 
 
     /** @brief Resets all generated values to allow computation of next interval
@@ -75,7 +79,7 @@ public:
      * Locks the internal mutex before calling MSInductLoop::reset()
      * @see MSInductLoop::reset()
      */
-    void reset() throw();
+    void reset() ;
 
 
     /** @brief Returns this detector's visualisation-wrapper
@@ -92,7 +96,7 @@ public:
      * @return The list of vehicles
      * @see MSInductLoop::collectVehiclesOnDet()
      */
-    std::vector<VehicleData> collectVehiclesOnDet(SUMOTime t) const throw();
+    std::vector<VehicleData> collectVehiclesOnDet(SUMOTime t) const ;
 
 
 protected:
@@ -107,7 +111,7 @@ protected:
      * @param entryTimestep Timestep (not necessary integer) of entrance.
      * @see MSInductLoop::enterDetectorByMove()
      */
-    void enterDetectorByMove(SUMOVehicle& veh, SUMOReal entryTimestep) throw();
+    void enterDetectorByMove(SUMOVehicle& veh, SUMOReal entryTimestep) ;
 
 
     /** @brief Processes a vehicle that leaves the detector
@@ -118,7 +122,7 @@ protected:
      * @param leaveTimestep Timestep (not necessary integer) of leaving.
      * @see MSInductLoop::leaveDetectorByMove()
      */
-    void leaveDetectorByMove(SUMOVehicle& veh, SUMOReal leaveTimestep) throw();
+    void leaveDetectorByMove(SUMOVehicle& veh, SUMOReal leaveTimestep) ;
 
 
     /** @brief Removes a vehicle from the detector's map myVehiclesOnDet.
@@ -127,7 +131,7 @@ protected:
      * @see MSInductLoop::leaveDetectorByLaneChange()
      * @param veh The leaving vehicle.
      */
-    void leaveDetectorByLaneChange(SUMOVehicle& veh) throw();
+    void leaveDetectorByLaneChange(SUMOVehicle& veh) ;
     /// @}
 
 
@@ -143,10 +147,10 @@ public:
         /// @brief Constructor
         MyWrapper(GUIInductLoop& detector,
                   GUILaneWrapper& wrapper,
-                  SUMOReal pos) throw();
+                  SUMOReal pos) ;
 
         /// @brief Destructor
-        ~MyWrapper() throw();
+        ~MyWrapper() ;
 
 
         /// @name inherited from GUIGlObject
@@ -160,7 +164,7 @@ public:
          * @see GUIGlObject::getParameterWindow
          */
         GUIParameterTableWindow* getParameterWindow(
-            GUIMainWindow& app, GUISUMOAbstractView& parent) throw();
+            GUIMainWindow& app, GUISUMOAbstractView& parent) ;
 
 
         /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -168,14 +172,14 @@ public:
          * @return The boundary the object is within
          * @see GUIGlObject::getCenteringBoundary
          */
-        Boundary getCenteringBoundary() const throw();
+        Boundary getCenteringBoundary() const ;
 
 
         /** @brief Draws the object
          * @param[in] s The settings for the current view (may influence drawing)
          * @see GUIGlObject::drawGL
          */
-        void drawGL(const GUIVisualizationSettings& s) const throw();
+        void drawGL(const GUIVisualizationSettings& s) const ;
         //@}
 
 

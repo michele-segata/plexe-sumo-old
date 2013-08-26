@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 """
 @file    10to11.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
 @date    2009-06-09
 @version $Id$
 
 Transfers configuration files from character data to attribute style.
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, sys, re

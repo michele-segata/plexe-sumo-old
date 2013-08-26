@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    MSXMLRawOut.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Bjoern Hendriks
+/// @author  Michael Behrisch
 /// @date    Mon, 10.05.2004
 /// @version $Id$
 ///
 // Realises dumping the complete network state
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -66,7 +71,7 @@ public:
      * @exception IOError If an error on writing occurs (!!! not yet implemented)
      */
     static void write(OutputDevice& of, const MSEdgeControl& ec,
-                      SUMOTime timestep) throw(IOError);
+                      SUMOTime timestep);
 
 
     /** @brief Writes the dump of the given vehicle into the given device
@@ -75,7 +80,7 @@ public:
      * @param[in] veh The vehicle to dump
      * @exception IOError If an error on writing occurs (!!! not yet implemented)
      */
-    static void writeVehicle(OutputDevice& of, const MSBaseVehicle& veh) throw(IOError);
+    static void writeVehicle(OutputDevice& of, const MSBaseVehicle& veh);
 
 
 private:
@@ -89,7 +94,7 @@ private:
      * @todo MSGlobals::gOmitEmptyEdgesOnDump should not be used; rather the according option read in write
      * @exception IOError If an error on writing occurs (!!! not yet implemented)
      */
-    static void writeEdge(OutputDevice& of, const MSEdge& edge) throw(IOError);
+    static void writeEdge(OutputDevice& of, const MSEdge& edge);
 
 
     /** @brief Writes the dump of the given lane into the given device
@@ -101,7 +106,7 @@ private:
      * @param[in] lane The lane to dump
      * @exception IOError If an error on writing occurs (!!! not yet implemented)
      */
-    static void writeLane(OutputDevice& of, const MSLane& lane) throw(IOError);
+    static void writeLane(OutputDevice& of, const MSLane& lane);
 
 
 private:

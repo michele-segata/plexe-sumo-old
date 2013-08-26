@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUI_E2_ZS_Collector.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Okt 2003
 /// @version $Id$
 ///
 // The gui-version of the MS_E2_ZS_Collector
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -74,11 +77,11 @@ public:
     GUI_E2_ZS_Collector(const std::string& id, DetectorUsage usage,
                         MSLane* const lane, SUMOReal startPos, SUMOReal detLength,
                         SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-                        SUMOReal jamDistThreshold) throw();
+                        SUMOReal jamDistThreshold) ;
 
 
     /// @brief Destructor
-    ~GUI_E2_ZS_Collector() throw();
+    ~GUI_E2_ZS_Collector() ;
 
 
     /** @brief Returns the wrapper for this detector
@@ -96,10 +99,10 @@ public:
     class MyWrapper : public GUIDetectorWrapper {
     public:
         /// @brief Constructor
-        MyWrapper(GUI_E2_ZS_Collector& detector) throw();
+        MyWrapper(GUI_E2_ZS_Collector& detector) ;
 
         /// @brief Destrutor
-        ~MyWrapper() throw();
+        ~MyWrapper() ;
 
 
         /// @name inherited from GUIGlObject
@@ -113,7 +116,7 @@ public:
          * @see GUIGlObject::getParameterWindow
          */
         GUIParameterTableWindow* getParameterWindow(
-            GUIMainWindow& app, GUISUMOAbstractView& parent) throw();
+            GUIMainWindow& app, GUISUMOAbstractView& parent) ;
 
 
         /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -121,14 +124,14 @@ public:
          * @return The boundary the object is within
          * @see GUIGlObject::getCenteringBoundary
          */
-        Boundary getCenteringBoundary() const throw();
+        Boundary getCenteringBoundary() const ;
 
 
         /** @brief Draws the object
          * @param[in] s The settings for the current view (may influence drawing)
          * @see GUIGlObject::drawGL
          */
-        void drawGL(const GUIVisualizationSettings& s) const throw();
+        void drawGL(const GUIVisualizationSettings& s) const ;
         //@}
 
 

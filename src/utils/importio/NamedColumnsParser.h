@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NamedColumnsParser.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Fri, 19 Jul 2002
 /// @version $Id$
 ///
 // A parser to retrieve information from a table with known columns
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,7 +61,7 @@ public:
      *
      * Does nothing, a later call to reinit is necessary
      */
-    NamedColumnsParser() throw();
+    NamedColumnsParser() ;
 
 
     /** @brief Constructor
@@ -74,13 +76,13 @@ public:
      * @param[in] chomp Whether the lines shall be trimmed (white spaces shall be removed)
      * @param[in] ignoreCase Whether the case shall be ignored when parsing the definitions
      */
-    NamedColumnsParser(const std::string& def, const std::string& defDelim=";",
-                       const std::string& lineDelim=";", bool chomp=false,
-                       bool ignoreCase=true) throw();
+    NamedColumnsParser(const std::string& def, const std::string& defDelim = ";",
+                       const std::string& lineDelim = ";", bool chomp = false,
+                       bool ignoreCase = true) ;
 
 
     /// @brief Destructor
-    ~NamedColumnsParser() throw();
+    ~NamedColumnsParser() ;
 
 
     /** @brief Reinitialises the parser
@@ -94,9 +96,9 @@ public:
      * @param[in] chomp Whether the lines shall be trimmed (white spaces shall be removed)
      * @param[in] ignoreCase Whether the case shall be ignored when parsing the definitions
      */
-    void reinit(const std::string& def, const std::string& defDelim=";",
-                const std::string& lineDelim=";", bool chomp=false,
-                bool ignoreCase=true) throw();
+    void reinit(const std::string& def, const std::string& defDelim = ";",
+                const std::string& lineDelim = ";", bool chomp = false,
+                bool ignoreCase = true) ;
 
 
     /** @brief Parses the contents of the line
@@ -107,7 +109,7 @@ public:
      *
      * @param[in] line The line to parse
      */
-    void parseLine(const std::string& line) throw();
+    void parseLine(const std::string& line) ;
 
 
     /** @brief Returns the named information
@@ -125,7 +127,7 @@ public:
      * @exception UnknownElement when the element was not named during the initialisation
      * @exception OutOfBoundsException when the line was too short and did not contain the item */
     std::string get(const std::string& name,
-                    bool prune=false) const throw(UnknownElement, OutOfBoundsException);
+                    bool prune = false) const throw(UnknownElement, OutOfBoundsException);
 
 
     /** @brief Returns the information whether the named column is known
@@ -133,14 +135,14 @@ public:
      * @param[in] name The name of the value to check
      * @return Whether the named value is stored in the parsed line
      */
-    bool know(const std::string& name) const throw();
+    bool know(const std::string& name) const ;
 
 
     /** @brief Returns whether the number of named columns matches the actual number
      *
      * @return Whether the number of named columns matches the actual number
      */
-    bool hasFullDefinition() const throw();
+    bool hasFullDefinition() const ;
 
 
 private:
@@ -156,8 +158,8 @@ private:
      * @param[in] delim The delimiter string
      * @param[in] chomp Whether the tokens shall be prunned
      */
-    void reinitMap(std::string def, const std::string& delim=";",
-                   bool chomp=false) throw();
+    void reinitMap(std::string def, const std::string& delim = ";",
+                   bool chomp = false) ;
 
 
     /** @brief Prunes the given string if it shall be done
@@ -168,7 +170,7 @@ private:
      * @param[in, out] str The string to prune (optionally)
      * @param[in] prune Whether the string shall be prunned
      */
-    void checkPrune(std::string& str, bool prune) const throw();
+    void checkPrune(std::string& str, bool prune) const ;
 
 
 private:

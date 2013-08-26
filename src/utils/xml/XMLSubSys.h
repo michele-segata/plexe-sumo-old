@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    XMLSubSys.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 1 Jul 2002
 /// @version $Id$
 ///
 // Utility methods for initialising, closing and using the XML-subsystem
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -84,7 +86,7 @@ public:
      * @exception ProcessError If the initialisation fails
      * @see getSAXReader()
      */
-    static void init(bool enableValidation) throw(ProcessError);
+    static void init(bool enableValidation) ;
 
 
     /**
@@ -92,7 +94,7 @@ public:
      *
      * Deletes the built reader and calls XMLPlatformUtils::Terminate();
      */
-    static void close() throw();
+    static void close() ;
 
 
     /**
@@ -106,7 +108,7 @@ public:
      * @return The built Xerces-SAX-reader, 0 if something failed
      * @see getSAXReader()
      */
-    static XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader* getSAXReader(SUMOSAXHandler& handler) throw();
+    static XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader* getSAXReader(SUMOSAXHandler& handler) ;
 
 
     /**
@@ -137,7 +139,7 @@ public:
      * @return true if the parsing was done without errors, false otherwise (error was printed)
      */
     static bool runParser(GenericSAXHandler& handler,
-                          const std::string& file) throw();
+                          const std::string& file) ;
 
 
 protected:
@@ -151,7 +153,7 @@ protected:
      *
      * @return The built Xerces-SAX-reader, 0 if something failed
      */
-    static XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader* getSAXReader() throw();
+    static XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader* getSAXReader() ;
 
 
     /**
@@ -164,7 +166,7 @@ protected:
      * @param[in] value Value of the feature to set
      */
     static void setFeature(XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader& reader,
-                           const std::string& feature, bool value) throw();
+                           const std::string& feature, bool value) ;
 
 
 private:

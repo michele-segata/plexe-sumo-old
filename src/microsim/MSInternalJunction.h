@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSInternalJunction.h
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Wed, 12 Dez 2001
 /// @version $Id$
 ///
 // junction.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,20 +68,20 @@ public:
      */
     MSInternalJunction(const std::string& id, const Position& position,
                        const PositionVector& shape,
-                       std::vector<MSLane*> incoming, std::vector<MSLane*> internal) throw();
+                       std::vector<MSLane*> incoming, std::vector<MSLane*> internal) ;
 
     /// Destructor.
     virtual ~MSInternalJunction();
 
 
-    void postloadInit() throw(ProcessError);
+    void postloadInit() ;
 
-    const std::vector<MSLink*> &getFoeLinks(const MSLink* const srcLink) const throw() {
+    const std::vector<MSLink*> &getFoeLinks(const MSLink* const srcLink) const {
         UNUSED_PARAMETER(srcLink);
         return myInternalLinkFoes;
     }
 
-    const std::vector<MSLane*> &getFoeInternalLanes(const MSLink* const srcLink) const throw() {
+    const std::vector<MSLane*> &getFoeInternalLanes(const MSLink* const srcLink) const {
         UNUSED_PARAMETER(srcLink);
         return myInternalLaneFoes;
     }

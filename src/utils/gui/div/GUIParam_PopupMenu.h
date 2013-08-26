@@ -7,12 +7,13 @@
 // A popup-menu for dynamic patameter table entries
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,11 +66,11 @@ public:
     GUIParam_PopupMenuInterface(GUIMainWindow& app,
                                 GUIParameterTableWindow& parentWindow,
                                 GUIGlObject& o, const std::string& varName,
-                                ValueSource<SUMOReal> *src) throw();
+                                ValueSource<SUMOReal> *src) ;
 
 
     /// @brief Destructor
-    ~GUIParam_PopupMenuInterface() throw();
+    ~GUIParam_PopupMenuInterface() ;
 
 
     /// @name FOX-callbacks
@@ -80,7 +81,7 @@ public:
      * Builds a new GUIParameterTracker adding the stored value to it.
      * Initialises this tracker, then.
      */
-    long onCmdOpenTracker(FXObject*,FXSelector,void*);
+    long onCmdOpenTracker(FXObject*, FXSelector, void*);
     /// @}
 
 

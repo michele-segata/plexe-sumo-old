@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 @file    vehicle.py
-@author  Michael.Behrisch@dlr.de, Lena Kalleske
+@author  Michael Behrisch
+@author  Lena Kalleske
 @date    2011-03-09
 @version $Id$
 
 Python implementation of the TraCI interface.
 
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
 Copyright (C) 2011 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
@@ -102,10 +104,7 @@ def getSpeedWithoutTraCI(vehID):
 def getPosition(vehID):
     """getPosition(string) -> (double, double)
     
-    .
-    """
-    """
-    Returns the position of the named vehicle within the last step [m,m]
+    Returns the position of the named vehicle within the last step [m,m].
     """
     return _getUniversal(tc.VAR_POSITION, vehID)
 
@@ -175,49 +174,49 @@ def getColor(vehID):
 def getCO2Emission(vehID):
     """getCO2Emission(string) -> double
     
-    .
+    Returns the CO2 emission in mg for the last time step.
     """
     return _getUniversal(tc.VAR_CO2EMISSION, vehID)
 
 def getCOEmission(vehID):
     """getCOEmission(string) -> double
     
-    .
+    Returns the CO emission in mg for the last time step.
     """
     return _getUniversal(tc.VAR_COEMISSION, vehID)
 
 def getHCEmission(vehID):
     """getHCEmission(string) -> double
     
-    .
+    Returns the HC emission in mg for the last time step.
     """
     return _getUniversal(tc.VAR_HCEMISSION, vehID)
 
 def getPMxEmission(vehID):
     """getPMxEmission(string) -> double
     
-    .
+    Returns the particular matter emission in mg for the last time step.
     """
     return _getUniversal(tc.VAR_PMXEMISSION, vehID)
 
 def getNOxEmission(vehID):
     """getNOxEmission(string) -> double
     
-    .
+    Returns the NOx emission in mg for the last time step.
     """
     return _getUniversal(tc.VAR_NOXEMISSION, vehID)
 
 def getFuelConsumption(vehID):
     """getFuelConsumption(string) -> double
     
-    .
+    Returns the fuel consumption in ml for the last time step.
     """
     return _getUniversal(tc.VAR_FUELCONSUMPTION, vehID)
 
 def getNoiseEmission(vehID):
     """getNoiseEmission(string) -> double
     
-    .
+    Returns the noise emission in db for the last time step.
     """
     return _getUniversal(tc.VAR_NOISEEMISSION, vehID)
 
@@ -484,6 +483,11 @@ def setSpeed(vehID, speed):
     traci._sendDoubleCmd(tc.CMD_SET_VEHICLE_VARIABLE, tc.VAR_SPEED, vehID, speed)
 
 def setColor(vehID, color):
+    """setColor(string, (integer, integer, integer, integer))
+    sets color for vehicle with the given ID.
+    i.e. (255,0,0,0) for the color red. 
+    The fourth integer (alpha) is currently ignored
+    """
     traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.VAR_COLOR, vehID, 1+1+1+1+1)
     traci._message.string += struct.pack("!BBBBB", tc.TYPE_COLOR, int(color[0]), int(color[1]), int(color[2]), int(color[3]))
     traci._sendExact()

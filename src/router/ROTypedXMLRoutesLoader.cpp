@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    ROTypedXMLRoutesLoader.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Base class for loading routes from XML-files
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -49,7 +51,7 @@
 ROTypedXMLRoutesLoader::ROTypedXMLRoutesLoader(RONet& net,
         SUMOTime begin,
         SUMOTime end,
-        const std::string& file) throw(ProcessError)
+        const std::string& file)
     : ROAbstractRouteDefLoader(net, begin, end),
       SUMOSAXHandler(file),
       myParser(0), myToken(), myEnded(false) {
@@ -62,17 +64,17 @@ ROTypedXMLRoutesLoader::ROTypedXMLRoutesLoader(RONet& net,
 }
 
 
-ROTypedXMLRoutesLoader::~ROTypedXMLRoutesLoader() throw() {
+ROTypedXMLRoutesLoader::~ROTypedXMLRoutesLoader() {
     delete myParser;
 }
 
 
 bool
-ROTypedXMLRoutesLoader::readRoutesAtLeastUntil(SUMOTime time, bool skipping) throw(ProcessError) {
+ROTypedXMLRoutesLoader::readRoutesAtLeastUntil(SUMOTime time, bool skipping) {
     UNUSED_PARAMETER(skipping);
-    while (getLastReadTimeStep()<time&&!ended()) {
+    while (getLastReadTimeStep() < time && !ended()) {
         beginNextRoute();
-        while (!nextRouteRead()&&!ended()) {
+        while (!nextRouteRead() && !ended()) {
             myParser->parseNext(myToken);
         }
     }

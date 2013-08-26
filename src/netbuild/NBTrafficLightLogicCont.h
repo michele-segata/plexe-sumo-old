@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NBTrafficLightLogicCont.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A container for traffic light definitions and built programs
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -62,10 +65,10 @@ class OutputDevice;
 class NBTrafficLightLogicCont {
 public:
     /// @brief Constructor
-    NBTrafficLightLogicCont() throw();
+    NBTrafficLightLogicCont() ;
 
     /// @brief Destructor
-    ~NBTrafficLightLogicCont() throw();
+    ~NBTrafficLightLogicCont() ;
 
     /** @brief Initialises the storage by applying given options
      *
@@ -75,7 +78,7 @@ public:
      * @param[in] oc The options container to read options from
      * @todo Recheck exceptions
      */
-    void applyOptions(OptionsCont& oc) throw();
+    void applyOptions(OptionsCont& oc) ;
 
 
     /** @brief Adds a logic definition to the dictionary
@@ -87,7 +90,7 @@ public:
      * @param[in] renameProgram If true, rename the program to make insertion succeed
      * @return Whether the logic was valid (no logic with the same id and programID is already known)
      */
-    bool insert(NBTrafficLightDefinition* logic, bool forceInsert=false) throw();
+    bool insert(NBTrafficLightDefinition* logic, bool forceInsert = false) ;
 
 
     /** @brief Removes a logic definition (and all programs) from the dictionary
@@ -111,7 +114,7 @@ public:
      * @param[in] del Whether the definition shall be deleted
      * @return Whether the program was within the dictionary
      */
-    bool removeProgram(const std::string id, const std::string programID, bool del=true);
+    bool removeProgram(const std::string id, const std::string programID, bool del = true);
 
 
     /** @brief Extracts a traffic light definition from myDefinitions
@@ -155,7 +158,7 @@ public:
      * @todo Recheck usage
      */
     void remapRemoved(NBEdge* removed,
-                      const EdgeVector& incoming, const EdgeVector& outgoing) throw();
+                      const EdgeVector& incoming, const EdgeVector& outgoing) ;
 
 
     /** @brief Replaces occurences of the removed edge/lane in all definitions by the given edge
@@ -167,7 +170,7 @@ public:
      * @todo Recheck usage
      */
     void replaceRemoved(NBEdge* removed, int removedLane,
-                        NBEdge* by, int byLane) throw();
+                        NBEdge* by, int byLane) ;
 
 
     /** @brief Returns the named definition
@@ -205,7 +208,7 @@ public:
      * @see NBTrafficLightDefinition::setParticipantsInformation
      * @see NBTrafficLightDefinition::setTLControllingInformation
      */
-    void setTLControllingInformation(const NBEdgeCont& ec) throw();
+    void setTLControllingInformation(const NBEdgeCont& ec) ;
 
 
 private:
@@ -240,7 +243,7 @@ private:
 
     /** @brief Destroys all stored definitions and logics
      */
-    void clear() throw();
+    void clear() ;
 
 
 };

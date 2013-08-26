@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSVTypeProbe.cpp
 /// @author  Tino Morenz
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Wed, 24.10.2007
 /// @version $Id$
 ///
 // Writes positions of vehicles that have a certain (named) type
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,13 +63,13 @@ MSVTypeProbe::~MSVTypeProbe() {
 SUMOTime
 MSVTypeProbe::execute(SUMOTime currentTime) {
     const std::string indent("    ");
-    myOutputDevice << indent << "<timestep time=\"" <<time2string(currentTime)<< "\" id=\"" << getID() << "\" vType=\"" << myVType << "\">" << "\n";
+    myOutputDevice << indent << "<timestep time=\"" << time2string(currentTime) << "\" id=\"" << getID() << "\" vType=\"" << myVType << "\">" << "\n";
     MSVehicleControl& vc = MSNet::getInstance()->getVehicleControl();
     MSVehicleControl::constVehIt it = vc.loadedVehBegin();
     MSVehicleControl::constVehIt end = vc.loadedVehEnd();
     for (; it != end; ++it) {
         const MSVehicle* veh = static_cast<const MSVehicle*>((*it).second);
-        if (myVType=="" || myVType==veh->getVehicleType().getID()) {
+        if (myVType == "" || myVType == veh->getVehicleType().getID()) {
             if (!veh->isOnRoad()) {
                 continue;
             }
@@ -76,8 +80,8 @@ MSVTypeProbe::execute(SUMOTime currentTime) {
                            << "\" pos=\"" << veh->getPositionOnLane()
                            << "\" x=\"" << pos.x()
                            << "\" y=\"" << pos.y();
-            if (GeoConvHelper::getDefaultInstance().usingGeoProjection()) {
-                GeoConvHelper::getDefaultInstance().cartesian2geo(pos);
+            if (GeoConvHelper::getFinal().usingGeoProjection()) {
+                GeoConvHelper::getFinal().cartesian2geo(pos);
                 myOutputDevice.setPrecision(GEO_OUTPUT_ACCURACY);
                 myOutputDevice << "\" lat=\"" << pos.y() << "\" lon=\"" << pos.x();
                 myOutputDevice.setPrecision();

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    MSDevice_Routing.h
-/// @author  Michael Behrisch, Daniel Krajzewicz
+/// @author  Michael Behrisch
+/// @author  Daniel Krajzewicz
 /// @date    Tue, 04 Dec 2007
 /// @version $Id$
 ///
 // A device that performs vehicle rerouting based on current edge speeds
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -69,7 +71,7 @@ class MSDevice_Routing : public MSDevice {
 public:
     /** @brief Inserts MSDevice_Routing-options
      */
-    static void insertOptions() throw();
+    static void insertOptions() ;
 
 
     /** @brief Build devices for the given vehicle, if needed
@@ -89,7 +91,7 @@ public:
      * @param[in] v The vehicle for which a device may be built
      * @param[in, filled] into The vector to store the built device in
      */
-    static void buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) throw();
+    static void buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) ;
 
 
 public:
@@ -114,12 +116,12 @@ public:
      * @see MSEventHandler
      * @see WrappingCommand
      */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) throw();
+    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) ;
     /// @}
 
 
     /// @brief Destructor.
-    ~MSDevice_Routing() throw();
+    ~MSDevice_Routing() ;
 
 
 private:
@@ -131,7 +133,7 @@ private:
      * @param[in] preInsertionPeriod The route search period before insertion
      */
     MSDevice_Routing(SUMOVehicle& holder, const std::string& id, SUMOTime period,
-                     SUMOTime preInsertionPeriod) throw();
+                     SUMOTime preInsertionPeriod) ;
 
 
     /** @brief Performs rerouting at insertion into the network
@@ -145,7 +147,7 @@ private:
      * @see MSEventHandler
      * @see WrappingCommand
      */
-    SUMOTime preInsertionReroute(SUMOTime currentTime) throw(ProcessError);
+    SUMOTime preInsertionReroute(SUMOTime currentTime) ;
 
 
     /** @brief Performs rerouting after a period
@@ -162,7 +164,7 @@ private:
      * @see MSEventHandler
      * @see WrappingCommand
      */
-    SUMOTime wrappedRerouteCommandExecute(SUMOTime currentTime) throw(ProcessError);
+    SUMOTime wrappedRerouteCommandExecute(SUMOTime currentTime) ;
 
 
     /** @brief Returns the effort to pass an edge
@@ -196,7 +198,7 @@ private:
      * @see MSEventHandler
      * @see StaticCommand
      */
-    static SUMOTime adaptEdgeEfforts(SUMOTime currentTime) throw(ProcessError);
+    static SUMOTime adaptEdgeEfforts(SUMOTime currentTime) ;
     /// @}
 
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
 @file    tls_csv2SUMO.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2009-08-01
 @version $Id$
 
@@ -20,7 +21,8 @@ time;<PHASE_LENGTH>[;<PHASE_LENGTH>]+
 
 
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
 @file    My_mpl_dump_onNet.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Sascha Krieg
+@author  Michael Behrisch
 @date    2007-10-25
 @version $Id$
 
@@ -16,7 +18,8 @@ matplotlib has to be installed for this purpose
 -d E:/DLR/Projekte/Diplom/Daten/mpl_dump_onNet__Files/FCD_vs_completeRoute351_11.out.xml 
 --values no,no --show --color-map 0:#888888,.4:#ff0000,1:#00ff00
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    Boundary.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A class that stores a 2D geometrical boundary
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -88,13 +91,13 @@ public:
     SUMOReal getHeight() const;
 
     /// Returns whether the boundary contains the given coordinate
-    bool around(const Position& p, SUMOReal offset=0) const;
+    bool around(const Position& p, SUMOReal offset = 0) const;
 
     /// Returns whether the boundary overlaps with the given polygon
-    bool overlapsWith(const AbstractPoly& poly, SUMOReal offset=0) const;
+    bool overlapsWith(const AbstractPoly& poly, SUMOReal offset = 0) const;
 
     /// Returns whether the boundary is partially within the given polygon
-    bool partialWithin(const AbstractPoly& poly, SUMOReal offset=0) const;
+    bool partialWithin(const AbstractPoly& poly, SUMOReal offset = 0) const;
 
     /// Returns whether the boundary crosses the given line
     bool crosses(const Position& p1, const Position& p2) const;
@@ -123,7 +126,7 @@ public:
 
 private:
     /// The boundaries
-    SUMOReal myXmin,myXmax, myYmin, myYmax;
+    SUMOReal myXmin, myXmax, myYmin, myYmax;
 
     /// Information whether the boundary was initialised
     bool myWasInitialised;

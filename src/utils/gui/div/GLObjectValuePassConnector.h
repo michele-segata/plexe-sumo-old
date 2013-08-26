@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GLObjectValuePassConnector.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 // Class passing values from a GUIGlObject to another object
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -66,7 +70,7 @@ public:
      * @param[in] source The method for obtaining the value
      * @param[in] retriever The object to pass the value to
      */
-    GLObjectValuePassConnector(GUIGlObject& o, ValueSource<T> *source, ValueRetriever<T> *retriever) throw()
+    GLObjectValuePassConnector(GUIGlObject& o, ValueSource<T> *source, ValueRetriever<T> *retriever)
         : myObject(o), mySource(source), myRetriever(retriever) { /*, myIsInvalid(false) */
         myLock.lock();
         myContainer.push_back(this);
@@ -75,10 +79,10 @@ public:
 
 
     /// @brief Destructor
-    virtual ~GLObjectValuePassConnector() throw() {
+    virtual ~GLObjectValuePassConnector() {
         myLock.lock();
         typename std::vector< GLObjectValuePassConnector<T>* >::iterator i = std::find(myContainer.begin(), myContainer.end(), this);
-        if (i!=myContainer.end()) {
+        if (i != myContainer.end()) {
             myContainer.erase(i);
         }
         myLock.unlock();
@@ -91,7 +95,7 @@ public:
 
     /** @brief Updates all instances (passes values)
      */
-    static void updateAll() throw() {
+    static void updateAll() {
         myLock.lock();
         std::for_each(myContainer.begin(), myContainer.end(), std::mem_fun(&GLObjectValuePassConnector<T>::passValue));
         myLock.unlock();
@@ -100,7 +104,7 @@ public:
 
     /** @brief Deletes all instances
      */
-    static void clear() throw() {
+    static void clear() {
         myLock.lock();
         while (!myContainer.empty()) {
             delete(*myContainer.begin());
@@ -115,10 +119,10 @@ public:
      * Used if for example a vehicle leaves the network
      * @param[in] o The object which shall no longer be asked for values
      */
-    static void removeObject(GUIGlObject& o) throw() {
+    static void removeObject(GUIGlObject& o) {
         myLock.lock();
-        for (typename std::vector< GLObjectValuePassConnector<T>* >::iterator i=myContainer.begin(); i!=myContainer.end();) {
-            if ((*i)->myObject.getGlID()==o.getGlID()) {
+        for (typename std::vector< GLObjectValuePassConnector<T>* >::iterator i = myContainer.begin(); i != myContainer.end();) {
+            if ((*i)->myObject.getGlID() == o.getGlID()) {
                 i = myContainer.erase(i);
             } else {
                 ++i;
@@ -136,7 +140,7 @@ protected:
      *  Passes the value to the retriever.
      * @see GUIGlObject::active
      */
-    virtual bool passValue() throw() {
+    virtual bool passValue() {
         myRetriever->addValue(mySource->getValue());
         return true;
     }

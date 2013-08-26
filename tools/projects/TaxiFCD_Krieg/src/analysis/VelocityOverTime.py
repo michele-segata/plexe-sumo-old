@@ -1,12 +1,15 @@
 # -*- coding: Latin-1 -*-
 """
 @file    VelocityOverTime.py
-@author  Sascha.Krieg@dlr.de
+@author  Sascha Krieg
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-05-29
 
 Shows the velocityCurve of the chosen taxi for all available sources, thereby the time duration per Edge is apparent.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

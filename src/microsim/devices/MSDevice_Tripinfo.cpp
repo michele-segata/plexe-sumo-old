@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSDevice_Tripinfo.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    Fri, 30.01.2009
 /// @version $Id$
 ///
 // A device which collects info on the vehicle trip
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -44,7 +47,7 @@
 // static initialisation methods
 // ---------------------------------------------------------------------------
 void
-MSDevice_Tripinfo::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) throw() {
+MSDevice_Tripinfo::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) {
     if (OptionsCont::getOptions().isSet("tripinfo-output")) {
         MSDevice_Tripinfo* device = new MSDevice_Tripinfo(v, "tripinfo_" + v.getID());
         into.push_back(device);
@@ -55,20 +58,20 @@ MSDevice_Tripinfo::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &i
 // ---------------------------------------------------------------------------
 // MSDevice_Tripinfo-methods
 // ---------------------------------------------------------------------------
-MSDevice_Tripinfo::MSDevice_Tripinfo(SUMOVehicle& holder, const std::string& id) throw()
+MSDevice_Tripinfo::MSDevice_Tripinfo(SUMOVehicle& holder, const std::string& id)
     : MSDevice(holder, id), myDepartLane(""), myDepartPos(-1), myDepartSpeed(-1),
       myWaitingSteps(0), myArrivalTime(-1), myArrivalLane(""), myArrivalPos(-1), myArrivalSpeed(-1) {
 }
 
 
-MSDevice_Tripinfo::~MSDevice_Tripinfo() throw() {
+MSDevice_Tripinfo::~MSDevice_Tripinfo() {
 }
 
 
 bool
 MSDevice_Tripinfo::notifyMove(SUMOVehicle& /*veh*/, SUMOReal /*oldPos*/,
-                              SUMOReal /*newPos*/, SUMOReal newSpeed) throw() {
-    if (newSpeed<=0.1) {
+                              SUMOReal /*newPos*/, SUMOReal newSpeed) {
+    if (newSpeed <= 0.1) {
         myWaitingSteps++;
     }
     return true;
@@ -76,7 +79,7 @@ MSDevice_Tripinfo::notifyMove(SUMOVehicle& /*veh*/, SUMOReal /*oldPos*/,
 
 
 bool
-MSDevice_Tripinfo::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) throw() {
+MSDevice_Tripinfo::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) {
     if (reason == MSMoveReminder::NOTIFICATION_DEPARTED) {
 #ifdef HAVE_MESOSIM
         if (!MSGlobals::gUseMesoSim) {
@@ -94,7 +97,7 @@ MSDevice_Tripinfo::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification re
 
 bool
 MSDevice_Tripinfo::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/,
-                               MSMoveReminder::Notification reason) throw() {
+                               MSMoveReminder::Notification reason) {
     if (reason >= MSMoveReminder::NOTIFICATION_ARRIVED) {
         myArrivalTime = MSNet::getInstance()->getCurrentTimeStep();
 #ifdef HAVE_MESOSIM
@@ -112,7 +115,7 @@ MSDevice_Tripinfo::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/,
 
 
 void
-MSDevice_Tripinfo::generateOutput() const throw(IOError) {
+MSDevice_Tripinfo::generateOutput() const {
     SUMOReal routeLength = myHolder.getRoute().getLength();
     // write
     OutputDevice& os = OutputDevice::getDeviceByOption("tripinfo-output");
@@ -136,8 +139,8 @@ MSDevice_Tripinfo::generateOutput() const throw(IOError) {
        << "rerouteNo=\"" << myHolder.getNumberReroutes();
     const std::vector<MSDevice*> &devices = myHolder.getDevices();
     std::ostringstream str;
-    for (std::vector<MSDevice*>::const_iterator i=devices.begin(); i!=devices.end(); ++i) {
-        if (i!=devices.begin()) {
+    for (std::vector<MSDevice*>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
+        if (i != devices.begin()) {
             str << ' ';
         }
         str << (*i)->getID();

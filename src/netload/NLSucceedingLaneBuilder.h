@@ -1,6 +1,7 @@
 /****************************************************************************/
 /// @file    NLSucceedingLaneBuilder.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Mon, 22 Oct 2001
 /// @version $Id$
 ///
@@ -8,12 +9,13 @@
 // This class is only used when parsing legacy networks using tags succ/succlane
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -55,11 +57,11 @@ public:
      *
      * @param[in] jb The junction control builder to obtain referenced tls from
      */
-    NLSucceedingLaneBuilder(NLJunctionControlBuilder& jb) throw();
+    NLSucceedingLaneBuilder(NLJunctionControlBuilder& jb) ;
 
 
     /// @brief Destructor
-    ~NLSucceedingLaneBuilder() throw();
+    ~NLSucceedingLaneBuilder() ;
 
 
     /** @brief Begins the computation of a container holding the succeeding lanes of a lane
@@ -67,7 +69,7 @@ public:
      * @param[in] laneId The id of the lane from which connections will be built
      * @todo Why is the ID kept, not already the lane itself?
      */
-    void openSuccLane(const std::string& laneId) throw();
+    void openSuccLane(const std::string& laneId) ;
 
 
     /** @brief Adds a succeeding lane
@@ -94,7 +96,7 @@ public:
                      const std::string& viaID, SUMOReal pass,
 #endif
                      LinkDirection dir, LinkState state,
-                     const std::string& tlid="", unsigned int linkNo=0) throw(InvalidArgument);
+                     const std::string& tlid = "", unsigned int linkNo = 0) throw(InvalidArgument);
 
 
     /** @brief Ends the computation of a container holding the succeeding lanes of a lane
@@ -110,7 +112,7 @@ public:
     /** @brief Returns the name of the lane the succeeding lanes are added to
      * @return The ID of the currently opened lane
      */
-    const std::string& getCurrentLaneName() const throw();
+    const std::string& getCurrentLaneName() const ;
 
 
 private:

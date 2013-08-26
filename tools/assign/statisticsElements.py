@@ -1,6 +1,8 @@
 """
 @file    statisticsElements.py
-@author  Yun-Pang.Wang@dlr.de
+@author  Yun-Pang Wang
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-07-10
 @version $Id$
 
@@ -9,7 +11,8 @@ This script is to define classes, functions, parse-reader and output files/forma
 - conducting significance tests (either t-Test or Kruskal-Wallis-Test) and
 - writing results into files.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

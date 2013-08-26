@@ -1,20 +1,25 @@
 /****************************************************************************/
 /// @file    AGMain.cpp
-/// @author  Piotr Woznica & Walter Bamberger
+/// @author  Piotr Woznica
+/// @author  Walter Bamberger
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Jul 2010
 /// @version $Id$
 ///
 // Main object of the ActivityGen application
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,7 +69,7 @@
 // ===========================================================================
 
 /// Loads the network
-void loadNet(RONet& toFill, ROAbstractEdgeBuilder& eb) throw(ProcessError) {
+void loadNet(RONet& toFill, ROAbstractEdgeBuilder& eb) {
     OptionsCont& oc = OptionsCont::getOptions();
     std::string file = oc.getString("net-file");
     if (file == "") {
@@ -114,7 +119,7 @@ int main(int argc, char* argv[]) {
 
         std::string statFile = oc.getString("stat-file");
         std::string routeFile = oc.getString("output-file");
-        AGTime duration(1,0,0);
+        AGTime duration(1, 0, 0);
         AGTime begin(0);
         AGTime end(0);
         if (oc.isSet("duration-d")) {
@@ -135,7 +140,7 @@ int main(int argc, char* argv[]) {
         }
         ret = 0;
     } catch (ProcessError& pe) {
-        if (std::string(pe.what())!=std::string("Process Error") && std::string(pe.what())!=std::string("")) {
+        if (std::string(pe.what()) != std::string("Process Error") && std::string(pe.what()) != std::string("")) {
             WRITE_ERROR(pe.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
@@ -148,7 +153,7 @@ int main(int argc, char* argv[]) {
     }
     OutputDevice::closeAll();
     SystemFrame::close();
-    if (ret==0) {
+    if (ret == 0) {
         std::cout << "Success." << std::endl;
     }
     return ret;

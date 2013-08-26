@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    TraCIDijkstraRouter.h
-/// @author  Friedemann Wesner <wesner@itm.uni-luebeck.de>
+/// @author  Friedemann Wesner
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    2008/03/29
 /// @version $Id$
 ///
 /// Dijkstra Router for use by TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -113,11 +116,11 @@ public:
 
         /// Comparing method
         bool operator()(EdgeInfo* nod1, EdgeInfo* nod2) const {
-            return nod1->effort>nod2->effort;
+            return nod1->effort > nod2->effort;
         }
     };
 
-    virtual SUMOReal getEffort(const E* const e, SUMOReal t) {
+    virtual SUMOReal getEffort(const E* const e, SUMOReal t) const {
         SUMOReal value;
         if (MSNet::getInstance()->getWeightsStorage().retrieveExistingEffort(e, 0, t, value)) {
             return value;
@@ -130,33 +133,33 @@ public:
     /** @brief Builds the route between the given edges using the minimum effort at the given time
         The definition of the effort depends on the wished routing scheme */
     virtual void compute(const E* from, const E* to, const MSVehicle* const vehicle,
-                         SUMOTime time, std::vector<const E*> &into) {
-
+                         SUMOTime msTime, std::vector<const E*> &into) {
         UNUSED_PARAMETER(vehicle);
+        const SUMOReal time = STEPS2TIME(msTime);
         // get structures to reuse
         std::vector<bool> *visited = myReusableEdgeLists.getFreeInstance();
-        if (visited==0) {
+        if (visited == 0) {
             visited = new std::vector<bool>(myNoE, false);
         } else {
-            for (size_t i=0; i<myNoE; i++) {
+            for (size_t i = 0; i < myNoE; i++) {
                 (*visited)[i] = false; // too slow? !!!
             }
         }
         EdgeInfoCont* storage = myReusableEdgeInfoLists.getFreeInstance();
-        if (storage==0) {
+        if (storage == 0) {
             storage = new EdgeInfoCont(myNoE);
         }
         storage->reset();
 
         // check the nodes
-        if (from==0||to==0) {
+        if (from == 0 || to == 0) {
             throw std::exception();
         }
 
         // begin computation
-        std::priority_queue<EdgeInfo*,
+        std::priority_queue < EdgeInfo*,
             std::vector<EdgeInfo*>,
-            EdgeInfoByEffortComperator> frontierList;
+            EdgeInfoByEffortComperator > frontierList;
         // add begin node
         const E* actualKnot = from;
         if (from != 0) {
@@ -178,11 +181,11 @@ public:
                 return;
             }
             (*visited)[minEdge->getNumericalID()] = true;
-            SUMOReal effort = (SUMOReal)(minimumKnot->effort + getEffort(minEdge, time + minimumKnot->effort));
+            const SUMOReal effort = (SUMOReal)(minimumKnot->effort + getEffort(minEdge, time + minimumKnot->effort));
             // check all ways from the node with the minimal length
             unsigned int i = 0;
-            unsigned int length_size = minEdge->getNoFollowing();
-            for (i=0; i<length_size; i++) {
+            const unsigned int length_size = minEdge->getNoFollowing();
+            for (i = 0; i < length_size; i++) {
                 const E* help = minEdge->getFollower(i);
 
                 if ((!(*visited)[help->getNumericalID()] && effort < storage->getEffort(help))
@@ -199,11 +202,12 @@ public:
     }
 
 
-    SUMOReal recomputeCosts(const std::vector<const E*> &edges, const MSVehicle* const v, SUMOTime time) throw() {
+    SUMOReal recomputeCosts(const std::vector<const E*> &edges, const MSVehicle* const v, SUMOTime msTime) const {
         UNUSED_PARAMETER(v);
+        const SUMOReal time = STEPS2TIME(msTime);
         SUMOReal costs = 0;
-        for (typename std::vector<const E*>::const_iterator i=edges.begin(); i!=edges.end(); i++) {
-            costs += getEffort(*i, (SUMOTime)(time + costs));
+        for (typename std::vector<const E*>::const_iterator i = edges.begin(); i != edges.end(); i++) {
+            costs += getEffort(*i, time + costs);
         }
         return costs;
     }
@@ -213,7 +217,7 @@ public:
     void buildPathFrom(EdgeInfo* rbegin, std::vector<const E*> &edges) {
         std::deque<const E*> tmp;
         EdgeInfo* last = rbegin;
-        while (rbegin!=0) {
+        while (rbegin != 0) {
             tmp.push_front((E*) rbegin->edge);  // !!!
             rbegin = rbegin->prev;
             if (rbegin == last) {
@@ -236,7 +240,7 @@ public:
     public:
         /// Constructor
         EdgeInfoCont(size_t toAlloc)
-            : myEdgeInfos(toAlloc+1, EdgeInfo()) { }
+            : myEdgeInfos(toAlloc + 1, EdgeInfo()) { }
 
         /// Destructor
         ~EdgeInfoCont() { }
@@ -264,7 +268,7 @@ public:
 
         /// Resets all effort-information
         void reset() {
-            for (typename std::vector<EdgeInfo>::iterator i=myEdgeInfos.begin(); i!=myEdgeInfos.end(); i++) {
+            for (typename std::vector<EdgeInfo>::iterator i = myEdgeInfos.begin(); i != myEdgeInfos.end(); i++) {
                 (*i).effort = std::numeric_limits<SUMOReal>::max();
             }
         }

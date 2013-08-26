@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIImporter_DlrNavteq.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 14.04.2008
 /// @version $Id$
 ///
 // Importer for networks stored in Elmar's format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -88,11 +90,11 @@ protected:
          * @param[in, geoms] geoms Storage for read edge geometries
          */
         NodesHandler(NBNodeCont& nc, const std::string& file,
-                     std::map<std::string, PositionVector> &geoms) throw();
+                     std::map<std::string, PositionVector> &geoms) ;
 
 
         /// @brief Destructor
-        ~NodesHandler() throw();
+        ~NodesHandler() ;
 
 
         /** @brief Parsing method
@@ -106,7 +108,7 @@ protected:
          * @exception ProcessError if something fails
          * @see LineHandler::report
          */
-        bool report(const std::string& result) throw(ProcessError);
+        bool report(const std::string& result) ;
 
 
     protected:
@@ -144,11 +146,11 @@ protected:
          * @param[in] geoms The previously read edge geometries
          */
         EdgesHandler(NBNodeCont& nc, NBEdgeCont& ec,
-                     const std::string& file, std::map<std::string, PositionVector> &geoms) throw();
+                     const std::string& file, std::map<std::string, PositionVector> &geoms) ;
 
 
         /// @brief Destructor
-        ~EdgesHandler() throw();
+        ~EdgesHandler() ;
 
 
         /** @brief Parsing method
@@ -160,7 +162,7 @@ protected:
              * @exception ProcessError if something fails
              * @see LineHandler::report
          */
-        bool report(const std::string& result) throw(ProcessError);
+        bool report(const std::string& result) ;
 
 
     protected:
@@ -203,11 +205,11 @@ protected:
          * @param[in] file The name of the parsed file
          */
         TrafficlightsHandler(NBNodeCont& nc, NBTrafficLightLogicCont& tlc,
-                             const std::string& file) throw();
+                             const std::string& file) ;
 
 
         /// @brief Destructor
-        ~TrafficlightsHandler() throw();
+        ~TrafficlightsHandler() ;
 
 
         /** @brief Parsing method
@@ -219,7 +221,7 @@ protected:
          * @exception ProcessError if something fails
          * @see LineHandler::report
          */
-        bool report(const std::string& result) throw(ProcessError);
+        bool report(const std::string& result) ;
 
 
     protected:

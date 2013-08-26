@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    FileHelpers.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 17 Dec 2001
 /// @version $Id$
 ///
 // Functions for an easier usage of files
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,13 +50,13 @@
 // ---------------------------------------------------------------------------
 bool
 FileHelpers::exists(std::string path) {
-    if (path.length()==0) {
+    if (path.length() == 0) {
         return false;
     }
-    while (path[path.length()-1]=='/'||path[path.length()-1]=='\\') {
-        path.erase(path.end()-1);
+    while (path[path.length() - 1] == '/' || path[path.length() - 1] == '\\') {
+        path.erase(path.end() - 1);
     }
-    if (path.length()==0) {
+    if (path.length() == 0) {
         return false;
     }
     struct stat st;
@@ -69,10 +71,10 @@ FileHelpers::exists(std::string path) {
 std::string
 FileHelpers::getFilePath(const std::string& path) {
     size_t beg = path.find_last_of("\\/");
-    if (beg==std::string::npos||beg==0) {
+    if (beg == std::string::npos || beg == 0) {
         return "";
     }
-    return path.substr(0, beg+1);
+    return path.substr(0, beg + 1);
 }
 
 
@@ -97,17 +99,17 @@ FileHelpers::isAbsolute(const std::string& path) {
         return true;
     }
     // check UNIX - absolute paths
-    if (path.length()>0&&path[0]=='/') {
+    if (path.length() > 0 && path[0] == '/') {
         return true;
     }
     // check Windows - absolute paths
-    if (path.length()>0&&path[0]=='\\') {
+    if (path.length() > 0 && path[0] == '\\') {
         return true;
     }
-    if (path.length()>1&&path[1]==':') {
+    if (path.length() > 1 && path[1] == ':') {
         return true;
     }
-    if (path=="nul"||path=="NUL") {
+    if (path == "nul" || path == "NUL") {
         return true;
     }
     return false;

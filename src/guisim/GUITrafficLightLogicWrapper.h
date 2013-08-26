@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUITrafficLightLogicWrapper.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Oct/Nov 2003
 /// @version $Id$
 ///
 // A wrapper for tl-logics to allow their visualisation and interaction
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,10 +55,10 @@ class GUIMainWindow;
 class GUITrafficLightLogicWrapper : public GUIGlObject {
 public:
     /// Constructor
-    GUITrafficLightLogicWrapper(MSTLLogicControl& control, MSTrafficLightLogic& tll) throw();
+    GUITrafficLightLogicWrapper(MSTLLogicControl& control, MSTrafficLightLogic& tll) ;
 
     /// Destructor
-    ~GUITrafficLightLogicWrapper() throw();
+    ~GUITrafficLightLogicWrapper() ;
 
 
 
@@ -70,7 +73,7 @@ public:
      * @see GUIGlObject::getPopUpMenu
      */
     GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
-                                       GUISUMOAbstractView& parent) throw();
+                                       GUISUMOAbstractView& parent) ;
 
 
     /** @brief Returns an own parameter window
@@ -81,7 +84,7 @@ public:
      * @see GUIGlObject::getParameterWindow
      */
     GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app,
-            GUISUMOAbstractView& parent) throw();
+            GUISUMOAbstractView& parent) ;
 
 
     /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -89,14 +92,14 @@ public:
      * @return The boundary the object is within
      * @see GUIGlObject::getCenteringBoundary
      */
-    Boundary getCenteringBoundary() const throw();
+    Boundary getCenteringBoundary() const ;
 
 
     /** @brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const throw();
+    void drawGL(const GUIVisualizationSettings& s) const ;
     //@}
 
 
@@ -127,16 +130,16 @@ public:
                                              GUISUMOAbstractView& parent, GUIGlObject& o);
 
         /// Destructor
-        ~GUITrafficLightLogicWrapperPopupMenu() throw();
+        ~GUITrafficLightLogicWrapperPopupMenu() ;
 
         /// Called if the phases shall be shown
-        long onCmdShowPhases(FXObject*,FXSelector,void*);
+        long onCmdShowPhases(FXObject*, FXSelector, void*);
 
         /// Called if the phases shall be begun to track
-        long onCmdBegin2TrackPhases(FXObject*,FXSelector,void*);
+        long onCmdBegin2TrackPhases(FXObject*, FXSelector, void*);
 
-        long onCmdSwitchTLS2Off(FXObject*,FXSelector,void*);
-        long onCmdSwitchTLSLogic(FXObject*,FXSelector,void*);
+        long onCmdSwitchTLS2Off(FXObject*, FXSelector, void*);
+        long onCmdSwitchTLSLogic(FXObject*, FXSelector, void*);
 
     protected:
         /// protected constructor for FOX

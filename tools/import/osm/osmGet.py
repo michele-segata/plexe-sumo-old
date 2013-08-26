@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 """
 @file    osmGet.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Jakob Erdmann
+@author  Michael Behrisch
 @date    2009-08-01
 @version $Id$
 
 Retrieves an area from OpenStreetMap.
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -15,7 +18,8 @@ import os, sys, httplib, StringIO, gzip, optparse
 from os import path
 
 def readCompressed(conn, query, filename):
-    conn.request("POST", "/api/interpreter", """<osm-script timeout="180" element-limit="20000000">
+    conn.request("POST", "/api/interpreter", """
+    <osm-script timeout="240" element-limit="1073741824">
     <union>
        %s
        <recurse type="node-relation" into="rels"/>
@@ -74,6 +78,7 @@ def get(args=None):
         conn.close()
     else:
         conn = httplib.HTTPConnection("www.overpass-api.de")
+        #conn = httplib.HTTPConnection("overpass.osm.rambler.ru")
         if options.area:
             if options.area < 3600000000:
                 options.area += 3600000000

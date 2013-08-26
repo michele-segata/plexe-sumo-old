@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NGEdge.h
 /// @author  Markus Hartinger
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mar, 2003
 /// @version $Id$
 ///
 // A netgen-representation of an edge
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,21 +68,21 @@ public:
      * @param[in] StarNGNode The begin node
      * @param[in] EndNode The end node
      */
-    NGEdge(const std::string& id, NGNode* startNode, NGNode* endNode) throw();
+    NGEdge(const std::string& id, NGNode* startNode, NGNode* endNode) ;
 
 
     /** @brief Destructor
      *
      * Removes itself from the start and the end node's lists of connections.
      */
-    ~NGEdge() throw();
+    ~NGEdge() ;
 
 
     /** @brief Returns this link's id
      *
      * @return The id of the link
      */
-    const std::string& getID() const throw() {
+    const std::string& getID() const {
         return myID;
     }
 
@@ -88,7 +91,7 @@ public:
      *
      * @return The start node of the link
      */
-    NGNode* getStartNode() throw() {
+    NGNode* getStartNode() {
         return myStartNode;
     };
 
@@ -97,7 +100,7 @@ public:
      *
      * @return The end node of the link
      */
-    NGNode* getEndNode() throw() {
+    NGNode* getEndNode() {
         return myEndNode;
     };
 
@@ -111,7 +114,7 @@ public:
      * @param[in] nb The netbuilder to retrieve the referenced nodes from
      * @return The built edge
      */
-    NBEdge* buildNBEdge(NBNetBuilder& nb) const throw(ProcessError);
+    NBEdge* buildNBEdge(NBNetBuilder& nb) const ;
 
 
 private:

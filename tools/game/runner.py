@@ -2,7 +2,8 @@
 # -*- coding: utf8 -*-
 """
 @file    runner.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Jakob Erdmann
 @date    2010-01-30
 @version $Id$
 
@@ -11,7 +12,8 @@ It checks for possible scenarios in the current working directory
 and lets the user start them as a game. Furthermore it
 saves highscores to local disc and to the central highscore server.
 
-Copyright (C) 2010-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2010-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, subprocess, sys, re, pickle, httplib, glob, Tkinter
@@ -60,7 +62,7 @@ class StartDialog:
         self.root.minsize(250, 50)
         self.gametime = 0
         self.ret = 0
-        configs = glob.glob(os.path.join(base, "*.sumo.cfg"))
+        configs = glob.glob(os.path.join(base, "*.sumocfg"))
         numButtons = len(configs) + 2
         print numButtons
         # some pretty images

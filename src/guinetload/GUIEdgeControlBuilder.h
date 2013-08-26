@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GUIEdgeControlBuilder.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Derivation of NLEdgeControlBuilder which builds gui-edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,11 +63,11 @@ public:
      *
      * @param[in] glObjectIDStorage Storage of gl-ids used to assign new ids to built edges
      */
-    GUIEdgeControlBuilder() throw();
+    GUIEdgeControlBuilder() ;
 
 
     /// @brief Destructor
-    ~GUIEdgeControlBuilder() throw();
+    ~GUIEdgeControlBuilder() ;
 
 
     /** @brief Builds and adds a lane
@@ -96,7 +100,7 @@ public:
      *
      * @param[in] id The id of the edge to build
      */
-    MSEdge* buildEdge(const std::string& id, const std::string& streetName) throw();
+    MSEdge* buildEdge(const std::string& id, const std::string& streetName) ;
 
 
 private:

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
 @file    reprojectpolys.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-03-27
 @version $Id$
 
@@ -13,7 +14,8 @@ This means, the resulting polygons, written to the output
  specified by --output, are net2's polygons as they would
  be on net1.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

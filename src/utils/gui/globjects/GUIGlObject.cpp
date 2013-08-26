@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GUIGlObject.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Base class for all objects that may be displayed within the openGL-gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -96,8 +100,8 @@ GUIGlObject::GUIGlObject(const std::string& prefix, GUIGlObjectType type, const 
 
 
 
-GUIGlObject::~GUIGlObject() throw() {
-    for (std::set<GUIParameterTableWindow*>::iterator i=myParamWindows.begin(); i!=myParamWindows.end(); ++i) {
+GUIGlObject::~GUIGlObject() {
+    for (std::set<GUIParameterTableWindow*>::iterator i = myParamWindows.begin(); i != myParamWindows.end(); ++i) {
         (*i)->removeObject(this);
     }
     GUIGlObjectStorage::gIDStorage.remove(getGlID());
@@ -113,7 +117,7 @@ GUIGlObject::setMicrosimID(const std::string& newID) {
 
 void
 GUIGlObject::buildPopupHeader(GUIGLObjectPopupMenu* ret, GUIMainWindow& app,
-                              bool addSeparator) throw() {
+                              bool addSeparator) {
     new MFXMenuHeader(ret, app.getBoldFont(), getFullName().c_str(), 0, 0, 0);
     if (addSeparator) {
         new FXMenuSeparator(ret);
@@ -122,7 +126,7 @@ GUIGlObject::buildPopupHeader(GUIGLObjectPopupMenu* ret, GUIMainWindow& app,
 
 
 void
-GUIGlObject::buildCenterPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) throw() {
+GUIGlObject::buildCenterPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) {
     new FXMenuCommand(ret, "Center", GUIIconSubSys::getIcon(ICON_RECENTERVIEW), ret, MID_CENTER);
     if (addSeparator) {
         new FXMenuSeparator(ret);
@@ -131,7 +135,7 @@ GUIGlObject::buildCenterPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator)
 
 
 void
-GUIGlObject::buildNameCopyPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) throw() {
+GUIGlObject::buildNameCopyPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) {
     new FXMenuCommand(ret, "Copy name to clipboard", 0, ret, MID_COPY_NAME);
     new FXMenuCommand(ret, "Copy typed name to clipboard", 0, ret, MID_COPY_TYPED_NAME);
     if (addSeparator) {
@@ -141,7 +145,7 @@ GUIGlObject::buildNameCopyPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparato
 
 
 void
-GUIGlObject::buildSelectionPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) throw() {
+GUIGlObject::buildSelectionPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) {
     if (gSelected.isSelected(getType(), getGlID())) {
         new FXMenuCommand(ret, "Remove From Selected", GUIIconSubSys::getIcon(ICON_FLAG_MINUS), ret, MID_REMOVESELECT);
     } else {
@@ -154,7 +158,7 @@ GUIGlObject::buildSelectionPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparat
 
 
 void
-GUIGlObject::buildShowParamsPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) throw() {
+GUIGlObject::buildShowParamsPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) {
     new FXMenuCommand(ret, "Show Parameter", GUIIconSubSys::getIcon(ICON_APP_TABLE), ret, MID_SHOWPARS);
     if (addSeparator) {
         new FXMenuSeparator(ret);
@@ -163,9 +167,9 @@ GUIGlObject::buildShowParamsPopupEntry(GUIGLObjectPopupMenu* ret, bool addSepara
 
 
 void
-GUIGlObject::buildPositionCopyEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) throw() {
+GUIGlObject::buildPositionCopyEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) {
     new FXMenuCommand(ret, "Copy cursor position to clipboard", 0, ret, MID_COPY_CURSOR_POSITION);
-    if (GeoConvHelper::getDefaultInstance().usingGeoProjection()) {
+    if (GeoConvHelper::getFinal().usingGeoProjection()) {
         new FXMenuCommand(ret, "Copy cursor geo-position to clipboard", 0, ret, MID_COPY_CURSOR_GEOPOSITION);
     }
     if (addSeparator) {
@@ -175,7 +179,7 @@ GUIGlObject::buildPositionCopyEntry(GUIGLObjectPopupMenu* ret, bool addSeparator
 
 
 void
-GUIGlObject::buildShowManipulatorPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) throw() {
+GUIGlObject::buildShowManipulatorPopupEntry(GUIGLObjectPopupMenu* ret, bool addSeparator) {
     new FXMenuCommand(ret, "Open Manipulator...", GUIIconSubSys::getIcon(ICON_MANIP), ret, MID_MANIP);
     if (addSeparator) {
         new FXMenuSeparator(ret);
@@ -184,15 +188,15 @@ GUIGlObject::buildShowManipulatorPopupEntry(GUIGLObjectPopupMenu* ret, bool addS
 
 
 void
-GUIGlObject::addParameterTable(GUIParameterTableWindow* t) throw() {
+GUIGlObject::addParameterTable(GUIParameterTableWindow* t) {
     myParamWindows.insert(t);
 }
 
 
 void
-GUIGlObject::removeParameterTable(GUIParameterTableWindow* t) throw() {
-    std::set<GUIParameterTableWindow*>::iterator i=myParamWindows.find(t);
-    if (i!=myParamWindows.end()) {
+GUIGlObject::removeParameterTable(GUIParameterTableWindow* t) {
+    std::set<GUIParameterTableWindow*>::iterator i = myParamWindows.find(t);
+    if (i != myParamWindows.end()) {
         myParamWindows.erase(i);
     }
 }

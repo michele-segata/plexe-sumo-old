@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSInternalLane.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2003
 /// @version $Id$
 ///
 // Representation of a lane over a junction
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -91,11 +94,11 @@ public:
     MSInternalLane(const std::string& id, SUMOReal maxSpeed, SUMOReal length, MSEdge* const edge,
                    unsigned int numericalID, const PositionVector& shape, SUMOReal width,
                    const SUMOVehicleClasses& allowed,
-                   const SUMOVehicleClasses& disallowed) throw();
+                   const SUMOVehicleClasses& disallowed) ;
 
 
     /// @brief Destructor
-    virtual ~MSInternalLane() throw();
+    virtual ~MSInternalLane() ;
 
 
     /// @name Additional initialisation
@@ -111,13 +114,13 @@ public:
      * @param[in] foesIdx This lane's index within this state
      */
     void setParentJunctionInformation(MSLogicJunction::InnerState* const foescont,
-                                      unsigned int foesIdx) throw();
+                                      unsigned int foesIdx) ;
 
 
     /** @brief Sets the position that must be free so that vehicles can pass
      * @todo !!! incomplete usage; check
      */
-    void setPassPosition(SUMOReal passPos) throw();
+    void setPassPosition(SUMOReal passPos) ;
     /// @}
 
 

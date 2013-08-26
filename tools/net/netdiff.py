@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 """
 @file    netdiff.py
-@author  Jakob.Erdmann@dlr.de
+@author  Jakob Erdmann
 @date    2011-10-04
 @version $Id$
 
 Reads two networks (source, dest) and tries to produce the minimal plain-xml input
 which can be loaded with netconvert alongside source to create dest
 
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
 Copyright (C) 2011 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
@@ -22,6 +23,7 @@ from subprocess import call
 from collections import namedtuple, defaultdict
 sys.path.append(os.path.join(os.path.dirname(sys.argv[0]), '..', 'lib'))
 from testUtil import checkBinary
+from OrderedMultiSet import OrderedMultiSet
 
 INDENT = 4
 
@@ -46,6 +48,7 @@ PLAIN_TYPES = [
 # CAVEAT4 - deleted connections must be written with their tlID and tlIndex, otherwise
 #     parsing in netconvert becomes tedious
 # CAVEAT5 - phases must maintain their order
+# CAVEAT6 - identical phases may occur multiple times, thus OrderedMultiSet
 
 TAG_TLL = 'tlLogic'
 TAG_CONNECTION = 'connection'
@@ -59,7 +62,7 @@ def get_id_attrs(tag):
     else:
         return ('id',)
 
-DELETE_ELEMENT = 'reset' # the xml element for signifying deletes
+DELETE_ELEMENT = 'delete' # the xml element for signifying deletes
 
 # provide an order for the attribute names
 ATTRIBUTE_NAMES = {
@@ -85,13 +88,13 @@ class AttributeStore:
         # dict of names-tuples
         self.attrnames = {}
         # sets of (tag, id) preserve order to avoid dangling references during loading
-        self.ids_deleted = OrderedSet()
-        self.ids_created = OrderedSet()
+        self.ids_deleted = OrderedMultiSet()
+        self.ids_created = OrderedMultiSet()
         # dict from (tag, id) to (names, values)
         self.id_attrs = {}
         # dict from tag to (names, values)-sets, need to preserve order (CAVEAT5)
-        self.idless_deleted = defaultdict(lambda:OrderedSet())
-        self.idless_created = defaultdict(lambda:OrderedSet())
+        self.idless_deleted = defaultdict(lambda:OrderedMultiSet())
+        self.idless_created = defaultdict(lambda:OrderedMultiSet())
 
 
     # getAttribute returns "" if not present
@@ -217,9 +220,14 @@ class AttributeStore:
                 # see CAVEAT4
                 names, values, children = self.id_attrs[(tag, id)]
                 additional = " " + self.attr_string(names, values)
-            if tag != TAG_TLL: # see CAVEAT3
-                self.write(file, '<%s %s%s/>\n' % (
-                    DELETE_ELEMENT, self.id_string(tag, id), additional))
+
+            comment_start, comment_end = ("", "")
+            if tag == TAG_TLL: # see CAVEAT3
+                comment_start, comment_end = ("<!-- implicit via changed node type: ", " -->")
+            self.write(file, '%s<%s %s%s/>%s\n' % (
+                comment_start,
+                DELETE_ELEMENT, self.id_string(tag, id), additional,
+                comment_end))
         # data loss if two elements with different tags 
         # have the same list of attributes and values
         for value_set in self.idless_deleted.itervalues():
@@ -233,7 +241,7 @@ class AttributeStore:
 
 
     def writeChanged(self, file):
-        tagids_changed = OrderedSet(self.id_attrs.keys()) - (self.ids_deleted | self.ids_created)
+        tagids_changed = OrderedMultiSet(self.id_attrs.keys()) - (self.ids_deleted | self.ids_created)
         self.write_tagids(file, tagids_changed, False)
 
 
@@ -279,95 +287,6 @@ class AttributeStore:
         return ' '.join(['%s="%s"' % (n,v) for n,v in zip(idattrs, id)])
 
 
-
-#######################################################################################3
-# [http://code.activestate.com/recipes/576694/]
-# (c) Raymond Hettinger, MIT-License
-# added operators by Jakob.Erdmann@dlr.de
-
-import collections
-KEY, PREV, NEXT = range(3)
-class OrderedSet(collections.MutableSet):
-
-    def __init__(self, iterable=None):
-        self.end = end = [] 
-        end += [None, end, end]         # sentinel node for doubly linked list
-        self.map = {}                   # key --> [key, prev, next]
-        if iterable is not None:
-            self |= iterable
-
-    def __len__(self):
-        return len(self.map)
-
-    def __contains__(self, key):
-        return key in self.map
-
-    def add(self, key):
-        if key not in self.map:
-            end = self.end
-            curr = end[PREV]
-            curr[NEXT] = end[PREV] = self.map[key] = [key, curr, end]
-
-    def discard(self, key):
-        if key in self.map:        
-            key, prev, next = self.map.pop(key)
-            prev[NEXT] = next
-            next[PREV] = prev
-
-    def __iter__(self):
-        end = self.end
-        curr = end[NEXT]
-        while curr is not end:
-            yield curr[KEY]
-            curr = curr[NEXT]
-
-    def __reversed__(self):
-        end = self.end
-        curr = end[PREV]
-        while curr is not end:
-            yield curr[KEY]
-            curr = curr[PREV]
-
-    def pop(self, last=True):
-        if not self:
-            raise KeyError('set is empty')
-        key = next(reversed(self)) if last else next(iter(self))
-        self.discard(key)
-        return key
-
-    def __repr__(self):
-        if not self:
-            return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, list(self))
-
-    def __eq__(self, other):
-        if isinstance(other, OrderedSet):
-            return len(self) == len(other) and list(self) == list(other)
-        return set(self) == set(other)
-
-    def __del__(self):
-        self.clear()                    # remove circular references
-
-
-    def __sub__(self, other):
-        result = OrderedSet()
-        for x in self:
-            result.add(x)
-        for x in other:
-            result.discard(x)
-        return result
-
-
-    def __or__(self, other):
-        result = OrderedSet()
-        for x in self:
-            result.add(x)
-        for x in other:
-            result.add(x)
-        return result
-#######################################################################################3
-
-
 def parse_args():
     USAGE = "Usage: " + sys.argv[0] + " <source> <dest> <output-prefix>"
     optParser = OptionParser()
@@ -384,8 +303,7 @@ def parse_args():
     return options 
 
 
-def create_plain(netfile):
-    netconvert = checkBinary("netconvert", options.path)        
+def create_plain(netfile, netconvert):
     prefix = netfile[:-8]
     call([netconvert, 
         "--sumo-net-file", netfile, 
@@ -398,16 +316,21 @@ def create_plain(netfile):
 def xmldiff(source, dest, diff, type):
     attributeStore = AttributeStore(type)
     root_open = None
-    if os.path.isfile(source):
+    have_source = os.path.isfile(source)
+    have_dest = os.path.isfile(dest)
+    if have_source:
         root_open, root_close = handle_children(source, attributeStore.store)
-    else:
-        print "Source file %s is missing. Assuming all elements are created" % source
-    if os.path.isfile(dest):
+    if have_dest:
         root_open, root_close = handle_children(dest, attributeStore.compare)
-    else:
-        print "Dest file %s is missing. Assuming all elements are deleted" % dest
 
-    if root_open:
+    if not have_source and not have_dest:
+        print "Skipping %s due to lack of input files" % diff
+    else:
+        if not have_source:
+            print "Source file %s is missing. Assuming all elements are created" % source
+        elif not have_dest:
+            print "Dest file %s is missing. Assuming all elements are deleted" % dest
+
         with open(diff, 'w') as diff_file:
             diff_file.write(root_open)
             attributeStore.write(diff_file, "<!-- Deleted Elements -->\n")
@@ -417,8 +340,6 @@ def xmldiff(source, dest, diff, type):
             attributeStore.write(diff_file, "<!-- Changed Elements -->\n")
             attributeStore.writeChanged(diff_file)
             diff_file.write(root_close)
-    else:
-        print "Skipping %s due to lack of input files" % diff
 
 
 # calls function handle_parsenode for all children of the root element
@@ -447,13 +368,17 @@ def handle_children(xmlfile, handle_parsenode):
 
 
 # run
-options = parse_args()
-if not options.use_prefix:
-    options.source = create_plain(options.source)
-    options.dest = create_plain(options.dest)
-for type in PLAIN_TYPES:
-    xmldiff(options.source + type, 
-            options.dest + type, 
-            options.outprefix + type, 
-            type)
+def main():
+    options = parse_args()
+    if not options.use_prefix:
+        netconvert = checkBinary("netconvert", options.path)        
+        options.source = create_plain(options.source, netconvert)
+        options.dest = create_plain(options.dest, netconvert)
+    for type in PLAIN_TYPES:
+        xmldiff(options.source + type, 
+                options.dest + type, 
+                options.outprefix + type, 
+                type)
 
+if __name__ == "__main__":
+    main()

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    ODDistrictCont.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A container for districts
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -42,16 +44,16 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-ODDistrictCont::ODDistrictCont() throw() {}
+ODDistrictCont::ODDistrictCont() {}
 
 
-ODDistrictCont::~ODDistrictCont() throw() {}
+ODDistrictCont::~ODDistrictCont() {}
 
 
 std::string
 ODDistrictCont::getRandomSourceFromDistrict(const std::string& name) const throw(OutOfBoundsException, InvalidArgument) {
     ODDistrict* district = get(name);
-    if (district==0) {
+    if (district == 0) {
         throw InvalidArgument("There is no district '" + name + "'.");
     }
     return district->getRandomSource();
@@ -61,7 +63,7 @@ ODDistrictCont::getRandomSourceFromDistrict(const std::string& name) const throw
 std::string
 ODDistrictCont::getRandomSinkFromDistrict(const std::string& name) const throw(OutOfBoundsException, InvalidArgument) {
     ODDistrict* district = get(name);
-    if (district==0) {
+    if (district == 0) {
         throw InvalidArgument("There is no district '" + name + "'.");
     }
     return district->getRandomSink();

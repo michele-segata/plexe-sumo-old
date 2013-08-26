@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimSingleTypeParser_VWunschentscheidungsdefinition.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Wed, 18 Dec 2002
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -76,13 +78,13 @@ NIVissimSingleTypeParser_VWunschentscheidungsdefinition::parse(std::istream& fro
     tmp.push_back("zeit");
     tmp.push_back("fahrzeugklasse");
     tag = readEndSecure(from, tmp);
-    while (tag!="DATAEND"&&tag!="zeit") {
+    while (tag != "DATAEND" && tag != "zeit") {
         from >> tag;
         from >> tag;
         from >> tag;
         tag = myRead(from);
     }
-    if (tag=="zeit") {
+    if (tag == "zeit") {
         from >> tag;
         from >> tag;
         from >> tag;
@@ -92,14 +94,14 @@ NIVissimSingleTypeParser_VWunschentscheidungsdefinition::parse(std::istream& fro
     int numlane = TplConvert<char>::_2int(lane.c_str()) - 1;
     int numv = TplConvert<char>::_2int(vwunsch.c_str());
     NIVissimEdge* e = NIVissimEdge::dictionary(numid);
-    if (e==0) {
+    if (e == 0) {
         NIVissimConnection* c = NIVissimConnection::dictionary(numid);
         const IntVector& lanes = c->getToLanes();
         e = NIVissimEdge::dictionary(c->getToEdgeID());
-        for (IntVector::const_iterator j=lanes.begin(); j!=lanes.end(); j++) {
+        for (IntVector::const_iterator j = lanes.begin(); j != lanes.end(); j++) {
             e->setSpeed((*j), numv);
         }
-        assert(e!=0);
+        assert(e != 0);
     } else {
         e->setSpeed(numlane, numv);
     }

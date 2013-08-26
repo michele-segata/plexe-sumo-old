@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUILane.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Representation of a lane in the micro simulation (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -78,11 +81,11 @@ public:
             SUMOReal length, MSEdge* const edge, unsigned int numericalID,
             const PositionVector& shape, SUMOReal width,
             const SUMOVehicleClasses& allowed,
-            const SUMOVehicleClasses& disallowed) throw();
+            const SUMOVehicleClasses& disallowed) ;
 
 
     /// @brief Destructor
-    ~GUILane() throw();
+    ~GUILane() ;
 
 
 
@@ -98,7 +101,7 @@ public:
      * @return The vehicles on this lane
      * @see MSLane::getVehiclesSecure
      */
-    const VehCont& getVehiclesSecure() const throw();
+    const VehCont& getVehiclesSecure() const ;
 
 
     /** @brief Allows to use the container for microsimulation again
@@ -106,7 +109,7 @@ public:
      * Unlocks "myLock" preventing usage by microsimulation.
      * @see MSLane::releaseVehicles
      */
-    void releaseVehicles() const throw();
+    void releaseVehicles() const ;
     /// @}
 
 
@@ -152,7 +155,7 @@ protected:
      */
     virtual void incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed,
                                     const MSLane::VehCont::iterator& at,
-                                    MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED) throw(ProcessError);
+                                    MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED) ;
 
 
 private:

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NIXMLConnectionsHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Importer for edge connections stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -56,11 +59,11 @@ public:
     /** @brief Constructor
      * @param[in] ec The edge container which includes the edges to change connections of
      */
-    NIXMLConnectionsHandler(NBEdgeCont& ec) throw();
+    NIXMLConnectionsHandler(NBEdgeCont& ec) ;
 
 
     /// @brief Destructor
-    ~NIXMLConnectionsHandler() throw();
+    ~NIXMLConnectionsHandler() ;
 
 
 protected:
@@ -75,7 +78,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) throw(ProcessError);
+                        const SUMOSAXAttributes& attrs) ;
     //@}
 
 private:
@@ -87,7 +90,7 @@ private:
      * @param[in] def The definition of the connection
      * @return The parsed connection
      */
-    NBConnection parseConnection(const std::string& defRole, const std::string& def) throw();
+    NBConnection parseConnection(const std::string& defRole, const std::string& def) ;
 
 
     /** @brief Parses a connection when it describes a lane-2-lane relationship
@@ -95,7 +98,7 @@ private:
      * @param[in] from The edge at which the connection starts (the on incoming into a node)
      * @param[in] to The edge at which the connection ends (the on outgoing from a node)
      */
-    void parseLaneBound(const SUMOSAXAttributes& attrs, NBEdge* from, NBEdge* to) throw();
+    void parseLaneBound(const SUMOSAXAttributes& attrs, NBEdge* from, NBEdge* to) ;
 
 
     /** @brief Parses information about lane-2-lane connection when it describes a lane-2-lane relationship

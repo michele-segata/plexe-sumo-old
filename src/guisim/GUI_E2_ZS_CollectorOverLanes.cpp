@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUI_E2_ZS_CollectorOverLanes.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Okt 2003
 /// @version $Id$
 ///
 // The gui-version of a MS_E2_ZS_CollectorOverLanes.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,13 +61,13 @@ GUI_E2_ZS_CollectorOverLanes::GUI_E2_ZS_CollectorOverLanes(std::string id,
         DetectorUsage usage, MSLane* lane, SUMOReal startPos,
         SUMOTime haltingTimeThreshold,
         SUMOReal haltingSpeedThreshold,
-        SUMOReal jamDistThreshold) throw()
+        SUMOReal jamDistThreshold)
     : MS_E2_ZS_CollectorOverLanes(id, usage, lane, startPos,
                                   haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold) {}
 
 
 
-GUI_E2_ZS_CollectorOverLanes::~GUI_E2_ZS_CollectorOverLanes() throw() {}
+GUI_E2_ZS_CollectorOverLanes::~GUI_E2_ZS_CollectorOverLanes() {}
 
 
 GUIDetectorWrapper*
@@ -75,9 +78,9 @@ GUI_E2_ZS_CollectorOverLanes::buildDetectorGUIRepresentation() {
 
 MSE2Collector*
 GUI_E2_ZS_CollectorOverLanes::buildCollector(size_t c, size_t r, MSLane* l,
-        SUMOReal start, SUMOReal end) throw() {
+        SUMOReal start, SUMOReal end) {
     std::string id = makeID(myID, c, r);
-    if (start+end<l->getLength()) {
+    if (start + end < l->getLength()) {
         start = l->getLength() - end - (SUMOReal) 0.1;
     }
     return new GUI_E2_ZS_Collector(id, myUsage,
@@ -91,10 +94,10 @@ GUI_E2_ZS_CollectorOverLanes::buildCollector(size_t c, size_t r, MSLane* l,
  * ----------------------------------------------------------------------- */
 GUI_E2_ZS_CollectorOverLanes::MyWrapper::MyWrapper(
     GUI_E2_ZS_CollectorOverLanes& detector,
-    const LaneDetMap& detectors) throw()
+    const LaneDetMap& detectors)
     : GUIDetectorWrapper("E2OverLanes detector", detector.getID()),
       myDetector(detector) {
-    for (LaneDetMap::const_iterator i=detectors.begin(); i!=detectors.end(); ++i) {
+    for (LaneDetMap::const_iterator i = detectors.begin(); i != detectors.end(); ++i) {
         MSLane* l = (*i).first;
         GUIEdge& edge = static_cast<GUIEdge&>(l->getEdge());
         GUILaneWrapper& w = edge.getLaneGeometry(l);
@@ -106,15 +109,15 @@ GUI_E2_ZS_CollectorOverLanes::MyWrapper::MyWrapper(
 }
 
 
-GUI_E2_ZS_CollectorOverLanes::MyWrapper::~MyWrapper() throw() {
-    for (std::vector<GUIDetectorWrapper*>::iterator i=mySubWrappers.begin(); i!=mySubWrappers.end(); ++i) {
+GUI_E2_ZS_CollectorOverLanes::MyWrapper::~MyWrapper() {
+    for (std::vector<GUIDetectorWrapper*>::iterator i = mySubWrappers.begin(); i != mySubWrappers.end(); ++i) {
         delete(*i);
     }
 }
 
 
 Boundary
-GUI_E2_ZS_CollectorOverLanes::MyWrapper::getCenteringBoundary() const throw() {
+GUI_E2_ZS_CollectorOverLanes::MyWrapper::getCenteringBoundary() const {
     Boundary b(myBoundary);
     return b;
 }
@@ -122,7 +125,7 @@ GUI_E2_ZS_CollectorOverLanes::MyWrapper::getCenteringBoundary() const throw() {
 
 GUIParameterTableWindow*
 GUI_E2_ZS_CollectorOverLanes::MyWrapper::getParameterWindow(GUIMainWindow& app,
-        GUISUMOAbstractView&) throw() {
+        GUISUMOAbstractView&) {
     GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this, 12);
     // add items
     /*
@@ -167,8 +170,8 @@ ret.mkItem(name.c_str(), true, binding);
 
 
 void
-GUI_E2_ZS_CollectorOverLanes::MyWrapper::drawGL(const GUIVisualizationSettings& s) const throw() {
-    for (std::vector<GUIDetectorWrapper*>::const_iterator i=mySubWrappers.begin(); i!=mySubWrappers.end(); ++i) {
+GUI_E2_ZS_CollectorOverLanes::MyWrapper::drawGL(const GUIVisualizationSettings& s) const {
+    for (std::vector<GUIDetectorWrapper*>::const_iterator i = mySubWrappers.begin(); i != mySubWrappers.end(); ++i) {
         (*i)->drawGL(s);
     }
 }

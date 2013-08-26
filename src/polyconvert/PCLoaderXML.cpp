@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    PCLoaderXML.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Christoph Sommer
+/// @author  Michael Behrisch
 /// @date    Thu, 02.11.2006
 /// @version $Id$
 ///
 // A reader for polygons and pois stored in XML-format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,14 +63,14 @@
 // ---------------------------------------------------------------------------
 void
 PCLoaderXML::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
-                       PCTypeMap& tm) throw(ProcessError) {
+                       PCTypeMap& tm) {
     if (!oc.isSet("xml-files")) {
         return;
     }
     PCLoaderXML handler(toFill, tm, oc);
     // parse file(s)
     std::vector<std::string> files = oc.getStringVector("xml");
-    for (std::vector<std::string>::const_iterator file=files.begin(); file!=files.end(); ++file) {
+    for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
         if (!FileHelpers::exists(*file)) {
             throw ProcessError("Could not open xml-file '" + *file + "'.");
         }
@@ -84,21 +88,21 @@ PCLoaderXML::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
 // handler methods
 // ---------------------------------------------------------------------------
 PCLoaderXML::PCLoaderXML(PCPolyContainer& toFill,
-                         PCTypeMap& tm, OptionsCont& oc) throw()
+                         PCTypeMap& tm, OptionsCont& oc)
     : SUMOSAXHandler("xml-poi-definition"),
       myCont(toFill), myTypeMap(tm), myOptions(oc) {}
 
 
-PCLoaderXML::~PCLoaderXML() throw() {}
+PCLoaderXML::~PCLoaderXML() {}
 
 
 void
 PCLoaderXML::myStartElement(int element,
-                            const SUMOSAXAttributes& attrs) throw(ProcessError) {
-    if (element!=SUMO_TAG_POI && element!=SUMO_TAG_POLY) {
+                            const SUMOSAXAttributes& attrs) {
+    if (element != SUMO_TAG_POI && element != SUMO_TAG_POLY) {
         return;
     }
-    if (element==SUMO_TAG_POI) {
+    if (element == SUMO_TAG_POI) {
         bool ok = true;
         // get the id, report an error if not given or empty...
         std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
@@ -109,7 +113,7 @@ PCLoaderXML::myStartElement(int element,
             return;
         }
         Position pos(x, y);
-        if (!GeoConvHelper::getDefaultInstance().x2cartesian(pos)) {
+        if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
             WRITE_WARNING("Unable to project coordinates for POI '" + id + "'.");
         }
         // patch the values
@@ -140,7 +144,7 @@ PCLoaderXML::myStartElement(int element,
             }
         }
     }
-    if (element==SUMO_TAG_POLY) {
+    if (element == SUMO_TAG_POLY) {
         bool discard = myOptions.getBool("discard");
         int layer = myOptions.getInt("layer");
         bool ok = true;
@@ -183,8 +187,8 @@ PCLoaderXML::myStartElement(int element,
 
 void
 PCLoaderXML::myCharacters(int element,
-                          const std::string& chars) throw(ProcessError) {
-    if (element==SUMO_TAG_POLY) {
+                          const std::string& chars) {
+    if (element == SUMO_TAG_POLY) {
         bool ok = true;
         PositionVector pshape = GeomConvHelper::parseShapeReporting(chars, "poly", myCurrentID.c_str(), ok, false);
         if (!ok) {
@@ -192,9 +196,9 @@ PCLoaderXML::myCharacters(int element,
         }
         const PositionVector::ContType& cont = pshape.getCont();
         PositionVector shape;
-        for (PositionVector::ContType::const_iterator i=cont.begin(); i!=cont.end(); ++i) {
+        for (PositionVector::ContType::const_iterator i = cont.begin(); i != cont.end(); ++i) {
             Position pos((*i));
-            if (!GeoConvHelper::getDefaultInstance().x2cartesian(pos)) {
+            if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for polygon '" + myCurrentID + "'.");
             }
             shape.push_back(pos);

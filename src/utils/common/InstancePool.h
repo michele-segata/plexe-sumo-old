@@ -7,12 +7,13 @@
 // A pool of resuable instances
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -55,7 +56,7 @@ public:
     ~InstancePool() {
         typedef typename std::vector<T*>::iterator It;
         if (myDeleteOnQuit) {
-            for (It i=myFreeInstances.begin(); i!=myFreeInstances.end(); i++) {
+            for (It i = myFreeInstances.begin(); i != myFreeInstances.end(); i++) {
                 delete *i;
             }
         }
@@ -70,7 +71,7 @@ public:
      * @return A free instance or 0 if no such exists
      */
     T* getFreeInstance() {
-        if (myFreeInstances.size()==0) {
+        if (myFreeInstances.size() == 0) {
             return 0;
         } else {
             T* instance = myFreeInstances.back();

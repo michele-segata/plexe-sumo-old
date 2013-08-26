@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimEdge.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    End of 2002
 /// @version $Id$
 ///
 // A temporary storage for edges imported from Vissim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -81,7 +83,7 @@ public:
 
     /** @brief Returns the node at the given position
         As this may be ambigous, a second node not to return may be supplied */
-    NBNode* getNodeAt(const Position& p, NBNode* other=0);
+    NBNode* getNodeAt(const Position& p, NBNode* other = 0);
 
     /** Returns the begin position of the edge */
     Position getBegin2D() const;
@@ -109,12 +111,12 @@ public:
     /** @brief Returns whether this edge was found to be within a junction
      * @return Whether this node is assumed to be within a junction
      */
-    bool wasWithinAJunction() const throw() {
+    bool wasWithinAJunction() const {
         return myAmWithinJunction;
     }
 
-    NIVissimEdge* getBestIncoming() const throw();
-    NIVissimEdge* getBestOutgoing() const throw();
+    NIVissimEdge* getBestIncoming() const ;
+    NIVissimEdge* getBestOutgoing() const ;
 
     friend class NIVissimNodeDef_Edges;
     friend class NIVissimNodeDef_Poly;
@@ -142,7 +144,7 @@ public:
      *
      * @todo Probably the distance (MAX_CLUSTER_DISTANCE=10m) should be made variable
      */
-    static void buildConnectionClusters() throw();
+    static void buildConnectionClusters() ;
 
     /// Builds NBEdges from the VissimEdges within the dictionary
     static void dict_buildNBEdges(NBDistrictCont& dc, NBNodeCont& nc,
@@ -161,7 +163,7 @@ public:
      * If the option "vissim.report-unset-speeds" is set, all lane ids stored within
      *  this container are written.
      */
-    static void reportUnsetSpeeds() throw();
+    static void reportUnsetSpeeds() ;
 
 
 private:
@@ -178,7 +180,7 @@ private:
      * @exception ProcessError If one of the built nodes or edges could not be added to the according container
      */
     void buildNBEdge(NBDistrictCont& dc, NBNodeCont& nc,
-                     NBEdgeCont& ec, SUMOReal sameNodesOffset) throw(ProcessError);
+                     NBEdgeCont& ec, SUMOReal sameNodesOffset) ;
 
     /// Returns the origin node
     std::pair<NIVissimConnectionCluster*, NBNode*>

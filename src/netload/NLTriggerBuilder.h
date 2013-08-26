@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    NLTriggerBuilder.h
 /// @author  Daniel Krajzewicz
+/// @author  Tino Morenz
+/// @author  Eric Nicolay
+/// @author  Michael Behrisch
 /// @date    Thu, 17 Oct 2002
 /// @version $Id$
 ///
 // Builds trigger objects for microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,18 +68,18 @@ class METriggeredCalibrator;
 class NLTriggerBuilder {
 public:
     /// @brief Constructor
-    NLTriggerBuilder() throw();
+    NLTriggerBuilder() ;
 
 
     /// @brief Destructor
-    virtual ~NLTriggerBuilder() throw();
+    virtual ~NLTriggerBuilder() ;
 
 
     /** @brief Sets the parent handler to use for nested parsing
      *
      * @param[in] handler The netload handler to set
      */
-    void setHandler(NLHandler* handler) throw();
+    void setHandler(NLHandler* handler) ;
 
 
     /** @brief Builds a vaporization
@@ -87,7 +91,7 @@ public:
      * @param[in] attrs SAX-attributes which define the vaporizer
      * @note recheck throwing the exception
      */
-    void buildVaporizer(const SUMOSAXAttributes& attrs) throw();
+    void buildVaporizer(const SUMOSAXAttributes& attrs) ;
 
 
     /// @name parsing methods
@@ -172,7 +176,7 @@ protected:
      */
     virtual MSLaneSpeedTrigger* buildLaneSpeedTrigger(MSNet& net,
             const std::string& id, const std::vector<MSLane*> &destLanes,
-            const std::string& file) throw(ProcessError);
+            const std::string& file) ;
 
 
     /** @brief Builds a bus stop
@@ -207,7 +211,7 @@ protected:
     METriggeredCalibrator* buildCalibrator(MSNet& net,
                                            const std::string& id, const MSEdge* edge, SUMOReal pos,
                                            const std::string& file, const std::string& outfile,
-                                           const SUMOTime freq) throw();
+                                           const SUMOTime freq) ;
 #endif
 
 
@@ -223,7 +227,7 @@ protected:
      */
     virtual void buildRerouter(MSNet& net,
                                const std::string& id, std::vector<MSEdge*> &edges,
-                               SUMOReal prob, const std::string& file, bool off) throw();
+                               SUMOReal prob, const std::string& file, bool off) ;
     //@}
 
 
@@ -244,7 +248,7 @@ protected:
      */
     std::string getFileName(const SUMOSAXAttributes& attrs,
                             const std::string& base,
-                            const bool allowEmpty=false) throw(InvalidArgument);
+                            const bool allowEmpty = false) throw(InvalidArgument);
 
 
     /** @brief Returns the lane defined by attribute "lane"

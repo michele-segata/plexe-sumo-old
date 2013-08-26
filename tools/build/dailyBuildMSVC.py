@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
 @file    dailyBuildMSVC.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Jakob Erdmann
+@author  Laura Bieker
 @date    2008
 @version $Id$
 
@@ -10,24 +12,25 @@ studio build. The script is also used for the meso build.
 Some paths especially for the temp dir and the compiler are
 hard coded into this script.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 from __future__ import with_statement
 import re
 from datetime import date
 import optparse, os, glob, subprocess, zipfile, shutil, datetime, sys
-import status
+import status, wix
 
 optParser = optparse.OptionParser()
 optParser.add_option("-r", "--root-dir", dest="rootDir",
-                     default="D:\\Sumo", help="root for svn and log output")
+                     default=r"D:\Sumo", help="root for svn and log output")
 optParser.add_option("-s", "--suffix", default="", help="suffix to the fileprefix")
-optParser.add_option("-p", "--project", default="trunk\\sumo\\build\\msvc10\\prj.sln",
+optParser.add_option("-p", "--project", default=r"trunk\sumo\build\msvc10\prj.sln",
                      help="path to project solution relative to the root dir")
-optParser.add_option("-b", "--bin-dir", dest="binDir", default="trunk\\sumo\\bin",
+optParser.add_option("-b", "--bin-dir", dest="binDir", default=r"trunk\sumo\bin",
                      help="directory containg the binaries, relative to the root dir")
-optParser.add_option("-t", "--tests-dir", dest="testsDir", default="trunk\\sumo\\tests",
+optParser.add_option("-t", "--tests-dir", dest="testsDir", default=r"trunk\sumo\tests",
                      help="directory containg the tests, relative to the root dir")
 optParser.add_option("-e", "--sumo-exe", dest="sumoExe", default="sumo",
                      help="name of the sumo executable")
@@ -41,9 +44,9 @@ optParser.add_option("-f", "--force", action="store_true",
 
 env = os.environ
 env["SMTP_SERVER"]="smtprelay.dlr.de"
-env["TEMP"]=env["TMP"]="D:\\Delphi\\texttesttmp"
-nightlyDir="M:\\Daten\\Sumo\\Nightly"
-compiler="D:\\Programme\\Microsoft Visual Studio 10.0\\Common7\\IDE\\devenv.exe"
+env["TEMP"]=env["TMP"]=r"D:\Delphi\texttesttmp"
+nightlyDir=r"M:\Daten\Sumo\Nightly"
+compiler=r"D:\Programme\Microsoft Visual Studio 10.0\Common7\IDE\devenv.exe"
 svnrev=""
 for platform in ["Win32", "x64"]:
     env["FILEPREFIX"]="msvc10" + options.suffix + platform
@@ -111,24 +114,26 @@ for platform in ["Win32", "x64"]:
         if os.path.exists(maxFile.replace("-src-", "-doc-")):
             docZip = zipfile.ZipFile(maxFile.replace("-src-", "-doc-"))
             for f in docZip.namelist():
-                zipf.writestr(f, srcZip.read(f))
+                zipf.writestr(f, docZip.read(f))
             docZip.close()
         files_to_zip = (
                 glob.glob(os.path.join(env["XERCES"+envSuffix], "bin", "xerces-c_?_?.dll")) +
                 glob.glob(os.path.join(env["PROJ_GDAL"+envSuffix], "bin", "*.dll")) +
                 glob.glob(os.path.join(env["FOX16"+envSuffix], "lib", "FOXDLL-?.?.dll")) +
+                glob.glob(os.path.join(nightlyDir, "msvc?100.dll")) +
                 glob.glob(os.path.join(options.rootDir, options.binDir, "*.exe")) +
                 glob.glob(os.path.join(options.rootDir, options.binDir, "*.jar")) +
                 glob.glob(os.path.join(options.rootDir, options.binDir, "*.bat")))
         for f in files_to_zip:
             zipf.write(f, os.path.join(binDir, os.path.basename(f)))
-            if platform == "Win32":
+            if platform == "Win32" and not f.startswith(nightlyDir):
                 try:
                     shutil.copy2(f, nightlyDir)
                 except IOError, (errno, strerror):
                     print >> log, "Warning: Could not copy %s to %s!" % (f, nightlyDir)
                     print >> log, "I/O error(%s): %s" % (errno, strerror)
         zipf.close()
+        wix.buildMSI(binaryZip, binaryZip.replace(".zip", ".msi"), platformSuffix=programSuffix)
     except IOError, (errno, strerror):
         print >> log, "Warning: Could not zip to %s!" % binaryZip
         print >> log, "I/O error(%s): %s" % (errno, strerror)
@@ -168,5 +173,5 @@ for platform in ["Win32", "x64"]:
     status.printStatus(makeLog, makeAllLog, env["TEXTTEST_TMP"], env["SMTP_SERVER"], log)
     log.close()
     if not options.remoteDir:
-        toPut = " ".join([env["SUMO_REPORT"], makeLog, makeAllLog, testLog, statusLog, binaryZip])
+        toPut = " ".join([env["SUMO_REPORT"], makeLog, makeAllLog, testLog, statusLog, binaryZip, binaryZip.replace(".zip", ".msi")])
         subprocess.call('WinSCP3.com behrisch,sumo@web.sourceforge.net /privatekey=%s\\key.ppk /command "option batch on" "option confirm off" "put %s /home/groups/s/su/sumo/htdocs/daily/" "exit"' % (options.rootDir, toPut))

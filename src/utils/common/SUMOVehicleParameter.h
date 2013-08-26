@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    SUMOVehicleParameter.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Axel Wegener
+/// @author  Michael Behrisch
 /// @date    2006-01-24
 /// @version $Id$
 ///
 // Structure representing possible vehicle parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -69,7 +73,6 @@ const int STOP_INDEX_FIT = -2;
 /**
  * @enum DepartDefinition
  * @brief Possible ways to depart
- * @todo Recheck usage!!!
  */
 enum DepartDefinition {
     /// @brief The time is given
@@ -77,14 +80,15 @@ enum DepartDefinition {
     /// @brief The departure is person triggered
     DEPART_TRIGGERED,
     /// @brief The vehicle is discarded if emission fails
-    DEPART_NOW
+    DEPART_NOW,
+    /// @brief Tag for the last element in the enum for safe int casting
+    DEPART_DEF_MAX
 };
 
 
 /**
  * @enum DepartLaneDefinition
  * @brief Possible ways to choose a lane on depart
- * @todo Recheck usage!!!
  */
 enum DepartLaneDefinition {
     /// @brief No information given; use default
@@ -98,7 +102,9 @@ enum DepartLaneDefinition {
     /// @brief The least occupied lane from lanes which allow the continuation
     DEPART_LANE_ALLOWED_FREE,
     /// @brief The least occupied lane from best lanes
-    DEPART_LANE_BEST_FREE
+    DEPART_LANE_BEST_FREE,
+    /// @brief Tag for the last element in the enum for safe int casting
+    DEPART_LANE_DEF_MAX
 };
 
 
@@ -124,14 +130,15 @@ enum DepartPosDefinition {
     /// @brief A gap is chosen where the maximum speed may be achieved
     DEPART_POS_MAX_SPEED_GAP,
     /// @brief If a fixed number of random choices fails, a free position is chosen
-    DEPART_POS_RANDOM_FREE
+    DEPART_POS_RANDOM_FREE,
+    /// @brief Tag for the last element in the enum for safe int casting
+    DEPART_POS_DEF_MAX
 };
 
 
 /**
  * @enum DepartSpeedDefinition
  * @brief Possible ways to choose the departure speed
- * @todo Recheck usage!!!
  */
 enum DepartSpeedDefinition {
     /// @brief No information given; use default
@@ -141,14 +148,15 @@ enum DepartSpeedDefinition {
     /// @brief The speed is chosen randomly
     DEPART_SPEED_RANDOM,
     /// @brief The maximum speed is used
-    DEPART_SPEED_MAX
+    DEPART_SPEED_MAX,
+    /// @brief Tag for the last element in the enum for safe int casting
+    DEPART_SPEED_DEF_MAX
 };
 
 
 /**
  * @enum ArrivalLaneDefinition
  * @brief Possible ways to choose the arrival lane
- * @todo Recheck usage!!!
  */
 enum ArrivalLaneDefinition {
     /// @brief No information given; use default
@@ -156,14 +164,15 @@ enum ArrivalLaneDefinition {
     /// @brief The arrival lane is given
     ARRIVAL_LANE_GIVEN,
     /// @brief The current lane shall be used
-    ARRIVAL_LANE_CURRENT
+    ARRIVAL_LANE_CURRENT,
+    /// @brief Tag for the last element in the enum for safe int casting
+    ARRIVAL_LANE_DEF_MAX
 };
 
 
 /**
  * @enum ArrivalPosDefinition
  * @brief Possible ways to choose the arrival position
- * @todo Recheck usage!!!
  */
 enum ArrivalPosDefinition {
     /// @brief No information given; use default
@@ -173,14 +182,15 @@ enum ArrivalPosDefinition {
     /// @brief The arrival position is chosen randomly
     ARRIVAL_POS_RANDOM,
     /// @brief The maximum arrival position is used
-    ARRIVAL_POS_MAX
+    ARRIVAL_POS_MAX,
+    /// @brief Tag for the last element in the enum for safe int casting
+    ARRIVAL_POS_DEF_MAX
 };
 
 
 /**
  * @enum ArrivalSpeedDefinition
  * @brief Possible ways to choose the arrival speed
- * @todo Recheck usage!!!
  */
 enum ArrivalSpeedDefinition {
     /// @brief No information given; use default
@@ -188,7 +198,9 @@ enum ArrivalSpeedDefinition {
     /// @brief The speed is given
     ARRIVAL_SPEED_GIVEN,
     /// @brief The current speed is used
-    ARRIVAL_SPEED_CURRENT
+    ARRIVAL_SPEED_CURRENT,
+    /// @brief Tag for the last element in the enum for safe int casting
+    ARRIVAL_SPEED_DEF_MAX
 };
 
 
@@ -211,15 +223,15 @@ public:
      *
      * Initialises the structure with default values
      */
-    SUMOVehicleParameter() throw();
+    SUMOVehicleParameter() ;
 
 
     /** @brief Returns whether the given parameter was set
      * @param[in] what The parameter which one asks for
      * @return Whether the given parameter was set
      */
-    bool wasSet(int what) const throw() {
-        return (setParameter&what)!=0;
+    bool wasSet(int what) const {
+        return (setParameter & what) != 0;
     }
 
 
@@ -231,7 +243,7 @@ public:
      * @exception IOError not yet implemented
      */
     void writeAs(const std::string& xmlElem, OutputDevice& dev,
-                 const OptionsCont& oc) const throw(IOError);
+                 const OptionsCont& oc) const;
 
 
     /** @brief Returns whether the defaults shall be used
@@ -239,7 +251,7 @@ public:
      * @param[in] optionName The name of the option to determine whether its value shall be used
      * @return Whether the option is set and --defaults-override was set
      */
-    bool defaultOptionOverrides(const OptionsCont& oc, const std::string& optionName) const throw();
+    bool defaultOptionOverrides(const OptionsCont& oc, const std::string& optionName) const ;
 
 
 
@@ -250,42 +262,42 @@ public:
      * @param[in] val The departlane value to validate
      * @return Whether the given value is a valid departlane definition
      */
-    static bool departlaneValidate(const std::string& val) throw();
+    static bool departlaneValidate(const std::string& val) ;
 
 
     /** @brief Validates a given departpos value
      * @param[in] val The departpos value to validate
      * @return Whether the given value is a valid departpos definition
      */
-    static bool departposValidate(const std::string& val) throw();
+    static bool departposValidate(const std::string& val) ;
 
 
     /** @brief Validates a given departspeed value
      * @param[in] val The departspeed value to validate
      * @return Whether the given value is a valid departspeed definition
      */
-    static bool departspeedValidate(const std::string& val) throw();
+    static bool departspeedValidate(const std::string& val) ;
 
 
     /** @brief Validates a given arrivallane value
      * @param[in] val The arrivallane value to validate
      * @return Whether the given value is a valid arrivallane definition
      */
-    static bool arrivallaneValidate(const std::string& val) throw();
+    static bool arrivallaneValidate(const std::string& val) ;
 
 
     /** @brief Validates a given arrivalpos value
      * @param[in] val The arrivalpos value to validate
      * @return Whether the given value is a valid arrivalpos definition
      */
-    static bool arrivalposValidate(const std::string& val) throw();
+    static bool arrivalposValidate(const std::string& val) ;
 
 
     /** @brief Validates a given arrivalspeed value
      * @param[in] val The arrivalspeed value to validate
      * @return Whether the given value is a valid arrivalspeed definition
      */
-    static bool arrivalspeedValidate(const std::string& val) throw();
+    static bool arrivalspeedValidate(const std::string& val) ;
     /// @}
 
 

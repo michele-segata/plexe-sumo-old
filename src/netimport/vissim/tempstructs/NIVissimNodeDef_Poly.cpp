@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimNodeDef_Poly.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -98,22 +100,22 @@ NIVissimNodeDef_Poly::searchAndSetConnections(SUMOReal offset) {
     IntVector connections;
     IntVector edges;
     Boundary boundary(myPoly.getBoxBoundary());
-    for (IntVector::const_iterator i=within.begin(); i!=within.end(); i++) {
+    for (IntVector::const_iterator i = within.begin(); i != within.end(); i++) {
         NIVissimConnection* c =
             NIVissimConnection::dictionary(*i);
         NIVissimEdge* e =
             NIVissimEdge::dictionary(*i);
-        if (c!=0) {
+        if (c != 0) {
             connections.push_back(*i);
             c->setNodeCluster(myID);
         }
-        if (e!=0) {
+        if (e != 0) {
             edges.push_back(*i);
         }
     }
     NIVissimConnectionCluster* c =
         new NIVissimConnectionCluster(connections, boundary, myID, edges);
-    for (IntVector::iterator j=edges.begin(); j!=edges.end(); j++) {
+    for (IntVector::iterator j = edges.begin(); j != edges.end(); j++) {
         NIVissimEdge* edge = NIVissimEdge::dictionary(*j);
         edge->myConnectionClusters.push_back(c);
     }

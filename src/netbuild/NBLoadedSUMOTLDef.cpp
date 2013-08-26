@@ -8,12 +8,13 @@
 // since NBLoadedTLDef is quite vissim specific)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -63,13 +64,13 @@ NBLoadedSUMOTLDef::NBLoadedSUMOTLDef(NBTrafficLightDefinition* def, NBTrafficLig
 }
 
 
-NBLoadedSUMOTLDef::~NBLoadedSUMOTLDef() throw() {
+NBLoadedSUMOTLDef::~NBLoadedSUMOTLDef() {
     delete myTLLogic;
 }
 
 
 NBTrafficLightLogic*
-NBLoadedSUMOTLDef::myCompute(const NBEdgeCont& ec, unsigned int brakingTime) throw() {
+NBLoadedSUMOTLDef::myCompute(const NBEdgeCont& ec, unsigned int brakingTime) {
     // @todo what to do with those parameters?
     UNUSED_PARAMETER(ec);
     UNUSED_PARAMETER(brakingTime);
@@ -102,7 +103,7 @@ NBLoadedSUMOTLDef::addConnection(NBEdge* from, NBEdge* to, int fromLane, int toL
 
 
 void
-NBLoadedSUMOTLDef::setTLControllingInformation(const NBEdgeCont&) const throw() {
+NBLoadedSUMOTLDef::setTLControllingInformation(const NBEdgeCont&) const {
     setTLControllingInformation();
 }
 
@@ -126,11 +127,11 @@ NBLoadedSUMOTLDef::setTLControllingInformation() const {
 
 
 void
-NBLoadedSUMOTLDef::remapRemoved(NBEdge*, const EdgeVector&, const EdgeVector&) throw() {}
+NBLoadedSUMOTLDef::remapRemoved(NBEdge*, const EdgeVector&, const EdgeVector&) {}
 
 
 void
-NBLoadedSUMOTLDef::replaceRemoved(NBEdge*, int, NBEdge*, int) throw() {}
+NBLoadedSUMOTLDef::replaceRemoved(NBEdge*, int, NBEdge*, int) {}
 
 
 void
@@ -141,14 +142,14 @@ NBLoadedSUMOTLDef::addPhase(SUMOTime duration, const std::string& state) {
 
 bool
 NBLoadedSUMOTLDef::amInvalid() const {
-    if (myControlledLinks.size()==0) {
+    if (myControlledLinks.size() == 0) {
         return true;
     }
     // make sure that myControlledNodes are the original nodes
     if (myControlledNodes.size() != myOriginalNodes.size()) {
         return true;
     }
-    for (std::vector<NBNode*>::const_iterator i=myControlledNodes.begin(); i!=myControlledNodes.end(); i++) {
+    for (std::vector<NBNode*>::const_iterator i = myControlledNodes.begin(); i != myControlledNodes.end(); i++) {
         if (myOriginalNodes.count(*i) != 1) {
             return true;
         }

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    PointOfInterest.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    2005-09-15
 /// @version $Id$
 ///
 // A point-of-interest (2D)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -51,19 +54,19 @@ public:
      * @param[in] c The color of the poi
      */
     PointOfInterest(const std::string& id, const std::string& type,
-                    const Position& p, const RGBColor& c) throw()
+                    const Position& p, const RGBColor& c)
         : RGBColor(c), Position(p), Named(id), myType(type) { }
 
 
     /// @brief Destructor
-    virtual ~PointOfInterest() throw() { }
+    virtual ~PointOfInterest() { }
 
 
 
     /** @brief Returns the (abstract) type of the poi
      * @return The polygon's (abstract) type
      */
-    const std::string& getType() const throw() {
+    const std::string& getType() const {
         return myType;
     }
 
@@ -71,7 +74,7 @@ public:
     /** @brief Sets a new type
      * @param[in] type The new type to use
      */
-    void setType(const std::string& type) throw() {
+    void setType(const std::string& type) {
         myType = type;
     }
 

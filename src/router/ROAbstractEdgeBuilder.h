@@ -7,12 +7,13 @@
 // Interface for building instances of router-edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,11 +60,11 @@ class RONode;
 class ROAbstractEdgeBuilder {
 public:
     /// @brief Constructor
-    ROAbstractEdgeBuilder() throw() : myCurrentIndex(0) { }
+    ROAbstractEdgeBuilder() : myCurrentIndex(0) { }
 
 
     /// @brief Destructor
-    virtual ~ROAbstractEdgeBuilder() throw() { }
+    virtual ~ROAbstractEdgeBuilder() { }
 
 
     /// @name Methods to be implemented
@@ -76,7 +77,7 @@ public:
      * @param[in] to The node the edge ends at
      * @return A proper instance of the named edge
      */
-    virtual ROEdge* buildEdge(const std::string& name, RONode* from, RONode* to) throw() = 0;
+    virtual ROEdge* buildEdge(const std::string& name, RONode* from, RONode* to) = 0;
     /// @}
 
 
@@ -84,7 +85,7 @@ protected:
     /** @brief Returns the index of the edge to built
      * @return Next valid edge index
      */
-    unsigned int getNextIndex() throw() {
+    unsigned int getNextIndex() {
         return myCurrentIndex++;
     }
 

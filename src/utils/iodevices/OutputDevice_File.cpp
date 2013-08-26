@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    OutputDevice_File.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    2004
 /// @version $Id$
 ///
 // An output device that encapsulates an ofstream
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -38,13 +40,13 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-OutputDevice_File::OutputDevice_File(const std::string& fullName) throw(IOError)
+OutputDevice_File::OutputDevice_File(const std::string& fullName)
     : myFileStream(0) {
 #ifdef WIN32
-    if (fullName=="/dev/null") {
+    if (fullName == "/dev/null") {
         myFileStream = new std::ofstream("NUL");
 #else
-    if (fullName=="nul"||fullName=="NUL") {
+    if (fullName == "nul" || fullName == "NUL") {
         myFileStream = new std::ofstream("/dev/null");
 #endif
     } else {
@@ -57,14 +59,14 @@ OutputDevice_File::OutputDevice_File(const std::string& fullName) throw(IOError)
 }
 
 
-OutputDevice_File::~OutputDevice_File() throw() {
+OutputDevice_File::~OutputDevice_File() {
     myFileStream->close();
     delete myFileStream;
 }
 
 
 std::ostream&
-OutputDevice_File::getOStream() throw() {
+OutputDevice_File::getOStream() {
     return *myFileStream;
 }
 

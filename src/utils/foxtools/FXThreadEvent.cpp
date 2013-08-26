@@ -7,12 +7,13 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,36 +66,36 @@ namespace FXEX {
 #endif
 
 // Message map
-FXDEFMAP(FXThreadEvent) FXThreadEventMap[]= {
-    FXMAPTYPE(0,FXThreadEvent::onThreadEvent),
-    FXMAPFUNC(SEL_THREAD,0, FXThreadEvent::onThreadEvent),
-    FXMAPFUNC(SEL_IO_READ,FXThreadEvent::ID_THREAD_EVENT,FXThreadEvent::onThreadSignal),
+FXDEFMAP(FXThreadEvent) FXThreadEventMap[] = {
+    FXMAPTYPE(0, FXThreadEvent::onThreadEvent),
+    FXMAPFUNC(SEL_THREAD, 0, FXThreadEvent::onThreadEvent),
+    FXMAPFUNC(SEL_IO_READ, FXThreadEvent::ID_THREAD_EVENT, FXThreadEvent::onThreadSignal),
 };
-FXIMPLEMENT(FXThreadEvent,FXBaseObject,FXThreadEventMap,ARRAYNUMBER(FXThreadEventMap))
+FXIMPLEMENT(FXThreadEvent, FXBaseObject, FXThreadEventMap, ARRAYNUMBER(FXThreadEventMap))
 
 // FXThreadEvent : Constructor
-FXThreadEvent::FXThreadEvent(FXObject* tgt,FXSelector sel) : FXBaseObject(tgt,sel) {
+FXThreadEvent::FXThreadEvent(FXObject* tgt, FXSelector sel) : FXBaseObject(tgt, sel) {
 #ifndef WIN32
-    FXMALLOC(&event,FXThreadEventHandle,2);
+    FXMALLOC(&event, FXThreadEventHandle, 2);
     FXint res = pipe(event);
     FXASSERT(res == 0);
-    getApp()->addInput(event[PIPE_READ],INPUT_READ,this,ID_THREAD_EVENT);
+    getApp()->addInput(event[PIPE_READ], INPUT_READ, this, ID_THREAD_EVENT);
 #else
-    event=CreateEvent(NULL,FALSE,FALSE,NULL);
+    event = CreateEvent(NULL, FALSE, FALSE, NULL);
     FXASSERT(event != NULL);
-    getApp()->addInput(event,INPUT_READ,this, ID_THREAD_EVENT);
+    getApp()->addInput(event, INPUT_READ, this, ID_THREAD_EVENT);
 #endif
 }
 
 // ~FXThreadEvent : Destructor
 FXThreadEvent::~FXThreadEvent() {
 #ifndef WIN32
-    getApp()->removeInput(event[PIPE_READ],INPUT_READ);
+    getApp()->removeInput(event[PIPE_READ], INPUT_READ);
     ::close(event[PIPE_READ]);
     ::close(event[PIPE_WRITE]);
     FXFREE(&event);
 #else
-    getApp()->removeInput(event,INPUT_READ);
+    getApp()->removeInput(event, INPUT_READ);
     ::CloseHandle(event);
 #endif
 }
@@ -102,9 +103,9 @@ FXThreadEvent::~FXThreadEvent() {
 // signal the target using the SEL_THREAD seltype
 // this method is meant to be called from the worker thread
 void FXThreadEvent::signal() {
-    FXuint seltype=SEL_THREAD;
+    FXuint seltype = SEL_THREAD;
 #ifndef WIN32
-    ::write(event[PIPE_WRITE],&seltype,sizeof(seltype));
+    ::write(event[PIPE_WRITE], &seltype, sizeof(seltype));
 #else
     ::SetEvent(event);
 #endif
@@ -114,7 +115,7 @@ void FXThreadEvent::signal() {
 // this method is meant to be called from the worker thread
 void FXThreadEvent::signal(FXuint seltype) {
 #ifndef WIN32
-    ::write(event[PIPE_WRITE],&seltype,sizeof(seltype));
+    ::write(event[PIPE_WRITE], &seltype, sizeof(seltype));
 #else
     UNUSED_PARAMETER(seltype);
     ::SetEvent(event);
@@ -124,22 +125,22 @@ void FXThreadEvent::signal(FXuint seltype) {
 // this thread is signalled via the IO/event, from other thread.
 // We also figure out what SEL_type to generate.
 // We forward it to ourselves first, to allow child classes to handle the event.
-long FXThreadEvent::onThreadSignal(FXObject*,FXSelector,void*) {
-    FXuint seltype=SEL_THREAD;
+long FXThreadEvent::onThreadSignal(FXObject*, FXSelector, void*) {
+    FXuint seltype = SEL_THREAD;
 #ifndef WIN32
-    ::read(event[PIPE_READ],&seltype,sizeof(seltype));
+    ::read(event[PIPE_READ], &seltype, sizeof(seltype));
 #else
     //FIXME need win32 support
 #endif
-    handle(this,FXSEL(seltype,0),NULL);
+    handle(this, FXSEL(seltype, 0), NULL);
     return 0;
 }
 
 // forward thread event to application - we generate the appropriate FOX event
 // which is now in the main thread (ie no longer in the worker thread)
-long FXThreadEvent::onThreadEvent(FXObject*,FXSelector sel,void*) {
+long FXThreadEvent::onThreadEvent(FXObject*, FXSelector sel, void*) {
     FXuint seltype = FXSELTYPE(sel);
-    return target && target->handle(this,FXSEL(seltype,message),NULL);
+    return target && target->handle(this, FXSEL(seltype, message), NULL);
 }
 
 }

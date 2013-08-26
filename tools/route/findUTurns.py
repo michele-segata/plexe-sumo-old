@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
 @file    findUTurns.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
 @date    2008-04-16
 @version $Id$
 
@@ -11,7 +12,8 @@ most Elmar (Navteq) imported nets. Optional it can also remove
 U turns at the start and the end of a route and output the 
 modified routes.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, sys

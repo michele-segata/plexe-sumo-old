@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimSingleTypeParser_Zuflussdefinition.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Wed, 18 Dec 2002
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -54,11 +56,11 @@ NIVissimSingleTypeParser_Zuflussdefinition::parse(std::istream& from) {
     from >> id; // type-checking is missing!
     std::string tag, name;
     // override some optional values till q
-    while (tag!="q") {
+    while (tag != "q") {
         tag = overrideOptionalLabel(from);
-        if (tag=="name") {
+        if (tag == "name") {
             name = readName(from);
-        } else if (tag=="strecke") {
+        } else if (tag == "strecke") {
             from >> edgeid; // type-checking is missing!
         }
     }
@@ -66,7 +68,7 @@ NIVissimSingleTypeParser_Zuflussdefinition::parse(std::istream& from) {
     bool exact = false;
     SUMOReal q;
     tag = myRead(from);
-    if (tag=="exakt") {
+    if (tag == "exakt") {
         exact = true;
         tag = myRead(from);
     }
@@ -80,7 +82,7 @@ NIVissimSingleTypeParser_Zuflussdefinition::parse(std::istream& from) {
     SUMOReal beg, end;
     beg = -1;
     end = -1;
-    if (tag=="zeit") {
+    if (tag == "zeit") {
         from >> tag;
         from >> beg;
         from >> tag;

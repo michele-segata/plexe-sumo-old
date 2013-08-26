@@ -7,12 +7,13 @@
 // The gui-version of the MSInstantInductLoop
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,11 +59,11 @@ public:
      * @param[in] position Position of the detector within the lane.
      */
     GUIInstantInductLoop(const std::string& id, OutputDevice& od,
-                         MSLane* const lane, SUMOReal positionInMeters) throw();
+                         MSLane* const lane, SUMOReal positionInMeters) ;
 
 
     /// @brief Destructor
-    ~GUIInstantInductLoop() throw();
+    ~GUIInstantInductLoop() ;
 
 
 
@@ -82,10 +83,10 @@ public:
         /// @brief Constructor
         MyWrapper(GUIInstantInductLoop& detector,
                   GUILaneWrapper& wrapper,
-                  SUMOReal pos) throw();
+                  SUMOReal pos) ;
 
         /// @brief Destructor
-        ~MyWrapper() throw();
+        ~MyWrapper() ;
 
 
         /// @name inherited from GUIGlObject
@@ -99,7 +100,7 @@ public:
          * @see GUIGlObject::getParameterWindow
          */
         GUIParameterTableWindow* getParameterWindow(
-            GUIMainWindow& app, GUISUMOAbstractView& parent) throw();
+            GUIMainWindow& app, GUISUMOAbstractView& parent) ;
 
 
         /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -107,14 +108,14 @@ public:
          * @return The boundary the object is within
          * @see GUIGlObject::getCenteringBoundary
          */
-        Boundary getCenteringBoundary() const throw();
+        Boundary getCenteringBoundary() const ;
 
 
         /** @brief Draws the object
          * @param[in] s The settings for the current view (may influence drawing)
          * @see GUIGlObject::drawGL
          */
-        void drawGL(const GUIVisualizationSettings& s) const throw();
+        void drawGL(const GUIVisualizationSettings& s) const ;
         //@}
 
 

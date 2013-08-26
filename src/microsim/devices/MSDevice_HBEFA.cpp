@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSDevice_HBEFA.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    Fri, 30.01.2009
 /// @version $Id$
 ///
 // A device which collects vehicular emissions (using HBEFA-reformulation)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -46,7 +49,7 @@
 // static initialisation methods
 // ---------------------------------------------------------------------------
 void
-MSDevice_HBEFA::insertOptions() throw() {
+MSDevice_HBEFA::insertOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
     oc.addOptionSubTopic("Emissions");
 
@@ -63,9 +66,9 @@ MSDevice_HBEFA::insertOptions() throw() {
 
 
 void
-MSDevice_HBEFA::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) throw() {
+MSDevice_HBEFA::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) {
     OptionsCont& oc = OptionsCont::getOptions();
-    if (oc.getFloat("device.hbefa.probability")==0 && !oc.isSet("device.hbefa.explicit")) {
+    if (oc.getFloat("device.hbefa.probability") == 0 && !oc.isSet("device.hbefa.explicit")) {
         // no route computation is modelled
         return;
     }
@@ -74,10 +77,10 @@ MSDevice_HBEFA::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into
     if (oc.getBool("device.hbefa.deterministic")) {
         haveByNumber = MSNet::getInstance()->getVehicleControl().isInQuota(oc.getFloat("device.hbefa.probability"));
     } else {
-        haveByNumber = RandHelper::rand()<=oc.getFloat("device.hbefa.probability");
+        haveByNumber = RandHelper::rand() <= oc.getFloat("device.hbefa.probability");
     }
     bool haveByName = oc.isSet("device.hbefa.explicit") && OptionsCont::getOptions().isInStringVector("device.hbefa.explicit", v.getID());
-    if (haveByNumber||haveByName) {
+    if (haveByNumber || haveByName) {
         // build the device
         MSDevice_HBEFA* device = new MSDevice_HBEFA(v, "hbefa_" + v.getID());
         into.push_back(device);
@@ -88,40 +91,40 @@ MSDevice_HBEFA::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into
 // ---------------------------------------------------------------------------
 // MSDevice_HBEFA-methods
 // ---------------------------------------------------------------------------
-MSDevice_HBEFA::MSDevice_HBEFA(SUMOVehicle& holder, const std::string& id) throw()
+MSDevice_HBEFA::MSDevice_HBEFA(SUMOVehicle& holder, const std::string& id)
     : MSDevice(holder, id),
       myCO2(0), myCO(0), myHC(0), myPMx(0), myNOx(0), myFuel(0) {
 }
 
 
-MSDevice_HBEFA::~MSDevice_HBEFA() throw() {
+MSDevice_HBEFA::~MSDevice_HBEFA() {
 }
 
 
 bool
-MSDevice_HBEFA::notifyMove(SUMOVehicle& veh, SUMOReal /*oldPos*/, SUMOReal /*newPos*/, SUMOReal newSpeed) throw() {
-    SUMOEmissionClass c = veh.getVehicleType().getEmissionClass();
-    SUMOReal a = veh.getPreDawdleAcceleration();
-    myCO2 += HelpersHBEFA::computeCO2(c, newSpeed, a);
-    myCO += HelpersHBEFA::computeCO(c, newSpeed, a);
-    myHC += HelpersHBEFA::computeHC(c, newSpeed, a);
-    myPMx += HelpersHBEFA::computePMx(c, newSpeed, a);
-    myNOx += HelpersHBEFA::computeNOx(c, newSpeed, a);
-    myFuel += HelpersHBEFA::computeFuel(c, newSpeed, a);
+MSDevice_HBEFA::notifyMove(SUMOVehicle& veh, SUMOReal /*oldPos*/, SUMOReal /*newPos*/, SUMOReal newSpeed) {
+    const SUMOEmissionClass c = veh.getVehicleType().getEmissionClass();
+    const SUMOReal a = veh.getPreDawdleAcceleration();
+    myCO2 += TS * HelpersHBEFA::computeCO2(c, newSpeed, a);
+    myCO += TS * HelpersHBEFA::computeCO(c, newSpeed, a);
+    myHC += TS * HelpersHBEFA::computeHC(c, newSpeed, a);
+    myPMx += TS * HelpersHBEFA::computePMx(c, newSpeed, a);
+    myNOx += TS * HelpersHBEFA::computeNOx(c, newSpeed, a);
+    myFuel += TS * HelpersHBEFA::computeFuel(c, newSpeed, a);
     return true;
 }
 
 
 void
-MSDevice_HBEFA::generateOutput() const throw(IOError) {
+MSDevice_HBEFA::generateOutput() const {
     OutputDevice& os = OutputDevice::getDeviceByOption("tripinfo-output");
     (os.openTag("emissions") <<
      " CO_abs=\"" << OutputDevice::realString(myCO, 6) <<
      "\" CO2_abs=\"" << OutputDevice::realString(myCO2, 6) <<
      "\" HC_abs=\"" << OutputDevice::realString(myHC, 6) <<
-     "\" PMx_abs=\""<< OutputDevice::realString(myPMx, 6) <<
-     "\" NOx_abs=\""<< OutputDevice::realString(myNOx, 6) <<
-     "\" fuel_abs=\""<< OutputDevice::realString(myFuel, 6) <<
+     "\" PMx_abs=\"" << OutputDevice::realString(myPMx, 6) <<
+     "\" NOx_abs=\"" << OutputDevice::realString(myNOx, 6) <<
+     "\" fuel_abs=\"" << OutputDevice::realString(myFuel, 6) <<
      "\"").closeTag(true);
 }
 

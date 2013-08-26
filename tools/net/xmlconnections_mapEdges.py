@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 @file    xmlconnections_mapEdges.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
 @date    2009-08-01
 @version $Id$
 
@@ -12,7 +12,8 @@ The result is written to <CONNECTIONS>.mod.xml
 
 Call: xmlconnections_mapEdges.py <CONNECTIONS>
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

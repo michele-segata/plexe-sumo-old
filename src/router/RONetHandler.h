@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RONetHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The handler that parses a SUMO-network for its usage in a router
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,7 +68,7 @@ public:
 
 
     /// @brief Destructor
-    virtual ~RONetHandler() throw();
+    virtual ~RONetHandler() ;
 
 
 protected:
@@ -80,7 +83,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     virtual void myStartElement(int element,
-                                const SUMOSAXAttributes& attrs) throw(ProcessError);
+                                const SUMOSAXAttributes& attrs) ;
     //@}
 
 protected:
@@ -133,7 +136,7 @@ protected:
      * @param[in] attrs The attributes (of the "succ"-element) to parse
      * @exception ProcessError If the edge given in cedge@edge is not known
      */
-    void parseConnectingEdge(const SUMOSAXAttributes& attrs) throw(ProcessError);
+    void parseConnectingEdge(const SUMOSAXAttributes& attrs) ;
 
 
     /** @begin (deprecated) Parses an approached edge and lets the approaching know about the connection
@@ -165,7 +168,7 @@ protected:
      * @param[in] attrs The attributes (of the "district"-element) to parse
      * @exception ProcessError If an edge given in district@edges is not known
      */
-    void parseDistrict(const SUMOSAXAttributes& attrs) throw(ProcessError);
+    void parseDistrict(const SUMOSAXAttributes& attrs) ;
 
 
     /** @begin Parses a district edge and connects it to the district

@@ -1,20 +1,24 @@
 /****************************************************************************/
 /// @file    AGPosition.h
-/// @author  Piotr Woznica & Walter Bamberger
+/// @author  Piotr Woznica
+/// @author  Walter Bamberger
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    July 2010
 /// @version $Id$
 ///
 // References a street of the city and defines a position in this street
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -67,7 +71,7 @@ public:
      * param[in] str the street on which the AGPosition is located
      * param[in] pos the distance from the from node of the street
      */
-    AGPosition(const AGStreet& str, SUMOReal pos) throw();
+    AGPosition(const AGStreet& str, SUMOReal pos) ;
     /** @brief Constructs an AGPosition at a random point on a street.
      *
      * This constructor determines the distance from the from node with
@@ -75,13 +79,13 @@ public:
      *
      * param[in] str the street on which the AGPosition is located
      */
-    AGPosition(const AGStreet& str) throw();
+    AGPosition(const AGStreet& str) ;
 
     /** @brief Provides the street this AGPosition is located on.
      *
      * @return the street
      */
-    const AGStreet& getStreet() const throw();
+    const AGStreet& getStreet() const ;
 
     /** @brief Provides the relative position of this AGPosition on the street.
      *
@@ -90,7 +94,7 @@ public:
      *
      * @return the relative position
      */
-    SUMOReal getPosition() const throw();
+    SUMOReal getPosition() const ;
 
     /** @brief Tests whether two positions are at the same place.
      *
@@ -100,14 +104,14 @@ public:
      * @param[in] pos the position with which the comparison is done
      * @return true if both AGPositions are (almost) at the same place
      */
-    bool operator==(const AGPosition& pos) const throw();
+    bool operator==(const AGPosition& pos) const ;
 
     /** @brief Computes the distance between two AGPosition objects.
      *
      * @param[in] the other position the distance in computed to
      * @return the distance
      */
-    SUMOReal distanceTo(const AGPosition& otherPos) const throw();
+    SUMOReal distanceTo(const AGPosition& otherPos) const ;
 
     /** @brief Computes the distance to the closest position in a list.
      *
@@ -117,7 +121,7 @@ public:
      * @param[in] positions the list of positions the distances are computed to
      * @return the minimal distance
      */
-    SUMOReal minDistanceTo(const std::list<AGPosition>& positions) const throw();
+    SUMOReal minDistanceTo(const std::list<AGPosition>& positions) const ;
 
     /** @brief Computes the distance to the closest position in a map.
      *
@@ -127,12 +131,12 @@ public:
      * @param[in] positions the map of positions the distances are computed to
      * @return the minimal distance
      */
-    SUMOReal minDistanceTo(const std::map<int, AGPosition>& positions) const throw();
+    SUMOReal minDistanceTo(const std::map<int, AGPosition>& positions) const ;
 
     /** @brief Prints out a summary of the properties of this class
      * on standard output.
      */
-    void print() const throw();
+    void print() const ;
 
 private:
     const AGStreet* street;
@@ -143,7 +147,7 @@ private:
      *
      * @return the random relative position
      */
-    static SUMOReal randomPositionInStreet(const AGStreet& street) throw();
+    static SUMOReal randomPositionInStreet(const AGStreet& street) ;
 
     /** Creates a Position object to the street and position attribute of
      * this class.
@@ -152,7 +156,7 @@ private:
      *
      * @return the Position object
      */
-    Position compute2dPosition() const throw();
+    Position compute2dPosition() const ;
 };
 
 #endif /* AGPOSITION_H */

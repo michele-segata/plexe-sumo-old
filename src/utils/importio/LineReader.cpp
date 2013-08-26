@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    LineReader.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    Fri, 19 Jul 2002
 /// @version $Id$
 ///
 // Retrieves a file linewise and reports the lines to a handler.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -44,28 +47,28 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-LineReader::LineReader() throw() {}
+LineReader::LineReader() {}
 
 
-LineReader::LineReader(const std::string& file) throw()
+LineReader::LineReader(const std::string& file)
     : myFileName(file),
       myRead(0) {
     reinit();
 }
 
 
-LineReader::~LineReader() throw() {}
+LineReader::~LineReader() {}
 
 
 bool
-LineReader::hasMore() const throw() {
-    return myRread<myAvailable;
+LineReader::hasMore() const {
+    return myRread < myAvailable;
 }
 
 
 void
-LineReader::readAll(LineHandler& lh) throw(ProcessError) {
-    while (myRread<myAvailable) {
+LineReader::readAll(LineHandler& lh) {
+    while (myRread < myAvailable) {
         if (!readLine(lh)) {
             return;
         }
@@ -74,24 +77,24 @@ LineReader::readAll(LineHandler& lh) throw(ProcessError) {
 
 
 bool
-LineReader::readLine(LineHandler& lh) throw(ProcessError) {
+LineReader::readLine(LineHandler& lh) {
     std::string toReport;
     bool moreAvailable = true;
-    while (toReport.length()==0) {
+    while (toReport.length() == 0) {
         size_t idx = myStrBuffer.find('\n');
-        if (idx==0) {
+        if (idx == 0) {
             myStrBuffer = myStrBuffer.substr(1);
             myRread++;
             return lh.report("");
         }
-        if (idx!=std::string::npos) {
+        if (idx != std::string::npos) {
             toReport = myStrBuffer.substr(0, idx);
-            myStrBuffer = myStrBuffer.substr(idx+1);
-            myRread += (unsigned int)idx+1;
+            myStrBuffer = myStrBuffer.substr(idx + 1);
+            myRread += (unsigned int)idx + 1;
         } else {
-            if (myRead<myAvailable) {
+            if (myRead < myAvailable) {
                 myStrm.read(myBuffer,
-                            myAvailable - myRead<1024
+                            myAvailable - myRead < 1024
                             ? myAvailable - myRead
                             : 1024);
                 size_t noBytes = myAvailable - myRead;
@@ -101,19 +104,19 @@ LineReader::readLine(LineHandler& lh) throw(ProcessError) {
             } else {
                 toReport = myStrBuffer;
                 moreAvailable = false;
-                if (toReport=="") {
+                if (toReport == "") {
                     return lh.report(toReport);
                 }
             }
         }
     }
     // remove trailing blanks
-    int idx = (int)toReport.length()-1;
-    while (idx>=0&&toReport[idx]<32) {
+    int idx = (int)toReport.length() - 1;
+    while (idx >= 0 && toReport[idx] < 32) {
         idx--;
     }
-    if (idx>=0) {
-        toReport = toReport.substr(0, idx+1);
+    if (idx >= 0) {
+        toReport = toReport.substr(0, idx + 1);
     } else {
         toReport = "";
     }
@@ -126,24 +129,24 @@ LineReader::readLine(LineHandler& lh) throw(ProcessError) {
 
 
 std::string
-LineReader::readLine() throw() {
+LineReader::readLine() {
     std::string toReport;
     bool moreAvailable = true;
-    while (toReport.length()==0&&myStrm.good()) {
+    while (toReport.length() == 0 && myStrm.good()) {
         size_t idx = myStrBuffer.find('\n');
-        if (idx==0) {
+        if (idx == 0) {
             myStrBuffer = myStrBuffer.substr(1);
             myRread++;
             return "";
         }
-        if (idx!=std::string::npos) {
+        if (idx != std::string::npos) {
             toReport = myStrBuffer.substr(0, idx);
-            myStrBuffer = myStrBuffer.substr(idx+1);
-            myRread += (unsigned int) idx+1;
+            myStrBuffer = myStrBuffer.substr(idx + 1);
+            myRread += (unsigned int) idx + 1;
         } else {
-            if (myRead<myAvailable) {
+            if (myRead < myAvailable) {
                 myStrm.read(myBuffer,
-                            myAvailable - myRead<1024
+                            myAvailable - myRead < 1024
                             ? myAvailable - myRead
                             : 1024);
                 size_t noBytes = myAvailable - myRead;
@@ -154,7 +157,7 @@ LineReader::readLine() throw() {
                 toReport = myStrBuffer;
                 myRread += 1024;
                 moreAvailable = false;
-                if (toReport=="") {
+                if (toReport == "") {
                     return toReport;
                 }
             }
@@ -164,12 +167,12 @@ LineReader::readLine() throw() {
         return "";
     }
     // remove trailing blanks
-    int idx = (int)toReport.length()-1;
-    while (idx>=0&&toReport[idx]<32) {
+    int idx = (int)toReport.length() - 1;
+    while (idx >= 0 && toReport[idx] < 32) {
         idx--;
     }
-    if (idx>=0) {
-        toReport = toReport.substr(0, idx+1);
+    if (idx >= 0) {
+        toReport = toReport.substr(0, idx + 1);
     } else {
         toReport = "";
     }
@@ -179,13 +182,13 @@ LineReader::readLine() throw() {
 
 
 std::string
-LineReader::getFileName() const throw() {
+LineReader::getFileName() const {
     return myFileName;
 }
 
 
 bool
-LineReader::setFile(const std::string& file) throw() {
+LineReader::setFile(const std::string& file) {
     myFileName = file;
     reinit();
     return myStrm.good();
@@ -193,13 +196,13 @@ LineReader::setFile(const std::string& file) throw() {
 
 
 unsigned long
-LineReader::getPosition() throw() {
+LineReader::getPosition() {
     return myRread;
 }
 
 
 void
-LineReader::reinit() throw() {
+LineReader::reinit() {
     if (myStrm.is_open()) {
         myStrm.close();
     }
@@ -216,7 +219,7 @@ LineReader::reinit() throw() {
 
 
 void
-LineReader::setPos(unsigned long pos) throw() {
+LineReader::setPos(unsigned long pos) {
     myStrm.seekg(pos, std::ios::beg);
     myRead = pos;
     myRread = pos;
@@ -225,7 +228,7 @@ LineReader::setPos(unsigned long pos) throw() {
 
 
 bool
-LineReader::good() const throw() {
+LineReader::good() const {
     return myStrm.good();
 }
 

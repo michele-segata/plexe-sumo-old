@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RODFEdgeBuilder.h
 /// @author  Daniel Krajzewicz
+/// @author  Eric Nicolay
+/// @author  Michael Behrisch
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // Interface for building instances of dfrouter-edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -53,11 +56,11 @@ class ROEdge;
 class RODFEdgeBuilder : public ROAbstractEdgeBuilder {
 public:
     /// @brief Constructor
-    RODFEdgeBuilder() throw();
+    RODFEdgeBuilder() ;
 
 
     /// @brief Destructor
-    ~RODFEdgeBuilder() throw();
+    ~RODFEdgeBuilder() ;
 
 
     /// @name Methods to be implemented, inherited from ROAbstractEdgeBuilder
@@ -73,7 +76,7 @@ public:
      * @return A proper instance of the named edge
      * @see RODFEdge
      */
-    ROEdge* buildEdge(const std::string& name, RONode* from, RONode* to) throw();
+    ROEdge* buildEdge(const std::string& name, RONode* from, RONode* to) ;
     /// @}
 
 

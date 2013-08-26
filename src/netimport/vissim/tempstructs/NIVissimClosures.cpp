@@ -7,12 +7,13 @@
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,8 +65,8 @@ NIVissimClosures::dictionary(const std::string& id,
 
 bool
 NIVissimClosures::dictionary(const std::string& name, NIVissimClosures* o) {
-    DictType::iterator i=myDict.find(name);
-    if (i==myDict.end()) {
+    DictType::iterator i = myDict.find(name);
+    if (i == myDict.end()) {
         myDict[name] = o;
         return true;
     }
@@ -75,8 +76,8 @@ NIVissimClosures::dictionary(const std::string& name, NIVissimClosures* o) {
 
 NIVissimClosures*
 NIVissimClosures::dictionary(const std::string& name) {
-    DictType::iterator i=myDict.find(name);
-    if (i==myDict.end()) {
+    DictType::iterator i = myDict.find(name);
+    if (i == myDict.end()) {
         return 0;
     }
     return (*i).second;
@@ -86,7 +87,7 @@ NIVissimClosures::dictionary(const std::string& name) {
 
 void
 NIVissimClosures::clearDict() {
-    for (DictType::iterator i=myDict.begin(); i!=myDict.end(); i++) {
+    for (DictType::iterator i = myDict.begin(); i != myDict.end(); i++) {
         delete(*i).second;
     }
     myDict.clear();

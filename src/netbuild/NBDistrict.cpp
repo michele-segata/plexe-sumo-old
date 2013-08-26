@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NBDistrict.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A class representing a single district
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -70,12 +73,12 @@ NBDistrict::reshiftPosition(SUMOReal xoff, SUMOReal yoff) {
 bool
 NBDistrict::addSource(NBEdge* const source, SUMOReal weight) {
     EdgeVector::iterator i = find(mySources.begin(), mySources.end(), source);
-    if (i!=mySources.end()) {
+    if (i != mySources.end()) {
         return false;
     }
     mySources.push_back(source);
     mySourceWeights.push_back(weight);
-    assert(source->getID()!="");
+    assert(source->getID() != "");
     return true;
 }
 
@@ -83,12 +86,12 @@ NBDistrict::addSource(NBEdge* const source, SUMOReal weight) {
 bool
 NBDistrict::addSink(NBEdge* const sink, SUMOReal weight) {
     EdgeVector::iterator i = find(mySinks.begin(), mySinks.end(), sink);
-    if (i!=mySinks.end()) {
+    if (i != mySinks.end()) {
         return false;
     }
     mySinks.push_back(sink);
     mySinkWeights.push_back(weight);
-    assert(sink->getID()!="");
+    assert(sink->getID() != "");
     return true;
 }
 
@@ -106,12 +109,12 @@ NBDistrict::replaceIncoming(const EdgeVector& which, NBEdge* const by) {
     WeightsCont newWeights;
     SUMOReal joinedVal = 0;
     // go through the list of sinks
-    EdgeVector::iterator i=mySinks.begin();
-    WeightsCont::iterator j=mySinkWeights.begin();
-    for (; i!=mySinks.end(); i++, j++) {
+    EdgeVector::iterator i = mySinks.begin();
+    WeightsCont::iterator j = mySinkWeights.begin();
+    for (; i != mySinks.end(); i++, j++) {
         NBEdge* tmp = (*i);
         SUMOReal val = (*j);
-        if (find(which.begin(), which.end(), tmp)==which.end()) {
+        if (find(which.begin(), which.end(), tmp) == which.end()) {
             // if the current edge shall not be replaced, add to the
             //  temporary list
             newList.push_back(tmp);
@@ -138,12 +141,12 @@ NBDistrict::replaceOutgoing(const EdgeVector& which, NBEdge* const by) {
     WeightsCont newWeights;
     SUMOReal joinedVal = 0;
     // go through the list of sinks
-    EdgeVector::iterator i=mySources.begin();
-    WeightsCont::iterator j=mySourceWeights.begin();
-    for (; i!=mySources.end(); i++, j++) {
+    EdgeVector::iterator i = mySources.begin();
+    WeightsCont::iterator j = mySourceWeights.begin();
+    for (; i != mySources.end(); i++, j++) {
         NBEdge* tmp = (*i);
         SUMOReal val = (*j);
-        if (find(which.begin(), which.end(), tmp)==which.end()) {
+        if (find(which.begin(), which.end(), tmp) == which.end()) {
             // if the current edge shall not be replaced, add to the
             //  temporary list
             newList.push_back(tmp);
@@ -166,16 +169,16 @@ NBDistrict::replaceOutgoing(const EdgeVector& which, NBEdge* const by) {
 void
 NBDistrict::removeFromSinksAndSources(NBEdge* const e) {
     size_t i;
-    for (i=0; i<mySinks.size(); ++i) {
-        if (mySinks[i]==e) {
-            mySinks.erase(mySinks.begin()+i);
-            mySinkWeights.erase(mySinkWeights.begin()+i);
+    for (i = 0; i < mySinks.size(); ++i) {
+        if (mySinks[i] == e) {
+            mySinks.erase(mySinks.begin() + i);
+            mySinkWeights.erase(mySinkWeights.begin() + i);
         }
     }
-    for (i=0; i<mySources.size(); ++i) {
-        if (mySources[i]==e) {
-            mySources.erase(mySources.begin()+i);
-            mySourceWeights.erase(mySourceWeights.begin()+i);
+    for (i = 0; i < mySources.size(); ++i) {
+        if (mySources[i] == e) {
+            mySources.erase(mySources.begin() + i);
+            mySourceWeights.erase(mySourceWeights.begin() + i);
         }
     }
 }

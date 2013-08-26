@@ -1,18 +1,24 @@
 /****************************************************************************/
 /// @file    NLTriggerBuilder.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Tino Morenz
+/// @author  Jakob Erdmann
+/// @author  Eric Nicolay
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Thu, 17 Oct 2002
 /// @version $Id$
 ///
 // Builds trigger objects for microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -55,20 +61,20 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NLTriggerBuilder::NLTriggerBuilder() throw()
+NLTriggerBuilder::NLTriggerBuilder()
     : myHandler(0), myHaveWarnedAboutDeprecatedFriendlyPos(false) {}
 
 
-NLTriggerBuilder::~NLTriggerBuilder() throw() {}
+NLTriggerBuilder::~NLTriggerBuilder() {}
 
 void
-NLTriggerBuilder::setHandler(NLHandler* handler) throw() {
+NLTriggerBuilder::setHandler(NLHandler* handler) {
     myHandler = handler;
 }
 
 
 void
-NLTriggerBuilder::buildVaporizer(const SUMOSAXAttributes& attrs) throw() {
+NLTriggerBuilder::buildVaporizer(const SUMOSAXAttributes& attrs) {
     bool ok = true;
     // get the id, throw if not given or empty...
     std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
@@ -76,7 +82,7 @@ NLTriggerBuilder::buildVaporizer(const SUMOSAXAttributes& attrs) throw() {
         return;
     }
     MSEdge* e = MSEdge::dictionary(id);
-    if (e==0) {
+    if (e == 0) {
         WRITE_ERROR("Unknown edge ('" + id + "') referenced in a vaporizer.");
         return;
     }
@@ -85,15 +91,15 @@ NLTriggerBuilder::buildVaporizer(const SUMOSAXAttributes& attrs) throw() {
     if (!ok) {
         return;
     }
-    if (begin<0) {
+    if (begin < 0) {
         WRITE_ERROR("A vaporization begin time is negative (edge id='" + id + "').");
         return;
     }
-    if (begin>=end) {
+    if (begin >= end) {
         WRITE_ERROR("A vaporization ends before it starts (edge id='" + id + "').");
         return;
     }
-    if (end>=string2time(OptionsCont::getOptions().getString("begin"))) {
+    if (end >= string2time(OptionsCont::getOptions().getString("begin"))) {
         Command* cb = new WrappingCommand< MSEdge >(e, &MSEdge::incVaporization);
         MSNet::getInstance()->getBeginOfTimestepEvents().addEvent(cb, begin, MSEventControl::ADAPT_AFTER_EXECUTION);
         Command* ce = new WrappingCommand< MSEdge >(e, &MSEdge::decVaporization);
@@ -122,14 +128,14 @@ NLTriggerBuilder::parseAndBuildLaneSpeedTrigger(MSNet& net, const SUMOSAXAttribu
     std::vector<MSLane*> lanes;
     std::vector<std::string> laneIDs;
     SUMOSAXAttributes::parseStringVector(objectid, laneIDs);
-    for (std::vector<std::string>::iterator i=laneIDs.begin(); i!=laneIDs.end(); ++i) {
+    for (std::vector<std::string>::iterator i = laneIDs.begin(); i != laneIDs.end(); ++i) {
         MSLane* lane = MSLane::dictionary(*i);
-        if (lane==0) {
+        if (lane == 0) {
             throw InvalidArgument("The lane to use within MSLaneSpeedTrigger '" + id + "' is not known.");
         }
         lanes.push_back(lane);
     }
-    if (lanes.size()==0) {
+    if (lanes.size() == 0) {
         throw InvalidArgument("No lane defined for MSLaneSpeedTrigger '" + id + "'.");
     }
     try {
@@ -161,7 +167,7 @@ NLTriggerBuilder::parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attr
         frompos = attrs.getOptSUMORealReporting(SUMO_ATTR_FROM, id.c_str(), ok, 0);
         topos = attrs.getOptSUMORealReporting(SUMO_ATTR_TO, id.c_str(), ok, lane->getLength());
     }
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)&&!myHaveWarnedAboutDeprecatedFriendlyPos) {
+    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
         myHaveWarnedAboutDeprecatedFriendlyPos = true;
         WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated, use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "' instead.");
     }
@@ -224,14 +230,14 @@ NLTriggerBuilder::parseAndBuildRerouter(MSNet& net, const SUMOSAXAttributes& att
     std::vector<MSEdge*> edges;
     std::vector<std::string> edgeIDs;
     SUMOSAXAttributes::parseStringVector(objectid, edgeIDs);
-    for (std::vector<std::string>::iterator i=edgeIDs.begin(); i!=edgeIDs.end(); ++i) {
+    for (std::vector<std::string>::iterator i = edgeIDs.begin(); i != edgeIDs.end(); ++i) {
         MSEdge* edge = MSEdge::dictionary(*i);
-        if (edge==0) {
+        if (edge == 0) {
             throw InvalidArgument("The edge to use within MSTriggeredRerouter '" + id + "' is not known.");
         }
         edges.push_back(edge);
     }
-    if (edges.size()==0) {
+    if (edges.size() == 0) {
         throw InvalidArgument("No edges found for MSTriggeredRerouter '" + id + "'.");
     }
     SUMOReal prob = attrs.getOptSUMORealReporting(SUMO_ATTR_PROB, id.c_str(), ok, 1);
@@ -249,7 +255,7 @@ NLTriggerBuilder::parseAndBuildRerouter(MSNet& net, const SUMOSAXAttributes& att
 MSLaneSpeedTrigger*
 NLTriggerBuilder::buildLaneSpeedTrigger(MSNet& /*net*/, const std::string& id,
                                         const std::vector<MSLane*> &destLanes,
-                                        const std::string& file) throw(ProcessError) {
+                                        const std::string& file) {
     return new MSLaneSpeedTrigger(id, destLanes, file);
 }
 
@@ -260,7 +266,7 @@ NLTriggerBuilder::buildCalibrator(MSNet& net, const std::string& id,
                                   const MSEdge* edge, SUMOReal pos,
                                   const std::string& file,
                                   const std::string& outfile,
-                                  const SUMOTime freq) throw() {
+                                  const SUMOTime freq) {
     return new METriggeredCalibrator(id, edge, pos, file, outfile, freq);
 }
 #endif
@@ -269,7 +275,7 @@ NLTriggerBuilder::buildCalibrator(MSNet& net, const std::string& id,
 void
 NLTriggerBuilder::buildRerouter(MSNet&, const std::string& id,
                                 std::vector<MSEdge*> &edges,
-                                SUMOReal prob, const std::string& file, bool off) throw() {
+                                SUMOReal prob, const std::string& file, bool off) {
     new MSTriggeredRerouter(id, edges, prob, file, off);
 }
 
@@ -316,7 +322,7 @@ NLTriggerBuilder::getLane(const SUMOSAXAttributes& attrs,
     bool ok = true;
     std::string objectid = attrs.getStringReporting(SUMO_ATTR_LANE, tid.c_str(), ok);
     MSLane* lane = MSLane::dictionary(objectid);
-    if (lane==0) {
+    if (lane == 0) {
         throw InvalidArgument("The lane " + objectid + " to use within the " + tt + " '" + tid + "' is not known.");
     }
     return lane;
@@ -327,7 +333,7 @@ SUMOReal
 NLTriggerBuilder::getPosition(const SUMOSAXAttributes& attrs,
                               MSLane* lane,
                               const std::string& tt, const std::string& tid) throw(InvalidArgument) {
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)&&!myHaveWarnedAboutDeprecatedFriendlyPos) {
+    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
         myHaveWarnedAboutDeprecatedFriendlyPos = true;
         WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated, use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "' instead.");
     }
@@ -339,10 +345,10 @@ NLTriggerBuilder::getPosition(const SUMOSAXAttributes& attrs,
     if (!ok) {
         throw InvalidArgument("Error on parsing a position information.");
     }
-    if (pos<0) {
+    if (pos < 0) {
         pos = lane->getLength() + pos;
     }
-    if (pos>lane->getLength()) {
+    if (pos > lane->getLength()) {
         if (friendlyPos) {
             pos = lane->getLength() - (SUMOReal) 0.1;
         } else {

@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    MSCFModel_KraussOrig1.cpp
 /// @author  Tobias Mayer
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    Mon, 04 Aug 2009
 /// @version $Id$
 ///
 // The original Krauss (1998) car-following model and parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -54,7 +59,7 @@ MSCFModel_KraussOrig1::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
     //  in this case, we neglect dawdling, nonetheless, using
     //  vSafe does not incorporate speed reduction due to interaction
     //  on lane changing
-    veh->setPreDawdleAcceleration(SPEED2ACCEL(vSafe-oldV));
+    veh->setPreDawdleAcceleration(SPEED2ACCEL(vSafe - oldV));
     const SUMOReal vMin = MAX2((SUMOReal) 0, oldV - ACCEL2SPEED(myDecel));
     const SUMOReal vMax = MIN3(veh->getLane()->getMaxSpeed(), maxNextSpeed(oldV), vSafe);
 #ifdef _DEBUG
@@ -86,13 +91,13 @@ MSCFModel_KraussOrig1::dawdle(SUMOReal speed) const {
 
 /** Returns the SK-vsafe. */
 SUMOReal MSCFModel_KraussOrig1::_vsafe(SUMOReal gap, SUMOReal predSpeed) const {
-    if (predSpeed==0&&gap<0.01) {
+    if (predSpeed == 0 && gap < 0.01) {
         return 0;
     }
     SUMOReal vsafe = (SUMOReal)(-1. * myTauDecel
                                 + sqrt(
-                                    myTauDecel*myTauDecel
-                                    + (predSpeed*predSpeed)
+                                    myTauDecel * myTauDecel
+                                    + (predSpeed * predSpeed)
                                     + (2. * myDecel * gap)
                                 ));
     assert(vsafe >= 0);

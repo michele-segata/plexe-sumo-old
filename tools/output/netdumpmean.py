@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
 @file    netdumpmean.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2007-10-25
 @version $Id$
 
@@ -10,7 +11,8 @@ This script reads two network dumps,
  computes the mean values
  and writes the results into the output file
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, string, sys

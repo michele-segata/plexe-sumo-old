@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIMainWindow.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 29.05.2005
 /// @version $Id$
 ///
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -43,8 +46,8 @@
 // member method definitions
 // ===========================================================================
 GUIMainWindow::GUIMainWindow(FXApp* a)
-    : FXMainWindow(a,"SUMO-gui main window",NULL,NULL,DECOR_ALL,20,20,600,400),
-      myGLVisual(new FXGLVisual(a, VISUAL_DOUBLEBUFFER/*|VISUAL_STEREO*/)),
+    : FXMainWindow(a, "SUMO-gui main window", NULL, NULL, DECOR_ALL, 20, 20, 600, 400),
+      myGLVisual(new FXGLVisual(a, VISUAL_DOUBLEBUFFER)),
       myRunAtBegin(false), myAmGaming(false), myListInternal(false) {
 
     FXFontDesc fdesc;
@@ -52,10 +55,10 @@ GUIMainWindow::GUIMainWindow(FXApp* a)
     fdesc.weight = FXFont::Bold;
     myBoldFont = new FXFont(getApp(), fdesc);
 
-    myTopDock=new FXDockSite(this,LAYOUT_SIDE_TOP|LAYOUT_FILL_X);
-    myBottomDock=new FXDockSite(this,LAYOUT_SIDE_BOTTOM|LAYOUT_FILL_X);
-    myLeftDock=new FXDockSite(this,LAYOUT_SIDE_LEFT|LAYOUT_FILL_Y);
-    myRightDock=new FXDockSite(this,LAYOUT_SIDE_RIGHT|LAYOUT_FILL_Y);
+    myTopDock = new FXDockSite(this, LAYOUT_SIDE_TOP | LAYOUT_FILL_X);
+    myBottomDock = new FXDockSite(this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X);
+    myLeftDock = new FXDockSite(this, LAYOUT_SIDE_LEFT | LAYOUT_FILL_Y);
+    myRightDock = new FXDockSite(this, LAYOUT_SIDE_RIGHT | LAYOUT_FILL_Y);
 }
 
 
@@ -78,7 +81,7 @@ GUIMainWindow::addChild(FXMDIChild* child, bool /*updateOnSimStep !!!*/) {
 void
 GUIMainWindow::removeChild(FXMDIChild* child) {
     std::vector<FXMDIChild*>::iterator i = std::find(mySubWindows.begin(), mySubWindows.end(), child);
-    if (i!=mySubWindows.end()) {
+    if (i != mySubWindows.end()) {
         mySubWindows.erase(i);
     }
 }
@@ -102,9 +105,9 @@ GUIMainWindow::removeChild(FXMainWindow* child) {
 
 
 std::vector<std::string>
-GUIMainWindow::getViewIDs() const throw() {
+GUIMainWindow::getViewIDs() const {
     std::vector<std::string> ret;
-    for (std::vector<FXMDIChild*>::const_iterator i = mySubWindows.begin(); i!=mySubWindows.end(); ++i) {
+    for (std::vector<FXMDIChild*>::const_iterator i = mySubWindows.begin(); i != mySubWindows.end(); ++i) {
         ret.push_back((*i)->getTitle().text());
     }
     return ret;
@@ -112,9 +115,9 @@ GUIMainWindow::getViewIDs() const throw() {
 
 
 FXMDIChild*
-GUIMainWindow::getViewByID(const std::string& id) const throw() {
-    for (std::vector<FXMDIChild*>::const_iterator i = mySubWindows.begin(); i!=mySubWindows.end(); ++i) {
-        if (std::string((*i)->getTitle().text())==id) {
+GUIMainWindow::getViewByID(const std::string& id) const {
+    for (std::vector<FXMDIChild*>::const_iterator i = mySubWindows.begin(); i != mySubWindows.end(); ++i) {
+        if (std::string((*i)->getTitle().text()) == id) {
             return *i;
         }
     }
@@ -134,8 +137,8 @@ GUIMainWindow::updateChildren() {
     myMDIClient->forallWindows(this, FXSEL(SEL_COMMAND, MID_SIMSTEP), 0);
     // inform other windows
     myTrackerLock.lock();
-    for (size_t i=0; i<myTrackerWindows.size(); i++) {
-        myTrackerWindows[i]->handle(this,FXSEL(SEL_COMMAND,MID_SIMSTEP), 0);
+    for (size_t i = 0; i < myTrackerWindows.size(); i++) {
+        myTrackerWindows[i]->handle(this, FXSEL(SEL_COMMAND, MID_SIMSTEP), 0);
     }
     myTrackerLock.unlock();
 }

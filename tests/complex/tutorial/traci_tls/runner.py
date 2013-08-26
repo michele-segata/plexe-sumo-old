@@ -2,12 +2,15 @@
 """
 @file    runner.py
 @author  Lena Kalleske
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2009-03-26
 @version $Id$
 
 Tutorial for traffic light control via the TraCI interface.
 
-Copyright (C) 2009-2011 DLR/TS, Germany
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR/TS, Germany
 All rights reserved
 """
 
@@ -58,7 +61,7 @@ if not traci.isEmbedded():
     routes.close()
 
     sumoBinary = checkBinary('sumo')
-    sumoConfig = "data/cross.sumo.cfg"
+    sumoConfig = "data/cross.sumocfg"
     if len(sys.argv) > 1:
         retCode = subprocess.call("%s -c %s --python-script %s" % (sumoBinary, sumoConfig, __file__), shell=True, stdout=sys.stdout)
         sys.exit(retCode)

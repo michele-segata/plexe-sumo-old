@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    GUIJunctionWrapper.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
+/// @author  Andreas Gaubatz
 /// @date    Mon, 1 Jul 2003
 /// @version $Id$
 ///
 // }
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,12 +64,12 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-GUIJunctionWrapper::GUIJunctionWrapper(MSJunction& junction) throw()
+GUIJunctionWrapper::GUIJunctionWrapper(MSJunction& junction)
     : GUIGlObject(GLO_JUNCTION, junction.getID()),
       myJunction(junction) {
-    if (myJunction.getShape().size()==0) {
+    if (myJunction.getShape().size() == 0) {
         Position pos = myJunction.getPosition();
-        myBoundary = Boundary(pos.x()-1., pos.y()-1., pos.x()+1., pos.y()+1.);
+        myBoundary = Boundary(pos.x() - 1., pos.y() - 1., pos.x() + 1., pos.y() + 1.);
     } else {
         myBoundary = myJunction.getShape().getBoxBoundary();
     }
@@ -77,12 +82,12 @@ GUIJunctionWrapper::GUIJunctionWrapper(MSJunction& junction) throw()
 }
 
 
-GUIJunctionWrapper::~GUIJunctionWrapper() throw() {}
+GUIJunctionWrapper::~GUIJunctionWrapper() {}
 
 
 GUIGLObjectPopupMenu*
 GUIJunctionWrapper::getPopUpMenu(GUIMainWindow& app,
-                                 GUISUMOAbstractView& parent) throw() {
+                                 GUISUMOAbstractView& parent) {
     GUIGLObjectPopupMenu* ret = new GUIGLObjectPopupMenu(app, parent, *this);
     buildPopupHeader(ret, app);
     buildCenterPopupEntry(ret);
@@ -95,13 +100,13 @@ GUIJunctionWrapper::getPopUpMenu(GUIMainWindow& app,
 
 GUIParameterTableWindow*
 GUIJunctionWrapper::getParameterWindow(GUIMainWindow& /*app*/,
-                                       GUISUMOAbstractView&) throw() {
+                                       GUISUMOAbstractView&) {
     return 0;
 }
 
 
 Boundary
-GUIJunctionWrapper::getCenteringBoundary() const throw() {
+GUIJunctionWrapper::getCenteringBoundary() const {
     Boundary b = myBoundary;
     b.grow(20);
     return b;
@@ -109,9 +114,9 @@ GUIJunctionWrapper::getCenteringBoundary() const throw() {
 
 
 void
-GUIJunctionWrapper::drawGL(const GUIVisualizationSettings& s) const throw() {
+GUIJunctionWrapper::drawGL(const GUIVisualizationSettings& s) const {
     // check whether it is not too small
-    if (s.scale*myMaxSize<1.) {
+    if (s.scale * myMaxSize < 1.) {
         return;
     }
     if (!myIsInner) {

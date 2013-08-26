@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NIVissimAbstractEdge.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -47,11 +50,11 @@ NIVissimAbstractEdge::DictType NIVissimAbstractEdge::myDict;
 
 NIVissimAbstractEdge::NIVissimAbstractEdge(int id,
         const PositionVector& geom)
-    : myID(id), myNode(-1) {
+    : myID(id), myNode(-1) 
+{
     // convert/publicate geometry
-    std::deque<Position>::const_iterator i;
-    const std::deque<Position> &geomC = geom.getCont();
-    for (i=geomC.begin(); i!=geomC.end(); ++i) {
+    const PositionVector::ContType &geomC = geom.getCont();
+    for (PositionVector::ContType::const_iterator i = geomC.begin(); i != geomC.end(); ++i) {
         Position p = *i;
         if (!NILoader::transformCoordinates(p)) {
             WRITE_WARNING("Unable to project coordinates for edge '" + toString(id) + "'.");
@@ -68,8 +71,8 @@ NIVissimAbstractEdge::~NIVissimAbstractEdge() {}
 
 bool
 NIVissimAbstractEdge::dictionary(int id, NIVissimAbstractEdge* e) {
-    DictType::iterator i=myDict.find(id);
-    if (i==myDict.end()) {
+    DictType::iterator i = myDict.find(id);
+    if (i == myDict.end()) {
         myDict[id] = e;
         return true;
     }
@@ -79,8 +82,8 @@ NIVissimAbstractEdge::dictionary(int id, NIVissimAbstractEdge* e) {
 
 NIVissimAbstractEdge*
 NIVissimAbstractEdge::dictionary(int id) {
-    DictType::iterator i=myDict.find(id);
-    if (i==myDict.end()) {
+    DictType::iterator i = myDict.find(id);
+    if (i == myDict.end()) {
         return 0;
     }
     return (*i).second;
@@ -90,14 +93,14 @@ NIVissimAbstractEdge::dictionary(int id) {
 
 Position
 NIVissimAbstractEdge::getGeomPosition(SUMOReal pos) const {
-    if (myGeom.length()>pos) {
+    if (myGeom.length() > pos) {
         return myGeom.positionAtLengthPosition(pos);
-    } else if (myGeom.length()==pos) {
+    } else if (myGeom.length() == pos) {
         return myGeom[-1];
     } else {
         PositionVector g(myGeom);
         SUMOReal amount = pos - myGeom.length();
-        Position ne = GeomHelper::extrapolate_second(g[-2], g[-1], amount*2);
+        Position ne = GeomHelper::extrapolate_second(g[-2], g[-1], amount * 2);
         g.pop_back();
         g.push_back(ne);
         return g.positionAtLengthPosition(pos);
@@ -107,7 +110,7 @@ NIVissimAbstractEdge::getGeomPosition(SUMOReal pos) const {
 
 void
 NIVissimAbstractEdge::splitAndAssignToNodes() {
-    for (DictType::iterator i=myDict.begin(); i!=myDict.end(); i++) {
+    for (DictType::iterator i = myDict.begin(); i != myDict.end(); i++) {
         NIVissimAbstractEdge* e = (*i).second;
         e->splitAssigning();
     }
@@ -138,7 +141,7 @@ NIVissimAbstractEdge::crossesAtPoint(const Position& p1,
     // !!! not needed
     Position p = GeomHelper::intersection_position(
                      myGeom.getBegin(), myGeom.getEnd(), p1, p2);
-    return GeomHelper::nearest_position_on_line_to_point(
+    return GeomHelper::nearest_position_on_line_to_point2D(
                myGeom.getBegin(), myGeom.getEnd(), p);
 }
 
@@ -147,7 +150,7 @@ NIVissimAbstractEdge::crossesAtPoint(const Position& p1,
 IntVector
 NIVissimAbstractEdge::getWithin(const AbstractPoly& p, SUMOReal offset) {
     IntVector ret;
-    for (DictType::iterator i=myDict.begin(); i!=myDict.end(); i++) {
+    for (DictType::iterator i = myDict.begin(); i != myDict.end(); i++) {
         NIVissimAbstractEdge* e = (*i).second;
         if (e->overlapsWith(p, offset)) {
             ret.push_back(e->myID);
@@ -165,7 +168,7 @@ NIVissimAbstractEdge::overlapsWith(const AbstractPoly& p, SUMOReal offset) const
 
 bool
 NIVissimAbstractEdge::hasNodeCluster() const {
-    return myNode!=-1;
+    return myNode != -1;
 }
 
 
@@ -176,7 +179,7 @@ NIVissimAbstractEdge::getID() const {
 
 void
 NIVissimAbstractEdge::clearDict() {
-    for (DictType::iterator i=myDict.begin(); i!=myDict.end(); i++) {
+    for (DictType::iterator i = myDict.begin(); i != myDict.end(); i++) {
         delete(*i).second;
     }
     myDict.clear();

@@ -1,18 +1,24 @@
 /****************************************************************************/
 /// @file    SUMOXMLDefinitions.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Clemens Honomichl
+/// @author  Piotr Woznica
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -53,7 +59,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "laneAreaDetector", SUMO_TAG_LANE_AREA_DETECTOR },
     { "e3-detector",      SUMO_TAG_E3DETECTOR__DEPRECATED },
     { "e3Detector",       SUMO_TAG_E3DETECTOR },
-    { "entryExitDetector",SUMO_TAG_ENTRY_EXIT_DETECTOR },
+    { "entryExitDetector", SUMO_TAG_ENTRY_EXIT_DETECTOR },
     { "meandata-edge",    SUMO_TAG_MEANDATA_EDGE__DEPRECATED },
     { "edgeData",         SUMO_TAG_MEANDATA_EDGE },
     { "meandata-lane",    SUMO_TAG_MEANDATA_LANE__DEPRECATED },
@@ -68,7 +74,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "detExit",          SUMO_TAG_DET_EXIT },
     { "edgeFollowDetector", SUMO_TAG_EDGEFOLLOWDETECTOR },
     { "instantInductionLoop", SUMO_TAG_INSTANT_INDUCTION_LOOP },
-    { "variableSpeedSign",SUMO_TAG_VSS },
+    { "variableSpeedSign", SUMO_TAG_VSS },
     { "calibrator",       SUMO_TAG_CALIBRATOR },
     { "rerouter",         SUMO_TAG_REROUTER },
     { "busStop",          SUMO_TAG_BUS_STOP },
@@ -112,6 +118,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "wautSwitch",       SUMO_TAG_WAUT_SWITCH },
     { "wautJunction",     SUMO_TAG_WAUT_JUNCTION },
     { "reset",        	  SUMO_TAG_RESET },
+    { "delete",        	  SUMO_TAG_DELETE },
     { "stop",        	  SUMO_TAG_STOP },
     { "dest_prob_reroute", SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED },
     { "destProbReroute",  SUMO_TAG_DEST_PROB_REROUTE },

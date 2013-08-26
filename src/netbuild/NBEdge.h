@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NBEdge.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // The representation of a single edge during network building
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -142,7 +145,7 @@ public:
          * @param[in] toEdge_ The edge the connections yields in
          * @param[in] toLane_ The lane the connections yields in
          */
-        Connection(int fromLane_, NBEdge* toEdge_, int toLane_) throw()
+        Connection(int fromLane_, NBEdge* toEdge_, int toLane_)
             : fromLane(fromLane_), toEdge(toEdge_), toLane(toLane_),
               mayDefinitelyPass(false), haveVia(false) { }
 
@@ -213,8 +216,8 @@ public:
            NBNode* from, NBNode* to, std::string type,
            SUMOReal speed, unsigned int nolanes, int priority,
            SUMOReal width, SUMOReal offset,
-           const std::string& streetName="",
-           LaneSpreadFunction spread=LANESPREAD_RIGHT) throw(ProcessError);
+           const std::string& streetName = "",
+           LaneSpreadFunction spread = LANESPREAD_RIGHT) ;
 
 
     /** @brief Constructor
@@ -242,9 +245,9 @@ public:
            SUMOReal speed, unsigned int nolanes, int priority,
            SUMOReal width, SUMOReal offset,
            PositionVector geom,
-           const std::string& streetName="",
-           LaneSpreadFunction spread=LANESPREAD_RIGHT,
-           bool tryIgnoreNodePositions=false) throw(ProcessError);
+           const std::string& streetName = "",
+           LaneSpreadFunction spread = LANESPREAD_RIGHT,
+           bool tryIgnoreNodePositions = false) ;
 
     /** @brief Constructor
      *
@@ -262,7 +265,7 @@ public:
 
     /** @brief Destructor
      */
-    ~NBEdge() throw();
+    ~NBEdge() ;
 
 
     /** @brief Resets initial values
@@ -276,14 +279,16 @@ public:
      * @param[in] geom The edge's geomatry
      * @param[in] width This edge's lane width
      * @param[in] offset Additional offset to the destination node
+     * @param[in] streetName The street name (need not be unique)
      * @param[in] spread How the lateral offset of the lanes shall be computed
      * @param[in] tryIgnoreNodePositions Does not add node geometries if geom.size()>=2
      */
     void reinit(NBNode* from, NBNode* to, const std::string& type,
                 SUMOReal speed, unsigned int nolanes, int priority,
                 PositionVector geom, SUMOReal width, SUMOReal offset,
-                LaneSpreadFunction spread=LANESPREAD_RIGHT,
-                bool tryIgnoreNodePositions=false) throw(ProcessError);
+                const std::string& streetName,
+                LaneSpreadFunction spread = LANESPREAD_RIGHT,
+                bool tryIgnoreNodePositions = false) ;
 
 
 
@@ -294,14 +299,14 @@ public:
      * @param[in] xoff The x-offset to apply
      * @param[in] yoff The y-offset to apply
      */
-    void reshiftPosition(SUMOReal xoff, SUMOReal yoff) throw();
+    void reshiftPosition(SUMOReal xoff, SUMOReal yoff) ;
     /// @}
 
 
 
     /** @brief Marks this edge to be left-handed
      */
-    void setLeftHanded() throw() {
+    void setLeftHanded() {
         myAmLeftHand = true;
     }
 
@@ -312,7 +317,7 @@ public:
     /** @brief Returns the number of lanes
      * @returns This edge's number of lanes
      */
-    unsigned int getNumLanes() const throw() {
+    unsigned int getNumLanes() const {
         return (unsigned int) myLanes.size();
     }
 
@@ -320,7 +325,7 @@ public:
     /** @brief Returns the priority of the edge
      * @return This edge's priority
      */
-    int getPriority() const throw() {
+    int getPriority() const {
         return myPriority;
     }
 
@@ -328,7 +333,7 @@ public:
     /** @brief Returns the origin node of the edge
      * @return The node this edge starts at
      */
-    NBNode* getFromNode() const throw() {
+    NBNode* getFromNode() const {
         return myFrom;
     }
 
@@ -336,7 +341,7 @@ public:
     /** @brief Returns the destination node of the edge
      * @return The node this edge ends at
      */
-    NBNode* getToNode() const throw() {
+    NBNode* getToNode() const {
         return myTo;
     }
 
@@ -348,7 +353,7 @@ public:
      * @return This edge's angle
      * @see NBHelpers::angle
      */
-    SUMOReal getAngle() const throw() {
+    SUMOReal getAngle() const {
         return myAngle;
     }
 
@@ -356,7 +361,7 @@ public:
     /** @brief Returns the computed length of the edge
      * @return The edge's computed length
      */
-    SUMOReal getLength() const throw() {
+    SUMOReal getLength() const {
         return myLength;
     }
 
@@ -365,23 +370,23 @@ public:
      * @todo consolidate use of myLength and myLoaded length
      * @return The edge's specified length
      */
-    SUMOReal getLoadedLength() const throw() {
-        return myLoadedLength>0 ? myLoadedLength : myLength;
+    SUMOReal getLoadedLength() const {
+        return myLoadedLength > 0 ? myLoadedLength : myLength;
     }
 
 
     /** @brief Returns whether a length was set explicitly
      * @return Wether the edge's length was specified
      */
-    bool hasLoadedLength() const throw() {
-        return myLoadedLength>0;
+    bool hasLoadedLength() const {
+        return myLoadedLength > 0;
     }
 
 
     /** @brief Returns the speed allowed on this edge
      * @return The maximum speed allowed on this edge
      */
-    SUMOReal getSpeed() const throw() {
+    SUMOReal getSpeed() const {
         return mySpeed;
     }
 
@@ -391,7 +396,7 @@ public:
      * @todo Recheck usage!
      * @see EdgeBuildingStep
      */
-    EdgeBuildingStep getStep() const throw() {
+    EdgeBuildingStep getStep() const {
         return myStep;
     }
 
@@ -399,14 +404,14 @@ public:
     /** @brief Returns the width of lanes of this edge
      * @return The width of lanes of this edge
      */
-    SUMOReal getWidth() const throw() {
+    SUMOReal getWidth() const {
         return myWidth;
     }
 
 
     /** @brief Returns the street name of this edge
      */
-    const std::string& getStreetName() const throw() {
+    const std::string& getStreetName() const {
         return myStreetName;
     }
 
@@ -419,7 +424,7 @@ public:
     /** @brief Returns the offset to the destination node
      * @return The offset to the destination node
      */
-    SUMOReal getOffset() const throw() {
+    SUMOReal getOffset() const {
         return myOffset;
     }
 
@@ -427,7 +432,7 @@ public:
     /** @brief Returns the type name
      * @return The name of this edge's type
      */
-    const std::string& getTypeName() const throw() {
+    const std::string& getTypeName() const {
         return myType;
     }
 
@@ -448,7 +453,7 @@ public:
     /** @brief Returns the geometry of the edge
      * @return The edge's geometry
      */
-    const PositionVector& getGeometry() const throw() {
+    const PositionVector& getGeometry() const {
         return myGeom;
     }
 
@@ -480,7 +485,7 @@ public:
      * @todo Recheck usage, disallow access
      * @see computeLaneShapes
      */
-    void setGeometry(const PositionVector& g, bool inner=false) throw();
+    void setGeometry(const PositionVector& g, bool inner = false) ;
 
 
     /** @brief Adds a further geometry point
@@ -492,37 +497,39 @@ public:
      * @param[in] index The position at which the point shall be added
      * @param[in] p The point to add
      */
-    void addGeometryPoint(int index, const Position& p) throw();
+    void addGeometryPoint(int index, const Position& p) ;
 
 
-    /** @brief Computes the shape of the edge (regarding the nodes' shapes
-     *
-     * Because an edge's shape should start/end at the boundaries of the nodes
-     *  the edge starts/ends at, we have to recompute the edge's shape after
-     *  we know the ones of the nodes. This is done within this method.
-     * @todo Describe what is done here
+    /** @brief Recomputeds the lane shapes to terminate at the node shape
+     * For every lane the intersection with the fromNode and toNode is
+     * calculated and the lane shorted accordingly. The edge length is then set
+     * to the average of all lane lenghts (which may differ). This average length is used as the lane
+     * length when writing the network.
+     * @note All lanes of an edge in a sumo net must have the same nominal length 
+     *  but may differ in actual geomtric length.
+     * @note Depends on previous call to NBNodeCont::computeNodeShapes 
      */
-    void computeEdgeShape() throw();
+    void computeEdgeShape() ;
 
 
     /** @brief Returns the shape of the nth lane
      * @return The shape of the lane given by its index (counter from right)
      */
-    const PositionVector& getLaneShape(unsigned int i) const throw();
+    const PositionVector& getLaneShape(unsigned int i) const ;
 
 
     /** @brief (Re)sets how the lanes lateral offset shall be computed
      * @param[in] spread The type of lateral offset to apply
      * @see LaneSpreadFunction
      */
-    void setLaneSpreadFunction(LaneSpreadFunction spread) throw();
+    void setLaneSpreadFunction(LaneSpreadFunction spread) ;
 
 
     /** @brief Returns how this edge's lanes' lateral offset is computed
      * @return The type of lateral offset that is applied on this edge
      * @see LaneSpreadFunction
      */
-    LaneSpreadFunction getLaneSpreadFunction() const throw() {
+    LaneSpreadFunction getLaneSpreadFunction() const {
         return myLaneSpreadFunction;
     }
 
@@ -554,7 +561,7 @@ public:
      * @param[in] dest The connection's destination edge
      * @return Whether the connection was valid
      */
-    bool addEdge2EdgeConnection(NBEdge* dest) throw();
+    bool addEdge2EdgeConnection(NBEdge* dest);
 
 
     /** @brief Adds a connection between the specified this edge's lane and an approached one
@@ -579,8 +586,8 @@ public:
      */
     bool addLane2LaneConnection(unsigned int fromLane, NBEdge* dest,
                                 unsigned int toLane, Lane2LaneInfoType type,
-                                bool mayUseSameDestination=false,
-                                bool mayDefinitelyPass=false) throw();
+                                bool mayUseSameDestination = false,
+                                bool mayDefinitelyPass = false);
 
 
     /** @brief Builds no connections starting at the given lanes
@@ -602,8 +609,8 @@ public:
      */
     bool addLane2LaneConnections(unsigned int fromLane,
                                  NBEdge* dest, unsigned int toLane, unsigned int no,
-                                 Lane2LaneInfoType type, bool invalidatePrevious=false,
-                                 bool mayDefinitelyPass=false) throw();
+                                 Lane2LaneInfoType type, bool invalidatePrevious = false,
+                                 bool mayDefinitelyPass = false);
 
 
     /** @brief Adds a connection to a certain lane of a certain edge
@@ -619,27 +626,117 @@ public:
     void setConnection(unsigned int lane, NBEdge* destEdge,
                        unsigned int destLane,
                        Lane2LaneInfoType type,
-                       bool mayUseSameDestination=false,
-                       bool mayDefinitelyPass=false) throw();
+                       bool mayUseSameDestination = false,
+                       bool mayDefinitelyPass = false);
+
 
 
     /** @brief Returns connections from a given lane
      *
+     * This method goes through "myConnections" and copies those which are
+     *  starting at the given lane.
      * @param[in] lane The lane which connections shall be returned
      * @return The connections from the given lane
      * @see NBEdge::Connection
      */
-    std::vector<Connection> getConnectionsFromLane(unsigned int lane) const throw();
+    std::vector<Connection> getConnectionsFromLane(unsigned int lane) const;
 
 
     /** @brief Retrieves info about a connection to a certain lane of a certain edge
      *
+     * Turnaround edge is ignored!
      * @param[in] destEdge The connection's destination edge
      * @param[in] destLane The connection's destination lane
      * @return whether a connection to the specified lane exists
      */
-    bool hasConnectionTo(NBEdge* destEdge, unsigned int destLane) const throw();
+    bool hasConnectionTo(NBEdge* destEdge, unsigned int destLane) const;
+
+
+    /** @brief Returns the information whethe a connection to the given edge has been added (or computed)
+     *
+     * Turnaround edge is not ignored!
+     * @param[in] e The destination edge
+     * @return Whether a connection to the specified edge exists
+     */
+    bool isConnectedTo(NBEdge* e);
+
+
+    /** @brief Returns the connections
+     * @return This edge's connections to following edges
+     */
+    const std::vector<Connection> &getConnections() const {
+        return myConnections;
+    }
+
+
+    /** @brief Returns the connections
+     * @return This edge's connections to following edges
+     */
+    std::vector<Connection> &getConnections() {
+        return myConnections;
+    }
+
+
+    /** @brief Returns the list of outgoing edges without the turnaround sorted in clockwise direction 
+     * @return Connected edges, sorted clockwise
+     */
+    const EdgeVector* getConnectedSorted();
+
+
+    /** @brief Returns the list of outgoing edges unsorted 
+     * @return Connected edges
+     */
+    EdgeVector getConnectedEdges() const;
+
+
+    /** @brief Returns the list of lanes that may be used to reach the given edge
+     * @return Lanes approaching the given edge
+     */
+    std::vector<int> getConnectionLanes(NBEdge* currentOutgoing) const;
+
+
+    /** @brief sorts the outgoing connections by their angle relative to their junction
+     */
+    void sortOutgoingConnectionsByAngle();
+
+
+    /** @brief sorts the outgoing connections by their from-lane-index and their to-lane-index
+     */
+    void sortOutgoingConnectionsByIndex();
+
+
+    /** @brief Remaps the connection in a way that allows the removal of it
+     *
+     * This edge (which is a self loop edge, in fact) connections are spread over the valid incoming edges
+     * @todo recheck!
+     */
+    void remapConnections(const EdgeVector& incoming);
+
+
+    /** @brief Removes the specified connection(s)
+     * @param[in] toEdge The destination edge
+     * @param[in] fromLane The lane from which connections shall be removed; -1 means remove all
+     * @param[in] toLane   The lane to which connections shall be removed; -1 means remove all
+     */
+    void removeFromConnections(NBEdge* toEdge, int fromLane = -1, int toLane = -1);
+
+    void invalidateConnections(bool reallowSetting = false);
+
+    void replaceInConnections(NBEdge* which, NBEdge* by, unsigned int laneOff);
+    void replaceInConnections(NBEdge* which, const std::vector<NBEdge::Connection> &origConns);
+    void copyConnectionsFrom(NBEdge* src);
     /// @}
+
+
+
+    /** @brief Returns whether the given edge is the opposite direction to this edge
+     * @param[in] n The node at which this may be turnaround direction
+     * @param[in] edge The edge which may be the turnaround direction
+     * @return Whether the given edge is this edge's turnaround direction
+     */
+    bool isTurningDirectionAt(const NBNode* n, const NBEdge* const edge) const ;
+    void setTurningDestination(NBEdge* e);
+
 
 
     /// @name Setting/getting special types
@@ -647,7 +744,7 @@ public:
 
     /** @brief Marks this edge as a macroscopic connector
      */
-    void setAsMacroscopicConnector() throw() {
+    void setAsMacroscopicConnector() {
         myAmMacroscopicConnector = true;
     }
 
@@ -655,14 +752,14 @@ public:
     /** @brief Returns whether this edge was marked as a macroscopic connector
      * @return Whether this edge was marked as a macroscopic connector
      */
-    bool isMacroscopicConnector() const throw() {
+    bool isMacroscopicConnector() const {
         return myAmMacroscopicConnector;
     }
 
 
     /** @brief Marks this edge being within an intersection
      */
-    void setIsInnerEdge() throw() {
+    void setIsInnerEdge() {
         myAmInnerEdge = true;
     }
 
@@ -670,10 +767,12 @@ public:
     /** @brief Returns whether this edge was marked as being within an intersection
      * @return Whether this edge was marked as being within an intersection
      */
-    bool isInnerEdge() const throw() {
+    bool isInnerEdge() const {
         return myAmInnerEdge;
     }
     /// @}
+
+
 
 
     /// computes which edge shall be the turn-around one, if any
@@ -703,7 +802,7 @@ public:
     void dismissVehicleClassInformation();
 
 
-    const std::string& getTypeID() const throw() {
+    const std::string& getTypeID() const {
         return myType;
     }
 
@@ -734,12 +833,6 @@ public:
     /// computes the edge, step2: computation of which lanes approach the edges)
     bool computeLanes2Edges();
 
-    /// sorts the outgoing connections by their angle relative to their junction
-    void sortOutgoingConnectionsByAngle();
-
-    /// sorts the outgoing connections by their from-lane-index and their to-lane-index
-    void sortOutgoingConnectionsByIndex();
-
     /** recheck whether all lanes within the edge are all right and
         optimises the connections once again */
     bool recheckLanes();
@@ -752,67 +845,25 @@ public:
      *  of this edge to the leftmost lane of myTurnDestination).
      * @param[in] noTLSControlled Whether the turnaround shall not be connected if this edge is controlled by a tls
      */
-    void appendTurnaround(bool noTLSControlled) throw();
-
-    /// returns the list of lanes that may be used to reach the given edge
-    std::vector<int> getConnectionLanes(NBEdge* currentOutgoing) const;
-
-
-    /** @brief Returns whether the given edge is the opposite direction to this edge
-     * @param[in] n The node at which this may be turnaround direction
-     * @param[in] edge The edge which may be the turnaround direction
-     * @return Whether the given edge is this edge's turnaround direction
-     */
-    bool isTurningDirectionAt(const NBNode* n, const NBEdge* const edge) const throw();
+    void appendTurnaround(bool noTLSControlled) ;
 
 
 
     /** @brief Returns the node at the given edges length (using an epsilon)
         When no node is existing at the given position, 0 is returned
         The epsilon is a static member of NBEdge, should be setable via program options */
-    NBNode* tryGetNodeAtPosition(SUMOReal pos, SUMOReal tolerance=5.0) const;
+    NBNode* tryGetNodeAtPosition(SUMOReal pos, SUMOReal tolerance = 5.0) const;
 
-    void replaceInConnections(NBEdge* which, NBEdge* by, unsigned int laneOff);
 
     SUMOReal getMaxLaneOffset();
 
     Position getMinLaneOffsetPositionAt(NBNode* node, SUMOReal width) const;
     Position getMaxLaneOffsetPositionAt(NBNode* node, SUMOReal width) const;
-    const std::vector<Connection> &getConnections() const {
-        return myConnections;
-    }
-    std::vector<Connection> &getConnections() {
-        return myConnections;
-    }
 
-    /// Returns the information whethe a connection to the given edge has been added (or computed)
-    bool isConnectedTo(NBEdge* e);
-
-    /** returns the list of outgoing edges without the turnaround
-        sorted in clockwise direction */
-    const EdgeVector* getConnectedSorted();
-
-    /** returns the list of outgoing edges unsorted */
-    EdgeVector getConnectedEdges() const throw();
-
-    /** @brief Remaps the connection in a way tha allows the removal of it
-        This edges (which is a "dummy" edge, in fact) connections are spread over the incoming non-dummy edges */
-    void remapConnections(const EdgeVector& incoming);
-
-    /** @brief Removes the specified connection(s)
-     * @param[in] toEdge The destination edge
-     * @param[in] fromLane The lane from which connections shall be removed
-     *                     (-1) means remove all
-     * @param[in] toLane   The lane to which connections shall be removed
-     *                     (-1) means remove all
-     */
-    void removeFromConnections(NBEdge* toEdge, int fromLane=-1, int toLane=-1);
-
-    void invalidateConnections(bool reallowSetting=false);
 
     bool lanesWereAssigned() const;
 
-    bool mayBeTLSControlled(int fromLane, NBEdge* toEdge, int toLane) const throw();
+    bool mayBeTLSControlled(int fromLane, NBEdge* toEdge, int toLane) const ;
 
     /// Returns if the link could be set as to be controlled
     bool setControllingTLInformation(const NBConnection& c, const std::string& tlID);
@@ -832,7 +883,7 @@ public:
     void append(NBEdge* continuation);
     SUMOReal getNormedAngle() const;
 
-    bool hasSignalisedConnectionTo(const NBEdge* const e) const throw();
+    bool hasSignalisedConnectionTo(const NBEdge* const e) const ;
 
 
     void moveOutgoingConnectionsFrom(NBEdge* e, unsigned int laneOff);
@@ -840,8 +891,6 @@ public:
     NBEdge* getTurnDestination() const;
 
     std::string getLaneID(unsigned int lane) const;
-
-    void setLaneSpeed(unsigned int lane, SUMOReal speed);
 
     SUMOReal getLaneSpeed(unsigned int lane) const;
 
@@ -854,14 +903,12 @@ public:
 
     void incLaneNo(unsigned int by);
 
-    void decLaneNo(unsigned int by, int dir=0);
-
-    void copyConnectionsFrom(NBEdge* src);
+    void decLaneNo(unsigned int by, int dir = 0);
 
     void markAsInLane2LaneState();
 
     /// @brief set allowed/disallowed classes for the given lane or for all lanes if -1 is given
-    void setVehicleClasses(const SUMOVehicleClasses& allowed, const SUMOVehicleClasses& disallowed, int lane=-1);
+    void setVehicleClasses(const SUMOVehicleClasses& allowed, const SUMOVehicleClasses& disallowed, int lane = -1);
 
     /// @brief set allowed class for the given lane or for all lanes if -1 is given
     void allowVehicleClass(int lane, SUMOVehicleClass vclass);
@@ -894,11 +941,6 @@ public:
 
     void disableConnection4TLS(int fromLane, NBEdge* toEdge, int toLane);
 
-
-    int getMinConnectedLane(NBEdge* of) const;
-    int getMaxConnectedLane(NBEdge* of) const;
-
-    void setTurningDestination(NBEdge* e);
 
     // returns a reference to the internal structure for the convenience of NETEDIT
     Lane& getLaneStruct(unsigned int lane) {
@@ -935,16 +977,16 @@ private:
 
     public:
         /// constructor
-        ToEdgeConnectionsAdder(const EdgeVector& transitions) throw()
+        ToEdgeConnectionsAdder(const EdgeVector& transitions)
             : myTransitions(transitions) { }
 
         /// destructor
-        ~ToEdgeConnectionsAdder() throw() { }
+        ~ToEdgeConnectionsAdder() { }
 
         /// executes a bresenham - step
-        void execute(const unsigned int lane, const unsigned int virtEdge) throw();
+        void execute(const unsigned int lane, const unsigned int virtEdge) ;
 
-        const std::map<NBEdge*, std::vector<unsigned int> > &getBuiltConnections() const throw() {
+        const std::map<NBEdge*, std::vector<unsigned int> > &getBuiltConnections() const {
             return myConnections;
         }
 
@@ -1006,7 +1048,7 @@ private:
     std::pair<SUMOReal, SUMOReal> laneOffset(const Position& from,
             const Position& to, SUMOReal lanewidth, unsigned int lane) throw(InvalidArgument);
 
-    void computeLaneShapes() throw();
+    void computeLaneShapes() ;
 
 protected:
     bool acceptBeingTurning(NBEdge* e);
@@ -1028,7 +1070,7 @@ private:
      * @param[in] noLanes The number of lanes this edge has
      * @param[in] tryIgnoreNodePositions Does not add node geometries if geom.size()>=2
      */
-    void init(unsigned int noLanes, bool tryIgnoreNodePositions) throw(ProcessError);
+    void init(unsigned int noLanes, bool tryIgnoreNodePositions) ;
 
 
     /** divides the lanes on the outgoing edges */
@@ -1042,6 +1084,10 @@ private:
     /** computes the sum of the given list's entries (sic!) */
     unsigned int computePrioritySum(std::vector<unsigned int> *priorities);
 
+
+    /// @name Setting and getting connections
+    /// @{
+
     /** moves a connection one place to the left;
         Attention! no checking for field validity */
     void moveConnectionToLeft(unsigned int lane);
@@ -1049,10 +1095,14 @@ private:
     /** moves a connection one place to the right;
         Attention! no checking for field validity */
     void moveConnectionToRight(unsigned int lane);
+    /// @}
 
 
-
-
+    /** returns a modified version of laneShape which starts at the outside of
+     * startNode. laneShape may be shorted or extended
+     * @note see [wiki:Developer/Network_Building_Process]
+     */
+    PositionVector startShapeAt(const PositionVector& laneShape, const NBNode* startNode, unsigned int laneIndex) const;
 
 
 private:
@@ -1098,9 +1148,6 @@ private:
 
     /// @brief The information about how to spread the lanes
     LaneSpreadFunction myLaneSpreadFunction;
-
-    /// @brief An optional name
-    std::string myName;
 
     /// @brief This edges's offset to the intersection begin (will be applied to all lanes)
     SUMOReal myOffset;
@@ -1158,13 +1205,13 @@ public:
         tls_disable_finder(const TLSDisabledConnection& tpl) : myDefinition(tpl) { }
 
         bool operator()(const TLSDisabledConnection& e) const {
-            if (e.to!=myDefinition.to) {
+            if (e.to != myDefinition.to) {
                 return false;
             }
-            if (e.fromLane!=myDefinition.fromLane) {
+            if (e.fromLane != myDefinition.fromLane) {
                 return false;
             }
-            if (e.toLane!=myDefinition.toLane) {
+            if (e.toLane != myDefinition.toLane) {
                 return false;
             }
             return true;
@@ -1234,7 +1281,7 @@ public:
         connections_finder(int fromLane, NBEdge* const edge2find, int lane2find) : myFromLane(fromLane), myEdge2Find(edge2find), myLane2Find(lane2find) { }
 
         bool operator()(const Connection& c) const {
-            return c.fromLane==myFromLane && c.toEdge == myEdge2Find && c.toLane == myLane2Find;
+            return c.fromLane == myFromLane && c.toEdge == myEdge2Find && c.toLane == myLane2Find;
         }
 
     private:
@@ -1273,13 +1320,13 @@ public:
      * connections_sorter
      */
     static bool connections_sorter(const Connection& c1, const Connection& c2) {
-        if (c1.fromLane!=c2.fromLane) {
-            return c1.fromLane<c2.fromLane;
+        if (c1.fromLane != c2.fromLane) {
+            return c1.fromLane < c2.fromLane;
         }
         if (c1.toEdge != c2.toEdge) {
             return c1.toEdge->getID().compare(c1.toEdge->getID()) < 0;
         }
-        return c1.toLane<c2.toLane;
+        return c1.toLane < c2.toLane;
     }
 
     /**
@@ -1295,14 +1342,14 @@ public:
     public:
         /// comparing operation
         int operator()(const Connection& c1, const Connection& c2) const {
-            if (c1.toEdge!=c2.toEdge) {
+            if (c1.toEdge != c2.toEdge) {
                 SUMOReal relAngle1 = NBHelpers::normRelAngle(
                                          myEdge->getAngle(), c1.toEdge->getAngle());
                 SUMOReal relAngle2 = NBHelpers::normRelAngle(
                                          myEdge->getAngle(), c2.toEdge->getAngle());
                 return relAngle1 > relAngle2;
             }
-            return c1.toLane<c2.toLane;
+            return c1.toLane < c2.toLane;
         }
 
     private:

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NIImporter_DlrNavteq.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 14.04.2008
 /// @version $Id$
 ///
 // Importer for networks stored in Elmar's format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -107,18 +110,18 @@ NIImporter_DlrNavteq::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
 // ---------------------------------------------------------------------------
 NIImporter_DlrNavteq::NodesHandler::NodesHandler(NBNodeCont& nc,
         const std::string& file,
-        std::map<std::string, PositionVector> &geoms) throw()
+        std::map<std::string, PositionVector> &geoms)
     : myNodeCont(nc), myGeoms(geoms) {
     UNUSED_PARAMETER(file);
 }
 
 
-NIImporter_DlrNavteq::NodesHandler::~NodesHandler() throw() {}
+NIImporter_DlrNavteq::NodesHandler::~NodesHandler() {}
 
 
 bool
-NIImporter_DlrNavteq::NodesHandler::report(const std::string& result) throw(ProcessError) {
-    if (result[0]=='#') {
+NIImporter_DlrNavteq::NodesHandler::report(const std::string& result) {
+    if (result[0] == '#') {
         return true;
     }
     std::string id;
@@ -146,7 +149,7 @@ NIImporter_DlrNavteq::NodesHandler::report(const std::string& result) throw(Proc
     }
     // geometrical information
     PositionVector geoms;
-    for (int i=0; i<no_geoms; i++) {
+    for (int i = 0; i < no_geoms; i++) {
         stream >> x;
         if (stream.fail()) {
             throw ProcessError("Non-numerical value for x-position in node " + id + ".");
@@ -162,7 +165,7 @@ NIImporter_DlrNavteq::NodesHandler::report(const std::string& result) throw(Proc
         geoms.push_back(pos);
     }
 
-    if (intermediate==0) {
+    if (intermediate == 0) {
         NBNode* n = new NBNode(id, geoms[0]);
         if (!myNodeCont.insert(n)) {
             delete n;
@@ -180,18 +183,18 @@ NIImporter_DlrNavteq::NodesHandler::report(const std::string& result) throw(Proc
 // ---------------------------------------------------------------------------
 NIImporter_DlrNavteq::EdgesHandler::EdgesHandler(NBNodeCont& nc, NBEdgeCont& ec,
         const std::string& file,
-        std::map<std::string,
-        PositionVector> &geoms) throw()
+        std::map < std::string,
+        PositionVector > &geoms)
     : myNodeCont(nc), myEdgeCont(ec), myGeoms(geoms) {
     UNUSED_PARAMETER(file);
 }
 
 
-NIImporter_DlrNavteq::EdgesHandler::~EdgesHandler() throw() {}
+NIImporter_DlrNavteq::EdgesHandler::~EdgesHandler() {}
 
 
 bool
-NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) throw(ProcessError) {
+NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
 //	0: LINK_ID	NODE_ID_FROM	NODE_ID_TO	BETWEEN_NODE_ID
 //  4: length	vehicle_type	form_of_way	brunnel_type
 //  7: street_type	speed_category	number_of_lanes	average_speed
@@ -200,7 +203,7 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) throw(Proc
 //  extended_number_of_lanes  isRamp    (these two only exist in networks extracted since 05/2009)
 //  connection (this may be omitted)
 
-    if (result[0]=='#') {
+    if (result[0] == '#') {
         return true;
     }
     std::string id, fromID, toID, interID;
@@ -251,15 +254,15 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) throw(Proc
     // try to get the nodes
     NBNode* from = myNodeCont.retrieve(fromID);
     NBNode* to = myNodeCont.retrieve(toID);
-    if (from==0) {
+    if (from == 0) {
         throw ProcessError("The from-node '" + fromID + "' of edge '" + id + "' could not be found");
     }
-    if (to==0) {
+    if (to == 0) {
         throw ProcessError("The to-node '" + toID + "' of edge '" + id + "' could not be found");
     }
     // build the edge
     NBEdge* e = 0;
-    if (interID=="-1") {
+    if (interID == "-1") {
         e = new NBEdge(id, from, to, "", speed, nolanes, priority, -1, -1);
     } else {
         PositionVector geoms = myGeoms[interID];
@@ -290,26 +293,26 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) throw(Proc
 // ---------------------------------------------------------------------------
 NIImporter_DlrNavteq::TrafficlightsHandler::TrafficlightsHandler(NBNodeCont& nc,
         NBTrafficLightLogicCont& tlc,
-        const std::string& file) throw()
+        const std::string& file)
     : myNodeCont(nc), myTLLogicCont(tlc) {
     UNUSED_PARAMETER(file);
 }
 
 
-NIImporter_DlrNavteq::TrafficlightsHandler::~TrafficlightsHandler() throw() {}
+NIImporter_DlrNavteq::TrafficlightsHandler::~TrafficlightsHandler() {}
 
 
 bool
-NIImporter_DlrNavteq::TrafficlightsHandler::report(const std::string& result) throw(ProcessError) {
+NIImporter_DlrNavteq::TrafficlightsHandler::report(const std::string& result) {
 // #ID     POICOL-TYPE     DESCRIPTION     LONGITUDE       LATITUDE        NAVTEQ_LINK_ID  NODEID
 
-    if (result[0]=='#') {
+    if (result[0] == '#') {
         return true;
     }
     StringTokenizer st(result, StringTokenizer::WHITECHARS);
     std::string nodeID = st.getVector().back();
     NBNode* node = myNodeCont.retrieve(nodeID);
-    if (node==0) {
+    if (node == 0) {
         WRITE_WARNING("The traffic light node '" + nodeID + "' could not be found");
     } else {
         if (node->getType() != NODETYPE_TRAFFIC_LIGHT) {

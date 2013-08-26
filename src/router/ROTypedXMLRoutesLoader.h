@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    ROTypedXMLRoutesLoader.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Base class for loading routes from XML-files
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -69,11 +71,11 @@ public:
      * @exception ProcessError If an error occured during initialisation of parsing the xml-file
      */
     ROTypedXMLRoutesLoader(RONet& net,
-                           SUMOTime begin, SUMOTime end, const std::string& file="") throw(ProcessError);
+                           SUMOTime begin, SUMOTime end, const std::string& file = "") ;
 
 
     /// @brief Destructor
-    virtual ~ROTypedXMLRoutesLoader() throw();
+    virtual ~ROTypedXMLRoutesLoader() ;
 
 
     /// @name inherited from ROAbstractRouteDefLoader
@@ -87,14 +89,14 @@ public:
      * @exception ProcessError If a major error occured
      * @see ROAbstractRouteDefLoader::readRoutesAtLeastUntil
      */
-    bool readRoutesAtLeastUntil(SUMOTime time, bool skipping) throw(ProcessError);
+    bool readRoutesAtLeastUntil(SUMOTime time, bool skipping) ;
 
 
     /** @brief Returns the information whether no routes are available from this loader anymore
      *
      * @return Whether the whole input has been processed
      */
-    bool ended() const throw() {
+    bool ended() const {
         return myEnded;
     }
     /// @}
@@ -117,14 +119,14 @@ protected:
      * @return Whether a further route was read
      * @todo recheck/refactor
      */
-    virtual bool nextRouteRead() throw() = 0;
+    virtual bool nextRouteRead() = 0;
 
 
     /** @brief Returns Initialises the reading of a further route
      *
      * @todo recheck/refactor
      */
-    virtual void beginNextRoute() throw() = 0;
+    virtual void beginNextRoute() = 0;
     /// @}
 
 

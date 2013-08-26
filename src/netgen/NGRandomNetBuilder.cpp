@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NGRandomNetBuilder.cpp
 /// @author  Markus Hartinger
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mar, 2003
 /// @version $Id$
 ///
 // Additional structures for building random nets
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -46,17 +49,17 @@
 // TNeighbourDistribution-definitions
 // ---------------------------------------------------------------------------
 void
-TNeighbourDistribution::add(int NumNeighbours, SUMOReal ratio) throw() {
+TNeighbourDistribution::add(int NumNeighbours, SUMOReal ratio) {
     myNeighbours[NumNeighbours] = ratio;
 }
 
 
 int
-TNeighbourDistribution::num() throw() {
-    SUMOReal sum=0, RandValue;
+TNeighbourDistribution::num() {
+    SUMOReal sum = 0, RandValue;
     std::map<int, SUMOReal>::iterator i;
     // total sum of ratios
-    for (i=myNeighbours.begin(); i!=myNeighbours.end(); ++i) {
+    for (i = myNeighbours.begin(); i != myNeighbours.end(); ++i) {
         sum += (*i).second;
     }
     // RandValue = [0,sum]
@@ -77,7 +80,7 @@ TNeighbourDistribution::num() throw() {
 // ---------------------------------------------------------------------------
 NGRandomNetBuilder::NGRandomNetBuilder(NGNet& net, SUMOReal minAngle, SUMOReal minDistance,
                                        SUMOReal maxDistance, SUMOReal connectivity,
-                                       int numTries, const TNeighbourDistribution& neighborDist) throw()
+                                       int numTries, const TNeighbourDistribution& neighborDist)
     : myNet(net), myMinLinkAngle(minAngle), myMinDistance(minDistance),
       myMaxDistance(maxDistance), myConnectivity(connectivity), myNumTries(numTries),
       myNeighbourDistribution(neighborDist) {
@@ -85,9 +88,9 @@ NGRandomNetBuilder::NGRandomNetBuilder(NGNet& net, SUMOReal minAngle, SUMOReal m
 
 
 void
-NGRandomNetBuilder::removeOuterNode(NGNode* node) throw() {
-    for (NGNodeList::iterator ni=myOuterNodes.begin(); ni!=myOuterNodes.end(); ++ni) {
-        if (*ni==node) {
+NGRandomNetBuilder::removeOuterNode(NGNode* node) {
+    for (NGNodeList::iterator ni = myOuterNodes.begin(); ni != myOuterNodes.end(); ++ni) {
+        if (*ni == node) {
             myOuterNodes.erase(ni);
             return;
         }
@@ -96,7 +99,7 @@ NGRandomNetBuilder::removeOuterNode(NGNode* node) throw() {
 
 
 bool
-NGRandomNetBuilder::checkAngles(NGNode* node) throw() {
+NGRandomNetBuilder::checkAngles(NGNode* node) {
     bool check = true;
 
     if (node->LinkList.size() >  1) {
@@ -138,8 +141,8 @@ NGRandomNetBuilder::checkAngles(NGNode* node) throw() {
 
 
 bool
-NGRandomNetBuilder::canConnect(NGNode* baseNode, NGNode* newNode) throw() {
-    bool connectable=true;
+NGRandomNetBuilder::canConnect(NGNode* baseNode, NGNode* newNode) {
+    bool connectable = true;
     Position n1(baseNode->getPosition());
     Position n2(newNode->getPosition());
 
@@ -167,8 +170,8 @@ NGRandomNetBuilder::canConnect(NGNode* baseNode, NGNode* newNode) throw() {
             // check intersection only if links don't share a node
             Position p1((*li)->getStartNode()->getPosition());
             Position p2((*li)->getEndNode()->getPosition());
-            if ((baseNode != (*li)->getStartNode()) && (baseNode!= (*li)->getEndNode())
-                    && (newNode != (*li)->getStartNode()) && (newNode!= (*li)->getEndNode())) {
+            if ((baseNode != (*li)->getStartNode()) && (baseNode != (*li)->getEndNode())
+                    && (newNode != (*li)->getStartNode()) && (newNode != (*li)->getEndNode())) {
                 connectable = !GeomHelper::intersects(n1, n2, p1, p2);
 
             }
@@ -188,11 +191,11 @@ NGRandomNetBuilder::canConnect(NGNode* baseNode, NGNode* newNode) throw() {
 
 
 void
-NGRandomNetBuilder::findPossibleOuterNodes(NGNode* node) throw() {
+NGRandomNetBuilder::findPossibleOuterNodes(NGNode* node) {
     myConNodes.clear();
     NGNodeList::iterator ni;
     for (ni = myOuterNodes.begin(); ni != myOuterNodes.end(); ++ni) {
-        NGNode* on=*ni;
+        NGNode* on = *ni;
         if (!node->connected(on)) {
             if ((node->getMaxNeighbours() > node->LinkList.size()) &&
                     ((on)->getMaxNeighbours() > (on)->LinkList.size())) {
@@ -206,10 +209,10 @@ NGRandomNetBuilder::findPossibleOuterNodes(NGNode* node) throw() {
 
 
 bool
-NGRandomNetBuilder::createNewNode(NGNode* baseNode) throw() {
+NGRandomNetBuilder::createNewNode(NGNode* baseNode) {
     // calculate position of new node based on BaseNode
     SUMOReal dist = RandHelper::rand(myMinDistance, myMaxDistance);
-    SUMOReal angle = RandHelper::rand((SUMOReal)(2*PI));
+    SUMOReal angle = RandHelper::rand((SUMOReal)(2 * PI));
     SUMOReal x = baseNode->getPosition().x() + dist * cos(angle);
     SUMOReal y = baseNode->getPosition().y() + dist * sin(angle);
     NGNode* newNode = new NGNode(myNet.getNextFreeID());
@@ -237,7 +240,7 @@ NGRandomNetBuilder::createNewNode(NGNode* baseNode) throw() {
 
 
 void
-NGRandomNetBuilder::createNet(int numNodes) throw() {
+NGRandomNetBuilder::createNet(int numNodes) {
     myNumNodes = numNodes;
 
     NGNode* outerNode = new NGNode(myNet.getNextFreeID());
@@ -277,7 +280,7 @@ NGRandomNetBuilder::createNet(int numNodes) throw() {
                 delete newLink;
             }
         } else {
-            int count=0;
+            int count = 0;
             do {
                 created = createNewNode(outerNode);
                 count++;

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    PCLoaderOSM.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Wed, 19.11.2008
 /// @version $Id$
 ///
 // A reader of pois and polygons stored in OSM-format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,7 +67,7 @@ public:
      * @exception ProcessError if something fails
      */
     static void loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
-                          PCTypeMap& tm) throw(ProcessError);
+                          PCTypeMap& tm) ;
 
 
 protected:
@@ -112,11 +115,11 @@ protected:
         /** @brief Contructor
          * @param[in] toFill The nodes container to fill
          */
-        NodesHandler(std::map<int, PCOSMNode*> &toFill) throw();
+        NodesHandler(std::map<int, PCOSMNode*> &toFill) ;
 
 
         /// @brief Destructor
-        ~NodesHandler() throw();
+        ~NodesHandler() ;
 
 
     protected:
@@ -130,7 +133,7 @@ protected:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myStartElement
          */
-        void myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError);
+        void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
 
 
         /** @brief Called when a closing tag occurs
@@ -139,7 +142,7 @@ protected:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myEndElement
          */
-        void myEndElement(int element) throw(ProcessError);
+        void myEndElement(int element) ;
         //@}
 
 
@@ -177,11 +180,11 @@ protected:
          * @param[in] toFill The edges container to fill with read edges
          */
         EdgesHandler(const std::map<int, PCOSMNode*> &osmNodes,
-                     std::map<std::string, PCOSMEdge*> &toFill) throw();
+                     std::map<std::string, PCOSMEdge*> &toFill) ;
 
 
         /// @brief Destructor
-        ~EdgesHandler() throw();
+        ~EdgesHandler() ;
 
 
     protected:
@@ -195,7 +198,7 @@ protected:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myStartElement
          */
-        void myStartElement(int element, const SUMOSAXAttributes& attrs) throw(ProcessError);
+        void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
 
 
         /** @brief Called when a closing tag occurs
@@ -204,7 +207,7 @@ protected:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myEndElement
          */
-        void myEndElement(int element) throw(ProcessError);
+        void myEndElement(int element) ;
         //@}
 
 

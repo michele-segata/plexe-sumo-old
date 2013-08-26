@@ -1,18 +1,24 @@
 /****************************************************************************/
 /// @file    MSEdgeControl.h
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Christoph Sommer
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Mon, 09 Apr 2001
 /// @version $Id$
 ///
 // Stores edges and lanes, performs moving of vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -78,11 +84,11 @@ public:
      * @param[in] edges The loaded edges
      * @todo Assure both containers are not 0
      */
-    MSEdgeControl(const std::vector< MSEdge* > &edges) throw();
+    MSEdgeControl(const std::vector< MSEdge* > &edges) ;
 
 
     /// @brief Destructor.
-    ~MSEdgeControl() throw();
+    ~MSEdgeControl() ;
 
 
     /** @brief Resets information whether a lane is active for all lanes
@@ -91,7 +97,7 @@ public:
      *  and is not marked as being active, it is added to the list og active lanes
      *  and marked as being active.
      */
-    void patchActiveLanes() throw();
+    void patchActiveLanes() ;
 
 
     /// @name Interfaces for longitudinal vehicle movement
@@ -109,7 +115,7 @@ public:
      *
      * @see MSLane::moveCritical
      */
-    void moveCritical(SUMOTime t) throw();
+    void moveCritical(SUMOTime t) ;
 
 
     /** @brief Really moves critical vehicles
@@ -130,7 +136,7 @@ public:
      * @see MSLane::integrateNewVehicle
      * @todo When moving to parallel processing, the usage of myWithVehicles2Integrate would get insecure!!
      */
-    void moveFirst(SUMOTime t) throw();
+    void moveFirst(SUMOTime t) ;
     /// @}
 
 
@@ -142,7 +148,7 @@ public:
      *
      * @see MSEdge::changeLanes
      */
-    void changeLanes(SUMOTime t) throw();
+    void changeLanes(SUMOTime t) ;
 
 
     /** @brief Detect collisions
@@ -153,7 +159,7 @@ public:
      *
      * @param[in] timestep The current time step
      */
-    void detectCollisions(SUMOTime timestep) throw();
+    void detectCollisions(SUMOTime timestep) ;
 
 
     /** @brief Returns loaded edges
@@ -161,7 +167,7 @@ public:
      * @return the container storing one-lane edges
      * @todo Check: Is this secure?
      */
-    const std::vector<MSEdge*> &getEdges() const throw() {
+    const std::vector<MSEdge*> &getEdges() const {
         return myEdges;
     }
 
@@ -170,7 +176,7 @@ public:
      *
      * @return a vector of names of all known edges
      */
-    std::vector<std::string> getEdgeNames() const throw();
+    std::vector<std::string> getEdgeNames() const ;
 
 
     /** @brief Informs the control that the given lane got active
@@ -178,7 +184,7 @@ public:
      * @param[in] l The activated lane
      * @todo Check for l==0?
      */
-    void gotActive(MSLane* l) throw();
+    void gotActive(MSLane* l) ;
 
 
 public:

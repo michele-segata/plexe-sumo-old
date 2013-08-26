@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    OutputDevice.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    2004
 /// @version $Id$
 ///
 // Static storage of an output device and its base (abstract) implementation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,22 +62,22 @@ OutputDevice::DeviceMap OutputDevice::myOutputDevices;
 // ===========================================================================
 OutputDevice&
 OutputDevice::getDevice(const std::string& name,
-                        const std::string& base) throw(IOError) {
+                        const std::string& base) {
     // check whether the device has already been aqcuired
-    if (myOutputDevices.find(name)!=myOutputDevices.end()) {
+    if (myOutputDevices.find(name) != myOutputDevices.end()) {
         return *myOutputDevices[name];
     }
     // build the device
     OutputDevice* dev = 0;
     // check whether the device shall print to stdout
-    if (name=="stdout" || name=="-") {
+    if (name == "stdout" || name == "-") {
         dev = new OutputDevice_COUT();
     } else if (FileHelpers::isSocket(name)) {
         try {
-            int port = TplConvert<char>::_2int(name.substr(name.find(":")+1).c_str());
+            int port = TplConvert<char>::_2int(name.substr(name.find(":") + 1).c_str());
             dev = new OutputDevice_Network(name.substr(0, name.find(":")), port);
         } catch (NumberFormatException&) {
-            throw IOError("Given port number '" + name.substr(name.find(":")+1) + "' is not numeric.");
+            throw IOError("Given port number '" + name.substr(name.find(":") + 1) + "' is not numeric.");
         } catch (EmptyData&) {
             throw IOError("No port number given.");
         }
@@ -90,7 +93,7 @@ OutputDevice::getDevice(const std::string& name,
 
 bool
 OutputDevice::createDeviceByOption(const std::string& optionName,
-                                   const std::string& rootElement) throw(IOError) {
+                                   const std::string& rootElement) {
     if (!OptionsCont::getOptions().isSet(optionName)) {
         return false;
     }
@@ -105,7 +108,7 @@ OutputDevice::createDeviceByOption(const std::string& optionName,
 OutputDevice&
 OutputDevice::getDeviceByOption(const std::string& optionName) throw(IOError, InvalidArgument) {
     std::string devName = OptionsCont::getOptions().getString(optionName);
-    if (myOutputDevices.find(devName)==myOutputDevices.end()) {
+    if (myOutputDevices.find(devName) == myOutputDevices.end()) {
         throw InvalidArgument("Device '" + devName + "' has not been created.");
     }
     return OutputDevice::getDevice(devName);
@@ -113,8 +116,8 @@ OutputDevice::getDeviceByOption(const std::string& optionName) throw(IOError, In
 
 
 void
-OutputDevice::closeAll() throw() {
-    while (myOutputDevices.size()!=0) {
+OutputDevice::closeAll() {
+    while (myOutputDevices.size() != 0) {
         myOutputDevices.begin()->second->close();
     }
     myOutputDevices.clear();
@@ -124,10 +127,10 @@ OutputDevice::closeAll() throw() {
 std::string
 OutputDevice::realString(const SUMOReal v, const int precision) {
     std::ostringstream oss;
-    if (v==0) {
+    if (v == 0) {
         return "0";
     }
-    if (v<pow(10., -precision)) {
+    if (v < pow(10., -precision)) {
         oss.setf(std::ios::scientific, std::ios::floatfield);
     } else {
         oss.setf(std::ios::fixed , std::ios::floatfield);    // use decimal format
@@ -142,21 +145,21 @@ OutputDevice::realString(const SUMOReal v, const int precision) {
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-OutputDevice::OutputDevice(const unsigned int defaultIndentation) throw(IOError)
+OutputDevice::OutputDevice(const unsigned int defaultIndentation)
     : myDefaultIndentation(defaultIndentation) {
 }
 
 
 bool
-OutputDevice::ok() throw() {
+OutputDevice::ok() {
     return getOStream().good();
 }
 
 
 void
-OutputDevice::close() throw() {
+OutputDevice::close() {
     while (closeTag()) {}
-    for (DeviceMap::iterator i=myOutputDevices.begin(); i!=myOutputDevices.end(); ++i) {
+    for (DeviceMap::iterator i = myOutputDevices.begin(); i != myOutputDevices.end(); ++i) {
         if (i->second == this) {
             myOutputDevices.erase(i);
             break;
@@ -167,14 +170,14 @@ OutputDevice::close() throw() {
 
 
 void
-OutputDevice::setPrecision(unsigned int precision) throw() {
+OutputDevice::setPrecision(unsigned int precision) {
     getOStream() << std::setprecision(precision);
 }
 
 
 bool
 OutputDevice::writeXMLHeader(const std::string& rootElement, const std::string xmlParams,
-                             const std::string& attrs, const std::string& comment) throw() {
+                             const std::string& attrs, const std::string& comment) {
     if (myXMLStack.empty()) {
         OptionsCont::getOptions().writeXMLHeader(getOStream(), xmlParams);
         if (comment != "") {
@@ -192,16 +195,16 @@ OutputDevice::writeXMLHeader(const std::string& rootElement, const std::string x
 
 
 OutputDevice&
-OutputDevice::indent() throw() {
-    getOStream() << std::string(4*(myXMLStack.size() + myDefaultIndentation), ' ');
+OutputDevice::indent() {
+    getOStream() << std::string(4 * (myXMLStack.size() + myDefaultIndentation), ' ');
     postWriteHook();
     return *this;
 }
 
 
 OutputDevice&
-OutputDevice::openTag(const std::string& xmlElement) throw() {
-    getOStream() << std::string(4*(myXMLStack.size() + myDefaultIndentation), ' ') << "<" << xmlElement;
+OutputDevice::openTag(const std::string& xmlElement) {
+    getOStream() << std::string(4 * (myXMLStack.size() + myDefaultIndentation), ' ') << "<" << xmlElement;
     postWriteHook();
     myXMLStack.push_back(xmlElement);
     return *this;
@@ -209,18 +212,18 @@ OutputDevice::openTag(const std::string& xmlElement) throw() {
 
 
 OutputDevice&
-OutputDevice::openTag(const SumoXMLTag& xmlElement) throw() {
+OutputDevice::openTag(const SumoXMLTag& xmlElement) {
     return openTag(toString(xmlElement));
 }
 
 
 bool
-OutputDevice::closeTag(bool abbreviated) throw() {
+OutputDevice::closeTag(bool abbreviated) {
     if (!myXMLStack.empty()) {
         if (abbreviated) {
             getOStream() << "/>" << std::endl;
         } else {
-            std::string indent(4*(myXMLStack.size() + myDefaultIndentation - 1), ' ');
+            std::string indent(4 * (myXMLStack.size() + myDefaultIndentation - 1), ' ');
             getOStream() << indent << "</" << myXMLStack.back() << ">" << std::endl;
         }
         myXMLStack.pop_back();
@@ -232,7 +235,7 @@ OutputDevice::closeTag(bool abbreviated) throw() {
 
 
 void
-OutputDevice::postWriteHook() throw() {}
+OutputDevice::postWriteHook() {}
 
 
 void
@@ -241,6 +244,12 @@ OutputDevice::inform(const std::string& msg) {
     postWriteHook();
 }
 
+
+OutputDevice& 
+OutputDevice::writeAttr(std::string attr, std::string val) {
+    getOStream() << " " << attr << "=\"" << val << "\"";
+    return *this;
+}
 
 /****************************************************************************/
 

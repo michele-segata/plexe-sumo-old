@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSInsertionControl.h
 /// @author  Christian Roessel
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 12 Mar 2001
 /// @version $Id$
 ///
 // Inserts vehicles into the network when their departure time is reached
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -68,11 +71,11 @@ public:
      * @param[in] maxDepartDelay Vehicles waiting for insertion longer than this time are deleted (-1: no deletion)
      * @param[in] checkEdgesOnce Whether an edge on which a vehicle could not depart should be ignored in the same step
      */
-    MSInsertionControl(MSVehicleControl& vc, SUMOTime maxDepartDelay, bool checkEdgesOnce) throw();
+    MSInsertionControl(MSVehicleControl& vc, SUMOTime maxDepartDelay, bool checkEdgesOnce) ;
 
 
     /// @brief Destructor.
-    ~MSInsertionControl() throw();
+    ~MSInsertionControl() ;
 
 
     /** @brief Emits vehicles that want to depart at the given time
@@ -91,7 +94,7 @@ public:
      * @param[in] time The current simulation time
      * @return The number of vehicles that could be inserted into the net
      */
-    unsigned int emitVehicles(SUMOTime time) throw(ProcessError);
+    unsigned int emitVehicles(SUMOTime time) ;
 
 
     /** @brief Adds a single vehicle for departure
@@ -100,14 +103,14 @@ public:
      *
      * @param[in] veh The vehicle to add for later insertion
      */
-    void add(SUMOVehicle* veh) throw();
+    void add(SUMOVehicle* veh) ;
 
 
     /** @brief Adds parameter for a vehicle flow for departure
      *
      * @param[in] flow The flow to add for later insertion
      */
-    void add(SUMOVehicleParameter* pars) throw();
+    void add(SUMOVehicleParameter* pars) ;
 
 
     /** @brief Returns the number of waiting vehicles
@@ -117,14 +120,14 @@ public:
      *
      * @return The number of vehicles that could not (yet) be inserted into the net
      */
-    unsigned int getWaitingVehicleNo() const throw();
+    unsigned int getWaitingVehicleNo() const ;
 
 
     /** @brief Returns the number of flows that are still active
      *
      * @return number of active flows
      */
-    int getPendingFlowCount() const throw();
+    int getPendingFlowCount() const ;
 
 
 private:
@@ -143,14 +146,14 @@ private:
      * @return The number of emitted vehicles (0 or 1)
      */
     unsigned int tryInsert(SUMOTime time, SUMOVehicle* veh,
-                           MSVehicleContainer::VehicleVector& refusedEmits) throw(ProcessError);
+                           MSVehicleContainer::VehicleVector& refusedEmits) ;
 
 
     /** @brief Checks whether any flow is blocked due to this vehicle and clears the block
      *
      * @param[in] veh The vehicle to check for
      */
-    void checkFlowWait(SUMOVehicle* veh) throw();
+    void checkFlowWait(SUMOVehicle* veh) ;
 
 
     /** @brief Adds all vehicles that should have been emitted earlier to the refuse container
@@ -158,7 +161,7 @@ private:
      * @param[in] time The current simulation time
      * @todo recheck
      */
-    void checkPrevious(SUMOTime time) throw();
+    void checkPrevious(SUMOTime time) ;
 
 
     /** @brief Checks for all vehicles coming from flows whether they can be emitted
@@ -168,7 +171,7 @@ private:
      * @return The number of emitted vehicles
      */
     unsigned int checkFlows(SUMOTime time,
-                            MSVehicleContainer::VehicleVector& refusedEmits) throw(ProcessError);
+                            MSVehicleContainer::VehicleVector& refusedEmits) ;
 
 
 private:

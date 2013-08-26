@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    HelpersHBEFA.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 10.05.2004
 /// @version $Id$
 ///
 // Helper methods for HBEFA-based emission computation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -157,92 +160,38 @@ HelpersHBEFA::myFunctionParameter[42][36] = {
 // method definitions
 // ===========================================================================
 SUMOReal
-HelpersHBEFA::computeCO(SUMOEmissionClass c, double v, double a) throw() {
-    switch (c) {
-    case SVE_ZERO_EMISSIONS:
-        return 0;
-    case SVE_UNKNOWN:
-        c = SVE_P_LDV_7_7;
-        break;
-    default:
-        break;
-    }
-    return (SUMOReal) computeUsing(getParameterForClass(c)+CO_OFFSET,v,a);
+HelpersHBEFA::computeCO(SUMOEmissionClass c, double v, double a) {
+	return compute(c, CO_OFFSET, v, a);
 }
 
 
 SUMOReal
-HelpersHBEFA::computeCO2(SUMOEmissionClass c, double v, double a) throw() {
-    switch (c) {
-    case SVE_ZERO_EMISSIONS:
-        return 0;
-    case SVE_UNKNOWN:
-        c = SVE_P_LDV_7_7;
-        break;
-    default:
-        break;
-    }
-    return (SUMOReal) computeUsing(getParameterForClass(c)+CO2_OFFSET,v,a);
+HelpersHBEFA::computeCO2(SUMOEmissionClass c, double v, double a) {
+	return compute(c, CO2_OFFSET, v, a);
 }
 
 
 SUMOReal
-HelpersHBEFA::computeHC(SUMOEmissionClass c, double v, double a) throw() {
-    switch (c) {
-    case SVE_ZERO_EMISSIONS:
-        return 0;
-    case SVE_UNKNOWN:
-        c = SVE_P_LDV_7_7;
-        break;
-    default:
-        break;
-    }
-    return (SUMOReal) computeUsing(getParameterForClass(c)+HC_OFFSET,v,a);
+HelpersHBEFA::computeHC(SUMOEmissionClass c, double v, double a) {
+	return compute(c, HC_OFFSET, v, a);
 }
 
 
 SUMOReal
-HelpersHBEFA::computeNOx(SUMOEmissionClass c, double v, double a) throw() {
-    switch (c) {
-    case SVE_ZERO_EMISSIONS:
-        return 0;
-    case SVE_UNKNOWN:
-        c = SVE_P_LDV_7_7;
-        break;
-    default:
-        break;
-    }
-    return (SUMOReal) computeUsing(getParameterForClass(c)+NOx_OFFSET,v,a);
+HelpersHBEFA::computeNOx(SUMOEmissionClass c, double v, double a) {
+	return compute(c, NOx_OFFSET, v, a);
 }
 
 
 SUMOReal
-HelpersHBEFA::computePMx(SUMOEmissionClass c, double v, double a) throw() {
-    switch (c) {
-    case SVE_ZERO_EMISSIONS:
-        return 0;
-    case SVE_UNKNOWN:
-        c = SVE_P_LDV_7_7;
-        break;
-    default:
-        break;
-    }
-    return (SUMOReal) computeUsing(getParameterForClass(c)+PMx_OFFSET,v,a);
+HelpersHBEFA::computePMx(SUMOEmissionClass c, double v, double a) {
+	return compute(c, PMx_OFFSET, v, a);
 }
 
 
 SUMOReal
-HelpersHBEFA::computeFuel(SUMOEmissionClass c, double v, double a) throw() {
-    switch (c) {
-    case SVE_ZERO_EMISSIONS:
-        return 0;
-    case SVE_UNKNOWN:
-        c = SVE_P_LDV_7_7;
-        break;
-    default:
-        break;
-    }
-    return (SUMOReal)(computeUsing(getParameterForClass(c)+FUEL_OFFSET,v,a) / 790.);
+HelpersHBEFA::computeFuel(SUMOEmissionClass c, double v, double a) {
+	return compute(c, FUEL_OFFSET, v, a) / 790.;
 }
 
 

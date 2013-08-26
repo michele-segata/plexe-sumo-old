@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIVehicleControl.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Wed, 10. Dec 2003
 /// @version $Id$
 ///
 // The class responsible for building and deletion of vehicles (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -41,11 +44,11 @@
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-GUIVehicleControl::GUIVehicleControl() throw()
+GUIVehicleControl::GUIVehicleControl()
     : MSVehicleControl() {}
 
 
-GUIVehicleControl::~GUIVehicleControl() throw() {
+GUIVehicleControl::~GUIVehicleControl() {
     // just to quit cleanly on a failure
     if (myLock.locked()) {
         myLock.unlock();
@@ -55,16 +58,16 @@ GUIVehicleControl::~GUIVehicleControl() throw() {
 
 SUMOVehicle*
 GUIVehicleControl::buildVehicle(SUMOVehicleParameter* defs,
-                                const MSRoute* route, const MSVehicleType* type) throw(ProcessError) {
+                                const MSRoute* route, const MSVehicleType* type) {
     myLoadedVehNo++;
-    MSVehicle* built = new GUIVehicle(defs, route, type, myLoadedVehNo-1);
+    MSVehicle* built = new GUIVehicle(defs, route, type, myLoadedVehNo - 1);
     MSNet::getInstance()->informVehicleStateListener(built, MSNet::VEHICLE_STATE_BUILT);
     return built;
 }
 
 
 bool
-GUIVehicleControl::addVehicle(const std::string& id, SUMOVehicle* v) throw() {
+GUIVehicleControl::addVehicle(const std::string& id, SUMOVehicle* v) {
     myLock.lock();
     const bool result = MSVehicleControl::addVehicle(id, v);
     myLock.unlock();
@@ -73,7 +76,7 @@ GUIVehicleControl::addVehicle(const std::string& id, SUMOVehicle* v) throw() {
 
 
 void
-GUIVehicleControl::deleteVehicle(SUMOVehicle* veh) throw() {
+GUIVehicleControl::deleteVehicle(SUMOVehicle* veh) {
     myLock.lock();
     MSVehicleControl::deleteVehicle(veh);
     myLock.unlock();
@@ -81,10 +84,10 @@ GUIVehicleControl::deleteVehicle(SUMOVehicle* veh) throw() {
 
 
 void
-GUIVehicleControl::insertVehicleIDs(std::vector<GUIGlID> &into) throw() {
+GUIVehicleControl::insertVehicleIDs(std::vector<GUIGlID> &into) {
     myLock.lock();
     into.reserve(myVehicleDict.size());
-    for (VehicleDictType::iterator i=myVehicleDict.begin(); i!=myVehicleDict.end(); ++i) {
+    for (VehicleDictType::iterator i = myVehicleDict.begin(); i != myVehicleDict.end(); ++i) {
         SUMOVehicle* veh = (*i).second;
         if (veh->isOnRoad()) {
             into.push_back(static_cast<GUIVehicle*>((*i).second)->getGlID());

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIGlObjectStorage.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A storage for displayed objects via their numerical id
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,15 +51,15 @@ GUIGlObjectStorage GUIGlObjectStorage::gIDStorage;
 // ===========================================================================
 // method definitions
 // ===========================================================================
-GUIGlObjectStorage::GUIGlObjectStorage() throw()
+GUIGlObjectStorage::GUIGlObjectStorage()
     : myAktID(0) {}
 
 
-GUIGlObjectStorage::~GUIGlObjectStorage() throw() {}
+GUIGlObjectStorage::~GUIGlObjectStorage() {}
 
 
 GUIGlID
-GUIGlObjectStorage::registerObject(GUIGlObject* object, const std::string& fullName) throw() {
+GUIGlObjectStorage::registerObject(GUIGlObject* object, const std::string& fullName) {
     myLock.lock();
     GUIGlID id = myAktID++;
     myMap[id] = object;
@@ -67,12 +70,12 @@ GUIGlObjectStorage::registerObject(GUIGlObject* object, const std::string& fullN
 
 
 GUIGlObject*
-GUIGlObjectStorage::getObjectBlocking(GUIGlID id) throw() {
+GUIGlObjectStorage::getObjectBlocking(GUIGlID id) {
     myLock.lock();
-    ObjectMap::iterator i=myMap.find(id);
-    if (i==myMap.end()) {
+    ObjectMap::iterator i = myMap.find(id);
+    if (i == myMap.end()) {
         i = myBlocked.find(id);
-        if (i!=myBlocked.end()) {
+        if (i != myBlocked.end()) {
             GUIGlObject* o = (*i).second;
             myLock.unlock();
             return o;
@@ -89,7 +92,7 @@ GUIGlObjectStorage::getObjectBlocking(GUIGlID id) throw() {
 
 
 GUIGlObject*
-GUIGlObjectStorage::getObjectBlocking(const std::string& fullName) throw() {
+GUIGlObjectStorage::getObjectBlocking(const std::string& fullName) {
     myLock.lock();
     if (myFullNameMap.count(fullName)) {
         GUIGlID id = myFullNameMap[fullName]->getGlID();
@@ -103,12 +106,12 @@ GUIGlObjectStorage::getObjectBlocking(const std::string& fullName) throw() {
 
 
 bool
-GUIGlObjectStorage::remove(GUIGlID id) throw() {
+GUIGlObjectStorage::remove(GUIGlID id) {
     myLock.lock();
-    ObjectMap::iterator i=myMap.find(id);
-    if (i==myMap.end()) {
+    ObjectMap::iterator i = myMap.find(id);
+    if (i == myMap.end()) {
         i = myBlocked.find(id);
-        assert(i!=myBlocked.end());
+        assert(i != myBlocked.end());
         GUIGlObject* o = (*i).second;
         myFullNameMap.erase(o->getFullName());
         myBlocked.erase(id);
@@ -125,7 +128,7 @@ GUIGlObjectStorage::remove(GUIGlID id) throw() {
 
 
 void
-GUIGlObjectStorage::clear() throw() {
+GUIGlObjectStorage::clear() {
     myLock.lock();
     myMap.clear();
     myAktID = 0;
@@ -134,10 +137,10 @@ GUIGlObjectStorage::clear() throw() {
 
 
 void
-GUIGlObjectStorage::unblockObject(GUIGlID id) throw() {
+GUIGlObjectStorage::unblockObject(GUIGlID id) {
     myLock.lock();
-    ObjectMap::iterator i=myBlocked.find(id);
-    if (i==myBlocked.end()) {
+    ObjectMap::iterator i = myBlocked.find(id);
+    if (i == myBlocked.end()) {
         myLock.unlock();
         return;
     }
@@ -151,7 +154,7 @@ GUIGlObjectStorage::unblockObject(GUIGlID id) throw() {
 std::set<GUIGlID>
 GUIGlObjectStorage::getAllIDs() const {
     std::set<GUIGlID> result;
-    for (ObjectMap::const_iterator it=myMap.begin(); it!=myMap.end(); it++) {
+    for (ObjectMap::const_iterator it = myMap.begin(); it != myMap.end(); it++) {
         result.insert(it->first);
     }
     return result;

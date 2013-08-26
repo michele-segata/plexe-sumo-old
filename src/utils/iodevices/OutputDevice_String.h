@@ -7,12 +7,13 @@
 // An output device that encapsulates a stringstream
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -48,17 +49,17 @@ public:
     /** @brief Constructor
      * @exception IOError Should not be thrown by this implementation
      */
-    OutputDevice_String(const unsigned int defaultIndentation=0) throw(IOError);
+    OutputDevice_String(const unsigned int defaultIndentation = 0);
 
 
     /// @brief Destructor
-    ~OutputDevice_String() throw();
+    ~OutputDevice_String() ;
 
 
     /** @brief Returns the current content as a string
      * @return The content as string
      */
-    std::string getString() throw();
+    std::string getString() ;
 
 protected:
     /// @name Methods that override/implement OutputDevice-methods
@@ -67,7 +68,7 @@ protected:
     /** @brief Returns the associated ostream
      * @return The used stream
      */
-    std::ostream& getOStream() throw();
+    std::ostream& getOStream() ;
     /// @}
 
 

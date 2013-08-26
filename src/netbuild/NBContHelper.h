@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NBContHelper.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Mon, 17 Dec 2001
 /// @version $Id$
 ///
 // Some methods for traversing lists of edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -108,7 +111,7 @@ public:
     public:
         /// comparing operation
         int operator()(NBEdge* e1, NBEdge* e2) const {
-            if (e1==0||e2==0) {
+            if (e1 == 0 || e2 == 0) {
                 return -1;
             }
             SUMOReal relAngle1 = NBHelpers::normRelAngle(
@@ -136,10 +139,10 @@ public:
     public:
         /// comparing operator
         int operator()(NBEdge* e1, NBEdge* e2) const {
-            if (e1->getPriority()!=e2->getPriority()) {
+            if (e1->getPriority() != e2->getPriority()) {
                 return e1->getPriority() > e2->getPriority();
             }
-            if (e1->getSpeed()!=e2->getSpeed()) {
+            if (e1->getSpeed() != e2->getSpeed()) {
                 return e1->getSpeed() > e2->getSpeed();
             }
             return e1->getNumLanes() > e2->getNumLanes();
@@ -161,7 +164,7 @@ public:
          * @param[in] e The edge to which the sorting relates
          * @param[in] n The node to consider
          */
-        explicit edge_opposite_direction_sorter(const NBEdge* const e, const NBNode* const n) throw()
+        explicit edge_opposite_direction_sorter(const NBEdge* const e, const NBNode* const n)
             : myNode(n) {
             myAngle = getEdgeAngleAt(e, n);
         }
@@ -171,7 +174,7 @@ public:
          * @param[in] e2 The second edge to compare
          * @return Which edge is more opposite to the related one
          */
-        int operator()(NBEdge* e1, NBEdge* e2) const throw() {
+        int operator()(NBEdge* e1, NBEdge* e2) const {
             SUMOReal d1 = getDiff(e1);
             SUMOReal d2 = getDiff(e2);
             return d1 > d2;
@@ -182,7 +185,7 @@ public:
          * @param[in] e The edge to compare the angle difference of
          * @return The angle difference
          */
-        SUMOReal getDiff(const NBEdge* const e) const throw() {
+        SUMOReal getDiff(const NBEdge* const e) const {
             SUMOReal d = getEdgeAngleAt(e, myNode);
             return GeomHelper::getMinAngleDiff(d, myAngle);
         }
@@ -193,8 +196,8 @@ public:
          * @param[in] e The edge to which the sorting relates
          * @param[in] n The node to consider
          */
-        SUMOReal getEdgeAngleAt(const NBEdge* const e, const NBNode* const n) const throw() {
-            if (e->getFromNode()==n) {
+        SUMOReal getEdgeAngleAt(const NBEdge* const e, const NBNode* const n) const {
+            if (e->getFromNode() == n) {
                 return e->getGeometry().getBegLine().atan2DegreeAngle();
             } else {
                 return e->getGeometry().getEndLine().reverse().atan2DegreeAngle();
@@ -320,16 +323,16 @@ public:
         int operator()(NBEdge* e1, NBEdge* e2) const {
             std::pair<SUMOReal, SUMOReal> mm1 = getMinMaxRelAngles(e1);
             std::pair<SUMOReal, SUMOReal> mm2 = getMinMaxRelAngles(e2);
-            if (mm1.first==mm2.first && mm1.second==mm2.second) {
+            if (mm1.first == mm2.first && mm1.second == mm2.second) {
                 // ok, let's simply sort them arbitrarily
                 return e1->getID() < e2->getID();
             }
 
             assert(
-                (mm1.first<=mm2.first&&mm1.second<=mm2.second)
+                (mm1.first <= mm2.first && mm1.second <= mm2.second)
                 ||
-                (mm1.first>=mm2.first&&mm1.second>=mm2.second));
-            return (mm1.first>=mm2.first&&mm1.second>=mm2.second);
+                (mm1.first >= mm2.first && mm1.second >= mm2.second));
+            return (mm1.first >= mm2.first && mm1.second >= mm2.second);
         }
 
         /**
@@ -339,13 +342,13 @@ public:
             SUMOReal min = 360;
             SUMOReal max = 360;
             const EdgeVector& ev = e->getConnectedEdges();
-            for (EdgeVector::const_iterator i=ev.begin(); i!=ev.end(); ++i) {
+            for (EdgeVector::const_iterator i = ev.begin(); i != ev.end(); ++i) {
                 SUMOReal angle = NBHelpers::normRelAngle(
                                      e->getAngle(), (*i)->getAngle());
-                if (min==360||min>angle) {
+                if (min == 360 || min > angle) {
                     min = angle;
                 }
-                if (max==360||max<angle) {
+                if (max == 360 || max < angle) {
                     max = angle;
                 }
             }
@@ -363,7 +366,7 @@ public:
             : myReferenceEdge(edge), myAtNode(n) { }
 
         bool operator()(NBEdge* e) const {
-            return e->isTurningDirectionAt(myAtNode, myReferenceEdge)||
+            return e->isTurningDirectionAt(myAtNode, myReferenceEdge) ||
                    myReferenceEdge->isTurningDirectionAt(myAtNode, e);
         }
 

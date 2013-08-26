@@ -7,12 +7,13 @@
 // An instantaneous induction loop
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -67,11 +68,11 @@ public:
      * @param[in] position Position of the detector within the lane.
      */
     MSInstantInductLoop(const std::string& id, OutputDevice& od,
-                        MSLane* const lane, SUMOReal positionInMeters) throw();
+                        MSLane* const lane, SUMOReal positionInMeters) ;
 
 
     /// @brief Destructor
-    ~MSInstantInductLoop() throw();
+    ~MSInstantInductLoop() ;
 
 
 
@@ -94,7 +95,7 @@ public:
      * @see enterDetectorByMove
      * @see leaveDetectorByMove
      */
-    bool notifyMove(SUMOVehicle& veh, SUMOReal oldPos, SUMOReal newPos, SUMOReal newSpeed) throw();
+    bool notifyMove(SUMOVehicle& veh, SUMOReal oldPos, SUMOReal newPos, SUMOReal newSpeed) ;
 
 
     /** @brief Dismisses the vehicle if it is on the detector due to a lane change
@@ -111,7 +112,7 @@ public:
      * @see MSMoveReminder
      * @see MSMoveReminder::notifyLeave
      */
-    bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos, MSMoveReminder::Notification reason) throw();
+    bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos, MSMoveReminder::Notification reason) ;
 
 
     /** @brief Returns whether the detector may has to be concerned during the vehicle's further movement
@@ -127,7 +128,7 @@ public:
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) throw();
+    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) ;
     //@}
 
 
@@ -142,7 +143,7 @@ public:
      * @exception IOError If an error on writing occurs
      */
     void writeXMLOutput(OutputDevice& dev,
-                        SUMOTime startTime, SUMOTime stopTime) throw(IOError) { }
+                        SUMOTime startTime, SUMOTime stopTime) { }
 
 
     /** @brief Open the XML-output
@@ -153,7 +154,7 @@ public:
      * @param[in] dev The output device to write the root into
      * @exception IOError If an error on writing occurs
      */
-    void writeXMLDetectorProlog(OutputDevice& dev) const throw(IOError);
+    void writeXMLDetectorProlog(OutputDevice& dev) const;
 
 
 protected:
@@ -165,7 +166,7 @@ protected:
      * @param[in] add An optional attribute to report
      * @param[in] addValue The value of the optional attribute
      */
-    void write(const char* state, SUMOReal t, SUMOVehicle& veh, SUMOReal speed, const char* add=0, SUMOReal addValue=-1);
+    void write(const char* state, SUMOReal t, SUMOVehicle& veh, SUMOReal speed, const char* add = 0, SUMOReal addValue = -1);
 
 
 protected:

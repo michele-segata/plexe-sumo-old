@@ -1,20 +1,25 @@
 /****************************************************************************/
 /// @file    AGBusLine.cpp
 /// @author  Piotr Woznica
+/// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    July 2010
 /// @version $Id$
 ///
 // Bus line of the city: contains all the buses of this line
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -59,7 +64,7 @@ AGBusLine::setBusNames() {
 
     std::list<std::pair<int, std::string> > drivingBuses1, drivingBuses2;	//buses on the road or in the parking of the corresponding end: int: the time of availability
 
-    while (it1!= buses.end() && it2!=revBuses.end()) {
+    while (it1 != buses.end() && it2 != revBuses.end()) {
         if (it1->getDeparture() > it2->getDeparture()) {
             if (drivingBuses2.size() == 0) {
                 drivingBuses2.push_front(make_pair(it2->getDeparture(), createName()));
@@ -159,11 +164,11 @@ AGBusLine::printBuses() {
     std::list<AGBus>::iterator it;
     std::cout << "\n ----------- BUS LINE " << lineNumber << " PRINTING -------------\n" << std::endl;
     std::cout << "\n -------------------------- First way ---------------------------\n" << std::endl;
-    for (it=buses.begin() ; it!=buses.end() ; ++it) {
+    for (it = buses.begin() ; it != buses.end() ; ++it) {
         it->print();
     }
     std::cout << "\n -------------------------- Second way --------------------------\n" << std::endl;
-    for (it=revBuses.begin() ; it!=revBuses.end() ; ++it) {
+    for (it = revBuses.begin() ; it != revBuses.end() ; ++it) {
         it->print();
     }
     std::cout << "\n ----------------------------------------------------------------\n" << std::endl;

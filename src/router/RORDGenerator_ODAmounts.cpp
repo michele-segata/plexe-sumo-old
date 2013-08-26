@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    RORDGenerator_ODAmounts.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Wed, 21 Jan 2004
 /// @version $Id$
 ///
 // Class for loading trip amount definitions and route generation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -67,11 +70,11 @@ RORDGenerator_ODAmounts::FlowDef::FlowDef(ROVehicle* vehicle,
     : myVehicle(vehicle), myVehicleType(type), myRoute(route),
       myIntervalBegin(intBegin), myIntervalEnd(intEnd),
       myVehicle2InsertNumber(vehicles2insert), myInserted(0), myRandom(randomize) {
-    assert(myIntervalBegin<myIntervalEnd);
+    assert(myIntervalBegin < myIntervalEnd);
     if (myRandom) {
         SUMOTime period = myIntervalEnd - myIntervalBegin;
         myDepartures.reserve(myVehicle2InsertNumber);
-        for (size_t i=0; i<myVehicle2InsertNumber; ++i) {
+        for (size_t i = 0; i < myVehicle2InsertNumber; ++i) {
             SUMOTime departure = myIntervalBegin + ((int)(RandHelper::rand(period) / DELTA_T)) * DELTA_T;
             myDepartures.push_back(departure);
         }
@@ -88,25 +91,25 @@ RORDGenerator_ODAmounts::FlowDef::~FlowDef() {
 
 bool
 RORDGenerator_ODAmounts::FlowDef::applicableForTime(SUMOTime t) const {
-    return myIntervalBegin<=t&&myIntervalEnd>t;
+    return myIntervalBegin <= t && myIntervalEnd > t;
 }
 
 
 void
 RORDGenerator_ODAmounts::FlowDef::addRoutes(RONet& net, SUMOTime t) {
-    assert(myIntervalBegin<=t&&myIntervalEnd>=t);
+    assert(myIntervalBegin <= t && myIntervalEnd >= t);
     if (!myRandom) {
-        unsigned int absPerEachStep = myVehicle2InsertNumber / ((myIntervalEnd-myIntervalBegin) / DELTA_T);
-        for (unsigned int i=0; i<absPerEachStep; i++) {
+        unsigned int absPerEachStep = myVehicle2InsertNumber / ((myIntervalEnd - myIntervalBegin) / DELTA_T);
+        for (unsigned int i = 0; i < absPerEachStep; i++) {
             addSingleRoute(net, t);
         }
         // fraction
-        SUMOReal toInsert = (SUMOReal) myVehicle2InsertNumber / (SUMOReal)(myIntervalEnd-myIntervalBegin) * (SUMOReal)(t-myIntervalBegin+(SUMOReal)DELTA_T/2.);
-        if (toInsert>myInserted) {
+        SUMOReal toInsert = (SUMOReal) myVehicle2InsertNumber / (SUMOReal)(myIntervalEnd - myIntervalBegin) * (SUMOReal)(t - myIntervalBegin + (SUMOReal)DELTA_T / 2.);
+        if (toInsert > myInserted) {
             addSingleRoute(net, t);
         }
     } else {
-        while (myDepartures.size() > 0 && myDepartures.back() < t+DELTA_T) {
+        while (myDepartures.size() > 0 && myDepartures.back() < t + DELTA_T) {
             addSingleRoute(net, myDepartures.back());
             myDepartures.pop_back();
         }
@@ -139,7 +142,7 @@ RORDGenerator_ODAmounts::RORDGenerator_ODAmounts(RONet& net,
         SUMOTime end,
         bool emptyDestinationsAllowed,
         bool randomize,
-        const std::string& fileName) throw(ProcessError)
+        const std::string& fileName)
     : RORDLoader_TripDefs(net, begin, end, emptyDestinationsAllowed, false, fileName),
       myRandom(randomize),
       myHaveWarnedAboutDeprecatedNumber(false) {
@@ -150,18 +153,18 @@ RORDGenerator_ODAmounts::RORDGenerator_ODAmounts(RONet& net,
 }
 
 
-RORDGenerator_ODAmounts::~RORDGenerator_ODAmounts() throw() {
-    for (FlowDefV::const_iterator i=myFlows.begin(); i!=myFlows.end(); i++) {
+RORDGenerator_ODAmounts::~RORDGenerator_ODAmounts() {
+    for (FlowDefV::const_iterator i = myFlows.begin(); i != myFlows.end(); i++) {
         delete(*i);
     }
 }
 
 
 bool
-RORDGenerator_ODAmounts::readRoutesAtLeastUntil(SUMOTime until, bool skipping) throw(ProcessError) {
+RORDGenerator_ODAmounts::readRoutesAtLeastUntil(SUMOTime until, bool skipping) {
     UNUSED_PARAMETER(skipping);
     // skip routes before begin
-    if (until<myBegin) {
+    if (until < myBegin) {
         myDepartureTime = until;
         return true;
     }
@@ -172,9 +175,9 @@ RORDGenerator_ODAmounts::readRoutesAtLeastUntil(SUMOTime until, bool skipping) t
 
 
 void
-RORDGenerator_ODAmounts::buildRoutes(SUMOTime until) throw() {
+RORDGenerator_ODAmounts::buildRoutes(SUMOTime until) {
     SUMOTime t;
-    for (t=myDepartureTime; t<until+1; t+=DELTA_T) {
+    for (t = myDepartureTime; t < until + 1; t += DELTA_T) {
         buildForTimeStep(t);
     }
     myDepartureTime = t;
@@ -182,19 +185,19 @@ RORDGenerator_ODAmounts::buildRoutes(SUMOTime until) throw() {
 
 
 void
-RORDGenerator_ODAmounts::buildForTimeStep(SUMOTime time) throw() {
-    if (time<myBegin||time>=myEnd) {
+RORDGenerator_ODAmounts::buildForTimeStep(SUMOTime time) {
+    if (time < myBegin || time >= myEnd) {
         return;
     }
     myEnded = true;
-    for (FlowDefV::const_iterator i=myFlows.begin(); i!=myFlows.end(); i++) {
+    for (FlowDefV::const_iterator i = myFlows.begin(); i != myFlows.end(); i++) {
         FlowDef* fd = *i;
         // skip flow definitions not valid for the current time
         if (fd->applicableForTime(time)) {
             fd->addRoutes(myNet, time);
         }
         // check whether any further exists
-        if (fd->getIntervalEnd()>time) {
+        if (fd->getIntervalEnd() > time) {
             myEnded = false;
         }
     }
@@ -203,7 +206,7 @@ RORDGenerator_ODAmounts::buildForTimeStep(SUMOTime time) throw() {
 
 void
 RORDGenerator_ODAmounts::myStartElement(int element,
-                                        const SUMOSAXAttributes& attrs) throw(ProcessError) {
+                                        const SUMOSAXAttributes& attrs) {
     RORDLoader_TripDefs::myStartElement(element, attrs);
     if (element == SUMO_TAG_FLOW) {
         parseFlowAmountDef(attrs);
@@ -214,11 +217,11 @@ RORDGenerator_ODAmounts::myStartElement(int element,
 
 
 void
-RORDGenerator_ODAmounts::parseFlowAmountDef(const SUMOSAXAttributes& attrs) throw(ProcessError) {
+RORDGenerator_ODAmounts::parseFlowAmountDef(const SUMOSAXAttributes& attrs) {
     // get the vehicle id, the edges, the speed and position and
     //  the departure time and other information
     std::string id = getVehicleID(attrs);
-    if (myKnownIDs.find(id)!=myKnownIDs.end()) {
+    if (myKnownIDs.find(id) != myKnownIDs.end()) {
         throw ProcessError("The id '" + id + "' appears twice within the flow descriptions.'");
     }
     myKnownIDs.insert(id); // !!! a local storage is not save
@@ -248,7 +251,7 @@ RORDGenerator_ODAmounts::parseFlowAmountDef(const SUMOSAXAttributes& attrs) thro
     if (!ok) {
         throw ProcessError();
     }
-    if (myIntervalEnd<=myIntervalBegin) {
+    if (myIntervalEnd <= myIntervalBegin) {
         throw ProcessError("The interval must be larger than 0.\n The current values are: begin=" + toString<unsigned int>(myIntervalBegin) + " end=" + toString<unsigned int>(myIntervalEnd));
     }
 }
@@ -263,7 +266,7 @@ RORDGenerator_ODAmounts::parseInterval(const SUMOSAXAttributes& attrs) {
 
 
 void
-RORDGenerator_ODAmounts::myEndElement(int element) throw(ProcessError) {
+RORDGenerator_ODAmounts::myEndElement(int element) {
     RORDLoader_TripDefs::myEndElement(element);
     if (element == SUMO_TAG_FLOW) {
         myEndFlowAmountDef();
@@ -284,7 +287,7 @@ void
 RORDGenerator_ODAmounts::myEndFlowAmountDef() {
     if (!MsgHandler::getErrorInstance()->wasInformed()) {
 
-        if (myIntervalEnd<myBegin) {
+        if (myIntervalEnd < myBegin) {
             return;
         }
         // add the vehicle type, the vehicle and the route to the net

@@ -1,12 +1,15 @@
 # -*- coding: Latin-1 -*-
 """
 @file    GenerateRawFCD.py
-@author  Sascha.Krieg@dlr.de
+@author  Sascha Krieg
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-04-01
 
 Converts the vtypeProbe XML-File to the raw FCD-Format which can afterwards used to process FCD. 
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

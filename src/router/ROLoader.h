@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    ROLoader.h
 /// @author  Daniel Krajzewicz
+/// @author  Christian Roessel
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Loader for networks and route imports
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -67,7 +70,7 @@ public:
      * @param[in] emptyDestinationsAllowed Whether tripdefs may be given without destinations
      * @todo Recheck usage of emptyDestinationsAllowed
      */
-    ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed) throw();
+    ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed) ;
 
 
     /// @brief Destructor
@@ -87,14 +90,14 @@ public:
     /** @brief Loads routes stepwise
         This is done for all previously build route loaders */
     virtual void processRoutesStepWise(SUMOTime start, SUMOTime end,
-                                       RONet& net, SUMOAbstractRouter<ROEdge,ROVehicle> &router);
+                                       RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
 
     /** @brief Loads all routes at once
         This is done for all previously build route loaders */
     virtual void processAllRoutes(SUMOTime start, SUMOTime end,
-                                  RONet& net, SUMOAbstractRouter<ROEdge,ROVehicle> &router);
+                                  RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
 
-    bool makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge,ROVehicle> &router);
+    bool makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
 
 protected:
     /** @brief Opens route handler of the given type
@@ -118,7 +121,7 @@ protected:
      * @param[in] net The net to assign to the built handlers
      * @return Whether the wished handler(s) could be built
      */
-    bool openTypedRoutes(const std::string& optionName, RONet& net) throw();
+    bool openTypedRoutes(const std::string& optionName, RONet& net) ;
 
 
     /** @brief Returns the first time step known by the built handlers
@@ -130,7 +133,7 @@ protected:
      * @return The first time step of loaded routes
      * @see ROAbstractRouteDefLoader::getLastReadTimeStep
      */
-    SUMOTime getMinTimeStep() const throw();
+    SUMOTime getMinTimeStep() const ;
 
 
 
@@ -142,10 +145,10 @@ protected:
     class EdgeFloatTimeLineRetriever_EdgeWeight : public SAXWeightsHandler::EdgeFloatTimeLineRetriever {
     public:
         /// @brief Constructor
-        EdgeFloatTimeLineRetriever_EdgeWeight(RONet& net) throw() : myNet(net) {}
+        EdgeFloatTimeLineRetriever_EdgeWeight(RONet& net) : myNet(net) {}
 
         /// @brief Destructor
-        ~EdgeFloatTimeLineRetriever_EdgeWeight() throw() { }
+        ~EdgeFloatTimeLineRetriever_EdgeWeight() { }
 
         /** @brief Adds an effort for a given edge and time period
          *
@@ -156,7 +159,7 @@ protected:
          * @see SAXWeightsHandler::EdgeFloatTimeLineRetriever::addEdgeWeight
          */
         void addEdgeWeight(const std::string& id,
-                           SUMOReal val, SUMOReal beg, SUMOReal end) const throw();
+                           SUMOReal val, SUMOReal beg, SUMOReal end) const ;
 
     private:
         /// @brief The network edges shall be obtained from
@@ -173,10 +176,10 @@ protected:
     class EdgeFloatTimeLineRetriever_EdgeTravelTime : public SAXWeightsHandler::EdgeFloatTimeLineRetriever {
     public:
         /// @brief Constructor
-        EdgeFloatTimeLineRetriever_EdgeTravelTime(RONet& net) throw() : myNet(net) {}
+        EdgeFloatTimeLineRetriever_EdgeTravelTime(RONet& net) : myNet(net) {}
 
         /// @brief Destructor
-        ~EdgeFloatTimeLineRetriever_EdgeTravelTime() throw() {}
+        ~EdgeFloatTimeLineRetriever_EdgeTravelTime() {}
 
         /** @brief Adds a travel time for a given edge and time period
          *
@@ -187,7 +190,7 @@ protected:
          * @see SAXWeightsHandler::EdgeFloatTimeLineRetriever::addEdgeWeight
          */
         void addEdgeWeight(const std::string& id,
-                           SUMOReal val, SUMOReal beg, SUMOReal end) const throw();
+                           SUMOReal val, SUMOReal beg, SUMOReal end) const ;
 
     private:
         /// @brief The network edges shall be obtained from
@@ -199,14 +202,14 @@ protected:
 
 protected:
     ROAbstractRouteDefLoader* buildNamedHandler(const std::string& optionName,
-            const std::string& file, RONet& net) throw(ProcessError);
+            const std::string& file, RONet& net) ;
 
 
-    void writeStats(SUMOTime time, SUMOTime start, int absNo) throw();
+    void writeStats(SUMOTime time, SUMOTime start, int absNo) ;
 
 
     /** @brief Deletes all handlers and clears their container ("myHandler") */
-    void destroyHandlers() throw();
+    void destroyHandlers() ;
 
 
 protected:

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NGNode.h
 /// @author  Markus Hartinger
+/// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mar, 2003
 /// @version $Id$
 ///
 // A netgen-representation of a node
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -54,14 +57,14 @@ class NBNetBuilder;
 class NGNode {
 public:
     /// @brief Constructor
-    NGNode() throw();
+    NGNode() ;
 
 
     /** @brief Constructor
      *
      * @param[in] id The id of the node
      */
-    NGNode(const std::string& id) throw();
+    NGNode(const std::string& id) ;
 
 
     /** @brief Constructor
@@ -70,7 +73,7 @@ public:
      * @param[in] xPos The x-position of the node
      * @param[in] yPos The y-position of the node
      */
-    NGNode(const std::string& id, int xPos, int yPos) throw();
+    NGNode(const std::string& id, int xPos, int yPos) ;
 
 
     /** @brief Constructor
@@ -80,18 +83,18 @@ public:
      * @param[in] yPos The y-position of the node
      * @param[in] amCenter Information whether this is the center-node of a spider-net
      */
-    NGNode(const std::string& id, int xID, int yID, bool amCenter) throw();
+    NGNode(const std::string& id, int xID, int yID, bool amCenter) ;
 
 
     /// @brief Destructor
-    ~NGNode() throw();
+    ~NGNode() ;
 
 
     /** @brief Returns this node's id
      *
      * @return The id of the node
      */
-    const std::string& getID() const throw() {
+    const std::string& getID() const {
         return myID;
     }
 
@@ -100,7 +103,7 @@ public:
      *
      * @return The position of the node
      */
-    const Position& getPosition() const throw() {
+    const Position& getPosition() const {
         return myPosition;
     }
 
@@ -109,7 +112,7 @@ public:
      *
      * @return The maximum neighbour number of the node
      */
-    SUMOReal getMaxNeighbours() throw() {
+    SUMOReal getMaxNeighbours() {
         return myMaxNeighbours;
     }
 
@@ -118,7 +121,7 @@ public:
      *
      * @param[in] value The new maximum neighbour number of the node
      */
-    void setMaxNeighbours(SUMOReal value) throw() {
+    void setMaxNeighbours(SUMOReal value) {
         myMaxNeighbours = value;
     }
 
@@ -127,7 +130,7 @@ public:
      *
      * @param[in] value The new x-position of this node
      */
-    void setX(SUMOReal x) throw() {
+    void setX(SUMOReal x) {
         myPosition.set(x, myPosition.y());
     }
 
@@ -136,7 +139,7 @@ public:
      *
      * @param[in] value The new y-position of this node
      */
-    void setY(SUMOReal y) throw() {
+    void setY(SUMOReal y) {
         myPosition.set(myPosition.x(), y);
     }
 
@@ -156,14 +159,14 @@ public:
      * @todo There is no interaction with explicit node setting options? Where is this done?
      * @todo Check whether throwing an exception is really necessary, here
      */
-    NBNode* buildNBNode(NBNetBuilder& nb) const throw(ProcessError);
+    NBNode* buildNBNode(NBNetBuilder& nb) const ;
 
 
     /** @brief Adds the given link to the internal list
      *
      * @param[in] link The link to add
      */
-    void addLink(NGEdge* link) throw();
+    void addLink(NGEdge* link) ;
 
 
     /** @brief Removes the given link
@@ -173,7 +176,7 @@ public:
      *
      * @param[in] link The link to remove
      */
-    void removeLink(NGEdge* link) throw();
+    void removeLink(NGEdge* link) ;
 
 
     /** @brief Returns whether the other node is connected
@@ -181,7 +184,7 @@ public:
      * @param[in] node The link to check whether it is connected
      * @return Whether the given node is connected
      */
-    bool connected(NGNode* node) const throw();
+    bool connected(NGNode* node) const ;
 
 
     /** @brief Returns whether the node has the given position
@@ -189,8 +192,8 @@ public:
      * @param[in] node The link to check whether it is connected
      * @return Whether the given node is connected
      */
-    bool samePos(int xPos, int yPos) const throw() {
-        return xID==xPos && yID==yPos;
+    bool samePos(int xPos, int yPos) const {
+        return xID == xPos && yID == yPos;
     }
 
     // NGRandomNetBuilder needs access to links

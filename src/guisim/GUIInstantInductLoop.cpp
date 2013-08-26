@@ -7,12 +7,13 @@
 // The gui-version of the MSInstantInductLoop
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -58,11 +59,11 @@
  * GUIInstantInductLoop-methods
  * ----------------------------------------------------------------------- */
 GUIInstantInductLoop::GUIInstantInductLoop(const std::string& id, OutputDevice& od,
-        MSLane* const lane, SUMOReal positionInMeters) throw()
+        MSLane* const lane, SUMOReal positionInMeters)
     : MSInstantInductLoop(id, od, lane, positionInMeters) {}
 
 
-GUIInstantInductLoop::~GUIInstantInductLoop() throw() {}
+GUIInstantInductLoop::~GUIInstantInductLoop() {}
 
 
 GUIDetectorWrapper*
@@ -75,24 +76,24 @@ GUIInstantInductLoop::buildDetectorGUIRepresentation() {
  * GUIInstantInductLoop::MyWrapper-methods
  * ----------------------------------------------------------------------- */
 GUIInstantInductLoop::MyWrapper::MyWrapper(GUIInstantInductLoop& detector,
-        GUILaneWrapper& wrapper, SUMOReal pos) throw()
+        GUILaneWrapper& wrapper, SUMOReal pos)
     : GUIDetectorWrapper("instant induct loop", detector.getID()),
       myDetector(detector), myPosition(pos) {
     const PositionVector& v = wrapper.getShape();
     myFGPosition = v.positionAtLengthPosition(pos);
     Line l(v.getBegin(), v.getEnd());
     SUMOReal sgPos = pos / v.length() * l.length();
-    myBoundary.add(myFGPosition.x()+(SUMOReal) 5.5, myFGPosition.y()+(SUMOReal) 5.5);
-    myBoundary.add(myFGPosition.x()-(SUMOReal) 5.5, myFGPosition.y()-(SUMOReal) 5.5);
+    myBoundary.add(myFGPosition.x() + (SUMOReal) 5.5, myFGPosition.y() + (SUMOReal) 5.5);
+    myBoundary.add(myFGPosition.x() - (SUMOReal) 5.5, myFGPosition.y() - (SUMOReal) 5.5);
     myFGRotation = -v.rotationDegreeAtLengthPosition(pos);
 }
 
 
-GUIInstantInductLoop::MyWrapper::~MyWrapper() throw() {}
+GUIInstantInductLoop::MyWrapper::~MyWrapper() {}
 
 
 Boundary
-GUIInstantInductLoop::MyWrapper::getCenteringBoundary() const throw() {
+GUIInstantInductLoop::MyWrapper::getCenteringBoundary() const {
     Boundary b(myBoundary);
     b.grow(20);
     return b;
@@ -102,7 +103,7 @@ GUIInstantInductLoop::MyWrapper::getCenteringBoundary() const throw() {
 
 GUIParameterTableWindow*
 GUIInstantInductLoop::MyWrapper::getParameterWindow(GUIMainWindow& app,
-        GUISUMOAbstractView& /*parent !!! recheck this - never needed?*/) throw() {
+        GUISUMOAbstractView& /*parent !!! recheck this - never needed?*/) {
     GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this, 7);
     // add items
     // parameter
@@ -116,7 +117,7 @@ GUIInstantInductLoop::MyWrapper::getParameterWindow(GUIMainWindow& app,
 
 
 void
-GUIInstantInductLoop::MyWrapper::drawGL(const GUIVisualizationSettings& s) const throw() {
+GUIInstantInductLoop::MyWrapper::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     SUMOReal width = (SUMOReal) 2.0 * s.scale;
     glLineWidth(1.0);
@@ -128,23 +129,23 @@ GUIInstantInductLoop::MyWrapper::drawGL(const GUIVisualizationSettings& s) const
     glRotated(myFGRotation, 0, 0, 1);
     glScaled(s.addExaggeration, s.addExaggeration, 1);
     glBegin(GL_QUADS);
-    glVertex2d(0-1.0, 2);
+    glVertex2d(0 - 1.0, 2);
     glVertex2d(-1.0, -2);
     glVertex2d(1.0, -2);
     glVertex2d(1.0, 2);
     glEnd();
     glTranslated(0, 0, .01);
     glBegin(GL_LINES);
-    glVertex2d(0, 2-.1);
-    glVertex2d(0, -2+.1);
+    glVertex2d(0, 2 - .1);
+    glVertex2d(0, -2 + .1);
     glEnd();
 
     // outline
-    if (width*s.addExaggeration>1) {
+    if (width * s.addExaggeration > 1) {
         glColor3d(1, 1, 1);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glBegin(GL_QUADS);
-        glVertex2f(0-1.0, 2);
+        glVertex2f(0 - 1.0, 2);
         glVertex2f(-1.0, -2);
         glVertex2f(1.0, -2);
         glVertex2f(1.0, 2);
@@ -153,7 +154,7 @@ GUIInstantInductLoop::MyWrapper::drawGL(const GUIVisualizationSettings& s) const
     }
 
     // position indicator
-    if (width*s.addExaggeration>1) {
+    if (width * s.addExaggeration > 1) {
         glRotated(90, 0, 0, -1);
         glColor3d(1, 1, 1);
         glBegin(GL_LINES);

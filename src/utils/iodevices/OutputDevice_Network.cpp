@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    OutputDevice_Network.cpp
 /// @author  Michael Behrisch
+/// @author  Daniel Krajzewicz
+/// @author  Felix Brack
 /// @date    2006
 /// @version $Id$
 ///
 // An output device for TCP/IP Network connections
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -41,7 +44,7 @@
 // method definitions
 // ==========================================================================
 OutputDevice_Network::OutputDevice_Network(const std::string& host,
-        const int port) throw(IOError) {
+        const int port) {
     mySocket = new tcpip::Socket(host, port);
     try {
         mySocket->connect();
@@ -51,20 +54,20 @@ OutputDevice_Network::OutputDevice_Network(const std::string& host,
 }
 
 
-OutputDevice_Network::~OutputDevice_Network() throw() {
+OutputDevice_Network::~OutputDevice_Network() {
     mySocket->close();
     delete mySocket;
 }
 
 
 std::ostream&
-OutputDevice_Network::getOStream() throw() {
+OutputDevice_Network::getOStream() {
     return myMessage;
 }
 
 
 void
-OutputDevice_Network::postWriteHook() throw() {
+OutputDevice_Network::postWriteHook() {
     std::string toSend = myMessage.str();
     std::vector<unsigned char> msg;
     msg.insert(msg.end(), toSend.begin(), toSend.end());

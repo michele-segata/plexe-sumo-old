@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    StringTokenizer.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    ?
 /// @version $Id$
 ///
 // A java-style StringTokenizer for c++ (stl)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -64,19 +67,19 @@ StringTokenizer::StringTokenizer(std::string tosplit, std::string token, bool sp
 StringTokenizer::StringTokenizer(std::string tosplit, int special)
     : myTosplit(tosplit), myPos(0) {
     switch (special) {
-    case NEWLINE:
-        prepare(tosplit, "\r\n", true);
-        break;
-    case WHITECHARS:
-        prepareWhitechar(tosplit);
-        break;
-    default:
-        char* buf = new char[2];
-        buf[0] = (char) special;
-        buf[1] = 0;
-        prepare(tosplit, buf, false);
-        delete[] buf;
-        break;
+        case NEWLINE:
+            prepare(tosplit, "\r\n", true);
+            break;
+        case WHITECHARS:
+            prepareWhitechar(tosplit);
+            break;
+        default:
+            char* buf = new char[2];
+            buf[0] = (char) special;
+            buf[1] = 0;
+            prepare(tosplit, buf, false);
+            delete[] buf;
+            break;
     }
 }
 
@@ -88,37 +91,37 @@ void StringTokenizer::reinit() {
 }
 
 bool StringTokenizer::hasNext() {
-    return myPos!=myStarts.size();
+    return myPos != myStarts.size();
 }
 
 std::string StringTokenizer::next() {
-    if (myPos>=myStarts.size()) {
+    if (myPos >= myStarts.size()) {
         throw OutOfBoundsException();
     }
-    if (myLengths[myPos]==0) {
+    if (myLengths[myPos] == 0) {
         myPos++;
         return "";
     }
     size_t start = myStarts[myPos];
     size_t length = myLengths[myPos++];
-    return myTosplit.substr(start,length);
+    return myTosplit.substr(start, length);
 }
 
 std::string StringTokenizer::front() {
-    if (myStarts.size()==0) {
+    if (myStarts.size() == 0) {
         throw OutOfBoundsException();
     }
-    if (myLengths[0]==0) {
+    if (myLengths[0] == 0) {
         return "";
     }
-    return myTosplit.substr(myStarts[0],myLengths[0]);
+    return myTosplit.substr(myStarts[0], myLengths[0]);
 }
 
 std::string StringTokenizer::get(size_t pos) const {
-    if (pos>=myStarts.size()) {
+    if (pos >= myStarts.size()) {
         throw OutOfBoundsException();
     }
-    if (myLengths[pos]==0) {
+    if (myLengths[pos] == 0) {
         return "";
     }
     size_t start = myStarts[pos];
@@ -137,7 +140,7 @@ void StringTokenizer::prepare(const std::string& tosplit, const std::string& tok
     if (splitAtAllChars) {
         len = 1;
     }
-    while (beg<tosplit.length()) {
+    while (beg < tosplit.length()) {
         size_t end;
         if (splitAtAllChars) {
             end = tosplit.find_first_of(token, beg);
@@ -148,10 +151,10 @@ void StringTokenizer::prepare(const std::string& tosplit, const std::string& tok
             end = tosplit.length();
         }
         myStarts.push_back(beg);
-        myLengths.push_back(end-beg);
+        myLengths.push_back(end - beg);
         beg = end + len;
-        if (beg==tosplit.length()) {
-            myStarts.push_back(beg-1);
+        if (beg == tosplit.length()) {
+            myStarts.push_back(beg - 1);
             myLengths.push_back(0);
         }
     }
@@ -160,18 +163,18 @@ void StringTokenizer::prepare(const std::string& tosplit, const std::string& tok
 void StringTokenizer::prepareWhitechar(const std::string& tosplit) {
     size_t len = tosplit.length();
     size_t beg = 0;
-    while (beg<len&&tosplit[beg]<=SPACE) {
+    while (beg < len && tosplit[beg] <= SPACE) {
         beg++;
     }
-    while (beg!=std::string::npos&&beg<len) {
+    while (beg != std::string::npos && beg < len) {
         size_t end = beg;
-        while (end<len&&tosplit[end]>SPACE) {
+        while (end < len && tosplit[end] > SPACE) {
             end++;
         }
         myStarts.push_back(beg);
-        myLengths.push_back(end-beg);
+        myLengths.push_back(end - beg);
         beg = end;
-        while (beg<len&&tosplit[beg]<=SPACE) {
+        while (beg < len && tosplit[beg] <= SPACE) {
             beg++;
         }
     }

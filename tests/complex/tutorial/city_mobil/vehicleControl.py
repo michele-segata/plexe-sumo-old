@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """
 @file    vehicleControl.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
+@author  Lena Kalleske
 @date    2008-07-21
 @version $Id$
 
 Control the CityMobil parking lot via TraCI.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import subprocess, random, sys, os
@@ -73,9 +76,9 @@ def init(manager):
     sumoExe = SUMO
     if options.gui:
         sumoExe = SUMOGUI
-    sumoConfig = "%s%02i.sumo.cfg" % (PREFIX, options.demand)
+    sumoConfig = "%s%02i.sumocfg" % (PREFIX, options.demand)
     if options.cyber:
-        sumoConfig = "%s%02i_cyber.sumo.cfg" % (PREFIX, options.demand)
+        sumoConfig = "%s%02i_cyber.sumocfg" % (PREFIX, options.demand)
     sumoProcess = subprocess.Popen("%s -c %s" % (sumoExe, sumoConfig), shell=True, stdout=sys.stdout)
     traci.init(PORT)
     traci.simulation.subscribe()

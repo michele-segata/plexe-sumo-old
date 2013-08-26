@@ -7,12 +7,13 @@
 // An rtree for networks
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -63,7 +64,7 @@ public:
     /** @brief Adds an additional object (detector/shape/trigger) for visualisation
      * @param[in] o The object to add
      */
-    void addAdditionalGLObject(GUIGlObject *o) throw() {
+    void addAdditionalGLObject(GUIGlObject *o) {
         Boundary b = o->getCenteringBoundary();
         const float cmin[2] = {(float) b.xmin(), (float) b.ymin()};
         const float cmax[2] = {(float) b.xmax(), (float) b.ymax()};
@@ -73,7 +74,7 @@ public:
     /** @brief Removes an additional object (detector/shape/trigger) from being visualised
      * @param[in] o The object to remove
      */
-    void removeAdditionalGLObject(GUIGlObject *o) throw() {
+    void removeAdditionalGLObject(GUIGlObject *o) {
         Boundary b = o->getCenteringBoundary();
         const float cmin[2] = {(float) b.xmin(), (float) b.ymin()};
         const float cmax[2] = {(float) b.xmax(), (float) b.ymax()};

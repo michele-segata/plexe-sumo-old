@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    GUIApplicationWindow.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Christian Roessel
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The main window of the SUMO-gui.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -94,7 +98,7 @@ public:
     virtual void detach();
 
 
-    void loadOnStartup(const std::string& config, bool run);
+    void loadOnStartup(bool run);
 
 
     void dependentBuild(bool game);
@@ -116,51 +120,51 @@ public:
 
     /// @name FOX-callbacks
     /// @{
-    long onCmdOpenConfiguration(FXObject*,FXSelector,void*);
-    long onCmdOpenNetwork(FXObject*,FXSelector,void*);
-    long onCmdReload(FXObject*,FXSelector,void*);
-    long onCmdOpenRecent(FXObject*,FXSelector,void*);
+    long onCmdOpenConfiguration(FXObject*, FXSelector, void*);
+    long onCmdOpenNetwork(FXObject*, FXSelector, void*);
+    long onCmdReload(FXObject*, FXSelector, void*);
+    long onCmdOpenRecent(FXObject*, FXSelector, void*);
 
-    long onCmdClose(FXObject*,FXSelector,void*);
+    long onCmdClose(FXObject*, FXSelector, void*);
 
     /** @brief Called by FOX if the application shall be closed
         Called either by FileMenu->Quit, the normal close-menu or SIGINT  */
-    long onCmdQuit(FXObject*,FXSelector,void*);
+    long onCmdQuit(FXObject*, FXSelector, void*);
 
-    long onCmdEditChosen(FXObject*,FXSelector,void*);
-    long onCmdEditBreakpoints(FXObject*,FXSelector,void*);
+    long onCmdEditChosen(FXObject*, FXSelector, void*);
+    long onCmdEditBreakpoints(FXObject*, FXSelector, void*);
 
     /// Opens the application settings menu
-    long onCmdAppSettings(FXObject*,FXSelector,void*);
+    long onCmdAppSettings(FXObject*, FXSelector, void*);
     /// Toggle gaming mode
-    long onCmdGaming(FXObject*,FXSelector,void*);
+    long onCmdGaming(FXObject*, FXSelector, void*);
     /// Toggle listing of internal structures
-    long onCmdListInternal(FXObject*,FXSelector,void*);
+    long onCmdListInternal(FXObject*, FXSelector, void*);
 
     /// Shows the about dialog
-    long onCmdAbout(FXObject*,FXSelector,void*);
+    long onCmdAbout(FXObject*, FXSelector, void*);
 
-    long onCmdStart(FXObject*,FXSelector,void*);
-    long onCmdStop(FXObject*,FXSelector,void*);
-    long onCmdStep(FXObject*,FXSelector,void*);
+    long onCmdStart(FXObject*, FXSelector, void*);
+    long onCmdStop(FXObject*, FXSelector, void*);
+    long onCmdStep(FXObject*, FXSelector, void*);
 
-    long onCmdNewView(FXObject*,FXSelector,void*);
+    long onCmdNewView(FXObject*, FXSelector, void*);
 
-    long onUpdOpen(FXObject*,FXSelector,void*);
-    long onUpdReload(FXObject*,FXSelector,void*);
-    long onUpdOpenRecent(FXObject*,FXSelector,void*);
-    long onUpdAddMicro(FXObject*,FXSelector,void*);
-    virtual long onUpdStart(FXObject*,FXSelector,void*);
-    long onUpdStop(FXObject*,FXSelector,void*);
-    long onUpdStep(FXObject*,FXSelector,void*);
-    long onUpdEditChosen(FXObject* sender,FXSelector,void* ptr);
-    virtual long onUpdEditBreakpoints(FXObject*,FXSelector,void*);
-    long onCmdClearMsgWindow(FXObject*,FXSelector,void*);
+    long onUpdOpen(FXObject*, FXSelector, void*);
+    long onUpdReload(FXObject*, FXSelector, void*);
+    long onUpdOpenRecent(FXObject*, FXSelector, void*);
+    long onUpdAddMicro(FXObject*, FXSelector, void*);
+    virtual long onUpdStart(FXObject*, FXSelector, void*);
+    long onUpdStop(FXObject*, FXSelector, void*);
+    long onUpdStep(FXObject*, FXSelector, void*);
+    long onUpdEditChosen(FXObject* sender, FXSelector, void* ptr);
+    virtual long onUpdEditBreakpoints(FXObject*, FXSelector, void*);
+    long onCmdClearMsgWindow(FXObject*, FXSelector, void*);
 
     long onLoadThreadEvent(FXObject*, FXSelector, void*);
     long onRunThreadEvent(FXObject*, FXSelector, void*);
     /// Somebody wants our clipped text
-    long onClipboardRequest(FXObject* sender,FXSelector sel,void* ptr);
+    long onClipboardRequest(FXObject* sender, FXSelector sel, void* ptr);
     /// @}
 
     FXGLCanvas* getBuildGLCanvas() const;
@@ -173,7 +177,7 @@ protected:
 
 private:
     /** starts to load a simulation */
-    void load(const std::string& file, bool isNet, bool isReload=false);
+    void load(const std::string& file, bool isNet, bool isReload = false);
 
     /** this method closes all windows and deletes the current simulation */
     void closeAllWindows();

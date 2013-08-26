@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSVehicleControl.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Wed, 10. Dec 2003
 /// @version $Id$
 ///
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -74,11 +77,11 @@ public:
 
 public:
     /// @brief Constructor
-    MSVehicleControl() throw();
+    MSVehicleControl() ;
 
 
     /// @brief Destructor
-    virtual ~MSVehicleControl() throw();
+    virtual ~MSVehicleControl() ;
 
 
     /// @name Vehicle creation
@@ -98,7 +101,7 @@ public:
      * @return The built vehicle (MSVehicle instance)
      */
     virtual SUMOVehicle* buildVehicle(SUMOVehicleParameter* defs, const MSRoute* route,
-                                      const MSVehicleType* type) throw(ProcessError);
+                                      const MSVehicleType* type) ;
     /// @}
 
 
@@ -118,7 +121,7 @@ public:
      * @param[in] v The vehicle
      * @return Whether the vehicle could be inserted (no other vehicle with the same id was inserted before)
      */
-    virtual bool addVehicle(const std::string& id, SUMOVehicle* v) throw();
+    virtual bool addVehicle(const std::string& id, SUMOVehicle* v) ;
 
 
     /** @brief Returns the vehicle with the given id
@@ -129,7 +132,7 @@ public:
      * @param[in] id The id of the vehicle to retrieve
      * @return The vehicle with the given id, 0 if no such vehicle exists
      */
-    SUMOVehicle* getVehicle(const std::string& id) const throw();
+    SUMOVehicle* getVehicle(const std::string& id) const ;
 
 
     /** @brief Deletes the vehicle
@@ -137,7 +140,7 @@ public:
      * @param[in] v The vehicle to delete
      * @todo Isn't this quite insecure?
      */
-    virtual void deleteVehicle(SUMOVehicle* v) throw();
+    virtual void deleteVehicle(SUMOVehicle* v) ;
 
 
     /** @brief Removes a vehicle after it has ended
@@ -151,21 +154,21 @@ public:
      *
      * @param[in] veh The vehicle to remove
      */
-    void scheduleVehicleRemoval(SUMOVehicle* veh) throw();
+    void scheduleVehicleRemoval(SUMOVehicle* veh) ;
 
 
     /** @brief Returns the begin of the internal vehicle map
      *
      * @return The begin of the internal vehicle map
      */
-    constVehIt loadedVehBegin() const throw();
+    constVehIt loadedVehBegin() const ;
 
 
     /** @brief Returns the end of the internal vehicle map
      *
      * @return The end of the internal vehicle map
      */
-    constVehIt loadedVehEnd() const throw();
+    constVehIt loadedVehEnd() const ;
     /// @}
 
 
@@ -180,7 +183,7 @@ public:
      *  vehicle.
      * @param[in] v The inserted vehicle
      */
-    void vehicleDeparted(const SUMOVehicle& v) throw();
+    void vehicleDeparted(const SUMOVehicle& v) ;
     /// @}
 
 
@@ -191,7 +194,7 @@ public:
     /** @brief Returns the number of build vehicles
      * @return The number of loaded (build) vehicles
      */
-    unsigned int getLoadedVehicleNo() const throw() {
+    unsigned int getLoadedVehicleNo() const {
         return myLoadedVehNo;
     }
 
@@ -199,7 +202,7 @@ public:
     /** @brief Returns the number of removed vehicles
      * @return The number of vehicles that have left the simulation
      */
-    unsigned int getEndedVehicleNo() const throw() {
+    unsigned int getEndedVehicleNo() const {
         return myEndedVehNo;
     }
 
@@ -207,7 +210,7 @@ public:
     /** @brief Returns the number of build and inserted, but not yet deleted vehicles
      * @return The number simulated vehicles (including those in teleporter)
      */
-    unsigned int getRunningVehicleNo() const throw() {
+    unsigned int getRunningVehicleNo() const {
         return myRunningVehNo;
     }
 
@@ -215,7 +218,7 @@ public:
     /** @brief Returns the number of inserted vehicles
      * @return The number of vehicles that have entered the simulation so far
      */
-    unsigned int getDepartedVehicleNo() const throw() {
+    unsigned int getDepartedVehicleNo() const {
         return myRunningVehNo + myEndedVehNo;
     }
 
@@ -223,11 +226,11 @@ public:
     /** @brief Returns the information whether the currently vehicle number is still in the given range
      * @return True iff the vehicle number is acceptable
      */
-    bool isInQuota(const SUMOReal frac) const throw() {
+    bool isInQuota(const SUMOReal frac) const {
         if (MSGlobals::gFractions.find(frac) == MSGlobals::gFractions.end()) {
-            return (myLoadedVehNo-1) % 1000 < (unsigned int)(frac*1000.);
+            return (myLoadedVehNo - 1) % 1000 < (unsigned int)(frac * 1000.);
         }
-        return (myLoadedVehNo-1) % MSGlobals::gFractions[frac].second < MSGlobals::gFractions[frac].first;
+        return (myLoadedVehNo - 1) % MSGlobals::gFractions[frac].second < MSGlobals::gFractions[frac].first;
     }
 
 
@@ -235,7 +238,7 @@ public:
      * or need to wait for a passenger
      * @return Number of active vehicles
      */
-    int getActiveVehicleCount() const throw() {
+    int getActiveVehicleCount() const {
         return myLoadedVehNo - (myWaitingForPerson + myEndedVehNo);
     }
     /// @}
@@ -248,14 +251,14 @@ public:
      *  The mean time vehicles had to wait for being inserted (-1 if no vehicle was inserted, yet)
      * @todo Enable this for guisim?
      */
-    void printMeanWaitingTime(OutputDevice& od) const throw();
+    void printMeanWaitingTime(OutputDevice& od) const ;
 
 
     /** @brief Returns the mean travel time of vehicles
      * The mean travel time of ended vehicles (-1 if no vehicle has ended, yet)
      * @todo Enable this for guisim?
      */
-    void printMeanTravelTime(OutputDevice& od) const throw();
+    void printMeanTravelTime(OutputDevice& od) const ;
     /// @}
 
 
@@ -276,7 +279,7 @@ public:
      * @param[in] vehType The vehicle type to add
      * @return Whether the vehicle type could be added
      */
-    bool addVType(MSVehicleType* vehType) throw();
+    bool addVType(MSVehicleType* vehType) ;
 
 
     /** @brief Adds a vehicle type distribution
@@ -292,7 +295,7 @@ public:
      * @param[in] vehTypeDistribution The vehicle type distribution to add
      * @return Whether the vehicle type could be added
      */
-    bool addVTypeDistribution(const std::string& id, RandomDistributor<MSVehicleType*> *vehTypeDistribution) throw();
+    bool addVTypeDistribution(const std::string& id, RandomDistributor<MSVehicleType*> *vehTypeDistribution) ;
 
 
     /** @brief Asks for a vehicle type distribution
@@ -302,27 +305,27 @@ public:
      * @param[in] id The id of the distribution
      * @return Whether the vehicle type distribution exists
      */
-    bool hasVTypeDistribution(const std::string& id) const throw();
+    bool hasVTypeDistribution(const std::string& id) const ;
 
 
     /** @brief Returns the named vehicle type or a sample from the named distribution
      * @param[in] id The id of the vehicle type to return. If left out, the default type is returned.
      * @return The named vehicle type, or 0 if no such type exists
      */
-    MSVehicleType* getVType(const std::string& id=DEFAULT_VTYPE_ID) throw();
+    MSVehicleType* getVType(const std::string& id = DEFAULT_VTYPE_ID) ;
 
 
     /** @brief Inserts ids of all known vehicle types and vehicle type distributions to the given vector
      * @param[in] into The vector to fill with ids
      */
-    void insertVTypeIDs(std::vector<std::string> &into) const throw();
+    void insertVTypeIDs(std::vector<std::string> &into) const ;
     /// @}
 
-    void addWaiting(const MSEdge* const edge, SUMOVehicle* vehicle) throw();
+    void addWaiting(const MSEdge* const edge, SUMOVehicle* vehicle) ;
 
-    void removeWaiting(const MSEdge* const edge, SUMOVehicle* vehicle) throw();
+    void removeWaiting(const MSEdge* const edge, SUMOVehicle* vehicle) ;
 
-    SUMOVehicle* getWaitingVehicle(const MSEdge* const edge, const std::set<std::string> &lines) throw();
+    SUMOVehicle* getWaitingVehicle(const MSEdge* const edge, const std::set<std::string> &lines) ;
 
     /** @brief increases the count of vehicles waiting for a person to allow recogniztion of person related deadlocks
      */
@@ -342,18 +345,18 @@ public:
     /** @brief Loads the state of this control from the given stream
      * @todo Does not work for microsim
      */
-    virtual void saveState(std::ostream& os) throw();
+    virtual void saveState(std::ostream& os) ;
 
     /** @brief Saves the current state into the given stream
      * @todo Does not work for microsim
      */
-    virtual void loadState(BinaryInputDevice& bis, const SUMOTime offset) throw();
+    virtual void loadState(BinaryInputDevice& bis, const SUMOTime offset) ;
     /// @}
     //
 
     /** @brief removes any vehicles that are still waiting
      */
-    void abortWaiting() throw();
+    void abortWaiting() ;
 
 
 private:
@@ -363,7 +366,7 @@ private:
      * @param[in] id The id of the vehicle type (distribution) to add
      * @return Whether the type (distribution) may be added
      */
-    bool checkVType(const std::string& id) throw();
+    bool checkVType(const std::string& id) ;
 
 
 protected:

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GenericSAXHandler.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A handler which converts occuring elements and attributes into enums
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -165,7 +168,7 @@ public:
      *
      * @todo Hmmm - this is as unsafe as having a direct access to the variable; recheck
      */
-    void setFileName(const std::string& name) throw();
+    void setFileName(const std::string& name) ;
 
 
     /**
@@ -173,7 +176,7 @@ public:
      *
      * @return The name of the currently processed file
      */
-    const std::string& getFileName() const throw();
+    const std::string& getFileName() const ;
 
 
     /// @name SAX ErrorHandler callbacks
@@ -187,7 +190,7 @@ public:
      *
      * @param[in] exception The occured exception to process
      */
-    void warning(const SAXParseException& exception) throw();
+    void warning(const SAXParseException& exception) ;
 
 
     /**
@@ -198,7 +201,7 @@ public:
      * @param[in] exception The occured exception to process
      * @exception ProcessError On any call
      */
-    void error(const SAXParseException& exception) throw(ProcessError);
+    void error(const SAXParseException& exception) ;
 
 
     /**
@@ -209,7 +212,7 @@ public:
      * @exception ProcessError On any call
      * @param[in] exception The occured exception to process
      */
-    void fatalError(const SAXParseException& exception) throw(ProcessError);
+    void fatalError(const SAXParseException& exception) ;
     //@}
 
 
@@ -224,7 +227,7 @@ protected:
      * @param[in] exception The name of the currently processed file
      * @return A string describing the given exception
      */
-    std::string buildErrorMessage(const SAXParseException& exception) throw();
+    std::string buildErrorMessage(const SAXParseException& exception) ;
 
 
     /**
@@ -268,7 +271,7 @@ private:
      * @param[in] name The string to convert
      * @return The string converted into a XMLCh-string
      */
-    XMLCh* convert(const std::string& name) const throw();
+    XMLCh* convert(const std::string& name) const ;
 
 
     /**
@@ -279,7 +282,7 @@ private:
      * @param[in] tag The string to convert
      * @return The int-value that represents the string, SUMO_TAG_NOTHING if the named attribute is not known
      */
-    int convertTag(const std::string& tag) const throw();
+    int convertTag(const std::string& tag) const ;
 
 
 private:

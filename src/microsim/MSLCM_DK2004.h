@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    MSLCM_DK2004.h
 /// @author  Daniel Krajzewicz
+/// @author  Friedemann Wesner
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 // A lane change model developed by D. Krajzewicz between 2004 and 2010
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -117,22 +121,22 @@ protected:
                        const std::pair<MSVehicle*, SUMOReal> &neighFollow);
 
     inline bool amBlockingLeader() {
-        return (myOwnState&LCA_AMBLOCKINGLEADER)!=0;
+        return (myOwnState & LCA_AMBLOCKINGLEADER) != 0;
     }
     inline bool amBlockingFollower() {
-        return (myOwnState&LCA_AMBLOCKINGFOLLOWER)!=0;
+        return (myOwnState & LCA_AMBLOCKINGFOLLOWER) != 0;
     }
     inline bool amBlockingFollowerNB() {
-        return (myOwnState&LCA_AMBLOCKINGFOLLOWER_DONTBRAKE)!=0;
+        return (myOwnState & LCA_AMBLOCKINGFOLLOWER_DONTBRAKE) != 0;
     }
     inline bool amBlockingFollowerPlusNB() {
-        return (myOwnState&(LCA_AMBLOCKINGFOLLOWER|LCA_AMBLOCKINGFOLLOWER_DONTBRAKE))!=0;
+        return (myOwnState & (LCA_AMBLOCKINGFOLLOWER | LCA_AMBLOCKINGFOLLOWER_DONTBRAKE)) != 0;
     }
     inline bool currentDistDisallows(SUMOReal dist, int laneOffset, SUMOReal lookForwardDist) {
-        return dist/(abs(laneOffset))<lookForwardDist;
+        return dist / (abs(laneOffset)) < lookForwardDist;
     }
     inline bool currentDistAllows(SUMOReal dist, int laneOffset, SUMOReal lookForwardDist) {
-        return dist/abs(laneOffset)>lookForwardDist;
+        return dist / abs(laneOffset) > lookForwardDist;
     }
 
     typedef std::pair<SUMOReal, int> Info;

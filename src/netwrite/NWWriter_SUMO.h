@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    NWWriter_SUMO.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 04.05.2011
 /// @version $Id$
 ///
 // Exporter writing networks using the SUMO format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -81,7 +84,7 @@ public:
      * @param[in] plain Whether only plain-xml output should be written (omit some attributes)
      */
     static void writeConnection(OutputDevice& into, const NBEdge& from, const NBEdge::Connection& c,
-                                bool includeInternal, ConnectionStyle style=SUMONET);
+                                bool includeInternal, ConnectionStyle style = SUMONET);
 
     /// @brief writes the given prohibitions
     static void writeProhibitions(OutputDevice& into, const NBConnectionProhibits& prohibitions);

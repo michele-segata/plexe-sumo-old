@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    GUIDetectorBuilder.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Tue, 22 Jul 2003
 /// @version $Id$
 ///
 // Builds detectors for guisim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -57,11 +59,11 @@ public:
      *
      * @param[in] net The network to which's detector control built detector shall be added
      */
-    GUIDetectorBuilder(MSNet& net) throw();
+    GUIDetectorBuilder(MSNet& net) ;
 
 
     /// @brief Destructor
-    ~GUIDetectorBuilder() throw();
+    ~GUIDetectorBuilder() ;
 
 
     /// @name Detector creating methods
@@ -79,7 +81,7 @@ public:
      * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
      */
     virtual MSDetectorFileOutput* createInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, bool splitByType) throw();
+            MSLane* lane, SUMOReal pos, bool splitByType) ;
 
 
     /** @brief Creates an instance of an e1 detector using the given values
@@ -92,7 +94,7 @@ public:
      * @param[in] od The output device the loop shall use
      */
     virtual MSDetectorFileOutput* createInstantInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, OutputDevice& od) throw();
+            MSLane* lane, SUMOReal pos, OutputDevice& od) ;
 
 
 #ifdef HAVE_MESOSIM
@@ -106,7 +108,7 @@ public:
      * @todo Position is not used, herein!?
      */
     virtual MEInductLoop* createMEInductLoop(const std::string& id,
-            MESegment* s, SUMOReal pos) throw();
+            MESegment* s, SUMOReal pos) ;
 #endif
 
 
@@ -126,7 +128,7 @@ public:
             DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold,
             SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold) throw();
+            SUMOReal jamDistThreshold) ;
 
 
     /** @brief Creates an instance of an e2ol-detector using the given values
@@ -146,7 +148,7 @@ public:
         const std::string& id, DetectorUsage usage, MSLane* lane, SUMOReal pos,
         SUMOTime haltingTimeThreshold,
         SUMOReal haltingSpeedThreshold,
-        SUMOReal jamDistThreshold) throw();
+        SUMOReal jamDistThreshold) ;
 
 
     /** @brief Creates an instance of an e3 detector using the given values
@@ -163,7 +165,7 @@ public:
             const CrossSectionVector& entries,
             const CrossSectionVector& exits,
             SUMOReal haltingSpeedThreshold,
-            SUMOTime haltingTimeThreshold) throw();
+            SUMOTime haltingTimeThreshold) ;
     /// @}
 
 

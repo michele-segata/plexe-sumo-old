@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSDevice_Vehroutes.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Laura Bieker
+/// @author  Michael Behrisch
 /// @date    Fri, 30.01.2009
 /// @version $Id$
 ///
 // A device which collects info on the vehicle trip
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -56,7 +59,7 @@ std::map<const SUMOTime, std::string> MSDevice_Vehroutes::myRouteInfos;
 // static initialisation methods
 // ---------------------------------------------------------------------------
 void
-MSDevice_Vehroutes::init() throw(IOError) {
+MSDevice_Vehroutes::init() {
     if (OptionsCont::getOptions().isSet("vehroute-output")) {
         OutputDevice::createDeviceByOption("vehroute-output", "routes");
         mySaveExits = OptionsCont::getOptions().getBool("vehroute-output.exit-times");
@@ -69,7 +72,7 @@ MSDevice_Vehroutes::init() throw(IOError) {
 
 
 MSDevice_Vehroutes*
-MSDevice_Vehroutes::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into, unsigned int maxRoutes) throw() {
+MSDevice_Vehroutes::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into, unsigned int maxRoutes) {
     if (maxRoutes < INT_MAX) {
         return new MSDevice_Vehroutes(v, "vehroute_" + v.getID(), maxRoutes);
     }
@@ -99,14 +102,14 @@ MSDevice_Vehroutes::StateListener::vehicleStateChanged(const SUMOVehicle* const 
 // ---------------------------------------------------------------------------
 // MSDevice_Vehroutes-methods
 // ---------------------------------------------------------------------------
-MSDevice_Vehroutes::MSDevice_Vehroutes(SUMOVehicle& holder, const std::string& id, unsigned int maxRoutes) throw()
+MSDevice_Vehroutes::MSDevice_Vehroutes(SUMOVehicle& holder, const std::string& id, unsigned int maxRoutes)
     : MSDevice(holder, id), myCurrentRoute(&holder.getRoute()), myMaxRoutes(maxRoutes), myLastSavedAt(0) {
     myCurrentRoute->addReference();
 }
 
 
-MSDevice_Vehroutes::~MSDevice_Vehroutes() throw() {
-    for (std::vector<RouteReplaceInfo>::iterator i=myReplacedRoutes.begin(); i!=myReplacedRoutes.end(); ++i) {
+MSDevice_Vehroutes::~MSDevice_Vehroutes() {
+    for (std::vector<RouteReplaceInfo>::iterator i = myReplacedRoutes.begin(); i != myReplacedRoutes.end(); ++i) {
         (*i).route->release();
     }
     myCurrentRoute->release();
@@ -115,7 +118,7 @@ MSDevice_Vehroutes::~MSDevice_Vehroutes() throw() {
 
 
 bool
-MSDevice_Vehroutes::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) throw() {
+MSDevice_Vehroutes::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) {
     if (mySorted && reason == NOTIFICATION_DEPARTED && myStateListener.myDevices[&veh] == this) {
         myDepartureCounts[MSNet::getInstance()->getCurrentTimeStep()]++;
     }
@@ -124,7 +127,7 @@ MSDevice_Vehroutes::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification r
 
 
 bool
-MSDevice_Vehroutes::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/, MSMoveReminder::Notification reason) throw() {
+MSDevice_Vehroutes::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/, MSMoveReminder::Notification reason) {
     if (mySaveExits && reason != NOTIFICATION_LANE_CHANGE) {
         if (reason != NOTIFICATION_TELEPORT && myLastSavedAt == veh.getEdge()) { // need to check this for internal lanes
             myExits.back() = MSNet::getInstance()->getCurrentTimeStep();
@@ -141,8 +144,8 @@ void
 MSDevice_Vehroutes::writeXMLRoute(OutputDevice& os, int index) const {
     // check if a previous route shall be written
     os.openTag("route");
-    if (index>=0) {
-        assert((int) myReplacedRoutes.size()>index);
+    if (index >= 0) {
+        assert((int) myReplacedRoutes.size() > index);
         // write edge on which the vehicle was when the route was valid
         os << " replacedOnEdge=\"";
         if (myReplacedRoutes[index].edge) {
@@ -152,11 +155,11 @@ MSDevice_Vehroutes::writeXMLRoute(OutputDevice& os, int index) const {
         os << "\" replacedAtTime=\"" << time2string(myReplacedRoutes[index].time) << "\" probability=\"0\" edges=\"";
         // get the route
         int i = index;
-        while (i > 0 && myReplacedRoutes[i-1].edge) {
+        while (i > 0 && myReplacedRoutes[i - 1].edge) {
             i--;
         }
         const MSEdge* lastEdge = 0;
-        for (; i<index; ++i) {
+        for (; i < index; ++i) {
             myReplacedRoutes[i].route->writeEdgeIDs(os, lastEdge, myReplacedRoutes[i].edge);
             lastEdge = myReplacedRoutes[i].edge;
         }
@@ -165,9 +168,9 @@ MSDevice_Vehroutes::writeXMLRoute(OutputDevice& os, int index) const {
         os << " edges=\"";
         const MSEdge* lastEdge = 0;
         if (myHolder.getNumberReroutes() > 0) {
-            assert(myReplacedRoutes.size()<=myHolder.getNumberReroutes());
+            assert(myReplacedRoutes.size() <= myHolder.getNumberReroutes());
             unsigned int i = static_cast<unsigned int>(myReplacedRoutes.size());
-            while (i > 0 && myReplacedRoutes[i-1].edge) {
+            while (i > 0 && myReplacedRoutes[i - 1].edge) {
                 i--;
             }
             for (; i < myReplacedRoutes.size(); ++i) {
@@ -191,7 +194,7 @@ MSDevice_Vehroutes::writeXMLRoute(OutputDevice& os, int index) const {
 
 
 void
-MSDevice_Vehroutes::generateOutput() const throw(IOError) {
+MSDevice_Vehroutes::generateOutput() const {
     OutputDevice_String od(1);
     od.openTag("vehicle").writeAttr(SUMO_ATTR_ID, myHolder.getID());
     if (myHolder.getVehicleType().getID() != DEFAULT_VTYPE_ID) {
@@ -205,7 +208,7 @@ MSDevice_Vehroutes::generateOutput() const throw(IOError) {
     od << ">\n";
     if (myReplacedRoutes.size() > 0) {
         od.openTag("routeDistribution") << ">\n";
-        for (unsigned int i=0; i<myReplacedRoutes.size(); ++i) {
+        for (unsigned int i = 0; i < myReplacedRoutes.size(); ++i) {
             writeXMLRoute(od, i);
         }
     }

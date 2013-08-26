@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
 @file    netextract.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Laura Bieker
+@author  Michael Behrisch
 @date    2007-02-21
 @version $Id$
 
@@ -14,7 +16,8 @@ todo:
 - parse connections
 - parse tls information
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 """
 @file    costFunctionChecker.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
+@author  Daniel Krajzewicz
+@author  Jakob Erdmann
 @date    2009-08-31
 @version $Id$
 
 Run duarouter repeatedly and simulate weight changes via a cost function.
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import os, sys, subprocess, types
@@ -27,7 +30,7 @@ def call(command, log):
         sys.exit(retCode) 
 
 def writeRouteConf(step, options, file, output):
-    fd = open("iteration_" + str(step) + ".rou.cfg", "w")
+    fd = open("iteration_" + str(step) + ".duarcfg", "w")
     print >> fd, """<configuration>
     <input>
         <net-file value="%s"/>""" % options.net
@@ -197,7 +200,7 @@ for step in range(options.firstStep, options.lastStep):
         btime = datetime.now()
         print ">>> Begin time: %s" % btime
         writeRouteConf(step, options, file, output)
-        retCode = call([duaBinary, "-c", "iteration_%s.rou.cfg" % step], log)
+        retCode = call([duaBinary, "-c", "iteration_%s.duarcfg" % step], log)
         etime = datetime.now()
         print ">>> End time: %s" % etime
         print ">>> Duration: %s" % (etime-btime)

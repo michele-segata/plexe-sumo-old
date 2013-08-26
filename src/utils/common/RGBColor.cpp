@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    RGBColor.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A RGB-color definition
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -51,23 +55,23 @@ const RGBColor RGBColor::DEFAULT_COLOR = RGBColor::parseColor(RGBColor::DEFAULT_
 // ===========================================================================
 // method definitions
 // ===========================================================================
-RGBColor::RGBColor() throw()
+RGBColor::RGBColor()
     : myRed(-1), myGreen(-1), myBlue(-1) {}
 
 
-RGBColor::RGBColor(SUMOReal red, SUMOReal green, SUMOReal blue) throw()
+RGBColor::RGBColor(SUMOReal red, SUMOReal green, SUMOReal blue)
     : myRed(red), myGreen(green), myBlue(blue) {}
 
 
-RGBColor::RGBColor(const RGBColor& col) throw()
+RGBColor::RGBColor(const RGBColor& col)
     : myRed(col.myRed), myGreen(col.myGreen), myBlue(col.myBlue) {}
 
 
-RGBColor::~RGBColor() throw() {}
+RGBColor::~RGBColor() {}
 
 
 void
-RGBColor::set(SUMOReal r, SUMOReal g, SUMOReal b) throw() {
+RGBColor::set(SUMOReal r, SUMOReal g, SUMOReal b) {
     myRed = r;
     myGreen = g;
     myBlue = b;
@@ -87,14 +91,14 @@ operator<<(std::ostream& os, const RGBColor& col) {
 
 bool
 RGBColor::operator==(const RGBColor& c) const {
-    return fabs(myRed-c.myRed)<0.1 && fabs(myGreen-c.myGreen)<0.1 && fabs(myBlue-c.myBlue)<0.1;
+    return fabs(myRed - c.myRed) < 0.1 && fabs(myGreen - c.myGreen) < 0.1 && fabs(myBlue - c.myBlue) < 0.1;
     //return myRed==c.myRed&&myGreen==c.myGreen&&myBlue==c.myBlue;
 }
 
 
 bool
 RGBColor::operator!=(const RGBColor& c) const {
-    return fabs(myRed-c.myRed)>0.1 || fabs(myGreen-c.myGreen)>0.1 || fabs(myBlue-c.myBlue)>0.1;
+    return fabs(myRed - c.myRed) > 0.1 || fabs(myGreen - c.myGreen) > 0.1 || fabs(myBlue - c.myBlue) > 0.1;
     //return myRed!=c.myRed||myGreen!=c.myGreen||myBlue!=c.myBlue;
 }
 
@@ -111,7 +115,7 @@ RGBColor::changedBrightness(SUMOReal change) {
 RGBColor
 RGBColor::parseColor(const std::string& coldef) throw(EmptyData, NumberFormatException) {
     StringTokenizer st(coldef, ",");
-    if (st.size()<3) {
+    if (st.size() < 3) {
         throw EmptyData();
     }
     SUMOReal r = TplConvert<char>::_2SUMOReal(st.next().c_str());
@@ -124,7 +128,7 @@ RGBColor::parseColor(const std::string& coldef) throw(EmptyData, NumberFormatExc
 RGBColor
 RGBColor::parseColorReporting(
     const std::string& coldef, const std::string& objecttype,
-    const char* objectid, bool report, bool& ok) throw() {
+    const char* objectid, bool report, bool& ok) {
     UNUSED_PARAMETER(report);
     try {
         return parseColor(coldef);
@@ -134,11 +138,11 @@ RGBColor::parseColorReporting(
     ok = false;
     std::ostringstream oss;
     oss << "Attribute 'color' in definition of ";
-    if (objectid==0) {
+    if (objectid == 0) {
         oss << "a ";
     }
     oss << objecttype;
-    if (objectid!=0) {
+    if (objectid != 0) {
         oss << " '" << objectid << "'";
     }
     oss << " is not a valid color.";
@@ -148,13 +152,13 @@ RGBColor::parseColorReporting(
 
 
 RGBColor
-RGBColor::getDefaultColor() throw() {
+RGBColor::getDefaultColor() {
     return parseColor(RGBColor::DEFAULT_COLOR_STRING);
 }
 
 
 RGBColor
-RGBColor::interpolate(const RGBColor& minColor, const RGBColor& maxColor, SUMOReal weight) throw() {
+RGBColor::interpolate(const RGBColor& minColor, const RGBColor& maxColor, SUMOReal weight) {
     if (weight < 0) {
         weight = 0;
     }
@@ -169,7 +173,7 @@ RGBColor::interpolate(const RGBColor& minColor, const RGBColor& maxColor, SUMORe
 
 
 RGBColor
-RGBColor::fromHSV(SUMOReal h, SUMOReal s, SUMOReal v) throw() {
+RGBColor::fromHSV(SUMOReal h, SUMOReal s, SUMOReal v) {
     // H is given on [0, 6] or UNDEFINED. S and V are given on [0, 1].
     // RGB are each returned on [0, 1].
     //float h = HSV.H, s = HSV.S, v = HSV.V,
@@ -179,25 +183,25 @@ RGBColor::fromHSV(SUMOReal h, SUMOReal s, SUMOReal v) throw() {
     //if (h == UNDEFINED) RETURN_RGB(v, v, v);
     i = int(floor(h));
     f = float(h - i);
-    if (!(i&1)) {
+    if (!(i & 1)) {
         f = 1 - f;    // if i is even
     }
     m = float(v * (1 - s));
     n = float(v * (1 - s * f));
     switch (i) {
-    case 6:
-    case 0:
-        return RGBColor(v, n, m);
-    case 1:
-        return RGBColor(n, v, m);
-    case 2:
-        return RGBColor(m, v, n);
-    case 3:
-        return RGBColor(m, n, v);
-    case 4:
-        return RGBColor(n, m, v);
-    case 5:
-        return RGBColor(v, m, n);
+        case 6:
+        case 0:
+            return RGBColor(v, n, m);
+        case 1:
+            return RGBColor(n, v, m);
+        case 2:
+            return RGBColor(m, v, n);
+        case 3:
+            return RGBColor(m, n, v);
+        case 4:
+            return RGBColor(n, m, v);
+        case 5:
+            return RGBColor(v, m, n);
     }
     return RGBColor(1, 1, 1);
 }

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    MsgRetrievingFunction.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 24 Oct 2003
 /// @version $Id$
 ///
 // Encapsulates an object's method for using it as a message retriever
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -63,7 +65,7 @@ public:
 
 
     /// @brief Destructor
-    ~MsgRetrievingFunction() throw() {}
+    ~MsgRetrievingFunction() {}
 
 
 protected:
@@ -78,14 +80,14 @@ protected:
      * @return The used stream
      * @see postWriteHook
      */
-    std::ostream& getOStream() throw() {
+    std::ostream& getOStream() {
         return myMessage;
     }
 
 
     /** @brief Sends the data which was written to the string stream via the retrieving function.
      */
-    virtual void postWriteHook() throw() {
+    virtual void postWriteHook() {
         (myObject->*myOperation)(myMsgType, myMessage.str());
         myMessage.str("");
     }

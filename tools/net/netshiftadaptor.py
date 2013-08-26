@@ -1,6 +1,7 @@
 """
 @file    netshiftadaptor.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2008-09-01
 @version $Id$
 
@@ -17,7 +18,8 @@ When "reproject" is called, all nodes' position
  of the second network are reprojected so that
  they match positions within the first network.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

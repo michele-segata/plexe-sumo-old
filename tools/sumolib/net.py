@@ -1,13 +1,17 @@
 """
 @file    net.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Laura Bieker
+@author  Karol Stosiek
+@author  Michael Behrisch
 @date    2008-03-27
 @version $Id$
 
 This file contains a content handler for parsing sumo network xml files
 and classes that represent the network.
 
-Copyright (C) 2008-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

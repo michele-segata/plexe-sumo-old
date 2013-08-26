@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIDanielPerspectiveChanger.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A class that allows to steer the visual output in dependence to
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -82,7 +85,7 @@ public:
     virtual SUMOReal getZoom() const;
 
     /// Centers the view to the given position, setting it to a size that covers the radius
-    void centerTo(const Position& pos, SUMOReal radius, bool applyZoom=true);
+    void centerTo(const Position& pos, SUMOReal radius, bool applyZoom = true);
 
     /** @brief Sets the viewport */
     void setViewport(SUMOReal zoom, SUMOReal xPos, SUMOReal yPos);

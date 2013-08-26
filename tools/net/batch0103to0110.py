@@ -1,14 +1,16 @@
 #!/usr/bin/python
 """
 @file    batch0103to0110.py
-@author  Daniel.Krajzewicz@dlr.de
+@author  Daniel Krajzewicz
+@author  Michael Behrisch
 @date    2007
 @version $Id$
 
 Applies the transformation on all nets in the given folder or 
  - if no folder is given - in the base folder (../..).
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

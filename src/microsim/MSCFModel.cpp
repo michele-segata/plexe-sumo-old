@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    MSCFModel.cpp
 /// @author  Tobias Mayer
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    Mon, 27 Jul 2009
 /// @version $Id$
 ///
 // The car-following model abstraction
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -54,10 +59,10 @@ MSCFModel::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
     //  in this case, we neglect dawdling, nonetheless, using
     //  vSafe does not incorporate speed reduction due to interaction
     //  on lane changing
-    veh->setPreDawdleAcceleration(SPEED2ACCEL(vSafe-oldV));
+    veh->setPreDawdleAcceleration(SPEED2ACCEL(vSafe - oldV));
     const SUMOReal vMin = MAX2((SUMOReal) 0, oldV - ACCEL2SPEED(myDecel));
     const SUMOReal vMax = MIN3(veh->getLane()->getMaxSpeed(), maxNextSpeed(oldV), vSafe);
-    assert(vMin<=vMax);
+    assert(vMin <= vMax);
     return veh->getLaneChangeModel().patchSpeed(vMin, vMax, vMax, *this);
 }
 
@@ -79,10 +84,10 @@ MSCFModel::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 
 void
 MSCFModel::leftVehicleVsafe(const MSVehicle* const ego, const MSVehicle* const neigh, SUMOReal& vSafe) const {
-    if (neigh!=0&&neigh->getSpeed()>60./3.6) {
-        SUMOReal mgap = MAX2((SUMOReal) 0, neigh->getPositionOnLane()-neigh->getVehicleType().getLengthWithGap()-ego->getPositionOnLane());
+    if (neigh != 0 && neigh->getSpeed() > 60. / 3.6) {
+        SUMOReal mgap = MAX2((SUMOReal) 0, neigh->getPositionOnLane() - neigh->getVehicleType().getLengthWithGap() - ego->getPositionOnLane());
         SUMOReal nVSafe = followSpeed(ego, ego->getSpeed(), mgap, neigh->getSpeed(), neigh->getCarFollowModel().getMaxDecel());
-        if (mgap-neigh->getSpeed()>=0) {
+        if (mgap - neigh->getSpeed() >= 0) {
             vSafe = MIN2(vSafe, nVSafe);
         }
     }
@@ -101,7 +106,7 @@ MSCFModel::brakeGap(SUMOReal speed) const {
        for small values of steps (up to 10 maybe) and store them in an array */
     const SUMOReal speedReduction = ACCEL2SPEED(getMaxDecel());
     const int steps = int(speed / speedReduction);
-    return SPEED2DIST(steps * speed - speedReduction * steps *(steps+1) / 2) + speed * myHeadwayTime;
+    return SPEED2DIST(steps * speed - speedReduction * steps * (steps + 1) / 2) + speed * myHeadwayTime;
 }
 
 

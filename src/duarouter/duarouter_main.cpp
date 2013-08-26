@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    duarouter_main.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Thu, 06 Jun 2002
 /// @version $Id$
 ///
 // Main for DUAROUTER
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -97,15 +100,11 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
     // initialise the loader
     loader.openRoutes(net);
     // prepare the output
-    try {
-        net.openOutput(oc.getString("output-file"), true);
-    } catch (IOError& e) {
-        throw e;
-    }
+    net.openOutput(oc.getString("output-file"), true);
     // build the router
     SUMOAbstractRouter<ROEdge, ROVehicle> *router;
-    std::string measure = oc.getString("weight-attribute");
-    if (measure=="traveltime") {
+    const std::string measure = oc.getString("weight-attribute");
+    if (measure == "traveltime") {
         if (net.hasRestrictions()) {
             router = new DijkstraRouterTT_Direct<ROEdge, ROVehicle, prohibited_withRestrictions<ROEdge, ROVehicle> >(
                 net.getEdgeNo(), oc.getBool("ignore-errors"), &ROEdge::getTravelTime);
@@ -115,20 +114,23 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
         }
     } else {
         DijkstraRouterEffort_Direct<ROEdge, ROVehicle, prohibited_withRestrictions<ROEdge, ROVehicle> >::Operation op;
-        if (measure=="CO") {
+        if (measure == "CO") {
             op = &ROEdge::getCOEffort;
-        } else if (measure=="CO2") {
+        } else if (measure == "CO2") {
             op = &ROEdge::getCO2Effort;
-        } else if (measure=="PMx") {
+        } else if (measure == "PMx") {
             op = &ROEdge::getPMxEffort;
-        } else if (measure=="HC") {
+        } else if (measure == "HC") {
             op = &ROEdge::getHCEffort;
-        } else if (measure=="NOx") {
+        } else if (measure == "NOx") {
             op = &ROEdge::getNOxEffort;
-        } else if (measure=="fuel") {
+        } else if (measure == "fuel") {
             op = &ROEdge::getFuelEffort;
-        } else if (measure=="noise") {
+        } else if (measure == "noise") {
             op = &ROEdge::getNoiseEffort;
+        } else {
+            net.closeOutput();
+            throw ProcessError("Unknown measure (weight attribute '" + measure + "')!");
         }
         if (net.hasRestrictions()) {
             router = new DijkstraRouterEffort_Direct<ROEdge, ROVehicle, prohibited_withRestrictions<ROEdge, ROVehicle> >(
@@ -197,11 +199,11 @@ main(int argc, char** argv) {
             WRITE_ERROR(TplConvert<XMLCh>::_2str(e.getMessage()));
             ret = 1;
         }
-        if (MsgHandler::getErrorInstance()->wasInformed()||ret!=0) {
+        if (MsgHandler::getErrorInstance()->wasInformed() || ret != 0) {
             throw ProcessError();
         }
     } catch (ProcessError& e) {
-        if (std::string(e.what())!=std::string("Process Error") && std::string(e.what())!=std::string("")) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
@@ -215,7 +217,7 @@ main(int argc, char** argv) {
     delete net;
     OutputDevice::closeAll();
     SystemFrame::close();
-    if (ret==0) {
+    if (ret == 0) {
         std::cout << "Success." << std::endl;
     }
     return ret;

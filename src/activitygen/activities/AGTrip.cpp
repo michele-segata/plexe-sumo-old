@@ -1,20 +1,23 @@
 /****************************************************************************/
 /// @file    AGTrip.cpp
 /// @author  Piotr Woznica
+/// @author  Daniel Krajzewicz
+/// @author  Walter Bamberger
 /// @date    July 2010
 /// @version $Id$
 ///
 // Class containing all information of a given trip (car, bus)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -67,7 +70,7 @@ AGTrip::addLayOver(AGPosition by) {
 void
 AGTrip::addLayOver(AGTrip& trip) {
     std::list<AGPosition>::iterator it;
-    for (it=trip.passBy.begin() ; it!=trip.passBy.end() ; ++it) {
+    for (it = trip.passBy.begin() ; it != trip.passBy.end() ; ++it) {
         passBy.push_back(*it);
     }
     passBy.push_back(trip.to);
@@ -76,7 +79,7 @@ AGTrip::addLayOver(AGTrip& trip) {
 void
 AGTrip::addLayOverWithoutDestination(AGTrip& trip) {
     std::list<AGPosition>::iterator it;
-    for (it=trip.passBy.begin() ; it!=trip.passBy.end() ; ++it) {
+    for (it = trip.passBy.begin() ; it != trip.passBy.end() ; ++it) {
         passBy.push_back(*it);
     }
 }
@@ -117,14 +120,14 @@ AGTrip::getTimeTrip(SUMOReal secPerKm) {
     std::list<AGPosition> positions;
     positions.push_back(from);
     std::list<AGPosition>::iterator it;
-    for (it=passBy.begin() ; it!=passBy.end() ; ++it) {
+    for (it = passBy.begin() ; it != passBy.end() ; ++it) {
         positions.push_back(*it);
     }
     positions.push_back(to);
 
     bool firstPass = true;
     AGPosition* temp;
-    for (it=positions.begin() ; it!=positions.end() ; ++it) {
+    for (it = positions.begin() ; it != positions.end() ; ++it) {
         if (firstPass) {
             temp = &*it;
             continue;
@@ -132,7 +135,7 @@ AGTrip::getTimeTrip(SUMOReal secPerKm) {
         dist += temp->distanceTo(*it);
         temp = &*it;
     }
-    return (int)(secPerKm *(dist / 1000.0));
+    return (int)(secPerKm * (dist / 1000.0));
 }
 
 int
@@ -144,7 +147,7 @@ AGTrip::getArrTime(SUMOReal secPerKm) {
 int
 AGTrip::getRideBackArrTime(SUMOReal secPerKm) {
     int arrAtTime = getArrTime(secPerKm);
-    int time = (int)(secPerKm * to.distanceTo(from) /1000.0);
+    int time = (int)(secPerKm * to.distanceTo(from) / 1000.0);
     int arrTime = arrAtTime + time;
     return arrTime;
 }

@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    IDSupplier.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A class that generates enumerated and prefixed string-ids
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -44,7 +46,7 @@
 class IDSupplier {
 public:
     /// Constructor
-    IDSupplier(const std::string& prefix="", long begin=0);
+    IDSupplier(const std::string& prefix = "", long begin = 0);
 
     /** @brief Constructor
      * @param[in] prefix The string to use as ID prefix

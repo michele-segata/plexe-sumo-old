@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    NIVissimExtendedEdgePoint.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -54,7 +56,7 @@ public:
      * @param[in] assignedVehicles Vehicle (type) indices which should be regarded by this point
      */
     NIVissimExtendedEdgePoint(int edgeid, const IntVector& lanes,
-                              SUMOReal position, const IntVector& assignedVehicles) throw();
+                              SUMOReal position, const IntVector& assignedVehicles) ;
     ~NIVissimExtendedEdgePoint();
     int getEdgeID() const;
     SUMOReal getPosition() const;
@@ -69,7 +71,7 @@ public:
      *
      * @param[in] The built edge
      */
-    void recheckLanes(const NBEdge* const edge) throw();
+    void recheckLanes(const NBEdge* const edge) ;
 
 private:
     int myEdgeID;

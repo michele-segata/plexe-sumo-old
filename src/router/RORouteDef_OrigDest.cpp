@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    RORouteDef_OrigDest.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A route where only the origin and the destination edges are known
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -52,31 +54,31 @@ RORouteDef_OrigDest::RORouteDef_OrigDest(const std::string& id,
         const RGBColor* const color,
         const ROEdge* from,
         const ROEdge* to,
-        bool removeFirst) throw()
+        bool removeFirst)
     : RORouteDef(id, color), myFrom(from), myTo(to), myCurrent(0),
       myRemoveFirst(removeFirst) {}
 
 
-RORouteDef_OrigDest::~RORouteDef_OrigDest() throw() {
+RORouteDef_OrigDest::~RORouteDef_OrigDest() {
     delete myCurrent;
 }
 
 
 RORoute*
-RORouteDef_OrigDest::buildCurrentRoute(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+RORouteDef_OrigDest::buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                                        SUMOTime begin, const ROVehicle& veh) const {
     std::vector<const ROEdge*> edges;
     router.compute(myFrom, myTo, &veh, begin, edges);
-    if (myRemoveFirst&&edges.size()>2) {
+    if (myRemoveFirst && edges.size() > 2) {
         edges.erase(edges.begin());
-        edges.erase(edges.end()-1);
+        edges.erase(edges.end() - 1);
     }
     return new RORoute(myID, 0, 1, edges, copyColorIfGiven());
 }
 
 
 void
-RORouteDef_OrigDest::addAlternative(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+RORouteDef_OrigDest::addAlternative(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                                     const ROVehicle* const veh, RORoute* current, SUMOTime begin) {
     myCurrent = current;
     myStartTime = begin;
@@ -92,7 +94,7 @@ RORouteDef_OrigDest::copy(const std::string& id) const {
 
 
 OutputDevice&
-RORouteDef_OrigDest::writeXMLDefinition(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
+RORouteDef_OrigDest::writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
                                         OutputDevice& dev, const ROVehicle* const veh, bool asAlternatives, bool withExitTimes) const {
     return myCurrent->writeXMLDefinition(router, dev, veh, asAlternatives, withExitTimes);
 }

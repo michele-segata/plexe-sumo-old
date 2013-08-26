@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    GUIIconSubSys.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Andreas Gaubatz
 /// @date    Mon, 08.03.2004
 /// @version $Id$
 ///
 // Helper for icons loading and usage
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -213,8 +216,8 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     myIcons[ICON_CUT_SWELL]    = new FXXPMIcon(a, cut_xpm);
 
     // ... and create them
-    for (int i=0; i<ICON_MAX; i++) {
-        if (myIcons[i]!=0) {
+    for (int i = 0; i < ICON_MAX; i++) {
+        if (myIcons[i] != 0) {
             myIcons[i]->create();
         }
     }
@@ -222,7 +225,7 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
 
 
 GUIIconSubSys::~GUIIconSubSys() {
-    for (int i=0; i<ICON_MAX; i++) {
+    for (int i = 0; i < ICON_MAX; i++) {
         delete myIcons[i];
     }
 }
@@ -230,7 +233,7 @@ GUIIconSubSys::~GUIIconSubSys() {
 
 void
 GUIIconSubSys::init(FXApp* a) {
-    assert(myInstance==0);
+    assert(myInstance == 0);
     myInstance = new GUIIconSubSys(a);
 }
 

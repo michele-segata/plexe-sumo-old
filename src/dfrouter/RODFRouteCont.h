@@ -1,18 +1,20 @@
 /****************************************************************************/
 /// @file    RODFRouteCont.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // A container for routes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -61,10 +63,10 @@ class OutputDevice;
 class RODFRouteCont {
 public:
     /// @brief Constructor
-    RODFRouteCont() throw();
+    RODFRouteCont() ;
 
     /// @brief Destructor
-    ~RODFRouteCont() throw();
+    ~RODFRouteCont() ;
 
 
     /** @brief Adds a route to the container
@@ -78,7 +80,7 @@ public:
      * @param[in] desc The route description to add
      * @see setID
      */
-    void addRouteDesc(RODFRouteDesc& desc) throw();
+    void addRouteDesc(RODFRouteDesc& desc) ;
 
 
     /** @brief Removes the given route description from the container
@@ -90,7 +92,7 @@ public:
      * @return Whether the route was removed (a similar was found)
      * @see RODFRouteCont::route_finder
      */
-    bool removeRouteDesc(RODFRouteDesc& desc) throw();
+    bool removeRouteDesc(RODFRouteDesc& desc) ;
 
 
     /** @brief Saves routes
@@ -102,13 +104,13 @@ public:
      * @exception IOError not yet implemented
      */
     bool save(std::vector<std::string> &saved,
-              const std::string& prependix, OutputDevice& out) throw(IOError);
+              const std::string& prependix, OutputDevice& out);
 
 
     /** @brief Returns the container of stored routes
      * @return The stored routes
      */
-    std::vector<RODFRouteDesc> &get() throw() {
+    std::vector<RODFRouteDesc> &get() {
         return myRoutes;
     }
 
@@ -118,7 +120,7 @@ public:
      * Done using by_distance_sorter.
      * @see RODFRouteCont::by_distance_sorter
      */
-    void sortByDistance() throw();
+    void sortByDistance() ;
 
 
     /** @brief Removes "illegal" routes
@@ -128,12 +130,12 @@ public:
      * @param[in] illegals List of edge combinations that shall not be passed
      * @todo Not used, yet
      */
-    void removeIllegal(const std::vector<std::vector<ROEdge*> > &illegals) throw();
+    void removeIllegal(const std::vector<std::vector<ROEdge*> > &illegals) ;
 
 
     /** @brief All routes are replaced by their versions extended by follower edges
     */
-    void addAllEndFollower() throw();
+    void addAllEndFollower() ;
 
 
 protected:
@@ -144,7 +146,7 @@ protected:
      *
      * @param[in] desc The route description to add
      */
-    void setID(RODFRouteDesc& desc) const throw();
+    void setID(RODFRouteDesc& desc) const ;
 
 
     /** @brief A class for sorting route descriptions by their length */
@@ -155,7 +157,7 @@ protected:
 
         /// @brief Sorting function; compares RODFRouteDesc::distance2Last
         int operator()(const RODFRouteDesc& p1, const RODFRouteDesc& p2) {
-            return p1.distance2Last<p2.distance2Last;
+            return p1.distance2Last < p2.distance2Last;
         }
     };
 
@@ -170,7 +172,7 @@ protected:
 
         /**  @brief The comparing function; compares passed edges */
         bool operator()(const RODFRouteDesc& desc) {
-            return myDesc.edges2Pass==desc.edges2Pass;
+            return myDesc.edges2Pass == desc.edges2Pass;
         }
 
     private:

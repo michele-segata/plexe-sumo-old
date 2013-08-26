@@ -3,14 +3,16 @@
 
 """
 @file    network_statistics.py
-@author  Ronald.Nippold@dlr.de
+@author  Ronald Nippold
+@author  Michael Behrisch
 @date    20089-10-06
 @version
 @usage   "python network_statistics.py network-file-to-be-analyzed.net.xml"
 
 Prints some information about a given network
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 

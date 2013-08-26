@@ -10,7 +10,7 @@ copy_test_path:input_definition2.def.xml
 copy_test_path:input_trips.trips.xml
 copy_test_path:input_districts.net.xml
 copy_test_path:busnet.net.xml
-copy_test_path:sumo.sumo.cfg
+copy_test_path:sumo.sumocfg
 copy_test_path:settings.xml
 copy_test_path:dlr.gif
 
@@ -73,6 +73,9 @@ c2x_transmitted_info:<!--{[->]}-->
 c2x_vehicle_in_range:<!--{[->]}-->
 c2x_saved_info_freq:<!--{[->]}-->
 c2x_edge_near_info:<!--{[->]}-->
+errors:Leaked object at 
+errors:\*\*\* \d+ leaks found
+errors:delete: freed
 
 [floating_point_tolerance]
 detector:0.0101
@@ -90,10 +93,10 @@ rawdump:0.0101
 aggregated1:0.00001
 
 [batch_extra_version]
-default:perf
-meso:perf
+gcc4:perf
+gcc4_64:perf
+msvc10Win32:perf
+msvc10x64:perf
 meso:meso
-msvc10mesox64:perf
-msvc10mesox64:meso
-msvc10mesoWin32:perf
 msvc10mesoWin32:meso
+msvc10mesox64:meso

@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    PositionVector.h
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A list of 2D-positions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -50,24 +53,24 @@ class PositionVector
         : public AbstractPoly {
 public:
     /// Definition of the list of points
-    typedef std::deque<Position> ContType;
+    typedef std::vector<Position> ContType;
 
 public:
     /** @brief Constructor
      *
      * Creates an empty position vector
      */
-    PositionVector() throw();
+    PositionVector() ;
 
 
     /** @brief Constructor
      * @param[in] v The vector to copy
      */
-    PositionVector(const std::vector<Position> &v) throw();
+    PositionVector(const std::vector<Position> &v) ;
 
 
     /// @brief Destructor
-    ~PositionVector() throw();
+    ~PositionVector() ;
 
 
     /// @name Adding items to the container
@@ -76,13 +79,13 @@ public:
     /** @brief Appends the given position to the list
      * @param[in] p The position to append
      */
-    void push_back(const Position& p) throw();
+    void push_back(const Position& p) ;
 
 
     /** @brief Appends all positions from the given vector
      * @param[in] p The vector from which values shall be appended
      */
-    void push_back(const PositionVector& p) throw();
+    void push_back(const PositionVector& p) ;
     /// @}
 
 
@@ -92,11 +95,11 @@ public:
 
     /** @brief Returns the information whether the position vector describes a polygon lying around the given point
         The optional offset is added to the polygon's bounderies */
-    bool around(const Position& p, SUMOReal offset=0) const;
+    bool around(const Position& p, SUMOReal offset = 0) const;
 
     /** @brief Returns the information whether the given polygon overlaps with this
         Again a boundary may be specified */
-    bool overlapsWith(const AbstractPoly& poly, SUMOReal offset=0) const;
+    bool overlapsWith(const AbstractPoly& poly, SUMOReal offset = 0) const;
 
     /** Returns the information whether this list of points interesects the given line */
     bool intersects(const Position& p1, const Position& p2) const;
@@ -108,12 +111,16 @@ public:
     Position intersectsAtPoint(const Position& p1,
                                const Position& p2) const; // !!!
 
-    PositionVector intersectsAtPoints(const Position& p1,
-                                      const Position& p2) const; // !!!
+    /** Returns any intersection Points with the given line (ignoring z-coordinates) */
+    PositionVector intersectionPoints2D(const Line& line) const;
 
-    DoubleVector intersectsAtLengths(const PositionVector& s) const; // !!!
+    /** @brief For all intersections between this vector and other, 
+     * return the 2D-length of the subvector from this vectors start to the intersection */
+    DoubleVector intersectsAtLengths2D(const PositionVector& other) const; // !!!
 
-    DoubleVector intersectsAtLengths(const Line& s) const; // !!!
+    /** @brief For all intersections between this vector and line, 
+     * return the 2D-length of the subvector from this vectors start to the intersection */
+    DoubleVector intersectsAtLengths2D(const Line& line) const; // !!!
 
     /** Returns the position of the intersection */
     Position intersectsAtPoint(const PositionVector& v1) const; // !!!
@@ -167,7 +174,7 @@ public:
     SUMOReal area() const;
 
     /// Returns the information whether this polygon lies partially within the given polygon
-    bool partialWithin(const AbstractPoly& poly, SUMOReal offset=0) const;
+    bool partialWithin(const AbstractPoly& poly, SUMOReal offset = 0) const;
 
     /// Returns the first position
     const Position& getBegin() const;
@@ -257,7 +264,7 @@ public:
 
     void eraseAt(int i);
 
-    SUMOReal nearest_position_on_line_to_point(const Position& p, bool perpendicular=true) const;
+    SUMOReal nearest_position_on_line_to_point(const Position& p, bool perpendicular = true) const;
 
     /* @brief index of the closest position to p
      * @note: may only be called for a non-empty vector */

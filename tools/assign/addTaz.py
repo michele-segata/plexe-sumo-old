@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 """
 @file    addTaz.py
-@author  Michael.Behrisch@dlr.de
+@author  Michael Behrisch
 @date    2009-05-20
 @version $Id$
 
-Copyright (C) 2009-2011 DLR (http://www.dlr.de/) and contributors
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import sys

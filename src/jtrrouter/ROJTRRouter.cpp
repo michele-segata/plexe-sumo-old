@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    ROJTRRouter.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, 20 Jan 2004
 /// @version $Id$
 ///
 // Computes routes using junction turning percentages
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -57,19 +60,19 @@ ROJTRRouter::compute(const ROEdge* from, const ROEdge* /*to*/,
                      SUMOTime time, std::vector<const ROEdge*> &into) {
     const ROJTREdge* current = static_cast<const ROJTREdge*>(from);
     // route until a sinks has been found
-    while (current!=0
+    while (current != 0
             &&
-            current->getType()!=ROEdge::ET_SINK
+            current->getType() != ROEdge::ET_SINK
             &&
-            (int) into.size()<myMaxEdges) {
+            (int) into.size() < myMaxEdges) {
 
         into.push_back(current);
         time += (SUMOTime) current->getTravelTime(vehicle, time);
         current = current->chooseNext(myIgnoreClasses ? 0 : vehicle, time);
-        assert(myIgnoreClasses||current==0||!current->prohibits(vehicle));
+        assert(myIgnoreClasses || current == 0 || !current->prohibits(vehicle));
     }
     // check whether no valid ending edge was found
-    if ((int) into.size()>=myMaxEdges) {
+    if ((int) into.size() >= myMaxEdges) {
         if (myAcceptAllDestination) {
             return;
         } else {
@@ -83,16 +86,16 @@ ROJTRRouter::compute(const ROEdge* from, const ROEdge* /*to*/,
         }
     }
     // append the sink
-    if (current!=0) {
+    if (current != 0) {
         into.push_back(current);
     }
 }
 
 
 SUMOReal
-ROJTRRouter::recomputeCosts(const std::vector<const ROEdge*> &edges, const ROVehicle* const v, SUMOTime time) throw() {
+ROJTRRouter::recomputeCosts(const std::vector<const ROEdge*> &edges, const ROVehicle* const v, SUMOTime time) const {
     SUMOReal costs = 0;
-    for (std::vector<const ROEdge*>::const_iterator i=edges.begin(); i!=edges.end(); i++) {
+    for (std::vector<const ROEdge*>::const_iterator i = edges.begin(); i != edges.end(); i++) {
         /*
         if (PF::operator()(*i, v)) {
             return -1;

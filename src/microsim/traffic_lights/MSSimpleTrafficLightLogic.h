@@ -1,18 +1,23 @@
 /****************************************************************************/
 /// @file    MSSimpleTrafficLightLogic.h
 /// @author  Daniel Krajzewicz
+/// @author  Julia Ringel
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Friedemann Wesner
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A fixed traffic light logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -177,6 +182,10 @@ public:
      */
     void changeStepAndDuration(MSTLLogicControl& tlcontrol, SUMOTime simStep,
                                unsigned int step, SUMOTime stepDuration);
+
+    /** @brief Replaces the phases
+     */
+    void setPhases(const Phases& phases);
     /// @}
 
 
@@ -187,6 +196,10 @@ protected:
     /// @brief The current step
     unsigned int myStep;
 
+
+private:
+    /// @brief frees memory responsibilities
+    void deletePhases();
 
 };
 

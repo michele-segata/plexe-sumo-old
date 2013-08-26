@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    SUMOVehicleClass.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Walter Bamberger
 /// @date    2006-01-24
 /// @version $Id$
 ///
 // Definitions of SUMO vehicle classes and helper functions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -121,7 +125,7 @@ getVehicleClassCompoundName(int id) {
             ret += ("|" + *it);
         }
     }
-    if (ret.length()>0) {
+    if (ret.length() > 0) {
         return ret.substr(1);
     } else {
         return ret;
@@ -133,7 +137,7 @@ std::string
 getVehicleClassNames(const SUMOVehicleClasses& ids) {
     std::ostringstream oss;
     bool hadOne = false;
-    for (SUMOVehicleClasses::const_iterator i=ids.begin(); i!=ids.end(); ++i) {
+    for (SUMOVehicleClasses::const_iterator i = ids.begin(); i != ids.end(); ++i) {
         if (hadOne) {
             oss << ' ';
         }
@@ -190,7 +194,7 @@ parseVehicleClasses(const std::string& allowedS,
 void
 parseVehicleClasses(const std::vector<std::string> &classesS,
                     SUMOVehicleClasses& classes) {
-    for (std::vector<std::string>::const_iterator i=classesS.begin(); i!=classesS.end(); ++i) {
+    for (std::vector<std::string>::const_iterator i = classesS.begin(); i != classesS.end(); ++i) {
         classes.insert(getVehicleClassID(*i));
     }
 }
@@ -214,22 +218,32 @@ getVehicleShapeName(SUMOVehicleShape id) {
 
 // ------------ Conversion of SUMOEmissionClass
 SUMOEmissionClass
-getVehicleEmissionTypeID(const std::string& name) throw(ProcessError) {
+getVehicleEmissionTypeID(const std::string& name) {
     try {
-        if (name=="") {
+        if (name == "") {
             return SVE_UNKNOWN;
-        } else if (name=="zero") {
+        } else if (name == "zero") {
             return SVE_ZERO_EMISSIONS;
-        } else if (name.find("HDV_3_")==0) {
-            return (SUMOEmissionClass)(SVE_HDV_3_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_")+1).c_str()));
-        } else if (name.find("HDV_6_")==0) {
-            return (SUMOEmissionClass)(SVE_HDV_6_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_")+1).c_str()));
-        } else if (name.find("HDV_12_")==0) {
-            return (SUMOEmissionClass)(SVE_HDV_12_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_")+1).c_str()));
-        } else if (name.find("P_7_")==0) {
-            return (SUMOEmissionClass)(SVE_P_LDV_7_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_")+1).c_str()));
-        } else if (name.find("P_14_")==0) {
-            return (SUMOEmissionClass)(SVE_P_LDV_14_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_")+1).c_str()));
+        } else if (name.find("HDV_3_") == 0) {
+            return (SUMOEmissionClass)(SVE_HDV_3_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("HDV_6_") == 0) {
+            return (SUMOEmissionClass)(SVE_HDV_6_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("HDV_12_") == 0) {
+            return (SUMOEmissionClass)(SVE_HDV_12_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("P_7_") == 0) {
+            return (SUMOEmissionClass)(SVE_P_LDV_7_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("P_14_") == 0) {
+            return (SUMOEmissionClass)(SVE_P_LDV_14_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("HDV_A0_3_") == 0) {
+            return (SUMOEmissionClass)(SVE_HDV_A0_3_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("HDV_A0_6_") == 0) {
+            return (SUMOEmissionClass)(SVE_HDV_A0_6_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("HDV_A0_12_") == 0) {
+            return (SUMOEmissionClass)(SVE_HDV_A0_12_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("P_A0_7_") == 0) {
+            return (SUMOEmissionClass)(SVE_P_LDV_A0_7_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+        } else if (name.find("P_A0_14_") == 0) {
+            return (SUMOEmissionClass)(SVE_P_LDV_A0_14_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
         }
     } catch (NumberFormatException&) {
     }
@@ -239,21 +253,21 @@ getVehicleEmissionTypeID(const std::string& name) throw(ProcessError) {
 
 std::string
 getVehicleEmissionTypeName(SUMOEmissionClass id) {
-    if (id==SVE_ZERO_EMISSIONS) {
+    if (id == SVE_ZERO_EMISSIONS) {
         return "zero";
     }
-    if (id<0) {
+    if (id < 0) {
         return "";
-    } else if (id<3) {
+    } else if (id < 3) {
         return "HDV_3_" + toString(int(id));
-    } else if (id<3+6) {
-        return "HDV_6_" + toString(int(id-3));
-    } else if (id<3+6+12) {
-        return "HDV_12_" + toString(int(id-3-6));
-    } else if (id<3+6+12+7) {
-        return "P_7_" + toString(int(id-3-6-12));
-    } else if (id<3+6+12+7+14) {
-        return "P_14_" + toString(int(id-3-6-12-7));
+    } else if (id < 3 + 6) {
+        return "HDV_6_" + toString(int(id - 3));
+    } else if (id < 3 + 6 + 12) {
+        return "HDV_12_" + toString(int(id - 3 - 6));
+    } else if (id < 3 + 6 + 12 + 7) {
+        return "P_7_" + toString(int(id - 3 - 6 - 12));
+    } else if (id < 3 + 6 + 12 + 7 + 14) {
+        return "P_14_" + toString(int(id - 3 - 6 - 12 - 7));
     }
     return "";
 }

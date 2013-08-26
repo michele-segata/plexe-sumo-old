@@ -7,12 +7,13 @@
 // A storage for type mappings
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -39,16 +40,16 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-PCTypeMap::PCTypeMap() throw() {}
+PCTypeMap::PCTypeMap() {}
 
 
-PCTypeMap::~PCTypeMap() throw() {}
+PCTypeMap::~PCTypeMap() {}
 
 
 bool
 PCTypeMap::add(const std::string& id, const std::string& newid,
                const std::string& color, const std::string& prefix,
-               int layer, bool discard, bool allowFill) throw() {
+               int layer, bool discard, bool allowFill) {
     if (has(id)) {
         return false;
     }
@@ -65,14 +66,14 @@ PCTypeMap::add(const std::string& id, const std::string& newid,
 
 
 const PCTypeMap::TypeDef&
-PCTypeMap::get(const std::string& id) throw() {
+PCTypeMap::get(const std::string& id) {
     return myTypes.find(id)->second;
 }
 
 
 bool
-PCTypeMap::has(const std::string& id) throw() {
-    return myTypes.find(id)!=myTypes.end();
+PCTypeMap::has(const std::string& id) {
+    return myTypes.find(id) != myTypes.end();
 }
 
 

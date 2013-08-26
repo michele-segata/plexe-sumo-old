@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    MSBaseVehicle.cpp
 /// @author  Michael Behrisch
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Mon, 8 Nov 2010
 /// @version $Id$
 ///
 // A base class for vehicle implementations
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -50,7 +53,7 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route, const MSVehicleType* type) throw(ProcessError) :
+MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route, const MSVehicleType* type) :
     myParameter(pars),
     myRoute(route),
     myType(type),
@@ -67,42 +70,42 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route, c
     MSDevice_Tripinfo::buildVehicleDevices(*this, myDevices);
     MSDevice_Routing::buildVehicleDevices(*this, myDevices);
     MSDevice_HBEFA::buildVehicleDevices(*this, myDevices);
-    for (std::vector< MSDevice* >::iterator dev=myDevices.begin(); dev != myDevices.end(); ++dev) {
+    for (std::vector< MSDevice* >::iterator dev = myDevices.begin(); dev != myDevices.end(); ++dev) {
         myMoveReminders.push_back(std::make_pair(*dev, 0.));
     }
     myRoute->addReference();
     calculateArrivalPos();
 }
 
-MSBaseVehicle::~MSBaseVehicle() throw() {
+MSBaseVehicle::~MSBaseVehicle() {
     myRoute->release();
     delete myParameter;
-    for (std::vector< MSDevice* >::iterator dev=myDevices.begin(); dev != myDevices.end(); ++dev) {
+    for (std::vector< MSDevice* >::iterator dev = myDevices.begin(); dev != myDevices.end(); ++dev) {
         delete(*dev);
     }
 }
 
 
 const std::string&
-MSBaseVehicle::getID() const throw() {
+MSBaseVehicle::getID() const {
     return myParameter->id;
 }
 
 
 const SUMOVehicleParameter&
-MSBaseVehicle::getParameter() const throw() {
+MSBaseVehicle::getParameter() const {
     return *myParameter;
 }
 
 
 const MSRoute&
-MSBaseVehicle::getRoute() const throw() {
+MSBaseVehicle::getRoute() const {
     return *myRoute;
 }
 
 
 const MSVehicleType&
-MSBaseVehicle::getVehicleType() const throw() {
+MSBaseVehicle::getVehicleType() const {
     return *myType;
 }
 
@@ -131,7 +134,7 @@ MSBaseVehicle::adaptMaxSpeed(SUMOReal referenceSpeed) {
 
 
 const MSEdge*
-MSBaseVehicle::succEdge(unsigned int nSuccs) const throw() {
+MSBaseVehicle::succEdge(unsigned int nSuccs) const {
     if (myCurrEdge + nSuccs < myRoute->end()) {
         return *(myCurrEdge + nSuccs);
     } else {
@@ -147,11 +150,11 @@ MSBaseVehicle::getEdge() const {
 
 
 void
-MSBaseVehicle::reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle> &router, bool withTaz) throw() {
+MSBaseVehicle::reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle> &router, bool withTaz) {
     // check whether to reroute
     std::vector<const MSEdge*> edges;
-    if (withTaz && MSEdge::dictionary(myParameter->fromTaz+"-source") && MSEdge::dictionary(myParameter->toTaz+"-sink")) {
-        router.compute(MSEdge::dictionary(myParameter->fromTaz+"-source"), MSEdge::dictionary(myParameter->toTaz+"-sink"), this, t, edges);
+    if (withTaz && MSEdge::dictionary(myParameter->fromTaz + "-source") && MSEdge::dictionary(myParameter->toTaz + "-sink")) {
+        router.compute(MSEdge::dictionary(myParameter->fromTaz + "-source"), MSEdge::dictionary(myParameter->toTaz + "-sink"), this, t, edges);
         if (edges.size() >= 2) {
             edges.erase(edges.begin());
             edges.pop_back();
@@ -168,14 +171,14 @@ MSBaseVehicle::reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle> &rout
 
 
 bool
-MSBaseVehicle::replaceRouteEdges(const MSEdgeVector& edges, bool onInit) throw() {
+MSBaseVehicle::replaceRouteEdges(const MSEdgeVector& edges, bool onInit) {
     // build a new id, first
     std::string id = getID();
-    if (id[0]!='!') {
+    if (id[0] != '!') {
         id = "!" + id;
     }
-    if (myRoute->getID().find("!var#")!=std::string::npos) {
-        id = myRoute->getID().substr(0, myRoute->getID().rfind("!var#")+4) + toString(getNumberReroutes() + 1);
+    if (myRoute->getID().find("!var#") != std::string::npos) {
+        id = myRoute->getID().substr(0, myRoute->getID().rfind("!var#") + 4) + toString(getNumberReroutes() + 1);
     } else {
         id = id + "!var#1";
     }
@@ -194,32 +197,32 @@ MSBaseVehicle::replaceRouteEdges(const MSEdgeVector& edges, bool onInit) throw()
 
 
 SUMOReal
-MSBaseVehicle::getPreDawdleAcceleration() const throw() {
+MSBaseVehicle::getPreDawdleAcceleration() const {
     return 0;
 }
 
 
 void
-MSBaseVehicle::onDepart() throw() {
+MSBaseVehicle::onDepart() {
     myDeparture = MSNet::getInstance()->getCurrentTimeStep();
     MSNet::getInstance()->getVehicleControl().vehicleDeparted(*this);
 }
 
 
 SUMOTime
-MSBaseVehicle::getDeparture() const throw() {
+MSBaseVehicle::getDeparture() const {
     return myDeparture;
 }
 
 
 unsigned int
-MSBaseVehicle::getNumberReroutes() const throw() {
+MSBaseVehicle::getNumberReroutes() const {
     return myNumberReroutes;
 }
 
 
 void
-MSBaseVehicle::addPerson(MSPerson* /*person*/) throw() {
+MSBaseVehicle::addPerson(MSPerson* /*person*/) {
 }
 
 bool
@@ -229,18 +232,18 @@ MSBaseVehicle::isStopped() const {
 
 
 bool
-MSBaseVehicle::hasValidRoute(std::string& msg) const throw() {
+MSBaseVehicle::hasValidRoute(std::string& msg) const {
     MSRouteIterator last = myRoute->end() - 1;
     // check connectivity, first
-    for (MSRouteIterator e=myCurrEdge; e!=last; ++e) {
-        if ((*e)->allowedLanes(**(e+1), myType->getVehicleClass())==0) {
-            msg = "No connection between '" + (*e)->getID() + "' and '" + (*(e+1))->getID() + "'.";
+    for (MSRouteIterator e = myCurrEdge; e != last; ++e) {
+        if ((*e)->allowedLanes(**(e + 1), myType->getVehicleClass()) == 0) {
+            msg = "No connection between '" + (*e)->getID() + "' and '" + (*(e + 1))->getID() + "'.";
             return false;
         }
     }
     last = myRoute->end();
     // check usable lanes, then
-    for (MSRouteIterator e=myCurrEdge; e!=last; ++e) {
+    for (MSRouteIterator e = myCurrEdge; e != last; ++e) {
         if ((*e)->prohibits(this)) {
             msg = "Edge '" + (*e)->getID() + "' prohibits.";
             return false;
@@ -251,14 +254,14 @@ MSBaseVehicle::hasValidRoute(std::string& msg) const throw() {
 
 
 void
-MSBaseVehicle::addReminder(MSMoveReminder* rem) throw() {
+MSBaseVehicle::addReminder(MSMoveReminder* rem) {
     myMoveReminders.push_back(std::make_pair(rem, 0.));
 }
 
 
 void
-MSBaseVehicle::removeReminder(MSMoveReminder* rem) throw() {
-    for (MoveReminderCont::iterator r=myMoveReminders.begin(); r!=myMoveReminders.end(); ++r) {
+MSBaseVehicle::removeReminder(MSMoveReminder* rem) {
+    for (MoveReminderCont::iterator r = myMoveReminders.begin(); r != myMoveReminders.end(); ++r) {
         if (r->first == rem) {
             myMoveReminders.erase(r);
             return;
@@ -268,8 +271,8 @@ MSBaseVehicle::removeReminder(MSMoveReminder* rem) throw() {
 
 
 void
-MSBaseVehicle::activateReminders(const MSMoveReminder::Notification reason) throw() {
-    for (MoveReminderCont::iterator rem=myMoveReminders.begin(); rem!=myMoveReminders.end();) {
+MSBaseVehicle::activateReminders(const MSMoveReminder::Notification reason) {
+    for (MoveReminderCont::iterator rem = myMoveReminders.begin(); rem != myMoveReminders.end();) {
         if (rem->first->notifyEnter(*this, reason)) {
             ++rem;
         } else {
@@ -280,23 +283,23 @@ MSBaseVehicle::activateReminders(const MSMoveReminder::Notification reason) thro
 
 
 void
-MSBaseVehicle::calculateArrivalPos() throw() {
+MSBaseVehicle::calculateArrivalPos() {
     const SUMOReal lastLaneLength = (myRoute->getLastEdge()->getLanes())[0]->getLength();
     switch (myParameter->arrivalPosProcedure) {
-    case ARRIVAL_POS_DEFAULT:
-    case ARRIVAL_POS_GIVEN:
-        // Maybe we should warn the user about invalid inputs!
-        myArrivalPos = MIN2(myParameter->arrivalPos, lastLaneLength);
-        if (myArrivalPos < 0) {
-            myArrivalPos = MAX2(myArrivalPos + lastLaneLength, static_cast<SUMOReal>(0));
-        }
-        break;
-    case ARRIVAL_POS_RANDOM:
-        myArrivalPos = RandHelper::rand(static_cast<SUMOReal>(0), lastLaneLength);
-        break;
-    case ARRIVAL_POS_MAX:
-        myArrivalPos = lastLaneLength;
-        break;
+        case ARRIVAL_POS_GIVEN:
+            // Maybe we should warn the user about invalid inputs!
+            myArrivalPos = MIN2(myParameter->arrivalPos, lastLaneLength);
+            if (myArrivalPos < 0) {
+                myArrivalPos = MAX2(myArrivalPos + lastLaneLength, static_cast<SUMOReal>(0));
+            }
+            break;
+        case ARRIVAL_POS_RANDOM:
+            myArrivalPos = RandHelper::rand(static_cast<SUMOReal>(0), lastLaneLength);
+            break;
+        case ARRIVAL_POS_MAX:
+        case ARRIVAL_POS_DEFAULT:
+            myArrivalPos = lastLaneLength;
+            break;
     }
 }
 

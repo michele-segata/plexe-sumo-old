@@ -1,18 +1,21 @@
 /****************************************************************************/
 /// @file    ROVehicleCont.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Sascha Krieg
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A container for vehicles sorted by their departure time
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -42,15 +45,15 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-ROVehicleCont::ROVehicleCont() throw() {}
+ROVehicleCont::ROVehicleCont() {}
 
 
-ROVehicleCont::~ROVehicleCont() throw() {}
+ROVehicleCont::~ROVehicleCont() {}
 
 
 const ROVehicle*
-ROVehicleCont::getTopVehicle() const throw() {
-    if (size()==0) {
+ROVehicleCont::getTopVehicle() const {
+    if (size() == 0) {
         return 0;
     }
     return mySorted.top();
@@ -58,7 +61,7 @@ ROVehicleCont::getTopVehicle() const throw() {
 
 
 bool
-ROVehicleCont::add(const std::string& id, ROVehicle* item) throw() {
+ROVehicleCont::add(const std::string& id, ROVehicle* item) {
     if (NamedObjectCont<ROVehicle*>::add(id, item)) {
         mySorted.push(item);
         return true;
@@ -68,16 +71,16 @@ ROVehicleCont::add(const std::string& id, ROVehicle* item) throw() {
 
 
 void
-ROVehicleCont::clear() throw() {
+ROVehicleCont::clear() {
     mySorted = std::priority_queue<ROVehicle*, std::vector<ROVehicle*>, ROVehicleByDepartureComperator>();
     NamedObjectCont<ROVehicle*>::clear();
 }
 
 
 bool
-ROVehicleCont::erase(const std::string& id) throw() {
+ROVehicleCont::erase(const std::string& id) {
     const ROVehicle* const topVeh = getTopVehicle();
-    bool wasTop = topVeh!=0&&topVeh->getID()==id;
+    bool wasTop = topVeh != 0 && topVeh->getID() == id;
     if (!NamedObjectCont<ROVehicle*>::erase(id)) {
         return false;
     }
@@ -91,11 +94,11 @@ ROVehicleCont::erase(const std::string& id) throw() {
 
 
 void
-ROVehicleCont::rebuildSorted() throw() {
+ROVehicleCont::rebuildSorted() {
     mySorted = std::priority_queue<ROVehicle*, std::vector<ROVehicle*>, ROVehicleByDepartureComperator>();
     std::map<std::string, ROVehicle*>::const_iterator i;
     const std::map<std::string, ROVehicle*> &mmap = getMyMap();
-    for (i=mmap.begin(); i!=mmap.end(); ++i) {
+    for (i = mmap.begin(); i != mmap.end(); ++i) {
         mySorted.push((*i).second);
     }
 }

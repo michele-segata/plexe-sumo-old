@@ -8,12 +8,13 @@
 // since NBLoadedTLDef is quite vissim specific)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -65,12 +66,12 @@ public:
 
 
     /// @brief Destructor
-    ~NBLoadedSUMOTLDef() throw();
+    ~NBLoadedSUMOTLDef() ;
 
     /** @brief Informs edges about being controlled by a tls
      * @param[in] ec The container of edges
      */
-    void setTLControllingInformation(const NBEdgeCont& ec) const throw();
+    void setTLControllingInformation(const NBEdgeCont& ec) const ;
 
     /** @brief Replaces occurences of the removed edge in incoming/outgoing edges of all definitions
      * @param[in] removed The removed edge
@@ -78,7 +79,7 @@ public:
      * @param[in] outgoing The edges to use instead if an outgoing edge was removed
      */
     void remapRemoved(NBEdge* removed,
-                      const EdgeVector& incoming, const EdgeVector& outgoing) throw();
+                      const EdgeVector& incoming, const EdgeVector& outgoing) ;
 
 
     /** @brief Replaces a removed edge/lane
@@ -88,7 +89,7 @@ public:
      * @param[in] byLane This edge's lane to insert instead
      */
     void replaceRemoved(NBEdge* removed, int removedLane,
-                        NBEdge* by, int byLane) throw();
+                        NBEdge* by, int byLane) ;
 
     /** @brief Adds a phase to the logic
      * the new phase is inserted at the end of the list of already added phases
@@ -107,7 +108,7 @@ public:
      * if recontruct=true, reconstructs the logic and informs the edges for immediate use in NETEDIT
      * @note: tlIndex is not necessarily unique. we need the whole connection data here
      */
-    void removeConnection(const NBConnection& conn, bool reconstruct=true);
+    void removeConnection(const NBConnection& conn, bool reconstruct = true);
 
     /** @brief Returns the internal logic
      */
@@ -120,7 +121,7 @@ protected:
     /** @brief Collects the links participating in this traffic light
      *    does nothing because the links are already loaded
      */
-    void collectLinks() throw(ProcessError) {}
+    void collectLinks() {}
 
 
     /** @brief Computes the traffic light logic finally in dependence to the type
@@ -129,7 +130,7 @@ protected:
      * @return The computed logic
      */
     NBTrafficLightLogic* myCompute(const NBEdgeCont& ec,
-                                   unsigned int brakingTime) throw();
+                                   unsigned int brakingTime) ;
 
     bool amInvalid() const;
 

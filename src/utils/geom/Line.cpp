@@ -1,18 +1,22 @@
 /****************************************************************************/
 /// @file    Line.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
+/// @author  Laura Bieker
 /// @date    2003-08-14
 /// @version $Id$
 ///
 // }
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -88,13 +92,13 @@ Line::p2() const {
 Position
 Line::getPositionAtDistance(SUMOReal offset) const {
     SUMOReal length = myP1.distanceTo(myP2);
-    if (length==0) {
-        if (offset!=0) {
+    if (length == 0) {
+        if (offset != 0) {
             throw InvalidArgument("Invalid offset " + toString(offset) + " for Line with length " + toString(length));;
         }
         return myP1;
     }
-    return myP1 + ((myP2 - myP1) * (offset/length));
+    return myP1 + ((myP2 - myP1) * (offset / length));
 }
 
 
@@ -107,11 +111,11 @@ Line::move2side(SUMOReal amount) {
 
 
 DoubleVector
-Line::intersectsAtLengths(const PositionVector& v) {
-    PositionVector p = v.intersectsAtPoints(myP1, myP2);
+Line::intersectsAtLengths2D(const PositionVector& v) {
+    PositionVector p = v.intersectionPoints2D(*this);
     DoubleVector ret;
-    for (size_t i=0; i<p.size(); i++) {
-        ret.push_back(myP1.distanceTo(p[int(i)]));
+    for (size_t i = 0; i < p.size(); i++) {
+        ret.push_back(myP1.distanceTo2D(p[int(i)]));
     }
     return ret;
 }
@@ -119,20 +123,20 @@ Line::intersectsAtLengths(const PositionVector& v) {
 
 SUMOReal
 Line::atan2Angle() const {
-    return atan2(myP1.x()-myP2.x(), myP1.y()-myP2.y());
+    return atan2(myP1.x() - myP2.x(), myP1.y() - myP2.y());
 }
 
 
 SUMOReal
 Line::atan2DegreeAngle() const {
-    return (SUMOReal) atan2(myP1.x()-myP2.x(), myP1.y()-myP2.y()) *(SUMOReal) 180.0 / (SUMOReal) PI;
+    return (SUMOReal) atan2(myP1.x() - myP2.x(), myP1.y() - myP2.y()) * (SUMOReal) 180.0 / (SUMOReal) PI;
 }
 
 
 SUMOReal
 Line::atan2PositiveAngle() const {
     SUMOReal angle = atan2Angle();
-    if (angle<0) {
+    if (angle < 0) {
         angle = (SUMOReal) PI * (SUMOReal) 2.0 + angle;
     }
     return angle;
@@ -151,11 +155,14 @@ Line::intersects(const Line& l) const {
 
 
 SUMOReal
+Line::length2D() const {
+    return myP1.distanceTo2D(myP2);
+}
+
+
+SUMOReal
 Line::length() const {
-    return sqrt(
-               (myP1.x()-myP2.x())*(myP1.x()-myP2.x())
-               +
-               (myP1.y()-myP2.y())*(myP1.y()-myP2.y()));
+    return myP1.distanceTo(myP2);
 }
 
 
@@ -191,10 +198,10 @@ Line::reverse() {
 
 
 SUMOReal
-Line::intersectsAtLength(const Line& v) {
+Line::intersectsAtLength2D(const Line& v) {
     Position pos =
         GeomHelper::intersection_position(myP1, myP2, v.myP1, v.myP2);
-    return GeomHelper::nearest_position_on_line_to_point(myP1, myP2, pos);
+    return GeomHelper::nearest_position_on_line_to_point2D(myP1, myP2, pos);
 }
 
 
