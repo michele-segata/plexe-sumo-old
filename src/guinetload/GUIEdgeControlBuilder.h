@@ -63,11 +63,11 @@ public:
      *
      * @param[in] glObjectIDStorage Storage of gl-ids used to assign new ids to built edges
      */
-    GUIEdgeControlBuilder() ;
+    GUIEdgeControlBuilder();
 
 
     /// @brief Destructor
-    ~GUIEdgeControlBuilder() ;
+    ~GUIEdgeControlBuilder();
 
 
     /** @brief Builds and adds a lane
@@ -76,7 +76,7 @@ public:
      * @param[in] length The lane's length
      * @param[in] shape The shape of the lane
      * @param[in] width The width of the lane
-     * @param[in] permissions encoding of vehicle classes that may drive on this lane
+     * @param[in] permissions Encoding of vehicle classes that may drive on this lane
      * @see SUMOVehicleClass
      * @see MSLane
      * @see MSInternalLane
@@ -98,7 +98,7 @@ public:
      *
      * @param[in] id The id of the edge to build
      */
-    MSEdge* buildEdge(const std::string& id, const std::string& streetName) ;
+    MSEdge* buildEdge(const std::string& id, const MSEdge::EdgeBasicFunction function, const std::string& streetName);
 
 
 private:

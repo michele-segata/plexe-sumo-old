@@ -71,7 +71,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
     // parse file(s)
     std::vector<std::string> files = oc.getStringVector("osm-files");
     // load nodes, first
-    std::map<long, PCOSMNode*> nodes;
+    std::map<SUMOLong, PCOSMNode*> nodes;
     NodesHandler nodesHandler(nodes);
     for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
         // nodes
@@ -104,7 +104,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
         }
         // compute shape
         PositionVector vec;
-        for (std::vector<long>::iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
+        for (std::vector<SUMOLong>::iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
             PCOSMNode* n = nodes.find(*j)->second;
             Position pos(n->lon, n->lat);
             if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
@@ -146,15 +146,15 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
             }
             name = StringUtils::escapeXML(name);
             type = StringUtils::escapeXML(type);
-            Polygon* poly = new Polygon(name, type, color, vec, fill);
+            Polygon* poly = new Polygon(name, type, color, vec, fill, (SUMOReal)layer);
             if (!toFill.insert(name, poly, layer)) {
-                WRITE_ERROR("Polygon '" + name + "' could not been added.");
+                WRITE_ERROR("Polygon '" + name + "' could not be added.");
                 delete poly;
             }
         }
     }
     // instantiate pois
-    for (std::map<long, PCOSMNode*>::iterator i = nodes.begin(); i != nodes.end(); ++i) {
+    for (std::map<SUMOLong, PCOSMNode*>::iterator i = nodes.begin(); i != nodes.end(); ++i) {
         PCOSMNode* n = (*i).second;
         if (!n->myIsAdditional) {
             continue;
@@ -199,9 +199,9 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
             }
             name = StringUtils::escapeXML(name);
             type = StringUtils::escapeXML(type);
-            PointOfInterest* poi = new PointOfInterest(name, type, pos, color);
+            PointOfInterest* poi = new PointOfInterest(name, type, color, pos, (SUMOReal)layer);
             if (!toFill.insert(name, poi, layer, ignorePrunning)) {
-                WRITE_ERROR("POI '" + name + "' could not been added.");
+                WRITE_ERROR("POI '" + name + "' could not be added.");
                 delete poi;
             }
         }
@@ -209,7 +209,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
 
 
     // delete nodes
-    for (std::map<long, PCOSMNode*>::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
+    for (std::map<SUMOLong, PCOSMNode*>::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
         delete(*i).second;
     }
     // delete edges
@@ -223,7 +223,7 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
 // ---------------------------------------------------------------------------
 // definitions of PCLoaderOSM::NodesHandler-methods
 // ---------------------------------------------------------------------------
-PCLoaderOSM::NodesHandler::NodesHandler(std::map<long, PCOSMNode*> &toFill)
+PCLoaderOSM::NodesHandler::NodesHandler(std::map<SUMOLong, PCOSMNode*>& toFill)
     : SUMOSAXHandler("osm - file"), myToFill(toFill), myLastNodeID(-1) {}
 
 
@@ -235,7 +235,7 @@ PCLoaderOSM::NodesHandler::myStartElement(int element, const SUMOSAXAttributes& 
     myParentElements.push_back(element);
     if (element == SUMO_TAG_NODE) {
         bool ok = true;
-        long id = attrs.getLongReporting(SUMO_ATTR_ID, 0, ok);
+        SUMOLong id = attrs.getLongReporting(SUMO_ATTR_ID, 0, ok);
         if (!ok) {
             return;
         }
@@ -260,7 +260,7 @@ PCLoaderOSM::NodesHandler::myStartElement(int element, const SUMOSAXAttributes& 
     if (element == SUMO_TAG_TAG && myParentElements.size() > 2 && myParentElements[myParentElements.size() - 2] == SUMO_TAG_NODE) {
         bool ok = true;
         std::string key = attrs.getStringReporting(SUMO_ATTR_K, toString(myLastNodeID).c_str(), ok);
-        std::string value = attrs.getOptStringReporting(SUMO_ATTR_V, toString(myLastNodeID).c_str(), ok, "");
+        std::string value = attrs.getStringReporting(SUMO_ATTR_V, toString(myLastNodeID).c_str(), ok, false);
         if (!ok) {
             return;
         }
@@ -292,8 +292,8 @@ PCLoaderOSM::NodesHandler::myEndElement(int element) {
 // definitions of PCLoaderOSM::EdgesHandler-methods
 // ---------------------------------------------------------------------------
 PCLoaderOSM::EdgesHandler::EdgesHandler(
-    const std::map<long, PCOSMNode*> &osmNodes,
-    std::map<std::string, PCOSMEdge*> &toFill)
+    const std::map<SUMOLong, PCOSMNode*>& osmNodes,
+    std::map<std::string, PCOSMEdge*>& toFill)
     : SUMOSAXHandler("osm - file"),
       myOSMNodes(osmNodes), myEdgeMap(toFill) {
 }
@@ -321,7 +321,7 @@ PCLoaderOSM::EdgesHandler::myStartElement(int element, const SUMOSAXAttributes& 
     // parse "nd" (node) elements
     if (element == SUMO_TAG_ND) {
         bool ok = true;
-        long ref = attrs.getLongReporting(SUMO_ATTR_REF, 0, ok);
+        SUMOLong ref = attrs.getLongReporting(SUMO_ATTR_REF, 0, ok);
         if (ok) {
             if (myOSMNodes.find(ref) == myOSMNodes.end()) {
                 WRITE_WARNING("The referenced geometry information (ref='" + toString(ref) + "') is not known");
@@ -334,7 +334,7 @@ PCLoaderOSM::EdgesHandler::myStartElement(int element, const SUMOSAXAttributes& 
     if (element == SUMO_TAG_TAG && myParentElements.size() > 2 && myParentElements[myParentElements.size() - 2] == SUMO_TAG_WAY) {
         bool ok = true;
         std::string key = attrs.getStringReporting(SUMO_ATTR_K, toString(myCurrentEdge->id).c_str(), ok);
-        std::string value = attrs.getStringReporting(SUMO_ATTR_V, toString(myCurrentEdge->id).c_str(), ok);
+        std::string value = attrs.getStringReporting(SUMO_ATTR_V, toString(myCurrentEdge->id).c_str(), ok, false);
         if (!ok) {
             return;
         }

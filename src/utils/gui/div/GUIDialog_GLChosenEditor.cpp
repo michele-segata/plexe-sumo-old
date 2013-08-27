@@ -44,12 +44,6 @@
 #include <utils/gui/windows/GUIMainWindow.h>
 #include <utils/gui/images/GUIIconSubSys.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
-
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
@@ -127,7 +121,7 @@ GUIDialog_GLChosenEditor::~GUIDialog_GLChosenEditor() {
 void
 GUIDialog_GLChosenEditor::rebuildList() {
     myList->clearItems();
-    const std::set<GUIGlID> &chosen = gSelected.getSelected();
+    const std::set<GUIGlID>& chosen = gSelected.getSelected();
     for (std::set<GUIGlID>::const_iterator i = chosen.begin(); i != chosen.end(); ++i) {
         GUIGlObject* object = GUIGlObjectStorage::gIDStorage.getObjectBlocking(*i);
         if (object != 0) {
@@ -162,7 +156,7 @@ GUIDialog_GLChosenEditor::onCmdLoad(FXObject*, FXSelector, void*) {
         std::string file = opendialog.getFilename().text();
         std::string msg = gSelected.load(file);
         if (msg != "") {
-            FXMessageBox::error(this, MBOX_OK, "Errors while loading Selection", msg.c_str());
+            FXMessageBox::error(this, MBOX_OK, "Errors while loading Selection", "%s", msg.c_str());
         }
         rebuildList();
     }
@@ -179,7 +173,7 @@ GUIDialog_GLChosenEditor::onCmdSave(FXObject*, FXSelector, void*) {
     try {
         gSelected.save(file.text());
     } catch (IOError& e) {
-        FXMessageBox::error(this, MBOX_OK, "Storing failed!", e.what());
+        FXMessageBox::error(this, MBOX_OK, "Storing failed!", "%s", e.what());
     }
     return 1;
 }

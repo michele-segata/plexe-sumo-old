@@ -32,8 +32,6 @@
 #endif
 
 #include <vector>
-#include <xercesc/sax2/SAX2XMLReader.hpp>
-#include <utils/common/UtilExceptions.h>
 
 
 // ===========================================================================
@@ -41,6 +39,7 @@
 // ===========================================================================
 class GenericSAXHandler;
 class SUMOSAXHandler;
+class SUMOSAXReader;
 
 
 // ===========================================================================
@@ -73,20 +72,24 @@ class SUMOSAXHandler;
 class XMLSubSys {
 public:
     /**
-     * @brief Initialises the xml-subsystem, returns whether the initialisation succeeded.
+     * @brief Initialises the xml-subsystem.
      *
      * Calls XMLPlatformUtils::Initialize(). If this fails, the exception is
-     *  caught and its content is reported using a ProcessError. Otherwise, a
-     *  static SAX2XMLReader is built using "getSAXReader()" (stored in "myReader").
+     *  caught and its content is reported using a ProcessError.
      *
-     * The information whether validationis wanted is stored in "myEnableValidation" for
-     *  later usage.
+     * @exception ProcessError If the initialisation fails
+     */
+    static void init();
+
+
+    /**
+     * @brief Enables or disables validation.
+     *
+     * The setting is only valid for parsers created after the call. Existing parsers are not adapted.
      *
      * @param[in] enableValidation Whether validation of XML-documents against schemata shall be enabled
-     * @exception ProcessError If the initialisation fails
-     * @see getSAXReader()
      */
-    static void init(bool enableValidation) ;
+    static void setValidation(bool enableValidation);
 
 
     /**
@@ -94,7 +97,7 @@ public:
      *
      * Deletes the built reader and calls XMLPlatformUtils::Terminate();
      */
-    static void close() ;
+    static void close();
 
 
     /**
@@ -108,7 +111,7 @@ public:
      * @return The built Xerces-SAX-reader, 0 if something failed
      * @see getSAXReader()
      */
-    static XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader* getSAXReader(SUMOSAXHandler& handler) ;
+    static SUMOSAXReader* getSAXReader(SUMOSAXHandler& handler);
 
 
     /**
@@ -139,39 +142,12 @@ public:
      * @return true if the parsing was done without errors, false otherwise (error was printed)
      */
     static bool runParser(GenericSAXHandler& handler,
-                          const std::string& file) ;
-
-
-protected:
-    /**
-     * @brief Builds a reader
-     *
-     * Tries to build a SAX2XMLReader using XMLReaderFactory::createXMLReader. If this
-     *  fails, 0 is returned. Otherwise the validation is set matching the value of
-     *  "myEnableValidation". If validation is not wanted, a WFXMLScanner is used
-     *  (see http://www.ibm.com/developerworks/library/x-xercesperf.html).
-     *
-     * @return The built Xerces-SAX-reader, 0 if something failed
-     */
-    static XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader* getSAXReader() ;
-
-
-    /**
-     * @brief Sets the named feature of the given reader to the given value
-     *
-     * The given feature name is translated into an XMLCh* and set.
-     *
-     * @param[in] reader The reader to set the feature of
-     * @param[in] feature Name of the feature to set
-     * @param[in] value Value of the feature to set
-     */
-    static void setFeature(XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader& reader,
-                           const std::string& feature, bool value) ;
+                          const std::string& file);
 
 
 private:
     /// @brief The XML Readers used for repeated parsing
-    static std::vector<XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader*> myReaders;
+    static std::vector<SUMOSAXReader*> myReaders;
 
     /// @brief Information whether the reader is parsing
     static unsigned int myNextFreeReader;

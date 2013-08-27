@@ -38,8 +38,6 @@
 #include <ctime>
 #include <signal.h>
 #include <iostream>
-#include <fx.h>
-#include <fx3d.h>
 #include <microsim/MSFrame.h>
 #include <microsim/MSNet.h>
 #include <utils/options/Option.h>
@@ -52,11 +50,7 @@
 #include <utils/xml/XMLSubSys.h>
 #include <gui/GUIApplicationWindow.h>
 #include <utils/gui/windows/GUIAppEnum.h>
-#include <gui/GUIGlobals.h>
-#include <guisim/GUIEdge.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
-#include <gui/GUIViewTraffic.h>
-#include <guisim/GUIVehicle.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -86,13 +80,14 @@ main(int argc, char** argv) {
     {
 #endif
         // initialise subsystems
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         MSFrame::fillOptions();
         OptionsIO::getOptions(false, argc, argv);
         if (oc.processMetaOptions(false)) {
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
         // Make application
         FXApp application("SUMO GUISimulation", "DLR");
         // Open display
@@ -117,13 +112,17 @@ main(int argc, char** argv) {
         // Run
         ret = application.run();
 #ifndef _DEBUG
-    } catch (...) {
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
-    }
-#else
-    }
+    } catch (...) {
+        MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
+        ret = 1;
 #endif
+    }
     SystemFrame::close();
     return ret;
 }

@@ -21,12 +21,19 @@
     <output>
         <netstate-dump value="" synonymes="ndump netstate" type="FILE" help="Save complete network states into FILE"/>
         <netstate-dump.empty-edges value="false" synonymes="dump-empty-edges netstate.empty-edges" type="BOOL" help="Write also empty edges completely when dumping"/>
+        <emission-output value="" type="FILE" help="Save the emission values of each vehicle"/>
+        <fcd-output value="" type="FILE" help="Save the Floating Car Data"/>
+        <fcd-output.geo value="false" type="BOOL" help="Save the Floating Car Data using geo-coordinates (lon/lat)"/>
+        <full-output value="" type="FILE" help="Save a lot of information for each timestep (very redundant)"/>
+        <queue-output value="" type="FILE" help="Save the vehicle queues at the junctions (experimental)"/>
+        <vtk-output value="" type="FILE" help="Save complete vehicle positions in VTK Format (usage: /file/out will produce /file/out_$NR$.vtp files)"/>
         <summary-output value="" synonymes="emissions emissions-output summary" type="FILE" help="Save aggregated vehicle departure info into FILE"/>
         <tripinfo-output value="" synonymes="tripinfo" type="FILE" help="Save single vehicle trip info into FILE"/>
         <vehroute-output value="" synonymes="vehroutes" type="FILE" help="Save single vehicle route info into FILE"/>
         <vehroute-output.exit-times value="false" synonymes="vehroutes.exit-times" type="BOOL" help="Write the exit times for all edges"/>
         <vehroute-output.last-route value="false" synonymes="vehroutes.last-route" type="BOOL" help="Write the last route only"/>
         <vehroute-output.sorted value="false" synonymes="vehroutes.sorted" type="BOOL" help="Sorts the output by departure time"/>
+        <vehroute-output.write-unfinished value="false" type="BOOL" help="Write vehroute output for vehicles which have not arrived at simulation end"/>
     </output>
 
     <time>
@@ -48,6 +55,8 @@
         <max-depart-delay value="-1" type="TIME" help="How long vehicles wait for departure before being skipped, defaults to -1 which means vehicles are never skipped"/>
         <sloppy-insert value="false" type="BOOL" help="Whether insertion on an edge shall not be repeated in same step once failed."/>
         <lanechange.allow-swap value="false" type="BOOL" help="Whether blocking vehicles trying to change lanes may be swapped."/>
+        <routing-algorithm value="dijkstra" type="STR" help="Select among routing algorithms [&apos;dijkstra&apos;, &apos;astar&apos;]"/>
+        <routeDist.maxsize value="" type="INT" help="Restrict the maximum size of route distributions"/>
     </processing>
 
     <report>
@@ -55,6 +64,7 @@
         <print-options value="false" synonymes="p" type="BOOL" help="Prints option values before processing"/>
         <help value="false" synonymes="?" type="BOOL" help="Prints this screen"/>
         <version value="false" synonymes="V" type="BOOL" help="Prints the current version"/>
+        <xml-validation value="false" synonymes="X" type="BOOL" help="Enable schema validation of XML inputs"/>
         <no-warnings value="false" synonymes="W suppress-warnings" type="BOOL" help="Disables output of warnings"/>
         <log value="" synonymes="l log-file" type="FILE" help="Writes all messages to FILE (implies verbose)"/>
         <message-log value="" type="FILE" help="Writes all non-error messages to FILE (implies verbose)"/>
@@ -72,6 +82,7 @@
         <device.rerouting.adaptation-weight value="0.5" synonymes="device.routing.adaptation-weight" type="FLOAT" help="The weight of prior edge weights."/>
         <device.rerouting.adaptation-interval value="1" synonymes="device.routing.adaptation-interval" type="TIME" help="The interval for updating the edge weights."/>
         <device.rerouting.with-taz value="false" synonymes="device.routing.with-taz" type="BOOL" help="Use zones (districts) as routing end points"/>
+        <device.rerouting.init-with-loaded-weights value="false" type="BOOL" help="Use given weight files for initializing edge weights"/>
     </routing>
 
     <emissions>

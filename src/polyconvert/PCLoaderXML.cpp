@@ -108,7 +108,7 @@ PCLoaderXML::myStartElement(int element,
         std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
         SUMOReal x = attrs.getSUMORealReporting(SUMO_ATTR_X, id.c_str(), ok);
         SUMOReal y = attrs.getSUMORealReporting(SUMO_ATTR_Y, id.c_str(), ok);
-        std::string type = attrs.getOptStringReporting(SUMO_ATTR_TYPE, id.c_str(), ok, "");
+        std::string type = attrs.getOptStringReporting(SUMO_ATTR_TYPE, id.c_str(), ok, myOptions.getString("type"));
         if (!ok) {
             return;
         }
@@ -118,7 +118,7 @@ PCLoaderXML::myStartElement(int element,
         }
         // patch the values
         bool discard = myOptions.getBool("discard");
-        int layer = myOptions.getInt("layer");
+        SUMOReal layer = (SUMOReal)myOptions.getInt("layer");
         RGBColor color;
         if (myTypeMap.has(type)) {
             const PCTypeMap::TypeDef& def = myTypeMap.get(type);
@@ -126,30 +126,43 @@ PCLoaderXML::myStartElement(int element,
             type = def.id;
             color = RGBColor::parseColor(def.color);
             discard = def.discard;
-            layer = def.layer;
+            layer = (SUMOReal)def.layer;
         } else {
             id = myOptions.getString("prefix") + id;
-            type = myOptions.getString("type");
             color = RGBColor::parseColor(myOptions.getString("color"));
+        }
+        layer = attrs.getOptSUMORealReporting(SUMO_ATTR_LAYER, id.c_str(), ok, layer);
+        if (attrs.hasAttribute(SUMO_ATTR_COLOR)) {
+            color = attrs.getColorReporting(id.c_str(), ok);
+        }
+        SUMOReal angle = attrs.getOptSUMORealReporting(SUMO_ATTR_ANGLE, id.c_str(), ok, Shape::DEFAULT_ANGLE);
+        std::string imgFile = attrs.getOptStringReporting(SUMO_ATTR_IMGFILE, id.c_str(), ok, Shape::DEFAULT_IMG_FILE);
+        if (imgFile != "" && !FileHelpers::isAbsolute(imgFile)) {
+            imgFile = FileHelpers::getConfigurationRelative(getFileName(), imgFile);
+        }
+        SUMOReal imgWidth = attrs.getOptSUMORealReporting(SUMO_ATTR_WIDTH, id.c_str(), ok, Shape::DEFAULT_IMG_WIDTH);
+        SUMOReal imgHeight = attrs.getOptSUMORealReporting(SUMO_ATTR_HEIGHT, id.c_str(), ok, Shape::DEFAULT_IMG_HEIGHT);
+        if (!ok) {
+            return;
         }
         if (!discard) {
             bool ignorePrunning = false;
             if (OptionsCont::getOptions().isInStringVector("prune.keep-list", id)) {
                 ignorePrunning = true;
             }
-            PointOfInterest* poi = new PointOfInterest(id, type, pos, color);
-            if (!myCont.insert(id, poi, layer, ignorePrunning)) {
-                WRITE_ERROR("POI '" + id + "' could not been added.");
+            PointOfInterest* poi = new PointOfInterest(id, type, color, pos, layer, angle, imgFile, imgWidth, imgHeight);
+            if (!myCont.insert(id, poi, (int)layer, ignorePrunning)) {
+                WRITE_ERROR("POI '" + id + "' could not be added.");
                 delete poi;
             }
         }
     }
     if (element == SUMO_TAG_POLY) {
         bool discard = myOptions.getBool("discard");
-        int layer = myOptions.getInt("layer");
+        SUMOReal layer = (SUMOReal)myOptions.getInt("layer");
         bool ok = true;
         std::string id = attrs.getOptStringReporting(SUMO_ATTR_ID, myCurrentID.c_str(), ok, "");
-        std::string type = attrs.getOptStringReporting(SUMO_ATTR_TYPE, myCurrentID.c_str(), ok, "");
+        std::string type = attrs.getOptStringReporting(SUMO_ATTR_TYPE, myCurrentID.c_str(), ok, myOptions.getString("type"));
         if (!ok) {
             return;
         }
@@ -160,11 +173,23 @@ PCLoaderXML::myStartElement(int element,
             type = def.id;
             color = RGBColor::parseColor(def.color);
             discard = def.discard;
-            layer = def.layer;
+            layer = (SUMOReal)def.layer;
         } else {
             id = myOptions.getString("prefix") + id;
-            type = myOptions.getString("type");
             color = RGBColor::parseColor(myOptions.getString("color"));
+        }
+        layer = attrs.getOptSUMORealReporting(SUMO_ATTR_LAYER, id.c_str(), ok, layer);
+        if (attrs.hasAttribute(SUMO_ATTR_COLOR)) {
+            color = attrs.getColorReporting(id.c_str(), ok);
+        }
+        SUMOReal angle = attrs.getOptSUMORealReporting(SUMO_ATTR_ANGLE, id.c_str(), ok, Shape::DEFAULT_ANGLE);
+        std::string imgFile = attrs.getOptStringReporting(SUMO_ATTR_IMGFILE, id.c_str(), ok, Shape::DEFAULT_IMG_FILE);
+        if (imgFile != "" && !FileHelpers::isAbsolute(imgFile)) {
+            imgFile = FileHelpers::getConfigurationRelative(getFileName(), imgFile);
+        }
+        bool fill = attrs.getOptBoolReporting(SUMO_ATTR_FILL, id.c_str(), ok, false);
+        if (!ok) {
+            return;
         }
         if (!discard) {
             bool ignorePrunning = false;
@@ -176,36 +201,23 @@ PCLoaderXML::myStartElement(int element,
             myCurrentColor = color;
             myCurrentIgnorePrunning = ignorePrunning;
             myCurrentLayer = layer;
-            if (attrs.hasAttribute(SUMO_ATTR_SHAPE)) {
-                // @deprecated At some time, no shape definition using characters will be allowed
-                myCharacters(element, attrs.getStringReporting(SUMO_ATTR_SHAPE, myCurrentID.c_str(), ok));
+            PositionVector pshape = attrs.getShapeReporting(SUMO_ATTR_SHAPE, myCurrentID.c_str(), ok, false);
+            if (!ok) {
+                return;
             }
-        }
-    }
-}
-
-
-void
-PCLoaderXML::myCharacters(int element,
-                          const std::string& chars) {
-    if (element == SUMO_TAG_POLY) {
-        bool ok = true;
-        PositionVector pshape = GeomConvHelper::parseShapeReporting(chars, "poly", myCurrentID.c_str(), ok, false);
-        if (!ok) {
-            return;
-        }
-        PositionVector shape;
-        for (PositionVector::ContType::const_iterator i = pshape.begin(); i != pshape.end(); ++i) {
-            Position pos((*i));
-            if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
-                WRITE_WARNING("Unable to project coordinates for polygon '" + myCurrentID + "'.");
+            PositionVector shape;
+            for (PositionVector::ContType::const_iterator i = pshape.begin(); i != pshape.end(); ++i) {
+                Position pos((*i));
+                if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
+                    WRITE_WARNING("Unable to project coordinates for polygon '" + myCurrentID + "'.");
+                }
+                shape.push_back(pos);
             }
-            shape.push_back(pos);
-        }
-        Polygon* poly = new Polygon(myCurrentID, myCurrentType, myCurrentColor, shape, false);
-        if (!myCont.insert(myCurrentID, poly, myCurrentLayer, myCurrentIgnorePrunning)) {
-            WRITE_ERROR("Polygon '" + myCurrentID + "' could not been added.");
-            delete poly;
+            Polygon* poly = new Polygon(myCurrentID, myCurrentType, myCurrentColor, shape, fill, layer, angle, imgFile);
+            if (!myCont.insert(myCurrentID, poly, (int)myCurrentLayer, myCurrentIgnorePrunning)) {
+                WRITE_ERROR("Polygon '" + myCurrentID + "' could not be added.");
+                delete poly;
+            }
         }
     }
 }

@@ -34,7 +34,9 @@
 #ifndef NO_TRACI
 
 #include <microsim/MSEdge.h>
+#include <microsim/MSEdgeControl.h>
 #include <microsim/MSLane.h>
+#include <microsim/MSNet.h>
 #include "TraCIConstants.h"
 #include "TraCIServerAPI_Lane.h"
 
@@ -55,7 +57,6 @@ using namespace traci;
 bool
 TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorage,
                                 tcpip::Storage& outputStorage) {
-    std::string warning = "";	// additional description for response
     // variable
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
@@ -108,7 +109,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 break;
             case VAR_MAXSPEED:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(lane->getMaxSpeed());
+                tempMsg.writeDouble(lane->getSpeedLimit());
                 break;
             case LANE_LINKS: {
                 tempMsg.writeUnsignedByte(TYPE_COMPOUND);
@@ -138,11 +139,11 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                     ++cnt;
                     // opened
                     tempContent.writeUnsignedByte(TYPE_UBYTE);
-                    tempContent.writeUnsignedByte(link->opened(MSNet::getInstance()->getCurrentTimeStep(), MSNet::getInstance()->getCurrentTimeStep(), 0.) ? 1 : 0);
+                    tempContent.writeUnsignedByte(link->opened(MSNet::getInstance()->getCurrentTimeStep(), 0, 0, 0.) ? 1 : 0);
                     ++cnt;
                     // approaching foe
                     tempContent.writeUnsignedByte(TYPE_UBYTE);
-                    tempContent.writeUnsignedByte(link->hasApproachingFoe(MSNet::getInstance()->getCurrentTimeStep(), MSNet::getInstance()->getCurrentTimeStep()) ? 1 : 0);
+                    tempContent.writeUnsignedByte(link->hasApproachingFoe(MSNet::getInstance()->getCurrentTimeStep(), MSNet::getInstance()->getCurrentTimeStep(), 0) ? 1 : 0);
                     ++cnt;
                     // state (not implemented, yet)
                     tempContent.writeUnsignedByte(TYPE_STRING);
@@ -220,7 +221,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 break;
             case LAST_STEP_VEHICLE_ID_LIST: {
                 std::vector<std::string> vehIDs;
-                const std::deque<MSVehicle*> &vehs = lane->getVehiclesSecure();
+                const std::deque<MSVehicle*>& vehs = lane->getVehiclesSecure();
                 for (std::deque<MSVehicle*>::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
                     vehIDs.push_back((*j)->getID());
                 }
@@ -235,7 +236,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 break;
             case LAST_STEP_VEHICLE_HALTING_NUMBER: {
                 int halting = 0;
-                const std::deque<MSVehicle*> &vehs = lane->getVehiclesSecure();
+                const std::deque<MSVehicle*>& vehs = lane->getVehiclesSecure();
                 for (std::deque<MSVehicle*>::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
                     if ((*j)->getSpeed() < 0.1) {
                         ++halting;
@@ -248,7 +249,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             break;
             case LAST_STEP_LENGTH: {
                 SUMOReal lengthSum = 0;
-                const std::deque<MSVehicle*> &vehs = lane->getVehiclesSecure();
+                const std::deque<MSVehicle*>& vehs = lane->getVehiclesSecure();
                 for (std::deque<MSVehicle*>::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
                     lengthSum += (*j)->getVehicleType().getLength();
                 }
@@ -279,7 +280,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 break;
         }
     }
-    server.writeStatusCmd(CMD_GET_LANE_VARIABLE, RTYPE_OK, warning, outputStorage);
+    server.writeStatusCmd(CMD_GET_LANE_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
     return true;
 }
@@ -348,6 +349,32 @@ TraCIServerAPI_Lane::processSet(TraCIServer& server, tcpip::Storage& inputStorag
     }
     server.writeStatusCmd(CMD_SET_LANE_VARIABLE, RTYPE_OK, warning, outputStorage);
     return true;
+}
+
+
+bool
+TraCIServerAPI_Lane::getShape(const std::string& id, PositionVector& shape) {
+    const MSLane* const l = MSLane::dictionary(id);
+    if (l == 0) {
+        return false;
+    }
+    shape.push_back(l->getShape());
+    return true;
+}
+
+
+TraCIRTree*
+TraCIServerAPI_Lane::getTree() {
+    TraCIRTree* t = new TraCIRTree();
+    const std::vector<MSEdge*>& edges = MSNet::getInstance()->getEdgeControl().getEdges();
+    for (std::vector<MSEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
+        const std::vector<MSLane*>& lanes = (*i)->getLanes();
+        for (std::vector<MSLane*>::const_iterator j = lanes.begin(); j != lanes.end(); ++j) {
+            Boundary b = (*j)->getShape().getBoxBoundary();
+            t->addObject(*j, b);
+        }
+    }
+    return t;
 }
 
 #endif

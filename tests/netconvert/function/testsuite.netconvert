@@ -28,6 +28,7 @@ join_double_conn
 
 # tests for joining of close junctions
 junctions.join
+tls.join
 
 # tests for disabling left-turns
 no_left
@@ -40,3 +41,6 @@ self_loop_edges
 
 # test speed factor and offset
 speed_modification
+
+# generate street signs based on edge priority at junctions
+street_sign_output

@@ -39,6 +39,7 @@
 #include <utils/common/WrappingCommand.h>
 #include <utils/common/StaticCommand.h>
 #include <utils/common/DijkstraRouterTT.h>
+#include <utils/common/AStarRouter.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -54,6 +55,8 @@ SUMOReal MSDevice_Routing::myAdaptationWeight;
 SUMOTime MSDevice_Routing::myAdaptationInterval;
 bool MSDevice_Routing::myWithTaz;
 std::map<std::pair<const MSEdge*, const MSEdge*>, const MSRoute*> MSDevice_Routing::myCachedRoutes;
+SUMOAbstractRouter<MSEdge, SUMOVehicle>* MSDevice_Routing::myRouter = 0;
+std::set<std::string> MSDevice_Routing::myExplicitIDs;
 
 
 // ===========================================================================
@@ -99,13 +102,16 @@ MSDevice_Routing::insertOptions() {
     oc.addSynonyme("device.rerouting.with-taz", "device.routing.with-taz", true);
     oc.addDescription("device.rerouting.with-taz", "Routing", "Use zones (districts) as routing end points");
 
+    oc.doRegister("device.rerouting.init-with-loaded-weights", new Option_Bool(false));
+    oc.addDescription("device.rerouting.init-with-loaded-weights", "Routing", "Use given weight files for initializing edge weights");
+
     myEdgeWeightSettingCommand = 0;
     myEdgeEfforts.clear();
 }
 
 
 void
-MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &into) {
+MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& into) {
     OptionsCont& oc = OptionsCont::getOptions();
     bool needRerouting = v.getParameter().wasSet(VEHPARS_FORCE_REROUTE);
     if (!needRerouting && oc.getFloat("device.rerouting.probability") == 0 && !oc.isSet("device.rerouting.explicit")) {
@@ -119,7 +125,12 @@ MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &in
     } else {
         haveByNumber = RandHelper::rand() <= oc.getFloat("device.rerouting.probability");
     }
-    bool haveByName = oc.isSet("device.rerouting.explicit") && OptionsCont::getOptions().isInStringVector("device.rerouting.explicit", v.getID());
+    // initialize myExplicitIDs if not done before
+    if (oc.isSet("device.rerouting.explicit") && myExplicitIDs.size() == 0) {
+        const std::vector<std::string> idList = OptionsCont::getOptions().getStringVector("device.rerouting.explicit");
+        myExplicitIDs.insert(idList.begin(), idList.end());
+    }
+    const bool haveByName = myExplicitIDs.count(v.getID()) > 0;
     myWithTaz = oc.getBool("device.rerouting.with-taz");
     if (needRerouting || haveByNumber || haveByName) {
         // build the device
@@ -129,9 +140,15 @@ MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*> &in
         into.push_back(device);
         // initialise edge efforts if not done before
         if (myEdgeEfforts.size() == 0) {
-            const std::vector<MSEdge*> &edges = MSNet::getInstance()->getEdgeControl().getEdges();
+            const std::vector<MSEdge*>& edges = MSNet::getInstance()->getEdgeControl().getEdges();
+            const bool useLoaded = oc.getBool("device.rerouting.init-with-loaded-weights");
+            const SUMOReal currentSecond = STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep());
             for (std::vector<MSEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
-                myEdgeEfforts[*i] = (*i)->getCurrentTravelTime();
+                if (useLoaded) {
+                    myEdgeEfforts[*i] = MSNet::getTravelTime(*i, 0, currentSecond);
+                } else {
+                    myEdgeEfforts[*i] = (*i)->getCurrentTravelTime();
+                }
             }
         }
         // make the weights be updated
@@ -210,9 +227,7 @@ MSDevice_Routing::preInsertionReroute(SUMOTime currentTime) {
     if (source && dest) {
         const std::pair<const MSEdge*, const MSEdge*> key = std::make_pair(source, dest);
         if (myCachedRoutes.find(key) == myCachedRoutes.end()) {
-            DijkstraRouterTT_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle>, MSDevice_Routing>
-            router(MSEdge::dictSize(), true, this, &MSDevice_Routing::getEffort);
-            myHolder.reroute(currentTime, router, true);
+            myHolder.reroute(currentTime, getRouter(), true);
             myCachedRoutes[key] = &myHolder.getRoute();
             myHolder.getRoute().addReference();
         } else {
@@ -225,17 +240,15 @@ MSDevice_Routing::preInsertionReroute(SUMOTime currentTime) {
 
 SUMOTime
 MSDevice_Routing::wrappedRerouteCommandExecute(SUMOTime currentTime) {
-    DijkstraRouterTT_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle>, MSDevice_Routing>
-    router(MSEdge::dictSize(), true, this, &MSDevice_Routing::getEffort);
-    myHolder.reroute(currentTime, router);
+    myHolder.reroute(currentTime, getRouter());
     return myPeriod;
 }
 
 
 SUMOReal
-MSDevice_Routing::getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal) const {
+MSDevice_Routing::getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal) {
     if (myEdgeEfforts.find(e) != myEdgeEfforts.end()) {
-        return MAX2(myEdgeEfforts.find(e)->second, e->getLength() / v->getMaxSpeed());
+        return MAX2(myEdgeEfforts.find(e)->second, e->getMinimumTravelTime(v));
     }
     return 0;
 }
@@ -249,7 +262,7 @@ MSDevice_Routing::adaptEdgeEfforts(SUMOTime /*currentTime*/) {
     }
     myCachedRoutes.clear();
     SUMOReal newWeight = (SUMOReal)(1. - myAdaptationWeight);
-    const std::vector<MSEdge*> &edges = MSNet::getInstance()->getEdgeControl().getEdges();
+    const std::vector<MSEdge*>& edges = MSNet::getInstance()->getEdgeControl().getEdges();
     for (std::vector<MSEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
         myEdgeEfforts[*i] = myEdgeEfforts[*i] * myAdaptationWeight + (*i)->getCurrentTravelTime() * newWeight;
     }
@@ -257,6 +270,28 @@ MSDevice_Routing::adaptEdgeEfforts(SUMOTime /*currentTime*/) {
 }
 
 
+SUMOAbstractRouter<MSEdge, SUMOVehicle>&
+MSDevice_Routing::getRouter() {
+    if (myRouter == 0) {
+        const std::string routingAlgorithm = OptionsCont::getOptions().getString("routing-algorithm");
+        if (routingAlgorithm == "dijkstra") {
+            myRouter = new DijkstraRouterTT_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle> >(
+                MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort);
+        } else if (routingAlgorithm == "astar") {
+            myRouter = new AStarRouterTT_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle> >(
+                MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort);
+        } else {
+            throw ProcessError("Unknown routing Algorithm '" + routingAlgorithm + "'!");
+        }
+    }
+    return *myRouter;
+}
 
+
+void
+MSDevice_Routing::cleanup() {
+    delete myRouter;
+    myRouter = 0;
+}
 /****************************************************************************/
 

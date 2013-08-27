@@ -44,6 +44,7 @@
 #include <netbuild/NBEdgeCont.h>
 #include <netbuild/NBNetBuilder.h>
 #include <utils/xml/SUMOSAXHandler.h>
+#include <utils/xml/SUMOSAXReader.h>
 #include <netimport/NIXMLEdgesHandler.h>
 #include <netimport/NIXMLNodesHandler.h>
 #include <netimport/NIXMLTrafficLightsHandler.h>
@@ -64,7 +65,7 @@
 #include <utils/common/TplConvert.h>
 #include <utils/geom/GeoConvHelper.h>
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 #include <internal/HeightMapper.h>
 #endif
 
@@ -94,7 +95,7 @@ NILoader::load(OptionsCont& oc) {
         new NIXMLTypesHandler(myNetBuilder.getTypeCont());
     loadXMLType(handler, oc.getStringVector("type-files"), "types");
     // try to load height data so it is ready for use by other importers
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     HeightMapper::loadIfSet(oc);
 #endif
     // try to load using different methods
@@ -161,10 +162,9 @@ NILoader::loadXML(OptionsCont& oc) {
 
 
 void
-NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string> &files,
+NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string>& files,
                       const std::string& type) {
     // build parser
-    SAX2XMLReader* parser = XMLSubSys::getSAXReader(*handler);
     std::string exceptMsg = "";
     // start the parsing
     try {
@@ -174,20 +174,18 @@ NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string> &f
                 exceptMsg = "Process Error";
                 continue;
             }
-            handler->setFileName(*file);
             PROGRESS_BEGIN_MESSAGE("Parsing " + type + " from '" + *file + "'");
-            parser->parse(file->c_str());
+            XMLSubSys::runParser(*handler, *file);
             PROGRESS_DONE_MESSAGE();
         }
-    } catch (const XMLException& toCatch) {
-        exceptMsg = TplConvert<XMLCh>::_2str(toCatch.getMessage())
+    } catch (const XERCES_CPP_NAMESPACE::XMLException& toCatch) {
+        exceptMsg = TplConvert::_2str(toCatch.getMessage())
                     + "\n  The " + type  + " could not be loaded from '" + handler->getFileName() + "'.";
     } catch (const ProcessError& toCatch) {
         exceptMsg = std::string(toCatch.what()) + "\n  The " + type  + " could not be loaded from '" + handler->getFileName() + "'.";
     } catch (...) {
         exceptMsg = "The " + type  + " could not be loaded from '" + handler->getFileName() + "'.";
     }
-    delete parser;
     delete handler;
     if (exceptMsg != "") {
         throw ProcessError(exceptMsg);
@@ -199,7 +197,7 @@ bool
 NILoader::transformCoordinates(Position& from, bool includeInBoundary, GeoConvHelper* from_srs) {
     Position orig(from);
     bool ok = GeoConvHelper::getProcessing().x2cartesian(from, includeInBoundary);
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (ok) {
         const HeightMapper& hm = HeightMapper::get();
         if (hm.ready()) {
@@ -210,6 +208,8 @@ NILoader::transformCoordinates(Position& from, bool includeInBoundary, GeoConvHe
             from = Position(from.x(), from.y(), z);
         }
     }
+#else
+    UNUSED_PARAMETER(from_srs);
 #endif
     return ok;
 }

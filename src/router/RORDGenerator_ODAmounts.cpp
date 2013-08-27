@@ -40,13 +40,13 @@
 #include <utils/common/ToString.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/StringUtils.h>
-#include "RORouteDef.h"
+#include "RORoute.h"
 #include "RONet.h"
-#include "RORouteDef_OrigDest.h"
 #include "RORDGenerator_ODAmounts.h"
 #include "ROVehicle.h"
-#include "RORouteDef_Complete.h"
+#include "RORouteDef.h"
 #include <utils/xml/SUMOVehicleParserHelper.h>
+#include <utils/xml/XMLSubSys.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -119,7 +119,7 @@ RORDGenerator_ODAmounts::FlowDef::addRoutes(RONet& net, SUMOTime t) {
 void
 RORDGenerator_ODAmounts::FlowDef::addSingleRoute(RONet& net, SUMOTime t) {
     std::string id = myVehicle->getID() + "_" + toString<unsigned int>(myInserted);
-    RORouteDef* rd = myRoute->copy(id);
+    RORouteDef* rd = myRoute->copyOrigDest(id);
     net.addRouteDef(rd);
     ROVehicle* veh = myVehicle->copy(id, t, rd);
     net.addVehicle(id, veh);
@@ -143,11 +143,9 @@ RORDGenerator_ODAmounts::RORDGenerator_ODAmounts(RONet& net,
         bool randomize,
         const std::string& fileName)
     : RORDLoader_TripDefs(net, begin, end, emptyDestinationsAllowed, false, fileName),
-      myRandom(randomize),
-      myHaveWarnedAboutDeprecatedNumber(false) {
+      myRandom(randomize) {
     // read the complete file on initialisation
-    myParser->parseReset(myToken);
-    myParser->parse(getFileName().c_str());
+    XMLSubSys::runParser(*this, getFileName());
     myCurrentDepart = begin;
 }
 
@@ -231,17 +229,7 @@ RORDGenerator_ODAmounts::parseFlowAmountDef(const SUMOSAXAttributes& attrs) {
     bool ok = true;
     myIntervalBegin = attrs.getOptSUMOTimeReporting(SUMO_ATTR_BEGIN, id.c_str(), ok, myUpperIntervalBegin);
     myIntervalEnd = attrs.getOptSUMOTimeReporting(SUMO_ATTR_END, id.c_str(), ok, myUpperIntervalEnd);
-    if (attrs.hasAttribute(SUMO_ATTR_NUMBER)) {
-        myVehicle2InsertNumber = attrs.getIntReporting(SUMO_ATTR_NUMBER, id.c_str(), ok);
-    } else if (attrs.hasAttribute(SUMO_ATTR_NO__DEPRECATED)) {
-        if (!myHaveWarnedAboutDeprecatedNumber) {
-            myHaveWarnedAboutDeprecatedNumber = true;
-            WRITE_WARNING("'" + toString(SUMO_ATTR_NO__DEPRECATED) + "' is deprecated, please use '" + toString(SUMO_ATTR_NUMBER) + "' instead.");
-        }
-        myVehicle2InsertNumber = attrs.getIntReporting(SUMO_ATTR_NO__DEPRECATED, id.c_str(), ok);
-    } else {
-        throw ProcessError("Flow '" + id + "' has no vehicle number.");
-    }
+    myVehicle2InsertNumber = attrs.getIntReporting(SUMO_ATTR_NUMBER, id.c_str(), ok); // throw ProcessError("Flow '" + id + "' has no vehicle number.");
     if (!ok) {
         throw ProcessError();
     }
@@ -272,7 +260,11 @@ RORDGenerator_ODAmounts::myEndFlowAmountDef() {
         }
         // add the vehicle type, the vehicle and the route to the net
         RGBColor* col = myParameter->wasSet(VEHPARS_COLOR_SET) ? new RGBColor(myParameter->color) : 0;
-        RORouteDef* route = new RORouteDef_OrigDest(myParameter->id, col, myBeginEdge, myEndEdge);//!!! set double in route def and flowdef?
+        RORouteDef* route = new RORouteDef(myParameter->id, 0, true);//!!! set double in route def and flowdef?
+        std::vector<const ROEdge*> edges;
+        edges.push_back(myBeginEdge);
+        edges.push_back(myEndEdge);
+        route->addLoadedAlternative(new RORoute(myParameter->id, 0, 1, edges, col));
         SUMOVTypeParameter* type = myNet.getVehicleTypeSecure(myParameter->vtypeid);
         // check whether any errors occured
         if (MsgHandler::getErrorInstance()->wasInformed()) {

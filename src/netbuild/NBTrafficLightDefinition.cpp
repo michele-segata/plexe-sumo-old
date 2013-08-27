@@ -39,7 +39,6 @@
 #include <utils/common/ToString.h>
 #include "NBTrafficLightDefinition.h"
 #include <utils/options/OptionsCont.h>
-#include "NBTrafficLightDefinition.h"
 #include "NBLinkPossibilityMatrix.h"
 #include "NBTrafficLightLogic.h"
 #include "NBContHelper.h"
@@ -57,9 +56,8 @@ const std::string NBTrafficLightDefinition::DefaultProgramID = "0";
 // method definitions
 // ===========================================================================
 NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id,
-        const std::vector<NBNode*> &junctions,
-        const std::string& programID)
-    : Named(id), myControlledNodes(junctions), mySubID(programID) {
+        const std::vector<NBNode*>& junctions, const std::string& programID, SUMOTime offset)
+    : Named(id), myControlledNodes(junctions), mySubID(programID), myOffset(offset) {
     std::vector<NBNode*>::iterator i = myControlledNodes.begin();
     while (i != myControlledNodes.end()) {
         for (std::vector<NBNode*>::iterator j = i + 1; j != myControlledNodes.end();) {
@@ -79,16 +77,15 @@ NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id,
 
 
 NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id,
-        NBNode* junction,
-        const std::string& programID)
-    : Named(id), mySubID(programID) {
+        NBNode* junction, const std::string& programID, SUMOTime offset)
+    : Named(id), mySubID(programID), myOffset(offset) {
     addNode(junction);
     junction->addTrafficLight(this);
 }
 
 
-NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id, const std::string& programID)
-    : Named(id), mySubID(programID) {}
+NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id, const std::string& programID, SUMOTime offset)
+    : Named(id), mySubID(programID), myOffset(offset) {}
 
 
 NBTrafficLightDefinition::~NBTrafficLightDefinition() {}
@@ -342,7 +339,7 @@ NBTrafficLightDefinition::removeNode(NBNode* node) {
 
 
 void
-NBTrafficLightDefinition::addControlledInnerEdges(const std::vector<std::string> &edges) {
+NBTrafficLightDefinition::addControlledInnerEdges(const std::vector<std::string>& edges) {
     myControlledInnerEdges.insert(edges.begin(), edges.end());
 }
 

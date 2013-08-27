@@ -59,11 +59,9 @@
 #include <utils/common/SUMOTime.h>
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/FileHelpers.h>
-#include <utils/common/FileHelpers.h>
 #include <utils/common/SUMOVehicleParameter.h>
 #include <utils/importio/LineReader.h>
 #include <utils/iodevices/OutputDevice.h>
-#include <utils/common/SUMOTime.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -168,7 +166,7 @@ fillOptions() {
 
 
 Distribution_Points
-parseTimeLine(const std::vector<std::string> &def, bool timelineDayInHours) {
+parseTimeLine(const std::vector<std::string>& def, bool timelineDayInHours) {
     bool interpolating = !timelineDayInHours;
     PositionVector points;
     SUMOReal prob = 0;
@@ -177,7 +175,7 @@ parseTimeLine(const std::vector<std::string> &def, bool timelineDayInHours) {
             throw ProcessError("Assuming 24 entries for a day timeline, but got " + toString(def.size()) + ".");
         }
         for (int chour = 0; chour < 24; ++chour) {
-            prob = TplConvert<char>::_2SUMOReal(def[chour].c_str());
+            prob = TplConvert::_2SUMOReal(def[chour].c_str());
             points.push_back(Position((SUMOReal)(chour * 3600), prob));
         }
         points.push_back(Position((SUMOReal)(24 * 3600), prob));
@@ -188,8 +186,8 @@ parseTimeLine(const std::vector<std::string> &def, bool timelineDayInHours) {
             if (st2.size() != 2) {
                 throw ProcessError("Broken time line definition: missing a value in '" + def[i - 1] + "'.");
             }
-            int time = TplConvert<char>::_2int(st2.next().c_str());
-            prob = TplConvert<char>::_2SUMOReal(st2.next().c_str());
+            int time = TplConvert::_2int(st2.next().c_str());
+            prob = TplConvert::_2SUMOReal(st2.next().c_str());
             points.push_back(Position((SUMOReal) time, prob));
         }
     }
@@ -214,12 +212,32 @@ checkOptions() {
         ok = false;
     }
     //
-    ok &= (!oc.isSet("departlane") || SUMOVehicleParameter::departlaneValidate(oc.getString("departlane")));
-    ok &= (!oc.isSet("departpos") || SUMOVehicleParameter::departposValidate(oc.getString("departpos")));
-    ok &= (!oc.isSet("departspeed") || SUMOVehicleParameter::departspeedValidate(oc.getString("departspeed")));
-    ok &= (!oc.isSet("arrivallane") || SUMOVehicleParameter::arrivallaneValidate(oc.getString("arrivallane")));
-    ok &= (!oc.isSet("arrivalpos") || SUMOVehicleParameter::arrivalposValidate(oc.getString("arrivalpos")));
-    ok &= (!oc.isSet("arrivalspeed") || SUMOVehicleParameter::arrivalspeedValidate(oc.getString("arrivalspeed")));
+    SUMOVehicleParameter p;
+    std::string error;
+    if (oc.isSet("departlane") && !SUMOVehicleParameter::parseDepartLane(oc.getString("departlane"), "option", "departlane", p.departLane, p.departLaneProcedure, error)) {
+        WRITE_ERROR(error);
+        ok = false;
+    }
+    if (oc.isSet("departpos") && !SUMOVehicleParameter::parseDepartPos(oc.getString("departpos"), "option", "departpos", p.departPos, p.departPosProcedure, error)) {
+        WRITE_ERROR(error);
+        ok = false;
+    }
+    if (oc.isSet("departspeed") && !SUMOVehicleParameter::parseDepartSpeed(oc.getString("departspeed"), "option", "departspeed", p.departSpeed, p.departSpeedProcedure, error)) {
+        WRITE_ERROR(error);
+        ok = false;
+    }
+    if (oc.isSet("arrivallane") && !SUMOVehicleParameter::parseArrivalLane(oc.getString("arrivallane"), "option", "arrivallane", p.arrivalLane, p.arrivalLaneProcedure, error)) {
+        WRITE_ERROR(error);
+        ok = false;
+    }
+    if (oc.isSet("arrivalpos") && !SUMOVehicleParameter::parseArrivalPos(oc.getString("arrivalpos"), "option", "arrivalpos", p.arrivalPos, p.arrivalPosProcedure, error)) {
+        WRITE_ERROR(error);
+        ok = false;
+    }
+    if (oc.isSet("arrivalspeed") && !SUMOVehicleParameter::parseArrivalSpeed(oc.getString("arrivalspeed"), "option", "arrivalspeed", p.arrivalSpeed, p.arrivalSpeedProcedure, error)) {
+        WRITE_ERROR(error);
+        ok = false;
+    }
     return ok;
 }
 
@@ -267,7 +285,7 @@ parseSingleTime(const std::string& time) {
     }
     std::string hours = time.substr(0, time.find('.'));
     std::string minutes = time.substr(time.find('.') + 1);
-    return (SUMOTime) TplConvert<char>::_2int(hours.c_str()) * 3600 + TplConvert<char>::_2int(minutes.c_str()) * 60;
+    return TIME2STEPS(TplConvert::_2int(hours.c_str()) * 3600 + TplConvert::_2int(minutes.c_str()) * 60);
 }
 
 
@@ -295,7 +313,7 @@ readFactor(LineReader& lr, SUMOReal scale) {
     std::string line = getNextNonCommentLine(lr);
     SUMOReal factor = -1;
     try {
-        factor = TplConvert<char>::_2SUMOReal(line.c_str()) * scale;
+        factor = TplConvert::_2SUMOReal(line.c_str()) * scale;
     } catch (NumberFormatException&) {
         throw ProcessError("Broken factor: '" + line + "'.");
     }
@@ -327,7 +345,7 @@ readV(LineReader& lr, ODMatrix& into, SUMOReal scale,
 
     // districts
     line = getNextNonCommentLine(lr);
-    int districtNo = TplConvert<char>::_2int(StringUtils::prune(line).c_str());
+    int districtNo = TplConvert::_2int(StringUtils::prune(line).c_str());
     // parse district names (normally ints)
     std::vector<std::string> names;
     do {
@@ -351,7 +369,7 @@ readV(LineReader& lr, ODMatrix& into, SUMOReal scale,
                 StringTokenizer st2(line, StringTokenizer::WHITECHARS);
                 while (st2.hasNext()) {
                     assert(di != names.end());
-                    SUMOReal vehNumber = TplConvert<char>::_2SUMOReal(st2.next().c_str()) * factor;
+                    SUMOReal vehNumber = TplConvert::_2SUMOReal(st2.next().c_str()) * factor;
                     if (vehNumber != 0) {
                         into.add(vehNumber, begin, end, *si, *di, vehType);
                     }
@@ -380,7 +398,7 @@ readO(LineReader& lr, ODMatrix& into, SUMOReal scale,
     std::string line;
     if (matrixHasVehType) {
         line = getNextNonCommentLine(lr);
-        int type = TplConvert<char>::_2int(StringUtils::prune(line).c_str());
+        int type = TplConvert::_2int(StringUtils::prune(line).c_str());
         if (vehType == "") {
             vehType = toString(type);
         }
@@ -407,7 +425,7 @@ readO(LineReader& lr, ODMatrix& into, SUMOReal scale,
         try {
             std::string sourceD = st2.next();
             std::string destD = st2.next();
-            SUMOReal vehNumber = TplConvert<char>::_2SUMOReal(st2.next().c_str()) * factor;
+            SUMOReal vehNumber = TplConvert::_2SUMOReal(st2.next().c_str()) * factor;
             if (vehNumber != 0) {
                 into.add(vehNumber, begin, end, sourceD, destD, vehType);
             }
@@ -471,14 +489,14 @@ main(int argc, char** argv) {
     int ret = 0;
     try {
         // initialise subsystems
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
-            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
         MsgHandler::initOutputOptions();
         if (!checkOptions()) {
             throw ProcessError();
@@ -509,24 +527,30 @@ main(int argc, char** argv) {
             throw ProcessError("No output name is given.");
         }
         OutputDevice& dev = OutputDevice::getDeviceByOption("output-file");
-        matrix.write(SUMOTime(string2time(oc.getString("begin")) / 1000.), SUMOTime(string2time(oc.getString("end")) / 1000.),
-                     dev, oc.getBool("spread.uniform"), oc.getBool("ignore-vehicle-type"), oc.getString("prefix"), !oc.getBool("no-step-log"));
+        matrix.write(string2time(oc.getString("begin")), string2time(oc.getString("end")),
+                     dev, oc.getBool("spread.uniform"), oc.getBool("ignore-vehicle-type"),
+                     oc.getString("prefix"), !oc.getBool("no-step-log"));
         WRITE_MESSAGE(toString(matrix.getNoDiscarded()) + " vehicles discarded.");
         WRITE_MESSAGE(toString(matrix.getNoWritten()) + " vehicles written.");
-    } catch (ProcessError& e) {
+    } catch (const ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
 #ifndef _DEBUG
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
     } catch (...) {
         MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
         ret = 1;
 #endif
     }
     SystemFrame::close();
-    OutputDevice::closeAll();
     if (ret == 0) {
         std::cout << "Success." << std::endl;
     }

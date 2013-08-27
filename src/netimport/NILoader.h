@@ -62,11 +62,11 @@ public:
     /** @brief Constructor
      * @param[in] nb The network builder to fill with loaded data
      */
-    NILoader(NBNetBuilder& nb) ;
+    NILoader(NBNetBuilder& nb);
 
 
     /// @brief Destructor
-    ~NILoader() ;
+    ~NILoader();
 
 
     /** loads data from the files specified in the given option container */
@@ -91,7 +91,7 @@ private:
 
     /** loads data from the list of xml-files of certain type */
     void loadXMLType(SUMOSAXHandler* handler,
-                     const std::vector<std::string> &files, const std::string& type);
+                     const std::vector<std::string>& files, const std::string& type);
 
 private:
     /// @brief The network builder to fill with loaded data

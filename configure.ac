@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(sumo, 0.15.0)
+AC_INIT(sumo, 0.16.0)
 AC_CONFIG_SRCDIR(src/sumo_main.cpp)
 AC_CANONICAL_SYSTEM
 
@@ -17,9 +17,18 @@ if test x$enable_debug = xyes; then
     AC_DEFINE(_DEBUG, 1, [Define to 1 in order to enable sumo debugging code.])
     CXXFLAGS="-g -pthread $CXXFLAGS"
     ac_enabled="$ac_enabled Debug"
+    program_transform_name="s,\$\$,D,; $program_transform_name"
 else
     CXXFLAGS="-O2 -DNDEBUG $CXXFLAGS"
     ac_disabled="$ac_disabled Debug"
+fi
+
+AC_ARG_ENABLE([profiling], [AS_HELP_STRING([--enable-profiling],[enable compilation of gprof profiling code [default=no].])])
+if test x$enable_profiling = xyes; then
+    CXXFLAGS="-pg $CXXFLAGS"
+    ac_enabled="$ac_enabled Profiling"
+else
+    ac_disabled="$ac_disabled Profiling"
 fi
 
 
@@ -71,6 +80,7 @@ else
     AC_DEFINE([SUMOReal], [float], [defines the precision of floats])
     ac_disabled="$ac_disabled DoublePrecision"
 fi
+AC_DEFINE([SUMOLong], [long long int], [defines a long])
 
 AC_ARG_ENABLE([subsecond], [AS_HELP_STRING([--disable-subsecond],[Disable subsecond timesteps.])])
 if test x$enable_subsecond != xno; then
@@ -83,6 +93,7 @@ fi
 AC_DEFINE([POSITION_EPS], [0.1], [defines the epsilon to use on position comparison])
 AC_DEFINE([OUTPUT_ACCURACY], [2], [defines the number of digits after the comma in output])
 AC_DEFINE([GEO_OUTPUT_ACCURACY], [6], [defines the number of digits after the comma in geo-coordinates output])
+AC_DEFINE([SUMOLong], [long long int], [defines the type for very long integers])
 
 dnl   ... for xerces 3.0
 PKG_CHECK_MODULES([XERCES], [xerces-c >= 3.0],
@@ -90,19 +101,19 @@ PKG_CHECK_MODULES([XERCES], [xerces-c >= 3.0],
                   [AC_DEFINE([XERCES3_SIZE_t],[unsigned int],[Define length for Xerces 2.])])
 
 
-AM_CONDITIONAL(MESOSIM, test -d $srcdir/src/mesosim)
-m4_syscmd([test -d src/mesosim])
+AM_CONDITIONAL(INTERNAL, test -d $srcdir/src/internal)
+m4_syscmd([test -d src/internal])
 m4_if(m4_sysval,[0],[
-    AC_DEFINE([HAVE_MESOSIM], [1], [Define to enable mesoscopic simulation code.])
+    AC_DEFINE([HAVE_INTERNAL], [1], [Define to enable internal code.])
     AC_CONFIG_FILES([src/mesogui/Makefile src/mesosim/Makefile src/netedit/Makefile src/osgview/Makefile src/marouter/Makefile src/internal/Makefile unittest/src/internal/Makefile])
-    MESO_DIRS="mesosim marouter internal"
-    AC_SUBST([MESO_DIRS])
-    MESOGUI_DIRS="mesogui netedit osgview"
-    AC_SUBST([MESOGUI_DIRS])
+    INTERNAL_DIRS="mesosim marouter internal"
+    AC_SUBST([INTERNAL_DIRS])
+    GUI_INTERNAL_DIRS="mesogui netedit osgview"
+    AC_SUBST([GUI_INTERNAL_DIRS])
     UNITTEST_INTERNAL_DIRS=internal
     AC_SUBST([UNITTEST_INTERNAL_DIRS])
-    ac_enabled="$ac_enabled Meso"
-    program_transform_name="s,sumo,meso,; $program_transform_name"
+    ac_enabled="$ac_enabled Internal"
+    program_transform_name="s,\$\$,Int,; s,sumoInt,meso,; s,sumo-guiInt,meso-gui,; s,marouterInt,marouter,; s,neteditInt,netedit,; $program_transform_name"
 ])
 
 AC_ARG_ENABLE([traci],[AS_HELP_STRING([--disable-traci],[disable Traffic Control Interface (TraCI) Server [default=no].])])
@@ -392,7 +403,7 @@ fi
 
 if test x"$MESOGUI_DIRS" != x; then
     AC_CHECK_HEADER([osg/Config], [AC_DEFINE([HAVE_OSG], [1], [defined if osg is available])
-    OSG_LIBS="-losg -losgGA -losgViewer -losgUtil -losgDB" AC_SUBST(OSG_LIBS)])
+    OSG_LIBS="-losg -losgGA -losgViewer -losgUtil -losgDB -lOpenThreads" AC_SUBST(OSG_LIBS)])
 fi
 
 AM_CPPFLAGS="-I$PWD/$srcdir/src $AM_CPPFLAGS"
@@ -485,6 +496,7 @@ src/utils/importio/Makefile
 src/utils/iodevices/Makefile
 src/utils/options/Makefile
 src/utils/shapes/Makefile
+src/utils/traci/Makefile
 src/utils/xml/Makefile
 unittest/Makefile
 unittest/src/Makefile

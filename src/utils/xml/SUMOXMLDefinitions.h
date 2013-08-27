@@ -49,6 +49,8 @@
 enum SumoXMLTag {
     /** invalid tag */
     SUMO_TAG_NOTHING,
+    /** root element of a network file */
+    SUMO_TAG_NET,
     /** begin/end of the description of an edge */
     SUMO_TAG_EDGE,
     /** begin/end of the description of a single lane */
@@ -64,28 +66,21 @@ enum SumoXMLTag {
     SUMO_TAG_MSG_EMITTER,
 #endif
     /** an e1 detector */
-    SUMO_TAG_E1DETECTOR__DEPRECATED,
     SUMO_TAG_E1DETECTOR,
     SUMO_TAG_INDUCTION_LOOP,
     /** an e2 detector */
-    SUMO_TAG_E2DETECTOR__DEPRECATED,
     SUMO_TAG_E2DETECTOR,
     SUMO_TAG_LANE_AREA_DETECTOR,
     /** an e3 detector */
-    SUMO_TAG_E3DETECTOR__DEPRECATED,
     SUMO_TAG_E3DETECTOR,
     SUMO_TAG_ENTRY_EXIT_DETECTOR,
     /** an edge based mean data detector */
-    SUMO_TAG_MEANDATA_EDGE__DEPRECATED,
     SUMO_TAG_MEANDATA_EDGE,
     /** a lane based mean data detector */
-    SUMO_TAG_MEANDATA_LANE__DEPRECATED,
     SUMO_TAG_MEANDATA_LANE,
     /** an e3 entry point*/
-    SUMO_TAG_DET_ENTRY__DEPRECATED,
     SUMO_TAG_DET_ENTRY,
     /** an e3 exit point */
-    SUMO_TAG_DET_EXIT__DEPRECATED,
     SUMO_TAG_DET_EXIT,
     /// @brief An edge-following detector
     SUMO_TAG_EDGEFOLLOWDETECTOR,
@@ -100,46 +95,32 @@ enum SumoXMLTag {
     /// @brief A bus stop
     SUMO_TAG_BUS_STOP,
     /** a vtypeprobe detector */
-    SUMO_TAG_VTYPEPROBE__DEPRECATED,
     SUMO_TAG_VTYPEPROBE,
     /** a routeprobe detector */
-    SUMO_TAG_ROUTEPROBE__DEPRECATED,
     SUMO_TAG_ROUTEPROBE,
+    /** root element of a route file */
+    SUMO_TAG_ROUTES,
     /** description of a vehicle */
     SUMO_TAG_VEHICLE,
     /** description of a vehicle type */
-    SUMO_TAG_VTYPE__DEPRECATED,
     SUMO_TAG_VTYPE,
     /** begin/end of the description of a route */
     SUMO_TAG_ROUTE,
-    /** begin/end of the description of succeeding lanes (deprecated) */
-    SUMO_TAG_SUCC,
-    /** description of a single succeeding lane (deprecated) */
-    SUMO_TAG_SUCCLANE,
-    /** begin of a right-of-way logic (deprecated) */
-    SUMO_TAG_ROWLOGIC__DEPRECATED,
-    /** description of a single junction logic part (deprecated) */
-    SUMO_TAG_LOGICITEM,
     /** description of a logic request within the junction */
     SUMO_TAG_REQUEST,
     /** a source */
     SUMO_TAG_SOURCE,
     /** a traffic assignment zone */
-    SUMO_TAG_DISTRICT__DEPRECATED,
     SUMO_TAG_TAZ,
     /** a source within a district (connection road) */
-    SUMO_TAG_DSOURCE__DEPRECATED,
     SUMO_TAG_TAZSOURCE,
     /** a sink within a district (connection road) */
-    SUMO_TAG_DSINK__DEPRECATED,
     SUMO_TAG_TAZSINK,
     /** a traffic light logic */
-    SUMO_TAG_TLLOGIC__DEPRECATED,
     SUMO_TAG_TLLOGIC,
     /** a single phase description */
     SUMO_TAG_PHASE,
     /** a single trip definition (used by router) */
-    SUMO_TAG_TRIP__DEPRECATED,
     SUMO_TAG_TRIP,
     /** a flow definition (used by router) */
     SUMO_TAG_FLOW,
@@ -148,13 +129,10 @@ enum SumoXMLTag {
     /** an aggreagated-output interval */
     SUMO_TAG_INTERVAL,
     /// The definition of a periodic event
-    SUMO_TAG_TIMEDEVENT__DEPRECATED,
     SUMO_TAG_TIMEDEVENT,
     /// Incoming edge specification (jtrrouter)
-    SUMO_TAG_FROMEDGE__DEPRECATED,
     SUMO_TAG_FROMEDGE,
     /// Outgoing edge specification (jtrrouter)
-    SUMO_TAG_TOEDGE__DEPRECATED,
     SUMO_TAG_TOEDGE,
     /// Sink(s) specification
     SUMO_TAG_SINK,
@@ -165,23 +143,17 @@ enum SumoXMLTag {
     SUMO_TAG_RESET,
     SUMO_TAG_DELETE,
     SUMO_TAG_STOP,
-    SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED,
     SUMO_TAG_DEST_PROB_REROUTE,
-    SUMO_TAG_CLOSING_REROUTE__DEPRECATED,
     SUMO_TAG_CLOSING_REROUTE,
-    SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED,
     SUMO_TAG_ROUTE_PROB_REROUTE,
-    SUMO_TAG_POLYTYPE__DEPRECATED,
     SUMO_TAG_POLYTYPE,
     SUMO_TAG_CONNECTION,
     SUMO_TAG_PROHIBITION,
     SUMO_TAG_SPLIT,
     SUMO_TAG_NODE,
     SUMO_TAG_TYPE,
-    SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED,
     SUMO_TAG_DETECTOR_DEFINITION,
     SUMO_TAG_ROUTE_DISTRIBUTION,
-    SUMO_TAG_VTYPE_DISTRIBUTION__DEPRECATED,
     SUMO_TAG_VTYPE_DISTRIBUTION,
     SUMO_TAG_VAPORIZER,
     SUMO_TAG_ROUNDABOUT,
@@ -214,6 +186,8 @@ enum SumoXMLTag {
 
     SUMO_TAG_CF_KRAUSS,
     SUMO_TAG_CF_KRAUSS_ORIG1,
+    SUMO_TAG_CF_SMART_SK,
+    SUMO_TAG_CF_DANIEL1,
     SUMO_TAG_CF_IDM,
     SUMO_TAG_CF_IDMM,
     SUMO_TAG_CF_PWAGNER2009,
@@ -276,26 +250,16 @@ enum SumoXMLAttr {
     SUMO_ATTR_NOTHING,
     /* common attributes */
     SUMO_ATTR_ID,
-    SUMO_ATTR_REFID__DEPRECATED,
     SUMO_ATTR_REFID,
     SUMO_ATTR_NAME,
     SUMO_ATTR_TYPE,
     SUMO_ATTR_PRIORITY,
-    SUMO_ATTR_NOLANES__DEPRECATED,
     SUMO_ATTR_NUMLANES,
     SUMO_ATTR_SPEED,
     SUMO_ATTR_ONEWAY,
     SUMO_ATTR_WIDTH,
     SUMO_ATTR_REMOVE,
-    /* edge attributes */
     SUMO_ATTR_LENGTH,
-    SUMO_ATTR_FROMNODE,
-    SUMO_ATTR_TONODE,
-    SUMO_ATTR_XFROM,
-    SUMO_ATTR_YFROM,
-    SUMO_ATTR_XTO,
-    SUMO_ATTR_YTO,
-    /* node attributes */
     SUMO_ATTR_X,
     SUMO_ATTR_Y,
     SUMO_ATTR_Z,
@@ -316,24 +280,16 @@ enum SumoXMLAttr {
     SUMO_ATTR_EDGES,
     /* vehicle attributes */
     SUMO_ATTR_DEPART,
-    SUMO_ATTR_DEPARTLANE__DEPRECATED,
     SUMO_ATTR_DEPARTLANE,
-    SUMO_ATTR_DEPARTPOS__DEPRECATED,
     SUMO_ATTR_DEPARTPOS,
-    SUMO_ATTR_DEPARTSPEED__DEPRECATED,
     SUMO_ATTR_DEPARTSPEED,
-    SUMO_ATTR_ARRIVALLANE__DEPRECATED,
     SUMO_ATTR_ARRIVALLANE,
-    SUMO_ATTR_ARRIVALPOS__DEPRECATED,
     SUMO_ATTR_ARRIVALPOS,
-    SUMO_ATTR_ARRIVALSPEED__DEPRECATED,
     SUMO_ATTR_ARRIVALSPEED,
     SUMO_ATTR_ROUTE,
-    SUMO_ATTR_MAXSPEED__DEPRECATED,
     SUMO_ATTR_MAXSPEED,
     SUMO_ATTR_ACCEL,
     SUMO_ATTR_DECEL,
-    SUMO_ATTR_VCLASS__DEPRECATED,
     SUMO_ATTR_VCLASS,
     SUMO_ATTR_REPNUMBER,
     SUMO_ATTR_SPEEDFACTOR,
@@ -343,13 +299,18 @@ enum SumoXMLAttr {
     /* Car following model attributes */
     SUMO_ATTR_SIGMA,    // used by: Krauss
     SUMO_ATTR_TAU,      // Krauss
+    SUMO_ATTR_TMP1,
+    SUMO_ATTR_TMP2,
+    SUMO_ATTR_TMP3,
+    SUMO_ATTR_TMP4,
+    SUMO_ATTR_TMP5,
     SUMO_ATTR_DESIRED_GAP,// CACC
     /* route alternatives / distribution attributes */
     SUMO_ATTR_LAST,
     SUMO_ATTR_COST,
     SUMO_ATTR_PROB,
+    SUMO_ATTR_PROBS,
     SUMO_ATTR_ROUTES,
-    SUMO_ATTR_VTYPES__DEPRECATED,
     SUMO_ATTR_VTYPES,
     /* trip definition attributes */
     SUMO_ATTR_LANE,
@@ -357,11 +318,11 @@ enum SumoXMLAttr {
     SUMO_ATTR_FROM,
     SUMO_ATTR_TO,
     SUMO_ATTR_PERIOD,
-    SUMO_ATTR_FROM_TAZ__DEPRECATED,
     SUMO_ATTR_FROM_TAZ,
-    SUMO_ATTR_TO_TAZ__DEPRECATED,
     SUMO_ATTR_TO_TAZ,
     SUMO_ATTR_REROUTE,
+    SUMO_ATTR_PERSON_CAPACITY,
+    SUMO_ATTR_PERSON_NUMBER,
     /* source definitions */
     SUMO_ATTR_FUNCTION,
     SUMO_ATTR_POSITION,
@@ -369,7 +330,6 @@ enum SumoXMLAttr {
     SUMO_ATTR_STYLE,
     SUMO_ATTR_FILE,
     SUMO_ATTR_JUNCTION,
-    SUMO_ATTR_NO__DEPRECATED,
     SUMO_ATTR_NUMBER,
     SUMO_ATTR_DURATION,
     SUMO_ATTR_UNTIL,
@@ -382,12 +342,10 @@ enum SumoXMLAttr {
     /** link: the traffic light id responsible for this link */
     SUMO_ATTR_TLID,
     /** link: the index of the link within the traffic light */
-    SUMO_ATTR_TLLINKNO__DEPRECATED,
     SUMO_ATTR_TLLINKINDEX,
     /** edge: the shape in xml-definition */
     SUMO_ATTR_SHAPE,
     /// The information about how to spread the lanes from the given position
-    SUMO_ATTR_SPREADFUNC__DEPRECATED,
     SUMO_ATTR_SPREADTYPE,
     /// A color information
     SUMO_ATTR_COLOR,
@@ -427,10 +385,8 @@ enum SumoXMLAttr {
 #endif
     // Attributes for actuated traffic lights:
     /// minimum duration of a phase
-    SUMO_ATTR_MINDURATION__DEPRECATED,
     SUMO_ATTR_MINDURATION,
     /// maximum duration of a phase
-    SUMO_ATTR_MAXDURATION__DEPRECATED,
     SUMO_ATTR_MAXDURATION,
     // Attributes for junction-internal lanes
     /// Information within the junction logic which internal lanes block external
@@ -438,11 +394,8 @@ enum SumoXMLAttr {
     // Attributes for detectors
     /// Information whether the detector shall be continued on the folowing lanes
     SUMO_ATTR_CONT,
-    SUMO_ATTR_HALTING_TIME_THRESHOLD__DEPRECATED,
     SUMO_ATTR_HALTING_TIME_THRESHOLD,
-    SUMO_ATTR_HALTING_SPEED_THRESHOLD__DEPRECATED,
     SUMO_ATTR_HALTING_SPEED_THRESHOLD,
-    SUMO_ATTR_JAM_DIST_THRESHOLD__DEPRECATED,
     SUMO_ATTR_JAM_DIST_THRESHOLD,
 
     SUMO_ATTR_WAUT_ID,
@@ -453,12 +406,10 @@ enum SumoXMLAttr {
     SUMO_ATTR_START_PROG,
 
     SUMO_ATTR_OFF,
-    SUMO_ATTR_FRIENDLY_POS__DEPRECATED,
     SUMO_ATTR_FRIENDLY_POS,
     SUMO_ATTR_SPLIT_VTYPE,
     SUMO_ATTR_UNCONTROLLED,
     SUMO_ATTR_PASS,
-    SUMO_ATTR_BUS_STOP__DEPRECATED,
     SUMO_ATTR_BUS_STOP,
     SUMO_ATTR_LINE,
     SUMO_ATTR_LINES,
@@ -468,14 +419,14 @@ enum SumoXMLAttr {
     SUMO_ATTR_ALLOW,
     SUMO_ATTR_DISALLOW,
     SUMO_ATTR_PREFER,
-    SUMO_ATTR_CONTROLLED_INNER__DEPRECATED,
     SUMO_ATTR_CONTROLLED_INNER,
     SUMO_ATTR_VEHSPERHOUR,
     SUMO_ATTR_OUTPUT,
     SUMO_ATTR_HEIGHT,
-    SUMO_ATTR_GUIOFFSET,
     SUMO_ATTR_GUISHAPE,
     SUMO_ATTR_OSGFILE,
+    SUMO_ATTR_IMGFILE,
+    SUMO_ATTR_ANGLE,
     SUMO_ATTR_EMISSIONCLASS,
     SUMO_ATTR_STARTPOS,
     SUMO_ATTR_ENDPOS,
@@ -525,6 +476,8 @@ enum SumoXMLAttr {
     SUMO_ATTR_CF_CC_TAU,
 
     SUMO_ATTR_GENERATE_WALKS,
+    SUMO_ATTR_ACTTYPE,
+
 
     /**
      * ActivityGen Tags

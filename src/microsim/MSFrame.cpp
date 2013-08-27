@@ -5,6 +5,7 @@
 /// @author  Jakob Erdmann
 /// @author  Axel Wegener
 /// @author  Thimor Bohn
+/// @author  Mario Krumnow
 /// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
@@ -42,8 +43,10 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/ToString.h>
+#include <utils/geom/GeoConvHelper.h>
 #include <utils/iodevices/OutputDevice.h>
 #include <microsim/MSJunction.h>
+#include <microsim/MSRoute.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSGlobals.h>
 #include <microsim/devices/MSDevice_Vehroutes.h>
@@ -98,7 +101,7 @@ MSFrame::fillOptions() {
     oc.addSynonyme("weight-attribute", "measure", true);
     oc.addDescription("weight-attribute", "Input", "Name of the xml attribute which gives the edge weight");
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     oc.doRegister("load-state", new Option_FileName());//!!! check, describe
     oc.addDescription("load-state", "Input", "Loads a network state from FILE");
     oc.doRegister("load-state.offset", new Option_String("0", "TIME"));//!!! check, describe
@@ -114,6 +117,21 @@ MSFrame::fillOptions() {
     oc.addSynonyme("netstate-dump.empty-edges", "netstate.empty-edges");
     oc.addSynonyme("netstate-dump.empty-edges", "dump-empty-edges", true);
     oc.addDescription("netstate-dump.empty-edges", "Output", "Write also empty edges completely when dumping");
+
+
+    oc.doRegister("emission-output", new Option_FileName());
+    oc.addDescription("emission-output", "Output", "Save the emission values of each vehicle");
+    oc.doRegister("fcd-output", new Option_FileName());
+    oc.addDescription("fcd-output", "Output", "Save the Floating Car Data");
+    oc.doRegister("fcd-output.geo", new Option_Bool(false));
+    oc.addDescription("fcd-output.geo", "Output", "Save the Floating Car Data using geo-coordinates (lon/lat)");
+    oc.doRegister("full-output", new Option_FileName());
+    oc.addDescription("full-output", "Output", "Save a lot of information for each timestep (very redundant)");
+    oc.doRegister("queue-output", new Option_FileName());
+    oc.addDescription("queue-output", "Output", "Save the vehicle queues at the junctions (experimental)");
+    oc.doRegister("vtk-output", new Option_FileName());
+    oc.addDescription("vtk-output", "Output", "Save complete vehicle positions in VTK Format (usage: /file/out will produce /file/out_$NR$.vtp files)");
+
 
     oc.doRegister("summary-output", new Option_FileName());
     oc.addSynonyme("summary-output", "summary");
@@ -141,10 +159,15 @@ MSFrame::fillOptions() {
     oc.addSynonyme("vehroute-output.sorted", "vehroutes.sorted");
     oc.addDescription("vehroute-output.sorted", "Output", "Sorts the output by departure time");
 
-#ifdef HAVE_MESOSIM
+    oc.doRegister("vehroute-output.write-unfinished", new Option_Bool(false));
+    oc.addDescription("vehroute-output.write-unfinished", "Output", "Write vehroute output for vehicles which have not arrived at simulation end");
+
+
+
+#ifdef HAVE_INTERNAL
     oc.doRegister("save-state.times", new Option_IntVector(IntVector()));//!!! check, describe
     oc.addDescription("save-state.times", "Output", "Use INT[] as times at which a network state written");
-    oc.doRegister("save-state.prefix", new Option_FileName());//!!! check, describe
+    oc.doRegister("save-state.prefix", new Option_FileName("state"));//!!! check, describe
     oc.addDescription("save-state.prefix", "Output", "Prefix for network states");
     oc.doRegister("save-state.files", new Option_FileName());//!!! check, describe
     oc.addDescription("save-state.files", "Output", "Files for network states");
@@ -201,6 +224,13 @@ MSFrame::fillOptions() {
     oc.doRegister("lanechange.allow-swap", new Option_Bool(false));
     oc.addDescription("lanechange.allow-swap", "Processing", "Whether blocking vehicles trying to change lanes may be swapped.");
 
+    oc.doRegister("routing-algorithm", new Option_String("dijkstra"));
+    oc.addDescription("routing-algorithm", "Processing",
+                      "Select among routing algorithms ['dijkstra', 'astar']");
+
+    oc.doRegister("routeDist.maxsize", new Option_Integer());
+    oc.addDescription("routeDist.maxsize", "Processing",
+                      "Restrict the maximum size of route distributions");
 
     // devices
     MSDevice_Routing::insertOptions();
@@ -226,7 +256,7 @@ MSFrame::fillOptions() {
 #endif
 #endif
     //
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     oc.addOptionSubTopic("Mesoscopic");
     oc.doRegister("mesosim", new Option_Bool(false));
     oc.addDescription("mesosim", "Mesoscopic", "Enables mesoscopic simulation");
@@ -240,12 +270,14 @@ MSFrame::fillOptions() {
     oc.addDescription("meso-taujf", "Mesoscopic", "Factor for calculating the jam-free headway time");
     oc.doRegister("meso-taujj", new Option_String("2", "TIME"));
     oc.addDescription("meso-taujj", "Mesoscopic", "Factor for calculating the jam-jam headway time");
-    oc.doRegister("meso-jam-threshold", new Option_Float(0.29f));
-    oc.addDescription("meso-jam-threshold", "Mesoscopic", "Minimum percentage of occupied space to consider a segment jammed");
+    oc.doRegister("meso-jam-threshold", new Option_Float(-1));
+    oc.addDescription("meso-jam-threshold", "Mesoscopic", "Minimum percentage of occupied space to consider a segment jammed. A negative argument causes thresholds to be computed based on edge speed and tauff (default)");
     oc.doRegister("meso-multi-queue", new Option_Bool(false));
     oc.addDescription("meso-multi-queue", "Mesoscopic", "Enable multiple queues at edge ends");
     oc.doRegister("meso-junction-control", new Option_Bool(false));
     oc.addDescription("meso-junction-control", "Mesoscopic", "Enable mesoscopic traffic light and priority junction handling");
+    oc.doRegister("meso-junction-control.limited", new Option_Bool(false));
+    oc.addDescription("meso-junction-control.limited", "Mesoscopic", "Enable mesoscopic traffic light and priority junction handling for saturated links. This prevents faulty traffic lights from hindering flow in low-traffic situations");
     oc.doRegister("meso-recheck", new Option_String("0", "TIME"));
     oc.addDescription("meso-recheck", "Mesoscopic", "Time interval for rechecking insertion into the next segment after failure");
 #endif
@@ -280,6 +312,14 @@ MSFrame::buildStreams() {
     OutputDevice::createDeviceByOption("netstate-dump", "sumo-netstate");
     OutputDevice::createDeviceByOption("summary-output", "summary");
     OutputDevice::createDeviceByOption("tripinfo-output", "tripinfos");
+
+    //extended
+    OutputDevice::createDeviceByOption("fcd-output", "fcd-export");
+    OutputDevice::createDeviceByOption("emission-output", "emission-export");
+    OutputDevice::createDeviceByOption("full-output", "full-export");
+    OutputDevice::createDeviceByOption("queue-output", "queue-export");
+    OutputDevice::createDeviceByOption("vtk-output", "vtk-export");
+
     MSDevice_Vehroutes::init();
 }
 
@@ -309,6 +349,20 @@ MSFrame::checkOptions() {
         WRITE_ERROR("A vehroute-output file is needed for exit times.");
         ok = false;
     }
+    if (oc.isSet("gui-settings-file") &&
+            oc.getString("gui-settings-file") != "" &&
+            !oc.isUsableFileList("gui-settings-file")) {
+        ok = false;
+    }
+    if (oc.isSet("routeDist.maxsize") && oc.getInt("routeDist.maxsize") <= 0) {
+        WRITE_ERROR("routeDist.maxsize must be positive");
+        ok = false;
+    }
+#ifdef HAVE_INTERNAL
+    if (oc.getBool("meso-junction-control.limited") && !oc.getBool("meso-junction-control")) {
+        oc.set("meso-junction-control", "true");
+    }
+#endif
     return ok;
 }
 
@@ -328,14 +382,21 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
     MSGlobals::gTimeToGridlock = string2time(oc.getString("time-to-teleport")) < 0 ? 0 : string2time(oc.getString("time-to-teleport"));
     MSGlobals::gCheck4Accidents = !oc.getBool("ignore-accidents");
     MSGlobals::gCheckRoutes = !oc.getBool("ignore-route-errors");
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     MSGlobals::gStateLoaded = oc.isSet("load-state");
     MSGlobals::gUseMesoSim = oc.getBool("mesosim");
+    MSGlobals::gMesoLimitedJunctionControl = oc.getBool("meso-junction-control.limited");
+    if (MSGlobals::gUseMesoSim) {
+        MSGlobals::gUsingInternalLanes = false;
+    }
 #endif
 
 #ifdef HAVE_SUBSECOND_TIMESTEPS
     DELTA_T = string2time(oc.getString("step-length"));
 #endif
+    if (oc.isSet("routeDist.maxsize")) {
+        MSRoute::setMaxRouteDistSize(oc.getInt("routeDist.maxsize"));
+    }
 }
 
 

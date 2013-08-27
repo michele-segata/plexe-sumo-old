@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/netgenConfiguration.xsd">
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/netgenerateConfiguration.xsd">
 
     <configuration>
         <configuration-file value="" synonymes="c configuration" type="FILE" help="Loads the named config on startup"/>
@@ -53,7 +53,10 @@
         <map-output value="" synonymes="M" type="FILE" help="Writes joined edges information to FILE"/>
         <matsim-output value="" type="FILE" help="The generated net will be written to FILE using MATsim format."/>
         <opendrive-output value="" type="FILE" help="The generated net will be written to FILE using openDRIVE format."/>
+        <dlr-navteq-output value="" type="FILE" help="The generated net will be written to dlr-navteq files with the given PREFIX."/>
         <output.street-names value="false" type="BOOL" help="Street names will be included in the output (if available)."/>
+        <output.original-names value="false" type="BOOL" help="Writes original names, if given, as parameter."/>
+        <street-sign-output value="" type="FILE" help="Writes street signs as POIs to FILE."/>
     </output>
 
     <tls_building>
@@ -71,7 +74,7 @@
     </tls_building>
 
     <edge_removal>
-        <keep-edges.min-speed value="" synonymes="edges-min-speed" type="FLOAT" help="Only keep edges with speed > FLOAT"/>
+        <keep-edges.min-speed value="" synonymes="edges-min-speed" type="FLOAT" help="Only keep edges with speed in meters/second > FLOAT"/>
         <remove-edges.explicit value="" synonymes="remove-edges" type="STR" help="Remove edges in STR"/>
         <keep-edges.explicit value="" synonymes="keep-edges" type="STR" help="Only keep edges in STR"/>
         <keep-edges.input-file value="" type="FILE" help="Only keep edges in FILE"/>
@@ -96,7 +99,8 @@
         <roundabouts.guess value="false" synonymes="guess-roundabouts" type="BOOL" help="Enable roundabout-guessing"/>
         <lefthand value="false" type="BOOL" help="Assumes left-hand traffic on the network"/>
         <junctions.join value="false" type="BOOL" help="Joins junctions that are close to each other (recommended for OSM import)"/>
-        <junctions.join-dist value="15" type="FLOAT" help="Determines the maximal distance for joining junctions (defaults to 15)"/>
+        <junctions.join-dist value="10" type="FLOAT" help="Determines the maximal distance for joining junctions (defaults to 10)"/>
+        <tls.join-dist value="20" type="FLOAT" help="Determines the maximal distance for joining traffic lights (defaults to 20)"/>
     </processing>
 
     <building_defaults>
@@ -111,6 +115,7 @@
         <print-options value="false" synonymes="p" type="BOOL" help="Prints option values before processing"/>
         <help value="false" synonymes="?" type="BOOL" help="Prints this screen"/>
         <version value="false" synonymes="V" type="BOOL" help="Prints the current version"/>
+        <xml-validation value="false" synonymes="X" type="BOOL" help="Enable schema validation of XML inputs"/>
         <no-warnings value="false" synonymes="W suppress-warnings" type="BOOL" help="Disables output of warnings"/>
         <log value="" synonymes="l log-file" type="FILE" help="Writes all messages to FILE (implies verbose)"/>
         <message-log value="" type="FILE" help="Writes all non-error messages to FILE (implies verbose)"/>

@@ -72,6 +72,8 @@ public:
      */
     static void loadNetwork(const OptionsCont& oc, NBNetBuilder& nb);
 
+    /// @brief scaling factor for geo coordinates (DLRNavteq format uses this to increase floating point precisions)
+    static const int GEO_SCALE;
 
 protected:
     /**
@@ -90,11 +92,11 @@ protected:
          * @param[in, geoms] geoms Storage for read edge geometries
          */
         NodesHandler(NBNodeCont& nc, const std::string& file,
-                     std::map<std::string, PositionVector> &geoms) ;
+                     std::map<std::string, PositionVector>& geoms);
 
 
         /// @brief Destructor
-        ~NodesHandler() ;
+        ~NodesHandler();
 
 
         /** @brief Parsing method
@@ -108,7 +110,7 @@ protected:
          * @exception ProcessError if something fails
          * @see LineHandler::report
          */
-        bool report(const std::string& result) ;
+        bool report(const std::string& result);
 
 
     protected:
@@ -116,7 +118,7 @@ protected:
         NBNodeCont& myNodeCont;
 
         /// @brief A container for parsed geometries
-        std::map<std::string, PositionVector> &myGeoms;
+        std::map<std::string, PositionVector>& myGeoms;
 
 
     private:
@@ -144,13 +146,16 @@ protected:
          * @param[in, filled] ec The edge control to insert loaded edges into
          * @param[in] file The name of the parsed file
          * @param[in] geoms The previously read edge geometries
+         * @param[in] streetNames The previously read street names
          */
         EdgesHandler(NBNodeCont& nc, NBEdgeCont& ec,
-                     const std::string& file, std::map<std::string, PositionVector> &geoms) ;
+                     const std::string& file,
+                     std::map<std::string, PositionVector>& geoms,
+                     std::map<std::string, std::string>& streetNames);
 
 
         /// @brief Destructor
-        ~EdgesHandler() ;
+        ~EdgesHandler();
 
 
         /** @brief Parsing method
@@ -162,7 +167,7 @@ protected:
              * @exception ProcessError if something fails
              * @see LineHandler::report
          */
-        bool report(const std::string& result) ;
+        bool report(const std::string& result);
 
 
     protected:
@@ -172,11 +177,18 @@ protected:
         /// @brief The edge container to store loaded edges into
         NBEdgeCont& myEdgeCont;
 
-        /// @brief Previously read edge geometries
-        std::map<std::string, PositionVector> &myGeoms;
+        /// @brief Previously read edge geometries (manipulated during use)
+        std::map<std::string, PositionVector>& myGeoms;
+
+        /// @brief Previously read streat names (non-const because operate[] is more convenient)
+        std::map<std::string, std::string>& myStreetNames;
 
         /// @brief Whether node positions shall not be added to the edge's geometry
         bool myTryIgnoreNodePositions;
+
+    private:
+        /// @brief build the street name for the given ids
+        std::string getStreetNameFromIDs(const std::string& regionalID, const std::string& localID) const;
 
 
     private:
@@ -205,11 +217,11 @@ protected:
          * @param[in] file The name of the parsed file
          */
         TrafficlightsHandler(NBNodeCont& nc, NBTrafficLightLogicCont& tlc,
-                             const std::string& file) ;
+                             NBEdgeCont& ne, const std::string& file);
 
 
         /// @brief Destructor
-        ~TrafficlightsHandler() ;
+        ~TrafficlightsHandler();
 
 
         /** @brief Parsing method
@@ -221,7 +233,7 @@ protected:
          * @exception ProcessError if something fails
          * @see LineHandler::report
          */
-        bool report(const std::string& result) ;
+        bool report(const std::string& result);
 
 
     protected:
@@ -231,6 +243,9 @@ protected:
         /// @brief The traffic lights container to add built tls to
         NBTrafficLightLogicCont& myTLLogicCont;
 
+        /// @brief The edge container to get the referenced edges from
+        NBEdgeCont& myEdgeCont;
+
 
     private:
         /// @brief Invalidated copy constructor.
@@ -238,6 +253,54 @@ protected:
 
         /// @brief Invalidated assignment operator.
         TrafficlightsHandler& operator=(const TrafficlightsHandler&);
+
+    };
+
+
+    /**
+     * @class NamesHandler
+     * @brief Importer of street names in DLRNavteq's (aka elmar) format
+     *
+     * Being a LineHandler, this class retrieves each line from a LineReader
+     * and parses these information assuming they contain name definitions
+     * in DLRNavteq's format.
+     */
+    class NamesHandler : public LineHandler {
+    public:
+        /** @brief Constructor
+         * @param[in] file The name of the parsed file
+         * @param[filled] streetNames output container for read names
+         */
+        NamesHandler(const std::string& file, std::map<std::string, std::string>& streetNames);
+
+
+        /// @brief Destructor
+        ~NamesHandler();
+
+
+        /** @brief Parsing method
+         *
+         * Implementation of the LineHandler-interface called by a LineReader;
+         * interprets the retrieved information and stores the streetNames
+         * @param[in] result The read line
+         * @return Whether the parsing shall continue
+         * @exception ProcessError if something fails
+         * @see LineHandler::report
+         */
+        bool report(const std::string& result);
+
+
+    protected:
+        /// @brief The container for storing read names
+        std::map<std::string, std::string>& myStreetNames;
+
+
+    private:
+        /// @brief Invalidated copy constructor.
+        NamesHandler(const NamesHandler&);
+
+        /// @brief Invalidated assignment operator.
+        NamesHandler& operator=(const NamesHandler&);
 
     };
 

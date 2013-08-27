@@ -31,6 +31,7 @@
 #include <config.h>
 #endif
 
+#include <set>
 #include <utils/common/Named.h>
 
 
@@ -50,12 +51,13 @@ public:
      *
      * @param[in] id The id of the trigger
      */
-    MSTrigger(const std::string& id) : Named(id) { }
-
+    MSTrigger(const std::string& id);
 
     /// @brief Destructor
-    virtual ~MSTrigger() { }
+    virtual ~MSTrigger();
 
+    /// @brief properly deletes all trigger instances
+    static void cleanup();
 
 private:
     /// @brief Invalidated copy constructor.
@@ -64,6 +66,7 @@ private:
     /// @brief Invalidated assignment operator.
     MSTrigger& operator=(const MSTrigger&);
 
+    static std::set<MSTrigger*> myInstances;
 
 };
 

@@ -34,7 +34,6 @@
 
 #include <vector>
 #include <set>
-#include <cassert>
 #include <limits>
 #include "MSMeanData.h"
 
@@ -78,20 +77,20 @@ public:
          */
         MSLaneMeanDataValues(MSLane* const lane, const SUMOReal length, const bool doAdd,
                              const std::set<std::string>* const vTypes = 0,
-                             const MSMeanData_Net* parent = 0) ;
+                             const MSMeanData_Net* parent = 0);
 
         /** @brief Destructor */
-        virtual ~MSLaneMeanDataValues() ;
+        virtual ~MSLaneMeanDataValues();
 
         /** @brief Resets values so they may be used for the next interval
          */
-        void reset(bool afterWrite = false) ;
+        void reset(bool afterWrite = false);
 
         /** @brief Add the values of this to the given one and store them there
          *
          * @param[in] val The meandata to add to
          */
-        void addTo(MSMeanData::MeanDataValues& val) const ;
+        void addTo(MSMeanData::MeanDataValues& val) const;
 
         /// @name Methods inherited from MSMoveReminder
         /// @{
@@ -105,7 +104,7 @@ public:
          * @see MSMoveReminder
          * @see MSMoveReminder::notifyLeave
          */
-        bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos, MSMoveReminder::Notification reason) ;
+        bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos, MSMoveReminder::Notification reason);
 
 
         /** @brief Computes current values and adds them to their sums
@@ -121,10 +120,10 @@ public:
          * @see MSMoveReminder::notifyEnter
          * @see MSMoveReminder::Notification
          */
-        bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) ;
+        bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason);
         //@}
 
-        bool isEmpty() const ;
+        bool isEmpty() const;
 
         /** @brief Writes output values into the given stream
          *
@@ -149,7 +148,7 @@ public:
          * @param[in] speed Moving speed.
          */
         void notifyMoveInternal(SUMOVehicle& veh, SUMOReal timeOnLane,
-                                SUMOReal speed) ;
+                                SUMOReal speed);
 
     public:
         /// @name Collected values
@@ -165,6 +164,9 @@ public:
 
         /// @brief The number of vehicles that left this lane within the sample interval
         unsigned nVehLeft;
+
+        /// @brief The number of vehicles that left this lane within the sample interval
+        unsigned nVehVaporized;
 
     private:
         /// @brief The number of vehicles that changed from this lane
@@ -211,7 +213,7 @@ public:
 
 
     /// @brief Destructor
-    virtual ~MSMeanData_Net() ;
+    virtual ~MSMeanData_Net();
 
 protected:
     /** @brief Create an instance of MeanDataValues
@@ -226,7 +228,7 @@ protected:
      * Goes through the lists of edges and starts "resetOnly" for each edge.
      * @param [in] edge The last time step that is reported
      */
-    void resetOnly(SUMOTime stopTime) ;
+    void resetOnly(SUMOTime stopTime);
 
 private:
     /// @brief the minimum sample seconds

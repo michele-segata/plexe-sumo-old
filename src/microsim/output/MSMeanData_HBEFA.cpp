@@ -50,10 +50,12 @@
 // ---------------------------------------------------------------------------
 // MSMeanData_HBEFA::MSLaneMeanDataValues - methods
 // ---------------------------------------------------------------------------
-MSMeanData_HBEFA::MSLaneMeanDataValues::MSLaneMeanDataValues(MSLane* const lane, const SUMOReal length, const bool doAdd,
+MSMeanData_HBEFA::MSLaneMeanDataValues::MSLaneMeanDataValues(MSLane* const lane,
+        const SUMOReal length, const bool doAdd,
         const std::set<std::string>* const vTypes,
         const MSMeanData_HBEFA* parent)
-    : MSMeanData::MeanDataValues(lane, length, doAdd, vTypes), myParent(parent), CO2(0), CO(0), HC(0), NOx(0), PMx(0), fuel(0) {}
+    : MSMeanData::MeanDataValues(lane, length, doAdd, vTypes),
+      CO2(0), CO(0), HC(0), NOx(0), PMx(0), fuel(0), myParent(parent) {}
 
 
 MSMeanData_HBEFA::MSLaneMeanDataValues::~MSLaneMeanDataValues() {
@@ -91,7 +93,7 @@ void
 MSMeanData_HBEFA::MSLaneMeanDataValues::notifyMoveInternal(SUMOVehicle& veh, SUMOReal timeOnLane, SUMOReal speed) {
     sampleSeconds += timeOnLane;
     travelledDistance += speed * timeOnLane;
-    const double a = veh.getPreDawdleAcceleration();
+    const double a = veh.getAcceleration();
     CO += (timeOnLane * HelpersHBEFA::computeCO(veh.getVehicleType().getEmissionClass(), (double) speed, a));
     CO2 += (timeOnLane * HelpersHBEFA::computeCO2(veh.getVehicleType().getEmissionClass(), (double) speed, a));
     HC += (timeOnLane * HelpersHBEFA::computeHC(veh.getVehicleType().getEmissionClass(), (double) speed, a));
@@ -143,7 +145,7 @@ MSMeanData_HBEFA::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime 
             "\" fuel_perVeh=\"" << OutputDevice::realString(HelpersHBEFA::computeDefaultFuel(t->getEmissionClass(), speed, t->getCarFollowModel().getMaxAccel(), defaultTravelTime), 6);
     }
     dev << "\"";
-	dev.closeTag(true);
+    dev.closeTag(true);
 }
 
 

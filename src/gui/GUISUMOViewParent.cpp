@@ -79,7 +79,8 @@ FXDEFMAP(GUISUMOViewParent) GUISUMOViewParentMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_LOCATEVEHICLE,  GUISUMOViewParent::onCmdLocate),
     FXMAPFUNC(SEL_COMMAND,  MID_LOCATETLS,      GUISUMOViewParent::onCmdLocate),
     FXMAPFUNC(SEL_COMMAND,  MID_LOCATEADD,      GUISUMOViewParent::onCmdLocate),
-    FXMAPFUNC(SEL_COMMAND,  MID_LOCATESHAPE,    GUISUMOViewParent::onCmdLocate),
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATEPOI,      GUISUMOViewParent::onCmdLocate),
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATEPOLY,     GUISUMOViewParent::onCmdLocate),
     FXMAPFUNC(SEL_COMMAND,  MID_SIMSTEP,        GUISUMOViewParent::onSimStep),
 
 };
@@ -103,15 +104,15 @@ GUISUMOViewParent::GUISUMOViewParent(FXMDIClient* p, FXMDIMenu* mdimenu,
 
 GUISUMOAbstractView*
 GUISUMOViewParent::init(FXGLCanvas* share, GUINet& net, GUISUMOViewParent::ViewType type) {
-    switch(type) {
-    default:
-    case VIEW_2D_OPENGL:
-        myView = new GUIViewTraffic(myContentFrame, *myParent, this, net, myParent->getGLVisual(), share);
-        break;
+    switch (type) {
+        default:
+        case VIEW_2D_OPENGL:
+            myView = new GUIViewTraffic(myContentFrame, *myParent, this, net, myParent->getGLVisual(), share);
+            break;
 #ifdef HAVE_OSG
-    case VIEW_3D_OSG:
-        myView = new GUIOSGView(myContentFrame, *myParent, this, net, myParent->getGLVisual(), share);
-        break;
+        case VIEW_3D_OSG:
+            myView = new GUIOSGView(myContentFrame, *myParent, this, net, myParent->getGLVisual(), share);
+            break;
 #endif
     }
     myView->buildViewToolBars(*this);
@@ -150,7 +151,7 @@ GUISUMOViewParent::onCmdMakeSnapshot(FXObject*, FXSelector, void*) {
     std::string file = opendialog.getFilename().text();
     std::string error = myView->makeSnapshot(file);
     if (error != "") {
-        FXMessageBox::error(this, MBOX_OK, "Saving failed.", error.c_str());
+        FXMessageBox::error(this, MBOX_OK, "Saving failed.", "%s", error.c_str());
     }
     return 1;
 }
@@ -193,11 +194,17 @@ GUISUMOViewParent::onCmdLocate(FXObject*, FXSelector sel, void*) {
             icon = ICON_LOCATEADD;
             title = "Additional Objects Chooser";
             break;
-        case MID_LOCATESHAPE:
-            type = GLO_SHAPE;
-            ids = static_cast<GUIShapeContainer&>(GUINet::getInstance()->getShapeContainer()).getShapeIDs();
+        case MID_LOCATEPOI:
+            type = GLO_POI;
+            ids = static_cast<GUIShapeContainer&>(GUINet::getInstance()->getShapeContainer()).getPOIIds();
             icon = ICON_LOCATESHAPE;
-            title = "Shape Chooser";
+            title = "POI Chooser";
+            break;
+        case MID_LOCATEPOLY:
+            type = GLO_POLYGON;
+            ids = static_cast<GUIShapeContainer&>(GUINet::getInstance()->getShapeContainer()).getPolygonIDs();
+            icon = ICON_LOCATESHAPE;
+            title = "Polygon Chooser";
             break;
         default:
             throw ProcessError("Unknown Message ID in onCmdLocate");
@@ -228,7 +235,10 @@ GUISUMOViewParent::isSelected(GUIGlObject* o) const {
         return true;
     } else if (type == GLO_EDGE) {
         GUIEdge* edge = dynamic_cast<GUIEdge*>(o);
-        assert(edge);
+        if (edge == 0) {
+            // hmph, just some security stuff
+            return false;
+        }
         size_t noLanes = edge->getLanes().size();
         for (size_t j = 0; j < noLanes; ++j) {
             const GUILaneWrapper& l = edge->getLaneGeometry(j);

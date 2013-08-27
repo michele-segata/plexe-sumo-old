@@ -106,7 +106,7 @@ MFXAddEditTypedTable::editItem(FXTableItem* item,FXint how)
         {
             try {
                 myNumberEditor->setValue(
-                    TplConvert<char>::_2SUMOReal(it->getText().text()));
+                    TplConvert::_2SUMOReal(it->getText().text()));
             } catch (NumberFormatException &) {
             } catch (EmptyData &) {
             }
@@ -129,7 +129,7 @@ MFXAddEditTypedTable::editItem(FXTableItem* item,FXint how)
         {
             try {
                 myNumberEditor->setValue(
-                    TplConvert<char>::_2int(it->getText().text()));
+                    TplConvert::_2int(it->getText().text()));
             } catch (NumberFormatException &) {
             } catch (EmptyData &) {
             }
@@ -150,7 +150,7 @@ MFXAddEditTypedTable::editItem(FXTableItem* item,FXint how)
     case CT_BOOL:
         try {
             myBoolEditor->setCheck(
-                TplConvert<char>::_2bool(it->getText().text())
+                TplConvert::_2bool(it->getText().text())
                 ? true : false);
         } catch (NumberFormatException &) {
         } catch (EmptyData &) {
@@ -203,10 +203,10 @@ MFXAddEditTypedTable::getControlForItem(FXint r, FXint c) {
     register FXTableItem* item = cells[r * ncols + c];
     if (item == NULL) {
         return 0;
-        cells[r * ncols + c] = item = createItem("", NULL, NULL);
-        if (isItemSelected(r, c)) {
-            item->setSelected(FALSE);
-        }
+//         cells[r * ncols + c] = item = createItem("", NULL, NULL);
+//         if (isItemSelected(r, c)) {
+//             item->setSelected(FALSE);
+//         }
     }
     delete editor;
     editor = NULL;
@@ -256,9 +256,9 @@ MFXAddEditTypedTable::getControlForItem(FXint r, FXint c) {
             }
             try {
                 if (getCellType(c) == CT_REAL) {
-                    field->setValue(TplConvert<char>::_2SUMOReal(item->getText().text()));
+                    field->setValue(TplConvert::_2SUMOReal(item->getText().text()));
                 } else {
-                    field->setValue(TplConvert<char>::_2int(item->getText().text()));
+                    field->setValue(TplConvert::_2int(item->getText().text()));
                 }
             } catch (NumberFormatException&) {
                 field->setValue(0);
@@ -405,10 +405,8 @@ MFXAddEditTypedTable::setItemFromControl_NoRelease(FXint r, FXint c, FXWindow* c
     edited.row = r;
     edited.col = c;
     edited.updateOnly = true;
-    bool accepted = true;
     if (target) {
         if (!target->handle(this, FXSEL(SEL_CHANGED, ID_TEXT_CHANGED), (void*) &edited)) {
-            accepted = false;
             // !!! item->setText(myPreviousText);
         }
     }
@@ -609,7 +607,7 @@ MFXAddEditTypedTable::getNumberCellParams(size_t pos) const {
 
 void
 MFXAddEditTypedTable::setEnums(size_t pos,
-                               const std::vector<std::string> &params) {
+                               const std::vector<std::string>& params) {
     while (myEnums.size() <= pos) {
         myEnums.push_back(std::vector<std::string>());
     }
@@ -627,7 +625,7 @@ MFXAddEditTypedTable::addEnum(size_t pos,
 }
 
 
-const std::vector<std::string> &
+const std::vector<std::string>&
 MFXAddEditTypedTable::getEnums(size_t pos) const {
     return myEnums[pos];
 }

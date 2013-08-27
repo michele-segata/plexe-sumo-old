@@ -46,7 +46,7 @@
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 #include <mesosim/MELoop.h>
 #endif
 
@@ -72,14 +72,13 @@ NLEdgeControlBuilder::~NLEdgeControlBuilder() {
 
 void
 NLEdgeControlBuilder::beginEdgeParsing(
-    const std::string& id, MSEdge::EdgeBasicFunction function,
+    const std::string& id, const MSEdge::EdgeBasicFunction function,
     const std::string& streetName) {
-    myActiveEdge = buildEdge(id, streetName);
+    myActiveEdge = buildEdge(id, function, streetName);
     if (MSEdge::dictionary(id) != 0) {
         throw InvalidArgument("Another edge with the id '" + id + "' exists.");
     }
     myEdges.push_back(myActiveEdge);
-    myFunction = function;
 }
 
 
@@ -89,7 +88,7 @@ NLEdgeControlBuilder::addLane(const std::string& id,
                               const PositionVector& shape, SUMOReal width,
                               SVCPermissions permissions) {
     MSLane* lane = 0;
-    switch (myFunction) {
+    switch (myActiveEdge->getPurpose()) {
         case MSEdge::EDGEFUNCTION_INTERNAL:
             lane = new MSInternalLane(id, maxSpeed, length, myActiveEdge,
                                       myCurrentNumericalLaneID++, shape, width, permissions);
@@ -109,11 +108,11 @@ NLEdgeControlBuilder::addLane(const std::string& id,
 
 MSEdge*
 NLEdgeControlBuilder::closeEdge() {
-    std::vector<MSLane*> *lanes = new std::vector<MSLane*>();
+    std::vector<MSLane*>* lanes = new std::vector<MSLane*>();
     lanes->reserve(myLaneStorage->size());
     copy(myLaneStorage->begin(), myLaneStorage->end(), back_inserter(*lanes));
     myLaneStorage->clear();
-    myActiveEdge->initialize(lanes, myFunction);
+    myActiveEdge->initialize(lanes);
     return myActiveEdge;
 }
 
@@ -122,7 +121,7 @@ MSEdgeControl*
 NLEdgeControlBuilder::build() {
     for (EdgeCont::iterator i1 = myEdges.begin(); i1 != myEdges.end(); i1++) {
         (*i1)->closeBuilding();
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             MSGlobals::gMesoNet->buildSegmentsFor(**i1, OptionsCont::getOptions());
         }
@@ -133,8 +132,11 @@ NLEdgeControlBuilder::build() {
 
 
 MSEdge*
-NLEdgeControlBuilder::buildEdge(const std::string& id, const std::string& streetName) {
-    return new MSEdge(id, myCurrentNumericalEdgeID++, streetName);
+NLEdgeControlBuilder::buildEdge(const std::string& id, const MSEdge::EdgeBasicFunction function, const std::string& streetName) {
+    if (function == MSEdge::EDGEFUNCTION_INTERNAL) {
+        return new MSEdge(id, -1, function, streetName);
+    }
+    return new MSEdge(id, myCurrentNumericalEdgeID++, function, streetName);
 }
 
 

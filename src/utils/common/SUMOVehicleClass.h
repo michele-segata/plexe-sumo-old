@@ -377,7 +377,7 @@ extern SVCPermissions parseVehicleClasses(const std::string& allowedS, const std
 /** @brief Encodes the given vector of allowed classs into a bitset
  * @param[in] classesS The names vector to parse
  */
-extern SVCPermissions parseVehicleClasses(const std::vector<std::string> &allowedS);
+extern SVCPermissions parseVehicleClasses(const std::vector<std::string>& allowedS);
 
 
 // ---------------------------------------------------------------------------
@@ -411,7 +411,14 @@ extern std::string getVehicleEmissionTypeName(SUMOEmissionClass id);
  * @param[in] name The name of the emission class
  * @return The internal representation of this class
  */
-extern SUMOEmissionClass getVehicleEmissionTypeID(const std::string& name) ;
+extern SUMOEmissionClass getVehicleEmissionTypeID(const std::string& name);
+
+
+/** @brief Returns whether an edge with the given permission is a railway edge
+ * @param[in] permissions The permissions of the edge
+ * @return Whether the edge is a railway edge
+ */
+extern bool isRailway(SVCPermissions permissions);
 
 
 // ---------------------------------------------------------------------------
@@ -434,6 +441,13 @@ extern const SUMOReal DEFAULT_VEH_HEIGHT;
 extern const SumoXMLTag DEFAULT_VEH_FOLLOW_MODEL;
 extern const std::string DEFAULT_VEH_LANE_CHANGE_MODEL;
 extern const SUMOVehicleShape DEFAULT_VEH_SHAPE;
+extern const SUMOReal DEFAULT_VEH_TMP1;
+extern const SUMOReal DEFAULT_VEH_TMP2;
+extern const SUMOReal DEFAULT_VEH_TMP3;
+extern const SUMOReal DEFAULT_VEH_TMP4;
+extern const SUMOReal DEFAULT_VEH_TMP5;
+
+extern const SUMOReal DEFAULT_PERSON_SPEED;
 
 #endif
 

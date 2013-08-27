@@ -30,12 +30,6 @@
 #include <config.h>
 #endif
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
-
 #include <string>
 #include <utils/common/MsgHandler.h>
 #include <utils/geom/PositionVector.h>
@@ -46,8 +40,9 @@
 #include <microsim/MSNet.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSEdge.h>
-#include <guisim/GUINet.h>
-#include <guisim/GUIEdge.h>
+#include "GUINet.h"
+#include "GUIEdge.h"
+#include "GUIPerson.h"
 #include "GUIBusStop.h"
 #include <utils/gui/globjects/GUIGLObjectPopupMenu.h>
 #include <utils/gui/windows/GUIAppEnum.h>
@@ -59,8 +54,8 @@
 #include <utils/gui/div/GUIGlobalSelection.h>
 #include <foreign/polyfonts/polyfonts.h>
 #include <utils/geom/GeomHelper.h>
-#include <gui/GUIApplicationWindow.h>
 #include <guisim/GUIBusStop.h>
+#include <utils/gui/globjects/GLIncludes.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -70,10 +65,10 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-GUIBusStop::GUIBusStop(const std::string& id, const std::vector<std::string> &lines, MSLane& lane,
+GUIBusStop::GUIBusStop(const std::string& id, const std::vector<std::string>& lines, MSLane& lane,
                        SUMOReal frompos, SUMOReal topos)
     : MSBusStop(id, lines, lane, frompos, topos),
-      GUIGlObject_AbstractAdd("bus_stop", GLO_TRIGGER, id) {
+      GUIGlObject_AbstractAdd("busStop", GLO_TRIGGER, id) {
     myFGShape = lane.getShape();
     myFGShape.move2side((SUMOReal) 1.65);
     myFGShape = myFGShape.getSubpart(frompos, topos);
@@ -108,15 +103,24 @@ GUIBusStop::getPopUpMenu(GUIMainWindow& app,
     buildCenterPopupEntry(ret);
     buildNameCopyPopupEntry(ret);
     buildSelectionPopupEntry(ret);
+    buildShowParamsPopupEntry(ret);
     buildPositionCopyEntry(ret, false);
     return ret;
 }
 
 
 GUIParameterTableWindow*
-GUIBusStop::getParameterWindow(GUIMainWindow&,
+GUIBusStop::getParameterWindow(GUIMainWindow& app,
                                GUISUMOAbstractView&) {
-    return 0;
+    GUIParameterTableWindow* ret =
+        new GUIParameterTableWindow(app, *this, 4);
+    // add items
+    ret->mkItem("begin position [m]", false, myBegPos);
+    ret->mkItem("end position [m]", false, myEndPos);
+    ret->mkItem("person number [#]", true, new FunctionBinding<GUIBusStop, unsigned int>(this, &MSBusStop::getPersonNumber));
+    // close building
+    ret->closeBuilding();
+    return ret;
 }
 
 
@@ -132,7 +136,7 @@ GUIBusStop::drawGL(const GUIVisualizationSettings& s) const {
     GLHelper::setColor(green);
     GLHelper::drawBoxLines(myFGShape, myFGShapeRotations, myFGShapeLengths, 1.0);
     // draw details unless zoomed out to far
-    if (s.scale* s.addExaggeration >= 10) {
+    if (s.scale * s.addExaggeration >= 10) {
         // draw the lines
         for (i = 0; i != myLines.size(); ++i) {
             glPushMatrix();
@@ -158,13 +162,17 @@ GUIBusStop::drawGL(const GUIVisualizationSettings& s) const {
         glTranslated(0, 0, .1);
         GLHelper::setColor(yellow);
         GLHelper::drawFilledCircle((SUMOReal) 0.9, noPoints);
-        if (s.scale* s.addExaggeration >= 4.5) {
+        if (s.scale * s.addExaggeration >= 4.5) {
             GLHelper::drawText("H", Position(), .1, 1.6 * s.addExaggeration, green, myFGSignRot);
         }
     }
     glPopMatrix();
-    drawName(getCenteringBoundary().getCenter(), s.scale, s.addName);
     glPopName();
+    drawName(getCenteringBoundary().getCenter(), s.scale, s.addName);
+    for (std::vector<MSPerson*>::const_iterator i = myWaitingPersons.begin(); i != myWaitingPersons.end(); ++i) {
+        glTranslated(0, 1, 0); // make multiple persons viewable
+        static_cast<GUIPerson*>(*i)->drawGL(s);
+    }
 }
 
 

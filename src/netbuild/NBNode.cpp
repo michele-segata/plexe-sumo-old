@@ -101,7 +101,7 @@ NBNode::ApproachingDivider::execute(const unsigned int src, const unsigned int d
     std::vector<int> approachingLanes =
         incomingEdge->getConnectionLanes(myCurrentOutgoing);
     assert(approachingLanes.size() != 0);
-    std::deque<int> *approachedLanes = spread(approachingLanes, dest);
+    std::deque<int>* approachedLanes = spread(approachingLanes, dest);
     assert(approachedLanes->size() <= myCurrentOutgoing->getNumLanes());
     // set lanes
     for (unsigned int i = 0; i < approachedLanes->size(); i++) {
@@ -115,10 +115,10 @@ NBNode::ApproachingDivider::execute(const unsigned int src, const unsigned int d
 }
 
 
-std::deque<int> *
-NBNode::ApproachingDivider::spread(const std::vector<int> &approachingLanes,
+std::deque<int>*
+NBNode::ApproachingDivider::spread(const std::vector<int>& approachingLanes,
                                    int dest) const {
-    std::deque<int> *ret = new std::deque<int>();
+    std::deque<int>* ret = new std::deque<int>();
     unsigned int noLanes = (unsigned int) approachingLanes.size();
     // when only one lane is approached, we check, whether the SUMOReal-value
     //  is assigned more to the left or right lane
@@ -622,17 +622,18 @@ NBNode::computeLanes2Lanes() {
     }
     // special case b):
     //  two in, one out, the outgoing has the same number of lanes as the sum of the incoming
-    //  and a high speed, too
     //  --> highway on-ramp
     bool check = false;
     if (myIncomingEdges.size() == 2 && myOutgoingEdges.size() == 1) {
         check = myIncomingEdges[0]->getNumLanes() + myIncomingEdges[1]->getNumLanes() == myOutgoingEdges[0]->getNumLanes();
         check &= (myIncomingEdges[0]->getStep() <= NBEdge::LANES2EDGES);
         check &= (myIncomingEdges[1]->getStep() <= NBEdge::LANES2EDGES);
+        check &= myIncomingEdges[0] != myOutgoingEdges[0];
+        check &= myIncomingEdges[1] != myOutgoingEdges[0];
+        check &= myIncomingEdges[0]->isConnectedTo(myOutgoingEdges[0]);
+        check &= myIncomingEdges[1]->isConnectedTo(myOutgoingEdges[0]);
     }
-    if (check
-            && myIncomingEdges[0] != myOutgoingEdges[0]
-            && myIncomingEdges[0]->isConnectedTo(myOutgoingEdges[0])) {
+    if (check) {
         NBEdge* inc1 = myIncomingEdges[0];
         NBEdge* inc2 = myIncomingEdges[1];
         // for internal: check which one is the rightmost
@@ -640,12 +641,38 @@ NBNode::computeLanes2Lanes() {
         SUMOReal a2 = inc2->getAngleAtNode(this);
         SUMOReal ccw = GeomHelper::getCCWAngleDiff(a1, a2);
         SUMOReal cw = GeomHelper::getCWAngleDiff(a1, a2);
-        if (ccw < cw) {
+        if (ccw > cw) {
             std::swap(inc1, inc2);
         }
-        //
         inc1->addLane2LaneConnections(0, myOutgoingEdges[0], 0, inc1->getNumLanes(), NBEdge::L2L_VALIDATED, true, true);
         inc2->addLane2LaneConnections(0, myOutgoingEdges[0], inc1->getNumLanes(), inc2->getNumLanes(), NBEdge::L2L_VALIDATED, true, true);
+        return;
+    }
+    // special case c):
+    //  one in, two out, the incoming has the same number of lanes as the sum of the outgoing
+    //  --> highway off-ramp
+    check = false;
+    if (myIncomingEdges.size() == 1 && myOutgoingEdges.size() == 2) {
+        check = myIncomingEdges[0]->getNumLanes() == myOutgoingEdges[1]->getNumLanes() + myOutgoingEdges[0]->getNumLanes();
+        check &= (myIncomingEdges[0]->getStep() <= NBEdge::LANES2EDGES);
+        check &= myIncomingEdges[0] != myOutgoingEdges[0];
+        check &= myIncomingEdges[0] != myOutgoingEdges[1];
+        check &= myIncomingEdges[0]->isConnectedTo(myOutgoingEdges[0]);
+        check &= myIncomingEdges[0]->isConnectedTo(myOutgoingEdges[1]);
+    }
+    if (check) {
+        NBEdge* out1 = myOutgoingEdges[0];
+        NBEdge* out2 = myOutgoingEdges[1];
+        // for internal: check which one is the rightmost
+        SUMOReal a1 = out1->getAngleAtNode(this);
+        SUMOReal a2 = out2->getAngleAtNode(this);
+        SUMOReal ccw = GeomHelper::getCCWAngleDiff(a1, a2);
+        SUMOReal cw = GeomHelper::getCWAngleDiff(a1, a2);
+        if (ccw < cw) {
+            std::swap(out1, out2);
+        }
+        myIncomingEdges[0]->addLane2LaneConnections(0, out1, 0, out1->getNumLanes(), NBEdge::L2L_VALIDATED, true, true);
+        myIncomingEdges[0]->addLane2LaneConnections(out1->getNumLanes(), out2, 0, out2->getNumLanes(), NBEdge::L2L_VALIDATED, false, true);
         return;
     }
 
@@ -860,6 +887,9 @@ NBNode::getOppositeIncoming(NBEdge* e) const {
     if (find(edges.begin(), edges.end(), e) != edges.end()) {
         edges.erase(find(edges.begin(), edges.end(), e));
     }
+    if (edges.size() == 0) {
+        return 0;
+    }
     if (e->getToNode() == this) {
         sort(edges.begin(), edges.end(), NBContHelper::edge_opposite_direction_sorter(e, this));
     } else {
@@ -1015,7 +1045,7 @@ NBNode::mustBrake(const NBEdge* const from, const NBEdge* const to, int toLane) 
         if ((*i) == from) {
             continue;
         }
-        const std::vector<NBEdge::Connection> &connections = (*i)->getConnections();
+        const std::vector<NBEdge::Connection>& connections = (*i)->getConnections();
         for (std::vector<NBEdge::Connection>::const_iterator j = connections.begin(); j != connections.end(); ++j) {
             if ((*j).toEdge == to && ((*j).toLane < 0 || (*j).toLane == toLane)) {
                 return true;
@@ -1189,19 +1219,23 @@ NBNode::getDirection(const NBEdge* const incoming, const NBEdge* const outgoing)
 }
 
 
-std::string
-NBNode::stateCode(const NBEdge* incoming, NBEdge* outgoing, int fromlane, bool mayDefinitelyPass) const {
+LinkState
+NBNode::getLinkState(const NBEdge* incoming, NBEdge* outgoing, int fromlane,
+                     bool mayDefinitelyPass, const std::string& tlID) const {
+    if (tlID != "") {
+        return LINKSTATE_TL_OFF_BLINKING;
+    }
     if (outgoing == 0) { // always off
-        return toString(LINKSTATE_TL_OFF_NOSIGNAL);
+        return LINKSTATE_TL_OFF_NOSIGNAL;
     }
     if (myType == NODETYPE_RIGHT_BEFORE_LEFT) {
-        return toString(LINKSTATE_EQUAL); // all the same
+        return LINKSTATE_EQUAL; // all the same
     }
     if ((!incoming->isInnerEdge() && mustBrake(incoming, outgoing, fromlane)) && !mayDefinitelyPass) {
-        return toString(LINKSTATE_MINOR); // minor road
+        return LINKSTATE_MINOR; // minor road
     }
-    // traffic lights are not regardedm here
-    return toString(LINKSTATE_MAJOR);
+    // traffic lights are not regarded here
+    return LINKSTATE_MAJOR;
 }
 
 
@@ -1357,7 +1391,7 @@ void
 NBNode::buildInnerEdges() {
     unsigned int noInternalNoSplits = 0;
     for (EdgeVector::const_iterator i = myIncomingEdges.begin(); i != myIncomingEdges.end(); i++) {
-        const std::vector<NBEdge::Connection> &elv = (*i)->getConnections();
+        const std::vector<NBEdge::Connection>& elv = (*i)->getConnections();
         for (std::vector<NBEdge::Connection>::const_iterator k = elv.begin(); k != elv.end(); ++k) {
             if ((*k).toEdge == 0) {
                 continue;

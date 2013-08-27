@@ -112,8 +112,11 @@ private:
      */
     bool streetsCompleted;
 
-    int NrStreets;
     int nbrCars;
+
+private:
+    /// @brief invalidated assignment operator
+    AGCity& operator=(const AGCity&);
 };
 
 #endif

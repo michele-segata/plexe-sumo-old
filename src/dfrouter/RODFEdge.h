@@ -60,15 +60,15 @@ public:
      * @param[in] to The node the edge ends at
      * @param[in] index The numeric id of the edge
      */
-    RODFEdge(const std::string& id, RONode* from, RONode* to, unsigned int index) ;
+    RODFEdge(const std::string& id, RONode* from, RONode* to, unsigned int index);
 
 
     /// @brief Destructor
-    ~RODFEdge() ;
+    ~RODFEdge();
 
-    void setFlows(const std::vector<FlowDef> &flows);
+    void setFlows(const std::vector<FlowDef>& flows);
 
-    const std::vector<FlowDef> &getFlows() const;
+    const std::vector<FlowDef>& getFlows() const;
 
 
 private:

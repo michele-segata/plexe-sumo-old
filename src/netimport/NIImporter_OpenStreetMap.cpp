@@ -133,14 +133,14 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
     //  for highways
     NBTypeCont& tc = nb.getTypeCont();
     SUMOReal const WIDTH = NBEdge::UNSPECIFIED_WIDTH;
-    tc.insert("highway.motorway",      3, (SUMOReal)(160./ 3.6), 13, WIDTH, SVC_UNKNOWN, true);
+    tc.insert("highway.motorway",      3, (SUMOReal)(160. / 3.6), 13, WIDTH, SVC_UNKNOWN, true);
     tc.insert("highway.motorway_link", 1, (SUMOReal)(80. / 3.6), 12, WIDTH, SVC_UNKNOWN, true);
-    tc.insert("highway.trunk",         2, (SUMOReal)(100./ 3.6), 11, WIDTH); // !!! 130km/h?
+    tc.insert("highway.trunk",         2, (SUMOReal)(100. / 3.6), 11, WIDTH); // !!! 130km/h?
     tc.insert("highway.trunk_link",    1, (SUMOReal)(80. / 3.6), 10, WIDTH);
-    tc.insert("highway.primary",       2, (SUMOReal)(100./ 3.6),  9, WIDTH);
+    tc.insert("highway.primary",       2, (SUMOReal)(100. / 3.6),  9, WIDTH);
     tc.insert("highway.primary_link",  1, (SUMOReal)(80. / 3.6),  8, WIDTH);
-    tc.insert("highway.secondary",     2, (SUMOReal)(100./ 3.6),  7, WIDTH);
-    tc.insert("highway.secondary_link",1, (SUMOReal)(80. / 3.6),  6, WIDTH);
+    tc.insert("highway.secondary",     2, (SUMOReal)(100. / 3.6),  7, WIDTH);
+    tc.insert("highway.secondary_link", 1, (SUMOReal)(80. / 3.6),  6, WIDTH);
     tc.insert("highway.tertiary",      1, (SUMOReal)(80. / 3.6),  6, WIDTH);
     tc.insert("highway.tertiary_link", 1, (SUMOReal)(80. / 3.6),  5, WIDTH);
     tc.insert("highway.unclassified",  1, (SUMOReal)(80. / 3.6),  5, WIDTH);
@@ -150,7 +150,7 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
     tc.insert("highway.track",         1, (SUMOReal)(20. / 3.6),  1, WIDTH);
     tc.insert("highway.services",      1, (SUMOReal)(30. / 3.6),  1, WIDTH);
     tc.insert("highway.unsurfaced",    1, (SUMOReal)(30. / 3.6),  1, WIDTH); // unofficial value, used outside germany
-    tc.insert("highway.footway",       1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_PEDESTRIAN); 
+    tc.insert("highway.footway",       1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_PEDESTRIAN);
     tc.insert("highway.pedestrian",    1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_PEDESTRIAN);
 
     tc.insert("highway.path",          1, (SUMOReal)(10. / 3.6),  1, WIDTH, SVC_PEDESTRIAN);
@@ -161,16 +161,16 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
     tc.insert("highway.steps",         1, (SUMOReal)(5.  / 3.6),  1, WIDTH, SVC_PEDESTRIAN); // :-) do not run too fast
     tc.insert("highway.stairs",        1, (SUMOReal)(5.  / 3.6),  1, WIDTH, SVC_PEDESTRIAN); // additional
     tc.insert("highway.bus_guideway",  1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_BUS);
-    tc.insert("highway.raceway",       2, (SUMOReal)(300./ 3.6), 14, WIDTH, SVC_VIP);
+    tc.insert("highway.raceway",       2, (SUMOReal)(300. / 3.6), 14, WIDTH, SVC_VIP);
     tc.insert("highway.ford",          1, (SUMOReal)(10. / 3.6),  1, WIDTH, SVC_PUBLIC_ARMY);
 
     //  for railways
-    tc.insert("railway.rail",          1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_RAIL_FAST);
-    tc.insert("railway.tram",          1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_CITYRAIL);
-    tc.insert("railway.light_rail",    1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_LIGHTRAIL);
-    tc.insert("railway.subway",        1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_CITYRAIL);
-    tc.insert("railway.preserved",     1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_LIGHTRAIL);
-    tc.insert("railway.monorail",      1, (SUMOReal)(30. / 3.6),  1, WIDTH, SVC_LIGHTRAIL); // rail stuff has to be discussed
+    tc.insert("railway.rail",          1, (SUMOReal)(300. / 3.6),  15, WIDTH, SVC_RAIL_FAST, true);
+    tc.insert("railway.tram",          1, (SUMOReal)(100. / 3.6),  15, WIDTH, SVC_CITYRAIL,  true);
+    tc.insert("railway.light_rail",    1, (SUMOReal)(100. / 3.6),  15, WIDTH, SVC_LIGHTRAIL, true);
+    tc.insert("railway.subway",        1, (SUMOReal)(100. / 3.6),  15, WIDTH, SVC_CITYRAIL,  true);
+    tc.insert("railway.preserved",     1, (SUMOReal)(100. / 3.6),  15, WIDTH, SVC_LIGHTRAIL, true);
+    tc.insert("railway.monorail",      1, (SUMOReal)(300. / 3.6),  15, WIDTH, SVC_LIGHTRAIL, true); // rail stuff has to be discussed
 
 
     /* Parse file(s)
@@ -223,12 +223,12 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
     /* Mark which nodes are used (by edges or traffic lights).
      * This is necessary to detect which OpenStreetMap nodes are for
      * geometry only */
-    std::map<long, int> nodeUsage;
+    std::map<SUMOLong, int> nodeUsage;
     // Mark which nodes are used by edges (begin and end)
     for (std::map<std::string, Edge*>::const_iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
         Edge* e = (*i).second;
         assert(e->myCurrentIsRoad);
-        for (std::vector<long>::const_iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
+        for (std::vector<SUMOLong>::const_iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
             if (nodeUsage.find(*j) == nodeUsage.end()) {
                 nodeUsage[*j] = 0;
             }
@@ -236,7 +236,7 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
         }
     }
     // Mark which nodes are used by traffic lights
-    for (std::map<long, NIOSMNode*>::const_iterator nodesIt = myOSMNodes.begin(); nodesIt != myOSMNodes.end(); ++nodesIt) {
+    for (std::map<SUMOLong, NIOSMNode*>::const_iterator nodesIt = myOSMNodes.begin(); nodesIt != myOSMNodes.end(); ++nodesIt) {
         if (nodesIt->second->tlsControlled) {
             // If the key is not found in the map, the value is automatically
             // initialized with 0.
@@ -247,7 +247,6 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
      * Only those nodes in the middle of an edge which are used by more than
      * one edge are instantiated. Other nodes are considered as geometry nodes. */
     NBNodeCont& nc = nb.getNodeCont();
-    NBEdgeCont& ec = nb.getEdgeCont();
     NBTrafficLightLogicCont& tlsc = nb.getTLLogicCont();
     for (std::map<std::string, Edge*>::iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
         Edge* e = (*i).second;
@@ -262,8 +261,8 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
         NBNode* currentFrom = insertNodeChecking(*e->myCurrentNodes.begin(), nc, tlsc);
         NBNode* last = insertNodeChecking(*(e->myCurrentNodes.end() - 1), nc, tlsc);
         int running = 0;
-        std::vector<long> passed;
-        for (std::vector<long>::iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
+        std::vector<SUMOLong> passed;
+        for (std::vector<SUMOLong>::iterator j = e->myCurrentNodes.begin(); j != e->myCurrentNodes.end(); ++j) {
             passed.push_back(*j);
             if (nodeUsage[*j] > 1 && j != e->myCurrentNodes.end() - 1 && j != e->myCurrentNodes.begin()) {
                 NBNode* currentTo = insertNodeChecking(*j, nc, tlsc);
@@ -281,7 +280,7 @@ NIImporter_OpenStreetMap::load(const OptionsCont& oc, NBNetBuilder& nb) {
 
 
 NBNode*
-NIImporter_OpenStreetMap::insertNodeChecking(long id, NBNodeCont& nc, NBTrafficLightLogicCont& tlsc) {
+NIImporter_OpenStreetMap::insertNodeChecking(SUMOLong id, NBNodeCont& nc, NBTrafficLightLogicCont& tlsc) {
     NBNode* from = nc.retrieve(toString(id));
     if (from == 0) {
         NIOSMNode* n = myOSMNodes.find(id)->second;
@@ -300,7 +299,7 @@ NIImporter_OpenStreetMap::insertNodeChecking(long id, NBNodeCont& nc, NBTrafficL
         if (n->tlsControlled) {
             // ok, this node is a traffic light node where no other nodes
             //  participate
-            NBOwnTLDef* tlDef = new NBOwnTLDef(toString(id), from);
+            NBOwnTLDef* tlDef = new NBOwnTLDef(toString(id), from, 0);
             if (!tlsc.insert(tlDef)) {
                 // actually, nothing should fail here
                 delete tlDef;
@@ -314,7 +313,7 @@ NIImporter_OpenStreetMap::insertNodeChecking(long id, NBNodeCont& nc, NBTrafficL
 
 int
 NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* to,
-                                     const std::vector<long> &passed, NBNetBuilder& nb) {
+                                     const std::vector<SUMOLong>& passed, NBNetBuilder& nb) {
     NBNodeCont& nc = nb.getNodeCont();
     NBEdgeCont& ec = nb.getEdgeCont();
     NBTypeCont& tc = nb.getTypeCont();
@@ -330,7 +329,7 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
     if (from == to) {
         // in the special case of a looped way split again using passed
         assert(passed.size() >= 2);
-        std::vector<long> geom(passed);
+        std::vector<SUMOLong> geom(passed);
         geom.pop_back(); // remove to-node
         NBNode* intermediate = insertNodeChecking(geom.back(), nc, tlsc);
         index = insertEdge(e, index, from, intermediate, geom, nb);
@@ -341,7 +340,7 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
 
     // convert the shape
     PositionVector shape;
-    for (std::vector<long>::const_iterator i = passed.begin(); i != passed.end(); ++i) {
+    for (std::vector<SUMOLong>::const_iterator i = passed.begin(); i != passed.end(); ++i) {
         NIOSMNode* n = myOSMNodes.find(*i)->second;
         Position pos(n->lon, n->lat);
         if (!NILoader::transformCoordinates(pos, true)) {
@@ -384,7 +383,7 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
                         noLanes = MAX2(noLanes, tc.getNumLanes(*it));
                         maxSpeed = MAX2(maxSpeed, tc.getSpeed(*it));
                         prio = MAX2(prio, tc.getPriority(*it));
-                        defaultIsOneWay |= tc.getIsOneWay(*it);
+                        defaultIsOneWay &= tc.getIsOneWay(*it);
                     }
                     WRITE_MESSAGE("Adding new compound type \"" + type + "\" for edge " + id + ".");
                     // @todo use the propper bitsets instead of SVC_UNKNOWN (see #675)
@@ -455,14 +454,14 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
 // definitions of NIImporter_OpenStreetMap::NodesHandler-methods
 // ---------------------------------------------------------------------------
 NIImporter_OpenStreetMap::NodesHandler::NodesHandler(
-        std::map<long, NIOSMNode*> &toFill,
-        std::set<NIOSMNode*, CompareNodes> &uniqueNodes) : 
-    SUMOSAXHandler("osm - file"), 
-    myToFill(toFill), 
-    myUniqueNodes(uniqueNodes),
-    myLastNodeID(-1), 
-    myIsInValidNodeTag(false), 
-    myHierarchyLevel(0) {
+    std::map<SUMOLong, NIOSMNode*>& toFill,
+    std::set<NIOSMNode*, CompareNodes>& uniqueNodes) :
+    SUMOSAXHandler("osm - file"),
+    myToFill(toFill),
+    myLastNodeID(-1),
+    myIsInValidNodeTag(false),
+    myHierarchyLevel(0),
+    myUniqueNodes(uniqueNodes) {
 }
 
 
@@ -478,7 +477,7 @@ NIImporter_OpenStreetMap::NodesHandler::myStartElement(int element, const SUMOSA
             WRITE_ERROR("Node element on wrong XML hierarchy level (id='" + toString(attrs.getLongReporting(SUMO_ATTR_ID, 0, ok)) + "', level='" + toString(myHierarchyLevel) + "').");
             return;
         }
-        long id = attrs.getLongReporting(SUMO_ATTR_ID, 0, ok);
+        SUMOLong id = attrs.getLongReporting(SUMO_ATTR_ID, 0, ok);
         std::string action = attrs.hasAttribute("action") ? attrs.getStringSecure("action", "") : "";
         if (action == "delete") {
             return;
@@ -523,7 +522,7 @@ NIImporter_OpenStreetMap::NodesHandler::myStartElement(int element, const SUMOSA
                 myUniqueNodes.insert(toAdd);
             } else {
                 delete toAdd;
-                toAdd = *similarNode; 
+                toAdd = *similarNode;
                 WRITE_MESSAGE("Found duplicate nodes. Substituting " + toString(id) + " with " + toString(toAdd->id));
             }
             myToFill[id] = toAdd;
@@ -536,12 +535,11 @@ NIImporter_OpenStreetMap::NodesHandler::myStartElement(int element, const SUMOSA
         }
         bool ok = true;
         std::string key = attrs.getStringReporting(SUMO_ATTR_K, toString(myLastNodeID).c_str(), ok);
-        std::string value = attrs.getOptStringReporting(SUMO_ATTR_V, toString(myLastNodeID).c_str(), ok, "");
+        std::string value = attrs.getStringReporting(SUMO_ATTR_V, toString(myLastNodeID).c_str(), ok, false);
         if (!ok) {
             return;
         }
-        if (key == "highway" && value.find("traffic_signal") != std::string::npos &&
-                !OptionsCont::getOptions().getBool("osm.discard-tls")) {
+        if (key == "highway" && value.find("traffic_signal") != std::string::npos && !OptionsCont::getOptions().getBool("tls.discard-loaded")) {
             myToFill[myLastNodeID]->tlsControlled = true;
         }
     }
@@ -562,8 +560,8 @@ NIImporter_OpenStreetMap::NodesHandler::myEndElement(int element) {
 // definitions of NIImporter_OpenStreetMap::EdgesHandler-methods
 // ---------------------------------------------------------------------------
 NIImporter_OpenStreetMap::EdgesHandler::EdgesHandler(
-    const std::map<long, NIOSMNode*> &osmNodes,
-    std::map<std::string, Edge*> &toFill)
+    const std::map<SUMOLong, NIOSMNode*>& osmNodes,
+    std::map<std::string, Edge*>& toFill)
     : SUMOSAXHandler("osm - file"),
       myOSMNodes(osmNodes), myEdgeMap(toFill) {
     mySpeedMap["signals"] = MAXSPEED_UNGIVEN;
@@ -607,9 +605,9 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
     // parse "nd" (node) elements
     if (element == SUMO_TAG_ND) {
         bool ok = true;
-        long ref = attrs.getLongReporting(SUMO_ATTR_REF, 0, ok);
+        SUMOLong ref = attrs.getLongReporting(SUMO_ATTR_REF, 0, ok);
         if (ok) {
-            std::map<long, NIOSMNode*>::const_iterator node = myOSMNodes.find(ref);
+            std::map<SUMOLong, NIOSMNode*>::const_iterator node = myOSMNodes.find(ref);
             if (node == myOSMNodes.end()) {
                 WRITE_WARNING("The referenced geometry information (ref='" + toString(ref) + "') is not known");
                 return;
@@ -617,7 +615,7 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
                 ref = node->second->id; // node may have been substituted
                 if (myCurrentEdge->myCurrentNodes.size() == 0 ||
                         myCurrentEdge->myCurrentNodes.back() != ref) { // avoid consecutive duplicates
-                    myCurrentEdge->myCurrentNodes.push_back(ref); 
+                    myCurrentEdge->myCurrentNodes.push_back(ref);
                 }
             }
         }
@@ -629,7 +627,7 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
         }
         bool ok = true;
         std::string key = attrs.getStringReporting(SUMO_ATTR_K, toString(myCurrentEdge->id).c_str(), ok);
-        std::string value = attrs.getStringReporting(SUMO_ATTR_V, toString(myCurrentEdge->id).c_str(), ok);
+        std::string value = attrs.getStringReporting(SUMO_ATTR_V, toString(myCurrentEdge->id).c_str(), ok, false);
         if (!ok) {
             return;
         }
@@ -644,7 +642,7 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
             myCurrentEdge->myCurrentIsRoad = true;
         } else if (key == "lanes") {
             try {
-                myCurrentEdge->myNoLanes = TplConvert<char>::_2int(value.c_str());
+                myCurrentEdge->myNoLanes = TplConvert::_2int(value.c_str());
             } catch (NumberFormatException&) {
                 // might be a list of values
                 StringTokenizer st(value, ";", true);
@@ -653,7 +651,7 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
                     int minLanes = std::numeric_limits<int>::max();
                     try {
                         for (std::vector<std::string>::iterator i = list.begin(); i != list.end(); ++i) {
-                            int numLanes = TplConvert<char>::_2int(StringUtils::prune(*i).c_str());
+                            int numLanes = TplConvert::_2int(StringUtils::prune(*i).c_str());
                             minLanes = MIN2(minLanes, numLanes);
                         }
                         myCurrentEdge->myNoLanes = minLanes;
@@ -675,7 +673,7 @@ NIImporter_OpenStreetMap::EdgesHandler::myStartElement(int element,
                     conversion = 1.609344; // kilometers per mile
                 }
                 try {
-                    myCurrentEdge->myMaxSpeed = TplConvert<char>::_2SUMOReal(value.c_str()) * conversion;
+                    myCurrentEdge->myMaxSpeed = TplConvert::_2SUMOReal(value.c_str()) * conversion;
                 } catch (NumberFormatException&) {
                     WRITE_WARNING("Value of key '" + key + "' is not numeric ('" + value + "') in edge '" + myCurrentEdge->id + "'.");
                 }

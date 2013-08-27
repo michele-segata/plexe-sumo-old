@@ -74,7 +74,7 @@ _RETURN_VALUE_FUNC = {tc.ID_LIST:             traci.Storage.readStringList,
                       tc.VAR_TAU:             traci.Storage.readDouble,
                       tc.VAR_BEST_LANES:      _readBestLanes,
                       tc.DISTANCE_REQUEST:    traci.Storage.readDouble}
-subscriptionResults = {}
+subscriptionResults = traci.SubscriptionResults(_RETURN_VALUE_FUNC)
 
 def _getUniversal(varID, vehID):
     result = traci._sendReadOneStringCmd(tc.CMD_GET_VEHICLE_VARIABLE, varID, vehID)
@@ -376,16 +376,8 @@ def subscribe(vehID, varIDs=(tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION), begin=0, end=
     Subscribe to one or more vehicle values for the given interval.
     A call to this method clears all previous subscription results.
     """
-    _resetSubscriptionResults()
+    subscriptionResults.reset()
     traci._subscribe(tc.CMD_SUBSCRIBE_VEHICLE_VARIABLE, begin, end, vehID, varIDs)
-
-def _resetSubscriptionResults():
-    subscriptionResults.clear()
-
-def _addSubscriptionResult(vehID, varID, data):
-    if vehID not in subscriptionResults:
-        subscriptionResults[vehID] = {}
-    subscriptionResults[vehID][varID] = _RETURN_VALUE_FUNC[varID](data)
 
 def getSubscriptionResults(vehID=None):
     """getSubscriptionResults(string) -> dict(integer: <value_type>)
@@ -397,9 +389,14 @@ def getSubscriptionResults(vehID=None):
     It is not possible to retrieve older subscription results than the ones
     from the last time step.
     """
-    if vehID == None:
-        return subscriptionResults
-    return subscriptionResults.get(vehID, None)
+    return subscriptionResults.get(vehID)
+
+def subscribeContext(vehID, domain, dist, varIDs=(tc.VAR_ROAD_ID, tc.VAR_LANEPOSITION), begin=0, end=2**31-1):
+    subscriptionResults.reset()
+    traci._subscribeContext(tc.CMD_SUBSCRIBE_VEHICLE_CONTEXT, begin, end, vehID, domain, dist, varIDs)
+
+def getContextSubscriptionResults(vehID=None):
+    return subscriptionResults.getContext(vehID)
 
 
 def setMaxSpeed(vehID, speed):
@@ -473,7 +470,7 @@ def setSignals(vehID, signals):
     traci._sendIntCmd(tc.CMD_SET_VEHICLE_VARIABLE, tc.VAR_SIGNALS, vehID, signals)
 
 def moveTo(vehID, laneID, pos):
-    traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.VAR_MOVE_TO, vehID, 1+4+1+4+len(laneID)+8)
+    traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.VAR_MOVE_TO, vehID, 1+4+1+4+len(laneID)+1+8)
     traci._message.string += struct.pack("!Bi", tc.TYPE_COMPOUND, 2)
     traci._message.string += struct.pack("!Bi", tc.TYPE_STRING, len(laneID)) + laneID
     traci._message.string += struct.pack("!Bd", tc.TYPE_DOUBLE, pos)
@@ -540,3 +537,18 @@ def add(vehID, routeID, depart=DEPART_NOW, pos=0, speed=0, lane=0, typeID="DEFAU
     traci._message.string += struct.pack("!BdBd", tc.TYPE_DOUBLE, pos, tc.TYPE_DOUBLE, speed)
     traci._message.string += struct.pack("!BB", tc.TYPE_BYTE, lane)
     traci._sendExact()
+
+def remove(vehID, reason=tc.REMOVE_VAPORIZED):
+    '''Remove vehicle with the given ID for the give reason. 
+       Reasons are defined in module constants and start with REMOVE_'''
+    traci._sendByteCmd(tc.CMD_SET_VEHICLE_VARIABLE, tc.REMOVE, vehID, reason)
+
+def moveToVTD(vehID, edgeID, lane, x, y):
+    traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.VAR_MOVE_TO_VTD, vehID, 1+4+1+4+len(edgeID)+1+4+1+8+1+8)
+    traci._message.string += struct.pack("!Bi", tc.TYPE_COMPOUND, 4)
+    traci._message.string += struct.pack("!Bi", tc.TYPE_STRING, len(edgeID)) + edgeID
+    traci._message.string += struct.pack("!Bi", tc.TYPE_INTEGER, lane)    
+    traci._message.string += struct.pack("!Bd", tc.TYPE_DOUBLE, x)
+    traci._message.string += struct.pack("!Bd", tc.TYPE_DOUBLE, y)
+    traci._sendExact()
+

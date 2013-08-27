@@ -36,14 +36,13 @@
 #include <utils/common/Named.h>
 #include "ReferencedItem.h"
 #include <utils/common/SUMOAbstractRouter.h>
-#include <utils/common/RGBColor.h>
+#include "RORoute.h"
 
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
 class ROEdge;
-class RORoute;
 class OptionsCont;
 class ROVehicle;
 class OutputDevice;
@@ -68,38 +67,43 @@ public:
      * @param[in] id The id of the route
      * @param[in] color The color of the route
      */
-    RORouteDef(const std::string& id, const RGBColor* const color) ;
+    RORouteDef(const std::string& id, const unsigned int lastUsed,
+               const bool tryRepair);
 
 
     /// @brief Destructor
-    virtual ~RORouteDef() ;
+    virtual ~RORouteDef();
 
+
+    /** @brief Adds a single alternative loaded from the file
+        An alternative may also be generated during DUA */
+    void addLoadedAlternative(RORoute* alternative);
+
+    /** @brief Adds an alternative loaded from the file */
+    void addAlternativeDef(const RORouteDef* alternative);
 
     /** @brief Triggers building of the complete route (via
      * preComputeCurrentRoute) or returns precomputed route */
-    RORoute* buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router, SUMOTime begin,
-                                       const ROVehicle& veh) const;
+    RORoute* buildCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router, SUMOTime begin,
+                               const ROVehicle& veh) const;
 
     /** @brief Builds the complete route
      * (or chooses her from the list of alternatives, when existing) */
-    virtual void preComputeCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle> &router, SUMOTime begin,
-                                       const ROVehicle& veh) const = 0;
+    void preComputeCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router, SUMOTime begin,
+                                const ROVehicle& veh) const;
+
+    /** @brief Builds the complete route
+     * (or chooses her from the list of alternatives, when existing) */
+    void repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router, SUMOTime begin,
+                            const ROVehicle& veh) const;
 
     /** @brief Adds an alternative to the list of routes
     *
      * (This may be the new route) */
-    virtual void addAlternative(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
-                                const ROVehicle* const, RORoute* current, SUMOTime begin) = 0;
+    void addAlternative(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
+                        const ROVehicle* const, RORoute* current, SUMOTime begin);
 
-    /** @brief Returns a copy of the route definition */
-    virtual RORouteDef* copy(const std::string& id) const = 0;
-
-    /// Returns the color of the route
-    const RGBColor* getColor() const {
-        return myColor;
-    }
-
-    virtual const ROEdge* getDestination() const = 0;
+    const ROEdge* getDestination() const;
 
     /** @brief Saves the built route / route alternatives
      *
@@ -109,19 +113,54 @@ public:
      * @param[in] asAlternatives Whether the route shall be saved as route alternatives
      * @return The same device for further usage
      */
-    virtual OutputDevice& writeXMLDefinition(SUMOAbstractRouter<ROEdge, ROVehicle> &router,
-            OutputDevice& dev, const ROVehicle* const veh,
-            bool asAlternatives, bool withExitTimes) const = 0;
+    OutputDevice& writeXMLDefinition(OutputDevice& dev, const ROVehicle* const veh,
+                                     bool asAlternatives, bool withExitTimes) const;
+
+    /** @brief Returns a origin-destination copy of the route definition.
+     *
+     * The resulting route definition contains only a single route with
+     * origin and destination edge copied from this one
+     *
+     * @param[in] id The id for the new route definition
+     * @return the new route definition
+     */
+    RORouteDef* copyOrigDest(const std::string& id) const;
+
+    /** @brief Returns a deep copy of the route definition.
+     *
+     * The resulting route definition contains copies of all
+     * routes contained in this one
+     *
+     * @param[in] id The id for the new route definition
+     * @return the new route definition
+     */
+    RORouteDef* copy(const std::string& id) const;
+
+    /** @brief Returns the sum of the probablities of the contained routes */
+    SUMOReal getOverallProb() const;
 
 protected:
-    const RGBColor* copyColorIfGiven() const ;
-
-protected:
-    /// The color the route shall have
-    const RGBColor* const myColor;
-
     /// @brief precomputed route for out-of-order computation
     mutable RORoute* myPrecomputed;
+
+    /// @brief Index of the route used within the last step
+    mutable unsigned int myLastUsed;
+
+    /// @brief The alternatives
+    std::vector<RORoute*> myAlternatives;
+
+    /// @brief Information whether a new route was generated
+    mutable bool myNewRoute;
+
+    const bool myTryRepair;
+
+private:
+    /** Function-object for sorting routes from highest to lowest probability. */
+    struct ComparatorProbability {
+        bool operator()(const RORoute* const a, const RORoute* const b) {
+            return a->getProbability() > b->getProbability();
+        }
+    };
 
 private:
     /// @brief Invalidated copy constructor

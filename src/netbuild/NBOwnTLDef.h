@@ -56,32 +56,35 @@ public:
     /** @brief Constructor
      * @param[in] id The id of the tls
      * @param[in] junctions Junctions controlled by this tls
+     * @param[in] offset The offset of the plan
      */
     NBOwnTLDef(const std::string& id,
-               const std::vector<NBNode*> &junctions) ;
+               const std::vector<NBNode*>& junctions, SUMOTime offset);
 
 
     /** @brief Constructor
      * @param[in] id The id of the tls
      * @param[in] junction The junction controlled by this tls
+     * @param[in] offset The offset of the plan
      */
-    NBOwnTLDef(const std::string& id, NBNode* junction) ;
+    NBOwnTLDef(const std::string& id, NBNode* junction, SUMOTime offset);
 
 
     /** @brief Constructor
      * @param[in] id The id of the tls
+     * @param[in] offset The offset of the plan
      */
-    NBOwnTLDef(const std::string& id) ;
+    NBOwnTLDef(const std::string& id, SUMOTime offset);
 
 
     /// @brief Destructor
-    ~NBOwnTLDef() ;
+    ~NBOwnTLDef();
 
 
     /** @brief Builds the list of participating nodes/edges/links
      * @see NBTrafficLightDefinition::setParticipantsInformation
      */
-    void setParticipantsInformation() ;
+    void setParticipantsInformation();
 
 
     /// @name Public methods from NBTrafficLightDefinition-interface
@@ -94,14 +97,14 @@ public:
      * @see NBTrafficLightDefinition::remapRemoved
      */
     void remapRemoved(NBEdge* removed,
-                      const EdgeVector& incoming, const EdgeVector& outgoing) ;
+                      const EdgeVector& incoming, const EdgeVector& outgoing);
 
 
     /** @brief Informs edges about being controlled by a tls
      * @param[in] ec The container of edges
      * @see NBTrafficLightDefinition::setTLControllingInformation
      */
-    void setTLControllingInformation(const NBEdgeCont& ec) const ;
+    void setTLControllingInformation(const NBEdgeCont& ec) const;
     /// @}
 
 
@@ -116,20 +119,20 @@ protected:
      * @see NBTrafficLightDefinition::myCompute
      */
     NBTrafficLightLogic* myCompute(const NBEdgeCont& ec,
-                                   unsigned int brakingTimeSeconds) ;
+                                   unsigned int brakingTimeSeconds);
 
 
     /** @brief Collects the nodes participating in this traffic light
      * @see NBTrafficLightDefinition::collectNodes
      */
-    void collectNodes() ;
+    void collectNodes();
 
 
     /** @brief Collects the links participating in this traffic light
      * @exception ProcessError If a link could not be found
      * @see NBTrafficLightDefinition::collectLinks
      */
-    void collectLinks() ;
+    void collectLinks();
 
 
     /** @brief Replaces a removed edge/lane
@@ -140,7 +143,7 @@ protected:
      * @see NBTrafficLightDefinition::replaceRemoved
      */
     void replaceRemoved(NBEdge* removed, int removedLane,
-                        NBEdge* by, int byLane) ;
+                        NBEdge* by, int byLane);
     /// @}
 
 
@@ -150,14 +153,14 @@ protected:
      * @return This stream's weight
      * @todo There are several magic numbers; describe
      */
-    SUMOReal getDirectionalWeight(LinkDirection dir) ;
+    SUMOReal getDirectionalWeight(LinkDirection dir);
 
 
     /** @brief Returns this edge's priority at the node it ends at
      * @param[in] e The edge to ask for his priority
      * @return The edge's priority at his destination node
      */
-    int getToPrio(const NBEdge* const e) ;
+    int getToPrio(const NBEdge* const e);
 
 
     /** @brief Returns how many streams outgoing from the edges can pass the junction without being blocked
@@ -165,14 +168,14 @@ protected:
      * @param[in] e2 The second edge
      * @todo There are several magic numbers; describe
      */
-    SUMOReal computeUnblockedWeightedStreamNumber(const NBEdge* const e1, const NBEdge* const e2) ;
+    SUMOReal computeUnblockedWeightedStreamNumber(const NBEdge* const e1, const NBEdge* const e2);
 
 
     /** @brief Returns the combination of two edges from the given which has most unblocked streams
      * @param[in] edges The list of edges to include in the computation
      * @return The two edges for which the weighted number of unblocked streams is the highest
      */
-    std::pair<NBEdge*, NBEdge*> getBestCombination(const EdgeVector& edges) ;
+    std::pair<NBEdge*, NBEdge*> getBestCombination(const EdgeVector& edges);
 
 
     /** @brief Returns the combination of two edges from the given which has most unblocked streams
@@ -182,7 +185,7 @@ protected:
      * @param[in, changed] incoming The list of edges which are participating in the logic
      * @return The two edges for which the weighted number of unblocked streams is the highest
      */
-    std::pair<NBEdge*, NBEdge*> getBestPair(EdgeVector& incoming) ;
+    std::pair<NBEdge*, NBEdge*> getBestPair(EdgeVector& incoming);
 
 
     /** @class edge_by_incoming_priority_sorter

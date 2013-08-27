@@ -98,16 +98,16 @@ int main(int argc, char* argv[]) {
     RONet* net = 0;
     try {
         // Initialise subsystems and process options
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         AGFrame::fillOptions();
         OptionsIO::getOptions(true, argc, argv);
-        MsgHandler::initOutputOptions();
-        RandHelper::initRandGlobal();
         if (oc.processMetaOptions(argc < 2)) {
-            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
+        MsgHandler::initOutputOptions();
+        RandHelper::initRandGlobal();
 
         // Load network
         net = new RONet();
@@ -140,19 +140,24 @@ int main(int argc, char* argv[]) {
             WRITE_MESSAGE("\n\t ---- end of ActivityGen ----\n");
         }
         ret = 0;
-    } catch (ProcessError& pe) {
-        if (std::string(pe.what()) != std::string("Process Error") && std::string(pe.what()) != std::string("")) {
-            WRITE_ERROR(pe.what());
+    } catch (const ProcessError& e) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
 #ifndef _DEBUG
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
     } catch (...) {
         MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
         ret = 1;
 #endif
     }
-    OutputDevice::closeAll();
     SystemFrame::close();
     if (ret == 0) {
         std::cout << "Success." << std::endl;

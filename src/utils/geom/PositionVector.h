@@ -50,8 +50,7 @@ class Boundary;
  * @class PositionVector
  * @brief A list of positions
  */
-class PositionVector
-        : public AbstractPoly {
+class PositionVector : public AbstractPoly {
 public:
     /// Definition of the list of points
     typedef std::vector<Position> ContType;
@@ -61,17 +60,17 @@ public:
      *
      * Creates an empty position vector
      */
-    PositionVector() ;
+    PositionVector();
 
 
     /** @brief Constructor
      * @param[in] v The vector to copy
      */
-    PositionVector(const std::vector<Position> &v) ;
+    PositionVector(const std::vector<Position>& v);
 
 
     /// @brief Destructor
-    ~PositionVector() ;
+    ~PositionVector();
 
 
     /// @name Adding items to the container
@@ -80,13 +79,13 @@ public:
     /** @brief Appends the given position to the list
      * @param[in] p The position to append
      */
-    void push_back(const Position& p) ;
+    void push_back(const Position& p);
 
 
     /** @brief Appends all positions from the given vector
      * @param[in] p The vector from which values shall be appended
      */
-    void push_back(const PositionVector& p) ;
+    void push_back(const PositionVector& p);
     /// @}
 
 
@@ -115,11 +114,11 @@ public:
     /** Returns any intersection Points with the given line (ignoring z-coordinates) */
     PositionVector intersectionPoints2D(const Line& line) const;
 
-    /** @brief For all intersections between this vector and other, 
+    /** @brief For all intersections between this vector and other,
      * return the 2D-length of the subvector from this vectors start to the intersection */
     std::vector<SUMOReal> intersectsAtLengths2D(const PositionVector& other) const; // !!!
 
-    /** @brief For all intersections between this vector and line, 
+    /** @brief For all intersections between this vector and line,
      * return the 2D-length of the subvector from this vectors start to the intersection */
     std::vector<SUMOReal> intersectsAtLengths2D(const Line& line) const; // !!!
 
@@ -145,8 +144,11 @@ public:
     /// Returns the position at the given length
     Position positionAtLengthPosition2D(SUMOReal pos) const;
 
-    /// Returns the position at the given length
+    /// Returns the rotation at the given length
     SUMOReal rotationDegreeAtLengthPosition(SUMOReal pos) const;
+
+    /// Returns the tilt at the given length
+    SUMOReal tiltDegreeAtLengthPosition(SUMOReal pos) const;
 
     /// Returns the position between the two given point at the specified position */
     static Position positionAtLengthPosition(const Position& p1,
@@ -194,8 +196,7 @@ public:
     std::pair<PositionVector, PositionVector> splitAt(SUMOReal where) const;
 
     /// Output operator
-    friend std::ostream& operator<<(std::ostream& os,
-                                    const PositionVector& geom);
+    friend std::ostream& operator<<(std::ostream& os, const PositionVector& geom);
 
     bool crosses(const Position& p1, const Position& p2) const;
 
@@ -238,8 +239,8 @@ public:
 
     void insertAt(int index, const Position& p);
 
-    // brief inserts p between the two closest positions
-    void insertAtClosest(const Position& p);
+    // @brief inserts p between the two closest positions and returns the insertion index
+    int insertAtClosest(const Position& p);
 
     /// comparing operation
     bool operator==(const PositionVector& v2) const;

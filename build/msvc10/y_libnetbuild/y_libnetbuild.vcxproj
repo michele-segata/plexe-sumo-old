@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\netbuild\NBAlgorithms.cpp" />
+    <ClCompile Include="..\..\..\src\netbuild\NBAlgorithms_Ramps.cpp" />
     <ClCompile Include="..\..\..\src\netbuild\NBConnection.cpp" />
     <ClCompile Include="..\..\..\src\netbuild\NBContHelper.cpp" />
     <ClCompile Include="..\..\..\src\netbuild\NBDistribution.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="..\..\..\src\netbuild\NBNodeShapeComputer.cpp" />
     <ClCompile Include="..\..\..\src\netbuild\NBOwnTLDef.cpp" />
     <ClCompile Include="..\..\..\src\netbuild\NBRequest.cpp" />
+    <ClCompile Include="..\..\..\src\netbuild\NBSign.cpp" />
     <ClCompile Include="..\..\..\src\netbuild\NBTrafficLightDefinition.cpp" />
     <ClCompile Include="..\..\..\src\netbuild\NBTrafficLightLogic.cpp" />
     <ClCompile Include="..\..\..\src\netbuild\NBTrafficLightLogicCont.cpp" />
@@ -161,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\netbuild\NBAlgorithms.h" />
+    <ClInclude Include="..\..\..\src\netbuild\NBAlgorithms_Ramps.h" />
     <ClInclude Include="..\..\..\src\netbuild\NBCapacity2Lanes.h" />
     <ClInclude Include="..\..\..\src\netbuild\NBConnection.h" />
     <ClInclude Include="..\..\..\src\netbuild\NBConnectionDefs.h" />
@@ -183,6 +186,7 @@
     <ClInclude Include="..\..\..\src\netbuild\NBNodeShapeComputer.h" />
     <ClInclude Include="..\..\..\src\netbuild\NBOwnTLDef.h" />
     <ClInclude Include="..\..\..\src\netbuild\NBRequest.h" />
+    <ClInclude Include="..\..\..\src\netbuild\NBSign.h" />
     <ClInclude Include="..\..\..\src\netbuild\NBTrafficLightDefinition.h" />
     <ClInclude Include="..\..\..\src\netbuild\NBTrafficLightLogic.h" />
     <ClInclude Include="..\..\..\src\netbuild\NBTrafficLightLogicCont.h" />

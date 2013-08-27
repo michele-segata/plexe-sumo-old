@@ -50,19 +50,19 @@
  */
 class GeomHelper {
 public:
-    /** @brief return whether the line segments defined by 
+    /** @brief return whether the line segments defined by
      * Line p11,p12 and Line p21,p22 intersect
      */
     static bool intersects(const Position& p11, const Position& p12,
                            const Position& p21, const Position& p22);
 
-    /** @brief returns the intersection point 
+    /** @brief returns the intersection point
      * of the (infinite) lines p11,p12 and p21,p22.
      * If the given lines are parallel the result will contain NAN-values
      */
     static Position intersection_position2D(
-            const Position& p11, const Position& p12, 
-            const Position& p21, const Position& p22);
+        const Position& p11, const Position& p12,
+        const Position& p21, const Position& p22);
 
     static SUMOReal Angle2D(SUMOReal x1, SUMOReal y1, SUMOReal x2, SUMOReal y2);
 
@@ -110,7 +110,7 @@ public:
      * @param[in] angle2 The second angle
      * @return Angle (counter-clockwise) starting from first to second angle
      */
-    static SUMOReal getCCWAngleDiff(SUMOReal angle1, SUMOReal angle2) ;
+    static SUMOReal getCCWAngleDiff(SUMOReal angle1, SUMOReal angle2);
 
 
     /** @brief Returns the distance of second angle from first angle clockwise
@@ -118,7 +118,7 @@ public:
      * @param[in] angle2 The second angle
      * @return Angle (clockwise) starting from first to second angle
      */
-    static SUMOReal getCWAngleDiff(SUMOReal angle1, SUMOReal angle2) ;
+    static SUMOReal getCWAngleDiff(SUMOReal angle1, SUMOReal angle2);
 
 
     /** @brief Returns the minimum distance (clockwise/counter-clockwise) between both angles
@@ -126,7 +126,7 @@ public:
      * @param[in] angle2 The second angle
      * @return The minimum distance between both angles
      */
-    static SUMOReal getMinAngleDiff(SUMOReal angle1, SUMOReal angle2) ;
+    static SUMOReal getMinAngleDiff(SUMOReal angle1, SUMOReal angle2);
 
 
     /** @brief Returns the maximum distance (clockwise/counter-clockwise) between both angles
@@ -134,7 +134,7 @@ public:
      * @param[in] angle2 The second angle
      * @return The maximum distance between both angles
      */
-    static SUMOReal getMaxAngleDiff(SUMOReal angle1, SUMOReal angle2) ;
+    static SUMOReal getMaxAngleDiff(SUMOReal angle1, SUMOReal angle2);
 
 
 private:
@@ -142,9 +142,9 @@ private:
      * and Line (x3,y3),(x4,y4) intersect
      */
     static bool intersects(
-            const SUMOReal x1, const SUMOReal y1, const SUMOReal x2, const SUMOReal y2,
-            const SUMOReal x3, const SUMOReal y3, const SUMOReal x4, const SUMOReal y4,
-            SUMOReal* x, SUMOReal* y, SUMOReal* mu);
+        const SUMOReal x1, const SUMOReal y1, const SUMOReal x2, const SUMOReal y2,
+        const SUMOReal x3, const SUMOReal y3, const SUMOReal x4, const SUMOReal y4,
+        SUMOReal* x, SUMOReal* y, SUMOReal* mu);
 
 };
 

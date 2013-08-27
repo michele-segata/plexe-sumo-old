@@ -34,7 +34,7 @@
 #include <cassert>
 #include "GenericSAXHandler.h"
 #include <utils/common/TplConvert.h>
-#include <utils/common/TplConvertSec.h>
+#include <utils/common/TplConvert.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/ToString.h>
@@ -105,8 +105,8 @@ void
 GenericSAXHandler::startElement(const XMLCh* const /*uri*/,
                                 const XMLCh* const /*localname*/,
                                 const XMLCh* const qname,
-                                const Attributes& attrs) {
-    std::string name = TplConvert<XMLCh>::_2str(qname);
+                                const XERCES_CPP_NAMESPACE::Attributes& attrs) {
+    std::string name = TplConvert::_2str(qname);
     int element = convertTag(name);
     myCharactersVector.clear();
     SUMOSAXAttributesImpl_Xerces na(attrs, myPredefinedTags, myPredefinedTagsMML, name);
@@ -126,7 +126,7 @@ void
 GenericSAXHandler::endElement(const XMLCh* const /*uri*/,
                               const XMLCh* const /*localname*/,
                               const XMLCh* const qname) {
-    std::string name = TplConvert<XMLCh>::_2str(qname);
+    std::string name = TplConvert::_2str(qname);
     int element = convertTag(name);
     // collect characters
     if (myCharactersVector.size() != 0) {
@@ -175,7 +175,7 @@ GenericSAXHandler::registerParent(const int tag, GenericSAXHandler* handler) {
 void
 GenericSAXHandler::characters(const XMLCh* const chars,
                               const XERCES3_SIZE_t length) {
-    myCharactersVector.push_back(TplConvert<XMLCh>::_2str(chars, static_cast<unsigned int>(length)));
+    myCharactersVector.push_back(TplConvert::_2str(chars, static_cast<unsigned int>(length)));
 }
 
 
@@ -190,32 +190,32 @@ GenericSAXHandler::convertTag(const std::string& tag) const {
 
 
 std::string
-GenericSAXHandler::buildErrorMessage(const SAXParseException& exception) {
+GenericSAXHandler::buildErrorMessage(const XERCES_CPP_NAMESPACE::SAXParseException& exception) {
     std::ostringstream buf;
-    char* pMsg = XMLString::transcode(exception.getMessage());
+    char* pMsg = XERCES_CPP_NAMESPACE::XMLString::transcode(exception.getMessage());
     buf << pMsg << std::endl;
     buf << " In file '" << getFileName() << "'" << std::endl;
     buf << " At line/column " << exception.getLineNumber() + 1
         << '/' << exception.getColumnNumber() << "." << std::endl;
-    XMLString::release(&pMsg);
+    XERCES_CPP_NAMESPACE::XMLString::release(&pMsg);
     return buf.str();
 }
 
 
 void
-GenericSAXHandler::warning(const SAXParseException& exception) {
+GenericSAXHandler::warning(const XERCES_CPP_NAMESPACE::SAXParseException& exception) {
     WRITE_WARNING(buildErrorMessage(exception));
 }
 
 
 void
-GenericSAXHandler::error(const SAXParseException& exception) {
+GenericSAXHandler::error(const XERCES_CPP_NAMESPACE::SAXParseException& exception) {
     throw ProcessError(buildErrorMessage(exception));
 }
 
 
 void
-GenericSAXHandler::fatalError(const SAXParseException& exception) {
+GenericSAXHandler::fatalError(const XERCES_CPP_NAMESPACE::SAXParseException& exception) {
     throw ProcessError(buildErrorMessage(exception));
 }
 

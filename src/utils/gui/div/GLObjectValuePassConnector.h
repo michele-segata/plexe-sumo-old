@@ -70,11 +70,10 @@ public:
      * @param[in] source The method for obtaining the value
      * @param[in] retriever The object to pass the value to
      */
-    GLObjectValuePassConnector(GUIGlObject& o, ValueSource<T> *source, ValueRetriever<T> *retriever)
+    GLObjectValuePassConnector(GUIGlObject& o, ValueSource<T>* source, ValueRetriever<T>* retriever)
         : myObject(o), mySource(source), myRetriever(retriever) { /*, myIsInvalid(false) */
-        myLock.lock();
+        AbstractMutex::ScopedLocker locker(myLock);
         myContainer.push_back(this);
-        myLock.unlock();
     }
 
 
@@ -96,21 +95,19 @@ public:
     /** @brief Updates all instances (passes values)
      */
     static void updateAll() {
-        myLock.lock();
+        AbstractMutex::ScopedLocker locker(myLock);
         std::for_each(myContainer.begin(), myContainer.end(), std::mem_fun(&GLObjectValuePassConnector<T>::passValue));
-        myLock.unlock();
     }
 
 
     /** @brief Deletes all instances
      */
     static void clear() {
-        myLock.lock();
+        AbstractMutex::ScopedLocker locker(myLock);
         while (!myContainer.empty()) {
             delete(*myContainer.begin());
         }
         myContainer.clear();
-        myLock.unlock();
     }
 
 
@@ -120,7 +117,7 @@ public:
      * @param[in] o The object which shall no longer be asked for values
      */
     static void removeObject(GUIGlObject& o) {
-        myLock.lock();
+        AbstractMutex::ScopedLocker locker(myLock);
         for (typename std::vector< GLObjectValuePassConnector<T>* >::iterator i = myContainer.begin(); i != myContainer.end();) {
             if ((*i)->myObject.getGlID() == o.getGlID()) {
                 i = myContainer.erase(i);
@@ -128,7 +125,6 @@ public:
                 ++i;
             }
         }
-        myLock.unlock();
     }
     /// @}
 
@@ -151,16 +147,24 @@ protected:
     GUIGlObject& myObject;
 
     /// @brief The source for values
-    ValueSource<T> *mySource;
+    ValueSource<T>* mySource;
 
     /// @brief The destination for values
-    ValueRetriever<T> *myRetriever;
+    ValueRetriever<T>* myRetriever;
 
     /// @brief The mutex used to avoid concurrent updates of the connectors container
     static MFXMutex myLock;
 
     /// @brief The container of items that shall be updated
     static std::vector< GLObjectValuePassConnector<T>* > myContainer;
+
+
+private:
+    /// @brief Invalidated copy constructor.
+    GLObjectValuePassConnector<T>(const GLObjectValuePassConnector<T>&);
+
+    /// @brief Invalidated assignment operator.
+    GLObjectValuePassConnector<T>& operator=(const GLObjectValuePassConnector<T>&);
 
 
 };

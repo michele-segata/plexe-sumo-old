@@ -63,10 +63,10 @@ class OutputDevice;
 class RODFRouteCont {
 public:
     /// @brief Constructor
-    RODFRouteCont() ;
+    RODFRouteCont();
 
     /// @brief Destructor
-    ~RODFRouteCont() ;
+    ~RODFRouteCont();
 
 
     /** @brief Adds a route to the container
@@ -80,7 +80,7 @@ public:
      * @param[in] desc The route description to add
      * @see setID
      */
-    void addRouteDesc(RODFRouteDesc& desc) ;
+    void addRouteDesc(RODFRouteDesc& desc);
 
 
     /** @brief Removes the given route description from the container
@@ -92,7 +92,7 @@ public:
      * @return Whether the route was removed (a similar was found)
      * @see RODFRouteCont::route_finder
      */
-    bool removeRouteDesc(RODFRouteDesc& desc) ;
+    bool removeRouteDesc(RODFRouteDesc& desc);
 
 
     /** @brief Saves routes
@@ -103,14 +103,14 @@ public:
      * @return Whether at least one route was saved
      * @exception IOError not yet implemented
      */
-    bool save(std::vector<std::string> &saved,
+    bool save(std::vector<std::string>& saved,
               const std::string& prependix, OutputDevice& out);
 
 
     /** @brief Returns the container of stored routes
      * @return The stored routes
      */
-    std::vector<RODFRouteDesc> &get() {
+    std::vector<RODFRouteDesc>& get() {
         return myRoutes;
     }
 
@@ -120,7 +120,7 @@ public:
      * Done using by_distance_sorter.
      * @see RODFRouteCont::by_distance_sorter
      */
-    void sortByDistance() ;
+    void sortByDistance();
 
 
     /** @brief Removes "illegal" routes
@@ -130,12 +130,12 @@ public:
      * @param[in] illegals List of edge combinations that shall not be passed
      * @todo Not used, yet
      */
-    void removeIllegal(const std::vector<std::vector<ROEdge*> > &illegals) ;
+    void removeIllegal(const std::vector<std::vector<ROEdge*> >& illegals);
 
 
     /** @brief All routes are replaced by their versions extended by follower edges
     */
-    void addAllEndFollower() ;
+    void addAllEndFollower();
 
 
 protected:
@@ -146,7 +146,7 @@ protected:
      *
      * @param[in] desc The route description to add
      */
-    void setID(RODFRouteDesc& desc) const ;
+    void setID(RODFRouteDesc& desc) const;
 
 
     /** @brief A class for sorting route descriptions by their length */
@@ -179,6 +179,9 @@ protected:
         /// @brief The route description for which a same shall be found
         const RODFRouteDesc& myDesc;
 
+    private:
+        /// @brief invalidated assignment operator
+        route_finder& operator=(const route_finder&);
     };
 
 protected:

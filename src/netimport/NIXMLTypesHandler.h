@@ -61,7 +61,7 @@ public:
 
 
     /// @brief Destructor
-    ~NIXMLTypesHandler() ;
+    ~NIXMLTypesHandler();
 
 
 protected:
@@ -80,7 +80,7 @@ protected:
      * @note policy is to throw no exception in order to allow further processing
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) ;
+                        const SUMOSAXAttributes& attrs);
     //@}
 
 
@@ -88,8 +88,6 @@ private:
     /// @brief The type container to fill
     NBTypeCont& myTypeCont;
 
-
-    bool myHaveWarnedAboutDeprecatedNoLanes;
 
 private:
     /** @brief invalid copy constructor */

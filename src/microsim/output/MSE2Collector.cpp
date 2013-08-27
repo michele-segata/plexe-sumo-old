@@ -32,6 +32,7 @@
 #include <config.h>
 #endif
 
+#include <cassert>
 #include <algorithm>
 #include "MSE2Collector.h"
 #include <microsim/MSLane.h>
@@ -152,7 +153,7 @@ MSE2Collector::reset() {
 
 
 void
-MSE2Collector::detectorUpdate(const SUMOTime step) {
+MSE2Collector::detectorUpdate(const SUMOTime /* step */) {
     JamInfo* currentJam = 0;
     std::map<SUMOVehicle*, SUMOTime> haltingVehicles;
     std::map<SUMOVehicle*, SUMOTime> intervalHaltingVehicles;
@@ -452,7 +453,7 @@ MSE2Collector::getCurrentStartedHalts() const {
 }
 
 
-int 
+int
 MSE2Collector::by_vehicle_position_sorter::operator()(const SUMOVehicle* v1, const SUMOVehicle* v2) {
     const MSVehicle* const occ = myLane->getPartialOccupator();
     if (v1 == occ) {

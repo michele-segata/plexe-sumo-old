@@ -30,23 +30,19 @@
 #include <config.h>
 #endif
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
-
 #include <string>
 #include <iostream>
 #include <utility>
 #include <microsim/MSLane.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSGlobals.h>
+#include <microsim/logging/FunctionBinding.h>
 #include <utils/geom/PositionVector.h>
 #include <microsim/MSNet.h>
 #include <gui/GUIGlobals.h>
 #include <utils/gui/windows/GUISUMOAbstractView.h>
 #include "GUILaneWrapper.h"
+#include "GUIEdge.h"
 #include <utils/common/ToString.h>
 #include <utils/geom/GeomHelper.h>
 #include <guisim/GUINet.h>
@@ -57,6 +53,7 @@
 #include <gui/GUIApplicationWindow.h>
 #include <utils/gui/div/GUIGlobalSelection.h>
 #include <utils/common/RandHelper.h>
+#include <utils/common/SUMOVehicleClass.h>
 #include <utils/gui/div/GLHelper.h>
 #include <gui/GUIViewTraffic.h>
 #include <utils/gui/images/GUITexturesHelper.h>
@@ -64,7 +61,7 @@
 #include <foreign/polyfonts/polyfonts.h>
 #include <utils/common/HelpersHarmonoise.h>
 #include <microsim/MSEdgeWeightsStorage.h>
-
+#include <utils/gui/globjects/GLIncludes.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -127,7 +124,7 @@ GUILaneWrapper::ROWdrawAction_drawLinkNo() const {
     SUMOReal rot = (SUMOReal) atan2((s.x() - f.x()), (f.y() - s.y())) * (SUMOReal) 180.0 / (SUMOReal) PI;
     glTranslated(end.x(), end.y(), 0);
     glRotated(rot, 0, 0, 1);
-    for (int i = noLinks; --i >= 0; ) {
+    for (int i = noLinks; --i >= 0;) {
         SUMOReal x2 = x1 - (SUMOReal)(w / 2.);
         GLHelper::drawText(toString(getLane().getLinkCont()[i]->getRespondIndex()),
                            Position(x2, 0), 0, .6, RGBColor(.5, .5, 1), 180);
@@ -154,7 +151,7 @@ GUILaneWrapper::ROWdrawAction_drawTLSLinkNo(const GUINet& net) const {
     SUMOReal rot = (SUMOReal) atan2((s.x() - f.x()), (f.y() - s.y())) * (SUMOReal) 180.0 / (SUMOReal) PI;
     glTranslated(end.x(), end.y(), 0);
     glRotated(rot, 0, 0, 1);
-    for (int i = noLinks; --i >= 0; ) {
+    for (int i = noLinks; --i >= 0;) {
         SUMOReal x2 = x1 - (SUMOReal)(w / 2.);
         int linkNo = net.getLinkTLIndex(getLane().getLinkCont()[i]);
         if (linkNo < 0) {
@@ -318,6 +315,8 @@ GUILaneWrapper::ROWdrawAction_drawArrows() const {
                 GLHelper::drawBoxLine(Position(0, 2.5), -45, .7, .05);
                 GLHelper::drawTriangleAtEnd(Line(Position(0, 2.5), Position(-1.2, 1.3)), (SUMOReal) 1, (SUMOReal) .25);
                 break;
+            default:
+                break;
         }
     }
     glPopMatrix();
@@ -382,6 +381,7 @@ GUILaneWrapper::drawGL(const GUIVisualizationSettings& s) const {
     glPushMatrix();
     const bool isInternal = getLane().getEdge().getPurpose() == MSEdge::EDGEFUNCTION_INTERNAL;
     bool mustDrawMarkings = false;
+    const bool drawDetails =  s.scale * s.laneWidthExaggeration > 5;
     if (isInternal) {
         // draw internal lanes on top of junctions
         glTranslated(0, 0, GLO_JUNCTION + 0.1);
@@ -395,25 +395,34 @@ GUILaneWrapper::drawGL(const GUIVisualizationSettings& s) const {
     }
     // draw lane
     // check whether it is not too small
-    if (s.scale < 1.) {
+    if (s.scale * s.laneWidthExaggeration < 1.) {
         GLHelper::drawLine(myShape);
         if (!MSGlobals::gUseMesoSim) {
             glPopName();
         }
         glPopMatrix();
-    } else {
-        if (!isInternal) {
-            GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, myHalfLaneWidth);
-            mustDrawMarkings = true;
-        } else {
-            GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, myQuarterLaneWidth);
+    } else if (isRailway(getLane().getPermissions())) {
+        // draw as railway
+        const SUMOReal halfRailWidth = 0.725;
+        GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, halfRailWidth * s.laneWidthExaggeration);
+        glColor3d(1, 1, 1);
+        glTranslated(0, 0, .1);
+        GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, (halfRailWidth - 0.2) * s.laneWidthExaggeration);
+        drawCrossties(s);
+        if (!MSGlobals::gUseMesoSim) {
+            glPopName();
         }
+        glPopMatrix();
+    } else {
+        const SUMOReal laneWidth = isInternal ? myQuarterLaneWidth : myHalfLaneWidth;
+        mustDrawMarkings = !isInternal;
+        GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, laneWidth * s.laneWidthExaggeration);
         if (!MSGlobals::gUseMesoSim) {
             glPopName();
         }
         glPopMatrix();
         // draw ROWs (not for inner lanes)
-        if (!isInternal) {
+        if (!isInternal && drawDetails) {
             glPushMatrix();
             glTranslated(0, 0, GLO_JUNCTION); // must draw on top of junction shape
             GUINet* net = (GUINet*) MSNet::getInstance();
@@ -437,7 +446,7 @@ GUILaneWrapper::drawGL(const GUIVisualizationSettings& s) const {
             glPopMatrix();
         }
     }
-    if (mustDrawMarkings) { // needs matrix reset
+    if (mustDrawMarkings && drawDetails) { // needs matrix reset
         drawMarkings(s);
     }
     // draw vehicles
@@ -445,7 +454,7 @@ GUILaneWrapper::drawGL(const GUIVisualizationSettings& s) const {
         // retrieve vehicles from lane; disallow simulation
         const MSLane::VehCont& vehicles = myLane.getVehiclesSecure();
         for (MSLane::VehCont::const_iterator v = vehicles.begin(); v != vehicles.end(); ++v) {
-            static_cast<const GUIVehicle * const>(*v)->drawGL(s);
+            static_cast<const GUIVehicle* const>(*v)->drawGL(s);
         }
         // allow lane simulation
         myLane.releaseVehicles();
@@ -458,7 +467,7 @@ GUILaneWrapper::drawMarkings(const GUIVisualizationSettings& s) const {
     glPushMatrix();
     glPushName(0);
     glTranslated(0, 0, GLO_EDGE);
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (!MSGlobals::gUseMesoSim)
 #endif
         setColor(s);
@@ -492,6 +501,34 @@ GUILaneWrapper::drawMarkings(const GUIVisualizationSettings& s) const {
 }
 
 
+void
+GUILaneWrapper::drawCrossties(const GUIVisualizationSettings& s) const {
+    glPushMatrix();
+    glPushName(0);
+    if (!MSGlobals::gUseMesoSim) {
+        setColor(s);
+    }
+    // draw on top of of the white area between the rails
+    glTranslated(0, 0, 0.1);
+    int e = (int) getShape().size() - 1;
+    for (int i = 0; i < e; i++) {
+        glPushMatrix();
+        glTranslated(getShape()[i].x(), getShape()[i].y(), 0.1);
+        glRotated(myShapeRotations[i], 0, 0, 1);
+        for (SUMOReal t = 0; t < myShapeLengths[i]; t += 1) {
+            glBegin(GL_QUADS);
+            glVertex2d(-1, -t);
+            glVertex2d(-1, -t - 0.3);
+            glVertex2d(1.0, -t - 0.3);
+            glVertex2d(1.0, -t);
+            glEnd();
+        }
+        glPopMatrix();
+    }
+    glPopMatrix();
+    glPopName();
+}
+
 GUIGLObjectPopupMenu*
 GUILaneWrapper::getPopUpMenu(GUIMainWindow& app,
                              GUISUMOAbstractView& parent) {
@@ -503,7 +540,8 @@ GUILaneWrapper::getPopUpMenu(GUIMainWindow& app,
     buildSelectionPopupEntry(ret);
     //
     buildShowParamsPopupEntry(ret, false);
-    const SUMOReal pos = myShape.nearest_position_on_line_to_point2D(parent.getPositionInformation());
+    const SUMOReal pos = myLane.interpolateGeometryPosToLanePos(
+                             myShape.nearest_position_on_line_to_point2D(parent.getPositionInformation()));
     new FXMenuCommand(ret, ("pos: " + toString(pos)).c_str(), 0, 0, 0);
     new FXMenuSeparator(ret);
     buildPositionCopyEntry(ret, false);
@@ -515,10 +553,13 @@ GUIParameterTableWindow*
 GUILaneWrapper::getParameterWindow(GUIMainWindow& app,
                                    GUISUMOAbstractView&) {
     GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 2);
+        new GUIParameterTableWindow(app, *this, 4);
     // add items
-    ret->mkItem("maxspeed [m/s]", false, myLane.getMaxSpeed());
+    ret->mkItem("maxspeed [m/s]", false, myLane.getSpeedLimit());
     ret->mkItem("length [m]", false, myLane.getLength());
+    ret->mkItem("permissions", false, getAllowedVehicleClassNames(myLane.getPermissions()));
+    ret->mkItem("street name", false, myLane.getEdge().getStreetName());
+    ret->mkItem("stored traveltime [s]", true, new FunctionBinding<GUILaneWrapper, SUMOReal>(this, &GUILaneWrapper::getStoredEdgeTravelTime));
     // close building
     ret->closeBuilding();
     return ret;
@@ -619,10 +660,24 @@ GUILaneWrapper::setColor(const GUIVisualizationSettings& s) const {
 
 
 SUMOReal
+GUILaneWrapper::getStoredEdgeTravelTime() const {
+    MSEdgeWeightsStorage& ews = MSNet::getInstance()->getWeightsStorage();
+    MSEdge& e = getLane().getEdge();
+    if (!ews.knowsTravelTime(&e)) {
+        return -1;
+    } else {
+        SUMOReal value(0);
+        ews.retrieveExistingTravelTime(&e, 0, STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep()), value);
+        return value;
+    }
+}
+
+SUMOReal
 GUILaneWrapper::getColorValue(size_t activeScheme) const {
     switch (activeScheme) {
         case 1:
-            return gSelected.isSelected(getType(), getGlID());
+            return (gSelected.isSelected(getType(), getGlID()) ||
+                    gSelected.isSelected(GLO_EDGE, dynamic_cast<GUIEdge*>(&(getLane().getEdge()))->getGlID()));
         case 2: {
             if (getLane().allowsVehicleClass(SVC_PASSENGER)) {
                 return 0;
@@ -631,7 +686,7 @@ GUILaneWrapper::getColorValue(size_t activeScheme) const {
             }
         }
         case 3:
-            return getLane().getMaxSpeed();
+            return getLane().getSpeedLimit();
         case 4:
             return getLane().getOccupancy();
         case 5:
@@ -653,15 +708,7 @@ GUILaneWrapper::getColorValue(size_t activeScheme) const {
         case 13:
             return getLane().getHarmonoise_NoiseEmissions();
         case 14: {
-            MSEdgeWeightsStorage& ews = MSNet::getInstance()->getWeightsStorage();
-            MSEdge& e = getLane().getEdge();
-            if (!ews.knowsTravelTime(&e)) {
-                return -1;
-            } else {
-                SUMOReal value(0);
-                ews.retrieveExistingTravelTime(&e, 0, STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep()), value);
-                return value;
-            }
+            return getStoredEdgeTravelTime();
         }
         case 15: {
             MSEdgeWeightsStorage& ews = MSNet::getInstance()->getWeightsStorage();
@@ -671,7 +718,7 @@ GUILaneWrapper::getColorValue(size_t activeScheme) const {
             } else {
                 SUMOReal value(0);
                 ews.retrieveExistingTravelTime(&e, 0, 0, value);
-                return (getLane().getLength() / getLane().getMaxSpeed()) / (getLane().getMaxSpeed() / value);
+                return 100 * getLane().getLength() / value / getLane().getSpeedLimit();
             }
         }
     }

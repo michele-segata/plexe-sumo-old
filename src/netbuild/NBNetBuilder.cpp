@@ -50,8 +50,9 @@
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/ToString.h>
 #include <utils/geom/GeoConvHelper.h>
-
 #include "NBAlgorithms.h"
+#include "NBAlgorithms_Ramps.h"
+
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -100,7 +101,7 @@ NBNetBuilder::applyOptions(OptionsCont& oc) {
 
 void
 NBNetBuilder::compute(OptionsCont& oc,
-                      const std::set<std::string> &explicitTurnarounds,
+                      const std::set<std::string>& explicitTurnarounds,
                       bool removeUnwishedNodes) {
     GeoConvHelper& geoConvHelper = GeoConvHelper::getProcessing();
 
@@ -114,6 +115,13 @@ NBNetBuilder::compute(OptionsCont& oc,
     unsigned int numJoined = myNodeCont.joinLoadedClusters(myDistrictCont, myEdgeCont, myTLLCont);
     if (oc.getBool("junctions.join")) {
         PROGRESS_BEGIN_MESSAGE("Joining junction clusters");
+        // preliminary geometry computations to determine the length of edges
+        // This depends on turning directions and sorting of edge list
+        // in case junctions are joined geometry computations have to be repeated
+        NBTurningDirectionsComputer::computeTurnDirections(myNodeCont);
+        NBNodesEdgesSorter::sortNodesEdges(myNodeCont, oc.getBool("lefthand"));
+        myNodeCont.computeNodeShapes(oc.getBool("lefthand"));
+        myEdgeCont.computeEdgeShapes();
         numJoined += myNodeCont.joinJunctions(oc.getFloat("junctions.join-dist"), myDistrictCont, myEdgeCont, myTLLCont);
         PROGRESS_DONE_MESSAGE();
     }
@@ -150,7 +158,7 @@ NBNetBuilder::compute(OptionsCont& oc,
         WRITE_MESSAGE("   " + toString(no) + " nodes removed.");
     }
     // @note: removing geometry can create similar edges so "Joining" must come afterwards
-    // @note: likewise splitting can destroy similarities so "Joining" must come before 
+    // @note: likewise splitting can destroy similarities so "Joining" must come before
     PROGRESS_BEGIN_MESSAGE("Joining similar edges");
     myJoinedEdges.init(myEdgeCont);
     myNodeCont.joinSimilarEdges(myDistrictCont, myEdgeCont, myTLLCont);
@@ -164,10 +172,13 @@ NBNetBuilder::compute(OptionsCont& oc,
     // guess ramps
     if ((oc.exists("ramps.guess") && oc.getBool("ramps.guess")) || (oc.exists("ramps.set") && oc.isSet("ramps.set"))) {
         PROGRESS_BEGIN_MESSAGE("Guessing and setting on-/off-ramps");
-        myNodeCont.guessRamps(oc, myEdgeCont, myDistrictCont);
+        NBNodesEdgesSorter::sortNodesEdges(myNodeCont, oc.getBool("lefthand"));
+        NBRampsComputer::computeRamps(*this, oc);
         PROGRESS_DONE_MESSAGE();
     }
 
+    // check whether any not previously setable connections may be set now
+    myEdgeCont.recheckPostProcessConnections();
 
     // MOVE TO ORIGIN
     if (!oc.getBool("offset.disable-normalization") && oc.isDefault("offset.x") && oc.isDefault("offset.y")) {
@@ -204,29 +215,6 @@ NBNetBuilder::compute(OptionsCont& oc,
         }
     }
 
-    // GUESS TLS POSITIONS
-    PROGRESS_BEGIN_MESSAGE("Assigning nodes to traffic lights");
-    if (oc.isSet("tls.set")) {
-        std::vector<std::string> tlControlledNodes = oc.getStringVector("tls.set");
-        for (std::vector<std::string>::const_iterator i = tlControlledNodes.begin(); i != tlControlledNodes.end(); ++i) {
-            NBNode* node = myNodeCont.retrieve(*i);
-            if (node == 0) {
-                WRITE_WARNING("Building a tl-logic for node '" + *i + "' is not possible." + "\n The node '" + *i + "' is not known.");
-            } else {
-                myNodeCont.setAsTLControlled(node, myTLLCont);
-            }
-        }
-    }
-    myNodeCont.guessTLs(oc, myTLLCont);
-    PROGRESS_DONE_MESSAGE();
-    //
-    if (oc.getBool("tls.join")) {
-        PROGRESS_BEGIN_MESSAGE("Joining traffic light nodes");
-        myNodeCont.joinTLS(myTLLCont);
-        PROGRESS_DONE_MESSAGE();
-    }
-
-
     // CONNECTIONS COMPUTATION
     //
     PROGRESS_BEGIN_MESSAGE("Computing turning directions");
@@ -245,15 +233,15 @@ NBNetBuilder::compute(OptionsCont& oc,
     NBEdgePriorityComputer::computeEdgePriorities(myNodeCont);
     PROGRESS_DONE_MESSAGE();
     //
+    PROGRESS_BEGIN_MESSAGE("Computing approached edges");
+    myEdgeCont.computeEdge2Edges(oc.getBool("no-left-connections"));
+    PROGRESS_DONE_MESSAGE();
+    //
     if (oc.getBool("roundabouts.guess")) {
         PROGRESS_BEGIN_MESSAGE("Guessing and setting roundabouts");
         myEdgeCont.guessRoundabouts(myRoundabouts);
         PROGRESS_DONE_MESSAGE();
     }
-    //
-    PROGRESS_BEGIN_MESSAGE("Computing approached edges");
-    myEdgeCont.computeEdge2Edges(oc.getBool("no-left-connections"));
-    PROGRESS_DONE_MESSAGE();
     //
     PROGRESS_BEGIN_MESSAGE("Computing approaching lanes");
     myEdgeCont.computeLanes2Edges();
@@ -288,6 +276,29 @@ NBNetBuilder::compute(OptionsCont& oc,
     PROGRESS_DONE_MESSAGE();
 
 
+    // GUESS TLS POSITIONS
+    PROGRESS_BEGIN_MESSAGE("Assigning nodes to traffic lights");
+    if (oc.isSet("tls.set")) {
+        std::vector<std::string> tlControlledNodes = oc.getStringVector("tls.set");
+        for (std::vector<std::string>::const_iterator i = tlControlledNodes.begin(); i != tlControlledNodes.end(); ++i) {
+            NBNode* node = myNodeCont.retrieve(*i);
+            if (node == 0) {
+                WRITE_WARNING("Building a tl-logic for node '" + *i + "' is not possible." + "\n The node '" + *i + "' is not known.");
+            } else {
+                myNodeCont.setAsTLControlled(node, myTLLCont);
+            }
+        }
+    }
+    myNodeCont.guessTLs(oc, myTLLCont);
+    PROGRESS_DONE_MESSAGE();
+    //
+    if (oc.getBool("tls.join")) {
+        PROGRESS_BEGIN_MESSAGE("Joining traffic light nodes");
+        myNodeCont.joinTLS(myTLLCont, oc.getFloat("tls.join-dist"));
+        PROGRESS_DONE_MESSAGE();
+    }
+
+
     // COMPUTING RIGHT-OF-WAY AND TRAFFIC LIGHT PROGRAMS
     //
     PROGRESS_BEGIN_MESSAGE("Computing traffic light control information");
@@ -306,7 +317,12 @@ NBNetBuilder::compute(OptionsCont& oc,
         progCount = "(" + toString(numbers.second) + " programs) ";
     }
     WRITE_MESSAGE(" " + toString(numbers.first) + " traffic light(s) " + progCount + "computed.");
-
+    //
+    if (oc.isSet("street-sign-output")) {
+        PROGRESS_BEGIN_MESSAGE("Generating street signs");
+        myEdgeCont.generateStreetSigns();
+        PROGRESS_DONE_MESSAGE();
+    }
 
     // FINISHING INNER EDGES
     if (!oc.getBool("no-internal-links")) {

@@ -44,12 +44,7 @@
 #include <utils/gui/windows/GUIMainWindow.h>
 #include <utils/gui/images/GUIIconSubSys.h>
 #include "GUIParameterTracker.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
+#include <utils/gui/globjects/GLIncludes.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -133,7 +128,7 @@ GUIParameterTracker::buildToolBar() {
 
 
 void
-GUIParameterTracker::addTracked(GUIGlObject& o, ValueSource<SUMOReal> *src,
+GUIParameterTracker::addTracked(GUIGlObject& o, ValueSource<SUMOReal>* src,
                                 TrackerValueDesc* newTracked) {
     myTracked.push_back(newTracked);
     // build connection (is automatically set into an execution map)
@@ -239,7 +234,7 @@ GUIParameterTracker::onCmdSave(FXObject*, FXSelector, void*) {
         }
         dev.close();
     } catch (IOError& e) {
-        FXMessageBox::error(this, MBOX_OK, "Storing failed!", e.what());
+        FXMessageBox::error(this, MBOX_OK, "Storing failed!", "%s", e.what());
     }
     return 1;
 }
@@ -325,7 +320,7 @@ GUIParameterTracker::GUIParameterTrackerPanel::drawValue(TrackerValueDesc& desc,
         glVertex2d(2.0, ypos);
         glEnd();
     }
-    const std::vector<SUMOReal> &values = desc.getAggregatedValues();
+    const std::vector<SUMOReal>& values = desc.getAggregatedValues();
     SUMOReal latest = 0;
     if (values.size() < 2) {
         glPopMatrix();

@@ -35,12 +35,11 @@
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/ToString.h>
-#include "RORouteDef.h"
+#include "RORoute.h"
 #include "RONet.h"
-#include "RORouteDef_OrigDest.h"
+#include "RORouteDef.h"
 #include "RORDLoader_TripDefs.h"
 #include "ROVehicle.h"
-#include "RORouteDef_Complete.h"
 #include <utils/xml/SUMOVehicleParserHelper.h>
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -58,7 +57,7 @@ RORDLoader_TripDefs::RORDLoader_TripDefs(RONet& net,
     : ROTypedXMLRoutesLoader(net, begin, end, fileName),
       myEmptyDestinationsAllowed(emptyDestinationsAllowed),
       myWithTaz(withTaz), myCurrentVehicleType(0),
-      myParameter(0), myHaveWarnedAboutDeprecatedTripDef(false) {}
+      myParameter(0) {}
 
 
 RORDLoader_TripDefs::~RORDLoader_TripDefs() {}
@@ -67,12 +66,8 @@ RORDLoader_TripDefs::~RORDLoader_TripDefs() {}
 void
 RORDLoader_TripDefs::myStartElement(int element,
                                     const SUMOSAXAttributes& attrs) {
-    if (element == SUMO_TAG_TRIP__DEPRECATED && !myHaveWarnedAboutDeprecatedTripDef) {
-        myHaveWarnedAboutDeprecatedTripDef = true;
-        WRITE_WARNING("'" + toString(SUMO_TAG_TRIP__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_TRIP) + "'.");
-    }
     // check whether a trip definition shall be parsed
-    if (element == SUMO_TAG_TRIP || element == SUMO_TAG_TRIP__DEPRECATED) {
+    if (element == SUMO_TAG_TRIP) {
         bool ok = true;
         // get the vehicle id, the edges, the speed and position and
         //  the departure time and other information
@@ -97,8 +92,8 @@ RORDLoader_TripDefs::myStartElement(int element,
         }
     }
     // check whether a vehicle type shall be parsed
-    if (element == SUMO_TAG_VTYPE || element == SUMO_TAG_VTYPE__DEPRECATED) {
-        myCurrentVehicleType = SUMOVehicleParserHelper::beginVTypeParsing(attrs);
+    if (element == SUMO_TAG_VTYPE) {
+        myCurrentVehicleType = SUMOVehicleParserHelper::beginVTypeParsing(attrs, getFileName());
     } else if (myCurrentVehicleType != 0) {
         SUMOVehicleParserHelper::parseVTypeEmbedded(*myCurrentVehicleType, element, attrs);
     }
@@ -143,15 +138,17 @@ RORDLoader_TripDefs::getEdge(const SUMOSAXAttributes& attrs,
 
 void
 RORDLoader_TripDefs::myEndElement(int element) {
-    if ((element == SUMO_TAG_TRIP || element == SUMO_TAG_TRIP__DEPRECATED) &&
-            !MsgHandler::getErrorInstance()->wasInformed()) {
-
+    if (element == SUMO_TAG_TRIP && !MsgHandler::getErrorInstance()->wasInformed()) {
         if (myCurrentDepart < myBegin || myCurrentDepart >= myEnd) {
             delete myParameter;
             return;
         }
         RGBColor* col = myParameter->wasSet(VEHPARS_COLOR_SET) ? new RGBColor(myParameter->color) : 0;
-        RORouteDef* route = new RORouteDef_OrigDest(myParameter->id, col, myBeginEdge, myEndEdge);
+        RORouteDef* route = new RORouteDef(myParameter->id, 0, true);
+        std::vector<const ROEdge*> edges;
+        edges.push_back(myBeginEdge);
+        edges.push_back(myEndEdge);
+        route->addLoadedAlternative(new RORoute(myParameter->id, 0, 1, edges, col));
         SUMOVTypeParameter* type = myNet.getVehicleTypeSecure(myParameter->vtypeid);
         // check whether any errors occured
         if (MsgHandler::getErrorInstance()->wasInformed()) {
@@ -169,7 +166,7 @@ RORDLoader_TripDefs::myEndElement(int element) {
         delete myParameter;
         myParameter = 0;
     }
-    if (element == SUMO_TAG_VTYPE || element == SUMO_TAG_VTYPE__DEPRECATED) {
+    if (element == SUMO_TAG_VTYPE) {
         SUMOVehicleParserHelper::closeVTypeParsing(*myCurrentVehicleType);
         myNet.addVehicleType(myCurrentVehicleType);
         myCurrentVehicleType = 0;

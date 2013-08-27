@@ -224,7 +224,7 @@ MSTLLogicControl::WAUTSwitchProcedure::getGSPValue(const MSTrafficLightLogic& lo
     if (val.length() == 0) {
         return 0;
     }
-    return TplConvert<char>::_2int(val.c_str());
+    return TplConvert::_2int(val.c_str());
 }
 
 
@@ -379,10 +379,10 @@ MSTLLogicControl::WAUTSwitchProcedure_Stretch::adaptLogic(SUMOTime step) {
     int areasNo = getStretchAreaNo(myTo);
     for (int i = 0; i < areasNo; i++) {
         StretchBereichDef def = getStretchBereichDef(myTo, i + 1);
-        assert(def.end >= def.begin) ;
+        assert(def.end >= def.begin);
         deltaPossible += TIME2STEPS(def.end - def.begin);
     }
-    int stretchUmlaufAnz = (int) TplConvert<char>::_2SUMOReal(myTo->getParameterValue("StretchUmlaufAnz").c_str());
+    int stretchUmlaufAnz = (int) TplConvert::_2SUMOReal(myTo->getParameterValue("StretchUmlaufAnz").c_str());
     deltaPossible = stretchUmlaufAnz * deltaPossible;
     if ((deltaPossible > deltaToCut) && (deltaToCut < (cycleTime / 2))) {
         cutLogic(step, gspTo, deltaToCut);
@@ -447,7 +447,7 @@ MSTLLogicControl::WAUTSwitchProcedure_Stretch::stretchLogic(SUMOTime step, SUMOT
     SUMOTime durOfPhase = myTo->getPhase(currStep).duration;
     SUMOTime remainingStretchTime = allStretchTime;
     SUMOTime StretchTimeOfPhase = 0;
-    unsigned int stretchUmlaufAnz = (unsigned int) TplConvert<char>::_2SUMOReal(myTo->getParameterValue("StretchUmlaufAnz").c_str());
+    unsigned int stretchUmlaufAnz = (unsigned int) TplConvert::_2SUMOReal(myTo->getParameterValue("StretchUmlaufAnz").c_str());
     SUMOReal facSum = 0;
     int areasNo = getStretchAreaNo(myTo);
     for (int x = 0; x < areasNo; x++) {
@@ -466,9 +466,13 @@ MSTLLogicControl::WAUTSwitchProcedure_Stretch::stretchLogic(SUMOTime step, SUMOT
             SUMOReal fac = def.fac;
             SUMOReal actualfac = fac / facSum;
             facSum = facSum - fac;
-            StretchTimeOfPhase = TIME2STEPS(STEPS2TIME(remainingStretchTime) * actualfac + 0.5);
+            StretchTimeOfPhase = TIME2STEPS(int(STEPS2TIME(remainingStretchTime) * actualfac + 0.5));
             remainingStretchTime = allStretchTime - StretchTimeOfPhase;
         }
+    }
+    if (facSum == 0) {
+        WRITE_WARNING("The computed factor sum in WAUT '" + myWAUT.id + "' at time '" + toString(STEPS2TIME(step)) + "' equals zero;\n assuming an error in WAUT definition.");
+        return;
     }
     durOfPhase = durOfPhase - diffToStart + StretchTimeOfPhase;
     myTo->changeStepAndDuration(myControl, step, currStep, durOfPhase);
@@ -486,7 +490,7 @@ MSTLLogicControl::WAUTSwitchProcedure_Stretch::stretchLogic(SUMOTime step, SUMOT
                 SUMOReal fac = def.fac;
                 if ((beginOfPhase <= end) && (endOfPhase >= end)) {
                     SUMOReal actualfac = fac / facSum;
-                    StretchTimeOfPhase = TIME2STEPS(STEPS2TIME(remainingStretchTime) * actualfac + 0.5);
+                    StretchTimeOfPhase = TIME2STEPS(int(STEPS2TIME(remainingStretchTime) * actualfac + 0.5));
                     facSum -= fac;
                     durOfPhase += StretchTimeOfPhase;
                     remainingStretchTime -= StretchTimeOfPhase;
@@ -511,9 +515,9 @@ MSTLLogicControl::WAUTSwitchProcedure_Stretch::getStretchAreaNo(MSTrafficLightLo
 MSTLLogicControl::WAUTSwitchProcedure_Stretch::StretchBereichDef
 MSTLLogicControl::WAUTSwitchProcedure_Stretch::getStretchBereichDef(MSTrafficLightLogic* from, int index) const {
     StretchBereichDef def;
-    def.begin = TplConvert<char>::_2SUMOReal(from->getParameterValue("B" + toString(index) + ".begin").c_str());
-    def.end = TplConvert<char>::_2SUMOReal(from->getParameterValue("B" + toString(index) + ".end").c_str());
-    def.fac = TplConvert<char>::_2SUMOReal(from->getParameterValue("B" + toString(index) + ".factor").c_str());
+    def.begin = TplConvert::_2SUMOReal(from->getParameterValue("B" + toString(index) + ".begin").c_str());
+    def.end = TplConvert::_2SUMOReal(from->getParameterValue("B" + toString(index) + ".end").c_str());
+    def.fac = TplConvert::_2SUMOReal(from->getParameterValue("B" + toString(index) + ".factor").c_str());
     return def;
 }
 
@@ -785,7 +789,7 @@ MSTLLogicControl::initWautSwitch(MSTLLogicControl::SwitchInitCommand& cmd) {
         myCurrentlySwitched.push_back(p);
     }
     index++;
-    if (index == (int) myWAUTs[wautid]->switches.size()) {
+    if (index == static_cast<unsigned int>(myWAUTs[wautid]->switches.size())) {
         return 0;
     }
     return myWAUTs[wautid]->switches[index].when - MSNet::getInstance()->getCurrentTimeStep();

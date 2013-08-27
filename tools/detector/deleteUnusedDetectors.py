@@ -4,6 +4,7 @@
 @author  Laura Bieker
 @author  Michael Behrisch
 @date    2010-03-03
+@version $Id$
 
 This script reads a network as first parameter and a file with the positions
 of detectors as second parameter. As result the script writes a new file
@@ -26,12 +27,12 @@ def writeDetectors(usedDet):
     fd = open("detectors.xml", "w")
     fd.write("<pois>\n")
     for det in usedDet:
-        fd.write("   <e1-detector id= \"" + det.getAttribute('id') + "\" lane=\"" + det.getAttribute('lane') + "\" pos=\"" + det.getAttribute('pos'))
+        fd.write("   <e1Detector id= \"" + det.getAttribute('id') + "\" lane=\"" + det.getAttribute('lane') + "\" pos=\"" + det.getAttribute('pos'))
         fd.write("\" freq=\"" + det.getAttribute('freq') + "\" file=\"" + det.getAttribute('file'))
         # the position of some detectors are over the end of an edge.
-        # the tag friendly_pos corrects the position
-        if det.hasAttribute('friendly_pos'):
-            fd.write("\" friendly_pos=\"" + det.getAttribute('friendly_pos'))
+        # the tag friendlyPos corrects the position
+        if det.hasAttribute('friendlyPos'):
+            fd.write("\" friendlyPos=\"" + det.getAttribute('friendlyPos'))
         
         fd.write("\"")
         fd.write("/>\n")

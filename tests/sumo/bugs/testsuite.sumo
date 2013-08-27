@@ -63,3 +63,28 @@ ticket435_parking
 ticket604
 ticket609
 ticket651
+ticket720
+ticket747
+
+# ticket672 (automatically commented due to no test directory being found)
+
+# ticket777 (automatically commented due to no test directory being found)
+
+# 
+ticket748
+ticket788
+
+# collisions because of wrong computaton of stopDist
+ticket791
+ticket794
+ticket795
+ticket796
+ticket800
+ticket801
+
+# another infinite loop
+ticket801b
+ticket802
+ticket803
+ticket806
+ticket807

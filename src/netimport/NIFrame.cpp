@@ -45,6 +45,7 @@
 #include <netbuild/NBNetBuilder.h>
 #include <netwrite/NWFrame.h>
 #include <utils/common/SystemFrame.h>
+#include "NIImporter_DlrNavteq.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -129,10 +130,10 @@ NIFrame::fillOptions() {
     oc.addSynonyme("itsumo-files", "itsumo");
     oc.addDescription("itsumo-files", "Input", "Read ITSUMO-net from FILE");
 
-#ifdef HAVE_MESOSIM // catchall for internal stuff
+#ifdef HAVE_INTERNAL // catchall for internal stuff
     oc.doRegister("heightmap.shapefiles", new Option_FileName());
     oc.addDescription("heightmap.shapefiles", "Input", "Read heightmap from ArcGIS shapefile");
-#endif // have HAVE_MESOSIM
+#endif // have HAVE_INTERNAL
 
     // register basic processing options
     oc.doRegister("ignore-errors", new Option_Bool(false));
@@ -142,6 +143,9 @@ NIFrame::fillOptions() {
     oc.doRegister("ignore-errors.connections", new Option_Bool(false));
     oc.addDescription("ignore-errors.connections", "Processing", "Continue on invalid connections");
 
+    oc.doRegister("show-errors.connections-first-try", new Option_Bool(false));
+    oc.addDescription("show-errors.connections-first-try", "Processing", "Show errors in connections at parsing");
+
     oc.doRegister("lanes-from-capacity.norm", new Option_Float((SUMOReal) 1800));
     oc.addSynonyme("lanes-from-capacity.norm", "capacity-norm");
     oc.addDescription("lanes-from-capacity.norm", "Processing", "The factor for flow to no. lanes conversion.");
@@ -150,10 +154,11 @@ NIFrame::fillOptions() {
     oc.addDescription("speed-in-kmh", "Processing", "vmax is parsed as given in km/h (some)");
 
 
+
     // register xml options
-    oc.doRegister("plain.keep-edge-shape", new Option_Bool(false));
-    oc.addSynonyme("plain.keep-edge-shape", "xml.keep-shape", true);
-    oc.addDescription("plain.keep-edge-shape", "Processing", "No node positions are added to the edge shape");
+    oc.doRegister("plain.extend-edge-shape", new Option_Bool(false));
+    oc.addSynonyme("plain.extend-edge-shape", "xml.keep-shape", true);
+    oc.addDescription("plain.extend-edge-shape", "Processing", "If edge shapes do not end at the node positions, extend them");
 
 
     // register matsim options
@@ -242,8 +247,10 @@ NIFrame::fillOptions() {
     oc.doRegister("osm.skip-duplicates-check", new Option_Bool(false));
     oc.addDescription("osm.skip-duplicates-check", "Processing", "Skips the check for duplicate nodes and edges.");
 
-    oc.doRegister("osm.discard-tls", new Option_Bool(false));
-    oc.addDescription("osm.discard-tls", "Processing", "Discards all traffic lights.");
+
+    // register some additional options
+    oc.doRegister("tls.discard-loaded", new Option_Bool(false));
+    oc.addDescription("tls.discard-loaded", "TLS Building", "Does not instatiate traffic lights loaded from other formats than XML");
 }
 
 
@@ -256,12 +263,12 @@ NIFrame::checkOptions() {
 #ifdef HAVE_PROJ
     unsigned numProjections = oc.getBool("simple-projection") + oc.getBool("proj.utm") + oc.getBool("proj.dhdn") + (oc.getString("proj").length() > 1);
     if ((oc.isSet("osm-files") || oc.isSet("dlr-navteq-prefix") || oc.isSet("shapefile-prefix")) && numProjections == 0) {
-        if(oc.isDefault("proj")) {
+        if (oc.isDefault("proj")) {
             oc.set("proj.utm", "true");
         }
     }
     if (oc.isSet("dlr-navteq-prefix") && oc.isDefault("proj.scale")) {
-        oc.set("proj.scale", std::string("5"));
+        oc.set("proj.scale", toString(NIImporter_DlrNavteq::GEO_SCALE));
     }
 #endif
     if (oc.isSet("sumo-net-file")) {

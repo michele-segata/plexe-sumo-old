@@ -104,9 +104,9 @@ SUMOSAXAttributes::getOptIntReporting(int attr, const char* objectid,
 }
 
 
-long
+SUMOLong
 SUMOSAXAttributes::getLongReporting(int attr, const char* objectid,
-                                   bool& ok, bool report) const {
+                                    bool& ok, bool report) const {
     if (!hasAttribute(attr)) {
         if (report) {
             emitUngivenError(getName(attr), objectid);
@@ -272,7 +272,7 @@ SUMOSAXAttributes::getOptStringReporting(int attr, const char* objectid,
 
 SUMOTime
 SUMOSAXAttributes::getSUMOTimeReporting(int attr, const char* objectid,
-                                        bool& ok, bool report) const throw() {
+                                        bool& ok, bool report) const {
 #ifdef HAVE_SUBSECOND_TIMESTEPS
     if (!hasAttribute(attr)) {
         if (report) {
@@ -378,7 +378,7 @@ SUMOSAXAttributes::emitFormatError(const std::string& attrname, const std::strin
 
 
 void
-SUMOSAXAttributes::parseStringVector(const std::string& def, std::vector<std::string> &into) {
+SUMOSAXAttributes::parseStringVector(const std::string& def, std::vector<std::string>& into) {
     if (def.find(';') != std::string::npos || def.find(',') != std::string::npos) {
         if (!myHaveInformedAboutDeprecatedDivider) {
             WRITE_WARNING("Please note that using ';' and ',' as XML list separators is deprecated.\n From 1.0 onwards, only ' ' will be accepted.");

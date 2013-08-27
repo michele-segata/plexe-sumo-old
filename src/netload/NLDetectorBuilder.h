@@ -46,7 +46,7 @@ class MSDetectorFileOutput;
 class MSLane;
 class MSEdge;
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 class MEInductLoop;
 class MESegment;
 #endif
@@ -68,11 +68,11 @@ public:
      *
      * @param[in] net The network to which's detector control built detector shall be added
      */
-    NLDetectorBuilder(MSNet& net) ;
+    NLDetectorBuilder(MSNet& net);
 
 
     /// @brief Destructor
-    virtual ~NLDetectorBuilder() ;
+    virtual ~NLDetectorBuilder();
 
 
     /// @name Value parsing and detector building methods
@@ -282,7 +282,7 @@ public:
      *
      * @return The id of the currently processed e3 detector
      */
-    std::string getCurrentE3ID() const ;
+    std::string getCurrentE3ID() const;
 
 
     /** @brief Builds a vTypeProbe and adds it to the net
@@ -303,12 +303,12 @@ public:
                          OutputDevice& device) throw(InvalidArgument);
 
 
-    /** @brief Builds a routeprobe and adds it to the net
+    /** @brief Builds a routeProbe and adds it to the net
      *
      * Checks the given values, first. If one of the values is invalid
      *  (sampling frequency<=0), an InvalidArgument is thrown.
      *
-     * Otherwise the routeprobe is built (directly).
+     * Otherwise the routeProbe is built (directly).
      *
      * @param[in] id The id the detector shall have
      * @param[in] edge The name of the edge the detector shall observe
@@ -339,7 +339,7 @@ public:
      * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
      */
     virtual MSDetectorFileOutput* createInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, bool splitByType) ;
+            MSLane* lane, SUMOReal pos, bool splitByType);
 
 
     /** @brief Creates an instance of an e1 detector using the given values
@@ -352,9 +352,9 @@ public:
      * @param[in] od The output device the loop shall use
      */
     virtual MSDetectorFileOutput* createInstantInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, OutputDevice& od) ;
+            MSLane* lane, SUMOReal pos, OutputDevice& od);
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /** @brief Creates an instance of a mesoscopic e1 detector using the given values
      *
      * Simply calls the MEInductLoop constructor
@@ -365,7 +365,7 @@ public:
      * @todo Position is not used, herein!?
      */
     virtual MEInductLoop* createMEInductLoop(const std::string& id,
-            MESegment* s, SUMOReal pos) ;
+            MESegment* s, SUMOReal pos);
 #endif
 
 
@@ -385,7 +385,7 @@ public:
             DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold,
             SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold) ;
+            SUMOReal jamDistThreshold);
 
 
     /** @brief Creates an instance of an e2ol-detector using the given values
@@ -404,7 +404,7 @@ public:
     virtual MSDetectorFileOutput* createMultiLaneE2Detector(
         const std::string& id, DetectorUsage usage, MSLane* lane, SUMOReal pos,
         SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-        SUMOReal jamDistThreshold) ;
+        SUMOReal jamDistThreshold);
 
 
     /** @brief Creates an instance of an e3 detector using the given values
@@ -419,7 +419,7 @@ public:
      */
     virtual MSDetectorFileOutput* createE3Detector(const std::string& id,
             const CrossSectionVector& entries, const CrossSectionVector& exits,
-            SUMOReal haltingSpeedThreshold, SUMOTime haltingTimeThreshold) ;
+            SUMOReal haltingSpeedThreshold, SUMOTime haltingTimeThreshold);
 
 
     /** @brief Creates edge based mean data collector using the given specification
@@ -465,7 +465,7 @@ public:
     MSDetectorFileOutput* buildSingleLaneE2Det(const std::string& id,
             DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold) ;
+            SUMOReal jamDistThreshold);
 
 
     /** @brief Builds an e2 detector that continues on preceeding lanes
@@ -482,7 +482,7 @@ public:
      */
     MSDetectorFileOutput* buildMultiLaneE2Det(const std::string& id, DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold) ;
+            SUMOReal jamDistThreshold);
 
 
 
@@ -503,10 +503,10 @@ protected:
          */
         E3DetectorDefinition(const std::string& id,
                              OutputDevice& device, SUMOReal haltingSpeedThreshold,
-                             SUMOTime haltingTimeThreshold, int splInterval) ;
+                             SUMOTime haltingTimeThreshold, int splInterval);
 
         /// @brief Destructor
-        ~E3DetectorDefinition() ;
+        ~E3DetectorDefinition();
 
         /// @brief The id of the detector
         std::string myID;

@@ -38,6 +38,7 @@
 #include <utils/geom/Boundary.h>
 #include <utils/geom/Position.h>
 #include <foreign/rtree/SUMORTree.h>
+#include <foreign/rtree/LayeredRTree.h>
 #include <utils/geom/PositionVector.h>
 #include <utils/gui/globjects/GUIGlObjectStorage.h>
 #include <utils/gui/globjects/GUIGLObjectPopupMenu.h>
@@ -61,7 +62,11 @@ class RGBColor;
 class GUIEdge;
 class OutputDevice;
 class GUIVehicle;
+class GUIVehicleControl;
 class MSVehicleControl;
+#ifdef HAVE_INTERNAL
+class GUIMEVehicleControl;
+#endif
 
 
 // ===========================================================================
@@ -95,11 +100,11 @@ public:
      * @exception ProcessError If a network was already constructed
      */
     GUINet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
-           MSEventControl* endOfTimestepEvents, MSEventControl* insertionEvents) ;
+           MSEventControl* endOfTimestepEvents, MSEventControl* insertionEvents);
 
 
     /// @brief Destructor
-    ~GUINet() ;
+    ~GUINet();
 
 
 
@@ -114,7 +119,7 @@ public:
      * @see GUIGlObject::getPopUpMenu
      */
     GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
-                                       GUISUMOAbstractView& parent) ;
+                                       GUISUMOAbstractView& parent);
 
 
     /** @brief Returns an own parameter window
@@ -125,7 +130,7 @@ public:
      * @see GUIGlObject::getParameterWindow
      */
     GUIParameterTableWindow* getParameterWindow(
-        GUIMainWindow& app, GUISUMOAbstractView& parent) ;
+        GUIMainWindow& app, GUISUMOAbstractView& parent);
 
 
     /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -133,14 +138,14 @@ public:
      * @return The boundary the object is within
      * @see GUIGlObject::getCenteringBoundary
      */
-    Boundary getCenteringBoundary() const ;
+    Boundary getCenteringBoundary() const;
 
 
     /** @brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const ;
+    void drawGL(const GUIVisualizationSettings& s) const;
     //@}
 
 
@@ -153,9 +158,6 @@ public:
     /// returns the information whether the vehicle still exists
     bool vehicleExists(const std::string& name) const;
 
-    /// returns the boundary of an edge
-    Boundary getEdgeBoundary(const std::string& name) const;
-
     /// Some further steps needed for gui processing
     void guiSimulationStep();
 
@@ -166,13 +168,13 @@ public:
     /** @brief Returns the duration of the last step (sim+visualisation+idle) (in ms)
      * @return How long it took to compute and display the last step
      */
-    unsigned int getWholeDuration() const ;
+    unsigned int getWholeDuration() const;
 
 
     /** @brief Returns the duration of the last step's simulation part (in ms)
      * @return How long it took to compute the last step
      */
-    unsigned int getSimDuration() const ;
+    unsigned int getSimDuration() const;
 
 
     /// Returns the simulation speed as a factor to real time
@@ -191,7 +193,7 @@ public:
     //int getVisDuration() const;
 
     /// Returns the duration of the last step's idle part (in ms)
-    unsigned int getIdleDuration() const ;
+    unsigned int getIdleDuration() const;
 
     /// Sets the duration of the last step's simulation part
     void setSimDuration(int val);
@@ -202,6 +204,17 @@ public:
     /// Sets the duration of the last step's idle part
     void setIdleDuration(int val);
     //}
+
+
+    /** @brief Returns the person control
+     *
+     * If the person control does not exist, yet, it is created.
+     *
+     * @return The person control
+     * @see MSPersonControl
+     * @see myPersonControl
+     */
+    MSPersonControl& getPersonControl();
 
 
     /** Returns the gl-id of the traffic light that controls the given link
@@ -245,6 +258,22 @@ public:
         return myGrid;
     }
 
+    /** @brief Returns the vehicle control
+     * @return The vehicle control
+     * @see MSVehicleControl
+     * @see myVehicleControl
+     */
+    GUIVehicleControl* getGUIVehicleControl();
+
+#ifdef HAVE_INTERNAL
+    /** @brief Returns the vehicle control
+     * @return The vehicle control
+     * @see MSVehicleControl
+     * @see myVehicleControl
+     */
+    GUIMEVehicleControl* getGUIMEVehicleControl();
+#endif
+
     /** @brief Returns the pointer to the unique instance of GUINet (singleton).
      * @return Pointer to the unique GUINet-instance
      * @exception ProcessError If a network was not yet constructed
@@ -263,7 +292,7 @@ private:
 
 protected:
     /// @brief The visualization speed-up
-    SUMORTree myGrid;
+    LayeredRTree myGrid;
 
     /// @brief The networks boundary
     Boundary myBoundary;

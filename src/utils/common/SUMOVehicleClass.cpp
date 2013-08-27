@@ -135,19 +135,9 @@ getVehicleClassCompoundName(int id) {
 }
 
 
-std::string 
+std::string
 getAllowedVehicleClassNames(SVCPermissions permissions) {
-    std::ostringstream oss;
-    const std::vector<std::string> classNames = getAllowedVehicleClassNamesList(permissions);
-    bool hadOne = false;
-    for (std::vector<std::string>::const_iterator it = classNames.begin(); it != classNames.end(); it++) {
-        if (hadOne) {
-            oss << ' ';
-        }
-        oss << *it;
-        hadOne = true;
-    }
-    return oss.str();
+    return joinToString(getAllowedVehicleClassNamesList(permissions), ' ');
 }
 
 
@@ -166,7 +156,7 @@ getAllowedVehicleClassNamesList(SVCPermissions permissions) {
 }
 
 
-std::pair<std::string, bool> 
+std::pair<std::string, bool>
 getPermissionEncoding(SVCPermissions permissions) {
     // shortcut the common cases
     if (permissions == SVCFreeForAll) {
@@ -174,12 +164,12 @@ getPermissionEncoding(SVCPermissions permissions) {
     }
     // figure out whether its shorter to write allow or disallow
     size_t num_allowed = 0;
-    for(int mask = 1; mask < SUMOVehicleClass_MAX; mask = mask << 1) {
+    for (int mask = 1; mask <= SUMOVehicleClass_MAX; mask = mask << 1) {
         if ((mask & permissions) == mask) {
             ++num_allowed;
         }
     }
-    if (num_allowed <= (SumoVehicleClassStrings.size() - num_allowed)) {
+    if (num_allowed <= (SumoVehicleClassStrings.size() - num_allowed) && num_allowed > 0) {
         return std::pair<std::string, bool>(getAllowedVehicleClassNames(permissions), true);
     } else {
         return std::pair<std::string, bool>(getAllowedVehicleClassNames(~permissions), false);
@@ -209,7 +199,7 @@ getVehicleClassCompoundID(const std::string& name) {
 }
 
 
-SVCPermissions 
+SVCPermissions
 parseVehicleClasses(const std::string& allowedS) {
     SVCPermissions result = 0;
     StringTokenizer sta(allowedS, " ");
@@ -220,7 +210,7 @@ parseVehicleClasses(const std::string& allowedS) {
 }
 
 
-bool 
+bool
 canParseVehicleClasses(const std::string& classes) {
     StringTokenizer sta(classes, " ");
     while (sta.hasNext()) {
@@ -246,8 +236,8 @@ extern SVCPermissions parseVehicleClasses(const std::string& allowedS, const std
 }
 
 
-SVCPermissions 
-parseVehicleClasses(const std::vector<std::string> &allowedS) {
+SVCPermissions
+parseVehicleClasses(const std::vector<std::string>& allowedS) {
     SVCPermissions result = 0;
     for (std::vector<std::string>::const_iterator i = allowedS.begin(); i != allowedS.end(); ++i) {
         result |= getVehicleClassID(*i);
@@ -272,6 +262,11 @@ getVehicleShapeName(SUMOVehicleShape id) {
 }
 
 
+bool isRailway(SVCPermissions permissions) {
+    const int anyRail = SVC_RAIL_FAST + SVC_RAIL_SLOW + SVC_CITYRAIL + SVC_LIGHTRAIL;
+    return (permissions & anyRail) > 0 && (permissions & SVC_PASSENGER) == 0;
+}
+
 // ------------ Conversion of SUMOEmissionClass
 SUMOEmissionClass
 getVehicleEmissionTypeID(const std::string& name) {
@@ -281,25 +276,25 @@ getVehicleEmissionTypeID(const std::string& name) {
         } else if (name == "zero") {
             return SVE_ZERO_EMISSIONS;
         } else if (name.find("HDV_3_") == 0) {
-            return (SUMOEmissionClass)(SVE_HDV_3_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_HDV_3_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("HDV_6_") == 0) {
-            return (SUMOEmissionClass)(SVE_HDV_6_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_HDV_6_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("HDV_12_") == 0) {
-            return (SUMOEmissionClass)(SVE_HDV_12_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_HDV_12_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("P_7_") == 0) {
-            return (SUMOEmissionClass)(SVE_P_LDV_7_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_P_LDV_7_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("P_14_") == 0) {
-            return (SUMOEmissionClass)(SVE_P_LDV_14_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_P_LDV_14_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("HDV_A0_3_") == 0) {
-            return (SUMOEmissionClass)(SVE_HDV_A0_3_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_HDV_A0_3_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("HDV_A0_6_") == 0) {
-            return (SUMOEmissionClass)(SVE_HDV_A0_6_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_HDV_A0_6_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("HDV_A0_12_") == 0) {
-            return (SUMOEmissionClass)(SVE_HDV_A0_12_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_HDV_A0_12_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("P_A0_7_") == 0) {
-            return (SUMOEmissionClass)(SVE_P_LDV_A0_7_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_P_LDV_A0_7_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         } else if (name.find("P_A0_14_") == 0) {
-            return (SUMOEmissionClass)(SVE_P_LDV_A0_14_1 - 1 + TplConvert<char>::_2int(name.substr(name.rfind("_") + 1).c_str()));
+            return (SUMOEmissionClass)(SVE_P_LDV_A0_14_1 - 1 + TplConvert::_2int(name.substr(name.rfind("_") + 1).c_str()));
         }
     } catch (NumberFormatException&) {
     }
@@ -345,6 +340,13 @@ const SUMOReal DEFAULT_VEH_HEIGHT(1.5);
 const SumoXMLTag DEFAULT_VEH_FOLLOW_MODEL(SUMO_TAG_CF_KRAUSS);
 const std::string DEFAULT_VEH_LANE_CHANGE_MODEL("dkrajzew2008");
 const SUMOVehicleShape DEFAULT_VEH_SHAPE(SVS_UNKNOWN);
+const SUMOReal DEFAULT_VEH_TMP1(1.);
+const SUMOReal DEFAULT_VEH_TMP2(1.);
+const SUMOReal DEFAULT_VEH_TMP3(1.);
+const SUMOReal DEFAULT_VEH_TMP4(1.);
+const SUMOReal DEFAULT_VEH_TMP5(1.);
+
+const SUMOReal DEFAULT_PERSON_SPEED(5. / 3.6);
 
 /****************************************************************************/
 

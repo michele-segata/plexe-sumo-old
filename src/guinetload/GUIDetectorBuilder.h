@@ -59,11 +59,11 @@ public:
      *
      * @param[in] net The network to which's detector control built detector shall be added
      */
-    GUIDetectorBuilder(MSNet& net) ;
+    GUIDetectorBuilder(MSNet& net);
 
 
     /// @brief Destructor
-    ~GUIDetectorBuilder() ;
+    ~GUIDetectorBuilder();
 
 
     /// @name Detector creating methods
@@ -81,7 +81,7 @@ public:
      * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
      */
     virtual MSDetectorFileOutput* createInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, bool splitByType) ;
+            MSLane* lane, SUMOReal pos, bool splitByType);
 
 
     /** @brief Creates an instance of an e1 detector using the given values
@@ -94,10 +94,10 @@ public:
      * @param[in] od The output device the loop shall use
      */
     virtual MSDetectorFileOutput* createInstantInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, OutputDevice& od) ;
+            MSLane* lane, SUMOReal pos, OutputDevice& od);
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /** @brief Creates an instance of a mesoscopic e1 detector using the given values
      *
      * Simply calls the MEInductLoop constructor
@@ -108,11 +108,11 @@ public:
      * @todo Position is not used, herein!?
      */
     virtual MEInductLoop* createMEInductLoop(const std::string& id,
-            MESegment* s, SUMOReal pos) ;
+            MESegment* s, SUMOReal pos);
 #endif
 
 
-    /** @brief Creates an instance of an e2-detector using the given values
+    /** @brief Creates an instance of an e2-detector (areal detector) using the given values
      *
      * Simply calls the GUI_E2_ZS_Collector constructor
      *
@@ -128,7 +128,7 @@ public:
             DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold,
             SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold) ;
+            SUMOReal jamDistThreshold);
 
 
     /** @brief Creates an instance of an e2ol-detector using the given values
@@ -148,7 +148,7 @@ public:
         const std::string& id, DetectorUsage usage, MSLane* lane, SUMOReal pos,
         SUMOTime haltingTimeThreshold,
         SUMOReal haltingSpeedThreshold,
-        SUMOReal jamDistThreshold) ;
+        SUMOReal jamDistThreshold);
 
 
     /** @brief Creates an instance of an e3 detector using the given values
@@ -165,7 +165,7 @@ public:
             const CrossSectionVector& entries,
             const CrossSectionVector& exits,
             SUMOReal haltingSpeedThreshold,
-            SUMOTime haltingTimeThreshold) ;
+            SUMOTime haltingTimeThreshold);
     /// @}
 
 

@@ -70,12 +70,12 @@ public:
      */
     GUIDialog_GLObjChooser(GUIGlChildWindow* parent, FXIcon* icon, const FXString& title,
                            GUIGlObjectType type,
-                           const std::vector<GUIGlID> &ids,
+                           const std::vector<GUIGlID>& ids,
                            GUIGlObjectStorage& glStorage);
 
 
     /// @brief Destructor
-    ~GUIDialog_GLObjChooser() ;
+    ~GUIDialog_GLObjChooser();
 
 
     /** @brief Returns the chosen (selected) object

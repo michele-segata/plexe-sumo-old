@@ -63,13 +63,7 @@
 #include <utils/gui/globjects/GUIGlObjectStorage.h>
 #include <foreign/rtree/SUMORTree.h>
 #include <utils/gui/div/GLHelper.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
-#include <GL/glu.h>
+#include <utils/gui/globjects/GLIncludes.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -97,7 +91,7 @@ void
 GUIViewTraffic::buildViewToolBars(GUIGlChildWindow& v) {
     // build coloring tools
     {
-        const std::vector<std::string> &names = gSchemeStorage.getNames();
+        const std::vector<std::string>& names = gSchemeStorage.getNames();
         for (std::vector<std::string>::const_iterator i = names.begin(); i != names.end(); ++i) {
             v.getColoringSchemesCombo().appendItem((*i).c_str());
             if ((*i) == myVisualizationSettings->name) {
@@ -118,11 +112,11 @@ GUIViewTraffic::buildViewToolBars(GUIGlChildWindow& v) {
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 
     if (!MSGlobals::gUseMesoSim) { // there are no gui-vehicles in mesosim
-    // for vehicles
+        // for vehicles
         new FXButton(v.getLocatorPopup(),
-                "\tLocate Vehicle\tLocate a vehicle within the network.",
-                GUIIconSubSys::getIcon(ICON_LOCATEVEHICLE), &v, MID_LOCATEVEHICLE,
-                ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
+                     "\tLocate Vehicle\tLocate a vehicle within the network.",
+                     GUIIconSubSys::getIcon(ICON_LOCATEVEHICLE), &v, MID_LOCATEVEHICLE,
+                     ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     }
     // for tls
     new FXButton(v.getLocatorPopup(),
@@ -134,10 +128,15 @@ GUIViewTraffic::buildViewToolBars(GUIGlChildWindow& v) {
                  "\tLocate Additional\tLocate an additional structure within the network.",
                  GUIIconSubSys::getIcon(ICON_LOCATEADD), &v, MID_LOCATEADD,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
-    // for shapes
+    // for pois
     new FXButton(v.getLocatorPopup(),
-                 "\tLocate Shape\tLocate a shape within the network.",
-                 GUIIconSubSys::getIcon(ICON_LOCATESHAPE), &v, MID_LOCATESHAPE,
+                 "\tLocate POI\tLocate a POI within the network.",
+                 GUIIconSubSys::getIcon(ICON_LOCATESHAPE), &v, MID_LOCATEPOI,
+                 ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
+    // for polygons
+    new FXButton(v.getLocatorPopup(),
+                 "\tLocate Polygon\tLocate a Polygon within the network.",
+                 GUIIconSubSys::getIcon(ICON_LOCATESHAPE), &v, MID_LOCATEPOLY,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 }
 
@@ -246,7 +245,7 @@ GUIViewTraffic::showViewschemeEditor() {
 void
 GUIViewTraffic::onGamingClick(Position pos) {
     MSTLLogicControl& tlsControl = MSNet::getInstance()->getTLSControl();
-    const std::vector<MSTrafficLightLogic*> &logics = tlsControl.getAllLogics();
+    const std::vector<MSTrafficLightLogic*>& logics = tlsControl.getAllLogics();
     MSTrafficLightLogic* minTll = 0;
     SUMOReal minDist = std::numeric_limits<SUMOReal>::infinity();
     for (std::vector<MSTrafficLightLogic*>::const_iterator i = logics.begin(); i != logics.end(); ++i) {

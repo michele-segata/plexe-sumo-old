@@ -72,8 +72,7 @@ NBLoadedTLDef::SignalGroup::addPhaseBegin(SUMOTime time, TLColor color) {
 
 
 void
-NBLoadedTLDef::SignalGroup::setYellowTimes(SUMOTime tRedYellow,
-        SUMOTime tYellow) {
+NBLoadedTLDef::SignalGroup::setYellowTimes(SUMOTime tRedYellow, SUMOTime tYellow) {
     myTRedYellow = tRedYellow;
     myTYellow = tYellow;
 }
@@ -81,14 +80,16 @@ NBLoadedTLDef::SignalGroup::setYellowTimes(SUMOTime tRedYellow,
 
 void
 NBLoadedTLDef::SignalGroup::sortPhases() {
-    sort(myPhases.begin(), myPhases.end(),
-         phase_by_time_sorter());
+    sort(myPhases.begin(), myPhases.end(), phase_by_time_sorter());
 }
 
 
 void
-NBLoadedTLDef::SignalGroup::patchTYellow(SUMOTime tyellow) {
-    if (myTYellow < tyellow) {
+NBLoadedTLDef::SignalGroup::patchTYellow(SUMOTime tyellow, bool forced) {
+    if (myTYellow < 0) {
+        // was not set before (was not loaded)
+        myTYellow = tyellow;
+    } else if (forced && myTYellow < tyellow) {
         WRITE_WARNING("TYellow of signal group '" + getID() + "' was less than the computed one; patched (was:" + toString<SUMOTime>(myTYellow) + ", is:" + toString<int>(tyellow) + ")");
         myTYellow = tyellow;
     }
@@ -97,8 +98,7 @@ NBLoadedTLDef::SignalGroup::patchTYellow(SUMOTime tyellow) {
 
 std::vector<SUMOReal>
 NBLoadedTLDef::SignalGroup::getTimes(SUMOTime cycleDuration) const {
-    // within the phase container, we should have the green and red phases
-    //  add their times
+    // within the phase container, we should have the green and red phases add their times
     std::vector<SUMOReal> ret; // !!! time vector
     for (std::vector<PhaseDef>::const_iterator i = myPhases.begin(); i != myPhases.end(); i++) {
         ret.push_back((SUMOReal)(*i).myTime);
@@ -109,7 +109,7 @@ NBLoadedTLDef::SignalGroup::getTimes(SUMOTime cycleDuration) const {
             if ((*i).myColor == TLCOLOR_RED) {
                 SUMOTime time = (SUMOTime)(*i).myTime + myTYellow;
                 if (time > cycleDuration) {
-                    time = time - cycleDuration ;
+                    time = time - cycleDuration;
                 }
                 ret.push_back((SUMOReal) time);
             }
@@ -266,16 +266,19 @@ NBLoadedTLDef::SignalGroup::remap(NBEdge* removed, int removedLane,
  * NBLoadedTLDef::Phase-methods
  * ----------------------------------------------------------------------- */
 NBLoadedTLDef::NBLoadedTLDef(const std::string& id,
-                             const std::vector<NBNode*> &junctions)
-    : NBTrafficLightDefinition(id, junctions, DefaultProgramID) {}
+                             const std::vector<NBNode*>& junctions, SUMOTime offset)
+    : NBTrafficLightDefinition(id, junctions, DefaultProgramID, offset)
+{}
 
 
-NBLoadedTLDef::NBLoadedTLDef(const std::string& id, NBNode* junction)
-    : NBTrafficLightDefinition(id, junction, DefaultProgramID) {}
+NBLoadedTLDef::NBLoadedTLDef(const std::string& id, NBNode* junction, SUMOTime offset)
+    : NBTrafficLightDefinition(id, junction, DefaultProgramID, offset)
+{}
 
 
-NBLoadedTLDef::NBLoadedTLDef(const std::string& id)
-    : NBTrafficLightDefinition(id, DefaultProgramID) {}
+NBLoadedTLDef::NBLoadedTLDef(const std::string& id, SUMOTime offset)
+    : NBTrafficLightDefinition(id, DefaultProgramID, offset)
+{}
 
 
 NBLoadedTLDef::~NBLoadedTLDef() {
@@ -296,9 +299,7 @@ NBLoadedTLDef::myCompute(const NBEdgeCont& ec, unsigned int brakingTime) {
         // needed later
         group->sortPhases();
         // patch the yellow time for this group
-        if (OptionsCont::getOptions().getBool("tls.yellow.patch-small")) {
-            group->patchTYellow(brakingTime);
-        }
+        group->patchTYellow(brakingTime, OptionsCont::getOptions().getBool("tls.yellow.patch-small"));
         // copy the now valid times into the container
         //  both the given red and green phases are added and also the
         //  yellow times
@@ -326,7 +327,7 @@ NBLoadedTLDef::myCompute(const NBEdgeCont& ec, unsigned int brakingTime) {
             duration = (unsigned int)((*(l + 1)) - (*l));
         } else {
             // get from the differenc to the first switching time
-            duration = (unsigned int)(myCycleDuration - (*l) + * (switchTimes.begin())) ;
+            duration = (unsigned int)(myCycleDuration - (*l) + * (switchTimes.begin()));
         }
         // no information about yellow times will be generated
         assert((*l) >= 0);
@@ -336,6 +337,7 @@ NBLoadedTLDef::myCompute(const NBEdgeCont& ec, unsigned int brakingTime) {
     if (MsgHandler::getWarningInstance()->wasInformed()) {
         WRITE_WARNING("During computation of traffic light '" + getID() + "'.");
     }
+    logic->setOffset(myOffset);
     logic->closeBuilding();
     return logic;
 }

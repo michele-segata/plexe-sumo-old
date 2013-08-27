@@ -43,6 +43,7 @@
 #include <utils/geom/Position.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/xml/XMLSubSys.h>
+#include <utils/xml/SUMOSAXReader.h>
 #include <utils/geom/GeomConvHelper.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/FileHelpers.h>
@@ -76,15 +77,14 @@ PCNetProjectionLoader::loadIfSet(OptionsCont& oc,
     // build handler and parser
     PCNetProjectionLoader handler(netOffset, origNetBoundary, convNetBoundary, projParameter);
     handler.setFileName(file);
-    XMLPScanToken token;
-    XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader* parser = XMLSubSys::getSAXReader(handler);
+    SUMOSAXReader* parser = XMLSubSys::getSAXReader(handler);
     PROGRESS_BEGIN_MESSAGE("Parsing network projection from '" + file + "'");
-    if (!parser->parseFirst(file.c_str(), token)) {
+    if (!parser->parseFirst(file)) {
         delete parser;
         throw ProcessError("Can not read XML-file '" + handler.getFileName() + "'.");
     }
     // parse
-    while (parser->parseNext(token) && !handler.hasReadAll());
+    while (parser->parseNext() && !handler.hasReadAll());
     // clean up
     PROGRESS_DONE_MESSAGE();
     if (!handler.hasReadAll()) {
@@ -118,28 +118,14 @@ PCNetProjectionLoader::myStartElement(int element,
         return;
     }
     bool ok = true;
-    PositionVector tmp = GeomConvHelper::parseShapeReporting(
-                             attrs.getOptStringReporting(SUMO_ATTR_NET_OFFSET, 0, ok, ""),
-                             attrs.getObjectType(), 0, ok, false);
+    PositionVector tmp = attrs.getShapeReporting(SUMO_ATTR_NET_OFFSET, 0, ok, false);
     if (ok) {
         myNetOffset = tmp[0];
     }
-    myOrigNetBoundary = GeomConvHelper::parseBoundaryReporting(
-                            attrs.getOptStringReporting(SUMO_ATTR_ORIG_BOUNDARY, 0, ok, ""),
-                            attrs.getObjectType(), 0, ok);
-    myConvNetBoundary = GeomConvHelper::parseBoundaryReporting(
-                            attrs.getOptStringReporting(SUMO_ATTR_CONV_BOUNDARY, 0, ok, ""),
-                            attrs.getObjectType(), 0, ok);
+    myOrigNetBoundary = attrs.getBoundaryReporting(SUMO_ATTR_ORIG_BOUNDARY, 0, ok);
+    myConvNetBoundary = attrs.getBoundaryReporting(SUMO_ATTR_CONV_BOUNDARY, 0, ok);
     myProjParameter = attrs.getOptStringReporting(SUMO_ATTR_ORIG_PROJ, 0, ok, "");
     myFoundOffset = myFoundOrigNetBoundary = myFoundConvNetBoundary = myFoundProj = ok;
-}
-
-
-void
-PCNetProjectionLoader::myCharacters(int element,
-                                    const std::string& chars) {
-    UNUSED_PARAMETER(element);
-    UNUSED_PARAMETER(chars);
 }
 
 

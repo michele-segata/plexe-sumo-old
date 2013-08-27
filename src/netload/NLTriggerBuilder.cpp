@@ -50,7 +50,7 @@
 #include <utils/xml/SUMOXMLDefinitions.h>
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 #include <mesosim/METriggeredCalibrator.h>
 #endif
 
@@ -63,7 +63,7 @@
 // method definitions
 // ===========================================================================
 NLTriggerBuilder::NLTriggerBuilder()
-    : myHandler(0), myHaveWarnedAboutDeprecatedFriendlyPos(false) {}
+    : myHandler(0) {}
 
 
 NLTriggerBuilder::~NLTriggerBuilder() {}
@@ -159,22 +159,11 @@ NLTriggerBuilder::parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attr
         throw ProcessError();
     }
     // get the lane
-    MSLane* lane = getLane(attrs, "bus_stop", id);
+    MSLane* lane = getLane(attrs, "busStop", id);
     // get the positions
     SUMOReal frompos = attrs.getOptSUMORealReporting(SUMO_ATTR_STARTPOS, id.c_str(), ok, 0);
     SUMOReal topos = attrs.getOptSUMORealReporting(SUMO_ATTR_ENDPOS, id.c_str(), ok, lane->getLength());
-    if (attrs.hasAttribute(SUMO_ATTR_FROM) || attrs.hasAttribute(SUMO_ATTR_TO)) {
-        WRITE_WARNING("Deprecated attribute 'from' or 'to' in description of bus stop '" + id + "'.");
-        frompos = attrs.getOptSUMORealReporting(SUMO_ATTR_FROM, id.c_str(), ok, 0);
-        topos = attrs.getOptSUMORealReporting(SUMO_ATTR_TO, id.c_str(), ok, lane->getLength());
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
-        myHaveWarnedAboutDeprecatedFriendlyPos = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated, use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "' instead.");
-    }
-    const bool friendlyPos = attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)
-                             ? attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS__DEPRECATED, id.c_str(), ok, false)
-                             : attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
+    const bool friendlyPos = attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
     if (!ok || !myHandler->checkStopPos(frompos, topos, lane->getLength(), 10., friendlyPos)) {
         throw InvalidArgument("Invalid position for bus stop '" + id + "'.");
     }
@@ -186,7 +175,7 @@ NLTriggerBuilder::parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attr
 }
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 void
 NLTriggerBuilder::parseAndBuildCalibrator(MSNet& net, const SUMOSAXAttributes& attrs,
         const std::string& base) throw(InvalidArgument) {
@@ -258,13 +247,13 @@ NLTriggerBuilder::parseAndBuildRerouter(MSNet& net, const SUMOSAXAttributes& att
 
 MSLaneSpeedTrigger*
 NLTriggerBuilder::buildLaneSpeedTrigger(MSNet& /*net*/, const std::string& id,
-                                        const std::vector<MSLane*> &destLanes,
+                                        const std::vector<MSLane*>& destLanes,
                                         const std::string& file) {
     return new MSLaneSpeedTrigger(id, destLanes, file);
 }
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 METriggeredCalibrator*
 NLTriggerBuilder::buildCalibrator(MSNet& net, const std::string& id,
                                   const MSEdge* edge, SUMOReal pos,
@@ -278,7 +267,7 @@ NLTriggerBuilder::buildCalibrator(MSNet& net, const std::string& id,
 
 MSTriggeredRerouter*
 NLTriggerBuilder::buildRerouter(MSNet&, const std::string& id,
-                                std::vector<MSEdge*> &edges,
+                                std::vector<MSEdge*>& edges,
                                 SUMOReal prob, const std::string& file, bool off) {
     return new MSTriggeredRerouter(id, edges, prob, file, off);
 }
@@ -286,7 +275,7 @@ NLTriggerBuilder::buildRerouter(MSNet&, const std::string& id,
 
 void
 NLTriggerBuilder::buildBusStop(MSNet& net, const std::string& id,
-                               const std::vector<std::string> &lines,
+                               const std::vector<std::string>& lines,
                                MSLane* lane, SUMOReal frompos, SUMOReal topos) throw(InvalidArgument) {
     MSBusStop* stop = new MSBusStop(id, lines, *lane, frompos, topos);
     if (!net.addBusStop(stop)) {
@@ -337,15 +326,9 @@ SUMOReal
 NLTriggerBuilder::getPosition(const SUMOSAXAttributes& attrs,
                               MSLane* lane,
                               const std::string& tt, const std::string& tid) throw(InvalidArgument) {
-    if (attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) && !myHaveWarnedAboutDeprecatedFriendlyPos) {
-        myHaveWarnedAboutDeprecatedFriendlyPos = true;
-        WRITE_WARNING("'" + toString(SUMO_ATTR_FRIENDLY_POS__DEPRECATED) + "' is deprecated, use '" + toString(SUMO_ATTR_FRIENDLY_POS) + "' instead.");
-    }
     bool ok = true;
     SUMOReal pos = attrs.getSUMORealReporting(SUMO_ATTR_POSITION, 0, ok);
-    const bool friendlyPos = attrs.hasAttribute(SUMO_ATTR_FRIENDLY_POS__DEPRECATED)
-                             ? attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS__DEPRECATED, 0, ok, false)
-                             : attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, 0, ok, false);
+    const bool friendlyPos = attrs.getOptBoolReporting(SUMO_ATTR_FRIENDLY_POS, 0, ok, false);
     if (!ok) {
         throw InvalidArgument("Error on parsing a position information.");
     }

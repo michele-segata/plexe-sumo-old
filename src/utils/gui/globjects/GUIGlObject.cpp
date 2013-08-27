@@ -31,12 +31,6 @@
 #include <config.h>
 #endif
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
-
 #include <string>
 #include <stack>
 #include <utils/common/ToString.h>
@@ -68,9 +62,11 @@ StringBijection<GUIGlObjectType>::Entry GUIGlObject::GUIGlObjectTypeNamesInitial
     {"tlLogic",       GLO_TLLOGIC},
     {"detector",      GLO_DETECTOR},
     {"trigger",       GLO_TRIGGER},
-    {"shape",         GLO_SHAPE},
-    {"vehicle",       GLO_VEHICLE},
     {"additional",    GLO_ADDITIONAL},
+    {"polygon",       GLO_POLYGON},
+    {"poi",           GLO_POI},
+    {"vehicle",       GLO_VEHICLE},
+    {"person",        GLO_PERSON},
     {"undefined",     GLO_MAX}
 };
 

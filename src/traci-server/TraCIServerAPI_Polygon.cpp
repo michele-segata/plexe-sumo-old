@@ -34,7 +34,7 @@
 
 #include <utils/common/StdDefs.h>
 #include <microsim/MSNet.h>
-#include <utils/shapes/PointOfInterest.h>
+#include <utils/shapes/Polygon.h>
 #include <utils/shapes/ShapeContainer.h>
 #include "TraCIConstants.h"
 #include "TraCIServerAPI_Polygon.h"
@@ -56,7 +56,6 @@ using namespace traci;
 bool
 TraCIServerAPI_Polygon::processGet(TraCIServer& server, tcpip::Storage& inputStorage,
                                    tcpip::Storage& outputStorage) {
-    std::string warning = ""; // additional description for response
     // variable & id
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
@@ -76,9 +75,7 @@ TraCIServerAPI_Polygon::processGet(TraCIServer& server, tcpip::Storage& inputSto
     if (variable == ID_LIST || variable == ID_COUNT) {
         std::vector<std::string> ids;
         ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
-        for (int i = shapeCont.getMinLayer(); i <= shapeCont.getMaxLayer(); ++i) {
-            shapeCont.getPolygonCont(i).insertIDs(ids);
-        }
+        shapeCont.getPolygons().insertIDs(ids);
         if (variable == ID_LIST) {
             tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
             tempMsg.writeStringList(ids);
@@ -87,11 +84,8 @@ TraCIServerAPI_Polygon::processGet(TraCIServer& server, tcpip::Storage& inputSto
             tempMsg.writeInt((int) ids.size());
         }
     } else {
-        Polygon* p = 0;
-        ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
-        for (int i = shapeCont.getMinLayer(); i <= shapeCont.getMaxLayer() && p == 0; ++i) {
-            p = shapeCont.getPolygonCont(i).get(id);
-        }
+        int layer;
+        Polygon* p = getPolygon(id, layer);
         if (p == 0) {
             server.writeStatusCmd(CMD_GET_POLYGON_VARIABLE, RTYPE_ERR, "Polygon '" + id + "' is not known", outputStorage);
             return false;
@@ -118,13 +112,13 @@ TraCIServerAPI_Polygon::processGet(TraCIServer& server, tcpip::Storage& inputSto
                 break;
             case VAR_FILL:
                 tempMsg.writeUnsignedByte(TYPE_UBYTE);
-                tempMsg.writeUnsignedByte(p->fill() ? 1 : 0);
+                tempMsg.writeUnsignedByte(p->getFill() ? 1 : 0);
                 break;
             default:
                 break;
         }
     }
-    server.writeStatusCmd(CMD_GET_POLYGON_VARIABLE, RTYPE_OK, warning, outputStorage);
+    server.writeStatusCmd(CMD_GET_POLYGON_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
     return true;
 }
@@ -147,10 +141,7 @@ TraCIServerAPI_Polygon::processSet(TraCIServer& server, tcpip::Storage& inputSto
     int layer = 0;
     ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
     if (variable != ADD && variable != REMOVE) {
-        for (int i = shapeCont.getMinLayer(); i <= shapeCont.getMaxLayer() && p == 0; ++i) {
-            p = shapeCont.getPolygonCont(i).get(id);
-            layer = i;
-        }
+        p = getPolygon(id, layer);
         if (p == 0) {
             server.writeStatusCmd(CMD_SET_POLYGON_VARIABLE, RTYPE_ERR, "Polygon '" + id + "' is not known", outputStorage);
             return false;
@@ -193,7 +184,7 @@ TraCIServerAPI_Polygon::processSet(TraCIServer& server, tcpip::Storage& inputSto
                 SUMOReal y = inputStorage.readDouble();
                 shape.push_back(Position(x, y));
             }
-            shapeCont.reshapePolygon(layer, id, shape);
+            shapeCont.reshapePolygon(id, shape);
         }
         break;
         case VAR_FILL: {
@@ -253,7 +244,8 @@ TraCIServerAPI_Polygon::processSet(TraCIServer& server, tcpip::Storage& inputSto
                 shape.push_back(Position(x, y));
             }
             //
-            if (!shapeCont.addPolygon(id, layer, type, RGBColor(r, g, b), fill, shape)) {
+            if (!shapeCont.addPolygon(id, type, RGBColor(r, g, b), (SUMOReal)layer,
+                                      Shape::DEFAULT_ANGLE, Shape::DEFAULT_IMG_FILE, shape, fill)) {
                 delete p;
                 server.writeStatusCmd(CMD_SET_POLYGON_VARIABLE, RTYPE_ERR, "Could not add polygon.", outputStorage);
                 return false;
@@ -262,19 +254,13 @@ TraCIServerAPI_Polygon::processSet(TraCIServer& server, tcpip::Storage& inputSto
         break;
         case REMOVE: {
             if (valueDataType != TYPE_INTEGER) {
-                server.writeStatusCmd(CMD_SET_POI_VARIABLE, RTYPE_ERR, "The layer must be given using an int.", outputStorage);
+                server.writeStatusCmd(CMD_SET_POLYGON_VARIABLE, RTYPE_ERR, "The layer must be given using an int.", outputStorage);
                 return false;
             }
             layer = inputStorage.readInt();
-            if (!shapeCont.removePolygon(layer, id)) {
-                bool removed = false;
-                for (int i = shapeCont.getMinLayer(); i <= shapeCont.getMaxLayer(); ++i) {
-                    removed |= shapeCont.removePolygon(i, id);
-                }
-                if (!removed) {
-                    server.writeStatusCmd(CMD_SET_POI_VARIABLE, RTYPE_ERR, "Could not remove PoI '" + id + "'", outputStorage);
-                    return false;
-                }
+            if (!shapeCont.removePolygon(id)) {
+                server.writeStatusCmd(CMD_SET_POLYGON_VARIABLE, RTYPE_ERR, "Could not remove polygon '" + id + "'", outputStorage);
+                return false;
             }
         }
         break;
@@ -284,6 +270,39 @@ TraCIServerAPI_Polygon::processSet(TraCIServer& server, tcpip::Storage& inputSto
     server.writeStatusCmd(CMD_SET_POLYGON_VARIABLE, RTYPE_OK, warning, outputStorage);
     return true;
 }
+
+
+bool
+TraCIServerAPI_Polygon::getShape(const std::string& id, PositionVector& shape) {
+    int layer;
+    Polygon* poly = getPolygon(id, layer);
+    if (poly == 0) {
+        return false;
+    }
+    shape.push_back(poly->getShape());
+    return true;
+}
+
+
+Polygon*
+TraCIServerAPI_Polygon::getPolygon(const std::string& id, int& layer) {
+    ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
+    return shapeCont.getPolygons().get(id);
+}
+
+
+TraCIRTree*
+TraCIServerAPI_Polygon::getTree() {
+    TraCIRTree* t = new TraCIRTree();
+    ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
+    const std::map<std::string, Polygon*>& polygons = shapeCont.getPolygons().getMyMap();
+    for (std::map<std::string, Polygon*>::const_iterator i = polygons.begin(); i != polygons.end(); ++i) {
+        Boundary b = (*i).second->getShape().getBoxBoundary();
+        t->addObject((*i).second, b);
+    }
+    return t;
+}
+
 
 #endif
 

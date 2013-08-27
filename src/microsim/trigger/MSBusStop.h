@@ -31,9 +31,10 @@
 #endif
 
 #include <vector>
+#include <algorithm>
 #include <map>
 #include <string>
-#include "MSTrigger.h"
+#include <utils/common/Named.h>
 
 
 // ===========================================================================
@@ -41,6 +42,7 @@
 // ===========================================================================
 class MSLane;
 class SUMOVehicle;
+class MSPerson;
 
 
 // ===========================================================================
@@ -58,7 +60,7 @@ class SUMOVehicle;
  * Please note that using the last free space disallows vehicles to enter a
  *  free space in between other vehicles.
  */
-class MSBusStop : public MSTrigger {
+class MSBusStop : public Named {
 public:
     /** @brief Constructor
      *
@@ -70,33 +72,33 @@ public:
      * @param[in] endPos End position of the bus stop on the lane
      */
     MSBusStop(const std::string& id,
-              const std::vector<std::string> &lines, MSLane& lane,
-              SUMOReal begPos, SUMOReal endPos) ;
+              const std::vector<std::string>& lines, MSLane& lane,
+              SUMOReal begPos, SUMOReal endPos);
 
 
     /// @brief Destructor
-    virtual ~MSBusStop() ;
+    virtual ~MSBusStop();
 
 
     /** @brief Returns the lane this bus stop is located at
      *
      * @return Reference to the lane the bus stop is located at
      */
-    const MSLane& getLane() const ;
+    const MSLane& getLane() const;
 
 
     /** @brief Returns the begin position of this bus stop
      *
      * @return The position the bus stop begins at
      */
-    SUMOReal getBeginLanePosition() const ;
+    SUMOReal getBeginLanePosition() const;
 
 
     /** @brief Returns the end position of this bus stop
      *
      * @return The position the bus stop ends at
      */
-    SUMOReal getEndLanePosition() const ;
+    SUMOReal getEndLanePosition() const;
 
 
     /** @brief Called if a vehicle enters this stop
@@ -110,7 +112,7 @@ public:
      * @param[in] what The end halting position of the vehicle
      * @see computeLastFreePos
      */
-    void enter(SUMOVehicle* what, SUMOReal beg, SUMOReal end) ;
+    void enter(SUMOVehicle* what, SUMOReal beg, SUMOReal end);
 
 
     /** @brief Called if a vehicle leaves this stop
@@ -122,15 +124,32 @@ public:
      * @param[in] what The vehicle that leaves the bus stop
      * @see computeLastFreePos
      */
-    void leaveFrom(SUMOVehicle* what) ;
+    void leaveFrom(SUMOVehicle* what);
 
 
     /** @brief Returns the last free position on this stop
      *
      * @return The last free position of this bus stop
      */
-    SUMOReal getLastFreePos(SUMOVehicle &forVehicle) const ;
+    SUMOReal getLastFreePos(SUMOVehicle& forVehicle) const;
 
+
+    /** @brief Returns the number of persons waiting on this stop
+    */
+    unsigned int getPersonNumber() const {
+        return static_cast<unsigned int>(myWaitingPersons.size());
+    }
+
+    void addPerson(MSPerson* p) {
+        myWaitingPersons.push_back(p);
+    }
+
+    void removePerson(MSPerson* p) {
+        std::vector<MSPerson*>::iterator i = std::find(myWaitingPersons.begin(), myWaitingPersons.end(), p);
+        if (i != myWaitingPersons.end()) {
+            myWaitingPersons.erase(i);
+        }
+    }
 
 protected:
     /** @brief Computes the last free position on this stop
@@ -139,7 +158,7 @@ protected:
      * It is stored in myLastFreePos. If no vehicle halts, the last free
      *  position gets the value of myEndPos.
      */
-    void computeLastFreePos() ;
+    void computeLastFreePos();
 
 
 protected:
@@ -160,6 +179,9 @@ protected:
 
     /// @brief The last free position at this stop (variable)
     SUMOReal myLastFreePos;
+
+    /// @brief Persons waiting at this stop
+    std::vector<MSPerson*> myWaitingPersons;
 
 
 private:

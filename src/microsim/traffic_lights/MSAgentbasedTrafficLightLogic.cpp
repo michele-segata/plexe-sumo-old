@@ -32,6 +32,7 @@
 #include <config.h>
 #endif
 
+#include <cassert>
 #include <utility>
 #include <vector>
 #include <bitset>
@@ -54,32 +55,32 @@ MSAgentbasedTrafficLightLogic::MSAgentbasedTrafficLightLogic(
     MSTLLogicControl& tlcontrol,
     const std::string& id, const std::string& programID,
     const Phases& phases, unsigned int step, SUMOTime delay,
-    const std::map<std::string, std::string> &parameter)
+    const std::map<std::string, std::string>& parameter)
     : MSSimpleTrafficLightLogic(tlcontrol, id, programID, phases, step, delay),
       tSinceLastDecision(0), stepOfLastDecision(0) {
 
     tDecide = 1;
     if (parameter.find("decision-horizon") != parameter.end()) {
-        tDecide = (unsigned int) TplConvert<char>::_2int(parameter.find("decision-horizon")->second.c_str());
+        tDecide = (unsigned int) TplConvert::_2int(parameter.find("decision-horizon")->second.c_str());
     }
     numberOfValues = 3;
     if (parameter.find("learn-horizon") != parameter.end()) {
-        numberOfValues = (unsigned int) TplConvert<char>::_2int(parameter.find("learn-horizon")->second.c_str());
+        numberOfValues = (unsigned int) TplConvert::_2int(parameter.find("learn-horizon")->second.c_str());
     }
     tCycle = 90;
     if (parameter.find("tcycle") != parameter.end()) {
-        tCycle = (unsigned int) TplConvert<char>::_2SUMOReal(parameter.find("tcycle")->second.c_str());
+        tCycle = (unsigned int) TplConvert::_2SUMOReal(parameter.find("tcycle")->second.c_str());
     }
     deltaLimit = 1;
     if (parameter.find("min-diff") != parameter.end()) {
-        deltaLimit = TplConvert<char>::_2int(parameter.find("min-diff")->second.c_str());
+        deltaLimit = TplConvert::_2int(parameter.find("min-diff")->second.c_str());
     }
 }
 
 
 void
 MSAgentbasedTrafficLightLogic::init(NLDetectorBuilder& nb) {
-    SUMOReal det_offset = TplConvert<char>::_2SUMOReal(myParameter.find("detector_offset")->second.c_str());
+    SUMOReal det_offset = TplConvert::_2SUMOReal(myParameter.find("detector_offset")->second.c_str());
     LaneVectorVector::const_iterator i2;
     LaneVector::const_iterator i;
     // build the detectors
@@ -185,7 +186,7 @@ MSAgentbasedTrafficLightLogic::collectData() {
     for (unsigned int i = 0; i < (unsigned int) state.size(); i++)  {
         // finds the maximum QUEUE_LENGTH_AHEAD_OF_TRAFFIC_LIGHTS_IN_VEHICLES of all lanes that have green
         if (state[i] == LINKSTATE_TL_GREEN_MAJOR || state[i] == LINKSTATE_TL_GREEN_MINOR) {
-            const std::vector<MSLane*> &lanes = getLanesAt(i);
+            const std::vector<MSLane*>& lanes = getLanesAt(i);
             if (lanes.empty())    {
                 break;
             }

@@ -30,19 +30,19 @@
 #include <config.h>
 #endif
 
-#include "RORDLoader_SUMOBase.h"
-#include <utils/common/SUMOVTypeParameter.h>
-#include "RORouteDef.h"
-#include "RONet.h"
-#include <utils/common/UtilExceptions.h>
+#include <utils/common/FileHelpers.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/StringTokenizer.h>
+#include <utils/common/SUMOVTypeParameter.h>
 #include <utils/common/ToString.h>
-#include "ROVehicle.h"
-#include "RORouteDef_Alternatives.h"
-#include "RORouteDef_Complete.h"
-#include "RORoute.h"
+#include <utils/common/UtilExceptions.h>
+#include <utils/iodevices/BinaryFormatter.h>
 #include <utils/xml/SUMOVehicleParserHelper.h>
+#include "RORouteDef.h"
+#include "RONet.h"
+#include "ROVehicle.h"
+#include "RORoute.h"
+#include "RORDLoader_SUMOBase.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -53,15 +53,12 @@
 // method definitions
 // ===========================================================================
 RORDLoader_SUMOBase::RORDLoader_SUMOBase(RONet& net,
-        SUMOTime begin, SUMOTime end, const int maxRouteNumber, const bool tryRepair,
-        const bool withTaz, const bool keepRoutes,
-        const bool skipRouteCalculation, const std::string& file)
+        SUMOTime begin, SUMOTime end, const bool tryRepair,
+        const bool withTaz, const std::string& file)
     : ROTypedXMLRoutesLoader(net, begin, end, file),
-      myVehicleParameter(0), myCurrentIsOk(true), myAltIsValid(true),
-      myCurrentAlternatives(0), myMaxRouteNumber(maxRouteNumber),
-      myCurrentRoute(0), myTryRepair(tryRepair), myWithTaz(withTaz), myKeepRoutes(keepRoutes),
-      mySkipRouteCalculation(skipRouteCalculation), myColor(0), myCurrentVType(0),
-      myHaveWarnedAboutDeprecatedVType(false), myHaveWarnedAboutDeprecatedRoute(false) {
+      myVehicleParameter(0), myColor(0), myCurrentIsOk(true),
+      myAltIsValid(true), myCurrentAlternatives(0), myTryRepair(tryRepair),
+      myWithTaz(withTaz), myCurrentRoute(0), myCurrentVType(0) {
 }
 
 
@@ -91,13 +88,8 @@ RORDLoader_SUMOBase::myStartElement(int element,
             }
             myCurrentIsOk = myVehicleParameter != 0;
             break;
-        case SUMO_TAG_VTYPE__DEPRECATED:
-            if (!myHaveWarnedAboutDeprecatedVType) {
-                myHaveWarnedAboutDeprecatedVType = true;
-                WRITE_WARNING("'" + toString(SUMO_TAG_VTYPE__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_VTYPE) + "'.");
-            }
         case SUMO_TAG_VTYPE:
-            myCurrentVType = SUMOVehicleParserHelper::beginVTypeParsing(attrs);
+            myCurrentVType = SUMOVehicleParserHelper::beginVTypeParsing(attrs, getFileName());
             break;
         case SUMO_TAG_ROUTE_DISTRIBUTION:
             myAltIsValid = true;
@@ -110,7 +102,7 @@ RORDLoader_SUMOBase::myStartElement(int element,
             break;
     }
     // parse embedded vtype information
-    if (myCurrentVType != 0 && element != SUMO_TAG_VTYPE && element != SUMO_TAG_VTYPE__DEPRECATED) {
+    if (myCurrentVType != 0 && element != SUMO_TAG_VTYPE) {
         SUMOVehicleParserHelper::parseVTypeEmbedded(*myCurrentVType, element, attrs);
         return;
     }
@@ -155,17 +147,11 @@ RORDLoader_SUMOBase::startRoute(const SUMOSAXAttributes& attrs) {
         }
     }
     if (attrs.hasAttribute(SUMO_ATTR_COLOR)) {
-        myColor = new RGBColor(RGBColor::parseColorReporting(
-                                   attrs.getString(SUMO_ATTR_COLOR),
-                                   attrs.getObjectType(), myCurrentRouteName.c_str(), true, myCurrentIsOk));
+        myColor = new RGBColor(attrs.getColorReporting(myCurrentRouteName.c_str(), myCurrentIsOk));
     }
-    if (attrs.hasAttribute(SUMO_ATTR_EDGES)) {
-        myCharacters(SUMO_TAG_ROUTE, attrs.getStringReporting(SUMO_ATTR_EDGES, myCurrentRouteName.c_str(), myCurrentIsOk));
-    } else {
-        if (!myHaveWarnedAboutDeprecatedRoute) {
-            WRITE_WARNING("Defining routes as a nested string is deprecated, use the edges attribute instead.");
-            myHaveWarnedAboutDeprecatedRoute = true;
-        }
+    std::string edges = attrs.getStringReporting(SUMO_ATTR_EDGES, myCurrentRouteName.c_str(), myCurrentIsOk);
+    if (myCurrentIsOk) {
+        parseRoute(edges);
     }
 }
 
@@ -197,18 +183,12 @@ RORDLoader_SUMOBase::startAlternative(const SUMOSAXAttributes& attrs) {
         return;
     }
     // build the alternative cont
-    myCurrentAlternatives = new RORouteDef_Alternatives(id, index, 
-        myMaxRouteNumber, myKeepRoutes, mySkipRouteCalculation);
+    myCurrentAlternatives = new RORouteDef(id, index, false);
 }
 
+
 void
-RORDLoader_SUMOBase::myCharacters(int element,
-                                  const std::string& chars) {
-    // process routes only, all other elements do
-    //  not have embedded characters
-    if (element != SUMO_TAG_ROUTE) {
-        return;
-    }
+RORDLoader_SUMOBase::parseRoute(const std::string& chars) {
     if (!myAltIsValid) {
         return;
     }
@@ -220,7 +200,7 @@ RORDLoader_SUMOBase::myCharacters(int element,
         return;
     }
     // build the list of edges
-    std::vector<const ROEdge*> *list = new std::vector<const ROEdge*>();
+    std::vector<const ROEdge*>* list = new std::vector<const ROEdge*>();
     if (myWithTaz && myVehicleParameter->wasSet(VEHPARS_TAZ_SET)) {
         ROEdge* edge = myNet.getEdge(myVehicleParameter->fromTaz + "-source");
         if (edge != 0) {
@@ -230,17 +210,25 @@ RORDLoader_SUMOBase::myCharacters(int element,
             myCurrentIsOk = false;
         }
     }
-    StringTokenizer st(chars);
-    while (myCurrentIsOk && st.hasNext()) { // !!! too slow !!!
-        const std::string id = st.next();
-        ROEdge* edge = myNet.getEdge(id);
-        if (edge != 0) {
-            list->push_back(edge);
-        } else {
-            if (!myTryRepair) {
-                std::string rid = myCurrentAlternatives != 0 ? myCurrentAlternatives->getID() : myCurrentRouteName;
-                WRITE_ERROR("The route '" + rid + "' contains the unknown edge '" + id + "'.");
-                myCurrentIsOk = false;
+    if (chars[0] == BinaryFormatter::BF_ROUTE) {
+        std::istringstream in(chars, std::ios::binary);
+        char c;
+        in >> c;
+        std::string rid = myCurrentAlternatives != 0 ? myCurrentAlternatives->getID() : myCurrentRouteName;
+        FileHelpers::readEdgeVector(in, *list, rid);
+    } else {
+        StringTokenizer st(chars);
+        while (myCurrentIsOk && st.hasNext()) { // !!! too slow !!!
+            const std::string id = st.next();
+            ROEdge* edge = myNet.getEdge(id);
+            if (edge != 0) {
+                list->push_back(edge);
+            } else {
+                if (!myTryRepair) {
+                    std::string rid = myCurrentAlternatives != 0 ? myCurrentAlternatives->getID() : myCurrentRouteName;
+                    WRITE_ERROR("The route '" + rid + "' contains the unknown edge '" + id + "'.");
+                    myCurrentIsOk = false;
+                }
             }
         }
     }
@@ -258,7 +246,8 @@ RORDLoader_SUMOBase::myCharacters(int element,
             myCurrentAlternatives->addLoadedAlternative(
                 new RORoute(myCurrentAlternatives->getID(), myCost, myProbability, *list, myColor));
         } else {
-            myCurrentRoute = new RORouteDef_Complete(myCurrentRouteName, myColor, *list, myTryRepair);
+            myCurrentRoute = new RORouteDef(myCurrentRouteName, 0, myTryRepair);
+            myCurrentRoute->addLoadedAlternative(new RORoute(myCurrentRouteName, 0, 1, *list, myColor));
         }
         myColor = 0;
     }
@@ -301,7 +290,6 @@ RORDLoader_SUMOBase::myEndElement(int element) {
             myVehicleParameter = 0;
             myNextRouteRead = true;
             break;
-        case SUMO_TAG_VTYPE__DEPRECATED:
         case SUMO_TAG_VTYPE: {
             SUMOVehicleParserHelper::closeVTypeParsing(*myCurrentVType);
             myNet.addVehicleType(myCurrentVType);
@@ -329,6 +317,8 @@ RORDLoader_SUMOBase::closeVehicle() {
     RORouteDef* route = myNet.getRouteDef(myVehicleParameter->routeid);
     if (route == 0) {
         route = myNet.getRouteDef("!" + myVehicleParameter->id);
+    } else {
+        route = route->copy("!" + myVehicleParameter->id);
     }
     if (route == 0) {
         WRITE_ERROR("The route of the vehicle '" + myVehicleParameter->id + "' is not known.");

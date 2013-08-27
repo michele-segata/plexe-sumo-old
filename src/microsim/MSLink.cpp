@@ -31,7 +31,6 @@
 #endif
 
 #include <iostream>
-#include <cassert>
 #include "MSLink.h"
 #include "MSLane.h"
 #include "MSGlobals.h"
@@ -75,8 +74,8 @@ MSLink::~MSLink() {}
 
 void
 MSLink::setRequestInformation(unsigned int requestIdx, unsigned int respondIdx, bool isCrossing, bool isCont,
-                              const std::vector<MSLink*> &foeLinks,
-                              const std::vector<MSLane*> &foeLanes) {
+                              const std::vector<MSLink*>& foeLinks,
+                              const std::vector<MSLane*>& foeLanes) {
     myRequestIdx = requestIdx;
     myRespondIdx = respondIdx;
     myIsCrossing = isCrossing;
@@ -126,28 +125,23 @@ MSLink::removeApproaching(SUMOVehicle* veh) {
 
 
 bool
-MSLink::opened(SUMOTime arrivalTime, SUMOReal arrivalSpeed, SUMOReal vehicleLength) const {
+MSLink::opened(SUMOTime arrivalTime, SUMOReal arrivalSpeed, SUMOReal leaveSpeed, SUMOReal vehicleLength) const {
     if (myState == LINKSTATE_TL_RED) {
         return false;
     }
     if (myAmCont) {
         return true;
     }
-#ifdef HAVE_INTERNAL_LANES
-    const SUMOReal length = myJunctionInlane == 0 ? getLength() : myJunctionInlane->getLength();
-#else
-    const SUMOReal length = getLength();
-#endif
-    const SUMOTime leaveTime = arrivalTime + TIME2STEPS((length + vehicleLength) / arrivalSpeed);
+    const SUMOTime leaveTime = arrivalTime + TIME2STEPS((getLength() + vehicleLength) / (0.5 * (arrivalSpeed + leaveSpeed)));
     for (std::vector<MSLink*>::const_iterator i = myFoeLinks.begin(); i != myFoeLinks.end(); ++i) {
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             if ((*i)->getState() == LINKSTATE_TL_RED) {
                 continue;
             }
         }
 #endif
-        if ((*i)->blockedAtTime(arrivalTime, leaveTime)) {
+        if ((*i)->blockedAtTime(arrivalTime, leaveTime, leaveSpeed)) {
             return false;
         }
     }
@@ -161,12 +155,23 @@ MSLink::opened(SUMOTime arrivalTime, SUMOReal arrivalSpeed, SUMOReal vehicleLeng
 
 
 bool
-MSLink::blockedAtTime(SUMOTime arrivalTime, SUMOTime leaveTime) const {
+MSLink::blockedAtTime(SUMOTime arrivalTime, SUMOTime leaveTime, SUMOReal speed) const {
     for (LinkApproachingVehicles::const_iterator i = myApproachingVehicles.begin(); i != myApproachingVehicles.end(); ++i) {
         if (!(*i).willPass) {
             continue;
         }
-        if (!(((*i).leavingTime + myLookaheadTime < arrivalTime) || ((*i).arrivalTime - myLookaheadTime > leaveTime))) {
+        if ((*i).leavingTime < arrivalTime) {
+            // ego wants to be follower
+            if ((*i).leavingTime + safeHeadwayTime(i->vehicle->getSpeed(), speed) >= arrivalTime) {
+                return true;
+            }
+        } else if ((*i).arrivalTime > leaveTime) {
+            // ego wants to be leader
+            if ((*i).arrivalTime - safeHeadwayTime(speed, i->vehicle->getSpeed()) <= leaveTime) {
+                return true;
+            }
+        } else {
+            // even without considering safeHeadwayTime there is already a conflict
             return true;
         }
     }
@@ -174,10 +179,36 @@ MSLink::blockedAtTime(SUMOTime arrivalTime, SUMOTime leaveTime) const {
 }
 
 
+SUMOTime
+MSLink::safeHeadwayTime(SUMOReal leaderSpeed, SUMOReal followerSpeed) {
+    // v: leader speed
+    // u: follower speed
+    // a: leader decel
+    // b: follower decel
+    // g: follower min gap
+    // h: save headway time (result)
+    const SUMOReal v = leaderSpeed;
+    const SUMOReal u = followerSpeed;
+    // XXX use cfmodel values of possible
+    const SUMOReal a = DEFAULT_VEH_DECEL;
+    const SUMOReal b = DEFAULT_VEH_DECEL;
+    const SUMOReal g = DEFAULT_VEH_MINGAP;
+    // breaking distance ~ (v^2 - a*v)/(2*a)
+    if (v < a) {
+        // leader may break in one timestep (need different formula)
+        // u*h > g + (u^2 - b*u)/(2*b) + 0.5
+        return TIME2STEPS((g + 0.5) / u + (u / b - 1.0) * 0.5);
+    } else {
+        // u*h + (v^2 - a*v)/(2*a) > g + (u^2 - b*u)/(2*b) + 0.5
+        return TIME2STEPS((g + (1.0 + v - v * v / a) * 0.5) / u + (u / b - 1.0) * 0.5);
+    }
+}
+
+
 bool
-MSLink::hasApproachingFoe(SUMOTime arrivalTime, SUMOTime leaveTime) const {
+MSLink::hasApproachingFoe(SUMOTime arrivalTime, SUMOTime leaveTime, SUMOReal speed) const {
     for (std::vector<MSLink*>::const_iterator i = myFoeLinks.begin(); i != myFoeLinks.end(); ++i) {
-        if ((*i)->blockedAtTime(arrivalTime, leaveTime)) {
+        if ((*i)->blockedAtTime(arrivalTime, leaveTime, speed)) {
             return true;
         }
     }
@@ -214,6 +245,20 @@ MSLink::getViaLane() const {
     return myJunctionInlane;
 }
 #endif
+
+
+MSLane*
+MSLink::getViaLaneOrLane() const {
+#ifdef HAVE_INTERNAL_LANES
+    if (myJunctionInlane != 0) {
+        return myJunctionInlane;
+    } else {
+        return myLane;
+    }
+#else
+    return myLane;
+#endif
+}
 
 
 unsigned int

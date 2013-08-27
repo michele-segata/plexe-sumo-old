@@ -38,6 +38,7 @@
 #include <string>
 #include <utils/gui/globjects/GUIGlObject.h>
 #include <utils/common/RGBColor.h>
+#include <utils/geom/PositionVector.h>
 #include <microsim/MSVehicle.h>
 #include <utils/gui/globjects/GUIGLObjectPopupMenu.h>
 #include <utils/foxtools/MFXMutex.h>
@@ -49,6 +50,7 @@
 // ===========================================================================
 class GUISUMOAbstractView;
 class GUIGLObjectPopupMenu;
+class GUILaneWrapper;
 class MSDevice_Vehroutes;
 
 
@@ -70,15 +72,16 @@ public:
      * @param[in] pars The vehicle description
      * @param[in] route The vehicle's route
      * @param[in] type The vehicle's type
+     * @param[in] speedFactor The factor for driven lane's speed limits
      * @param[in] vehicleIndex The vehicle's running index
      * @exception ProcessError If a value is wrong
      */
     GUIVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
-               const MSVehicleType* type, int vehicleIndex) ;
+               const MSVehicleType* type, SUMOReal speedFactor, int vehicleIndex);
 
 
     /// @brief destructor
-    ~GUIVehicle() ;
+    ~GUIVehicle();
 
 
     /// @name inherited from GUIGlObject
@@ -91,7 +94,7 @@ public:
      * @return The built popup-menu
      * @see GUIGlObject::getPopUpMenu
      */
-    GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) ;
+    GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent);
 
 
     /** @brief Returns an own parameter window
@@ -101,7 +104,7 @@ public:
      * @return The built parameter window
      * @see GUIGlObject::getParameterWindow
      */
-    GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView& parent) ;
+    GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView& parent);
 
 
     /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -109,14 +112,14 @@ public:
      * @return The boundary the object is within
      * @see GUIGlObject::getCenteringBoundary
      */
-    Boundary getCenteringBoundary() const ;
+    Boundary getCenteringBoundary() const;
 
 
     /** @brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const ;
+    void drawGL(const GUIVisualizationSettings& s) const;
 
 
 
@@ -124,7 +127,7 @@ public:
      * @param[in] parent The view
      * @param[in] s The settings for the current view (may influence drawing)
      */
-    virtual void drawGLAdditional(GUISUMOAbstractView* const parent, const GUIVisualizationSettings& s) const ;
+    virtual void drawGLAdditional(GUISUMOAbstractView* const parent, const GUIVisualizationSettings& s) const;
     //@}
 
 
@@ -137,7 +140,7 @@ public:
      * @param[in] which The visualisation feature
      * @return see comment
      */
-    bool hasActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) const ;
+    bool hasActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) const;
 
 
     /** @brief Adds the named visualisation feature to the given view
@@ -146,7 +149,7 @@ public:
      * @return Always true
      * @see GUISUMOAbstractView::addAdditionalGLVisualisation
      */
-    bool addActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) ;
+    bool addActiveAddVisualisation(GUISUMOAbstractView* const parent, int which);
 
 
     /** @brief Adds the named visualisation feature to the given view
@@ -155,7 +158,7 @@ public:
      * @return Whether the vehicle was known to the view
      * @see GUISUMOAbstractView::removeAdditionalGLVisualisation
      */
-    bool removeActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) ;
+    bool removeActiveAddVisualisation(GUISUMOAbstractView* const parent, int which);
     /// @}
 
 
@@ -176,7 +179,8 @@ public:
      * @return The best lanes structure holding matching the current vehicle position and state ahead
      * @see MSVehicle::getBestLanes
      */
-    const std::vector<LaneQ> &getBestLanes() const ;
+    const std::vector<LaneQ>& getBestLanes() const;
+
 
     /**
      * @class GUIVehiclePopupMenu
@@ -194,10 +198,10 @@ public:
          * @param[in, out] additionalVisualizations Information which additional visualisations are enabled (per view)
          */
         GUIVehiclePopupMenu(GUIMainWindow& app,
-                            GUISUMOAbstractView& parent, GUIGlObject& o, std::map<GUISUMOAbstractView*, int> &additionalVisualizations);
+                            GUISUMOAbstractView& parent, GUIGlObject& o, std::map<GUISUMOAbstractView*, int>& additionalVisualizations);
 
         /// @brief Destructor
-        ~GUIVehiclePopupMenu() ;
+        ~GUIVehiclePopupMenu();
 
         /// @brief Called if all routes of the vehicle shall be shown
         long onCmdShowAllRoutes(FXObject*, FXSelector, void*);
@@ -222,7 +226,7 @@ public:
 
     protected:
         /// @brief Information which additional visualisations are enabled (per view)
-        std::map<GUISUMOAbstractView*, int> &myVehiclesAdditionalVisualizations;
+        std::map<GUISUMOAbstractView*, int>& myVehiclesAdditionalVisualizations;
         /// @brief Needed for parameterless instantiation
         std::map<GUISUMOAbstractView*, int> dummy;
 
@@ -258,7 +262,7 @@ public:
     /** @brief Draws the route
      * @param[in] r The route to draw
      */
-    void draw(const MSRoute& r) const ;
+    void draw(const MSRoute& r) const;
 
 
     /** @brief Chooses the route to draw and draws it, darkening it as given
@@ -266,20 +270,23 @@ public:
      * @param[in] routeNo The route to show (0: the current, >0: prior)
      * @param[in] darken The amount to darken the route by
      */
-    void drawRoute(const GUIVisualizationSettings& s, int routeNo, SUMOReal darken) const ;
+    void drawRoute(const GUIVisualizationSettings& s, int routeNo, SUMOReal darken) const;
 
 
     /** @brief Draws the vehicle's best lanes
      */
-    void drawBestLanes() const ;
+    void drawBestLanes() const;
     /// @}
 
 
 private:
+
     /// The mutex used to avoid concurrent updates of the vehicle buffer
     mutable MFXMutex myLock;
 
     MSDevice_Vehroutes* myRoutes;
+
+private:
 
     /// @brief sets the color according to the currente settings
     void setColor(const GUIVisualizationSettings& s) const;
@@ -289,6 +296,47 @@ private:
 
     /// @brief sets the color according to the current scheme index and some vehicle function
     bool setFunctionalColor(size_t activeScheme) const;
+
+    /// @brief retrieves the laneWrapper for this vehicles lane
+    GUILaneWrapper& getLaneWrapper() const;
+
+    /// @name drawing helper methods
+    /// @{
+    static void drawPoly(double* poses, SUMOReal offset);
+
+    void drawAction_drawVehicleAsBoxPlus() const;
+    void drawAction_drawVehicleAsTrianglePlus() const;
+    void drawAction_drawVehicleAsPoly(const GUIVisualizationSettings& s) const;
+
+    /* @brief try to draw vehicle as raster image and return true if sucessful
+     * @param[in] length The custom length of the vehicle
+     *   (defaults to the * length specified in the vehicle type if -1 is passed)
+    */
+    bool drawAction_drawVehicleAsImage(const GUIVisualizationSettings& s, SUMOReal length = -1) const;
+
+    /* @brief draw train with individual carriages. The number of carriages is
+     * determined from defaultLength of carriages and vehicle length
+     * passengerSeats are computed beginning at firstPassengerCarriage */
+    void drawAction_drawRailCarriages(const GUIVisualizationSettings& s, SUMOReal defaultLength, int firstPassengerCarriage = 0, bool asImage = false) const;
+    /// @}
+
+    /* @brief return the previous lane in this vehicles route including internal lanes
+     * @param[in] current The lane of which the predecessor should be returned
+     * @param[in,out] routeIndex The index of the current or previous non-internal edge in the route
+     */
+    MSLane* getPreviousLane(MSLane* current, int& routeIndex) const;
+
+    /// @brief returns the seat position for the person with the given index
+    const Position& getSeatPosition(size_t personIndex) const;
+
+    /// @brief positions of seats in the vehicle (updated at every drawing step)
+    mutable PositionVector mySeatPositions;
+
+    /// @brief return the number of passengers
+    int getNumPassengers() const;
+
+    /// @brief add seats to mySeatPositions and update requiredSeats
+    void computeSeats(const Position& front, const Position& back, int& requiredSeats) const;
 };
 
 

@@ -38,6 +38,8 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <utils/common/Named.h>
+#include <utils/common/Parameterised.h>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/SUMOVehicle.h>
 #include <utils/common/SUMOVehicleClass.h>
@@ -55,6 +57,7 @@ class SUMOVehicle;
 class SUMOVehicleParameter;
 class MSVehicle;
 class MSLane;
+class MSPerson;
 
 
 // ===========================================================================
@@ -67,7 +70,7 @@ class MSLane;
  * A single connection between two junctions.
  * Holds lanes which are reponsible for vehicle movements.
  */
-class MSEdge {
+class MSEdge : public Named, public Parameterised {
 public:
     /**
      * @enum EdgeBasicFunction
@@ -106,22 +109,22 @@ public:
      *
      * @param[in] id The id of the edge
      * @param[in] numericalID The numerical id (index) of the edge
+     * @param[in] function A basic type of the edge
      * @param[in] streetName The street name for that edge
      */
-    MSEdge(const std::string& id, unsigned int numericalID, const std::string& streetName = "") ;
+    MSEdge(const std::string& id, int numericalID, const EdgeBasicFunction function, const std::string& streetName = "");
 
 
     /// @brief Destructor.
-    virtual ~MSEdge() ;
+    virtual ~MSEdge();
 
 
     /** @brief Initialize the edge.
      *
      * @param[in] allowed Information which edges may be reached from which lanes
      * @param[in] lanes List of this edge's lanes
-     * @param[in] function A basic type of the edge
      */
-    void initialize(std::vector<MSLane*>* lanes, EdgeBasicFunction function) ;
+    void initialize(std::vector<MSLane*>* lanes);
 
 
     /// @todo Has to be called after all edges were built and all connections were set...; Still, is not very nice
@@ -137,7 +140,7 @@ public:
      * @return The lane left to the given, 0 if no such lane exists
      * @todo This method searches for the given in the container; probably, this could be done faster
      */
-    MSLane* leftLane(const MSLane* const lane) const ;
+    MSLane* leftLane(const MSLane* const lane) const;
 
 
     /** @brief Returns the lane right to the one given, 0 if the given lane is rightmost
@@ -146,14 +149,14 @@ public:
      * @return The lane right to the given, 0 if no such lane exists
      * @todo This method searches for the given in the container; probably, this could be done faster
      */
-    MSLane* rightLane(const MSLane* const lane) const ;
+    MSLane* rightLane(const MSLane* const lane) const;
 
 
     /** @brief Returns this edge's lanes
      *
      * @return This edge's lanes
      */
-    const std::vector<MSLane*> &getLanes() const {
+    const std::vector<MSLane*>& getLanes() const {
         return *myLanes;
     }
 
@@ -167,7 +170,7 @@ public:
      * @return The lanes that may be used to reach the given edge, 0 if no such lanes exist
      */
     const std::vector<MSLane*>* allowedLanes(const MSEdge& destination,
-            SUMOVehicleClass vclass = SVC_UNKNOWN) const ;
+            SUMOVehicleClass vclass = SVC_UNKNOWN) const;
 
 
     /** @brief Get the allowed lanes for the given vehicle class.
@@ -177,21 +180,13 @@ public:
      * @param[in] vclass The vehicle class for which this information shall be returned
      * @return The lanes that may be used by the given vclass
      */
-    const std::vector<MSLane*>* allowedLanes(SUMOVehicleClass vclass = SVC_UNKNOWN) const ;
+    const std::vector<MSLane*>* allowedLanes(SUMOVehicleClass vclass = SVC_UNKNOWN) const;
     /// @}
 
 
 
     /// @name Access to other edge attributes
     /// @{
-
-    /** @brief Returns the id of the edge
-     * @return This edge's id
-     */
-    const std::string& getID() const {
-        return myID;
-    }
-
 
     /** @brief Returns the edge type (EdgeBasicFunction)
      * @return This edge's EdgeBasicFunction
@@ -205,7 +200,7 @@ public:
     /** @brief Returns the numerical id of the edge
      * @return This edge's numerical id
      */
-    unsigned int getNumericalID() const {
+    int getNumericalID() const {
         return myNumericalID;
     }
 
@@ -233,7 +228,7 @@ public:
     /** @brief Returns the list of edges from which this edge may be reached
      * @return Edges from which this edge may be reached
      */
-    const std::vector<MSEdge*> &getIncomingEdges() const {
+    const std::vector<MSEdge*>& getIncomingEdges() const {
         return myPredeccesors;
     }
 
@@ -276,7 +271,7 @@ public:
      * @return Time to next call (always 0)
      * @exception ProcessError not thrown by this method, just derived
      */
-    SUMOTime incVaporization(SUMOTime t) ;
+    SUMOTime incVaporization(SUMOTime t);
 
 
     /** @brief Disables vaporization
@@ -288,20 +283,29 @@ public:
      * @return Time to next call (always 0)
      * @exception ProcessError not thrown by this method, just derived
      */
-    SUMOTime decVaporization(SUMOTime t) ;
+    SUMOTime decVaporization(SUMOTime t);
     /// @}
 
 
     /** @brief Computes and returns the current travel time for this edge
      *
-     * The mean travel time of all lanes is summed and divided by the number
-     *  of lanes. If the result is zero, 1000000. (a very large number) is
-     *  returned, otherwise the edge's length divided by this speed.
+     * The mean speed of all lanes is used to compute the travel time.
+     * To avoid inifinte travel times, the given minimum speed is used.
      *
+     * @param[in] minSpeed The minimumSpeed to assume if traffic on this edge is stopped
      * @return The current effort (travel time) to pass the edge
      */
-    SUMOReal getCurrentTravelTime() const ;
+    SUMOReal getCurrentTravelTime(const SUMOReal minSpeed = 0.00001) const;
 
+
+    /// @brief returns the minimum travel time for the given vehicle
+    inline SUMOReal getMinimumTravelTime(const SUMOVehicle* const veh) const {
+        if (veh != 0) {
+            return getLength() / MIN2(veh->getMaxSpeed(), getVehicleMaxSpeed(veh));
+        } else {
+            return getLength() / getSpeedLimit();
+        }
+    }
 
 
     /// @name Methods releated to vehicle insertion
@@ -320,7 +324,7 @@ public:
      * @return Whether the vehicle could be inserted
      * @see MSLane::insertVehicle
      */
-    bool insertVehicle(SUMOVehicle& v, SUMOTime time) const ;
+    bool insertVehicle(SUMOVehicle& v, SUMOTime time) const;
 
 
     /** @brief Finds the emptiest lane allowing the vehicle class
@@ -337,7 +341,7 @@ public:
      * @return the least occupied lane
      * @see allowedLanes
      */
-    MSLane* getFreeLane(const std::vector<MSLane*>* allowed, const SUMOVehicleClass vclass) const ;
+    MSLane* getFreeLane(const std::vector<MSLane*>* allowed, const SUMOVehicleClass vclass) const;
 
 
     /** @brief Finds a depart lane for the given vehicle parameters
@@ -350,7 +354,7 @@ public:
      * @param[in] veh The vehicle to get the depart lane for
      * @return a possible/chosen depart lane, 0 if no lane can be used
      */
-    MSLane* getDepartLane(const MSVehicle& veh) const ;
+    MSLane* getDepartLane(const MSVehicle& veh) const;
 
 
     /** @brief Returns the last time a vehicle could not be inserted
@@ -371,16 +375,19 @@ public:
 
 
     /** @brief Performs lane changing on this edge */
-    virtual void changeLanes(SUMOTime t) ;
+    virtual void changeLanes(SUMOTime t);
 
 
 #ifdef HAVE_INTERNAL_LANES
     /// @todo extension: inner junctions are not filled
-    const MSEdge* getInternalFollowingEdge(MSEdge* followerAfterInternal) const ;
+    const MSEdge* getInternalFollowingEdge(MSEdge* followerAfterInternal) const;
 #endif
 
     /// @brief Returns whether the vehicle (class) is not allowed on the edge
     inline bool prohibits(const SUMOVehicle* const vehicle) const {
+        if (vehicle == 0) {
+            return false;
+        }
         const SUMOVehicleClass svc = vehicle->getVehicleType().getVehicleClass();
         return (myCombinedPermissions & svc) != svc;
     }
@@ -388,35 +395,69 @@ public:
     void rebuildAllowedLanes();
 
 
-    /// @brief optimistic distance heuristic for use in routing
+    /** @brief optimistic air distance heuristic for use in routing
+     * @param[in] other The edge to which the distance shall be returned
+     * @return The distance to the other edge
+     */
     SUMOReal getDistanceTo(const MSEdge* other) const;
 
 
-    /// @brief return the length of the edge
+    /** @brief return the length of the edge
+     * @return The edge's length
+     */
     SUMOReal getLength() const;
 
-    /// @brief return the maximum speed the edge
-    SUMOReal getMaxSpeed() const;
+
+    /** @brief Returns the speed limit of the edge
+     * @caution The speed limit of the first lane is retured; should probably be the fastest edge
+     * @return The maximum speed allowed on this edge
+     */
+    SUMOReal getSpeedLimit() const;
+
+
+    /** @brief Returns the maximum speed the vehicle may use on this edge
+     *
+     * Note that the vehicle's max. speed is not considered herein, only the edge's speed limit and the
+     *  driver's adaptation of this speed.
+     * @caution Only the first lane is considered
+     * @return The maximum velocity on this edge for the given vehicle
+     */
+    SUMOReal getVehicleMaxSpeed(const SUMOVehicle* const veh) const;
+
+    virtual void addPerson(MSPerson* p) const {
+        myPersons.insert(p);
+    }
+
+    virtual void removePerson(MSPerson* p) const {
+        std::set<MSPerson*>::iterator i = myPersons.find(p);
+        if (i != myPersons.end()) {
+            myPersons.erase(i);
+        }
+    }
+
 
     /** @brief Inserts edge into the static dictionary
         Returns true if the key id isn't already in the dictionary. Otherwise
         returns false. */
-    static bool dictionary(const std::string& id, MSEdge* edge) ;
+    static bool dictionary(const std::string& id, MSEdge* edge);
 
     /** @brief Returns the MSEdge associated to the key id if exists, otherwise returns 0. */
-    static MSEdge* dictionary(const std::string& id) ;
+    static MSEdge* dictionary(const std::string& id);
 
     /** @brief Returns the MSEdge at the index */
-    static MSEdge* dictionary(size_t index) ;
+    static MSEdge* dictionary(size_t index);
 
     /// @brief Returns the number of edges
-    static size_t dictSize() ;
+    static size_t dictSize();
+
+    /// @brief Returns the number of edges with a numerical id
+    static size_t numericalDictSize();
 
     /** @brief Clears the dictionary */
-    static void clear() ;
+    static void clear();
 
     /** @brief Inserts IDs of all known edges into the given vector */
-    static void insertIDs(std::vector<std::string> &into) ;
+    static void insertIDs(std::vector<std::string>& into);
 
 
 public:
@@ -431,8 +472,8 @@ public:
      * @param[in] rid The id of the route these description belongs to; used for error message generation
      * @exception ProcessError If one of the strings contained is not a known edge id
      */
-    static void parseEdgesList(const std::string& desc, std::vector<const MSEdge*> &into,
-                               const std::string& rid) ;
+    static void parseEdgesList(const std::string& desc, std::vector<const MSEdge*>& into,
+                               const std::string& rid);
 
 
     /** @brief Parses the given string vector assuming it edge ids
@@ -441,8 +482,8 @@ public:
      * @param[in] rid The id of the route these description belongs to; used for error message generation
      * @exception ProcessError If one of the strings contained is not a known edge id
      */
-    static void parseEdgesList(const std::vector<std::string> &desc, std::vector<const MSEdge*> &into,
-                               const std::string& rid) ;
+    static void parseEdgesList(const std::vector<std::string>& desc, std::vector<const MSEdge*>& into,
+                               const std::string& rid);
     /// @}
 
 
@@ -472,18 +513,15 @@ protected:
      * @return The lanes that may be used to reach the given edge, 0 if no such lanes exist
      */
     const std::vector<MSLane*>* allowedLanes(const MSEdge* destination,
-            SUMOVehicleClass vclass = SVC_UNKNOWN) const ;
+            SUMOVehicleClass vclass = SVC_UNKNOWN) const;
 
 
     /// @brief lookup in map and return 0 if not found
     const std::vector<MSLane*>* getAllowedLanesWithDefault(const AllowedLanesCont& c, const MSEdge* dest) const;
 
 protected:
-    /// @brief Unique ID.
-    std::string myID;
-
     /// @brief This edge's numerical id
-    unsigned int myNumericalID;
+    int myNumericalID;
 
     /// @brief Container for the edge's lane; should be sorted: (right-hand-traffic) the more left the lane, the higher the container-index
     std::vector<MSLane*>* myLanes;
@@ -492,7 +530,7 @@ protected:
     MSCACCLaneChanger* myLaneChanger;
 
     /// @brief the purpose of the edge
-    EdgeBasicFunction myFunction;
+    const EdgeBasicFunction myFunction;
 
     /// @brief Vaporizer counter
     int myVaporizationRequests;
@@ -506,7 +544,8 @@ protected:
     /// @brief The preceeding edges
     std::vector<MSEdge*> myPredeccesors;
 
-
+    /// @brief Persons on the edge (only for drawing)
+    mutable std::set<MSPerson*> myPersons;
 
     /// @name Storages for allowed lanes (depending on vehicle classes)
     /// @{

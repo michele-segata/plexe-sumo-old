@@ -37,6 +37,7 @@
 #include <netbuild/NBNodeCont.h>
 #include <netbuild/NBNetBuilder.h>
 #include <utils/common/ToString.h>
+#include <utils/common/StringUtils.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
 #include <utils/geom/GeoConvHelper.h>
@@ -58,7 +59,7 @@
 // ---------------------------------------------------------------------------
 void
 NWWriter_XML::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
-    // check whether a matsim-file shall be generated
+    // check whether plain-output files shall be generated
     if (oc.isSet("plain-output-prefix")) {
         writeNodes(oc, nb.getNodeCont());
         writeEdgesAndConnections(oc, nb.getNodeCont(), nb.getEdgeCont());
@@ -66,6 +67,9 @@ NWWriter_XML::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     }
     if (oc.isSet("junctions.join-output")) {
         writeJoinedJunctions(oc, nb.getNodeCont());
+    }
+    if (oc.isSet("street-sign-output")) {
+        writeStreetSigns(oc, nb.getEdgeCont());
     }
 }
 
@@ -108,7 +112,7 @@ NWWriter_XML::writeNodes(const OptionsCont& oc, NBNodeCont& nc) {
 
         device.writeAttr(SUMO_ATTR_TYPE, toString(n->getType()));
         if (n->isTLControlled()) {
-            const std::set<NBTrafficLightDefinition*> &tlss = n->getControllingTLS();
+            const std::set<NBTrafficLightDefinition*>& tlss = n->getControllingTLS();
             // set may contain multiple programs for the same id.
             // make sure ids are unique and sorted
             std::set<std::string> tlsIDs;
@@ -144,7 +148,7 @@ NWWriter_XML::writeEdgesAndConnections(const OptionsCont& oc, NBNodeCont& nc, NB
         edevice.writeAttr(SUMO_ATTR_FROM, e->getFromNode()->getID());
         edevice.writeAttr(SUMO_ATTR_TO, e->getToNode()->getID());
         if (!noNames && e->getStreetName() != "") {
-            edevice.writeAttr(SUMO_ATTR_NAME, e->getStreetName());
+            edevice.writeAttr(SUMO_ATTR_NAME, StringUtils::escapeXML(e->getStreetName()));
         }
         edevice.writeAttr(SUMO_ATTR_PRIORITY, e->getPriority());
         // write the type if given
@@ -262,13 +266,28 @@ NWWriter_XML::writeJoinedJunctions(const OptionsCont& oc, NBNodeCont& nc) {
         device.openTag(SUMO_TAG_JOIN);
         // prepare string
         std::ostringstream oss;
-        for (std::set<std::string>::iterator it_id = it->begin(); it_id != it->end(); it_id++) {
+        for (std::set<std::string>::const_iterator it_id = it->begin(); it_id != it->end(); it_id++) {
             oss << *it_id << " ";
         }
         // remove final space
         std::string ids = oss.str();
         device.writeAttr(SUMO_ATTR_NODES, ids.substr(0, ids.size() - 1));
         device.closeTag(true);
+    }
+    device.close();
+}
+
+
+void
+NWWriter_XML::writeStreetSigns(const OptionsCont& oc, NBEdgeCont& ec) {
+    OutputDevice& device = OutputDevice::getDevice(oc.getString("street-sign-output"));
+    device.writeXMLHeader("pois", SUMOSAXAttributes::ENCODING, NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/poi_file.xsd\"");
+    for (std::map<std::string, NBEdge*>::const_iterator i = ec.begin(); i != ec.end(); ++i) {
+        NBEdge* e = (*i).second;
+        const std::vector<NBSign>& signs =  e->getSigns();
+        for (std::vector<NBSign>::const_iterator it = signs.begin(); it != signs.end(); ++it) {
+            it->writeAsPOI(device, e);
+        }
     }
     device.close();
 }

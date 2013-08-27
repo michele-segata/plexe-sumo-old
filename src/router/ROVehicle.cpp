@@ -40,7 +40,6 @@
 #include <iostream>
 #include "RORouteDef.h"
 #include "ROVehicle.h"
-#include "RORouteDef_Alternatives.h"
 #include "RORoute.h"
 #include "ROHelper.h"
 
@@ -53,7 +52,7 @@
 // method definitions
 // ===========================================================================
 ROVehicle::ROVehicle(const SUMOVehicleParameter& pars,
-                     RORouteDef* route, SUMOVTypeParameter* type)
+                     RORouteDef* route, const SUMOVTypeParameter* type)
     : myParameter(pars), myType(type), myRoute(route) {}
 
 
@@ -61,19 +60,19 @@ ROVehicle::~ROVehicle() {}
 
 
 void
-ROVehicle::saveAllAsXML(SUMOAbstractRouter<ROEdge, ROVehicle> &router, OutputDevice& os,
-                        OutputDevice* const altos, OutputDevice* const typeos, bool withExitTimes) const {
+ROVehicle::saveAllAsXML(OutputDevice& os, OutputDevice* const altos,
+                        OutputDevice* const typeos, bool withExitTimes) const {
     // check whether the vehicle's type was saved before
     if (myType != 0 && !myType->saved) {
         // ... save if not
-		if (typeos != 0) {
-	        myType->write(*typeos);
-		} else {
-			myType->write(os);
-			if (altos != 0) {
-				myType->write(*altos);
-			}
-		}
+        if (typeos != 0) {
+            myType->write(*typeos);
+        } else {
+            myType->write(os);
+            if (altos != 0) {
+                myType->write(*altos);
+            }
+        }
         myType->saved = true;
     }
 
@@ -85,9 +84,9 @@ ROVehicle::saveAllAsXML(SUMOAbstractRouter<ROEdge, ROVehicle> &router, OutputDev
 
     // check whether the route shall be saved
     if (!myRoute->isSaved()) {
-        myRoute->writeXMLDefinition(router, os, this, false, withExitTimes);
+        myRoute->writeXMLDefinition(os, this, false, withExitTimes);
         if (altos != 0) {
-            myRoute->writeXMLDefinition(router, *altos, this, true, withExitTimes);
+            myRoute->writeXMLDefinition(*altos, this, true, withExitTimes);
         }
     }
     os.closeTag();
@@ -97,7 +96,7 @@ ROVehicle::saveAllAsXML(SUMOAbstractRouter<ROEdge, ROVehicle> &router, OutputDev
 }
 
 
-SUMOReal 
+SUMOReal
 ROVehicle::getMaxSpeed() const {
     return myType->maxSpeed;
 }
@@ -105,7 +104,7 @@ ROVehicle::getMaxSpeed() const {
 
 ROVehicle*
 ROVehicle::copy(const std::string& id, unsigned int depTime,
-                RORouteDef* newRoute) {
+                RORouteDef* newRoute) const {
     SUMOVehicleParameter pars(myParameter);
     pars.id = id;
     pars.depart = depTime;

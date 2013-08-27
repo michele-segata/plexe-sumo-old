@@ -56,14 +56,16 @@ class MFXAddEditTypedTable;
 class GUIDialog_Breakpoints : public FXMainWindow {
     // FOX-declarations
     FXDECLARE(GUIDialog_Breakpoints)
+
 public:
     /** @brief Constructor
      * @param[in] parent The parent window
      */
-    GUIDialog_Breakpoints(GUIMainWindow* parent) ;
+    GUIDialog_Breakpoints(GUIMainWindow* parent);
+
 
     /// @brief Destructor
-    ~GUIDialog_Breakpoints() ;
+    ~GUIDialog_Breakpoints();
 
 
 
@@ -89,12 +91,12 @@ public:
 
 private:
     /// @brief Rebuilds the entire list
-    void rebuildList() ;
+    void rebuildList();
 
     /** @brief Builds a text representation of the items in the list
      * @return Breakpoints encoded as a string
      */
-    std::string encode2TXT() ;
+    std::string encode2TXT();
 
 
 private:

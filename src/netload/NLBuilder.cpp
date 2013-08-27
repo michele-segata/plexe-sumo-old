@@ -125,7 +125,7 @@ NLBuilder::build() {
         return false;
     }
     buildNet();
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     // load the previous state if wished
     if (myOptions.isSet("load-state")) {
         long before = SysUtils::getCurrentMillis();
@@ -134,7 +134,7 @@ NLBuilder::build() {
             WRITE_ERROR("Could not read state from '" + myOptions.getString("load-state") + "'!");
         } else {
             PROGRESS_BEGIN_MESSAGE("Loading state from '" + myOptions.getString("load-state") + "'");
-            unsigned int step = myNet.loadState(strm);
+            SUMOTime step = myNet.loadState(strm);
             if (myOptions.isDefault("begin")) {
                 myOptions.set("begin", time2string(step));
             }
@@ -211,18 +211,21 @@ NLBuilder::buildNet() {
         MSFrame::buildStreams();
         std::vector<SUMOTime> stateDumpTimes;
         std::vector<std::string> stateDumpFiles;
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         const std::vector<int> times = myOptions.getIntVector("save-state.times");
         for (std::vector<int>::const_iterator i = times.begin(); i != times.end(); ++i) {
             stateDumpTimes.push_back(TIME2STEPS(*i));
         }
-        if (!myOptions.isDefault("save-state.prefix")) {
+        if (myOptions.isSet("save-state.files")) {
+            stateDumpFiles = StringTokenizer(myOptions.getString("save-state.files")).getVector();
+            if (stateDumpFiles.size() != stateDumpTimes.size()) {
+                WRITE_ERROR("Wrong number of state file names!");
+            }
+        } else {
             const std::string prefix = myOptions.getString("save-state.prefix");
             for (std::vector<SUMOTime>::iterator i = stateDumpTimes.begin(); i != stateDumpTimes.end(); ++i) {
                 stateDumpFiles.push_back(prefix + "_" + time2string(*i) + ".bin");
             }
-        } else {
-            stateDumpFiles = StringTokenizer(myOptions.getString("save-state.files")).getVector() ;
         }
 #endif
         myNet.closeBuilding(edges, junctions, routeLoaders, tlc, stateDumpTimes, stateDumpFiles);

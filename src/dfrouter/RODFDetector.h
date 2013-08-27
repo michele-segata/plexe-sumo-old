@@ -35,7 +35,6 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <map>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/RandomDistributor.h>
 #include "RODFRouteCont.h"
@@ -97,7 +96,7 @@ public:
      * @see RODFDetectorType
      */
     RODFDetector(const std::string& id, const std::string& laneID,
-                 SUMOReal pos, const RODFDetectorType type) ;
+                 SUMOReal pos, const RODFDetectorType type);
 
 
     /** @brief Constructor
@@ -107,11 +106,11 @@ public:
      * @param[in] id The id of the detector
      * @param[in] f A detector from which routes shall be copied
      */
-    RODFDetector(const std::string& id, const RODFDetector& f) ;
+    RODFDetector(const std::string& id, const RODFDetector& f);
 
 
     /// @brief Destructor
-    ~RODFDetector() ;
+    ~RODFDetector();
 
 
 
@@ -164,23 +163,23 @@ public:
     void addRoute(RODFRouteDesc& nrd);
     void addRoutes(RODFRouteCont* routes);
     bool hasRoutes() const;
-    const std::vector<RODFRouteDesc> &getRouteVector() const;
+    const std::vector<RODFRouteDesc>& getRouteVector() const;
     void addPriorDetector(RODFDetector* det);
     void addFollowingDetector(RODFDetector* det);
-    const std::vector<RODFDetector*> &getPriorDetectors() const;
-    const std::vector<RODFDetector*> &getFollowerDetectors() const;
+    const std::vector<RODFDetector*>& getPriorDetectors() const;
+    const std::vector<RODFDetector*>& getFollowerDetectors() const;
 
 
     /// @name Writing methods
     /// @{
 
     bool writeEmitterDefinition(const std::string& file,
-                                const std::map<size_t, RandomDistributor<size_t>* > &dists,
+                                const std::map<size_t, RandomDistributor<size_t>* >& dists,
                                 const RODFDetectorFlows& flows,
                                 SUMOTime startTime, SUMOTime endTime, SUMOTime stepOffset,
                                 bool includeUnusedRoutes, SUMOReal scale,
                                 bool insertionsOnly, SUMOReal defaultSpeed) const;
-    bool writeRoutes(std::vector<std::string> &saved,
+    bool writeRoutes(std::vector<std::string>& saved,
                      OutputDevice& out);
     void writeSingleSpeedTrigger(const std::string& file,
                                  const RODFDetectorFlows& flows,
@@ -190,17 +189,15 @@ public:
     /// @}
 
     void buildDestinationDistribution(const RODFDetectorCon& detectors,
-                                      const RODFDetectorFlows& flows,
                                       SUMOTime startTime, SUMOTime endTime, SUMOTime stepOffset,
                                       const RODFNet& net,
-                                      std::map<size_t, RandomDistributor<size_t>* > &into,
-                                      int maxFollower) const;
+                                      std::map<size_t, RandomDistributor<size_t>* >& into) const;
 
     void computeSplitProbabilities(const RODFNet* net, const RODFDetectorCon& detectors,
                                    const RODFDetectorFlows& flows,
                                    SUMOTime startTime, SUMOTime endTime, SUMOTime stepOffset);
 
-    const std::vector<std::map<RODFEdge*, SUMOReal> > &getSplitProbabilities() const {
+    const std::vector<std::map<RODFEdge*, SUMOReal> >& getSplitProbabilities() const {
         return mySplitProbabilities;
     }
 
@@ -242,7 +239,7 @@ public:
     void removeDetector(const std::string& id);
     bool detectorsHaveCompleteTypes() const;
     bool detectorsHaveRoutes() const;
-    const std::vector<RODFDetector*> &getDetectors() const;
+    const std::vector<RODFDetector*>& getDetectors() const;
     void save(const std::string& file) const;
     void saveAsPOIs(const std::string& file) const;
     void saveRoutes(const std::string& file) const;
@@ -256,7 +253,7 @@ public:
                        SUMOTime startTime, SUMOTime endTime, SUMOTime stepOffset,
                        const RODFNet& net,
                        bool writeCalibrators, bool includeUnusedRoutes,
-                       SUMOReal scale, int maxFollower,
+                       SUMOReal scale,
                        bool insertionsOnly);
 
     void writeEmitterPOIs(const std::string& file,
@@ -275,14 +272,14 @@ public:
 
     void guessEmptyFlows(RODFDetectorFlows& flows);
 
-    void mesoJoin(const std::string& nid, const std::vector<std::string> &oldids);
+    void mesoJoin(const std::string& nid, const std::vector<std::string>& oldids);
 
 
 protected:
     /** @brief Clears the given distributions map, deleting the timed distributions
      * @param[in] dists The distribution map to clear
      */
-    void clearDists(std::map<size_t, RandomDistributor<size_t>* > &dists) const ;
+    void clearDists(std::map<size_t, RandomDistributor<size_t>* >& dists) const;
 
 
 protected:

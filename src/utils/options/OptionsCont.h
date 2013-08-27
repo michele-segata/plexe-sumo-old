@@ -194,7 +194,7 @@ public:
      * @param[in] addComments Whether comments (option descriptions) shall be written
      */
     void writeConfiguration(std::ostream& os, bool filled,
-                            bool complete, bool addComments);
+                            bool complete, bool addComments) const;
 
 
     /** @brief Writes the xml schema for the configuration
@@ -309,6 +309,13 @@ public:
      * @exception InvalidArgument If the named option is not known
      */
     bool isSet(const std::string& name, bool failOnNonExistant = true) const;
+
+
+    /** @brief Marks the option as unset
+     * @param[in] name The name of the option to check
+     * @param[in] failOnNonExistant Whether asking for an unregistered option should trigger an exception
+     */
+    void unSet(const std::string& name, bool failOnNonExistant = true) const;
 
 
     /** @brief Returns the information whether the named option has still the default value
@@ -587,11 +594,11 @@ public:
      * @return Whether the application shall stop
      * @exception ProcessError If the configuration file could not be saved
      */
-    bool processMetaOptions(bool missingOptions) ;
+    bool processMetaOptions(bool missingOptions);
 
 
     /// @brief return the list of subtopics
-    const std::vector<std::string> & getSubTopics() const {
+    const std::vector<std::string>& getSubTopics() const {
         return mySubTopics;
     }
 
@@ -609,6 +616,11 @@ public:
     /// @brief return the type name for the given option
     std::string getTypeName(const std::string name) {
         return getSecure(name)->getTypeName();
+    }
+
+
+    inline const std::string& getFullName() const {
+        return myFullName;
     }
 
 private:

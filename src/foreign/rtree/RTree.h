@@ -85,13 +85,13 @@ public:
   /// \param a_min Min of bounding rect
   /// \param a_max Max of bounding rect
   /// \param a_dataId Positive Id of data.  Maybe zero, but negative numbers not allowed.
-  void Insert(const ELEMTYPE a_min[NUMDIMS], const ELEMTYPE a_max[NUMDIMS], const DATATYPE& a_dataId);
+  virtual void Insert(const ELEMTYPE a_min[NUMDIMS], const ELEMTYPE a_max[NUMDIMS], const DATATYPE& a_dataId);
   
   /// Remove entry
   /// \param a_min Min of bounding rect
   /// \param a_max Max of bounding rect
   /// \param a_dataId Positive Id of data.  Maybe zero, but negative numbers not allowed.
-  void Remove(const ELEMTYPE a_min[NUMDIMS], const ELEMTYPE a_max[NUMDIMS], const DATATYPE& a_dataId);
+  virtual void Remove(const ELEMTYPE a_min[NUMDIMS], const ELEMTYPE a_max[NUMDIMS], const DATATYPE& a_dataId);
   
 
   /// DK 15.10.2008 - begin
@@ -104,7 +104,7 @@ public:
   /// \param a_resultCallback Callback function to return result.  Callback should return 'true' to continue searching
   /// \param a_context User context to pass as parameter to a_resultCallback
   /// \return Returns the number of entries found
-  int Search(const ELEMTYPE a_min[NUMDIMS], const ELEMTYPE a_max[NUMDIMS], const CONTEXT &c);
+  virtual int Search(const ELEMTYPE a_min[NUMDIMS], const ELEMTYPE a_max[NUMDIMS], const CONTEXT &c);
 
   /// DK 15.10.2008 - end
 
@@ -1053,8 +1053,8 @@ int RTREE_QUAL::PickBranch(Rect* a_rect, Node* a_node)
   ELEMTYPEREAL increase;
   ELEMTYPEREAL bestIncr = (ELEMTYPEREAL)-1;
   ELEMTYPEREAL area;
-  ELEMTYPEREAL bestArea;
-  int best;
+  ELEMTYPEREAL bestArea = 0;
+  int best = 0;
   Rect tempRect;
 
   for(int index=0; index < a_node->m_count; ++index)
@@ -1242,7 +1242,7 @@ void RTREE_QUAL::ChoosePartition(PartitionVars* a_parVars, int a_minFill)
   ASSERT(a_parVars);
   
   ELEMTYPEREAL biggestDiff;
-  int group, chosen, betterGroup;
+  int group, chosen = 0, betterGroup = 0;
   
   InitParVars(a_parVars, a_parVars->m_branchCount, a_minFill);
   PickSeeds(a_parVars);

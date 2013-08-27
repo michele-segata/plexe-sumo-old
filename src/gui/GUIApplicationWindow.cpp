@@ -35,8 +35,6 @@
 #include <version.h>
 #endif
 
-#include <fx.h>
-#include <fx3d.h>
 #include <string>
 #include <sstream>
 #include <algorithm>
@@ -56,24 +54,25 @@
 #include <utils/foxtools/FXRealSpinDial.h>
 #include <utils/foxtools/FXThreadEvent.h>
 
+#include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/events/GUIEvent_SimulationStep.h>
 #include <utils/gui/events/GUIEvent_Message.h>
 #include <utils/gui/div/GUIMessageWindow.h>
 #include <utils/gui/div/GUIDialog_GLChosenEditor.h>
-#include "GUIGlobals.h"
 #include <utils/gui/tracker/GUIParameterTracker.h>
 #include <utils/gui/div/GUIParameterTableWindow.h>
 #include <utils/gui/images/GUIIconSubSys.h>
-#include "dialogs/GUIDialog_AboutSUMO.h"
-#include "dialogs/GUIDialog_AppSettings.h"
-#include "dialogs/GUIDialog_Breakpoints.h"
 #include <utils/gui/div/GUIIOGlobals.h>
 #include <utils/gui/div/GUIUserIO.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
 #include <utils/gui/globjects/GUIGlObjectStorage.h>
 #include <utils/gui/div/GUIGlobalSelection.h>
 #include <utils/gui/settings/GUISettingsHandler.h>
+#include "GUIGlobals.h"
+#include "dialogs/GUIDialog_AboutSUMO.h"
+#include "dialogs/GUIDialog_AppSettings.h"
+#include "dialogs/GUIDialog_Breakpoints.h"
 
 #ifndef NO_TRACI
 #include <traci-server/TraCIServer.h>
@@ -147,7 +146,9 @@ GUIApplicationWindow::GUIApplicationWindow(FXApp* a,
     : GUIMainWindow(a),
       myLoadThread(0), myRunThread(0),
       myAmLoading(false),
-      mySimDelay(50), myConfigPattern(configPattern), hadDependentBuild(false), myRecentNets(a, "nets") {
+      mySimDelay(50),
+      myRecentNets(a, "nets"), myConfigPattern(configPattern),
+      hadDependentBuild(false) {
     GUIIconSubSys::init(a);
 }
 
@@ -509,9 +510,9 @@ GUIApplicationWindow::buildToolBars() {
                      GUIIconSubSys::getIcon(ICON_MICROVIEW), this, MID_NEW_MICROVIEW,
                      ICON_ABOVE_TEXT | BUTTON_TOOLBAR | FRAME_RAISED | LAYOUT_TOP | LAYOUT_LEFT);
 #ifdef HAVE_OSG
-        new FXButton(myToolBar5,"\t\tOpen a new 3D view.",
+        new FXButton(myToolBar5, "\t\tOpen a new 3D view.",
                      GUIIconSubSys::getIcon(ICON_MICROVIEW), this, MID_NEW_OSGVIEW,
-                     ICON_ABOVE_TEXT|BUTTON_TOOLBAR|FRAME_RAISED|LAYOUT_TOP|LAYOUT_LEFT);
+                     ICON_ABOVE_TEXT | BUTTON_TOOLBAR | FRAME_RAISED | LAYOUT_TOP | LAYOUT_LEFT);
 #endif
     }
 }
@@ -546,8 +547,7 @@ GUIApplicationWindow::onCmdEditChosen(FXObject*, FXSelector, void*) {
 
 long
 GUIApplicationWindow::onCmdEditBreakpoints(FXObject*, FXSelector, void*) {
-    GUIDialog_Breakpoints* chooser =
-        new GUIDialog_Breakpoints(this);
+    GUIDialog_Breakpoints* chooser = new GUIDialog_Breakpoints(this);
     chooser->create();
     chooser->show();
     return 1;
@@ -791,8 +791,7 @@ GUIApplicationWindow::onCmdNewView(FXObject*, FXSelector, void*) {
 
 #ifdef HAVE_OSG
 long
-GUIApplicationWindow::onCmdNewOSG(FXObject*,FXSelector,void*)
-{
+GUIApplicationWindow::onCmdNewOSG(FXObject*, FXSelector, void*) {
     openNewView(GUISUMOViewParent::VIEW_3D_OSG);
     return 1;
 }
@@ -809,7 +808,7 @@ GUIApplicationWindow::onCmdAbout(FXObject*, FXSelector, void*) {
 }
 
 
-long GUIApplicationWindow::onClipboardRequest(FXObject* sender, FXSelector sel, void* ptr) {
+long GUIApplicationWindow::onClipboardRequest(FXObject* /* sender */, FXSelector /* sel */, void* ptr) {
     FXEvent* event = (FXEvent*)ptr;
     FXString string = GUIUserIO::clipped.c_str();
     setDNDData(FROM_CLIPBOARD, event->target, string);
@@ -901,17 +900,28 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
         myWasStarted = false;
         // initialise views
         myViewNumber = 0;
-        GUISUMOAbstractView* view = openNewView();
-        if (view && ec->mySettingsFile != "") {
-            GUISettingsHandler settings(ec->mySettingsFile);
-            std::string settingsName = settings.addSettings(view);
-            view->addDecals(settings.getDecals());
-            settings.setViewport(view);
-            settings.setSnapshots(view);
-            if (settings.getDelay() > 0) {
-                mySimDelayTarget->setValue(settings.getDelay());
+
+        if (ec->mySettingsFiles.size() > 0) {
+            // open a view for each file and apply settings
+            for (std::vector<std::string>::const_iterator it = ec->mySettingsFiles.begin();
+                    it != ec->mySettingsFiles.end(); ++it) {
+                GUISUMOAbstractView* view = openNewView();
+                if (view == 0) {
+                    break;
+                }
+                GUISettingsHandler settings(*it);
+                std::string settingsName = settings.addSettings(view);
+                view->addDecals(settings.getDecals());
+                settings.setViewport(view);
+                settings.setSnapshots(view);
+                if (settings.getDelay() > 0) {
+                    mySimDelayTarget->setValue(settings.getDelay());
+                }
             }
+        } else {
+            openNewView();
         }
+
         if (isGaming()) {
             setTitle("SUMO Traffic Light Game");
         } else {
@@ -967,7 +977,7 @@ GUIApplicationWindow::handleEvent_SimulationEnded(GUIEvent* e) {
         // build the text
         const std::string text = "Simulation ended at time: " + time2string(ec->getTimeStep()) +
                                  ".\nReason: " + MSNet::getStateMessage(ec->getReason());
-        FXMessageBox::warning(this, MBOX_OK, "Simulation ended", text.c_str());
+        FXMessageBox::warning(this, MBOX_OK, "Simulation ended", "%s", text.c_str());
     }
 }
 
@@ -1056,6 +1066,7 @@ GUIApplicationWindow::closeAllWindows() {
     myGeoCoordinate->setText("N/A");
     myCartesianCoordinate->setText("N/A");
     //
+    GUITexturesHelper::clearTextures();
     update();
 }
 

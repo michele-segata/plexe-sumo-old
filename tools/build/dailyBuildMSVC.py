@@ -42,6 +42,9 @@ optParser.add_option("-f", "--force", action="store_true",
                      default=False, help="force rebuild even if no source changed")
 (options, args) = optParser.parse_args()
 
+sys.path.append(os.path.join(options.rootDir, options.testsDir))
+import runInternalTests
+
 env = os.environ
 env["SMTP_SERVER"]="smtprelay.dlr.de"
 env["TEMP"]=env["TMP"]=r"D:\Delphi\texttesttmp"
@@ -77,7 +80,13 @@ for platform in ["Win32", "x64"]:
         else:
             open(makeLog, 'a').write("Error parsing svn revision\n")
             sys.exit()
-        update_lines = len(update_log[:update_log.index('Fetching external')].splitlines())
+        end_marker = 'Fetching external'        
+        if end_marker in update_log:
+            update_lines = len(update_log[:update_log.index(end_marker)].splitlines())
+        else:
+            open(makeLog, 'a').write("Error parsing svn output\n")
+            sys.exit()
+
         if update_lines < 3 and not options.force:
             open(makeLog, 'a').write("No changes since last update, skipping build and test\n")
             print "No changes since last update, skipping build and test"
@@ -123,7 +132,10 @@ for platform in ["Win32", "x64"]:
         files_to_zip = (
                 glob.glob(os.path.join(env["XERCES"+envSuffix], "bin", "xerces-c_?_?.dll")) +
                 glob.glob(os.path.join(env["PROJ_GDAL"+envSuffix], "bin", "*.dll")) +
-                glob.glob(os.path.join(env["FOX16"+envSuffix], "lib", "FOXDLL-?.?.dll")) +
+                glob.glob(os.path.join(env["FOX16"+envSuffix], "lib",
+                                       "FOXDLL-1.6.dll")) +
+                glob.glob(os.path.join(env["FOX16"+envSuffix], "lib",
+                                       "libpng*.dll")) +
                 glob.glob(os.path.join(nightlyDir, "msvc?100.dll")) +
                 glob.glob(os.path.join(options.rootDir, options.binDir, "*.exe")) +
                 glob.glob(os.path.join(options.rootDir, options.binDir, "*.jar")) +
@@ -143,9 +155,10 @@ for platform in ["Win32", "x64"]:
         print >> log, "I/O error(%s): %s" % (errno, strerror)
     if platform == "Win32" and options.sumoExe == "sumo":
         try:
-            subprocess.call(os.path.join(os.path.dirname(__file__), '..', game, 'setup.py'), stdout=log, stderr=subprocess.STDOUT)
-        except:
-            print >> log, "Warning: Could not create nightly sumogame.zip!"
+            setup = os.path.join(os.path.dirname(__file__), '..', 'game', 'setup.py')
+            subprocess.call(['python', setup], stdout=log, stderr=subprocess.STDOUT)
+        except Exception as e:
+            print >> log, "Warning: Could not create nightly sumogame.zip! (%s)" % e
     log.close()
     subprocess.call(compiler+" /rebuild Debug|%s %s\\%s /out %s" % (platform, options.rootDir, options.project, makeAllLog))
     if options.addConf:
@@ -154,16 +167,14 @@ for platform in ["Win32", "x64"]:
 # run tests
     env["TEXTTEST_TMP"] = os.path.join(options.rootDir, env["FILEPREFIX"]+"texttesttmp")
     env["TEXTTEST_HOME"] = os.path.join(options.rootDir, options.testsDir)
+    if "SUMO_HOME" not in env:
+        env["SUMO_HOME"] = options.rootDir
     shutil.rmtree(env["TEXTTEST_TMP"], True)
     shutil.rmtree(env["SUMO_REPORT"], True)
     os.mkdir(env["SUMO_REPORT"])
-    for name in ["dfrouter", "duarouter", "jtrrouter", "netconvert", "netgen", "od2trips", "sumo", "polyconvert", "sumo-gui", "activitygen"]:
+    for name in ["dfrouter", "duarouter", "jtrrouter", "netconvert", "netgenerate", "od2trips", "sumo", "polyconvert", "sumo-gui", "activitygen"]:
         binary = os.path.join(options.rootDir, options.binDir, name + programSuffix + ".exe")
-        if name == "sumo":
-            binary = os.path.join(options.rootDir, options.binDir, options.sumoExe + programSuffix + ".exe")
         if name == "sumo-gui":
-            if options.sumoExe == "meso":
-                binary = os.path.join(options.rootDir, options.binDir, "meso-gui" + programSuffix + ".exe")
             if os.path.exists(binary):
                 env["GUISIM_BINARY"] = binary
         elif os.path.exists(binary):
@@ -171,7 +182,10 @@ for platform in ["Win32", "x64"]:
     log = open(testLog, 'w')
     # provide more information than just the date:
     nameopt = " -name %sr%s" % (date.today().strftime("%d%b%y"), svnrev)
-    subprocess.call("texttest.py -b "+env["FILEPREFIX"]+nameopt, stdout=log, stderr=subprocess.STDOUT, shell=True)
+    if options.sumoExe == "meso":
+        runInternalTests.runInternal(programSuffix, "-b "+env["FILEPREFIX"]+nameopt, log)
+    else:
+        subprocess.call("texttest.py -b "+env["FILEPREFIX"]+nameopt, stdout=log, stderr=subprocess.STDOUT, shell=True)
     subprocess.call("texttest.py -a sumo.gui -b "+env["FILEPREFIX"]+nameopt, stdout=log, stderr=subprocess.STDOUT, shell=True)
     subprocess.call("texttest.py -b "+env["FILEPREFIX"]+" -coll", stdout=log, stderr=subprocess.STDOUT, shell=True)
     ago = datetime.datetime.now() - datetime.timedelta(30)

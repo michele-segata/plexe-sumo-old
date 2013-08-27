@@ -30,7 +30,6 @@
 #include <config.h>
 #endif
 
-#include <algorithm>
 #include <string>
 #include <exception>
 #include <sstream>
@@ -39,6 +38,7 @@
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/MsgHandler.h>
+#include <utils/common/ToString.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -118,6 +118,13 @@ Option::markSet() {
     myAmSet = true;
     myAmWritable = false;
     return ret;
+}
+
+
+void
+Option::unSet() {
+    myAmSet = false;
+    myAmWritable = true;
 }
 
 
@@ -215,11 +222,11 @@ Option_Integer::getInt() const {
 bool
 Option_Integer::set(const std::string& v) {
     try {
-        myValue = TplConvert<char>::_2int(v.c_str());
+        myValue = TplConvert::_2int(v.c_str());
         return markSet();
     } catch (...) {
-        std::string s = "'" + v + "' is not a valid integer (should be).";
-        throw InvalidArgument(s);
+        std::string s = "'" + v + "' is not a valid integer.";
+        throw ProcessError(s);
     }
 }
 
@@ -332,11 +339,10 @@ Option_Float::getFloat() const {
 bool
 Option_Float::set(const std::string& v) {
     try {
-        myValue = TplConvert<char>::_2SUMOReal(v.c_str());
+        myValue = TplConvert::_2SUMOReal(v.c_str());
         return markSet();
     } catch (...) {
-        std::string s = "'" + v + "' is not a valid float (should be).";
-        throw InvalidArgument(s);
+        throw ProcessError("'" + v + "' is not a valid float.");
     }
 }
 
@@ -393,16 +399,12 @@ Option_Bool::getBool() const {
 
 bool
 Option_Bool::set(const std::string& v) {
-    std::string value = v;
-    std::transform(value.begin(), value.end(), value.begin(), tolower);
-    if (value == "1" || value == "yes" || value == "true" || value == "on" || value == "x") {
-        myValue = true;
-    } else if (value == "0" || value == "no" || value == "false" || value == "off") {
-        myValue = false;
-    } else {
-        throw ProcessError("Invalid boolean value for option.");
+    try {
+        myValue = TplConvert::_2bool(v.c_str());
+        return markSet();
+    } catch (...) {
+        throw ProcessError("'" + v + "' is not a valid bool.");
     }
-    return markSet();
 }
 
 
@@ -503,27 +505,20 @@ Option_IntVector::set(const std::string& v) {
         }
         StringTokenizer st(v, ";,", true);
         while (st.hasNext()) {
-            myValue.push_back(TplConvert<char>::_2int(st.next().c_str()));
+            myValue.push_back(TplConvert::_2int(st.next().c_str()));
         }
         return markSet();
     } catch (EmptyData&) {
-        throw InvalidArgument("Empty element occured in " + v);
+        throw ProcessError("Empty element occured in " + v);
     } catch (...) {
-        throw InvalidArgument("'" + v + "' is not a valid integer vector.");
+        throw ProcessError("'" + v + "' is not a valid integer vector.");
     }
 }
 
 
 std::string
 Option_IntVector::getValueString() const {
-    std::ostringstream s;
-    for (IntVector::const_iterator i = myValue.begin(); i != myValue.end(); i++) {
-        if (i != myValue.begin()) {
-            s << ',';
-        }
-        s << (*i);
-    }
-    return s.str();
+    return joinToString(myValue, ',');
 }
 
 

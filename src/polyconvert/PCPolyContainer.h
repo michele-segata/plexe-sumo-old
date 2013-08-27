@@ -38,6 +38,7 @@
 #include <utils/shapes/PointOfInterest.h>
 #include <utils/geom/Boundary.h>
 #include <utils/common/UtilExceptions.h>
+using namespace SUMO;
 
 
 // ===========================================================================
@@ -55,11 +56,11 @@ public:
      * @param[in] removeByNames Names of objects that shall not be added
      */
     PCPolyContainer(bool prune, const Boundary& prunningBoundary,
-                    const std::vector<std::string> &removeByNames) ;
+                    const std::vector<std::string>& removeByNames);
 
 
     /// @brief Destructor
-    ~PCPolyContainer() ;
+    ~PCPolyContainer();
 
 
     /** @brief Adds a polygon to the storage
@@ -78,7 +79,7 @@ public:
      * @return Whether the polygon could been added (no one with the same id was added before)
      */
     bool insert(const std::string& id, Polygon* poly, int layer,
-                bool ignorePrunning = false) ;
+                bool ignorePrunning = false);
 
 
     /** @brief Adds a poi to the storage
@@ -97,7 +98,7 @@ public:
      * @return Whether the poi could been added (no one with the same id was added before)
      */
     bool insert(const std::string& id, PointOfInterest* poi, int layer,
-                bool ignorePrunning = false) ;
+                bool ignorePrunning = false);
 
 
     /** @brief Returns the number of stored polygons
@@ -120,23 +121,23 @@ public:
      *
      * All items are deleted
      */
-    void clear() ;
+    void clear();
 
 
     /** @brief Reports how many polygons and pois were added */
-    void report() ;
+    void report();
 
 
     /** @brief Returns the information whether a polygon with the given key is in the container
      * @param[in] id The id of the polygon to get the information about
      * @return Whether the named polygon was added before
      */
-    bool containsPolygon(const std::string& kidey) ;
+    bool containsPolygon(const std::string& kidey);
 
 
     /** @brief Saves the stored polygons into the given file
      * @param[in] file The name of the file to write stored objects' definitions into
-     * @exception IOError If the file could not been opened
+     * @exception IOError If the file could not be opened
      */
     void save(const std::string& file);
 
@@ -149,7 +150,7 @@ public:
      * @param[in] key The key to get a running number for
      * @return Unique id (running number of calls that used this key)
      */
-    int getEnumIDFor(const std::string& key) ;
+    int getEnumIDFor(const std::string& key);
 
 
 public:

@@ -125,17 +125,17 @@ public:
 
     /**  Closes all registered devices
      */
-    static void closeAll() ;
+    static void closeAll();
     /// @}
 
 
     /** @brief Helper method for string formatting
      *
      * @param[in] v The floating point value to be formatted
-     * @param[in] precision the precision to achieve 
+     * @param[in] precision the precision to achieve
      * @return The formatted string
      */
-    static std::string realString(const SUMOReal v, const int precision=OUTPUT_ACCURACY);
+    static std::string realString(const SUMOReal v, const int precision = OUTPUT_ACCURACY);
 
 
 public:
@@ -143,7 +143,7 @@ public:
     /// @{
 
     /// @brief Constructor
-    OutputDevice(const bool binary=false, const unsigned int defaultIndentation=0);
+    OutputDevice(const bool binary = false, const unsigned int defaultIndentation = 0);
 
 
     /// @brief Destructor
@@ -153,18 +153,18 @@ public:
     /** @brief returns the information whether one can write into the device
      * @return Whether the device can be used (stream is good)
      */
-    virtual bool ok() ;
+    virtual bool ok();
 
 
     /** @brief Closes the device and removes it from the dictionary
      */
-    void close() ;
+    void close();
 
 
     /** @brief Sets the precison or resets it to default
      * @param[in] precision The accuracy (number of digits behind '.') to set
      */
-    void setPrecision(unsigned int precision=OUTPUT_ACCURACY);
+    void setPrecision(unsigned int precision = OUTPUT_ACCURACY);
 
 
     /** @brief Writes an XML header with optional configuration
@@ -184,6 +184,18 @@ public:
                         const std::string xmlParams = "",
                         const std::string& attrs = "",
                         const std::string& comment = "");
+
+
+    template <typename E>
+    bool writeHeader(const SumoXMLTag& rootElement) {
+        if (myAmBinary) {
+            return static_cast<BinaryFormatter*>(myFormatter)->writeHeader<E>(getOStream(), rootElement);
+        }
+        if (rootElement == SUMO_TAG_ROUTES) {
+            return myFormatter->writeXMLHeader(getOStream(), "routes", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
+        }
+        return myFormatter->writeXMLHeader(getOStream(), toString(rootElement));
+    }
 
 
     /** @brief Opens an XML tag
@@ -224,7 +236,7 @@ public:
      * @return Whether a further element existed in the stack and could be closed
      * @todo it is not verified that the topmost element was closed
      */
-    bool closeTag(bool abbreviated=false);
+    bool closeTag(bool abbreviated = false);
 
     /** @brief writes an arbitrary attribute
      *
@@ -275,7 +287,7 @@ public:
      *
      * @param[in] msg The msg to write to the device
      */
-    void inform(const std::string& msg, const char progress=0);
+    void inform(const std::string& msg, const char progress = 0);
 
 
     /** @brief Abstract output operator
@@ -297,7 +309,7 @@ protected:
      *
      * Default implementation does nothing.
      */
-    virtual void postWriteHook() ;
+    virtual void postWriteHook();
 
 
 private:
@@ -311,9 +323,11 @@ private:
 
     const bool myAmBinary;
 
-private:
+public:
     /// @brief Invalidated copy constructor.
     OutputDevice(const OutputDevice&);
+
+private:
 
     /// @brief Invalidated assignment operator.
     OutputDevice& operator=(const OutputDevice&);

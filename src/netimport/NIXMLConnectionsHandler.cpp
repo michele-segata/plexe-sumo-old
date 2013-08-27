@@ -46,7 +46,6 @@
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <utils/common/ToString.h>
 #include <utils/common/TplConvert.h>
-#include <utils/common/TplConvertSec.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/options/OptionsCont.h>
@@ -237,8 +236,11 @@ NIXMLConnectionsHandler::parseLaneBound(const SUMOSAXAttributes& attrs, NBEdge* 
                 }
             } while (toNext);
             if (nFrom == 0 || !nFrom->addLane2LaneConnection(fromLane, to, toLane, NBEdge::L2L_USER, false, mayDefinitelyPass)) {
-                WRITE_WARNING("Could not set loaded connection from '" + from->getLaneID(fromLane) +
-                              "' to '" + to->getLaneID(toLane) + "'.");
+                if (OptionsCont::getOptions().getBool("show-errors.connections-first-try")) {
+                    WRITE_WARNING("Could not set loaded connection from '" + from->getLaneID(fromLane) + "' to '" + to->getLaneID(toLane) + "'.");
+                }
+                // set as to be re-applied after network processing
+                myEdgeCont.addPostProcessConnection(nFrom->getID(), fromLane, to->getID(), toLane, mayDefinitelyPass);
             } else {
                 from = nFrom;
             }
@@ -284,8 +286,8 @@ NIXMLConnectionsHandler::parseDeprecatedLaneDefinition(const SUMOSAXAttributes& 
         return false; // There was an error.
     }
 
-    *fromLane = TplConvertSec<char>::_2intSec(st.next().c_str(), -1);
-    *toLane = TplConvertSec<char>::_2intSec(st.next().c_str(), -1);
+    *fromLane = TplConvert::_2intSec(st.next().c_str(), -1);
+    *toLane = TplConvert::_2intSec(st.next().c_str(), -1);
 
     return true; // We succeeded.
 }

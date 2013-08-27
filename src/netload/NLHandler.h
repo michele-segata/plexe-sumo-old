@@ -37,6 +37,7 @@
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/sax/AttributeList.hpp>
 #include <utils/common/SUMOTime.h>
+#include <utils/common/Parameterised.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <microsim/MSLink.h>
 #include <microsim/MSRouteHandler.h>
@@ -45,7 +46,6 @@
 #include <microsim/MSBitSetLogic.h>
 #include "NLBuilder.h"
 #include "NLDiscreteEventBuilder.h"
-#include "NLSucceedingLaneBuilder.h"
 
 
 // ===========================================================================
@@ -86,11 +86,11 @@ public:
     NLHandler(const std::string& file, MSNet& net,
               NLDetectorBuilder& detBuilder, NLTriggerBuilder& triggerBuilder,
               NLEdgeControlBuilder& edgeBuilder,
-              NLJunctionControlBuilder& junctionBuilder) ;
+              NLJunctionControlBuilder& junctionBuilder);
 
 
     /// @brief Destructor
-    virtual ~NLHandler() ;
+    virtual ~NLHandler();
 
 
 protected:
@@ -106,7 +106,7 @@ protected:
      * @todo Refactor/describe
      */
     virtual void myStartElement(int element,
-                                const SUMOSAXAttributes& attrs) ;
+                                const SUMOSAXAttributes& attrs);
 
 
     /** @brief Called when a closing tag occurs
@@ -116,7 +116,7 @@ protected:
      * @see GenericSAXHandler::myEndElement
      * @todo Refactor/describe
      */
-    virtual void myEndElement(int element) ;
+    virtual void myEndElement(int element);
     //@}
 
 
@@ -161,7 +161,7 @@ protected:
      */
     virtual void addVTypeProbeDetector(const SUMOSAXAttributes& attrs);
 
-    /** @brief Builds a routeprobe-detector using the given specification
+    /** @brief Builds a routeProbe-detector using the given specification
      * @param[in] attrs The attributes that define the detector
      */
     virtual void addRouteProbeDetector(const SUMOSAXAttributes& attrs);
@@ -194,9 +194,6 @@ private:
     /// adds a polygon
     void addPoly(const SUMOSAXAttributes& attrs);
 
-    /// (deprecated) adds a logic item to the current logic
-    void addLogicItem(const SUMOSAXAttributes& attrs);
-
     ///  adds a request item to the current junction logic
     void addRequest(const SUMOSAXAttributes& attrs);
 
@@ -213,18 +210,12 @@ private:
     /// opens a junction for processing
     virtual void openJunction(const SUMOSAXAttributes& attrs);
 
-    void parseLanes(const std::string& junctionID, const std::string& def, std::vector<MSLane*> &into, bool& ok);
+    void parseLanes(const std::string& junctionID, const std::string& def, std::vector<MSLane*>& into, bool& ok);
 
 #ifdef _MESSAGES
     /// adds a message emitter
     void addMsgEmitter(const SUMOSAXAttributes& attrs);
 #endif
-
-    /// opens the container of succeeding lanes for processing (deprecated, see addConnection))
-    void openSucc(const SUMOSAXAttributes& attrs);
-
-    /// adds a succeeding lane (deprecated, see addConnection)
-    void addSuccLane(const SUMOSAXAttributes& attrs);
 
     /// adds a connection
     void addConnection(const SUMOSAXAttributes& attrs);
@@ -245,7 +236,7 @@ private:
      * @param[in] attrs The attributes (of the "district"-element) to parse
      * @exception ProcessError If an edge given in district@edges is not known
      */
-    void addDistrict(const SUMOSAXAttributes& attrs) ;
+    void addDistrict(const SUMOSAXAttributes& attrs);
 
 
     /** @begin Parses a district edge and connects it to the district
@@ -263,17 +254,11 @@ private:
 
     void closeWAUT();
 
-    /// closes the processing of a lane
-    void closeSuccLane();
-
     /// @brief Parses the given character into an enumeration typed link direction
     LinkDirection parseLinkDir(const std::string& dir);
 
     /// @brief Parses the given character into an enumeration typed link state
     LinkState parseLinkState(const std::string& state);
-
-    /// @brief retrieves <fromLane, toLane> based on the edges and an index specifier (i.e. '0:1')
-    std::pair<MSLane*, MSLane*> getLanesFromIndices(MSEdge* from, MSEdge* to, const std::string& laneIndices, bool& ok);
 
 
 protected:
@@ -296,9 +281,6 @@ protected:
     /// @brief The junction builder to use
     NLJunctionControlBuilder& myJunctionControlBuilder;
 
-    /// @brief The lane-to-lane connections builder to use
-    NLSucceedingLaneBuilder mySucceedingLaneBuilder;
-
 
 
     /// The id of the current district
@@ -318,19 +300,9 @@ protected:
 
     bool myCurrentIsBroken;
 
-    bool myHaveWarnedAboutDeprecatedE1, myHaveWarnedAboutDeprecatedE2,
-         myHaveWarnedAboutDeprecatedE3, myHaveWarnedAboutDeprecatedDetEntry,
-         myHaveWarnedAboutDeprecatedDetExit, myHaveWarnedAboutDeprecatedTimedEvent;
-    bool myHaveWarnedAboutDeprecatedRowLogic, myHaveWarnedAboutDeprecatedTLLogic;
-    bool myHaveWarnedAboutDeprecatedTLSTiming;
-    bool myHaveWarnedAboutDeprecatedTimeThreshold,
-         myHaveWarnedAboutDeprecatedSpeedThreshold,
-         myHaveWarnedAboutDeprecatedJamDistThreshold;
-    bool myHaveWarnedAboutDeprecatedVTypeProbe, myHaveWarnedAboutDeprecatedRouteProbe,
-         myHaveWarnedAboutDeprecatedEdgeMean, myHaveWarnedAboutDeprecatedLaneMean;
-    bool myHaveWarnedAboutDeprecatedVTypes, myHaveWarnedAboutDeprecatedLanes;
-    bool myHaveWarnedAboutDeprecatedDistrict, myHaveWarnedAboutDeprecatedDSource, myHaveWarnedAboutDeprecatedDSink;
+    bool myHaveWarnedAboutDeprecatedLanes;
 
+    Parameterised* myLastParameterised;
 
 private:
     /** invalid copy constructor */

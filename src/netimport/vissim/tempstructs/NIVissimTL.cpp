@@ -39,12 +39,10 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/common/ToString.h>
 #include "NIVissimConnection.h"
-#include <netbuild/NBLoadedTLDef.h>
 #include <netbuild/NBEdge.h>
 #include <netbuild/NBEdgeCont.h>
 #include <netbuild/NBTrafficLightLogicCont.h>
 #include <netbuild/NBLoadedTLDef.h>
-#include "NIVissimConnection.h"
 #include "NIVissimDisturbance.h"
 #include "NIVissimNodeDef.h"
 #include "NIVissimEdge.h"
@@ -146,7 +144,7 @@ NIVissimTL::NIVissimTLSignal::addTo(NBEdgeCont& ec, NBLoadedTLDef* tl) const {
     NBConnectionVector assignedConnections;
     if (c == 0) {
         // What to do if on an edge? -> close all outgoing connections
-        NBEdge* edge = ec.retrievePossiblySplitted(toString<int>(myEdgeID), myPosition);
+        NBEdge* edge = ec.retrievePossiblySplit(toString<int>(myEdgeID), myPosition);
         if (edge == 0) {
             WRITE_WARNING("Could not set tls signal at edge '" + toString(myEdgeID) + "' - the edge was not built.");
             return false;
@@ -173,14 +171,8 @@ NIVissimTL::NIVissimTLSignal::addTo(NBEdgeCont& ec, NBLoadedTLDef* tl) const {
         }
     } else {
         // get the edges
-        NBEdge* tmpFrom = ec.retrievePossiblySplitted(
-                              toString<int>(c->getFromEdgeID()),
-                              toString<int>(c->getToEdgeID()),
-                              true);
-        NBEdge* tmpTo = ec.retrievePossiblySplitted(
-                            toString<int>(c->getToEdgeID()),
-                            toString<int>(c->getFromEdgeID()),
-                            false);
+        NBEdge* tmpFrom = ec.retrievePossiblySplit(toString<int>(c->getFromEdgeID()), toString<int>(c->getToEdgeID()), true);
+        NBEdge* tmpTo = ec.retrievePossiblySplit(toString<int>(c->getToEdgeID()), toString<int>(c->getFromEdgeID()), false);
         // check whether the edges are known
         if (tmpFrom != 0 && tmpTo != 0) {
             // add connections this signal is responsible for
@@ -192,6 +184,8 @@ NIVissimTL::NIVissimTLSignal::addTo(NBEdgeCont& ec, NBLoadedTLDef* tl) const {
     }
     // add to the group
     assert(myGroupIDs.size() != 0);
+    // @todo just another hack?!
+    /*
     if (myGroupIDs.size() == 1) {
         return tl->addToSignalGroup(toString<int>(*(myGroupIDs.begin())),
                                     assignedConnections);
@@ -200,7 +194,8 @@ NIVissimTL::NIVissimTLSignal::addTo(NBEdgeCont& ec, NBLoadedTLDef* tl) const {
         return tl->addToSignalGroup(toString<int>(*(myGroupIDs.begin())),
                                     assignedConnections);
     }
-    return true;
+    */
+    return tl->addToSignalGroup(toString<int>(myGroupIDs.front()), assignedConnections);
 }
 
 
@@ -393,7 +388,7 @@ NIVissimTL::dict_SetSignals(NBTrafficLightLogicCont& tlc,
         			continue;
         		}*/
         std::string id = toString<int>(tl->myID);
-        NBLoadedTLDef* def = new NBLoadedTLDef(id);
+        NBLoadedTLDef* def = new NBLoadedTLDef(id, 0);
         if (!tlc.insert(def)) {
             WRITE_ERROR("Error on adding a traffic light\n Must be a multiple id ('" + id + "')");
             continue;

@@ -62,11 +62,11 @@
 #include "RODUAFrame.h"
 #include <utils/iodevices/OutputDevice.h>
 
-#ifdef HAVE_MESOSIM // catchall for internal stuff
+#ifdef HAVE_INTERNAL // catchall for internal stuff
 #include <internal/BulkStarRouter.h>
 #include <internal/CHRouter.h>
 #include <internal/CHRouterWrapper.h>
-#endif // have HAVE_MESOSIM
+#endif // have HAVE_INTERNAL
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -110,7 +110,7 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
     // prepare the output
     net.openOutput(oc.getString("output-file"), true, oc.getString("vtype-output"));
     // build the router
-    SUMOAbstractRouter<ROEdge, ROVehicle> *router;
+    SUMOAbstractRouter<ROEdge, ROVehicle>* router;
     const std::string measure = oc.getString("weight-attribute");
     const std::string routingAlgorithm = oc.getString("routing-algorithm");
     if (measure == "traveltime") {
@@ -130,7 +130,7 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
                 router = new AStarRouterTT_Direct<ROEdge, ROVehicle, prohibited_noRestrictions<ROEdge, ROVehicle> >(
                     net.getEdgeNo(), oc.getBool("ignore-errors"), &ROEdge::getTravelTime);
             }
-#ifdef HAVE_MESOSIM // catchall for internal stuff
+#ifdef HAVE_INTERNAL // catchall for internal stuff
         } else if (routingAlgorithm == "bulkstar") {
             if (net.hasRestrictions()) {
                 router = new BulkStarRouterTT<ROEdge, ROVehicle, prohibited_withRestrictions<ROEdge, ROVehicle> >(
@@ -145,9 +145,9 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
             // it is mainly needed for its maximum speed. @todo XXX make this configurable
             ROVehicle defaultVehicle(SUMOVehicleParameter(), 0, net.getVehicleTypeSecure(DEFAULT_VTYPE_ID));
             const SUMOTime begin = string2time(oc.getString("begin"));
-            const SUMOTime weightPeriod = (oc.isSet("weight-files") ? 
-                    string2time(oc.getString("weight-period")) : 
-                    std::numeric_limits<int>::max());
+            const SUMOTime weightPeriod = (oc.isSet("weight-files") ?
+                                           string2time(oc.getString("weight-period")) :
+                                           std::numeric_limits<int>::max());
             if (net.hasRestrictions()) {
                 router = new CHRouter<ROEdge, ROVehicle, prohibited_withRestrictions<ROEdge, ROVehicle> >(
                     net.getEdgeNo(), oc.getBool("ignore-errors"), &ROEdge::getTravelTime, &defaultVehicle, begin, weightPeriod, true);
@@ -158,17 +158,17 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
 
         } else if (routingAlgorithm == "CHWrapper") {
             const SUMOTime begin = string2time(oc.getString("begin"));
-            const SUMOTime weightPeriod = (oc.isSet("weight-files") ? 
-                    string2time(oc.getString("weight-period")) : 
-                    std::numeric_limits<int>::max());
+            const SUMOTime weightPeriod = (oc.isSet("weight-files") ?
+                                           string2time(oc.getString("weight-period")) :
+                                           std::numeric_limits<int>::max());
 
             if (!net.hasRestrictions()) {
                 WRITE_WARNING("CHWrapper is only needed for a restricted network");
             }
             router = new CHRouterWrapper<ROEdge, ROVehicle, prohibited_withRestrictions<ROEdge, ROVehicle> >(
-                    oc.getBool("ignore-errors"), &ROEdge::getTravelTime, begin, weightPeriod);
+                net.getEdgeNo(), oc.getBool("ignore-errors"), &ROEdge::getTravelTime, begin, weightPeriod);
 
-#endif // have HAVE_MESOSIM
+#endif // have HAVE_INTERNAL
         } else {
             throw ProcessError("Unknown routing Algorithm '" + routingAlgorithm + "'!");
         }
@@ -204,12 +204,14 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
     // process route definitions
     try {
         if (routingAlgorithm == "bulkstar") {
+#ifdef HAVE_INTERNAL // catchall for internal stuff
             // need to load all routes for spatial aggregation
             loader.processAllRoutesWithBulkRouter(string2time(oc.getString("begin")), string2time(oc.getString("end")), net, *router);
+#endif
         } else if (!oc.getBool("unsorted-input")) {
             // the routes are sorted - process stepwise
             loader.processRoutesStepWise(string2time(oc.getString("begin")), string2time(oc.getString("end")), net, *router);
-        } else { 
+        } else {
             // the routes are not sorted: load all and process
             loader.processAllRoutes(string2time(oc.getString("begin")), string2time(oc.getString("end")), net, *router);
         }
@@ -238,14 +240,14 @@ main(int argc, char** argv) {
     int ret = 0;
     RONet* net = 0;
     try {
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         RODUAFrame::fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
-            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
         MsgHandler::initOutputOptions();
         if (!RODUAFrame::checkOptions()) {
             throw ProcessError();
@@ -258,30 +260,35 @@ main(int argc, char** argv) {
         // build routes
         try {
             computeRoutes(*net, loader, oc);
-        } catch (SAXParseException& e) {
+        } catch (XERCES_CPP_NAMESPACE::SAXParseException& e) {
             WRITE_ERROR(toString(e.getLineNumber()));
             ret = 1;
-        } catch (SAXException& e) {
-            WRITE_ERROR(TplConvert<XMLCh>::_2str(e.getMessage()));
+        } catch (XERCES_CPP_NAMESPACE::SAXException& e) {
+            WRITE_ERROR(TplConvert::_2str(e.getMessage()));
             ret = 1;
         }
         if (MsgHandler::getErrorInstance()->wasInformed() || ret != 0) {
             throw ProcessError();
         }
-    } catch (ProcessError& e) {
+    } catch (const ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
 #ifndef _DEBUG
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
     } catch (...) {
         MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
         ret = 1;
 #endif
     }
     delete net;
-    OutputDevice::closeAll();
     SystemFrame::close();
     if (ret == 0) {
         std::cout << "Success." << std::endl;

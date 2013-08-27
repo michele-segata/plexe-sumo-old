@@ -62,12 +62,12 @@
 // ===========================================================================
 NIXMLNodesHandler::NIXMLNodesHandler(NBNodeCont& nc,
                                      NBTrafficLightLogicCont& tlc,
-                                     OptionsCont& options) : 
+                                     OptionsCont& options) :
     SUMOSAXHandler("xml-nodes - file"),
     myOptions(options),
-    myNodeCont(nc), 
+    myNodeCont(nc),
     myTLLogicCont(tlc),
-    myLocation(0) 
+    myLocation(0)
 {}
 
 
@@ -241,7 +241,7 @@ NIXMLNodesHandler::processTrafficLightDefinitions(const SUMOSAXAttributes& attrs
     } else {
         // we need to add a new defition
         tlID = tlID == "" ? myID : tlID;
-        NBTrafficLightDefinition* tlDef = new NBOwnTLDef(tlID, currentNode);
+        NBTrafficLightDefinition* tlDef = new NBOwnTLDef(tlID, currentNode, 0);
         if (!myTLLogicCont.insert(tlDef)) {
             // actually, nothing should fail here
             delete tlDef;
@@ -251,11 +251,7 @@ NIXMLNodesHandler::processTrafficLightDefinitions(const SUMOSAXAttributes& attrs
     }
     // process inner edges which shall be controlled
     std::vector<std::string> controlledInner;
-    if (attrs.hasAttribute(SUMO_ATTR_CONTROLLED_INNER__DEPRECATED)) {
-        SUMOSAXAttributes::parseStringVector(attrs.getStringReporting(SUMO_ATTR_CONTROLLED_INNER__DEPRECATED, 0, ok), controlledInner);
-    } else {
-        SUMOSAXAttributes::parseStringVector(attrs.getOptStringReporting(SUMO_ATTR_CONTROLLED_INNER, 0, ok, ""), controlledInner);
-    }
+    SUMOSAXAttributes::parseStringVector(attrs.getOptStringReporting(SUMO_ATTR_CONTROLLED_INNER, 0, ok, ""), controlledInner);
     if (controlledInner.size() != 0) {
         for (std::set<NBTrafficLightDefinition*>::iterator it = tlDefs.begin(); it != tlDefs.end(); it++) {
             (*it)->addControlledInnerEdges(controlledInner);

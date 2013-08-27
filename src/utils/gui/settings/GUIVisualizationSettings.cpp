@@ -42,7 +42,7 @@
 // ===========================================================================
 // static members
 // ===========================================================================
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 bool GUIVisualizationSettings::UseMesoSim = false;
 #endif
 
@@ -57,7 +57,7 @@ GUIVisualizationSettings::GUIVisualizationSettings()
       edgeName(false, 50, RGBColor(1, .5, 0)),
       internalEdgeName(false, 40, RGBColor(.5, .25, 0)),
       streetName(false, 55, RGBColor(1, 1, 0)),
-      hideConnectors(false), vehicleQuality(0),
+      hideConnectors(false), laneWidthExaggeration(1), vehicleQuality(0),
       minVehicleSize(1), vehicleExaggeration(1), showBlinker(true),
       drawLaneChangePreference(false), drawMinGap(false),
       vehicleName(false, 50, RGBColor(.8, .6, 0)),
@@ -66,8 +66,8 @@ GUIVisualizationSettings::GUIVisualizationSettings()
       internalJunctionName(false, 50, RGBColor(0, .8, .5)),
       showLane2Lane(false), addMode(0), minAddSize(1), addExaggeration(1),
       addName(false, 50, RGBColor(1., 0, .5)),
-      poiName(false, 50, RGBColor(1., 0, .5)),
       minPOISize(0), poiExaggeration(1),
+      poiName(false, 50, RGBColor(1., 0, .5)),
       showSizeLegend(true),
       gaming(false),
       selectionScale(1) {
@@ -128,6 +128,7 @@ GUIVisualizationSettings::GUIVisualizationSettings()
 
 
     /// add vehicle coloring schemes
+    vehicleColorer.addScheme(GUIColorScheme("given vehicle/type/route color", RGBColor(1, 1, 0), "", true));
     vehicleColorer.addScheme(GUIColorScheme("uniform", RGBColor(1, 1, 0), "", true));
     vehicleColorer.addScheme(GUIColorScheme("given/assigned vehicle color", RGBColor(1, 1, 0), "", true));
     vehicleColorer.addScheme(GUIColorScheme("given/assigned type color", RGBColor(1, 1, 0), "", true));
@@ -175,7 +176,7 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     vehicleColorer.addScheme(scheme);
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /// add edge coloring schemes
     edgeColorer.addScheme(GUIColorScheme("uniform (streetwise)", RGBColor(0, 0, 0), "", true));
     scheme = GUIColorScheme("by selection (streetwise)", RGBColor(0.7f, 0.7f, 0.7f), "unselected", true);
@@ -206,7 +207,7 @@ GUIVisualizationSettings::GUIVisualizationSettings()
 
 size_t
 GUIVisualizationSettings::getLaneEdgeMode() const {
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (UseMesoSim) {
         return edgeColorer.getActive();
     }
@@ -217,7 +218,7 @@ GUIVisualizationSettings::getLaneEdgeMode() const {
 
 GUIColorScheme&
 GUIVisualizationSettings::getLaneEdgeScheme() {
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (UseMesoSim) {
         return edgeColorer.getScheme();
     }
@@ -243,7 +244,7 @@ GUIVisualizationSettings::save(OutputDevice& dev) const {
         << "               " << internalEdgeName.print("internalEdgeName") << "\n"
         << "               " << streetName.print("streetName") << ">\n";
     laneColorer.save(dev);
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     edgeColorer.save(dev);
 #endif
     dev << "        </edges>\n";
@@ -306,7 +307,7 @@ GUIVisualizationSettings::operator==(const GUIVisualizationSettings& v2) {
         return false;
     }
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (!(edgeColorer == v2.edgeColorer)) {
         return false;
     }
@@ -335,7 +336,9 @@ GUIVisualizationSettings::operator==(const GUIVisualizationSettings& v2) {
     if (hideConnectors != v2.hideConnectors) {
         return false;
     }
-
+    if (laneWidthExaggeration != v2.laneWidthExaggeration) {
+        return false;
+    }
     if (!(vehicleColorer == v2.vehicleColorer)) {
         return false;
     }

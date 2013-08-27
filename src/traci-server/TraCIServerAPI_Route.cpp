@@ -55,7 +55,6 @@ using namespace traci;
 bool
 TraCIServerAPI_Route::processGet(TraCIServer& server, tcpip::Storage& inputStorage,
                                  tcpip::Storage& outputStorage) {
-    std::string warning = ""; // additional description for response
     // variable & id
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
@@ -99,7 +98,7 @@ TraCIServerAPI_Route::processGet(TraCIServer& server, tcpip::Storage& inputStora
                 break;
         }
     }
-    server.writeStatusCmd(CMD_GET_ROUTE_VARIABLE, RTYPE_OK, warning, outputStorage);
+    server.writeStatusCmd(CMD_GET_ROUTE_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
     return true;
 }
@@ -129,15 +128,16 @@ TraCIServerAPI_Route::processSet(TraCIServer& server, tcpip::Storage& inputStora
             int numEdges = inputStorage.readInt();
             MSEdgeVector edges;
             while (numEdges--) {
-                MSEdge* edge = MSEdge::dictionary(inputStorage.readString());
+                std::string edgeID = inputStorage.readString();
+                MSEdge* edge = MSEdge::dictionary(edgeID);
                 if (edge == 0) {
-                    server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "Unknown edge in route.", outputStorage);
+                    server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "Unknown edge '" + edgeID + "' in route.", outputStorage);
                     return false;
                 }
                 edges.push_back(edge);
             }
             const std::vector<SUMOVehicleParameter::Stop> stops;
-            if (!MSRoute::dictionary(id, new MSRoute(id, edges, 1, RGBColor::DEFAULT_COLOR, stops))) {
+            if (!MSRoute::dictionary(id, new MSRoute(id, edges, 1, 0, stops))) {
                 server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_ERR, "Could not add route.", outputStorage);
                 return false;
             }

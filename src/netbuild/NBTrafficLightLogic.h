@@ -95,7 +95,7 @@ public:
      * @param[in] subid The id of the program
      * @param[in] noLinks Number of links that are controlled by this tls. 0 means the value is not known beforehand
      */
-    NBTrafficLightLogic(const std::string& id, const std::string& subid, unsigned int noLinks) ;
+    NBTrafficLightLogic(const std::string& id, const std::string& subid, unsigned int noLinks, SUMOTime offset = 0);
 
 
     /** @brief Copy Constructor
@@ -105,7 +105,7 @@ public:
 
 
     /// @brief Destructor
-    ~NBTrafficLightLogic() ;
+    ~NBTrafficLightLogic();
 
 
     /** @brief Adds a phase to the logic
@@ -124,7 +124,7 @@ public:
      * @param[in] tlIndex The index at which to modify the state
      * @param[in] linkState The new link state for the given index
      */
-    void setPhaseState(unsigned int phaseIndex, int tlIndex, LinkState linkState);
+    void setPhaseState(unsigned int phaseIndex, unsigned int tlIndex, LinkState linkState);
 
     /** @brief Modifies the duration for an existing phase (used by NETEDIT)
      * @param[in] phaseIndex The index of the phase to modify
@@ -145,13 +145,13 @@ public:
      *
      * Joins equal steps.
      */
-    void closeBuilding() ;
+    void closeBuilding();
 
 
     /** @brief Returns the duration of the complete cycle
      * @return The duration of this logic's cycle
      */
-    SUMOTime getDuration() const ;
+    SUMOTime getDuration() const;
 
 
     /** @brief Sets the offset of this tls
@@ -173,7 +173,7 @@ public:
     /** @brief Returns the phases
      * @return The phase list
      */
-    const std::vector<PhaseDefinition> &getPhases() const {
+    const std::vector<PhaseDefinition>& getPhases() const {
         return myPhases;
     }
 
@@ -213,6 +213,9 @@ private:
     static const char allowedStatesInitializer[];
     static const std::string ALLOWED_STATES;
 
+private:
+    /// @brief Invalidated assignment operator
+    NBTrafficLightLogic& operator=(const NBTrafficLightLogic& s);
 
 };
 

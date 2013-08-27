@@ -20,18 +20,18 @@ class RouteReader(handler.ContentHandler):
         self._out = out
 
     def startElement(self, name, attrs):
-        if name == 'tripdef':
+        if name == 'trip':
             self._idToTaz[attrs['id']] = (attrs['fromtaz'], attrs['totaz'])
         elif name != 'tripdefs':
             print >> self._out, '<' + name,
             for key in attrs.keys():
                 print >> self._out,  '%s="%s"' % (key, attrs[key]),
             if name == 'vehicle':
-                print >> self._out,  'fromtaz="%s" totaz="%s"' % self._idToTaz[attrs['id']],
+                print >> self._out,  'fromTaz="%s" toTaz="%s"' % self._idToTaz[attrs['id']],
             print >> self._out,  '>'
 
     def endElement(self, name):
-        if name != 'tripdefs' and name != 'tripdef':
+        if name != 'tripdefs' and name != 'trip':
             print >> self._out,  '</%s>' % name
 
 def parse(trips, routes, out):

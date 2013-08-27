@@ -69,7 +69,7 @@ public:
      * @exception ProcessError if something fails
      */
     static void loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
-                          PCTypeMap& tm) ;
+                          PCTypeMap& tm);
 
 
 protected:
@@ -79,11 +79,11 @@ protected:
      * @param[in] oc The options container to get further options from
      */
     PCLoaderXML(PCPolyContainer& toFill,
-                PCTypeMap& tm, OptionsCont& oc) ;
+                PCTypeMap& tm, OptionsCont& oc);
 
 
     /// @brief Destructor
-    ~PCLoaderXML() ;
+    ~PCLoaderXML();
 
 
 protected:
@@ -97,19 +97,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myStartElement
      */
-    virtual void myStartElement(int element,
-                                const SUMOSAXAttributes& attrs) ;
-
-
-    /** @brief Called when characters occure
-     *
-     * @param[in] element ID of the last opened element
-     * @param[in] chars The read characters (complete)
-     * @exception ProcessError If something fails
-     * @see GenericSAXHandler::myCharacters
-     */
-    void myCharacters(int element,
-                      const std::string& chars) ;
+    virtual void myStartElement(int element, const SUMOSAXAttributes& attrs);
     //@}
 
 
@@ -140,7 +128,7 @@ private:
     bool myCurrentIgnorePrunning;
 
     /// @brief The layer of the currently parsed polygon
-    int myCurrentLayer;
+    SUMOReal myCurrentLayer;
     /// @}
 
 

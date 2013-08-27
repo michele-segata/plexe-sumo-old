@@ -51,6 +51,7 @@
 // ===========================================================================
 MSRoute::RouteDict MSRoute::myDict;
 MSRoute::RouteDistDict MSRoute::myDistDict;
+unsigned int MSRoute::MaxRouteDistSize = std::numeric_limits<unsigned int>::max();
 
 
 // ===========================================================================
@@ -58,24 +59,29 @@ MSRoute::RouteDistDict MSRoute::myDistDict;
 // ===========================================================================
 MSRoute::MSRoute(const std::string& id,
                  const MSEdgeVector& edges,
-                 unsigned int references, const RGBColor& c,
-                 const std::vector<SUMOVehicleParameter::Stop> &stops)
+                 unsigned int references, const RGBColor* const c,
+                 const std::vector<SUMOVehicleParameter::Stop>& stops)
     : Named(id), myEdges(edges),
       myReferenceCounter(references),
       myColor(c), myStops(stops) {}
 
 
-MSRoute::~MSRoute() {}
+MSRoute::~MSRoute() {
+    delete myColor;
+}
+
 
 MSRouteIterator
 MSRoute::begin() const {
     return myEdges.begin();
 }
 
+
 MSRouteIterator
 MSRoute::end() const {
     return myEdges.end();
 }
+
 
 unsigned
 MSRoute::size() const {
@@ -140,7 +146,7 @@ MSRoute::dictionary(const std::string& id) {
 }
 
 
-RandomDistributor<const MSRoute*> *
+RandomDistributor<const MSRoute*>*
 MSRoute::distDictionary(const std::string& id) {
     RouteDistDict::iterator it2 = myDistDict.find(id);
     if (it2 == myDistDict.end()) {
@@ -164,7 +170,7 @@ MSRoute::clear() {
 
 
 void
-MSRoute::insertIDs(std::vector<std::string> &into) {
+MSRoute::insertIDs(std::vector<std::string>& into) {
     into.reserve(myDict.size() + myDistDict.size() + into.size());
     for (RouteDict::const_iterator i = myDict.begin(); i != myDict.end(); ++i) {
         into.push_back((*i).first);
@@ -175,26 +181,29 @@ MSRoute::insertIDs(std::vector<std::string> &into) {
 }
 
 
-void
+int
 MSRoute::writeEdgeIDs(OutputDevice& os, const MSEdge* const from, const MSEdge* const upTo) const {
+    int numWritten = 0;
     MSEdgeVector::const_iterator i = myEdges.begin();
     if (from != 0) {
         i = std::find(myEdges.begin(), myEdges.end(), from);
     }
     for (; i != myEdges.end(); ++i) {
         if ((*i) == upTo) {
-            return;
+            return numWritten;
         }
         os << (*i)->getID();
+        numWritten++;
         if (upTo || i != myEdges.end() - 1) {
             os << ' ';
         }
     }
+    return numWritten;
 }
 
 
 bool
-MSRoute::containsAnyOf(const std::vector<MSEdge*> &edgelist) const {
+MSRoute::containsAnyOf(const std::vector<MSEdge*>& edgelist) const {
     std::vector<MSEdge*>::const_iterator i = edgelist.begin();
     for (; i != edgelist.end(); ++i) {
         if (contains(*i)) {
@@ -211,64 +220,14 @@ MSRoute::operator[](unsigned index) const {
 }
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 void
 MSRoute::dict_saveState(std::ostream& os) {
     FileHelpers::writeUInt(os, (unsigned int) myDict.size());
     for (RouteDict::iterator it = myDict.begin(); it != myDict.end(); ++it) {
         FileHelpers::writeString(os, (*it).second->getID());
-        const MSEdgeVector& edges = (*it).second->myEdges;
-        FileHelpers::writeUInt(os, (unsigned int)edges.size());
         FileHelpers::writeUInt(os, (*it).second->myReferenceCounter);
-        std::vector<unsigned int> follow;
-        unsigned int maxFollow = 0;
-        const MSEdge* prev = edges.front();
-        for (MSEdgeVector::const_iterator i = edges.begin() + 1; i != edges.end(); ++i) {
-            unsigned int idx = 0;
-            for (; idx < prev->getNoFollowing(); ++idx) {
-                if (idx > 15) {
-                    break;
-                }
-                if (prev->getFollower(idx) == (*i)) {
-                    follow.push_back(idx);
-                    if (idx > maxFollow) {
-                        maxFollow = idx;
-                    }
-                    break;
-                }
-            }
-            if (idx > 15 || idx == prev->getNoFollowing()) {
-                follow.clear();
-                break;
-            }
-            prev = *i;
-        }
-        if (follow.empty()) {
-            for (MSEdgeVector::const_iterator i = edges.begin(); i != edges.end(); ++i) {
-                FileHelpers::writeInt(os, (*i)->getNumericalID());
-            }
-        } else {
-            const unsigned int bits = maxFollow > 3 ? 4 : 2;
-            const unsigned int numFields = 8 * sizeof(unsigned int) / bits;
-            FileHelpers::writeInt(os, -bits);
-            FileHelpers::writeUInt(os, edges.front()->getNumericalID());
-            unsigned int data = 0;
-            unsigned int field = 0;
-            for (std::vector<unsigned int>::const_iterator i = follow.begin(); i != follow.end(); ++i) {
-                data |= *i;
-                field++;
-                if (field == numFields) {
-                    FileHelpers::writeUInt(os, data);
-                    data = 0;
-                    field = 0;
-                } else {
-                    data <<= bits;
-                }
-            }
-            if (field > 0) {
-                FileHelpers::writeUInt(os, data << ((numFields - field - 1) * bits));
-            }
-        }
+        FileHelpers::writeEdgeVector(os, (*it).second->myEdges);
     }
     FileHelpers::writeUInt(os, (unsigned int) myDistDict.size());
     for (RouteDistDict::iterator it = myDistDict.begin(); it != myDistDict.end(); ++it) {
@@ -290,69 +249,14 @@ MSRoute::dict_loadState(BinaryInputDevice& bis) {
     for (; numRoutes > 0; numRoutes--) {
         std::string id;
         bis >> id;
-        unsigned int numEdges;
-        bis >> numEdges;
         unsigned int references;
         bis >> references;
-        int first;
-        bis >> first;
-        if (first < 0) {
-            const unsigned int bits = -first;
-            const unsigned int numFields = 8 * sizeof(unsigned int) / bits;
-            if (dictionary(id) == 0) {
-                const unsigned int mask = (1 << bits) - 1;
-                MSEdgeVector edges;
-                edges.reserve(numEdges);
-                unsigned int edgeID;
-                bis >> edgeID;
-                const MSEdge* prev = MSEdge::dictionary(edgeID);
-                assert(prev != 0);
-                edges.push_back(prev);
-                numEdges--;
-                unsigned int data;
-                unsigned int field = numFields;
-                for (; numEdges > 0; numEdges--) {
-                    if (field == numFields) {
-                        bis >> data;
-                        field = 0;
-                    }
-                    unsigned int followIndex = (data >> ((numFields - field - 1) * bits)) & mask;
-                    prev = prev->getFollower(followIndex);
-                    edges.push_back(prev);
-                    field++;
-                }
-                MSRoute* r = new MSRoute(id, edges, references,
-                                         RGBColor::DEFAULT_COLOR, std::vector<SUMOVehicleParameter::Stop>());
-                dictionary(id, r);
-            } else {
-                unsigned int data;
-                bis >> data; // first edge id
-                for (int numFollows = numEdges - 1; numFollows > 0; numFollows -= numFields) {
-                    bis >> data;
-                }
-            }
-        } else {
-            if (dictionary(id) == 0) {
-                MSEdgeVector edges;
-                edges.reserve(numEdges);
-                edges.push_back(MSEdge::dictionary(first));
-                numEdges--;
-                for (; numEdges > 0; numEdges--) {
-                    unsigned int edgeID;
-                    bis >> edgeID;
-                    assert(MSEdge::dictionary(edgeID) != 0);
-                    edges.push_back(MSEdge::dictionary(edgeID));
-                }
-                MSRoute* r = new MSRoute(id, edges, references,
-                                         RGBColor::DEFAULT_COLOR, std::vector<SUMOVehicleParameter::Stop>());
-                dictionary(id, r);
-            } else {
-                numEdges--;
-                for (; numEdges > 0; numEdges--) {
-                    unsigned int edgeID;
-                    bis >> edgeID;
-                }
-            }
+        MSEdgeVector edges;
+        FileHelpers::readEdgeVector(bis.getIStream(), edges, id);
+        if (dictionary(id) == 0) {
+            MSRoute* r = new MSRoute(id, edges, references,
+                                     0, std::vector<SUMOVehicleParameter::Stop>());
+            dictionary(id, r);
         }
     }
     unsigned int numRouteDists;
@@ -363,7 +267,7 @@ MSRoute::dict_loadState(BinaryInputDevice& bis) {
         unsigned int no;
         bis >> no;
         if (dictionary(id) == 0) {
-            RandomDistributor<const MSRoute*> *dist = new RandomDistributor<const MSRoute*>();
+            RandomDistributor<const MSRoute*>* dist = new RandomDistributor<const MSRoute*>(getMaxRouteDistSize(), &releaseRoute);
             for (; no > 0; no--) {
                 std::string routeID;
                 bis >> routeID;
@@ -383,6 +287,8 @@ MSRoute::dict_loadState(BinaryInputDevice& bis) {
             }
         }
     }
+    WRITE_MESSAGE("    " + toString(myDict.size()) + " routes");
+    WRITE_MESSAGE("    " + toString(myDistDict.size()) + " route distributions");
 }
 #endif
 
@@ -442,11 +348,14 @@ MSRoute::getDistanceBetween(SUMOReal fromPos, SUMOReal toPos, const MSEdge* from
 
 const RGBColor&
 MSRoute::getColor() const {
-    return myColor;
+    if (myColor == 0) {
+        return RGBColor::DEFAULT_COLOR;
+    }
+    return *myColor;
 }
 
 
-const std::vector<SUMOVehicleParameter::Stop> &
+const std::vector<SUMOVehicleParameter::Stop>&
 MSRoute::getStops() const {
     return myStops;
 }

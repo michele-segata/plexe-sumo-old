@@ -46,12 +46,12 @@
 class AGActivity {
 public:
     AGActivity(AGHousehold* hh, AGDataAndStatistics* das, std::list<AGTrip>* prevTrips, int prio) :
-        hh(hh),
-        ds(das),
+        myHousehold(hh),
+        myStatData(das),
+        myPreviousTrips(prevTrips),
         activityPriority(prio),
         genDone(false),
         timePerKm(das->speedTimePerKm),
-        previousTrips(prevTrips),
         carPreference(das->carPreference) {};
 
     /**
@@ -62,9 +62,8 @@ public:
     /**
      * main function called for trip generation
      * this function is overwritten in every child-class (every activity)
-     * @TO BE OVERWRITEN
      */
-    bool generateTrips();
+    virtual bool generateTrips() = 0;
 
     /**
      * determine the possible transportation means, what would be chosen:
@@ -104,20 +103,22 @@ public:
      */
     int randomTimeBetween(int begin, int end);
 
+    std::list<AGTrip>& getPartialActivityTrips();
 
-    std::list<AGTrip> partialActivityTrips;
-    std::list<AGTrip> *previousTrips;
-    bool genDone;
+protected:
+    AGHousehold* myHousehold;
+
+    AGDataAndStatistics* myStatData;
+
+    std::list<AGTrip>* myPreviousTrips;
+    std::list<AGTrip> myPartialActivityTrips;
     int activityPriority;
+    bool genDone;
     SUMOReal timePerKm;
     /**
      * rate of taking the car instead of the bus because of personal preference
      */
     SUMOReal carPreference;
-
-    AGHousehold* hh;
-
-    AGDataAndStatistics* ds;
 
 };
 

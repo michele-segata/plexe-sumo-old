@@ -48,6 +48,9 @@
 /* defines the precision of floats */
 #define SUMOReal double
 
+/* defines a long */
+#define SUMOLong long long
+
 /* defines the epsilon to use on position comparison */
 #define POSITION_EPS 0.1
 
@@ -62,7 +65,7 @@
 
 /* Version number of package */
 #ifndef HAVE_VERSION_H
-#define VERSION_STRING "0.15.0"
+#define VERSION_STRING "0.16.0"
 #endif
 
 /* Define if junction internal lanes should be used. */

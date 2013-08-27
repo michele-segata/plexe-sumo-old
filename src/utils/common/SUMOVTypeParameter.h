@@ -62,6 +62,7 @@ const int VTYPEPARS_WIDTH_SET = 2 << 9;
 const int VTYPEPARS_HEIGHT_SET = 2 << 10;
 const int VTYPEPARS_SHAPE_SET = 2 << 11;
 const int VTYPEPARS_OSGFILE_SET = 2 << 12;
+const int VTYPEPARS_IMGFILE_SET = 2 << 13;
 
 
 // ===========================================================================
@@ -77,7 +78,7 @@ public:
      *
      * Initialises the structure with default values
      */
-    SUMOVTypeParameter() ;
+    SUMOVTypeParameter();
 
 
     /** @brief Returns whether the given parameter was set
@@ -112,7 +113,7 @@ public:
     /// @brief The vehicle type's id
     std::string id;
 
-    /// @brief The physical vehicle length + the standing gap in m
+    /// @brief The physical vehicle length
     SUMOReal length;
     /// @brief This class' free space in front of the vehicle itself
     SUMOReal minGap;
@@ -144,8 +145,11 @@ public:
     /// @brief This class' shape
     SUMOVehicleShape shape;
 
-    /// @brief This class 3D model file
+    /// @brief 3D model file for this class
     std::string osgFile;
+
+    /// @brief Image file for this class
+    std::string imgFile;
     /// @}
 
 

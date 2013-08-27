@@ -41,11 +41,6 @@
 #include "GUILaneWrapper.h"
 #include "GUI_E2_ZS_CollectorOverLanes.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#include <GL/gl.h>      /* OpenGL header file */
-#endif // _WIN32
-
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
@@ -98,9 +93,6 @@ GUI_E2_ZS_CollectorOverLanes::MyWrapper::MyWrapper(
     : GUIDetectorWrapper("E2OverLanes detector", detector.getID()),
       myDetector(detector) {
     for (LaneDetMap::const_iterator i = detectors.begin(); i != detectors.end(); ++i) {
-        MSLane* l = (*i).first;
-        GUIEdge& edge = static_cast<GUIEdge&>(l->getEdge());
-        GUILaneWrapper& w = edge.getLaneGeometry(l);
         GUI_E2_ZS_Collector* c = static_cast<GUI_E2_ZS_Collector*>((*i).second);
         GUIDetectorWrapper* dw = c->buildDetectorGUIRepresentation();
         mySubWrappers.push_back(dw);

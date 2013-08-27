@@ -35,7 +35,6 @@
 #include <sstream>
 #include <string>
 #include <iomanip>
-#include <cassert>
 #include "OutputDevice.h"
 #include "OutputDevice_File.h"
 #include "OutputDevice_COUT.h"
@@ -82,7 +81,7 @@ OutputDevice::getDevice(const std::string& name,
         dev = OutputDevice_CERR::getDevice();
     } else if (FileHelpers::isSocket(internalName)) {
         try {
-            int port = TplConvert<char>::_2int(internalName.substr(internalName.find(":") + 1).c_str());
+            int port = TplConvert::_2int(internalName.substr(internalName.find(":") + 1).c_str());
             dev = new OutputDevice_Network(internalName.substr(0, internalName.find(":")), port);
         } catch (NumberFormatException&) {
             throw IOError("Given port number '" + internalName.substr(internalName.find(":") + 1) + "' is not numeric.");
@@ -90,7 +89,9 @@ OutputDevice::getDevice(const std::string& name,
             throw IOError("No port number given.");
         }
     } else {
-        dev = new OutputDevice_File(FileHelpers::checkForRelativity(internalName, base), internalName.find(".sbx") != std::string::npos);
+        const size_t len = internalName.length();
+        dev = new OutputDevice_File(FileHelpers::checkForRelativity(internalName, base),
+                                    len > 4 && internalName.substr(len - 4) == ".sbx");
     }
     dev->setPrecision();
     dev->getOStream() << std::setiosflags(std::ios::fixed);
@@ -196,37 +197,37 @@ OutputDevice::setPrecision(unsigned int precision) {
 bool
 OutputDevice::writeXMLHeader(const std::string& rootElement, const std::string xmlParams,
                              const std::string& attrs, const std::string& comment) {
-	return myFormatter->writeXMLHeader(getOStream(), rootElement, xmlParams, attrs, comment);
+    return myFormatter->writeXMLHeader(getOStream(), rootElement, xmlParams, attrs, comment);
 }
 
 
 OutputDevice&
 OutputDevice::openTag(const std::string& xmlElement) {
-	myFormatter->openTag(getOStream(), xmlElement);
+    myFormatter->openTag(getOStream(), xmlElement);
     return *this;
 }
 
 
 OutputDevice&
 OutputDevice::openTag(const SumoXMLTag& xmlElement) {
-	myFormatter->openTag(getOStream(), xmlElement);
+    myFormatter->openTag(getOStream(), xmlElement);
     return *this;
 }
 
 
 void
 OutputDevice::closeOpener() {
-	myFormatter->closeOpener(getOStream());
+    myFormatter->closeOpener(getOStream());
 }
 
 
 bool
 OutputDevice::closeTag(bool abbreviated) {
-	if (myFormatter->closeTag(getOStream(), abbreviated)) {
-		postWriteHook();
-		return true;
-	}
-	return false;
+    if (myFormatter->closeTag(getOStream(), abbreviated)) {
+        postWriteHook();
+        return true;
+    }
+    return false;
 }
 
 
@@ -245,9 +246,9 @@ OutputDevice::inform(const std::string& msg, const char progress) {
 }
 
 
-OutputDevice& 
+OutputDevice&
 OutputDevice::writeAttr(std::string attr, std::string val) {
-	myFormatter->writeAttr(getOStream(), attr, val);
+    myFormatter->writeAttr(getOStream(), attr, val);
     return *this;
 }
 

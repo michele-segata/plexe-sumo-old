@@ -35,6 +35,7 @@
 #include <fx.h>
 #include <vector>
 #include <string>
+#include <map>
 #include <utils/common/SUMOTime.h>
 #include <utils/foxtools/MFXMutex.h>
 
@@ -54,8 +55,8 @@ public:
     void removeChild(FXMDIChild* child);
     void removeChild(FXMainWindow*  child);
 
-    std::vector<std::string> getViewIDs() const ;
-    FXMDIChild* getViewByID(const std::string& id) const ;
+    std::vector<std::string> getViewIDs() const;
+    FXMDIChild* getViewByID(const std::string& id) const;
 
     void updateChildren();
 
@@ -81,6 +82,8 @@ public:
     bool listInternal() const {
         return myListInternal;
     }
+
+    static GUIMainWindow* getInstance();
 
 protected:
     std::vector<FXMDIChild*> mySubWindows;
@@ -112,6 +115,9 @@ protected:
 
     /// information whether the locator should list internal structures
     bool myListInternal;
+
+    /// the singleton window instance
+    static GUIMainWindow* myInstance;
 
 protected:
     GUIMainWindow() { }

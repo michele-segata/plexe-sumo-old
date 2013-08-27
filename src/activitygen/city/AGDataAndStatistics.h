@@ -111,7 +111,7 @@ public:
     //households far from public transports
     int hhFarFromPT;
 
-    static AGDataAndStatistics& getDataAndStatistics() ;
+    static AGDataAndStatistics& getDataAndStatistics();
 
     /**
      * function returning a random number between the two given numbers: [n;m[ (m cannot occur)
@@ -136,7 +136,7 @@ public:
     int getPoissonsNumberOfChildren(SUMOReal mean);
     /**
      * these functions return the number of people having more (or less) than the given age
-     * (inclusive for getPeopleOlderThan ; exclusive for getPeopleYoungerThan)
+     * (inclusive for getPeopleOlderThan; exclusive for getPeopleYoungerThan)
      * getPeopleOlderThan(n) + getPeopleYoungerThan(n) = inhabitants
      * these first two function are based on the third one.
      */
@@ -183,7 +183,7 @@ private:
     int factorial(int n);
 
     //function normalizing the map's probabilities: Sum(floats) = 1
-    void normalizeMapProb(std::map<int, SUMOReal> *myMap);
+    void normalizeMapProb(std::map<int, SUMOReal>* myMap);
 };
 
 #endif

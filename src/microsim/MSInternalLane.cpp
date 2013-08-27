@@ -62,7 +62,7 @@ MSInternalLane::MSInternalLane(const std::string& id, SUMOReal maxSpeed,
                                const PositionVector& shape, SUMOReal width,
                                SVCPermissions permissions):
     MSLane(id, maxSpeed, length, edge, numericalID, shape, width, permissions),
-    myFoesIndex(-1) 
+    myFoesIndex(-1)
 {}
 
 
@@ -74,12 +74,6 @@ MSInternalLane::setParentJunctionInformation(MSLogicJunction::InnerState* const 
         unsigned int foesIdx) {
     myFoesCont = foescont;
     myFoesIndex = (int) foesIdx;
-}
-
-
-void
-MSInternalLane::setPassPosition(SUMOReal passPos) {
-    myPassPosition = passPos;
 }
 
 

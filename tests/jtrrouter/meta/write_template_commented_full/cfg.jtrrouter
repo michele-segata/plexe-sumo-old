@@ -34,7 +34,7 @@
         <flow-files value="" synonymes="f flow-definition flows" type="FILE"/>
 
         <!-- Read turning ratios from FILE(s) -->
-        <turn-ratio-files value="" synonymes="t turn-definitions turns" type="FILE"/>
+        <turn-ratio-files value="" synonymes="t turns" type="FILE"/>
 
     </input>
 
@@ -88,7 +88,7 @@
         <accept-all-destinations value="false" synonymes="A" type="BOOL"/>
 
         <!-- Ignore road restrictions based on vehicle class -->
-        <ignore-vclasses value="false" synonymes="i ignore-classes" type="BOOL"/>
+        <ignore-vclasses value="false" synonymes="i" type="BOOL"/>
 
         <!-- Allow to re-use a road -->
         <allow-loops value="false" type="BOOL"/>
@@ -140,6 +140,9 @@
 
         <!-- Prints the current version -->
         <version value="false" synonymes="V" type="BOOL"/>
+
+        <!-- Enable schema validation of XML inputs -->
+        <xml-validation value="false" synonymes="X" type="BOOL"/>
 
         <!-- Disables output of warnings -->
         <no-warnings value="false" synonymes="W suppress-warnings" type="BOOL"/>

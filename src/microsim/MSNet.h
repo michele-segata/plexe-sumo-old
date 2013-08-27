@@ -52,6 +52,10 @@
 #include <microsim/trigger/MSBusStop.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/NamedObjectCont.h>
+#include <utils/common/SUMOAbstractRouter.h>
+#include <utils/common/DijkstraRouterTT.h>
+#include <utils/common/DijkstraRouterEffort.h>
+#include <utils/common/AStarRouter.h>
 
 // ===========================================================================
 // class declarations
@@ -110,7 +114,7 @@ public:
      * @return Pointer to the unique MSNet-instance
      * @exception ProcessError If a network was not yet constructed
      */
-    static MSNet* getInstance() ;
+    static MSNet* getInstance();
 
 
     /** @brief Constructor
@@ -129,11 +133,11 @@ public:
      */
     MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
           MSEventControl* endOfTimestepEvents, MSEventControl* insertionEvents,
-          ShapeContainer* shapeCont = 0) ;
+          ShapeContainer* shapeCont = 0);
 
 
     /// @brief Destructor
-    virtual ~MSNet() ;
+    virtual ~MSNet();
 
 
     /** @brief Closes the network's building process
@@ -149,7 +153,7 @@ public:
      */
     void closeBuilding(MSEdgeControl* edges, MSJunctionControl* junctions,
                        MSRouteLoaderControl* routeLoaders, MSTLLogicControl* tlc,
-                       std::vector<SUMOTime> stateDumpTimes, std::vector<std::string> stateDumpFiles) ;
+                       std::vector<SUMOTime> stateDumpTimes, std::vector<std::string> stateDumpFiles);
 
 
     /** @brief Clears all dictionaries
@@ -189,13 +193,13 @@ public:
      * @return The current simulation state
      * @see SimulationState
      */
-    SimulationState simulationState(SUMOTime stopTime) const ;
+    SimulationState simulationState(SUMOTime stopTime) const;
 
 
     /** @brief Returns the message to show if a certain state occurs
      * @return Readable description of the state
      */
-    static std::string getStateMessage(SimulationState state) ;
+    static std::string getStateMessage(SimulationState state);
 
 
     /** @brief Returns the current simulation step (in s)
@@ -204,7 +208,7 @@ public:
     SUMOTime getCurrentTimeStep() const;
 
 
-    /** @brief Write netstate, emission and detector output
+    /** @brief Write netstate, summary and detector output
      * @todo Which exceptions may occur?
      */
     void writeOutput();
@@ -213,7 +217,7 @@ public:
     /** @brief Returns whether duration shall be logged
      * @return Whether duration shall be logged
      */
-    bool logSimulationDuration() const ;
+    bool logSimulationDuration() const;
 
 
     /// @name Output during the simulation
@@ -223,19 +227,19 @@ public:
      *
      * Called on the begin of a simulation step
      */
-    void preSimStepOutput() const ;
+    void preSimStepOutput() const;
 
 
     /** @brief Prints the statistics of the step at its end
      *
      * Called on the end of a simulation step
      */
-    void postSimStepOutput() const ;
+    void postSimStepOutput() const;
     //}
 
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /// @name State I/O (mesosim only)
     /// @{
 
@@ -243,14 +247,14 @@ public:
      *
      * @param[in] os The stream to write the state into (binary)
      */
-    void saveState(std::ostream& os) ;
+    void saveState(std::ostream& os);
 
 
     /** @brief Loads the network state
      *
      * @param[in] bis The input to read the state from (binary)
      */
-    unsigned int loadState(BinaryInputDevice& bis) ;
+    SUMOTime loadState(BinaryInputDevice& bis);
     /// @}
 #endif
 
@@ -275,7 +279,7 @@ public:
      * @see MSPersonControl
      * @see myPersonControl
      */
-    MSPersonControl& getPersonControl() ;
+    virtual MSPersonControl& getPersonControl();
 
 
     /** @brief Returns the edge control
@@ -373,7 +377,7 @@ public:
      * If the net does not have such a container, it is built.
      * @return The net's knowledge about edge weights
      */
-    MSEdgeWeightsStorage& getWeightsStorage() ;
+    MSEdgeWeightsStorage& getWeightsStorage();
     /// @}
 
 
@@ -458,13 +462,13 @@ public:
     /** @brief Adds a vehicle states listener
      * @param[in] listener The listener to add
      */
-    void addVehicleStateListener(VehicleStateListener* listener) ;
+    void addVehicleStateListener(VehicleStateListener* listener);
 
 
     /** @brief Removes a vehicle states listener
      * @param[in] listener The listener to remove
      */
-    void removeVehicleStateListener(VehicleStateListener* listener) ;
+    void removeVehicleStateListener(VehicleStateListener* listener);
 
 
     /** @brief Informs all added listeners about a vehicle's state change
@@ -472,64 +476,37 @@ public:
      * @param[in] to The state the vehicle has changed to
      * @see VehicleStateListener:vehicleStateChanged
      */
-    void informVehicleStateListener(const SUMOVehicle* const vehicle, VehicleState to) ;
+    void informVehicleStateListener(const SUMOVehicle* const vehicle, VehicleState to);
     /// @}
 
 
-    /** @class EdgeWeightsProxi
-     * @brief A proxi for edge weights known by a vehicle/known globally
-     *
-     * Both getter methods try to return the vehicle's knowledge about the edge/time, first.
-     *  If not existing,they try to retrieve it from the global knowledge. If not existing,
-     *  the travel time retrieval method returns the edges' length divided by the maximum speed
-     *  (information from the first lane is used). The default value for the effort is 0.
-     * @see MSEdgeWeightsStorage
+    /** @brief Returns the travel time to pass an edge
+     * @param[in] e The edge for which the travel time to be passed shall be returned
+     * @param[in] v The vehicle that is rerouted
+     * @param[in] t The time for which the travel time shall be returned [s]
+     * @return The travel time for an edge
+     * @see DijkstraRouterTT_ByProxi
      */
-    class EdgeWeightsProxi {
-    public:
-        /** @brief Constructor
-         * @param[in] vehKnowledge The vehicle's edge weights knowledge
-         * @param[in] netKnowledge The global edge weights knowledge
-         */
-        EdgeWeightsProxi(const MSEdgeWeightsStorage& vehKnowledge,
-                         const MSEdgeWeightsStorage& netKnowledge)
-            : myVehicleKnowledge(vehKnowledge), myNetKnowledge(netKnowledge) {}
+    static SUMOReal getTravelTime(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t);
 
 
-        /// @brief Destructor
-        ~EdgeWeightsProxi() {}
+    /** @brief Returns the effort to pass an edge
+     * @param[in] e The edge for which the effort to be passed shall be returned
+     * @param[in] v The vehicle that is rerouted
+     * @param[in] t The time for which the effort shall be returned [s]
+     * @return The effort (abstract) for an edge
+     * @see DijkstraRouterTT_ByProxi
+     */
+    static SUMOReal getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t);
 
 
-        /** @brief Returns the travel time to pass an edge
-         * @param[in] e The edge for which the travel time to be passed shall be returned
-         * @param[in] v The vehicle that is rerouted
-         * @param[in] t The time for which the travel time shall be returned [s]
-         * @return The travel time for an edge
-         * @see DijkstraRouterTT_ByProxi
-         */
-        SUMOReal getTravelTime(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t) const;
-
-
-        /** @brief Returns the effort to pass an edge
-         * @param[in] e The edge for which the effort to be passed shall be returned
-         * @param[in] v The vehicle that is rerouted
-         * @param[in] t The time for which the effort shall be returned [s]
-         * @return The effort (abstract) for an edge
-         * @see DijkstraRouterTT_ByProxi
-         */
-        SUMOReal getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t) const;
-
-    private:
-        EdgeWeightsProxi& operator=(const EdgeWeightsProxi&); // just to avoid a compiler warning
-
-    private:
-        /// @brief The vehicle's knownledge
-        const MSEdgeWeightsStorage& myVehicleKnowledge;
-
-        /// @brief The global knownledge
-        const MSEdgeWeightsStorage& myNetKnowledge;
-
-    };
+    /* @brief get the router, initialize on first use
+     * @param[in] prohibited The vector of forbidden edges (optional)
+     */
+    SUMOAbstractRouter<MSEdge, SUMOVehicle>& getRouterTT(
+        const std::vector<MSEdge*>& prohibited = std::vector<MSEdge*>()) const;
+    SUMOAbstractRouter<MSEdge, SUMOVehicle>& getRouterEffort(
+        const std::vector<MSEdge*>& prohibited = std::vector<MSEdge*>()) const;
 
 
 #ifdef _MESSAGES
@@ -618,7 +595,7 @@ protected:
     long mySimBeginMillis;
 
     /// @brief The overall number of vehicle movements
-    long myVehiclesMoved;
+    SUMOLong myVehiclesMoved;
     //}
 
 
@@ -651,6 +628,15 @@ protected:
     /// @brief List of message emitters
     std::vector<MSMessageEmitter*> msgEmitVec;
 #endif
+
+    /* @brief The router instance for routing by trigger and by traci
+     * @note MSDevice_Routing has its own instance since it uses a different weight function
+     * @note we provide one member for every switchable router type
+     * because the class structure makes it inconvenient to use a superclass*/
+    mutable bool myRouterTTInitialized;
+    mutable DijkstraRouterTT_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle> >* myRouterTTDijkstra;
+    mutable AStarRouterTT_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle> >* myRouterTTAStar;
+    mutable DijkstraRouterEffort_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle> >* myRouterEffort;
 
 
 private:

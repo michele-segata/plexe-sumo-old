@@ -1,8 +1,8 @@
-SUMO netgen Version dev-SVN-r12007
+SUMO netgenerate Version dev-SVN-r13111
  Copyright (C) 2001-2012 DLR and contributors; http://sumo.sourceforge.net
 Road network generator for the microscopic road traffic simulation SUMO.
 
-Usage: netgen [OPTION]*
+Usage: netgenerate [OPTION]*
  Either "--grid", "--spider" or "--rand" must be supplied.
   In dependance to these switches other options are used.
  
@@ -70,8 +70,13 @@ Output Options:
                                         using MATsim format.
   --opendrive-output FILE             The generated net will be written to FILE
                                         using openDRIVE format.
+  --dlr-navteq-output FILE            The generated net will be written to
+                                        dlr-navteq files with the given PREFIX.
   --output.street-names               Street names will be included in the
                                         output (if available).
+  --output.original-names             Writes original names, if given, as
+                                        parameter.
+  --street-sign-output FILE           Writes street signs as POIs to FILE.
 
 TLS Building Options:
   --tls.set STR                       Interprets STR as list of junctions to be
@@ -92,7 +97,8 @@ TLS Building Options:
                                         quarter-phase
 
 Edge Removal Options:
-  --keep-edges.min-speed FLOAT        Only keep edges with speed > FLOAT
+  --keep-edges.min-speed FLOAT        Only keep edges with speed in
+                                        meters/second > FLOAT
   --remove-edges.explicit STR         Remove edges in STR
   --keep-edges.explicit STR           Only keep edges in STR
   --keep-edges.input-file FILE        Only keep edges in FILE
@@ -122,7 +128,9 @@ Processing Options:
   --junctions.join                    Joins junctions that are close to each
                                         other (recommended for OSM import)
   --junctions.join-dist FLOAT         Determines the maximal distance for
-                                        joining junctions (defaults to 15)
+                                        joining junctions (defaults to 10)
+  --tls.join-dist FLOAT               Determines the maximal distance for
+                                        joining traffic lights (defaults to 20)
 
 Building Defaults Options:
   -L, --default.lanenumber INT        The default number of lanes in an edge
@@ -135,6 +143,7 @@ Report Options:
   -p, --print-options                 Prints option values before processing
   -?, --help                          Prints this screen
   -V, --version                       Prints the current version
+  -X, --xml-validation                Enable schema validation of XML inputs
   -W, --no-warnings                   Disables output of warnings
   -l, --log FILE                      Writes all messages to FILE (implies
                                         verbose)
@@ -150,13 +159,13 @@ Random Number Options:
 
 
 Examples:
-  netgen -c <CONFIGURATION>
+  netgenerate -c <CONFIGURATION>
     create net from given configuration
-  netgen --grid [grid-network options] -o <OUTPUTFILE>
+  netgenerate --grid [grid-network options] -o <OUTPUTFILE>
     create grid net
-  netgen --spider [spider-network options] -o <OUTPUTFILE>
+  netgenerate --spider [spider-network options] -o <OUTPUTFILE>
     create spider net
-  netgen --rand [random-network options] -o <OUTPUTFILE>
+  netgenerate --rand [random-network options] -o <OUTPUTFILE>
     create random net
 
 Report bugs at <http://sourceforge.net/apps/trac/sumo/>.

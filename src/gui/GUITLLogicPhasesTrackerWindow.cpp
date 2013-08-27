@@ -30,7 +30,6 @@
 #include <config.h>
 #endif
 
-#include <cassert>
 #include <vector>
 #include <iostream>
 #include <utils/gui/windows/GUIMainWindow.h>
@@ -43,12 +42,7 @@
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/images/GUIIconSubSys.h>
 #include <foreign/polyfonts/polyfonts.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
+#include <utils/gui/globjects/GLIncludes.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -159,7 +153,7 @@ FXIMPLEMENT(GUITLLogicPhasesTrackerWindow, FXMainWindow, GUITLLogicPhasesTracker
 GUITLLogicPhasesTrackerWindow::GUITLLogicPhasesTrackerWindow(
     GUIMainWindow& app,
     MSTrafficLightLogic& logic, GUITrafficLightLogicWrapper& wrapper,
-    ValueSource<std::pair<SUMOTime, MSPhaseDefinition> > *src)
+    ValueSource<std::pair<SUMOTime, MSPhaseDefinition> >* src)
     : FXMainWindow(app.getApp(), "TLS-Tracker", NULL, NULL, DECOR_ALL,
                    20, 20, 300, 200),
     myApplication(&app), myTLLogic(&logic), myAmInTrackingMode(true) {
@@ -344,7 +338,7 @@ GUITLLogicPhasesTrackerWindow::drawValues(GUITLLogicPhasesTrackerPanel& caller) 
     // disable value addition while drawing
     myLock.lock();
     // determine the initial offset
-    SUMOReal x = ((SUMOReal) 31. / width) ;
+    SUMOReal x = ((SUMOReal) 31. / width);
     SUMOReal ta = (SUMOReal) leftOffset / width;
     ta *= (SUMOReal)(((width - 31.0) / ((SUMOReal)(myLastTime - myBeginTime))));
     x += ta;

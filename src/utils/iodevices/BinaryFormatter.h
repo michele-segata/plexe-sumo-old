@@ -30,7 +30,13 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_VERSION_H
+#include <version.h>
+#endif
+
+#include <vector>
 #include <utils/common/FileHelpers.h>
+#include <utils/xml/SUMOXMLDefinitions.h>
 #include "OutputFormatter.h"
 
 
@@ -40,6 +46,8 @@
 class Position;
 class PositionVector;
 class Boundary;
+class RGBColor;
+class ROEdge;
 
 
 // ===========================================================================
@@ -55,7 +63,7 @@ class BinaryFormatter : public OutputFormatter {
 public:
     /// @brief data types in binary output
     enum DataType {
-        /// @brief 
+        /// @brief
         BF_BYTE,
         /// @brief
         BF_INTEGER,
@@ -80,11 +88,21 @@ public:
         /// @brief
         BF_POSITION_3D,
         /// @brief
+        BF_BOUNDARY,
+        /// @brief
         BF_COLOR,
         /// @brief
         BF_NODE_TYPE,
         /// @brief
-        BF_EDGE_FUNCTION
+        BF_EDGE_FUNCTION,
+        /// @brief
+        BF_ROUTE,
+        /// @brief
+        BF_SCALED2INT,
+        /// @brief
+        BF_SCALED2INT_POSITION_2D,
+        /// @brief
+        BF_SCALED2INT_POSITION_3D
     };
 
     /// @brief Constructor
@@ -112,6 +130,18 @@ public:
                         const std::string xmlParams = "",
                         const std::string& attrs = "",
                         const std::string& comment = "");
+
+
+    /** @brief Writes a header with optional edge list and connections.
+     *
+     * If something has been written (myXMLStack is not empty), nothing
+     *  is written and false returned. This header is only used by the binary formatter.
+     *
+     * @param[in] into The output stream to use
+     * @param[in] rootElement The root element to use
+     */
+    template <typename E>
+    bool writeHeader(std::ostream& into, const SumoXMLTag& rootElement);
 
 
     /** @brief Opens an XML tag
@@ -153,7 +183,7 @@ public:
      * @returns Whether a further element existed in the stack and could be closed
      * @todo it is not verified that the topmost element was closed
      */
-    bool closeTag(std::ostream& into, bool abbreviated=false);
+    bool closeTag(std::ostream& into, bool abbreviated = false);
 
 
     /** @brief writes an arbitrary attribute
@@ -171,8 +201,17 @@ public:
      * @param[in] attr The attribute (name)
      * @param[in] val The attribute value
      */
-    template <typename T>
-    static void writeAttr(std::ostream& into, const SumoXMLAttr attr, const T& val);
+    template <typename T, typename S>
+    static void writeAttr(S& into, const SumoXMLAttr attr, const T& val);
+
+
+    /** @brief writes a named boolean attribute
+     *
+     * @param[in] into The output stream to use
+     * @param[in] attr The attribute (name)
+     * @param[in] val The attribute value
+     */
+    static void writeAttr(std::ostream& into, const SumoXMLAttr attr, const bool& val);
 
 
     /** @brief writes a named float attribute
@@ -191,6 +230,15 @@ public:
      * @param[in] val The attribute value
      */
     static void writeAttr(std::ostream& into, const SumoXMLAttr attr, const int& val);
+
+
+    /** @brief writes a named unsigned integer attribute
+     *
+     * @param[in] into The output stream to use
+     * @param[in] attr The attribute (name)
+     * @param[in] val The attribute value
+     */
+    static void writeAttr(std::ostream& into, const SumoXMLAttr attr, const unsigned int& val);
 
 
     /** @brief writes a node type attribute
@@ -238,6 +286,25 @@ public:
     static void writeAttr(std::ostream& into, const SumoXMLAttr attr, const Boundary& val);
 
 
+    /** @brief writes a color attribute
+     *
+     * @param[in] into The output stream to use
+     * @param[in] attr The attribute (name)
+     * @param[in] val The attribute value
+     */
+    static void writeAttr(std::ostream& into, const SumoXMLAttr attr, const RGBColor& val);
+
+
+    /** @brief writes an edge vector attribute
+     *
+     * @param[in] into The output stream to use
+     * @param[in] attr The attribute (name)
+     * @param[in] val The attribute value
+     */
+    template <typename S>
+    static void writeAttr(S& into, const SumoXMLAttr attr, const std::vector<const ROEdge*>& val);
+
+
 private:
     /** @brief writes the header for an arbitrary attribute
      *
@@ -247,7 +314,7 @@ private:
      */
     static inline void writeAttrHeader(std::ostream& into, const SumoXMLAttr attr, const DataType type) {
         FileHelpers::writeByte(into, static_cast<unsigned char>(BF_XML_ATTRIBUTE));
-        FileHelpers::writeInt(into, attr);
+        FileHelpers::writeByte(into, static_cast<unsigned char>(attr));
         FileHelpers::writeByte(into, static_cast<unsigned char>(type));
     }
 
@@ -257,7 +324,15 @@ private:
      * @param[in] into The output stream to use
      * @param[in] list the list to write
      */
-    void writeStringList(std::ostream& into, const std::vector<std::string>& list);
+    static void writeStringList(std::ostream& into, const std::vector<std::string>& list);
+
+
+    /** @brief writes a position
+     *
+     * @param[in] into The output stream to use
+     * @param[in] val the position to write
+     */
+    static void writePosition(std::ostream& into, const Position& val);
 
 
 private:
@@ -268,10 +343,54 @@ private:
 };
 
 
-template <typename T>
-void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const T& val) {
+template <typename E>
+bool BinaryFormatter::writeHeader(std::ostream& into, const SumoXMLTag& rootElement) {
+    if (myXMLStack.empty()) {
+        FileHelpers::writeByte(into, BF_BYTE);
+        FileHelpers::writeByte(into, 1);
+        FileHelpers::writeByte(into, BF_STRING);
+        FileHelpers::writeString(into, VERSION_STRING);
+        writeStringList(into, SUMOXMLDefinitions::Tags.getStrings());
+        writeStringList(into, SUMOXMLDefinitions::Attrs.getStrings());
+        writeStringList(into, SUMOXMLDefinitions::NodeTypes.getStrings());
+        writeStringList(into, SUMOXMLDefinitions::EdgeFunctions.getStrings());
+
+        const unsigned int numEdges = (const unsigned int)E::dictSize();
+        FileHelpers::writeByte(into, BF_LIST);
+        FileHelpers::writeInt(into, numEdges);
+        for (unsigned int i = 0; i < numEdges; i++) {
+            FileHelpers::writeByte(into, BF_STRING);
+            FileHelpers::writeString(into, E::dictionary(i)->getID());
+        }
+        FileHelpers::writeByte(into, BF_LIST);
+        FileHelpers::writeInt(into, numEdges);
+        for (unsigned int i = 0; i < numEdges; i++) {
+            E* e = E::dictionary(i);
+            FileHelpers::writeByte(into, BF_LIST);
+            FileHelpers::writeInt(into, e->getNoFollowing());
+            for (unsigned int j = 0; j < e->getNoFollowing(); j++) {
+                FileHelpers::writeByte(into, BF_INTEGER);
+                FileHelpers::writeInt(into, e->getFollower(j)->getNumericalID());
+            }
+        }
+        openTag(into, rootElement);
+        return true;
+    }
+    return false;
+}
+
+
+template <typename T, typename S>
+void BinaryFormatter::writeAttr(S& into, const SumoXMLAttr attr, const T& val) {
     BinaryFormatter::writeAttrHeader(into, attr, BF_STRING);
     FileHelpers::writeString(into, toString(val, into.precision()));
+}
+
+
+template <typename S>
+void BinaryFormatter::writeAttr(S& into, const SumoXMLAttr attr, const std::vector<const ROEdge*>& val) {
+    BinaryFormatter::writeAttrHeader(into, attr, BF_ROUTE);
+    FileHelpers::writeEdgeVector(into, val);
 }
 
 

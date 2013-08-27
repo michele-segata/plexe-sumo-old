@@ -39,7 +39,7 @@
 // ===========================================================================
 // class declarations
 // ===========================================================================
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 class MELoop;
 #endif
 
@@ -72,12 +72,15 @@ public:
     /** information whether the routes shall be checked for connectivity */
     static bool gCheckRoutes;
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /// Information whether a state has been loaded
     static bool gStateLoaded;
 
     /** Information whether mesosim shall be used */
     static bool gUseMesoSim;
+
+    /** Information whether limited junction control shall be used */
+    static bool gMesoLimitedJunctionControl;
 
     /// mesoscopic simulation infrastructure
     static MELoop* gMesoNet;
@@ -85,6 +88,12 @@ public:
     /** Information whether mesosim shall be used = constant false */
     const static bool gUseMesoSim;
 
+#endif
+
+#ifdef _DEBUG
+    /// @brief global utility flags for debugging
+    static bool gDebugFlag1;
+    static bool gDebugFlag2;
 #endif
 
 };

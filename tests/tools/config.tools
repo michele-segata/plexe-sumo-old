@@ -7,6 +7,7 @@ copy_test_path:input_net.net.xml
 copy_test_path:input_trips.trips.xml
 copy_test_path:input_routes.rou.xml
 copy_test_path:input_flows.flows.xml
+copy_test_path:input_detectors.det.xml
 copy_test_path:tracefile.xml
 copy_test_path:input_weights.dump.xml
 copy_test_path:e2_output.xml
@@ -15,6 +16,7 @@ copy_test_path:lsa_def.csv
 copy_test_path:lsa_def2.csv
 copy_test_path:vehroutes.xml
 copy_test_path:tripinfos.xml
+copy_test_path:input_flows.txt
 copy_test_path:map.txt
 copy_test_path:routes.rou.alt.xml
 copy_test_path:input_measurements.xml
@@ -36,11 +38,13 @@ copy_test_path:source.nod.xml
 copy_test_path:source.edg.xml
 copy_test_path:source.con.xml
 copy_test_path:source.tll.xml
+copy_test_path:source.xml
 copy_test_path:dest.net.xml
 copy_test_path:dest.nod.xml
 copy_test_path:dest.edg.xml
 copy_test_path:dest.con.xml
 copy_test_path:dest.tll.xml
+copy_test_path:dest.xml
 
 [collate_file]
 detectors:e1.add.xml
@@ -66,18 +70,21 @@ diff_nod:diff.nod.xml
 diff_edg:diff.edg.xml
 diff_con:diff.con.xml
 diff_tll:diff.tll.xml
+diff_xml:diff.xml
 
 [run_dependent_text]
 output:Begin time
 output:End time
 output:uration:
 output:<!-- generated on
+output:.* files checked{REPLACE <number> files checked}
 trips:<!-- generated on
 pois:<!--
 errors:Execution of .*duarouter.*'{REPLACE Execution of <path-to>duarouter'}
 errors:Leaked object at 
 errors:*** 9 leaks found
 errors:delete: freed
+errors:Traceback{->}XMLSyntaxError
 
 [unordered_text]
 errors:ERROR:SCHEMA

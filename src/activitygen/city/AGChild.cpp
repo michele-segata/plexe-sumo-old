@@ -61,7 +61,7 @@ AGChild::setSchool(AGSchool* school) {
 }
 
 bool
-AGChild::alocateASchool(std::list<AGSchool> *schools, AGPosition housePos) {
+AGChild::allocateASchool(std::list<AGSchool>* schools, AGPosition housePos) {
     SUMOReal minDist = std::numeric_limits<SUMOReal>::infinity();
     AGSchool* sch = NULL;
     if (schools->size() == 0) {
@@ -69,7 +69,7 @@ AGChild::alocateASchool(std::list<AGSchool> *schools, AGPosition housePos) {
     }
     std::list<AGSchool>::iterator it;
 
-    for (it = schools->begin() ; it != schools->end() ; ++it) {
+    for (it = schools->begin(); it != schools->end(); ++it) {
         if (it->acceptThisAge(age) && it->getPlaces() > 0 && housePos.distanceTo(it->getPosition()) < minDist) {
             minDist = housePos.distanceTo(it->getPosition());
             sch = &(*it);
@@ -89,25 +89,22 @@ AGChild::leaveSchool() {
 }
 
 bool
-AGChild::haveASchool() {
-    if (school == NULL) {
-        return false;
-    }
-    return true;
+AGChild::haveASchool() const {
+    return (school != NULL);
 }
 
 AGPosition
-AGChild::getSchoolLocation() {
+AGChild::getSchoolLocation() const {
     return school->getPosition();
 }
 
 int
-AGChild::getSchoolClosing() {
+AGChild::getSchoolClosing() const {
     return school->getClosingHour();
 }
 
 int
-AGChild::getSchoolOpeining() {
+AGChild::getSchoolOpening() const {
     return school->getOpeningHour();
 }
 

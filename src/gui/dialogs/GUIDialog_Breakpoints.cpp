@@ -154,7 +154,7 @@ GUIDialog_Breakpoints::rebuildList() {
 
 long
 GUIDialog_Breakpoints::onCmdLoad(FXObject*, FXSelector, void*) {
-    FXFileDialog opendialog(this, "Save Breakpoints");
+    FXFileDialog opendialog(this, "Load Breakpoints");
     opendialog.setIcon(GUIIconSubSys::getIcon(ICON_EMPTY));
     opendialog.setSelectMode(SELECTFILE_ANY);
     opendialog.setPatternList("*.txt");
@@ -168,11 +168,16 @@ GUIDialog_Breakpoints::onCmdLoad(FXObject*, FXSelector, void*) {
         while (strm.good()) {
             std::string val;
             strm >> val;
+            if (val.length() == 0) {
+                continue;
+            }
             try {
                 SUMOTime value = string2time(val);
                 GUIGlobals::gBreakpoints.push_back(value);
             } catch (NumberFormatException&) {
                 WRITE_ERROR(" A breakpoint-value must be an int, is:" + val);
+            }  catch (ProcessError&) {
+                WRITE_ERROR(" Could not decode breakpoint '" + val + "'");
             } catch (EmptyData&) {}
         }
         rebuildList();
@@ -193,7 +198,7 @@ GUIDialog_Breakpoints::onCmdSave(FXObject*, FXSelector, void*) {
         dev << content;
         dev.close();
     } catch (IOError& e) {
-        FXMessageBox::error(this, MBOX_OK, "Storing failed!", e.what());
+        FXMessageBox::error(this, MBOX_OK, "Storing failed!", "%s", e.what());
     }
     return 1;
 }
@@ -248,7 +253,7 @@ GUIDialog_Breakpoints::onCmdEditTable(FXObject*, FXSelector, void* data) {
                 GUIGlobals::gBreakpoints[row] = string2time(value);
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be an int, is:" + value;
-                FXMessageBox::error(this, MBOX_OK, "Number format error", msg.c_str());
+                FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
             }
             break;
         default:

@@ -55,10 +55,22 @@ public:
 
     static void cleanup();
 
-    virtual void setCosts(RORoute* route, const SUMOReal costs, const bool isActive=false) const = 0;
+    virtual void setCosts(RORoute* route, const SUMOReal costs, const bool isActive = false) const = 0;
 
     /** @brief calculate the probabilities in the logit model */
     virtual void calculateProbabilities(const ROVehicle* const veh, std::vector<RORoute*> alternatives) = 0;
+
+    unsigned int getMaxRouteNumber() const {
+        return myMaxRouteNumber;
+    }
+
+    bool keepRoutes() const {
+        return myKeepRoutes;
+    }
+
+    bool skipRouteCalculation() const {
+        return mySkipRouteCalculation;
+    }
 
 protected:
     /// @brief Constructor
@@ -69,6 +81,15 @@ protected:
 
 private:
     static ROCostCalculator* myInstance;
+
+    /// @brief The maximum route alternatives number
+    unsigned int myMaxRouteNumber;
+
+    /// @brief Information whether all routes should be saved
+    bool myKeepRoutes;
+
+    /// @brief Information whether new routes should be calculated
+    bool mySkipRouteCalculation;
 
 };
 
@@ -85,7 +106,7 @@ public:
     /// Destructor
     virtual ~ROGawronCalculator();
 
-    void setCosts(RORoute* route, const SUMOReal costs, const bool isActive=false) const;
+    void setCosts(RORoute* route, const SUMOReal costs, const bool isActive = false) const;
 
     /** @brief calculate the probabilities */
     void calculateProbabilities(const ROVehicle* const veh, std::vector<RORoute*> alternatives);
@@ -106,6 +127,10 @@ private:
     /// @brief gawron a - value
     const SUMOReal myA;
 
+private:
+    /** @brief invalidated assignment operator */
+    ROGawronCalculator& operator=(const ROGawronCalculator& s);
+
 };
 
 
@@ -122,7 +147,7 @@ public:
     /// Destructor
     virtual ~ROLogitCalculator();
 
-    void setCosts(RORoute* route, const SUMOReal costs, const bool isActive=false) const;
+    void setCosts(RORoute* route, const SUMOReal costs, const bool isActive = false) const;
 
     /** @brief calculate the probabilities in the logit model */
     void calculateProbabilities(const ROVehicle* const veh, std::vector<RORoute*> alternatives);
@@ -146,6 +171,10 @@ private:
 
     /// @brief The route commonality factors for c-logit
     std::map<const RORoute*, SUMOReal> myCommonalities;
+
+private:
+    /** @brief invalidated assignment operator */
+    ROLogitCalculator& operator=(const ROLogitCalculator& s);
 
 };
 

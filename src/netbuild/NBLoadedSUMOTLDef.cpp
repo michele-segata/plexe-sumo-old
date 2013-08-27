@@ -49,17 +49,18 @@
 // ===========================================================================
 
 NBLoadedSUMOTLDef::NBLoadedSUMOTLDef(const std::string& id, const std::string& programID, SUMOTime offset) :
-    NBTrafficLightDefinition(id, programID),
+    NBTrafficLightDefinition(id, programID, offset),
     myTLLogic(0) {
-    myTLLogic = new NBTrafficLightLogic(id, programID, 0);
-    myTLLogic->setOffset(offset);
+    myTLLogic = new NBTrafficLightLogic(id, programID, 0, offset);
 }
 
 
 NBLoadedSUMOTLDef::NBLoadedSUMOTLDef(NBTrafficLightDefinition* def, NBTrafficLightLogic* logic) :
-    NBTrafficLightDefinition(def->getID(), def->getProgramID()),
+    NBTrafficLightDefinition(def->getID(), def->getProgramID(), def->getOffset()),
     myTLLogic(new NBTrafficLightLogic(logic)),
-    myOriginalNodes(def->getNodes().begin(), def->getNodes().end()) {
+    myOriginalNodes(def->getNodes().begin(), def->getNodes().end()) 
+{
+    assert(def->getOffset() == logic->getOffset());
     myControlledLinks = def->getControlledLinks();
 }
 
@@ -119,7 +120,7 @@ NBLoadedSUMOTLDef::setTLControllingInformation() const {
     //  edges the links are starting at, respectively
     for (NBConnectionVector::const_iterator it = myControlledLinks.begin(); it != myControlledLinks.end(); it++) {
         const NBConnection& c = *it;
-        assert(c.getTLIndex() < myTLLogic->getNumLinks());
+        assert(c.getTLIndex() < (int)myTLLogic->getNumLinks());
         NBEdge* edge = c.getFrom();
         edge->setControllingTLInformation(c, getID());
     }
@@ -160,11 +161,23 @@ NBLoadedSUMOTLDef::amInvalid() const {
 
 void
 NBLoadedSUMOTLDef::removeConnection(const NBConnection& conn, bool reconstruct) {
-    NBConnectionVector::iterator it = find(myControlledLinks.begin(), myControlledLinks.end(), conn);
-    if (it == myControlledLinks.end()) {
-        throw ProcessError("Attempt to remove nonexistant connection");
+    NBConnectionVector::iterator it = myControlledLinks.begin();
+    // find the connection but ignore its TLIndex since it might have been
+    // invalidated by an earlier removal
+    for (; it != myControlledLinks.end(); ++it) {
+        if (it->getFrom() == conn.getFrom() &&
+                it->getTo() == conn.getTo() &&
+                it->getFromLane() == conn.getFromLane() &&
+                it->getToLane() == conn.getToLane()) {
+            break;
+        }
     }
-    const int removed = conn.getTLIndex();
+    if (it == myControlledLinks.end()) {
+        // a traffic light doesn't always controll all connections at a junction
+        // especially when using the option --tls.join
+        return;
+    }
+    const int removed = it->getTLIndex();
     // remove the connection
     myControlledLinks.erase(it);
     if (reconstruct) {
@@ -192,6 +205,13 @@ NBLoadedSUMOTLDef::removeConnection(const NBConnection& conn, bool reconstruct) 
         delete myTLLogic;
         myTLLogic = newLogic;
     }
+}
+
+
+void 
+NBLoadedSUMOTLDef::setOffset(SUMOTime offset) {
+    myOffset = offset;
+    myTLLogic->setOffset(offset);
 }
 
 /****************************************************************************/

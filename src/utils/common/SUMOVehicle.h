@@ -100,12 +100,6 @@ public:
      */
     virtual const MSEdge* succEdge(unsigned int nSuccs) const = 0;
 
-    /** @brief Adapt the vehicle's maximum speed depending on the reference speed
-     * @param[in] the maximum speed on the edge
-     * @return The vehicle's new maximum speed
-     */
-    virtual SUMOReal adaptMaxSpeed(SUMOReal referenceSpeed) = 0;
-
     /// Replaces the current route by the given edges
     virtual bool replaceRouteEdges(const MSEdgeVector& edges, bool onInit = false) = 0;
 
@@ -121,12 +115,12 @@ public:
      * @param[in] router The router to use
      * @see replaceRoute
      */
-    virtual void reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle> &router, bool withTaz = false) = 0;
+    virtual void reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, bool withTaz = false) = 0;
 
-    /** @brief Returns the vehicle's acceleration before dawdling
-     * @return The acceleration before dawdling
+    /** @brief Returns the vehicle's acceleration
+     * @return The acceleration
      */
-    virtual SUMOReal getPreDawdleAcceleration() const = 0;
+    virtual SUMOReal getAcceleration() const = 0;
 
     /** @brief Returns the edge the vehicle is currently at
      *
@@ -157,6 +151,14 @@ public:
      */
     virtual SUMOTime getDeparture() const = 0;
 
+    /** @brief Returns whether this vehicle has departed
+     */
+    virtual bool hasDeparted() const = 0;
+
+    /** @brief Returns whether this vehicle has arrived
+     */
+    virtual bool hasArrived() const = 0;
+
     /** @brief Returns the number of new routes this vehicle got
      * @return the number of new routes this vehicle got
      */
@@ -165,7 +167,7 @@ public:
     /** @brief Returns this vehicle's devices
      * @return This vehicle's devices
      */
-    virtual const std::vector<MSDevice*> &getDevices() const = 0;
+    virtual const std::vector<MSDevice*>& getDevices() const = 0;
 
     /** @brief Adds a person to this vehicle
      *
@@ -181,7 +183,7 @@ public:
      * @param[in] stop The stop to add
      * @return Whether the stop could be added
      */
-    virtual bool addStop(const SUMOVehicleParameter::Stop& stopPar, SUMOTime untilOffset=0) = 0;
+    virtual bool addStop(const SUMOVehicleParameter::Stop& stopPar, SUMOTime untilOffset = 0) = 0;
 
     /** @brief Returns whether the vehicle is at a stop
      * @return Whether the has stopped
@@ -189,6 +191,7 @@ public:
     virtual bool isStopped() const = 0;
 
 
+    virtual SUMOReal getChosenSpeedFactor() const = 0;
 };
 
 

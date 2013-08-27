@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<!-- generated on Fri Nov 30 14:12:09 2012 by SUMO sumo Version dev-SVN-r13080
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="net.net.xml"/>
+        <route-files value="input_routes.rou.xml"/>
+    </input>
+
+    <output>
+        <netstate-dump value="rawdump.xml"/>
+    </output>
+
+    <report>
+        <no-step-log value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<sumo-netstate>
+    <timestep time="0.00">
+        <edge id="beg">
+            <lane id="beg_0">
+                <vehicle id="glitch" pos="0.00" speed="30.00"/>
+            </lane>
+        </edge>
+    </timestep>
+    <timestep time="1.00">
+        <edge id="beg">
+            <lane id="beg_0">
+                <vehicle id="glitch" pos="28.84" speed="28.84"/>
+            </lane>
+        </edge>
+    </timestep>
+    <timestep time="2.00">
+        <edge id="beg">
+            <lane id="beg_0">
+                <vehicle id="glitch" pos="57.92" speed="29.07"/>
+            </lane>
+        </edge>
+    </timestep>
+    <timestep time="3.00">
+        <edge id="beg">
+            <lane id="beg_0">
+                <vehicle id="glitch" pos="87.86" speed="29.94"/>
+            </lane>
+        </edge>
+    </timestep>
+    <timestep time="4.00">
+    </timestep>
+</sumo-netstate>

@@ -65,8 +65,8 @@ std::vector<ROEdge*> ROEdge::myEdges;
 ROEdge::ROEdge(const std::string& id, RONode* from, RONode* to, unsigned int index)
     : myID(id), mySpeed(-1),
       myIndex(index), myLength(-1),
-      myUsingTTTimeLine(false), 
-      myUsingETimeLine(false), 
+      myUsingTTTimeLine(false),
+      myUsingETimeLine(false),
       myFromNode(from), myToNode(to) {
     while (myEdges.size() <= index) {
         myEdges.push_back(0);
@@ -100,7 +100,7 @@ void
 ROEdge::addFollower(ROEdge* s, std::string) {
     if (find(myFollowingEdges.begin(), myFollowingEdges.end(), s) == myFollowingEdges.end()) {
         myFollowingEdges.push_back(s);
-#ifdef HAVE_MESOSIM // catchall for internal stuff
+#ifdef HAVE_INTERNAL // catchall for internal stuff
         s->myApproachingEdges.push_back(this);
 #endif
     }
@@ -131,14 +131,31 @@ ROEdge::getEffort(const ROVehicle* const veh, SUMOReal time) const {
 }
 
 
-SUMOReal 
+SUMOReal
 ROEdge::getDistanceTo(const ROEdge* other) const {
-    return getToNode()->getPosition().distanceTo2D(other->getFromNode()->getPosition());
+    if (getToNode() != 0 && other->getFromNode() != 0) {
+        return getToNode()->getPosition().distanceTo2D(other->getFromNode()->getPosition());
+    } else {
+        return 0; // optimism is just right for astar
+    }
+
 }
 
 
 SUMOReal
 ROEdge::getTravelTime(const ROVehicle* const veh, SUMOReal time) const {
+    return getTravelTime(veh->getType()->maxSpeed, time);
+}
+
+
+SUMOReal
+ROEdge::getTravelTime(const SUMOReal maxSpeed, SUMOReal time) const {
+    return MAX2(myLength / maxSpeed, getTravelTime(time));
+}
+
+
+SUMOReal
+ROEdge::getTravelTime(SUMOReal time) const {
     if (myUsingTTTimeLine) {
         if (!myHaveTTWarned && !myTravelTimes.describesTime(time)) {
             WRITE_WARNING("No interval matches passed time " + toString(time)  + " in edge '" + myID + "'.\n Using edge's length / edge's speed.");
@@ -153,8 +170,7 @@ ROEdge::getTravelTime(const ROVehicle* const veh, SUMOReal time) const {
         }
         return myTravelTimes.getValue(time);
     }
-    // ok, no absolute value was found, use the normal value (without) as default
-    return getMinimumTravelTime(veh);
+    return myLength / mySpeed;
 }
 
 
@@ -281,7 +297,7 @@ ROEdge::getNoFollowing() const {
 }
 
 
-#ifdef HAVE_MESOSIM // catchall for internal stuff
+#ifdef HAVE_INTERNAL // catchall for internal stuff
 unsigned int
 ROEdge::getNumApproaching() const {
     if (getType() == ET_SOURCE) {

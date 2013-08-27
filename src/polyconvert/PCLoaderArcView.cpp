@@ -81,6 +81,7 @@ PCLoaderArcView::load(const std::string& file, OptionsCont& oc, PCPolyContainer&
     RGBColor color = RGBColor::parseColor(oc.getString("color"));
     int layer = oc.getInt("layer");
     std::string idField = oc.getString("shapefile.id-column");
+    bool useRunningID = oc.getBool("shapefile.use-running-id");
     // start parsing
     std::string shpName = file + ".shp";
     OGRRegisterAll();
@@ -112,9 +113,11 @@ PCLoaderArcView::load(const std::string& file, OptionsCont& oc, PCPolyContainer&
 
     OGRFeature* poFeature;
     poLayer->ResetReading();
+    unsigned int runningID = 0;
     while ((poFeature = poLayer->GetNextFeature()) != NULL) {
         // read in edge attributes
-        std::string id = poFeature->GetFieldAsString(idField.c_str());
+        std::string id = useRunningID ? toString(runningID) : poFeature->GetFieldAsString(idField.c_str());
+        ++runningID;
         id = StringUtils::prune(id);
         if (id == "") {
             throw ProcessError("Missing id under '" + idField + "'");
@@ -134,9 +137,9 @@ PCLoaderArcView::load(const std::string& file, OptionsCont& oc, PCPolyContainer&
                 if (!geoConvHelper.x2cartesian(pos)) {
                     WRITE_ERROR("Unable to project coordinates for POI '" + id + "'.");
                 }
-                PointOfInterest* poi = new PointOfInterest(id, type, pos, color);
+                PointOfInterest* poi = new PointOfInterest(id, type, color, pos, (SUMOReal)layer);
                 if (!toFill.insert(id, poi, layer)) {
-                    WRITE_ERROR("POI '" + id + "' could not been added.");
+                    WRITE_ERROR("POI '" + id + "' could not be added.");
                     delete poi;
                 }
             }
@@ -151,9 +154,9 @@ PCLoaderArcView::load(const std::string& file, OptionsCont& oc, PCPolyContainer&
                     }
                     shape.push_back_noDoublePos(pos);
                 }
-                Polygon* poly = new Polygon(id, type, color, shape, false);
+                Polygon* poly = new Polygon(id, type, color, shape, false, (SUMOReal)layer);
                 if (!toFill.insert(id, poly, layer)) {
-                    WRITE_ERROR("Polygon '" + id + "' could not been added.");
+                    WRITE_ERROR("Polygon '" + id + "' could not be added.");
                     delete poly;
                 }
             }
@@ -168,9 +171,9 @@ PCLoaderArcView::load(const std::string& file, OptionsCont& oc, PCPolyContainer&
                     }
                     shape.push_back_noDoublePos(pos);
                 }
-                Polygon* poly = new Polygon(id, type, color, shape, true);
+                Polygon* poly = new Polygon(id, type, color, shape, true, (SUMOReal)layer);
                 if (!toFill.insert(id, poly, layer)) {
-                    WRITE_ERROR("Polygon '" + id + "' could not been added.");
+                    WRITE_ERROR("Polygon '" + id + "' could not be added.");
                     delete poly;
                 }
             }
@@ -184,9 +187,9 @@ PCLoaderArcView::load(const std::string& file, OptionsCont& oc, PCPolyContainer&
                     if (!geoConvHelper.x2cartesian(pos)) {
                         WRITE_ERROR("Unable to project coordinates for POI '" + tid + "'.");
                     }
-                    PointOfInterest* poi = new PointOfInterest(tid, type, pos, color);
+                    PointOfInterest* poi = new PointOfInterest(tid, type, color, pos, (SUMOReal)layer);
                     if (!toFill.insert(tid, poi, layer)) {
-                        WRITE_ERROR("POI '" + tid + "' could not been added.");
+                        WRITE_ERROR("POI '" + tid + "' could not be added.");
                         delete poi;
                     }
                 }
@@ -205,9 +208,9 @@ PCLoaderArcView::load(const std::string& file, OptionsCont& oc, PCPolyContainer&
                         }
                         shape.push_back_noDoublePos(pos);
                     }
-                    Polygon* poly = new Polygon(tid, type, color, shape, false);
+                    Polygon* poly = new Polygon(tid, type, color, shape, false, (SUMOReal)layer);
                     if (!toFill.insert(tid, poly, layer)) {
-                        WRITE_ERROR("Polygon '" + tid + "' could not been added.");
+                        WRITE_ERROR("Polygon '" + tid + "' could not be added.");
                         delete poly;
                     }
                 }
@@ -226,9 +229,9 @@ PCLoaderArcView::load(const std::string& file, OptionsCont& oc, PCPolyContainer&
                         }
                         shape.push_back_noDoublePos(pos);
                     }
-                    Polygon* poly = new Polygon(tid, type, color, shape, true);
+                    Polygon* poly = new Polygon(tid, type, color, shape, true, (SUMOReal)layer);
                     if (!toFill.insert(tid, poly, layer)) {
-                        WRITE_ERROR("Polygon '" + tid + "' could not been added.");
+                        WRITE_ERROR("Polygon '" + tid + "' could not be added.");
                         delete poly;
                     }
                 }

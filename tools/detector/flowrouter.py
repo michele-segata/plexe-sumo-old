@@ -56,7 +56,6 @@ class Edge:
         self.kind = kind
         self.maxSpeed = 0.0
         self.length = 0.0
-        self.finalizer = None
         self.detGroup = []
         self.routes = []
 
@@ -343,8 +342,6 @@ class Net:
 
     def writeRoutes(self, routeFileName):
         routeOut = open(routeFileName, 'w')
-        unfinalizedEdges = set()
-        unfinalizedRoutes = set()
         print >> routeOut, "<routes>"
         for edge in self._source.outEdges:
             for id, route in enumerate(edge.routes):
@@ -353,22 +350,16 @@ class Net:
                 routeString = ''
                 for redge in route.edges:
                     if redge.kind == "real":
-                        routeString += redge.label + " "
+                        if options.lanebased:
+                            routeString += redge.label[:redge.label.rfind("_")] + " "
+                        else:
+                            routeString += redge.label + " "
                         if firstReal == '':
                             firstReal = redge.label
                         lastReal = redge
                 assert firstReal != '' and lastReal != None
                 routeID = "%s.%s" % (firstReal, id)
-                if lastReal.finalizer:
-                    routeString += lastReal.finalizer
-                else:
-                    routeString = routeString.strip()
-                    unfinalizedEdges.add(lastReal.label)
-                    unfinalizedRoutes.add(routeID)
-                print >> routeOut, '    <route id="%s" multi_ref="x">%s</route>' % (routeID, routeString)
-        if len(unfinalizedRoutes) > 0:
-            warn("Warning! No finalizers for %s." % unfinalizedEdges)
-            warn("The routes %s will be one edge too short." % unfinalizedRoutes)
+                print >> routeOut, '    <route id="%s" edges="%s"/>' % (routeID, routeString.strip())
         print >> routeOut, "</routes>"
         routeOut.close()
 
@@ -379,20 +370,14 @@ class Net:
             if len(srcEdge.routes) == 0:
                 continue
             assert len(srcEdge.target.outEdges) == 1
-            for edge in srcEdge.target.outEdges: pass
-            srcFile = "src_" + edge.label + ".def.xml"
-            print >> emitOut, '    <emitter id="src_' + edge.label + '"',
-            print >> emitOut, 'pos="0"',
-            print >> emitOut, 'friendly_pos="x" objectid="' + edge.label + '_0"',
-            print >> emitOut, 'file="' + srcFile + '"/>'
-            srcOut = open(srcFile, 'w')
-            print >> srcOut, "<triggeredsource>"
+            edge = iter(srcEdge.target.outEdges).next()
+            print >> emitOut, '    <routeDistribution id="dist_' + edge.label + '">'
             for id, route in enumerate(srcEdge.routes):
-                print >> srcOut, '    <routedistelem id="%s.%s"' % (edge.label, id),
-                print >> srcOut, 'probability="%s"/>' % route.frequency
-            print >> srcOut, '    <flow no="%s" end="3600"/>' % srcEdge.flow
-            print >> srcOut, "</triggeredsource>"
-            srcOut.close()
+                print >> emitOut, '        <route refid="%s.%s"' % (edge.label, id),
+                print >> emitOut, 'probability="%s"/>' % route.frequency
+            print >> emitOut, '    </routeDistribution>'
+            print >> emitOut, '    <vehicle id="src_' + edge.label + '"',
+            print >> emitOut, 'route="dist_%s" number="%s" begin="0"/>' % (edge.label, srcEdge.flow)
         print >> emitOut, "</additional>"
         emitOut.close()
 
@@ -433,22 +418,25 @@ class NetDetectorFlowReader(handler.ContentHandler):
 
     def startElement(self, name, attrs):
         if name == 'edge' and (not attrs.has_key('function') or attrs['function'] != 'internal'):
-            self._net.addIsolatedRealEdge(attrs['id'])
-        elif name == 'succ':
-            self._edge = attrs['edge']
-            if self._edge[0]==':':
-                self._edge = ''
-        elif name == 'succlane' and self._edge != '':
-            fromEdge = self._net.getEdge(self._edge)
-            l = attrs['lane']
-            toEdge = self._net.getEdge(l[:l.rfind('_')])
-            newEdge = Edge(self._edge+"_"+attrs['id'], fromEdge.target, toEdge.source)
+            self._edge = attrs['id']
+            if not options.lanebased:
+                self._net.addIsolatedRealEdge(attrs['id'])
+        elif name == 'connection':
+            fromEdgeID = attrs['from']
+            toEdgeID = attrs['to']
+            if options.lanebased:
+                fromEdgeID += "_" + attrs["fromLane"]
+                toEdgeID += "_" + attrs["toLane"]
+            newEdge = Edge(fromEdgeID+"_"+toEdgeID, self._net.getEdge(fromEdgeID).target,
+                           self._net.getEdge(toEdgeID).source)
             self._net.addEdge(newEdge)
-            fromEdge.finalizer = attrs['id']
         elif name == 'lane' and self._edge != '':
+            if options.lanebased:
+                self._net.addIsolatedRealEdge(attrs['id'])
+                self._edge = attrs['id']
             self._lane2edge[attrs['id']] = self._edge
             edgeObj = self._net.getEdge(self._edge)
-            edgeObj.maxSpeed = max(edgeObj.maxSpeed, float(attrs['maxspeed']))
+            edgeObj.maxSpeed = max(edgeObj.maxSpeed, float(attrs['speed']))
             edgeObj.length = float(attrs['length'])
 
     def endElement(self, name):
@@ -461,7 +449,7 @@ class NetDetectorFlowReader(handler.ContentHandler):
             for group in detGroups:
                 if group.isValid:
                     self._net.getEdge(edge).detGroup.append(group)
-    
+
     def readFlows(self, flowFile):
         self._detReader.readFlows(flowFile)
 
@@ -503,6 +491,8 @@ optParser.add_option("-D", "--keep-det", action="store_true", dest="keepdet",
                      default=False, help='keep edges with detectors when deleting "slow" edges')
 optParser.add_option("-z", "--respect-zero", action="store_true", dest="respectzero",
                      default=False, help="respect detectors without data (or with permanent zero) with zero flow")
+optParser.add_option("-l", "--lane-based", action="store_true", dest="lanebased",
+                     default=False, help="do not aggregate detector data and connections to edges")
 optParser.add_option("-q", "--quiet", action="store_true", dest="quiet",
                      default=False, help="suppress warnings")
 optParser.add_option("-v", "--verbose", action="store_true", dest="verbose",
@@ -536,7 +526,7 @@ if net.checkNet():
     if options.routefile:
         net.writeRoutes(options.routefile)
     else:
-        for edge in net._source.outEdges:
+        for edge in sorted(net._source.outEdges, key=lambda e: e.label):
             for route in edge.routes:
                 print route
     if options.emitfile:

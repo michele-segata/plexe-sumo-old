@@ -30,6 +30,7 @@
 #endif
 
 #include <utils/options/OptionsCont.h>
+#include <utils/common/SysUtils.h>
 #include "RandHelper.h"
 #include <ctime>
 #include <cmath>
@@ -63,14 +64,25 @@ RandHelper::insertRandOptions() {
     oc.addDescription("seed", "Random Number", "Initialises the random number generator with the given value");
 }
 
-
 void
-RandHelper::initRandGlobal() {
+RandHelper::initRandGlobal(MTRand* which) {
     OptionsCont& oc = OptionsCont::getOptions();
+    if (which == 0) {
+        which = &myRandomNumberGenerator;
+    }
     if (oc.getBool("random")) {
-        myRandomNumberGenerator.seed();
+#ifdef _MSC_VER
+        long s = myRandomNumberGenerator.hash(time(NULL), clock()) + SysUtils::getWindowsTicks();
+        unsigned int s2 = (unsigned int)(s & 0xffff) ^ (s >> 16);
+        if (s2 < 0) {
+            s2 *= -1;
+        }
+        which->seed(s2);
+#else
+        which->seed();
+#endif
     } else {
-        myRandomNumberGenerator.seed(oc.getInt("seed"));
+        which->seed(oc.getInt("seed"));
     }
 }
 

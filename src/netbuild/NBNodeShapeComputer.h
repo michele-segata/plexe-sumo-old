@@ -92,9 +92,9 @@ private:
      *  all edges within the value-vector which direction at the node differs
      *  less than 1 from the key-edge's direction.
      */
-    void joinSameDirectionEdges(std::map<NBEdge*, EdgeVector > &same,
-                                std::map<NBEdge*, PositionVector> &geomsCCW,
-                                std::map<NBEdge*, PositionVector> &geomsCW);
+    void joinSameDirectionEdges(std::map<NBEdge*, EdgeVector >& same,
+                                std::map<NBEdge*, PositionVector>& geomsCCW,
+                                std::map<NBEdge*, PositionVector>& geomsCW);
 
     /** @brief Joins edges and computes ccw/cw boundaries
      *
@@ -104,19 +104,22 @@ private:
      *  ccwBoundary/cwBoundary.
      */
     EdgeVector computeUniqueDirectionList(
-        const std::map<NBEdge*, EdgeVector > &same,
-        std::map<NBEdge*, PositionVector> &geomsCCW,
-        std::map<NBEdge*, PositionVector> &geomsCW,
-        std::map<NBEdge*, NBEdge*> &ccwBoundary,
-        std::map<NBEdge*, NBEdge*> &cwBoundary);
+        const std::map<NBEdge*, EdgeVector >& same,
+        std::map<NBEdge*, PositionVector>& geomsCCW,
+        std::map<NBEdge*, PositionVector>& geomsCW,
+        std::map<NBEdge*, NBEdge*>& ccwBoundary,
+        std::map<NBEdge*, NBEdge*>& cwBoundary);
 
 
 private:
     /// The node to compute the geometry for
     const NBNode& myNode;
 
-};
+private:
+    /// @brief Invalidated assignment operator
+    NBNodeShapeComputer& operator=(const NBNodeShapeComputer& s);
 
+};
 
 #endif
 

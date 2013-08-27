@@ -35,7 +35,6 @@
 
 #include <bitset>
 #include <vector>
-#include <cassert>
 #include "MSJunctionLogic.h"
 #include "MSLogicJunction.h"
 
@@ -86,7 +85,7 @@ public:
         return (*myLogic)[linkIndex];
     }
 
-    const std::bitset<64> &getInternalFoesFor(unsigned int linkIndex) const {
+    const std::bitset<64>& getInternalFoesFor(unsigned int linkIndex) const {
         return (*myInternalLinksFoes)[linkIndex];
     }
 

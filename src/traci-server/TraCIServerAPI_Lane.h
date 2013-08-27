@@ -67,6 +67,21 @@ public:
                            tcpip::Storage& outputStorage);
 
 
+    /** @brief Returns the named lane's shape
+     *
+     * @param[in] id The id of the searched lane
+     * @param[out] shape The shape, if the lane is known
+     * @return Whether the lane is known
+     */
+    static bool getShape(const std::string& id, PositionVector& shape);
+
+
+    /** @brief Returns a tree filled with inductive loop instances
+     * @return The rtree of inductive loop
+     */
+    static TraCIRTree* getTree();
+
+
 private:
     /// @brief invalidated copy constructor
     TraCIServerAPI_Lane(const TraCIServerAPI_Lane& s);

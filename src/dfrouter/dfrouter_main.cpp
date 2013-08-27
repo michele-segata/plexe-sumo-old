@@ -64,7 +64,6 @@
 #include "RODFRouteCont.h"
 #include "RODFDetectorFlow.h"
 #include "RODFDetFlowLoader.h"
-#include <utils/xml/XMLSubSys.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/iodevices/OutputDevice.h>
 
@@ -206,7 +205,7 @@ startComputation(RODFNet* optNet, RODFDetectorFlows& flows, RODFDetectorCon& det
                                     oc.getBool("calibrator-output"),
                                     oc.getBool("include-unused-routes"),
                                     oc.getFloat("scale"),
-                                    oc.getInt("max-search-depth"),
+//                                    oc.getInt("max-search-depth"),
                                     oc.getBool("emissions-only"));
             PROGRESS_DONE_MESSAGE();
         }
@@ -261,14 +260,14 @@ main(int argc, char** argv) {
     RODFDetectorFlows* flows = 0;
     try {
         // initialise the application system (messaging, xml, options)
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         RODFFrame::fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
-            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
         MsgHandler::initOutputOptions();
         if (!RODFFrame::checkOptions()) {
             throw ProcessError();
@@ -289,13 +288,19 @@ main(int argc, char** argv) {
         readDetectorFlows(*flows, oc, *detectors);
         // build routes
         startComputation(net, *flows, *detectors, oc);
-    } catch (ProcessError& e) {
+    } catch (const ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
 #ifndef _DEBUG
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
     } catch (...) {
         MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
         ret = 1;
@@ -304,7 +309,6 @@ main(int argc, char** argv) {
     delete net;
     delete flows;
     delete detectors;
-    OutputDevice::closeAll();
     SystemFrame::close();
     if (ret == 0) {
         std::cout << "Success." << std::endl;

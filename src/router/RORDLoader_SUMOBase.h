@@ -65,14 +65,12 @@ class RORDLoader_SUMOBase :
     public ROTypedXMLRoutesLoader {
 public:
     /// Constructor
-    RORDLoader_SUMOBase(RONet& net,
-                        SUMOTime begin, SUMOTime end,
-                        const int maxRouteNumber, const bool tryRepair, const bool withTaz,
-                        const bool keepRoutes, const bool skipRouteCalculation,
+    RORDLoader_SUMOBase(RONet& net, SUMOTime begin, SUMOTime end,
+                        const bool tryRepair, const bool withTaz,
                         const std::string& file = "");
 
     /// Destructor
-    ~RORDLoader_SUMOBase() ;
+    ~RORDLoader_SUMOBase();
 
 
 protected:
@@ -87,18 +85,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     virtual void myStartElement(int element,
-                                const SUMOSAXAttributes& attrs) ;
-
-
-    /** @brief Called when characters occure
-     *
-     * @param[in] element ID of the last opened element
-     * @param[in] chars The read characters (complete)
-     * @exception ProcessError If something fails
-     * @see GenericSAXHandler::myCharacters
-     */
-    void myCharacters(int element,
-                      const std::string& chars) ;
+                                const SUMOSAXAttributes& attrs);
 
 
     /** @brief Called when a closing tag occurs
@@ -107,7 +94,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    virtual void myEndElement(int element) ;
+    virtual void myEndElement(int element);
     //@}
 
     /// Begins the parsing of the next route alternative in the file
@@ -116,7 +103,15 @@ protected:
     /// Begins the parsing of a route alternative of the opened route
     void startRoute(const SUMOSAXAttributes& attrs);
 
-    bool closeVehicle() ;
+    bool closeVehicle();
+
+    /** @brief Parses a route edge list
+     *
+     * @param[in] chars The read route
+     * @exception ProcessError If something fails
+     */
+    void parseRoute(const std::string& chars);
+
 
 
 protected:
@@ -133,7 +128,7 @@ protected:
     bool myAltIsValid;
 
     /// @brief The currently parsed route alternatives
-    RORouteDef_Alternatives* myCurrentAlternatives;
+    RORouteDef* myCurrentAlternatives;
 
     /// @brief The costs of the current alternative
     SUMOReal myCost;
@@ -141,23 +136,14 @@ protected:
     /// @brief The probability of the current alternative's usage
     SUMOReal myProbability;
 
-    /// @brief The maximum route alternatives number
-    int myMaxRouteNumber;
-
     /// @brief Information whether a read route shall be tried to be repaired
     bool myTryRepair;
 
     /// @brief Information whether zones (districts) are used as origins / destinations
     const bool myWithTaz;
 
-    /// @brief Information whether all routes should be saved
-    const bool myKeepRoutes;
-
-    /// @brief Information whether new routes should be calculated
-    const bool mySkipRouteCalculation;
-
     /// @brief The currently parsed route
-    RORouteDef_Complete* myCurrentRoute;
+    RORouteDef* myCurrentRoute;
 
     /// @brief The name of the currently parsed route
     std::string myCurrentRouteName;
@@ -165,8 +151,6 @@ protected:
     /// @brief The currently parsed vehicle type
     SUMOVTypeParameter* myCurrentVType;
 
-    bool myHaveWarnedAboutDeprecatedVType;
-    bool myHaveWarnedAboutDeprecatedRoute;
 
 private:
     /// @brief Invalidated copy constructor

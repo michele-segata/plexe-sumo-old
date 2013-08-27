@@ -37,8 +37,16 @@
 #include <string>
 #include <microsim/MSEdge.h>
 #include <utils/gui/globjects/GUIGlObject.h>
+#include <utils/foxtools/MFXMutex.h>
 #include "GUILaneWrapper.h"
 
+// ===========================================================================
+// class declarations
+// ===========================================================================
+#ifdef HAVE_INTERNAL
+class MESegment;
+#endif
+class MSBaseVehicle;
 
 // ===========================================================================
 // class definitions
@@ -56,16 +64,17 @@ public:
      * @param[in] numericalID The numerical id (index) of the edge
      * @see MSEdge
      */
-    GUIEdge(const std::string& id, unsigned int numericalID, const std::string& streetName) ;
+    GUIEdge(const std::string& id, int numericalID,
+            const EdgeBasicFunction function, const std::string& streetName);
 
 
     /// @brief Destructor.
-    ~GUIEdge() ;
+    ~GUIEdge();
 
 
     /** @brief Builds lane wrappers for this edge's lanes
      */
-    void initGeometry() ;
+    void initGeometry();
 
 
     /* @brief Returns the gl-ids of all known edges
@@ -92,7 +101,7 @@ public:
     static std::pair<SUMOReal, SUMOReal> getLaneOffsets(SUMOReal x1, SUMOReal y1,
             SUMOReal x2, SUMOReal y2, SUMOReal prev, SUMOReal wanted);
 
-    static void fill(std::vector<GUIEdge*> &netsWrappers);
+    static void fill(std::vector<GUIEdge*>& netsWrappers);
 
 
 
@@ -107,7 +116,7 @@ public:
      * @see GUIGlObject::getPopUpMenu
      */
     virtual GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
-            GUISUMOAbstractView& parent) ;
+            GUISUMOAbstractView& parent);
 
 
     /** @brief Returns an own parameter window
@@ -118,7 +127,7 @@ public:
      * @see GUIGlObject::getParameterWindow
      */
     virtual GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app,
-            GUISUMOAbstractView& parent) ;
+            GUISUMOAbstractView& parent);
 
 
     /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -126,18 +135,29 @@ public:
      * @return The boundary the object is within
      * @see GUIGlObject::getCenteringBoundary
      */
-    Boundary getCenteringBoundary() const ;
+    Boundary getCenteringBoundary() const;
 
 
     /** @brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const ;
+    void drawGL(const GUIVisualizationSettings& s) const;
     //@}
 
 
-#ifdef HAVE_MESOSIM
+    void addPerson(MSPerson* p) {
+        AbstractMutex::ScopedLocker locker(myLock);
+        MSEdge::addPerson(p);
+    }
+
+    void removePerson(MSPerson* p) {
+        AbstractMutex::ScopedLocker locker(myLock);
+        MSEdge::removePerson(p);
+    }
+
+
+#ifdef HAVE_INTERNAL
     unsigned int getVehicleNo() const;
     std::string getVehicleIDs() const;
     SUMOReal getOccupancy() const;
@@ -145,8 +165,6 @@ public:
     SUMOReal getAllowedSpeed() const;
     /// @brief return flow based on meanSpead @note: may produced incorrect results when jammed
     SUMOReal getFlow() const;
-    /// @brief return flow based on headWay
-    SUMOReal getFlowAlternative() const;
     /// @brief return meanSpead divided by allowedSpeed
     SUMOReal getRelativeSpeed() const;
 
@@ -155,6 +173,12 @@ public:
 
     /// @brief gets the color value according to the current scheme index
     SUMOReal getColorValue(size_t activeScheme) const;
+
+    /// @brief returns the segment closest to the given position
+    MESegment* getSegmentAtPosition(const Position& pos);
+
+    /// @brief sets the vehicle color according to the currente settings
+    void setVehicleColor(const GUIVisualizationSettings& s, MSBaseVehicle* veh) const;
 
 #endif
 
@@ -194,6 +218,9 @@ private:
     /// @brief invalidated assignment operator
     GUIEdge& operator=(const GUIEdge& s);
 
+private:
+    /// The mutex used to avoid concurrent updates of myPersons
+    mutable MFXMutex myLock;
 
 };
 

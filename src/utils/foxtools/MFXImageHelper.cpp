@@ -33,6 +33,7 @@
 #include <FXPNGImage.h>
 #include <FXJPGImage.h>
 #include <FXTIFImage.h>
+#include <utils/common/ToString.h>
 #include "MFXImageHelper.h"
 
 #include <cassert>
@@ -87,7 +88,7 @@ MFXImageHelper::loadImage(FXApp* a, const std::string& file) {
     } else if (comparecase(ext, "tif") == 0 || comparecase(ext, "tiff") == 0) {
         img = new FXTIFImage(a, NULL, IMAGE_KEEP | IMAGE_SHMI | IMAGE_SHMP);
     } else {
-        throw InvalidArgument("Unknown file extension for image '" + file + "'!");
+        throw InvalidArgument("Unknown file extension '" + toString(ext.text()) + "' for image '" + file + "'!");
     }
 
     FXFileStream stream;
@@ -99,6 +100,7 @@ MFXImageHelper::loadImage(FXApp* a, const std::string& file) {
         img->create();
         a->endWaitCursor();
     } else {
+        delete img;
         throw InvalidArgument("Loading failed!");
     }
     return img;
@@ -107,7 +109,7 @@ MFXImageHelper::loadImage(FXApp* a, const std::string& file) {
 
 FXbool
 MFXImageHelper::scalePower2(FXImage* image) {
-    FXint newHeight;
+    FXint newHeight = 0;
     for (FXint exp = 30; exp >= 0; exp--) {
         newHeight = 2 << exp;
         if (image->getHeight() & newHeight) {
@@ -117,7 +119,7 @@ MFXImageHelper::scalePower2(FXImage* image) {
     if (2 * newHeight - image->getHeight() < image->getHeight() - newHeight) {
         newHeight *= 2;
     }
-    FXint newWidth;
+    FXint newWidth = 0;
     for (FXint exp = 30; exp >= 0; exp--) {
         newWidth = 2 << exp;
         if (image->getWidth() & newWidth) {

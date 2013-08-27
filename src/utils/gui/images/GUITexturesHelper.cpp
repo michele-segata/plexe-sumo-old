@@ -29,18 +29,15 @@
 #include <config.h>
 #endif
 
-#include <cassert>
 #include <iostream>
 #include <fx.h>
 #include <fx3d.h>
-#include "GUITexturesHelper.h"
+#include <utils/foxtools/MFXImageHelper.h>
 #include <utils/gui/globjects/GUIGlObject.h>
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
+#include <utils/gui/globjects/GLIncludes.h>
+#include <utils/gui/windows/GUIMainWindow.h>
+#include <utils/common/MsgHandler.h>
+#include "GUITexturesHelper.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -51,6 +48,7 @@
 // definition of static variables
 // ===========================================================================
 bool gAllowTextures;
+std::map<std::string, int> GUITexturesHelper::myTextures;
 
 
 // ===========================================================================
@@ -89,7 +87,7 @@ GUITexturesHelper::drawTexturedBox(unsigned int which,
     glEnable(GL_TEXTURE_2D);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST); // without DEPTH_TEST vehicles may be drawn below roads
     glDisable(GL_LIGHTING);
     glDisable(GL_COLOR_MATERIAL);
     glDisable(GL_TEXTURE_GEN_S);
@@ -113,5 +111,31 @@ GUITexturesHelper::drawTexturedBox(unsigned int which,
     glEnable(GL_DEPTH_TEST);
 }
 
+
+
+void
+GUITexturesHelper::clearTextures() {
+    myTextures.clear();
+}
+
+
+int
+GUITexturesHelper::getTextureID(const std::string& filename) {
+    if (myTextures.count(filename) == 0) {
+        try {
+            FXImage* i = MFXImageHelper::loadImage(GUIMainWindow::getInstance()->getApp(), filename);
+            if (MFXImageHelper::scalePower2(i)) {
+                WRITE_WARNING("Scaling '" + filename + "'.");
+            }
+            GUIGlID id = add(i);
+            delete i;
+            myTextures[filename] = (int)id;
+        } catch (InvalidArgument& e) {
+            WRITE_ERROR("Could not load '" + filename + "'.\n" + e.what());
+            myTextures[filename] = -1;
+        }
+    }
+    return myTextures[filename];
+}
 
 /****************************************************************************/

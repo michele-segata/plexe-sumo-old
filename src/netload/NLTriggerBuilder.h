@@ -49,7 +49,7 @@ class MSLane;
 class MSEdge;
 class MSBusStop;
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 class METriggeredCalibrator;
 #endif
 
@@ -68,18 +68,18 @@ class METriggeredCalibrator;
 class NLTriggerBuilder {
 public:
     /// @brief Constructor
-    NLTriggerBuilder() ;
+    NLTriggerBuilder();
 
 
     /// @brief Destructor
-    virtual ~NLTriggerBuilder() ;
+    virtual ~NLTriggerBuilder();
 
 
     /** @brief Sets the parent handler to use for nested parsing
      *
      * @param[in] handler The netload handler to set
      */
-    void setHandler(NLHandler* handler) ;
+    void setHandler(NLHandler* handler);
 
 
     /** @brief Builds a vaporization
@@ -91,7 +91,7 @@ public:
      * @param[in] attrs SAX-attributes which define the vaporizer
      * @note recheck throwing the exception
      */
-    void buildVaporizer(const SUMOSAXAttributes& attrs) ;
+    void buildVaporizer(const SUMOSAXAttributes& attrs);
 
 
     /// @name parsing methods
@@ -138,7 +138,7 @@ public:
     void parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attrs) throw(InvalidArgument);
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /** @brief Parses his values and builds a mesoscopic or microscopic calibrator
      *
      * @param[in] net The network the calibrator belongs to
@@ -175,8 +175,8 @@ protected:
      * @exception ProcessError If the XML definition file is errornous
      */
     virtual MSLaneSpeedTrigger* buildLaneSpeedTrigger(MSNet& net,
-            const std::string& id, const std::vector<MSLane*> &destLanes,
-            const std::string& file) ;
+            const std::string& id, const std::vector<MSLane*>& destLanes,
+            const std::string& file);
 
 
     /** @brief Builds a bus stop
@@ -192,11 +192,11 @@ protected:
      * @exception InvalidArgument If the bus stop can not be added to the net (is duplicate)
      */
     virtual void buildBusStop(MSNet& net,
-                              const std::string& id, const std::vector<std::string> &lines,
+                              const std::string& id, const std::vector<std::string>& lines,
                               MSLane* lane, SUMOReal frompos, SUMOReal topos) throw(InvalidArgument);
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /** @brief builds a mesoscopic calibrator
      *
      * Simply calls the METriggeredCalibrator constructor.
@@ -211,7 +211,7 @@ protected:
     METriggeredCalibrator* buildCalibrator(MSNet& net,
                                            const std::string& id, const MSEdge* edge, SUMOReal pos,
                                            const std::string& file, const std::string& outfile,
-                                           const SUMOTime freq) ;
+                                           const SUMOTime freq);
 #endif
 
 
@@ -226,8 +226,8 @@ protected:
      * @param[in] file The file to read the reroute definitions from
      */
     virtual MSTriggeredRerouter* buildRerouter(MSNet& net,
-                                               const std::string& id, std::vector<MSEdge*> &edges,
-                                               SUMOReal prob, const std::string& file, bool off) ;
+            const std::string& id, std::vector<MSEdge*>& edges,
+            SUMOReal prob, const std::string& file, bool off);
     //@}
 
 
@@ -288,7 +288,6 @@ protected:
     /// @brief The parent handler to set for subhandlers
     NLHandler* myHandler;
 
-    bool myHaveWarnedAboutDeprecatedFriendlyPos;
 
 };
 

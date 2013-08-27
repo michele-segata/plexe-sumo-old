@@ -132,9 +132,9 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addDescription("junctions.join", "Processing",
                       "Joins junctions that are close to each other (recommended for OSM import)");
 
-    oc.doRegister("junctions.join-dist", new Option_Float(15));
+    oc.doRegister("junctions.join-dist", new Option_Float(10));
     oc.addDescription("junctions.join-dist", "Processing",
-                      "Determines the maximal distance for joining junctions (defaults to 15)");
+                      "Determines the maximal distance for joining junctions (defaults to 10)");
 
     if (!forNetgen) {
         oc.doRegister("junctions.join-exclude", new Option_String());
@@ -175,6 +175,10 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addSynonyme("tls.join", "try-join-tls", true);
     oc.addDescription("tls.join", "TLS Building", "Tries to cluster tls-controlled nodes"); // !!! describe
 
+    oc.doRegister("tls.join-dist", new Option_Float(20));
+    oc.addDescription("tls.join-dist", "Processing",
+                      "Determines the maximal distance for joining traffic lights (defaults to 20)");
+
     // computational
     oc.doRegister("tls.green.time", new Option_Integer(31));
     oc.addSynonyme("tls.green.time", "traffic-light-green", true);
@@ -206,7 +210,7 @@ NBFrame::fillOptions(bool forNetgen) {
     // edge pruning
     oc.doRegister("keep-edges.min-speed", new Option_Float());
     oc.addSynonyme("keep-edges.min-speed", "edges-min-speed", true);
-    oc.addDescription("keep-edges.min-speed", "Edge Removal", "Only keep edges with speed > FLOAT");
+    oc.addDescription("keep-edges.min-speed", "Edge Removal", "Only keep edges with speed in meters/second > FLOAT");
 
     oc.doRegister("remove-edges.explicit", new Option_String());
     oc.addSynonyme("remove-edges.explicit", "remove-edges");
@@ -282,6 +286,10 @@ NBFrame::fillOptions(bool forNetgen) {
         oc.doRegister("ramps.set", new Option_String());
         oc.addSynonyme("ramps.set", "ramp-guess.explicite", true);
         oc.addDescription("ramps.set", "Ramp Guessing", "Tries to handle the given edges as ramps");
+
+        oc.doRegister("ramps.no-split", new Option_Bool(false));
+        oc.addSynonyme("ramps.no-split", "ramp-guess.no-split", true);
+        oc.addDescription("ramps.no-split", "Ramp Guessing", "Avoids edge splitting");
     }
 }
 

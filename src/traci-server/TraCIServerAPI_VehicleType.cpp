@@ -58,7 +58,6 @@ using namespace traci;
 bool
 TraCIServerAPI_VehicleType::processGet(TraCIServer& server, tcpip::Storage& inputStorage,
                                        tcpip::Storage& outputStorage) {
-    std::string warning = ""; // additional description for response
     // variable & id
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
@@ -95,7 +94,7 @@ TraCIServerAPI_VehicleType::processGet(TraCIServer& server, tcpip::Storage& inpu
         }
         getVariable(variable, *v, tempMsg);
     }
-    server.writeStatusCmd(CMD_GET_VEHICLETYPE_VARIABLE, RTYPE_OK, warning, outputStorage);
+    server.writeStatusCmd(CMD_GET_VEHICLETYPE_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
     return true;
 }

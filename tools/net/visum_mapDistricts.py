@@ -422,15 +422,15 @@ for d in nmap1to2:
 					runningInLaneNumber = runningInLaneNumber + 1
 
 fd = open("districts.xml", "w")
-fd.write("<districts>\n")
+fd.write("<tazs>\n")
 for d in newDistricts:
-	fd.write('    <district id="' + d + '">\n')
+	fd.write('    <taz id="' + d + '">\n')
 	if d in districtSources:
-		fd.write('        <dsource id="' + districtSources[d]+ '" weight="1"/>\n')
+		fd.write('        <tazSource id="' + districtSources[d]+ '" weight="1"/>\n')
 	if d in districtSinks:
-		fd.write('        <dsink id="' + districtSinks[d] + '" weight="1"/>\n')
-	fd.write('    </district>\n')
-fd.write("</districts>\n")
+		fd.write('        <tazSink id="' + districtSinks[d] + '" weight="1"/>\n')
+	fd.write('    </taz>\n')
+fd.write("</tazs>\n")
 fd.close()
 
 
@@ -438,12 +438,12 @@ def writeNode(fd, node):
 	fd.write("   <node id=\"" + node._id + "\" x=\"" + str(node._coord[0]) + "\" y=\"" + str(node._coord[1]) + "\"/>\n")
 
 def writeEdge(fd, edge, withGeom=True):
-	fd.write("   <edge id=\"" + edge._id + "\" fromnode=\"" + edge._from._id + "\" tonode=\"" + edge._to._id)
+	fd.write("   <edge id=\"" + edge._id + "\" fromNode=\"" + edge._from._id + "\" toNode=\"" + edge._to._id)
 	fd.write("\" speed=\"" + str(edge._speed))
 	fd.write("\" priority=\"" + str(edge._priority))
 	if withGeom:
-		fd.write("\" spread_type=\"center")
-	fd.write("\" nolanes=\"" + str(len(edge._lanes)) + "\"")
+		fd.write("\" spreadType=\"center")
+	fd.write("\" numLanes=\"" + str(len(edge._lanes)) + "\"")
 	shape = edge.getShape()
 	if withGeom:
 		fd.write(" shape=\"")

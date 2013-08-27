@@ -61,7 +61,7 @@
 #include <microsim/output/MSDetectorControl.h>
 #include <utils/iodevices/OutputDevice.h>
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 #include <mesosim/MEVehicleControl.h>
 #endif
 
@@ -82,13 +82,13 @@ MSNet*
 load(OptionsCont& oc) {
     MSFrame::setMSGlobals(oc);
     MSVehicleControl* vc = 0;
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         vc = new MEVehicleControl();
     } else {
 #endif
         vc = new MSVehicleControl();
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     }
 #endif
     MSNet* net = new MSNet(vc, new MSEventControl(),
@@ -121,38 +121,44 @@ main(int argc, char** argv) {
     MSNet* net = 0;
     try {
         // initialise subsystems
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         MSFrame::fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
-            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
         MsgHandler::initOutputOptions();
         if (!MSFrame::checkOptions()) {
             throw ProcessError();
         }
         RandHelper::initRandGlobal();
+        RandHelper::initRandGlobal(&MSVehicleControl::myVehicleParamsRNG);
         // load the net
         net = load(oc);
         if (net != 0) {
             ret = net->simulate(string2time(oc.getString("begin")), string2time(oc.getString("end")));
         }
-    } catch (ProcessError& e) {
+    } catch (const ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
 #ifndef _DEBUG
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
     } catch (...) {
         MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
         ret = 1;
 #endif
     }
     delete net;
-    OutputDevice::closeAll();
     SystemFrame::close();
     return ret;
 }

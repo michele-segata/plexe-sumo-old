@@ -518,7 +518,7 @@ void FXRealSpinDial::disable() {
 
 // Recompute layout
 void FXRealSpinDial::layout() {
-    FXint dialWidth, dialHeight, buttonWidth, buttonHeight, textHeight;
+    FXint dialHeight, buttonHeight, textHeight;
 
     textHeight = height - 2 * border;
     dialHeight = textHeight;
@@ -550,7 +550,6 @@ void FXRealSpinDial::layout() {
         }
     } else {
         // dial/buttons are default width, text stretches to fill the rest
-        dialWidth = buttonWidth = 0;
         if (!(options & SPINDIAL_NODIAL)) {
             FXint w = DIALWIDTH;
             dial->position(right - w, border, w, dialHeight);
@@ -604,11 +603,11 @@ long FXRealSpinDial::onChgDial(FXObject* /*p*/, FXSelector /*sel*/, void* /*ptr*
         if (options & SPINDIAL_LOG) {
             if (options & SPINDIAL_CYCLIC && newpos > range[1]) {
                 FXdouble lr0 = log(range[0]), lr1 = log(range[1]), lnp = log(newpos);
-                newpos = exp(lr0 + fmod(lnp - lr0, lr1 - lr0)) ;
+                newpos = exp(lr0 + fmod(lnp - lr0, lr1 - lr0));
             }
         } else {
             if (options & SPINDIAL_CYCLIC) {
-                newpos = range[0] + fmod(newpos - range[0], range[1] - range[0] + 1) ;
+                newpos = range[0] + fmod(newpos - range[0], range[1] - range[0] + 1);
             }
         }
     } else {
@@ -800,7 +799,6 @@ long FXRealSpinDial::onKeyPress(FXObject* sender, FXSelector sel, void* ptr) {
         default:
             return textField->handle(sender, sel, ptr);
     }
-    return 0;
 }
 
 
@@ -823,7 +821,6 @@ long FXRealSpinDial::onKeyRelease(FXObject* sender, FXSelector sel, void* ptr) {
         default:
             return textField->handle(sender, sel, ptr);
     }
-    return 0;
 }
 
 // Mouse motion
@@ -912,12 +909,12 @@ void FXRealSpinDial::increment(FXint incMode) {
             if (options & SPINDIAL_CYCLIC && newpos > range[1]) {
                 // can have a huge magnitude disparity here, so better to work in log space
                 FXdouble lr0 = log(range[0]), lr1 = log(range[1]), lnp = log(newpos);
-                newpos = exp(lr0 + fmod(lnp - lr0, lr1 - lr0)) ;
+                newpos = exp(lr0 + fmod(lnp - lr0, lr1 - lr0));
             }
         } else {
             newpos = pos + inc;
             if (options & SPINDIAL_CYCLIC) {
-                newpos = range[0] + fmod(newpos - range[0], range[1] - range[0] + 1) ;
+                newpos = range[0] + fmod(newpos - range[0], range[1] - range[0] + 1);
             }
         }
         setValue(newpos);

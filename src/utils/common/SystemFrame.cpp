@@ -35,6 +35,7 @@
 #include <utils/xml/XMLSubSys.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/options/OptionsCont.h>
+#include <utils/iodevices/OutputDevice.h>
 #include "RandHelper.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -85,6 +86,9 @@ SystemFrame::addReportOptions(OptionsCont& oc) {
     oc.doRegister("version", 'V', new Option_Bool(false));
     oc.addDescription("version", "Report", "Prints the current version");
 
+    oc.doRegister("xml-validation", 'X', new Option_Bool(false));
+    oc.addDescription("xml-validation", "Report", "Enable schema validation of XML inputs");
+
     oc.doRegister("no-warnings", 'W', new Option_Bool(false));
     oc.addSynonyme("no-warnings", "suppress-warnings", true);
     oc.addDescription("no-warnings", "Report", "Disables output of warnings");
@@ -103,6 +107,8 @@ SystemFrame::addReportOptions(OptionsCont& oc) {
 
 void
 SystemFrame::close() {
+    // close all output devices
+    OutputDevice::closeAll();
     // close the xml-subsystem
     XMLSubSys::close();
     // delete build program options

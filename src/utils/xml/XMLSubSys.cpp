@@ -30,12 +30,11 @@
 #include <config.h>
 #endif
 
-#include <iostream>
-#include <xercesc/sax2/XMLReaderFactory.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
-#include <utils/common/TplConvert.h>
 #include <utils/common/MsgHandler.h>
+#include <utils/common/TplConvert.h>
 #include "SUMOSAXHandler.h"
+#include "SUMOSAXReader.h"
 #include "XMLSubSys.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -46,7 +45,7 @@
 // ===========================================================================
 // static member variables
 // ===========================================================================
-std::vector<SAX2XMLReader*> XMLSubSys::myReaders;
+std::vector<SUMOSAXReader*> XMLSubSys::myReaders;
 unsigned int XMLSubSys::myNextFreeReader;
 bool XMLSubSys::myEnableValidation;
 
@@ -55,44 +54,41 @@ bool XMLSubSys::myEnableValidation;
 // method definitions
 // ===========================================================================
 void
-XMLSubSys::init(bool enableValidation) {
-    myEnableValidation = enableValidation;
+XMLSubSys::init() {
     try {
-        XMLPlatformUtils::Initialize();
-        myReaders.push_back(getSAXReader());
+        XERCES_CPP_NAMESPACE::XMLPlatformUtils::Initialize();
         myNextFreeReader = 0;
-    } catch (const XMLException& e) {
-        throw ProcessError("Error during XML-initialization:\n " + TplConvert<XMLCh>::_2str(e.getMessage()));
+    } catch (const XERCES_CPP_NAMESPACE::XMLException& e) {
+        throw ProcessError("Error during XML-initialization:\n " + TplConvert::_2str(e.getMessage()));
     }
+}
+
+
+void
+XMLSubSys::setValidation(bool enableValidation) {
+    myEnableValidation = enableValidation;
 }
 
 
 void
 XMLSubSys::close() {
-    for (std::vector<SAX2XMLReader*>::iterator i = myReaders.begin(); i != myReaders.end(); ++i) {
+    for (std::vector<SUMOSAXReader*>::iterator i = myReaders.begin(); i != myReaders.end(); ++i) {
         delete *i;
     }
     myReaders.clear();
-    XMLPlatformUtils::Terminate();
+    XERCES_CPP_NAMESPACE::XMLPlatformUtils::Terminate();
 }
 
 
-SAX2XMLReader*
+SUMOSAXReader*
 XMLSubSys::getSAXReader(SUMOSAXHandler& handler) {
-    SAX2XMLReader* reader = getSAXReader();
-    if (reader == 0) {
-        return 0;
-    }
-    reader->setContentHandler(&handler);
-    reader->setErrorHandler(&handler);
-    return reader;
+    return new SUMOSAXReader(handler, myEnableValidation);
 }
 
 
 void
 XMLSubSys::setHandler(GenericSAXHandler& handler) {
-    myReaders[myNextFreeReader - 1]->setContentHandler(&handler);
-    myReaders[myNextFreeReader - 1]->setErrorHandler(&handler);
+    myReaders[myNextFreeReader - 1]->setHandler(handler);
 }
 
 
@@ -101,13 +97,14 @@ XMLSubSys::runParser(GenericSAXHandler& handler,
                      const std::string& file) {
     try {
         if (myNextFreeReader == myReaders.size()) {
-            myReaders.push_back(getSAXReader());
+            myReaders.push_back(new SUMOSAXReader(handler, myEnableValidation));
+        } else {
+            myReaders[myNextFreeReader]->setHandler(handler);
         }
         myNextFreeReader++;
-        setHandler(handler);
         std::string prevFile = handler.getFileName();
         handler.setFileName(file);
-        myReaders[myNextFreeReader - 1]->parse(file.c_str());
+        myReaders[myNextFreeReader - 1]->parse(file);
         handler.setFileName(prevFile);
         myNextFreeReader--;
     } catch (ProcessError& e) {
@@ -120,34 +117,6 @@ XMLSubSys::runParser(GenericSAXHandler& handler,
         return false;
     }
     return !MsgHandler::getErrorInstance()->wasInformed();
-}
-
-
-SAX2XMLReader*
-XMLSubSys::getSAXReader() {
-    SAX2XMLReader* reader = XMLReaderFactory::createXMLReader();
-    if (reader == 0) {
-        WRITE_ERROR("The XML-parser could not be build");
-        return 0;
-    }
-    if (!myEnableValidation) {
-        reader->setProperty(XMLUni::fgXercesScannerName, (void*)XMLUni::fgWFXMLScanner);
-    }
-    setFeature(*reader, "http://xml.org/sax/features/namespaces", false);
-    setFeature(*reader, "http://apache.org/xml/features/validation/schema", myEnableValidation);
-    setFeature(*reader, "http://apache.org/xml/features/validation/schema-full-checking", myEnableValidation);
-    setFeature(*reader, "http://xml.org/sax/features/validation", myEnableValidation);
-    setFeature(*reader, "http://apache.org/xml/features/validation/dynamic", myEnableValidation);
-    return reader;
-}
-
-
-void
-XMLSubSys::setFeature(XERCES_CPP_NAMESPACE_QUALIFIER SAX2XMLReader& reader,
-                      const std::string& feature, bool value) {
-    XMLCh* xmlFeature = XMLString::transcode(feature.c_str());
-    reader.setFeature(xmlFeature, value);
-    XMLString::release(&xmlFeature);
 }
 
 

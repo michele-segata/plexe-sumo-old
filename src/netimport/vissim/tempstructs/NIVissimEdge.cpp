@@ -504,7 +504,9 @@ NIVissimEdge::buildNBEdge(NBDistrictCont& dc, NBNodeCont& nc, NBEdgeCont& ec,
     }
 
     NBEdge* buildEdge = new NBEdge(toString<int>(myID), fromNode, toNode, myType,
-                                   avgSpeed / (SUMOReal) 3.6, myNoLanes, -1, -1, -1, myGeom, myName, LANESPREAD_CENTER, true);
+                                   avgSpeed / (SUMOReal) 3.6, myNoLanes, -1,
+                                   NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET,
+                                   myGeom, myName, LANESPREAD_CENTER, true);
     for (i = 0; i < (int) myNoLanes; i++) {
         if ((int) myLaneSpeeds.size() <= i || myLaneSpeeds[i] == -1) {
             buildEdge->setSpeed(i, OptionsCont::getOptions().getFloat("vissim.default-speed") / (SUMOReal) 3.6);
@@ -938,6 +940,7 @@ NIVissimEdge::addToTreatAsSame(NIVissimEdge* e) {
     } else {
         return false; // !!! check this
     }
+    /*
     //
     std::vector<NIVissimEdge*>::iterator i;
     // add to all other that shall be treated as same
@@ -951,6 +954,7 @@ NIVissimEdge::addToTreatAsSame(NIVissimEdge* e) {
             changed |= e->addToTreatAsSame(*i);
         }
     }
+    */
 }
 
 NIVissimConnection*
@@ -972,7 +976,7 @@ NIVissimEdge::getConnectionTo(NIVissimEdge* e) {
 }
 
 
-const std::vector<NIVissimEdge*> &
+const std::vector<NIVissimEdge*>&
 NIVissimEdge::getToTreatAsSame() const {
     return myToTreatAsSame;
 }
@@ -997,9 +1001,16 @@ NIVissimEdge::reportUnsetSpeeds() {
 
 NIVissimEdge*
 NIVissimEdge::getBestIncoming() const {
+    // @todo seems as this would have been a hard hack!
+    /*
     for (std::vector<int>::const_iterator i = myIncomingConnections.begin(); i != myIncomingConnections.end(); ++i) {
         NIVissimConnection* c = NIVissimConnection::dictionary(*i);
         return NIVissimEdge::dictionary(c->getFromEdgeID());
+    }
+    return 0;
+    */
+    if (myIncomingConnections.size() != 0) {
+        return NIVissimEdge::dictionary(NIVissimConnection::dictionary(myIncomingConnections.front())->getFromEdgeID());
     }
     return 0;
 }
@@ -1007,9 +1018,16 @@ NIVissimEdge::getBestIncoming() const {
 
 NIVissimEdge*
 NIVissimEdge::getBestOutgoing() const {
+    // @todo seems as this would have been a hard hack!
+    /*
     for (std::vector<int>::const_iterator i = myOutgoingConnections.begin(); i != myOutgoingConnections.end(); ++i) {
         NIVissimConnection* c = NIVissimConnection::dictionary(*i);
         return NIVissimEdge::dictionary(c->getToEdgeID());
+    }
+    return 0;
+    */
+    if (myOutgoingConnections.size() != 0) {
+        return NIVissimEdge::dictionary(NIVissimConnection::dictionary(myOutgoingConnections.front())->getToEdgeID());
     }
     return 0;
 }

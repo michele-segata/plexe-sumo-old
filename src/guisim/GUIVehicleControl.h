@@ -58,11 +58,11 @@ class MFXMutex;
 class GUIVehicleControl : public MSVehicleControl {
 public:
     /// @brief Constructor
-    GUIVehicleControl() ;
+    GUIVehicleControl();
 
 
     /// @brief Destructor
-    ~GUIVehicleControl() ;
+    ~GUIVehicleControl();
 
 
     /// @name Vehicle creation
@@ -72,17 +72,14 @@ public:
      *
      * Instead of a MSVehicle, a GUIVehicle is built
      *
-     * @param[in] id The id of the vehicle to build
+     * @param[in] defs The parameter defining the vehicle
      * @param[in] route The route of this vehicle
-     * @param[in] departTime The departure time of this vehicle
      * @param[in] type The type of this vehicle
-     * @param[in] repNo The number of repetitions
-     * @param[in] repOffset The repetition offset
-     * @return The built vehicle (GUIVehicle instance)
+     * @return The built vehicle (MSVehicle instance)
      * @see MSVehicleControl::buildVehicle
      */
     SUMOVehicle* buildVehicle(SUMOVehicleParameter* defs,
-                              const MSRoute* route, const MSVehicleType* type) ;
+                              const MSRoute* route, const MSVehicleType* type);
     /// @}
 
 
@@ -94,7 +91,7 @@ public:
      * @param[in] v The vehicle
      * @return Whether the vehicle could be inserted (no other vehicle with the same id was inserted before)
      */
-    bool addVehicle(const std::string& id, SUMOVehicle* v) ;
+    bool addVehicle(const std::string& id, SUMOVehicle* v);
 
 
     /** @brief Deletes the vehicle
@@ -104,14 +101,21 @@ public:
      * @param[in] v The vehicle to delete
      * @param[discard] Whether the vehicle is discard during loading (scale < 1)
      */
-    void deleteVehicle(SUMOVehicle* v, bool discard=false);
+    void deleteVehicle(SUMOVehicle* v, bool discard = false);
 
 
     /** @brief Returns the list of all known vehicles by gl-id
      * @param[fill] into The list to fill with vehicle ids
      * @todo Well, what about concurrent modifications?
      */
-    void insertVehicleIDs(std::vector<GUIGlID> &into) ;
+    void insertVehicleIDs(std::vector<GUIGlID>& into);
+
+
+    /// @brief lock access to vehicle removal/additions for thread synchronization
+    void secureVehicles();
+
+    /// @brief unlock access to vehicle removal/additions for thread synchronization
+    void releaseVehicles();
 
 
 private:

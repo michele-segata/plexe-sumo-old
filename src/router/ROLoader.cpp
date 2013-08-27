@@ -56,9 +56,9 @@
 #include "RORDGenerator_ODAmounts.h"
 #include "ROTypedXMLRoutesLoader.h"
 
-#ifdef HAVE_MESOSIM // catchall for internal stuff
+#ifdef HAVE_INTERNAL // catchall for internal stuff
 #include <internal/RouteAggregator.h>
-#endif // have HAVE_MESOSIM
+#endif // have HAVE_INTERNAL
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -79,7 +79,11 @@ ROLoader::EdgeFloatTimeLineRetriever_EdgeTravelTime::addEdgeWeight(const std::st
         e->addTravelTime(val, beg, end);
     } else {
         if (id[0] != ':') {
-            WRITE_ERROR("Trying to set a weight for the unknown edge '" + id + "'.");
+            if (OptionsCont::getOptions().getBool("ignore-errors")) {
+                WRITE_WARNING("Trying to set a weight for the unknown edge '" + id + "'.");
+            } else {
+                WRITE_ERROR("Trying to set a weight for the unknown edge '" + id + "'.");
+            }
         }
     }
 }
@@ -96,7 +100,11 @@ ROLoader::EdgeFloatTimeLineRetriever_EdgeWeight::addEdgeWeight(const std::string
         e->addEffort(val, beg, end);
     } else {
         if (id[0] != ':') {
-            WRITE_ERROR("Trying to set a weight for the unknown edge '" + id + "'.");
+            if (OptionsCont::getOptions().getBool("ignore-errors")) {
+                WRITE_WARNING("Trying to set a weight for the unknown edge '" + id + "'.");
+            } else {
+                WRITE_ERROR("Trying to set a weight for the unknown edge '" + id + "'.");
+            }
         }
     }
 }
@@ -105,8 +113,8 @@ ROLoader::EdgeFloatTimeLineRetriever_EdgeWeight::addEdgeWeight(const std::string
 // ---------------------------------------------------------------------------
 // ROLoader - methods
 // ---------------------------------------------------------------------------
-ROLoader::ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed) : 
-    myOptions(oc), 
+ROLoader::ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed) :
+    myOptions(oc),
     myEmptyDestinationsAllowed(emptyDestinationsAllowed),
     myLogSteps(!oc.getBool("no-step-log"))
 {}
@@ -186,7 +194,7 @@ ROLoader::openRoutes(RONet& net) {
 
 void
 ROLoader::processRoutesStepWise(SUMOTime start, SUMOTime end,
-                                RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router) {
+                                RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router) {
     SUMOTime absNo = end - start;
     // skip routes that begin before the simulation's begin
     // loop till the end
@@ -215,7 +223,7 @@ ROLoader::processRoutesStepWise(SUMOTime start, SUMOTime end,
 
 
 bool
-ROLoader::makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router) {
+ROLoader::makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router) {
     RouteLoaderCont::iterator i;
     // go through all handlers
     if (myHandler.size() != 0) {
@@ -252,7 +260,7 @@ ROLoader::getMinTimeStep() const {
 
 void
 ROLoader::processAllRoutes(SUMOTime start, SUMOTime end,
-                           RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router) {
+                           RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router) {
     long absNo = end - start;
     bool ok = true;
     for (RouteLoaderCont::iterator i = myHandler.begin(); ok && i != myHandler.end(); i++) {
@@ -270,20 +278,18 @@ ROLoader::processAllRoutes(SUMOTime start, SUMOTime end,
 }
 
 
+#ifdef HAVE_INTERNAL // catchall for internal stuff
 void
 ROLoader::processAllRoutesWithBulkRouter(SUMOTime start, SUMOTime end,
-                           RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router) {
-#ifndef HAVE_MESOSIM // catchall for internal stuff
-    assert(false);
-#else
+        RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router) {
     bool ok = true;
     for (RouteLoaderCont::iterator i = myHandler.begin(); ok && i != myHandler.end(); i++) {
         ok &= (*i)->readRoutesAtLeastUntil(SUMOTime_MAX);
     }
     RouteAggregator::processAllRoutes(net, router);
     net.saveAndRemoveRoutesUntil(myOptions, router, end);
-#endif
 }
+#endif
 
 
 bool
@@ -329,9 +335,7 @@ ROLoader::buildNamedHandler(const std::string& optionName,
     if (optionName == "route-files" || optionName == "alternative-files") {
         return new RORDLoader_SUMOBase(net,
                                        string2time(myOptions.getString("begin")), string2time(myOptions.getString("end")),
-                                       myOptions.getInt("max-alternatives"), myOptions.getBool("repair"),
-                                       myOptions.getBool("with-taz"), myOptions.getBool("keep-all-routes"),
-                                       myOptions.getBool("skip-new-routes"), file);
+                                       myOptions.getBool("repair"), myOptions.getBool("with-taz"), file);
     }
     if (optionName == "trip-files") {
         return new RORDLoader_TripDefs(net,
@@ -382,7 +386,7 @@ ROLoader::loadWeights(RONet& net, const std::string& optionName,
         }
     }
     // build edge-internal time lines
-    const std::map<std::string, ROEdge*> &edges = net.getEdgeMap();
+    const std::map<std::string, ROEdge*>& edges = net.getEdgeMap();
     for (std::map<std::string, ROEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
         (*i).second->buildTimeLines(measure);
     }

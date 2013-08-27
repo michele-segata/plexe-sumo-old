@@ -88,7 +88,7 @@ MSMeanData_Harmonoise::MSLaneMeanDataValues::update() {
 void
 MSMeanData_Harmonoise::MSLaneMeanDataValues::notifyMoveInternal(SUMOVehicle& veh, SUMOReal timeOnLane, SUMOReal speed) {
     const SUMOReal sn = HelpersHarmonoise::computeNoise(veh.getVehicleType().getEmissionClass(),
-                        (double) speed, veh.getPreDawdleAcceleration());
+                        (double) speed, veh.getAcceleration());
     currentTimeN += (SUMOReal) pow(10., (sn / 10.));
     sampleSeconds += timeOnLane;
     travelledDistance += speed * timeOnLane;
@@ -116,7 +116,7 @@ MSMeanData_Harmonoise::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMO
         dev << "\" traveltime=\"" << defaultTravelTime;
     }
     dev << "\"";
-	dev.closeTag(true);
+    dev.closeTag(true);
 }
 
 
@@ -149,7 +149,7 @@ void
 MSMeanData_Harmonoise::detectorUpdate(const SUMOTime step) {
     MSMeanData::detectorUpdate(step);
     for (std::vector<std::vector<MeanDataValues*> >::const_iterator i = myMeasures.begin(); i != myMeasures.end(); ++i) {
-        const std::vector<MeanDataValues*> &lm = *i;
+        const std::vector<MeanDataValues*>& lm = *i;
         for (std::vector<MeanDataValues*>::const_iterator j = lm.begin(); j != lm.end(); ++j) {
             (*j)->update();
         }

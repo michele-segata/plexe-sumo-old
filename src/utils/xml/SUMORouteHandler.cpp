@@ -55,6 +55,7 @@ SUMORouteHandler::SUMORouteHandler(const std::string& file) :
     SUMOSAXHandler(file),
     myVehicleParameter(0),
     myLastDepart(0),
+    myActiveRouteColor(0),
     myCurrentVType(0) {
 }
 
@@ -81,7 +82,7 @@ SUMORouteHandler::checkLastDepart() {
 }
 
 
-void 
+void
 SUMORouteHandler::registerLastDepart() {
     if (myVehicleParameter->departProcedure == DEPART_GIVEN) {
         myLastDepart = myVehicleParameter->depart;
@@ -92,7 +93,7 @@ SUMORouteHandler::registerLastDepart() {
 
 void
 SUMORouteHandler::myStartElement(int element,
-                               const SUMOSAXAttributes& attrs) {
+                                 const SUMOSAXAttributes& attrs) {
     switch (element) {
         case SUMO_TAG_VEHICLE:
             delete myVehicleParameter;
@@ -107,7 +108,7 @@ SUMORouteHandler::myStartElement(int element,
             myVehicleParameter = SUMOVehicleParserHelper::parseFlowAttributes(attrs);
             break;
         case SUMO_TAG_VTYPE:
-            myCurrentVType = SUMOVehicleParserHelper::beginVTypeParsing(attrs);
+            myCurrentVType = SUMOVehicleParserHelper::beginVTypeParsing(attrs, getFileName());
             break;
         case SUMO_TAG_VTYPE_DISTRIBUTION:
             openVehicleTypeDistribution(attrs);
@@ -157,17 +158,15 @@ SUMORouteHandler::myEndElement(int element) {
         case SUMO_TAG_FLOW:
             closeFlow();
             break;
-        case SUMO_TAG_VTYPE_DISTRIBUTION__DEPRECATED:
         case SUMO_TAG_VTYPE_DISTRIBUTION:
             closeVehicleTypeDistribution();
             break;
         case SUMO_TAG_ROUTE_DISTRIBUTION:
             closeRouteDistribution();
             break;
-        case SUMO_TAG_VTYPE__DEPRECATED:
         case SUMO_TAG_VTYPE:
             SUMOVehicleParserHelper::closeVTypeParsing(*myCurrentVType);
-        break;
+            break;
         default:
             break;
     }
@@ -176,7 +175,7 @@ SUMORouteHandler::myEndElement(int element) {
 
 bool
 SUMORouteHandler::checkStopPos(SUMOReal& startPos, SUMOReal& endPos, const SUMOReal laneLength,
-                             const SUMOReal minLength, const bool friendlyPos) {
+                               const SUMOReal minLength, const bool friendlyPos) {
     if (minLength > laneLength) {
         return false;
     }

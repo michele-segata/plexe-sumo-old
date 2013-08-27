@@ -4,7 +4,7 @@ if CHECK_MEMORY_LEAKS
 MEM_LIBS = ../../src/foreign/nvwa/libnvwa.a
 endif
 
-if MESOSIM
+if INTERNAL
 INTERNAL_LIB = ../../src/internal/libinternal.a
 INTERNAL_TESTS = ./internal/HeightMapperTest.o
 endif
@@ -47,6 +47,7 @@ $(XERCES_LIBS) \
 ./utils/common/StringUtilsTest.o \
 ./utils/common/StringTokenizerTest.o \
 ./utils/common/RGBColorTest.o \
+./utils/common/TplConvertTest.o \
 ./utils/common/ValueTimeLineTest.o \
 ./utils/geom/BoundaryTest.o \
 ./utils/geom/PositionVectorTest.o \

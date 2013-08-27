@@ -49,14 +49,19 @@ bool MSGlobals::gCheck4Accidents;
 
 bool MSGlobals::gCheckRoutes;
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 bool MSGlobals::gStateLoaded;
 bool MSGlobals::gUseMesoSim;
+bool MSGlobals::gMesoLimitedJunctionControl;
 MELoop* MSGlobals::gMesoNet;
 #else
 const bool MSGlobals::gUseMesoSim = false;
 #endif
 
+#ifdef _DEBUG
+bool MSGlobals::gDebugFlag1 = false;
+bool MSGlobals::gDebugFlag2 = false;
+#endif
 
 /****************************************************************************/
 

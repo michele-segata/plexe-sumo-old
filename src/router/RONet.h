@@ -43,6 +43,7 @@
 #include "RORouteDef.h"
 #include <utils/common/SUMOVTypeParameter.h>
 #include <utils/common/SUMOAbstractRouter.h>
+#include <utils/common/RandomDistributor.h>
 
 
 // ===========================================================================
@@ -70,11 +71,11 @@ class RONet {
 
 public:
     /// @brief Constructor
-    RONet() ;
+    RONet();
 
 
     /// @brief Destructor
-    virtual ~RONet() ;
+    virtual ~RONet();
 
 
     /// @name Insertion and retrieval of graph parts
@@ -89,7 +90,7 @@ public:
      * @param[in] edge The edge to add
      * @return Whether the edge was added (if not, it was deleted, too)
      */
-    virtual bool addEdge(ROEdge* edge) ;
+    virtual bool addEdge(ROEdge* edge);
 
 
     /** @brief Retrieves an edge from the network
@@ -114,7 +115,7 @@ public:
      *
      * @param[in] node The node to add
      */
-    void addNode(RONode* node) ;
+    void addNode(RONode* node);
 
 
     /** @brief Retrieves an node from the network
@@ -133,7 +134,16 @@ public:
     /// @name Insertion and retrieval of vehicle types, vehicles, routes, and route definitions
     //@{
 
-    /* @brief Adds a read vehicle type definition to the network
+    /** @brief Checks whether the vehicle type (distribution) may be added
+     *
+     * This method checks also whether the default type may still be replaced
+     * @param[in] id The id of the vehicle type (distribution) to add
+     * @return Whether the type (distribution) may be added
+     */
+    bool checkVType(const std::string& id);
+
+
+    /** @brief Adds a read vehicle type definition to the network
      *
      * If the vehicle type definition is already known (another one with
      *  the same id exists), false is returned, and the vehicle type
@@ -142,7 +152,23 @@ public:
      * @param[in] def The vehicle type to add
      * @return Whether the vehicle type could be added
      */
-    virtual bool addVehicleType(SUMOVTypeParameter* type) ;
+    virtual bool addVehicleType(SUMOVTypeParameter* type);
+
+
+    /** @brief Adds a vehicle type distribution
+     *
+     * If another vehicle type (or distribution) with the same id exists, false is returned.
+     *  Otherwise, the vehicle type distribution is added to the internal vehicle type distribution
+     *  container "myVTypeDistDict".
+     *
+     * This control get responsible for deletion of the added vehicle
+     *  type distribution.
+     *
+     * @param[in] id The id of the distribution to add
+     * @param[in] vehTypeDistribution The vehicle type distribution to add
+     * @return Whether the vehicle type could be added
+     */
+    bool addVTypeDistribution(const std::string& id, RandomDistributor<SUMOVTypeParameter*>* vehTypeDistribution);
 
 
     /** @brief Retrieves the named vehicle type
@@ -157,7 +183,7 @@ public:
      * @return The named vehicle type
      * @todo Check whether a const pointer may be returned
      */
-    SUMOVTypeParameter* getVehicleTypeSecure(const std::string& id) ;
+    SUMOVTypeParameter* getVehicleTypeSecure(const std::string& id);
 
 
     /* @brief Adds a route definition to the network
@@ -170,7 +196,7 @@ public:
      * @return Whether the route definition could be added
      * @todo Rename myRoutes to myRouteDefinitions
      */
-    bool addRouteDef(RORouteDef* def) ;
+    bool addRouteDef(RORouteDef* def);
 
 
     /** @brief Returns the named route definition
@@ -196,7 +222,7 @@ public:
      * @param[in] veh The vehicle to add
      * @return Whether the vehicle could be added
      */
-    virtual bool addVehicle(const std::string& id, ROVehicle* veh) ;
+    virtual bool addVehicle(const std::string& id, ROVehicle* veh);
     // @}
 
 
@@ -216,7 +242,7 @@ public:
      * @return The last seen departure time>=time
      */
     SUMOTime saveAndRemoveRoutesUntil(OptionsCont& options,
-                                      SUMOAbstractRouter<ROEdge, ROVehicle> &router, SUMOTime time);
+                                      SUMOAbstractRouter<ROEdge, ROVehicle>& router, SUMOTime time);
 
 
     /// Returns the information whether further vehicles are stored
@@ -242,7 +268,7 @@ public:
 
 
     /** @brief closes the file output for computed routes */
-    void closeOutput() ;
+    void closeOutput();
 
 
 
@@ -253,7 +279,7 @@ public:
      *  it is tried to be built, first.
      * @return A random edge from the list of edges with no predecessor
      */
-    ROEdge* getRandomSource() ;
+    ROEdge* getRandomSource();
 
 
     /** @brief Returns a random edge which may be used as a starting point
@@ -262,7 +288,7 @@ public:
      *  it is tried to be built, first.
      * @return A random edge from the list of edges with no predecessor
      */
-    const ROEdge* getRandomSource() const ;
+    const ROEdge* getRandomSource() const;
 
 
     /** @brief Returns a random edge which may be used as an ending point
@@ -271,7 +297,7 @@ public:
      *  it is tried to be built, first.
      * @return A random edge from the list of edges with no successor
      */
-    ROEdge* getRandomDestination() ;
+    ROEdge* getRandomDestination();
 
 
     /** @brief Returns a random edge which may be used as an ending point
@@ -280,13 +306,13 @@ public:
      *  it is tried to be built, first.
      * @return A random edge from the list of edges with no successor
      */
-    const ROEdge* getRandomDestination() const ;
+    const ROEdge* getRandomDestination() const;
 
 
     /// Returns the number of edges thenetwork contains
     unsigned int getEdgeNo() const;
 
-    const std::map<std::string, ROEdge*> &getEdgeMap() const;
+    const std::map<std::string, ROEdge*>& getEdgeMap() const;
 
     bool hasRestrictions() const;
 
@@ -294,7 +320,7 @@ public:
 
 protected:
     bool computeRoute(OptionsCont& options,
-                      SUMOAbstractRouter<ROEdge, ROVehicle> &router, const ROVehicle* const veh);
+                      SUMOAbstractRouter<ROEdge, ROVehicle>& router, const ROVehicle* const veh);
 
     /// Initialises the lists of source and destination edges
     void checkSourceAndDestinations() const;
@@ -318,6 +344,11 @@ protected:
 
     /// @brief Known vehicle types
     NamedObjectCont<SUMOVTypeParameter*> myVehicleTypes;
+
+    /// @brief Vehicle type distribution dictionary type
+    typedef std::map< std::string, RandomDistributor<SUMOVTypeParameter*>* > VTypeDistDictType;
+    /// @brief A distribution of vehicle types (probability->vehicle type)
+    VTypeDistDictType myVTypeDistDict;
 
     /// @brief Whether no vehicle type was loaded
     bool myDefaultVTypeMayBeDeleted;

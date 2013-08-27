@@ -67,10 +67,10 @@ public:
     /** @brief Constructor
      *
      * @param[in] oc The options to use
-     * @param[in] emptyDestinationsAllowed Whether tripdefs may be given without destinations
+     * @param[in] emptyDestinationsAllowed Whether trips may be given without destinations
      * @todo Recheck usage of emptyDestinationsAllowed
      */
-    ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed) ;
+    ROLoader(OptionsCont& oc, bool emptyDestinationsAllowed);
 
 
     /// @brief Destructor
@@ -90,18 +90,20 @@ public:
     /** @brief Loads routes stepwise
         This is done for all previously build route loaders */
     void processRoutesStepWise(SUMOTime start, SUMOTime end,
-                                       RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
+                               RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router);
 
     /** @brief Loads all routes at once
         This is done for all previously build route loaders */
     void processAllRoutes(SUMOTime start, SUMOTime end,
-                                  RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
+                          RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router);
 
+#ifdef HAVE_INTERNAL // catchall for internal stuff
     /** @brief Loads all routes and processes them with BulkStarRouter */
     void processAllRoutesWithBulkRouter(SUMOTime start, SUMOTime end,
-                                  RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
+                                        RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router);
+#endif
 
-    bool makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle> &router);
+    bool makeSingleStep(SUMOTime end, RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router);
 
 protected:
     /** @brief Opens route handler of the given type
@@ -125,7 +127,7 @@ protected:
      * @param[in] net The net to assign to the built handlers
      * @return Whether the wished handler(s) could be built
      */
-    bool openTypedRoutes(const std::string& optionName, RONet& net) ;
+    bool openTypedRoutes(const std::string& optionName, RONet& net);
 
 
     /** @brief Returns the first time step known by the built handlers
@@ -137,7 +139,7 @@ protected:
      * @return The first time step of loaded routes
      * @see ROAbstractRouteDefLoader::getLastReadTimeStep
      */
-    SUMOTime getMinTimeStep() const ;
+    SUMOTime getMinTimeStep() const;
 
 
 
@@ -163,7 +165,7 @@ protected:
          * @see SAXWeightsHandler::EdgeFloatTimeLineRetriever::addEdgeWeight
          */
         void addEdgeWeight(const std::string& id,
-                           SUMOReal val, SUMOReal beg, SUMOReal end) const ;
+                           SUMOReal val, SUMOReal beg, SUMOReal end) const;
 
     private:
         /// @brief The network edges shall be obtained from
@@ -194,7 +196,7 @@ protected:
          * @see SAXWeightsHandler::EdgeFloatTimeLineRetriever::addEdgeWeight
          */
         void addEdgeWeight(const std::string& id,
-                           SUMOReal val, SUMOReal beg, SUMOReal end) const ;
+                           SUMOReal val, SUMOReal beg, SUMOReal end) const;
 
     private:
         /// @brief The network edges shall be obtained from
@@ -206,14 +208,14 @@ protected:
 
 protected:
     ROTypedXMLRoutesLoader* buildNamedHandler(const std::string& optionName,
-            const std::string& file, RONet& net) ;
+            const std::string& file, RONet& net);
 
 
-    void writeStats(SUMOTime time, SUMOTime start, int absNo) ;
+    void writeStats(SUMOTime time, SUMOTime start, int absNo);
 
 
     /** @brief Deletes all handlers and clears their container ("myHandler") */
-    void destroyHandlers() ;
+    void destroyHandlers();
 
 
 protected:

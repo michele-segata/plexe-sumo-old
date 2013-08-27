@@ -102,7 +102,8 @@ protected:
         OPENDRIVE_TAG_LEFT,
         OPENDRIVE_TAG_CENTER,
         OPENDRIVE_TAG_RIGHT,
-        OPENDRIVE_TAG_LANE
+        OPENDRIVE_TAG_LANE,
+        OPENDRIVE_TAG_SIGNAL
     };
 
 
@@ -133,7 +134,9 @@ protected:
         OPENDRIVE_ATTR_C,
         OPENDRIVE_ATTR_D,
         OPENDRIVE_ATTR_TYPE,
-        OPENDRIVE_ATTR_LEVEL
+        OPENDRIVE_ATTR_LEVEL,
+        OPENDRIVE_ATTR_ORIENTATION,
+        OPENDRIVE_ATTR_DYNAMIC,
     };
 
     enum LinkType {
@@ -217,46 +220,30 @@ protected:
      * @brief Representation of a lane section
      */
     struct OpenDriveLaneSection {
-        OpenDriveLaneSection(SUMOReal sArg)
-            : s(sArg) {
-            lanesByDir[OPENDRIVE_TAG_LEFT] = std::vector<OpenDriveLane>();
-            lanesByDir[OPENDRIVE_TAG_RIGHT] = std::vector<OpenDriveLane>();
-            lanesByDir[OPENDRIVE_TAG_CENTER] = std::vector<OpenDriveLane>();
-        }
+        OpenDriveLaneSection(SUMOReal sArg);
 
-        unsigned int getLaneNumber(OpenDriveXMLTag dir) const {
-            unsigned int laneNum = 0;
-            const std::vector<OpenDriveLane> &dirLanes = lanesByDir.find(dir)->second;
-            for (std::vector<OpenDriveLane>::const_iterator i = dirLanes.begin(); i != dirLanes.end(); ++i) {
-                if ((*i).type == "driving") {
-                    ++laneNum;
-                }
-            }
-            return laneNum;
-        }
+        unsigned int getLaneNumber(OpenDriveXMLTag dir) const;
 
-        std::map<int, int> buildLaneMapping(OpenDriveXMLTag dir) {
-            std::map<int, int> ret;
-            unsigned int sumoLane = 0;
-            const std::vector<OpenDriveLane> &dirLanes = lanesByDir.find(dir)->second;
-            if (dir == OPENDRIVE_TAG_RIGHT) {
-                for (std::vector<OpenDriveLane>::const_reverse_iterator i = dirLanes.rbegin(); i != dirLanes.rend(); ++i) {
-                    if ((*i).type == "driving") {
-                        ret[(*i).id] = sumoLane++;
-                    }
-                }
-            } else {
-                for (std::vector<OpenDriveLane>::const_iterator i = dirLanes.begin(); i != dirLanes.end(); ++i) {
-                    if ((*i).type == "driving") {
-                        ret[(*i).id] = sumoLane++;
-                    }
-                }
-            }
-            return ret;
-        }
+        std::map<int, int> buildLaneMapping(OpenDriveXMLTag dir);
 
         SUMOReal s;
         std::map<OpenDriveXMLTag, std::vector<OpenDriveLane> > lanesByDir;
+    };
+
+
+    /**
+     * @struct OpenDriveSignal
+     * @brief Representation of a signal
+     */
+    struct OpenDriveSignal {
+        OpenDriveSignal(int idArg, const std::string typeArg, int orientationArg, bool dynamicArg, SUMOReal sArg)
+            : id(idArg), type(typeArg), orientation(orientationArg), dynamic(dynamicArg), s(sArg) { }
+
+        int id;
+        std::string type;
+        int orientation;
+        bool dynamic;
+        SUMOReal s;
     };
 
 
@@ -269,13 +256,8 @@ protected:
             : id(idArg), junction(junctionArg), length(lengthArg),
               from(0), to(0) { }
 
-        unsigned int getMaxLaneNumber(OpenDriveXMLTag dir) const {
-            unsigned int maxLaneNum = 0;
-            for (std::vector<OpenDriveLaneSection>::const_iterator i = laneSections.begin(); i != laneSections.end(); ++i) {
-                maxLaneNum = MAX2(maxLaneNum, (*i).getLaneNumber(dir));
-            }
-            return maxLaneNum;
-        }
+        unsigned int getMaxLaneNumber(OpenDriveXMLTag dir) const;
+        int getPriority(OpenDriveXMLTag dir) const;
 
         /// @brief The id of the edge
         std::string id;
@@ -291,6 +273,7 @@ protected:
         std::map<int, int> endLaneMap;
         PositionVector geom;
         std::vector<OpenDriveLaneSection> laneSections;
+        std::vector<OpenDriveSignal> signals;
     };
 
 
@@ -301,17 +284,18 @@ protected:
         NBEdge* to;
         std::string via;
         std::vector<std::pair<int, int> > lanes;
+        std::string id;
     };
 
 protected:
     /** @brief Constructor
      * @param[in] nc The node control to fill
      */
-    NIImporter_OpenDrive(std::vector<OpenDriveEdge> &innerEdges, std::vector<OpenDriveEdge> &outerEdges);
+    NIImporter_OpenDrive(std::vector<OpenDriveEdge>& innerEdges, std::vector<OpenDriveEdge>& outerEdges);
 
 
     /// @brief Destructor
-    ~NIImporter_OpenDrive() ;
+    ~NIImporter_OpenDrive();
 
 
 
@@ -329,18 +313,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) ;
-
-
-    /** @brief Called when characters occure
-     *
-     * @param[in] element ID of the last opened element
-     * @param[in] chars The read characters (complete)
-     * @exception ProcessError If something fails
-     * @see GenericSAXHandler::myCharacters
-     */
-    void myCharacters(int element,
-                      const std::string& chars) ;
+                        const SUMOSAXAttributes& attrs);
 
 
     /** @brief Called when a closing tag occurs
@@ -349,23 +322,24 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int element) ;
+    void myEndElement(int element);
     //@}
 
 
 
 private:
     void addLink(LinkType lt, const std::string& elementType, const std::string& elementID,
-                 const std::string& contactPoint) ;
+                 const std::string& contactPoint);
 
-    void addGeometryShape(GeometryType type, const std::vector<SUMOReal> &vals) ;
+    void addGeometryShape(GeometryType type, const std::vector<SUMOReal>& vals);
 
     OpenDriveEdge myCurrentEdge;
 
-    std::vector<OpenDriveEdge> &myInnerEdges;
-    std::vector<OpenDriveEdge> &myOuterEdges;
+    std::vector<OpenDriveEdge>& myInnerEdges;
+    std::vector<OpenDriveEdge>& myOuterEdges;
     std::vector<int> myElementStack;
     OpenDriveXMLTag myCurrentLaneDirection;
+    static std::set<std::string> myLaneTypes2Import;
 
 
 protected:
@@ -382,32 +356,32 @@ protected:
      * @return The retrieved/built node
      * @exception ProcessError If the node could not be built/retrieved
      */
-    static NBNode* getOrBuildNode(const std::string& id, Position& pos, NBNodeCont& nc) ;
+    static NBNode* getOrBuildNode(const std::string& id, Position& pos, NBNodeCont& nc);
 
 
-    static std::vector<Position> geomFromLine(const OpenDriveEdge& e, const OpenDriveGeometry& g) ;
-    static std::vector<Position> geomFromSpiral(const OpenDriveEdge& e, const OpenDriveGeometry& g) ;
-    static std::vector<Position> geomFromArc(const OpenDriveEdge& e, const OpenDriveGeometry& g) ;
-    static std::vector<Position> geomFromPoly(const OpenDriveEdge& e, const OpenDriveGeometry& g) ;
-    static Position calculateStraightEndPoint(double hdg, double length, const Position& start) ;
-    static void calculateCurveCenter(SUMOReal* ad_x, SUMOReal* ad_y, SUMOReal ad_radius, SUMOReal ad_hdg) ;
+    static std::vector<Position> geomFromLine(const OpenDriveEdge& e, const OpenDriveGeometry& g);
+    static std::vector<Position> geomFromSpiral(const OpenDriveEdge& e, const OpenDriveGeometry& g);
+    static std::vector<Position> geomFromArc(const OpenDriveEdge& e, const OpenDriveGeometry& g);
+    static std::vector<Position> geomFromPoly(const OpenDriveEdge& e, const OpenDriveGeometry& g);
+    static Position calculateStraightEndPoint(double hdg, double length, const Position& start);
+    static void calculateCurveCenter(SUMOReal* ad_x, SUMOReal* ad_y, SUMOReal ad_radius, SUMOReal ad_hdg);
     static void calcPointOnCurve(SUMOReal* ad_x, SUMOReal* ad_y, SUMOReal ad_centerX, SUMOReal ad_centerY,
-                                 SUMOReal ad_r, SUMOReal ad_length) ;
+                                 SUMOReal ad_r, SUMOReal ad_length);
     static NBEdge* getOutgoingDirectionalEdge(const NBEdgeCont& ec, const NBNodeCont& nc,
-            const std::string& edgeID, const std::string& nodeID) ;
+            const std::string& edgeID, const std::string& nodeID);
     static NBEdge* getIncomingDirectionalEdge(const NBEdgeCont& ec, const NBNodeCont& nc,
-            const std::string& edgeID, const std::string& nodeID) ;
+            const std::string& edgeID, const std::string& nodeID);
 
-    static void computeShapes(std::vector<OpenDriveEdge> &edges) ;
+    static void computeShapes(std::vector<OpenDriveEdge>& edges);
     static void setNodeSecure(NBNodeCont& nc, OpenDriveEdge& e,
-                              const std::string& nodeID, NIImporter_OpenDrive::LinkType lt) ;
+                              const std::string& nodeID, NIImporter_OpenDrive::LinkType lt);
 
     static void addE2EConnectionsSecure(const NBEdgeCont& ec, const NBNode* const node,
                                         const OpenDriveEdge& from, const OpenDriveEdge& to,
-                                        std::vector<NIImporter_OpenDrive::Connection> &connections);
+                                        std::vector<NIImporter_OpenDrive::Connection>& connections);
     static void addViaConnectionSecure(const NBEdgeCont& ec, const NBNode* const node, const OpenDriveEdge& e,
                                        LinkType lt, const std::string& via,
-                                       std::vector<NIImporter_OpenDrive::Connection> &connections);
+                                       std::vector<NIImporter_OpenDrive::Connection>& connections);
 
     static void setLaneConnections(NIImporter_OpenDrive::Connection& c,
                                    const OpenDriveEdge& from, bool fromAtBegin, OpenDriveXMLTag fromLaneDir,
@@ -430,6 +404,10 @@ protected:
 
     private:
         const std::string& myEdgeID;
+
+    private:
+        /// @brief Invalidated assignment operator
+        edge_by_id_finder& operator=(const edge_by_id_finder& s);
 
     };
 

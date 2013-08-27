@@ -163,6 +163,8 @@ NBRequest::buildBitfieldLogic(bool leftHanded) {
     }
     // reset signalised/non-signalised dependencies
     resetSignalised();
+    // reset foes it the number of lanes matches (or exceeds) the number of incoming connections
+    resetCooperating();
 }
 
 
@@ -235,21 +237,20 @@ NBRequest::setBlocking(bool leftHanded,
         return;
     }
 
-    // check the priorities
-    int from1p = from1->getJunctionPriority(myJunction);
-    int from2p = from2->getJunctionPriority(myJunction);
-    // check if one of the connections is higher priorised when incoming into
-    //  the junction, the connection road will yield
-    // should be valid for priority junctions only
-    if (from1p > from2p) {
-        assert(myJunction->getType() != NODETYPE_RIGHT_BEFORE_LEFT);
-        myForbids[idx1][idx2] = true;
-        return;
-    }
-    if (from2p > from1p) {
-        assert(myJunction->getType() != NODETYPE_RIGHT_BEFORE_LEFT);
-        myForbids[idx2][idx1] = true;
-        return;
+    // check the priorities if required by node type
+    if (myJunction->getType() != NODETYPE_RIGHT_BEFORE_LEFT) {
+        int from1p = from1->getJunctionPriority(myJunction);
+        int from2p = from2->getJunctionPriority(myJunction);
+        // check if one of the connections is higher priorised when incoming into
+        //  the junction, the connection road will yield
+        if (from1p > from2p) {
+            myForbids[idx1][idx2] = true;
+            return;
+        }
+        if (from2p > from1p) {
+            myForbids[idx2][idx1] = true;
+            return;
+        }
     }
 
     // check whether one of the connections is higher priorised on
@@ -312,21 +313,19 @@ size_t
 NBRequest::distanceCounterClockwise(NBEdge* from, NBEdge* to) {
     EdgeVector::const_iterator p = find(myAll.begin(), myAll.end(), from);
     size_t ret = 0;
-    while (true) {
+    do {
         ret++;
         if (p == myAll.begin()) {
             p = myAll.end();
         }
         p--;
-        if ((*p) == to) {
-            return ret;
-        }
-    }
+    } while (*p != to);
+    return ret;
 }
 
 
 void
-NBRequest::writeLogic(std::string key, OutputDevice& into) const {
+NBRequest::writeLogic(std::string /* key */, OutputDevice& into) const {
     int pos = 0;
     EdgeVector::const_iterator i;
     for (i = myIncoming.begin(); i != myIncoming.end(); i++) {
@@ -478,11 +477,7 @@ NBRequest::writeLaneResponse(OutputDevice& od, NBEdge* from,
         od.writeAttr(SUMO_ATTR_RESPONSE, getResponseString(from, (*j).toEdge, fromLane, (*j).mayDefinitelyPass));
         od.writeAttr(SUMO_ATTR_FOES, getFoesString(from, (*j).toEdge));
         if (!OptionsCont::getOptions().getBool("no-internal-links")) {
-            if ((*j).haveVia) {
-                od.writeAttr(SUMO_ATTR_CONT, 1);
-            } else {
-                od.writeAttr(SUMO_ATTR_CONT, 0);
-            }
+            od.writeAttr(SUMO_ATTR_CONT, j->haveVia);
         }
         od.closeTag(true);
     }
@@ -536,10 +531,6 @@ NBRequest::getFoesString(NBEdge* from, NBEdge* to) const {
     // remember the case when the lane is a "dead end" in the meaning that
     // vehicles must choose another lane to move over the following
     // junction
-    int idx = 0;
-    if (to != 0) {
-        idx = getIndex(from, to);
-    }
     // !!! move to forbidden
     std::string result;
     for (EdgeVector::const_reverse_iterator i = myIncoming.rbegin();
@@ -641,6 +632,36 @@ NBRequest::reportWarnings() {
 }
 
 
+void
+NBRequest::resetCooperating() {
+    // map from edge to number of incoming connections
+    std::map<NBEdge*, size_t> incomingCount; // initialized to 0
+    // map from edge to indices of approached lanes
+    std::map<NBEdge*, std::set<int> > approachedLanes;
+    // map from edge to list of incoming edges
+    std::map<NBEdge*, EdgeVector> incomingEdges;
+    for (EdgeVector::const_iterator it_e = myIncoming.begin(); it_e != myIncoming.end(); it_e++) {
+        const std::vector<NBEdge::Connection> connections = (*it_e)->getConnections();
+        for (std::vector<NBEdge::Connection>::const_iterator it_c = connections.begin(); it_c != connections.end(); ++it_c) {
+            incomingCount[it_c->toEdge]++;
+            approachedLanes[it_c->toEdge].insert(it_c->toLane);
+            incomingEdges[it_c->toEdge].push_back(*it_e);
+        }
+    }
+    for (std::map<NBEdge*, size_t>::iterator it = incomingCount.begin(); it != incomingCount.end(); ++it) {
+        NBEdge* to = it->first;
+        // we cannot test against to->getNumLanes() since not all lanes may be used
+        if (approachedLanes[to].size() >= it->second) {
+            EdgeVector& incoming = incomingEdges[to];
+            // make these connections mutually unconflicting
+            for (EdgeVector::iterator it_e1 = incoming.begin(); it_e1 != incoming.end(); ++it_e1) {
+                for (EdgeVector::iterator it_e2 = incoming.begin(); it_e2 != incoming.end(); ++it_e2) {
+                    myForbids[getIndex(*it_e1, to)][getIndex(*it_e2, to)] = false;
+                }
+            }
+        }
+    }
+}
 
 /****************************************************************************/
 

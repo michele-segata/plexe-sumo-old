@@ -53,7 +53,6 @@ using namespace traci;
 bool
 TraCIServerAPI_MeMeDetector::processGet(TraCIServer& server, tcpip::Storage& inputStorage,
                                         tcpip::Storage& outputStorage) {
-    std::string warning = ""; // additional description for response
     // variable & id
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
@@ -111,7 +110,7 @@ TraCIServerAPI_MeMeDetector::processGet(TraCIServer& server, tcpip::Storage& inp
                 break;
         }
     }
-    server.writeStatusCmd(CMD_GET_MULTI_ENTRY_EXIT_DETECTOR_VARIABLE, RTYPE_OK, warning, outputStorage);
+    server.writeStatusCmd(CMD_GET_MULTI_ENTRY_EXIT_DETECTOR_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
     return true;
 }

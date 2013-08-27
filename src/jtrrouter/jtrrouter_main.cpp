@@ -79,13 +79,13 @@
  * weights which may be supplied in a separate file
  */
 void
-initNet(RONet& net, ROLoader& loader, OptionsCont& oc,
-        const std::vector<SUMOReal> &turnDefs) {
+initNet(RONet& net, ROLoader& loader,
+        const std::vector<SUMOReal>& turnDefs) {
     // load the net
     ROJTREdgeBuilder builder;
     loader.loadNet(net, builder);
     // set the turn defaults
-    const std::map<std::string, ROEdge*> &edges = net.getEdgeMap();
+    const std::map<std::string, ROEdge*>& edges = net.getEdgeMap();
     for (std::map<std::string, ROEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
         static_cast<ROJTREdge*>((*i).second)->setTurnDefaults(turnDefs);
     }
@@ -100,7 +100,7 @@ getTurningDefaults(OptionsCont& oc) {
     }
     for (std::vector<std::string>::const_iterator i = defs.begin(); i != defs.end(); ++i) {
         try {
-            SUMOReal val = TplConvert<char>::_2SUMOReal((*i).c_str());
+            SUMOReal val = TplConvert::_2SUMOReal((*i).c_str());
             ret.push_back(val);
         } catch (NumberFormatException&) {
             throw ProcessError("A turn default is not numeric.");
@@ -177,14 +177,14 @@ main(int argc, char** argv) {
     RONet* net = 0;
     try {
         // initialise the application system (messaging, xml, options)
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         ROJTRFrame::fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
-            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
         MsgHandler::initOutputOptions();
         if (!ROJTRFrame::checkOptions()) {
             throw ProcessError();
@@ -194,36 +194,41 @@ main(int argc, char** argv) {
         // load data
         ROLoader loader(oc, true);
         net = new RONet();
-        initNet(*net, loader, oc, defs);
+        initNet(*net, loader, defs);
         try {
             // parse and set the turn defaults first
             loadJTRDefinitions(*net, oc);
             // build routes
             computeRoutes(*net, loader, oc);
-        } catch (SAXParseException& e) {
+        } catch (XERCES_CPP_NAMESPACE::SAXParseException& e) {
             WRITE_ERROR(toString(e.getLineNumber()));
             ret = 1;
-        } catch (SAXException& e) {
-            WRITE_ERROR(TplConvert<XMLCh>::_2str(e.getMessage()));
+        } catch (XERCES_CPP_NAMESPACE::SAXException& e) {
+            WRITE_ERROR(TplConvert::_2str(e.getMessage()));
             ret = 1;
         }
         if (MsgHandler::getErrorInstance()->wasInformed()) {
             throw ProcessError();
         }
-    } catch (ProcessError& e) {
+    } catch (const ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
 #ifndef _DEBUG
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
     } catch (...) {
         MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
         ret = 1;
 #endif
     }
     delete net;
-    OutputDevice::closeAll();
     SystemFrame::close();
     if (ret == 0) {
         std::cout << "Success." << std::endl;
@@ -234,4 +239,3 @@ main(int argc, char** argv) {
 
 
 /****************************************************************************/
-

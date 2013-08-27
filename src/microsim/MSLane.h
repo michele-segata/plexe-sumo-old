@@ -6,6 +6,7 @@
 /// @author  Christoph Sommer
 /// @author  Tino Morenz
 /// @author  Michael Behrisch
+/// @author  Mario Krumnow
 /// @date    Mon, 12 Mar 2001
 /// @version $Id$
 ///
@@ -39,7 +40,9 @@
 #include <deque>
 #include <cassert>
 #include <utils/common/Named.h>
+#include <utils/common/Parameterised.h>
 #include <utils/common/SUMOVehicleClass.h>
+#include <utils/common/SUMOVehicle.h>
 #include <utils/geom/PositionVector.h>
 #include "MSLinkCont.h"
 #include "MSMoveReminder.h"
@@ -68,15 +71,18 @@ class OutputDevice;
  * Class which represents a single lane. Somekind of the main class of the
  *  simulation. Allows moving vehicles.
  */
-class MSLane : public Named {
+class MSLane : public Named, public Parameterised {
 public:
-    /// needs access to myTmpVehicles (this maybe should be done via SUMOReal-buffering!!!)
+    /// needs access to myTmpVehicles (this maybe should be done via double-buffering!!!)
     friend class MSLaneChanger;
     friend class MSCACCLaneChanger;
 
     friend class GUILaneWrapper;
 
     friend class MSXMLRawOut;
+
+    friend class MSQueueExport;
+
 
     /** Function-object in order to find the vehicle, that has just
         passed the detector. */
@@ -104,22 +110,12 @@ public:
 
 
     /// @brief Destructor
-    virtual ~MSLane() ;
+    virtual ~MSLane();
 
 
 
     /// @name Additional initialisation
     /// @{
-
-    /** @brief Delayed initialization (deprecated)
-     *
-     *  Not all lane-members are known at the time the lane is born, above all the pointers
-     *   to other lanes, so we have to initialize later.
-     *
-     * @param[in] succs The list of (outgoing) links
-     * @todo Why are succs not const?
-     */
-    void initialize(MSLinkCont* succs);
 
     /** @brief Delayed initialization
      *
@@ -142,13 +138,13 @@ public:
      *
      * @param[in] rem The move reminder to add
      */
-    virtual void addMoveReminder(MSMoveReminder* rem) ;
+    virtual void addMoveReminder(MSMoveReminder* rem);
 
 
     /** @brief Return the list of this lane's move reminders
      * @return Previously added move reminder
      */
-    inline const std::vector< MSMoveReminder* > &getMoveReminders() const {
+    inline const std::vector< MSMoveReminder* >& getMoveReminders() const {
         return myMoveReminders;
     }
     ///@}
@@ -173,7 +169,7 @@ public:
      * @see MSVehicle::getDepartureDefinition
      * @see MSVehicle::DepartArrivalDefinition
      */
-    bool insertVehicle(MSVehicle& v) ;
+    bool insertVehicle(MSVehicle& v);
 
 
     /** @brief Tries to insert the given vehicle with the given state (speed and pos)
@@ -195,11 +191,11 @@ public:
      */
     virtual bool isInsertionSuccess(MSVehicle* vehicle, SUMOReal speed, SUMOReal pos,
                                     bool recheckNextLanes,
-                                    MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED) ;
+                                    MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED);
 
-    bool pWagGenericInsertion(MSVehicle& veh, SUMOReal speed, SUMOReal maxPos, SUMOReal minPos) ;
-    bool pWagSimpleInsertion(MSVehicle& veh, SUMOReal speed, SUMOReal maxPos, SUMOReal minPos) ;
-    bool maxSpeedGapInsertion(MSVehicle& veh, SUMOReal mspeed) ;
+    bool pWagGenericInsertion(MSVehicle& veh, SUMOReal speed, SUMOReal maxPos, SUMOReal minPos);
+    bool pWagSimpleInsertion(MSVehicle& veh, SUMOReal speed, SUMOReal maxPos, SUMOReal minPos);
+    bool maxSpeedGapInsertion(MSVehicle& veh, SUMOReal mspeed);
 
     /** @brief Tries to insert the given vehicle on any place
      *
@@ -209,7 +205,7 @@ public:
      * @return Whether the vehicle could be inserted
      */
     bool freeInsertion(MSVehicle& veh, SUMOReal speed,
-                       MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED) ;
+                       MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED);
 
 
     /** @brief Inserts the given vehicle at the given position
@@ -219,7 +215,7 @@ public:
      * @param[in] veh The vehicle to insert
      * @param[in] pos The position at which the vehicle shall be inserted
      */
-    void forceVehicleInsertion(MSVehicle* veh, SUMOReal pos) ;
+    void forceVehicleInsertion(MSVehicle* veh, SUMOReal pos);
     /// @}
 
 
@@ -238,13 +234,13 @@ public:
      * @param[in] leftVehicleLength The distance the vehicle laps into this lane
      * @return This lane's length
      */
-    SUMOReal setPartialOccupation(MSVehicle* v, SUMOReal leftVehicleLength) ;
+    SUMOReal setPartialOccupation(MSVehicle* v, SUMOReal leftVehicleLength);
 
 
     /** @brief Removes the information about a vehicle lapping into this lane
      * @param[in] v The vehicle which laps into this lane
      */
-    void resetPartialOccupation(MSVehicle* v) ;
+    void resetPartialOccupation(MSVehicle* v);
 
 
     /** @brief Returns the vehicle which laps into this lane
@@ -271,7 +267,7 @@ public:
      *  returned member is 0.
      * @return Information about the last vehicle and it's back position
      */
-    std::pair<MSVehicle*, SUMOReal> getLastVehicleInformation() const ;
+    std::pair<MSVehicle*, SUMOReal> getLastVehicleInformation() const;
     /// @}
 
 
@@ -293,7 +289,7 @@ public:
      *  afterwards using "releaseVehicles".
      * @return The vehicles on this lane
      */
-    virtual const std::deque< MSVehicle* > &getVehiclesSecure() const {
+    virtual const std::deque< MSVehicle* >& getVehiclesSecure() const {
         return myVehicles;
     }
 
@@ -324,11 +320,31 @@ public:
         return myShape;
     }
 
+    /* @brief fit the given lane position to a visibly suitable geometry position
+     * (lane length might differ from geomety length */
+    inline SUMOReal interpolateLanePosToGeometryPos(SUMOReal lanePos) const {
+        return lanePos * myLengthGeometryFactor;
+    }
 
-    /** @brief Returns the lane's maximum speed
-     * @return This lane's maximum speed
+    /* @brief fit the given geomtry position to a valid lane position
+     * (lane length might differ from geomety length */
+    inline SUMOReal interpolateGeometryPosToLanePos(SUMOReal geometryPos) const {
+        return geometryPos / myLengthGeometryFactor;
+    }
+
+    /** @brief Returns the lane's maximum speed, given a vehicle's speed limit adaptation
+     * @param[in] The vehicle to return the adapted speed limit for
+     * @return This lane's resulting max. speed
      */
-    SUMOReal getMaxSpeed() const {
+    SUMOReal getVehicleMaxSpeed(const SUMOVehicle* const veh) const {
+        return myMaxSpeed * veh->getChosenSpeedFactor();
+    }
+
+
+    /** @brief Returns the lane's maximum allowed speed
+     * @return This lane's maximum allowed speed
+     */
+    SUMOReal getSpeedLimit() const {
         return myMaxSpeed;
     }
 
@@ -344,7 +360,7 @@ public:
     /** @brief Returns the vehicle class permissions for this lane
      * @return This lane's allowed vehicle classes
      */
-    inline SVCPermissions getPermissions() {
+    inline SVCPermissions getPermissions() const {
         return myPermissions;
     }
 
@@ -366,7 +382,7 @@ public:
 
     /** Moves the critical vehicles
         This step is done after the responds have been set */
-    virtual bool setCritical(SUMOTime t, std::vector<MSLane*> &into);
+    virtual bool setCritical(SUMOTime t, std::vector<MSLane*>& into);
 
     /// Insert buffered vehicle into the real lane.
     virtual bool integrateNewVehicle(SUMOTime t);
@@ -425,7 +441,7 @@ public:
         return myDict.size();
     }
 
-    static void insertIDs(std::vector<std::string> &into) ;
+    static void insertIDs(std::vector<std::string>& into);
 
     /// Container for vehicles.
     typedef std::deque< MSVehicle* > VehCont;
@@ -437,7 +453,7 @@ public:
     virtual MSLinkCont::const_iterator succLinkSec(const SUMOVehicle& veh,
             unsigned int nRouteSuccs,
             const MSLane& succLinkSource,
-            const std::vector<MSLane*> &conts) const;
+            const std::vector<MSLane*>& conts) const;
 
 
     /** Returns the information whether the given link shows at the end
@@ -490,7 +506,7 @@ public:
         MSLink* viaLink;
     };
 
-    const std::vector<IncomingLaneInfo> &getIncomingLanes() const {
+    const std::vector<IncomingLaneInfo>& getIncomingLanes() const {
         return myIncomingLanes;
     }
 
@@ -503,6 +519,11 @@ public:
 
     std::pair<MSVehicle* const, SUMOReal> getFollowerOnConsecutive(SUMOReal dist, SUMOReal seen,
             SUMOReal leaderSpeed, SUMOReal backOffset, SUMOReal predMaxDecel) const;
+
+
+    /// @brief return by how much further the leader must be inserted to avoid rear end collisions
+    SUMOReal getMissingRearGap(SUMOReal dist, SUMOReal backOffset,
+                               SUMOReal leaderSpeed, SUMOReal leaderMaxDecel) const;
 
 
     /** @brief Returns the leader and the distance to him
@@ -528,10 +549,10 @@ public:
      * @return
      */
     std::pair<MSVehicle* const, SUMOReal> getLeaderOnConsecutive(SUMOReal dist, SUMOReal seen,
-            SUMOReal speed, const MSVehicle& veh, const std::vector<MSLane*> &bestLaneConts) const ;
+            SUMOReal speed, const MSVehicle& veh, const std::vector<MSLane*>& bestLaneConts) const;
 
 
-    MSLane* getLogicalPredecessorLane() const ;
+    MSLane* getLogicalPredecessorLane() const;
 
 
     /// @name Current state retrieval
@@ -540,61 +561,61 @@ public:
     /** @brief Returns the mean speed on this lane
      * @return The average speed of vehicles during the last step; default speed if no vehicle was on this lane
      */
-    SUMOReal getMeanSpeed() const ;
+    SUMOReal getMeanSpeed() const;
 
 
     /** @brief Returns the occupancy of this lane during the last step
      * @return The occupancy during the last step
      */
-    SUMOReal getOccupancy() const ;
+    SUMOReal getOccupancy() const;
 
 
     /** @brief Returns the sum of lengths of vehicles which were on the lane during the last step
      * @return The sum of vehicle lengths of vehicles in the last step
      */
-    SUMOReal getVehLenSum() const ;
+    SUMOReal getVehLenSum() const;
 
 
     /** @brief Returns the sum of last step CO2 emissions
      * @return CO2 emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_CO2Emissions() const ;
+    SUMOReal getHBEFA_CO2Emissions() const;
 
 
     /** @brief Returns the sum of last step CO emissions
      * @return CO emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_COEmissions() const ;
+    SUMOReal getHBEFA_COEmissions() const;
 
 
     /** @brief Returns the sum of last step PMx emissions
      * @return PMx emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_PMxEmissions() const ;
+    SUMOReal getHBEFA_PMxEmissions() const;
 
 
     /** @brief Returns the sum of last step NOx emissions
      * @return NOx emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_NOxEmissions() const ;
+    SUMOReal getHBEFA_NOxEmissions() const;
 
 
     /** @brief Returns the sum of last step HC emissions
      * @return HC emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_HCEmissions() const ;
+    SUMOReal getHBEFA_HCEmissions() const;
 
 
     /** @brief Returns the sum of last step fuel consumption
      * @return fuel consumption of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_FuelConsumption() const ;
+    SUMOReal getHBEFA_FuelConsumption() const;
 
 
     /** @brief Returns the sum of last step noise emissions
      * @return noise emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHarmonoise_NoiseEmissions() const ;
+    SUMOReal getHarmonoise_NoiseEmissions() const;
     /// @}
 
 
@@ -614,7 +635,7 @@ protected:
      */
     virtual void incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed,
                                     const MSLane::VehCont::iterator& at,
-                                    MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED) ;
+                                    MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED);
 
 
 protected:
@@ -679,7 +700,8 @@ protected:
 
     std::map<MSEdge*, std::vector<MSLane*> > myApproachingLanes;
 
-
+    // precomputed myShape.length / myLength
+    const SUMOReal myLengthGeometryFactor;
 
     /// definition of the tatic dictionary type
     typedef std::map< std::string, MSLane* > DictType;

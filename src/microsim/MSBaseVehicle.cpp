@@ -49,20 +49,22 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+// ===========================================================================
+// static members
+// ===========================================================================
+const SUMOTime MSBaseVehicle::NOT_YET_DEPARTED = SUMOTime_MAX;
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
-MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route, const MSVehicleType* type) :
+MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route, const MSVehicleType* type, SUMOReal speedFactor) :
     myParameter(pars),
     myRoute(route),
     myType(type),
     myCurrEdge(route->begin()),
-    myIndividualMaxSpeed(0.0),
-    myHasIndividualMaxSpeed(false),
-    myReferenceSpeed(-1.0),
+    myChosenSpeedFactor(speedFactor),
     myMoveReminders(0),
-    myDeparture(-1),
+    myDeparture(NOT_YET_DEPARTED),
     myArrivalPos(-1),
     myNumberReroutes(0) {
     // init devices
@@ -70,6 +72,7 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route, c
     MSDevice_Tripinfo::buildVehicleDevices(*this, myDevices);
     MSDevice_Routing::buildVehicleDevices(*this, myDevices);
     MSDevice_HBEFA::buildVehicleDevices(*this, myDevices);
+    //
     for (std::vector< MSDevice* >::iterator dev = myDevices.begin(); dev != myDevices.end(); ++dev) {
         myMoveReminders.push_back(std::make_pair(*dev, 0.));
     }
@@ -112,24 +115,7 @@ MSBaseVehicle::getVehicleType() const {
 
 SUMOReal
 MSBaseVehicle::getMaxSpeed() const {
-    if (myHasIndividualMaxSpeed) {
-        return myIndividualMaxSpeed;
-    }
     return myType->getMaxSpeed();
-}
-
-
-SUMOReal
-MSBaseVehicle::adaptMaxSpeed(SUMOReal referenceSpeed) {
-    if (myType->hasSpeedDeviation() && referenceSpeed != myReferenceSpeed) {
-        myHasIndividualMaxSpeed = true;
-        myIndividualMaxSpeed = myType->getMaxSpeedWithDeviation(referenceSpeed);
-        myReferenceSpeed = referenceSpeed;
-    }
-    if (myHasIndividualMaxSpeed) {
-        return myIndividualMaxSpeed;
-    }
-    return MIN2(myType->getMaxSpeed(), referenceSpeed);
 }
 
 
@@ -150,7 +136,7 @@ MSBaseVehicle::getEdge() const {
 
 
 void
-MSBaseVehicle::reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle> &router, bool withTaz) {
+MSBaseVehicle::reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, bool withTaz) {
     // check whether to reroute
     std::vector<const MSEdge*> edges;
     if (withTaz && MSEdge::dictionary(myParameter->fromTaz + "-source") && MSEdge::dictionary(myParameter->toTaz + "-sink")) {
@@ -182,7 +168,8 @@ MSBaseVehicle::replaceRouteEdges(const MSEdgeVector& edges, bool onInit) {
     } else {
         id = id + "!var#1";
     }
-    MSRoute* newRoute = new MSRoute(id, edges, 0, myRoute->getColor(), myRoute->getStops());
+    const RGBColor& c = myRoute->getColor();
+    MSRoute* newRoute = new MSRoute(id, edges, 0, &c == &RGBColor::DEFAULT_COLOR ? 0 : new RGBColor(c), myRoute->getStops());
     if (!MSRoute::dictionary(id, newRoute)) {
         delete newRoute;
         return false;
@@ -197,7 +184,7 @@ MSBaseVehicle::replaceRouteEdges(const MSEdgeVector& edges, bool onInit) {
 
 
 SUMOReal
-MSBaseVehicle::getPreDawdleAcceleration() const {
+MSBaseVehicle::getAcceleration() const {
     return 0;
 }
 
@@ -209,17 +196,16 @@ MSBaseVehicle::onDepart() {
 }
 
 
-SUMOTime
-MSBaseVehicle::getDeparture() const {
-    return myDeparture;
+bool
+MSBaseVehicle::hasDeparted() const {
+    return myDeparture != NOT_YET_DEPARTED;
 }
 
 
-unsigned int
-MSBaseVehicle::getNumberReroutes() const {
-    return myNumberReroutes;
+bool
+MSBaseVehicle::hasArrived() const {
+    return succEdge(1) == 0;
 }
-
 
 void
 MSBaseVehicle::addPerson(MSPerson* /*person*/) {
@@ -282,9 +268,9 @@ MSBaseVehicle::calculateArrivalPos() {
     const SUMOReal lastLaneLength = (myRoute->getLastEdge()->getLanes())[0]->getLength();
     switch (myParameter->arrivalPosProcedure) {
         case ARRIVAL_POS_GIVEN:
-			if (fabs(myParameter->arrivalPos) > lastLaneLength) {
-				WRITE_WARNING("Vehicle '" + getID() + "' will not be able to arrive at the given position!");
-			}
+            if (fabs(myParameter->arrivalPos) > lastLaneLength) {
+                WRITE_WARNING("Vehicle '" + getID() + "' will not be able to arrive at the given position!");
+            }
             // Maybe we should warn the user about invalid inputs!
             myArrivalPos = MIN2(myParameter->arrivalPos, lastLaneLength);
             if (myArrivalPos < 0) {
@@ -294,8 +280,7 @@ MSBaseVehicle::calculateArrivalPos() {
         case ARRIVAL_POS_RANDOM:
             myArrivalPos = RandHelper::rand(static_cast<SUMOReal>(0), lastLaneLength);
             break;
-        case ARRIVAL_POS_MAX:
-        case ARRIVAL_POS_DEFAULT:
+        default:
             myArrivalPos = lastLaneLength;
             break;
     }

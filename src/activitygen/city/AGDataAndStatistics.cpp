@@ -68,18 +68,8 @@ AGDataAndStatistics::getRandomPopDistributed(int n, int m) {
     if (m > limitEndAge) {
         m = limitEndAge;
     }
-    SUMOReal alea = RandHelper::rand();
-    SUMOReal beginProp = getPropYoungerThan(n);
-    SUMOReal total = getPropYoungerThan(m) - beginProp;
-    if (total <= 0) {
-        return -1;
-    }
-    /**
-     * alea = alea * total + beginProp =====> easier test
-     * than: alea < (getPropYoungerThan(a+1)-beginProp)/total
-     */
-    alea = alea * total + beginProp;
-    for (int a = n ; a < m ; ++a) {
+    const SUMOReal alea = RandHelper::rand(getPropYoungerThan(n), getPropYoungerThan(m));
+    for (int a = n; a < m; ++a) {
         if (alea < getPropYoungerThan(a + 1)) {
             return a;
         }
@@ -91,7 +81,7 @@ int
 AGDataAndStatistics::getPoissonsNumberOfChildren(SUMOReal mean) {
     SUMOReal alea = RandHelper::rand();
     SUMOReal cumul = 0;
-    for (int nbr = 0 ; nbr < LIMIT_CHILDREN_NUMBER ; ++nbr) {
+    for (int nbr = 0; nbr < LIMIT_CHILDREN_NUMBER; ++nbr) {
         cumul += poisson(mean, nbr);
         if (cumul > alea) {
             return nbr;
@@ -102,10 +92,7 @@ AGDataAndStatistics::getPoissonsNumberOfChildren(SUMOReal mean) {
 
 SUMOReal
 AGDataAndStatistics::poisson(SUMOReal mean, int occ) {
-    SUMOReal proba = exp(-mean);
-    proba *= pow(mean, occ);
-    proba /= (SUMOReal)factorial(occ);
-    return proba;
+    return exp(-mean) * pow(mean, occ) / (SUMOReal)factorial(occ);
 }
 
 int
@@ -140,7 +127,7 @@ AGDataAndStatistics::getPropYoungerThan(int age) {
     int previousAge = 0;
     SUMOReal prop = 0;
 
-    for (it = population.begin() ; it != population.end() ; ++it) {
+    for (it = population.begin(); it != population.end(); ++it) {
         if (it->first < age) {
             sum += it->second;
         } else if (it->first >= age && previousAge < age) {
@@ -155,7 +142,7 @@ AGDataAndStatistics::getPropYoungerThan(int age) {
 
 int
 AGDataAndStatistics::getPeopleYoungerThan(int age) {
-    return (int)((SUMOReal)inhabitants * getPropYoungerThan(age));
+    return (int)((SUMOReal)inhabitants * getPropYoungerThan(age) + .5);
 }
 
 int
@@ -164,16 +151,16 @@ AGDataAndStatistics::getPeopleOlderThan(int age) {
 }
 
 void
-AGDataAndStatistics::normalizeMapProb(std::map<int, SUMOReal> *myMap) {
+AGDataAndStatistics::normalizeMapProb(std::map<int, SUMOReal>* myMap) {
     SUMOReal sum = 0;
     std::map<int, SUMOReal>::iterator it;
-    for (it = myMap->begin() ; it != myMap->end() ; ++it) {
+    for (it = myMap->begin(); it != myMap->end(); ++it) {
         sum += it->second;
     }
     if (sum == 0) {
         return;
     }
-    for (it = myMap->begin() ; it != myMap->end() ; ++it) {
+    for (it = myMap->begin(); it != myMap->end(); ++it) {
         it->second = it->second / sum;
     }
 }
@@ -187,7 +174,7 @@ AGDataAndStatistics::getInverseExpRandomValue(SUMOReal mean, SUMOReal maxVar) {
     //we have to scale the distribution because maxVar is different from INF
     SUMOReal scale = exp((-1) * maxVar);
     //new p: scaled
-    p = p * (1 - scale) + scale; // p = [scale ; 1) ==> (1-p) = (0 ; 1-scale]
+    p = p * (1 - scale) + scale; // p = [scale; 1) ==> (1-p) = (0; 1-scale]
 
     SUMOReal variation = (-1) * log(p);
     //decide the side of the mean value
@@ -204,7 +191,7 @@ AGDataAndStatistics::getRandomCityGateByIncoming() {
     SUMOReal alea = RandHelper::rand();
     SUMOReal total = 0;
     std::map<int, SUMOReal>::iterator it;
-    for (it = incoming.begin() ; it != incoming.end() ; ++it) {
+    for (it = incoming.begin(); it != incoming.end(); ++it) {
         total += it->second;
         if (alea < total) {
             return it->first;
@@ -219,7 +206,7 @@ AGDataAndStatistics::getRandomCityGateByOutgoing() {
     SUMOReal alea = RandHelper::rand();
     SUMOReal total = 0;
     std::map<int, SUMOReal>::iterator it;
-    for (it = outgoing.begin() ; it != outgoing.end() ; ++it) {
+    for (it = outgoing.begin(); it != outgoing.end(); ++it) {
         total += it->second;
         if (alea < total) {
             return it->first;

@@ -65,11 +65,11 @@ class MSRoute : public Named {
 public:
     /// Constructor
     MSRoute(const std::string& id, const MSEdgeVector& edges,
-            unsigned int references, const RGBColor& c,
-            const std::vector<SUMOVehicleParameter::Stop> &stops) ;
+            unsigned int references, const RGBColor* const c,
+            const std::vector<SUMOVehicleParameter::Stop>& stops);
 
     /// Destructor
-    virtual ~MSRoute() ;
+    virtual ~MSRoute();
 
     /// Returns the begin of the list of edges to pass
     MSRouteIterator begin() const;
@@ -89,18 +89,23 @@ public:
     /** @brief deletes the route if there are no further references to it*/
     void release() const;
 
-    /// output the edge ids up to but not including the id of the given edge
-    void writeEdgeIDs(OutputDevice& os, const MSEdge* const from, const MSEdge* const upTo = 0) const;
+    /** @brief Output the edge ids up to but not including the id of the given edge
+     * @param[in] os The stream to write the routes into (binary)
+     * @param[in] from The first edge to be written
+     * @param[in] upTo The first edge that shall not be written
+     * @return The number of edges written
+     */
+    int writeEdgeIDs(OutputDevice& os, const MSEdge* const from, const MSEdge* const upTo = 0) const;
 
     bool contains(const MSEdge* const edge) const {
         return std::find(myEdges.begin(), myEdges.end(), edge) != myEdges.end();
     }
 
-    bool containsAnyOf(const std::vector<MSEdge*> &edgelist) const;
+    bool containsAnyOf(const std::vector<MSEdge*>& edgelist) const;
 
     const MSEdge* operator[](unsigned index) const;
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /// @name State I/O (mesosim only)
     /// @{
 
@@ -108,14 +113,14 @@ public:
      *
      * @param[in] os The stream to write the routes into (binary)
      */
-    static void dict_saveState(std::ostream& os) ;
+    static void dict_saveState(std::ostream& os);
 
 
     /** @brief Loads routes from the state.
      *
      * @param[in] bis The input to read the routes from (binary)
      */
-    static void dict_loadState(BinaryInputDevice& bis) ;
+    static void dict_loadState(BinaryInputDevice& bis);
     /// @}
 #endif
 
@@ -139,7 +144,7 @@ public:
     const RGBColor& getColor() const;
 
     /// Returns the stops
-    const std::vector<SUMOVehicleParameter::Stop> &getStops() const;
+    const std::vector<SUMOVehicleParameter::Stop>& getStops() const;
 
 public:
     /** @brief Adds a route to the dictionary.
@@ -162,7 +167,7 @@ public:
      * @param[in] route pointer to the distribution object
      * @return          whether adding was successful
      */
-    static bool dictionary(const std::string& id, RandomDistributor<const MSRoute*> *routeDist);
+    static bool dictionary(const std::string& id, RandomDistributor<const MSRoute*>* routeDist);
 
     /** @brief Returns the named route or a sample from the named distribution.
      *
@@ -181,13 +186,25 @@ public:
      * @param[in] id    the id of the route distribution
      * @return          the route distribution
      */
-    static RandomDistributor<const MSRoute*> *distDictionary(const std::string& id);
+    static RandomDistributor<const MSRoute*>* distDictionary(const std::string& id);
 
     /// Clears the dictionary (delete all known routes, too)
     static void clear();
 
-    static void insertIDs(std::vector<std::string> &into);
+    static void insertIDs(std::vector<std::string>& into);
 
+    /// @brief release the route (to be used as function pointer with RandomDistributor)
+    static void releaseRoute(const MSRoute* route) {
+        route->release();
+    }
+
+    static void setMaxRouteDistSize(unsigned int size) {
+        MaxRouteDistSize = size;
+    }
+
+    static unsigned int getMaxRouteDistSize() {
+        return MaxRouteDistSize;
+    }
 
 private:
     /// The list of edges to pass
@@ -197,7 +214,7 @@ private:
     mutable unsigned int myReferenceCounter;
 
     /// The color
-    RGBColor myColor;
+    const RGBColor* const myColor;
 
     /// @brief List of the stops on the parsed route
     std::vector<SUMOVehicleParameter::Stop> myStops;
@@ -214,6 +231,13 @@ private:
 
     /// The dictionary container
     static RouteDistDict myDistDict;
+
+    /// @brief the maximum size for each routeDistribution
+    static unsigned int MaxRouteDistSize;
+
+private:
+    /** invalid assignment operator */
+    MSRoute& operator=(const MSRoute& s);
 
 };
 

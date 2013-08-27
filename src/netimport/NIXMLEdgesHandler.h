@@ -78,11 +78,11 @@ public:
      * @param[in] options The options to use while building edges
      */
     NIXMLEdgesHandler(NBNodeCont& nc, NBEdgeCont& ec,
-                      NBTypeCont& tc, NBDistrictCont& dc, OptionsCont& options) ;
+                      NBTypeCont& tc, NBDistrictCont& dc, OptionsCont& options);
 
 
     /// @brief Destructor
-    ~NIXMLEdgesHandler() ;
+    ~NIXMLEdgesHandler();
 
 
 protected:
@@ -97,7 +97,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) ;
+                        const SUMOSAXAttributes& attrs);
 
 
     /** @brief Called when a closing tag occurs
@@ -106,7 +106,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int element) ;
+    void myEndElement(int element);
     //@}
 
 
@@ -118,7 +118,7 @@ private:
      * @param[in] attrs The attributes to read the shape from
      * @return The edge's shape
      */
-    PositionVector tryGetShape(const SUMOSAXAttributes& attrs) ;
+    PositionVector tryGetShape(const SUMOSAXAttributes& attrs);
 
 
     /** @brief Tries to parse the spread type
@@ -133,17 +133,7 @@ private:
      * @param[in] attrs The SAX-attributes to parse the nodes from
      * @return Whether valid nodes exist
      */
-    bool setNodes(const SUMOSAXAttributes& attrs) ;
-
-
-    /** @brief tries to parse one of the node's positions
-        Which position has to be parsed is defined by the given call variables */
-    SUMOReal tryGetPosition(const SUMOSAXAttributes& attrs, SumoXMLAttr attrID,
-                            const std::string& attrName);
-
-
-    NBNode* insertNodeChecking(const Position& pos,
-                               const std::string& name, const std::string& dir);
+    bool setNodes(const SUMOSAXAttributes& attrs);
 
 
 private:
@@ -193,14 +183,17 @@ private:
     /// @brief Information about lane permissions
     SVCPermissions myPermissions;
 
+    /// @brief Whether the edge shape shall be kept generally
+    bool myKeepEdgeShape;
+
+    /// @brief Whether the edge shape shall be kept at reinitilization
+    bool myReinitKeepEdgeShape;
+
     /// @}
 
 
     /// @brief Whether this edge definition is an update of a previously inserted edge
     bool myIsUpdate;
-
-    /// @brief The currently processed edge
-    NBEdge* myCurrentEdge;
 
 
     /// @name Used instance containers (access to nodes, edges, types, etc.)
@@ -219,6 +212,9 @@ private:
     NBDistrictCont& myDistrictCont;
     /// @}
 
+
+    /// @brief The currently processed edge
+    NBEdge* myCurrentEdge;
 
     /** @struct Split
      * @brief A structure which describes changes of lane number along the road
@@ -277,8 +273,7 @@ private:
     /// @brief Information whether at least one edge's attributes were overwritten
     bool myHaveReportedAboutOverwriting;
 
-    bool myHaveWarnedAboutDeprecatedSpreadType, myHaveWarnedAboutDeprecatedFromTo,
-         myHaveWarnedAboutDeprecatedNoLanes, myHaveWarnedAboutDeprecatedLaneId;
+    bool myHaveWarnedAboutDeprecatedLaneId;
 
 
 private:

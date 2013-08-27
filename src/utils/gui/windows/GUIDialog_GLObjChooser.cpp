@@ -43,12 +43,6 @@
 #include <utils/gui/globjects/GUIGlObject_AbstractAdd.h>
 #include "GUIDialog_GLObjChooser.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
-
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
@@ -77,7 +71,7 @@ GUIDialog_GLObjChooser::GUIDialog_GLObjChooser(
     FXIcon* icon,
     const FXString& title,
     GUIGlObjectType type,
-    const std::vector<GUIGlID> &ids,
+    const std::vector<GUIGlID>& ids,
     GUIGlObjectStorage& glStorage):
     FXMainWindow(parent->getApp(), title, icon, NULL, DECOR_ALL, 20, 20, 300, 300),
     myObjectType(type),
@@ -194,7 +188,7 @@ GUIDialog_GLObjChooser::onCmdFilter(FXObject*, FXSelector, void*) {
         }
     }
     myList->clearItems();
-    const int numSelected = selectedGlIDs.size();
+    const int numSelected = (const int)selectedGlIDs.size();
     for (int i = 0; i < numSelected; i++) {
         myList->appendItem(selectedMicrosimIDs[i], flag, (void*) & (*myIDs.find(selectedGlIDs[i])));
     }

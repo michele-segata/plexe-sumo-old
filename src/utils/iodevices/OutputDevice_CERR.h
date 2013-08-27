@@ -45,7 +45,7 @@ class OutputDevice_CERR : public OutputDevice {
 public:
     /** @brief Returns the single cerr instance
      *
-     * Creates and returns the cerr device. 
+     * Creates and returns the cerr device.
      */
     static OutputDevice* getDevice();
 
@@ -57,14 +57,14 @@ protected:
     /** @brief Returns the associated ostream
      * @return cerr
      */
-    std::ostream& getOStream() ;
+    std::ostream& getOStream();
 
 
     /** @brief Called after every write access.
      *
      * Calls flush on stderr.
      */
-    virtual void postWriteHook() ;
+    virtual void postWriteHook();
     /// @}
 
 
@@ -76,7 +76,7 @@ private:
 
 
     /// @brief Destructor
-    ~OutputDevice_CERR() ;
+    ~OutputDevice_CERR();
 
 
 private:

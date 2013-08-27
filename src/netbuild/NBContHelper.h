@@ -70,7 +70,7 @@ public:
     static SUMOReal getMinSpeed(const EdgeVector& edges);
 
     /** writes the vector of bools to the given stream */
-    static std::ostream& out(std::ostream& os, const std::vector<bool> &v);
+    static std::ostream& out(std::ostream& os, const std::vector<bool>& v);
 
 
     /**
@@ -189,6 +189,10 @@ public:
 
         /// @brief The related node
         const NBNode* const myNode;
+
+    private:
+        /// @brief Invalidated assignment operator
+        edge_opposite_direction_sorter& operator=(const edge_opposite_direction_sorter& s);
 
     };
 

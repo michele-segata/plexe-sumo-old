@@ -45,14 +45,6 @@
 
 
 // ===========================================================================
-// xerces 2.2 compatibility
-// ===========================================================================
-#if defined(XERCES_HAS_CPP_NAMESPACE)
-using namespace XERCES_CPP_NAMESPACE;
-#endif
-
-
-// ===========================================================================
 // class definitions
 // ===========================================================================
 /**
@@ -80,7 +72,7 @@ using namespace XERCES_CPP_NAMESPACE;
  *  which knows all tags/attributes used by SUMO. It is still kept separate for
  *  an easier maintainability and later extensions.
  */
-class GenericSAXHandler : public DefaultHandler {
+class GenericSAXHandler : public XERCES_CPP_NAMESPACE::DefaultHandler {
 
 public:
     /**
@@ -124,7 +116,7 @@ public:
      * @todo do not generate and report the string-representation
      */
     void startElement(const XMLCh* const uri, const XMLCh* const localname,
-                      const XMLCh* const qname, const Attributes& attrs);
+                      const XMLCh* const qname, const XERCES_CPP_NAMESPACE::Attributes& attrs);
 
 
     /**
@@ -168,7 +160,7 @@ public:
      *
      * @todo Hmmm - this is as unsafe as having a direct access to the variable; recheck
      */
-    void setFileName(const std::string& name) ;
+    void setFileName(const std::string& name);
 
 
     /**
@@ -176,7 +168,7 @@ public:
      *
      * @return The name of the currently processed file
      */
-    const std::string& getFileName() const ;
+    const std::string& getFileName() const;
 
 
     /// @name SAX ErrorHandler callbacks
@@ -190,7 +182,7 @@ public:
      *
      * @param[in] exception The occured exception to process
      */
-    void warning(const SAXParseException& exception) ;
+    void warning(const XERCES_CPP_NAMESPACE::SAXParseException& exception);
 
 
     /**
@@ -201,7 +193,7 @@ public:
      * @param[in] exception The occured exception to process
      * @exception ProcessError On any call
      */
-    void error(const SAXParseException& exception) ;
+    void error(const XERCES_CPP_NAMESPACE::SAXParseException& exception);
 
 
     /**
@@ -212,9 +204,12 @@ public:
      * @exception ProcessError On any call
      * @param[in] exception The occured exception to process
      */
-    void fatalError(const SAXParseException& exception) ;
+    void fatalError(const XERCES_CPP_NAMESPACE::SAXParseException& exception);
     //@}
 
+
+    // Reader needs access to myStartElement, myEndElement
+    friend class SUMOSAXReader;
 
 
 protected:
@@ -227,7 +222,7 @@ protected:
      * @param[in] exception The name of the currently processed file
      * @return A string describing the given exception
      */
-    std::string buildErrorMessage(const SAXParseException& exception) ;
+    std::string buildErrorMessage(const XERCES_CPP_NAMESPACE::SAXParseException& exception);
 
 
     /**
@@ -271,7 +266,7 @@ private:
      * @param[in] name The string to convert
      * @return The string converted into a XMLCh-string
      */
-    XMLCh* convert(const std::string& name) const ;
+    XMLCh* convert(const std::string& name) const;
 
 
     /**
@@ -282,7 +277,7 @@ private:
      * @param[in] tag The string to convert
      * @return The int-value that represents the string, SUMO_TAG_NOTHING if the named attribute is not known
      */
-    int convertTag(const std::string& tag) const ;
+    int convertTag(const std::string& tag) const;
 
 
 private:
@@ -321,6 +316,13 @@ private:
 
     /// @brief The name of the currently parsed file
     std::string myFileName;
+
+private:
+    /// @brief invalidated copy constructor
+    GenericSAXHandler(const GenericSAXHandler& s);
+
+    /// @brief invalidated assignment operator
+    const GenericSAXHandler& operator=(const GenericSAXHandler& s);
 
 };
 

@@ -43,6 +43,7 @@
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOVTypeParameter.h>
 #include <utils/common/RGBColor.h>
+#include <foreign/mersenne/MersenneTwister.h>
 
 
 // ===========================================================================
@@ -74,36 +75,22 @@ class MSVehicleType {
 public:
     /** @brief Constructor.
      *
-     * @param[in] id The vehicle type's id
-     * @param[in] length The length of vehicles that of this type
-     * @param[in] minGap The free space in front of the vehicles of this class
-     * @param[in] maxSpeed The maximum velocity vehicles of this type may drive with
-     * @param[in] prob The probability of this vehicle type
-     * @param[in] speedFactor The speed factor to scale maximum speed with
-     * @param[in] speedDev The speed deviation
-     * @param[in] vclass The class vehicles of this type belong to
-     * @param[in] emissionClass The emission class vehicles of this type belong to
-     * @param[in] width The width of the vehicles when being drawn
-     * @param[in] height The height of the vehicles when being drawn
-     * @param[in] shape How vehicles of this class shall be drawn
-     * @param[in] osgFile Model file of this class
-     * @param[in] lcModel Name of the lane-change model to use
-     * @param[in] c Color of this vehicle type
+     * @param[in] parameter The vehicle type's parameter
      */
-    MSVehicleType(const std::string& id, const SUMOReal lengthWithGap,
-                  const SUMOReal minGap, const SUMOReal maxSpeed,
-                  const SUMOReal prob, const SUMOReal speedFactor,
-                  const SUMOReal speedDev, const SUMOVehicleClass vclass,
-                  const SUMOEmissionClass emissionClass,
-                  const SUMOReal width, const SUMOReal height,
-                  const SUMOVehicleShape shape, const std::string osgFile,
-                  const std::string& lcModel,
-                  const RGBColor& c) ;
+    MSVehicleType(const SUMOVTypeParameter& parameter);
 
 
     /// @brief Destructor
-    virtual ~MSVehicleType() ;
+    virtual ~MSVehicleType();
 
+
+    /** @brief Returns whether the given parameter was set
+     * @param[in] what The parameter which one asks for
+     * @return Whether the given parameter was set
+     */
+    bool wasSet(int what) const {
+        return (myParameter.setParameter & what) != 0;
+    }
 
 
     /// @name Atomar getter for simulation
@@ -113,7 +100,7 @@ public:
      * @return This type's id
      */
     const std::string& getID() const {
-        return myID;
+        return myParameter.id;
     }
 
 
@@ -121,7 +108,7 @@ public:
      * @return The length vehicles of this type have in m
      */
     SUMOReal getLength() const {
-        return myLength;
+        return myParameter.length;
     }
 
 
@@ -129,7 +116,7 @@ public:
      * @return The length vehicles of this type have (including the minimum gap in m
      */
     SUMOReal getLengthWithGap() const {
-        return myLength + myMinGap;
+        return myParameter.length + myParameter.minGap;
     }
 
 
@@ -137,7 +124,7 @@ public:
      * @return The place before the vehicle
      */
     SUMOReal getMinGap() const {
-        return myMinGap;
+        return myParameter.minGap;
     }
 
 
@@ -161,36 +148,21 @@ public:
      * @return The maximum speed (in m/s) of vehicles of this class
      */
     SUMOReal getMaxSpeed() const {
-        return myMaxSpeed;
+        return myParameter.maxSpeed;
     }
 
-    /** @brief Get vehicle's maximum speed [m/s].
-     * @return The maximum speed (in m/s) of vehicles of this class
+
+    /** @brief Computes and returns the speed deviation
+     * @return A new, random speed deviation
      */
-    SUMOReal hasSpeedDeviation() const {
-        return mySpeedDev != 0.0 || mySpeedFactor != 1.0;
-    }
-
-
-    /** @brief Get vehicle's maximum speed [m/s] drawn from a normal distribution.
-     *
-     * The speed is calculated relative to the reference speed (which is usually
-     *  the maximum allowed speed on a lane or edge).
-     * @return The maximum speed (in m/s) of vehicles of this class
-     */
-    SUMOReal getMaxSpeedWithDeviation(SUMOReal referenceSpeed) const {
-        SUMOReal meanSpeed = mySpeedFactor * referenceSpeed;
-        SUMOReal speedDev = mySpeedDev * meanSpeed;
-        SUMOReal speed = MIN3(RandHelper::randNorm(meanSpeed, speedDev), meanSpeed + 2 * speedDev, myMaxSpeed);
-        return MAX3((SUMOReal)0.0, speed, meanSpeed - 2 * speedDev);
-    }
+    SUMOReal computeChosenSpeedDeviation(MTRand& rng) const;
 
 
     /** @brief Get the default probability of this vehicle type
      * @return The probability to use this type
      */
     SUMOReal getDefaultProbability() const {
-        return myDefaultProbability;
+        return myParameter.defaultProbability;
     }
 
 
@@ -199,7 +171,7 @@ public:
      * @see SUMOVehicleClass
      */
     SUMOVehicleClass getVehicleClass() const {
-        return myVehicleClass;
+        return myParameter.vehicleClass;
     }
 
 
@@ -208,7 +180,7 @@ public:
      * @see SUMOEmissionClass
      */
     SUMOEmissionClass getEmissionClass() const {
-        return myEmissionClass;
+        return myParameter.emissionClass;
     }
 
 
@@ -216,7 +188,7 @@ public:
      * @return The color of this type
      */
     const RGBColor& getColor() const {
-        return myColor;
+        return myParameter.color;
     }
 
 
@@ -224,7 +196,7 @@ public:
      * @return The speed factor of this type
      */
     SUMOReal getSpeedFactor() const {
-        return mySpeedFactor;
+        return myParameter.speedFactor;
     }
 
 
@@ -232,7 +204,7 @@ public:
      * @return The speed deviation of this type
      */
     SUMOReal getSpeedDeviation() const {
-        return mySpeedDev;
+        return myParameter.speedDev;
     }
     /// @}
 
@@ -245,14 +217,14 @@ public:
      * @return The width of this type's vehicles
      */
     SUMOReal getWidth() const {
-        return myWidth;
+        return myParameter.width;
     }
 
     /** @brief Get the height which vehicles of this class shall have when being drawn
      * @return The height of this type's vehicles
      */
     SUMOReal getHeight() const {
-        return myHeight;
+        return myParameter.height;
     }
 
     /** @brief Get this vehicle type's shape
@@ -260,14 +232,22 @@ public:
      * @see SUMOVehicleShape
      */
     SUMOVehicleShape getGuiShape() const {
-        return myShape;
+        return myParameter.shape;
     }
 
     /** @brief Get this vehicle type's 3D model file name
      * @return The model file name of this vehicle type
      */
     std::string getOSGFile() const {
-        return myOSGFile;
+        return myParameter.osgFile;
+    }
+
+
+    /** @brief Get this vehicle type's raster model file name
+     * @return The raster file name of this vehicle type
+     */
+    std::string getImgFile() const {
+        return myParameter.imgFile;
     }
 
     /// @}
@@ -291,7 +271,7 @@ public:
      *
      * @param[in] length The new length of this type
      */
-    void setLength(const SUMOReal& length) ;
+    void setLength(const SUMOReal& length);
 
 
     /** @brief Set a new value for this type's minimum gap
@@ -301,7 +281,7 @@ public:
      *
      * @param[in] offset The new minimum gap of this type
      */
-    void setMinGap(const SUMOReal& minGap) ;
+    void setMinGap(const SUMOReal& minGap);
 
 
     /** @brief Set a new value for this type's maximum speed
@@ -311,13 +291,13 @@ public:
      *
      * @param[in] maxSpeed The new maximum speed of this type
      */
-    void setMaxSpeed(const SUMOReal& maxSpeed) ;
+    void setMaxSpeed(const SUMOReal& maxSpeed);
 
 
     /** @brief Set a new value for this type's vehicle class
      * @param[in] vclass The new vehicle class of this type
      */
-    void setVClass(SUMOVehicleClass vclass) ;
+    void setVClass(SUMOVehicleClass vclass);
 
 
     /** @brief Set a new value for this type's default probability
@@ -327,7 +307,7 @@ public:
      *
      * @param[in] prob The new default probability of this type
      */
-    void setDefaultProbability(const SUMOReal& prob) ;
+    void setDefaultProbability(const SUMOReal& prob);
 
 
     /** @brief Set a new value for this type's speed factor
@@ -337,7 +317,7 @@ public:
      *
      * @param[in] factor The new speed factor of this type
      */
-    void setSpeedFactor(const SUMOReal& factor) ;
+    void setSpeedFactor(const SUMOReal& factor);
 
 
     /** @brief Set a new value for this type's speed deviation
@@ -347,19 +327,19 @@ public:
      *
      * @param[in] dev The new speed deviation of this type
      */
-    void setSpeedDeviation(const SUMOReal& dev) ;
+    void setSpeedDeviation(const SUMOReal& dev);
 
 
     /** @brief Set a new value for this type's emission class
      * @param[in] eclass The new emission class of this type
      */
-    void setEmissionClass(SUMOEmissionClass eclass) ;
+    void setEmissionClass(SUMOEmissionClass eclass);
 
 
     /** @brief Set a new value for this type's color
      * @param[in] color The new color of this type
      */
-    void setColor(const RGBColor& color) ;
+    void setColor(const RGBColor& color);
 
 
     /** @brief Set a new value for this type's width
@@ -369,13 +349,13 @@ public:
      *
      * @param[in] width The new width of this type
      */
-    void setWidth(const SUMOReal& width) ;
+    void setWidth(const SUMOReal& width);
 
 
     /** @brief Set a new value for this type's shape
      * @param[in] shape The new shape of this type
      */
-    void setShape(SUMOVehicleShape shape) ;
+    void setShape(SUMOVehicleShape shape);
     /// @}
 
 
@@ -388,7 +368,7 @@ public:
      * @return The built vehicle type
      * @exception ProcessError on false values (not et used)
      */
-    static MSVehicleType* build(SUMOVTypeParameter& from) ;
+    static MSVehicleType* build(SUMOVTypeParameter& from);
 
 
     /** @brief Duplicates the microsim vehicle type giving it a the given id
@@ -396,7 +376,7 @@ public:
      * @param[in] from The vehicle type
      * @return The built vehicle type
      */
-    static MSVehicleType* build(const std::string& id, const MSVehicleType* from) ;
+    static MSVehicleType* build(const std::string& id, const MSVehicleType* from);
     /// @}
 
 
@@ -409,59 +389,11 @@ public:
 
 
 private:
-    /// @brief Unique ID
-    std::string myID;
-
-    /// @brief Vehicles' length [m]
-    SUMOReal myLength;
-
-    /// @brief This class' free space in front of the vehicle itself
-    SUMOReal myMinGap;
-
-    /// @brief Vehicles' maximum speed [m/s]
-    SUMOReal myMaxSpeed;
-
-    /// @brief The probability when being added to a distribution without an explicit probability
-    SUMOReal myDefaultProbability;
-
-    /// @brief The factor by which the maximum speed may deviate from the allowed max speed on the street
-    SUMOReal mySpeedFactor;
-
-    /// @brief The standard deviation for speed variations
-    SUMOReal mySpeedDev;
+    /// @brief the parameter container
+    SUMOVTypeParameter myParameter;
 
     /// @brief ID of the car following model.
     MSCFModel* myCarFollowModel;
-
-    /// @brief ID of the lane change model.
-    std::string myLaneChangeModel;
-
-    /// @brief The emission class of such vehicles
-    SUMOEmissionClass myEmissionClass;
-
-    /// @brief The color
-    RGBColor myColor;
-
-    /// @brief The vehicles' class
-    SUMOVehicleClass myVehicleClass;
-
-
-    /// @name Values for drawing this class' vehicles
-    /// @{
-
-    /// @brief This class' width
-    SUMOReal myWidth;
-
-    /// @brief This class' height
-    SUMOReal myHeight;
-
-    /// @brief This class' shape
-    SUMOVehicleShape myShape;
-
-    /// @brief This class' model file
-    std::string myOSGFile;
-    /// @}
-
 
     /// @brief The original type
     const MSVehicleType* myOriginalType;

@@ -34,7 +34,8 @@
 
 #include <string>
 #include <cmath>
-#include <climits>
+#include <limits>
+#include <algorithm>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/StdDefs.h>
 
@@ -47,70 +48,31 @@
  * Some methods that convert 0-terminated char-arrays of any type into
  * other values (numerical/boolean) or into std::strings
  */
-template<class E>
 class TplConvert {
 public:
-    // conversion methods without a length
     /** converts a 0-terminated char-type array into std::string
-        throws an EmptyData - exception if the given string is empty */
-    static std::string _2str(const E* const data) {
+        throws an EmptyData - exception if the given pointer is 0 */
+    template<class E>
+    static inline std::string _2str(const E* const data) {
         return _2str(data, getLength(data));
     }
 
 
-    /** converts a 0-terminated char-type array into the integer value
-            described by it
-        throws an EmptyData - exception if the given string is empty
-        throws a NumberFormatException - exception when the string does
-            not contain an integer */
-    static int _2int(const E* const data) {
-        return _2int(data, INT_MAX);
+    /** converts a 0-terminated char array into std::string
+        throws an EmptyData - exception if the given pointer is 0 */
+    static inline std::string _2str(const char* const data) {
+        if (data == 0) {
+            throw EmptyData();
+        }
+        return std::string(data);
     }
 
 
-    /** converts a 0-terminated char-type array into the long value
-            described by it
-        throws an EmptyData - exception if the given string is empty
-        throws a NumberFormatException - exception when the string does
-            not contain a long */
-    static long _2long(const E* const data) {
-        return _2long(data, INT_MAX);
-    }
-
-
-    /** converts a 0-terminated char-type array into the SUMOReal value
-            described by it
-        throws an EmptyData - exception if the given string is empty
-        throws a NumberFormatException - exception when the string
-            does not contain a SUMOReal */
-    static SUMOReal _2SUMOReal(const E* const data) {
-        return _2SUMOReal(data, INT_MAX);
-    }
-
-
-    /** converts a 0-terminated char-type array into the SUMOReal value
-            described by it
-        returns true when the first char is one of the following: '1',
-            'x', 't', 'T'
-        throws an EmptyData - exception if the given string is empty */
-    static bool _2bool(const E* const data) {
-        return _2bool(data, 1);
-    }
-
-
-    /** converts a 0-terminated char-type array into a 0-terminated
-            0-terminated c-char-string
-        throws an EmptyData - exception if the given string is empty */
-    static char* _2charp(const E* const data) {
-        return _2charp(data, getLength(data));
-    }
-
-
-    // conversion methods with a length
     /** converts a char-type array into std::string considering the given
             length
-        throws an EmptyData - exception if the given string is empty */
-    static std::string _2str(const E* const data, unsigned length) {
+        throws an EmptyData - exception if the given pointer is 0 */
+    template<class E>
+    static inline std::string _2str(const E* const data, unsigned length) {
         if (data == 0) {
             throw EmptyData();
         }
@@ -133,50 +95,41 @@ public:
     }
 
 
+    /** converts a char array into std::string considering the given
+            length
+        throws an EmptyData - exception if the given pointer is 0 */
+    static inline std::string _2str(const char* const data, unsigned length) {
+        if (data == 0) {
+            throw EmptyData();
+        }
+        return std::string(data, length);
+    }
+
+
     /** converts a char-type array into the integer value described by it
-            considering the given length
         throws an EmptyData - exception if the given string is empty
         throws a NumberFormatException - exception when the string does
             not contain an integer */
-    static int _2int(const E* const data, unsigned length) {
-        if (data == 0 || length == 0 || data[0] == 0) {
-            throw EmptyData();
+    template<class E>
+    static int _2int(const E* const data) {
+        SUMOLong result = _2long(data);
+        if (result > std::numeric_limits<int>::max() || result < std::numeric_limits<int>::min()) {
+            throw NumberFormatException();
         }
-        int sgn = 1;
-        unsigned i = 0;
-        if (data[0] == '+') {
-            i++;
-        }
-        if (data[0] == '-') {
-            i++;
-            sgn = -1;
-        }
-        int val = 0;
-        for (; i < length && data[i] != 0; i++) {
-            val = val * 10;
-            char akt = (char) data[i];
-            if (akt < '0' || akt > '9') {
-                throw NumberFormatException();
-            }
-            val = val + akt - 48;
-        }
-        if (i == 0) {
-            throw EmptyData();
-        }
-        return val * sgn;
+        return (int)result;
     }
 
 
     /** converts a char-type array into the long value described by it
-            considering the given length
         throws an EmptyData - exception if the given string is empty
         throws a NumberFormatException - exception when the string does
             not contain a long */
-    static long _2long(const E* const data, unsigned length) {
-        if (data == 0 || length == 0 || data[0] == 0) {
+    template<class E>
+    static SUMOLong _2long(const E* const data) {
+        if (data == 0 || data[0] == 0) {
             throw EmptyData();
         }
-        long sgn = 1;
+        SUMOLong sgn = 1;
         unsigned i = 0;
         if (data[0] == '+') {
             i++;
@@ -185,14 +138,15 @@ public:
             i++;
             sgn = -1;
         }
-        long ret = 0;
-        for (; i < length && data[i] != 0; i++) {
-            ret = ret * 10;
+        SUMOLong ret = 0;
+        for (; data[i] != 0; i++) {
+            ret *= 10;
+            // !!! need to catch overflows
             char akt = (char) data[i];
             if (akt < '0' || akt > '9') {
                 throw NumberFormatException();
             }
-            ret = ret + akt - 48;
+            ret += akt - 48;
         }
         if (i == 0) {
             throw EmptyData();
@@ -202,15 +156,14 @@ public:
 
 
     /** converts a char-type array into the SUMOReal value described by it
-            considering the given length
         throws an EmptyData - exception if the given string is empty
         throws a NumberFormatException - exception when the string does
             not contain a SUMOReal */
-    static SUMOReal _2SUMOReal(const E* const data, unsigned length) {
-        if (data == 0 || length == 0 || data[0] == 0) {
+    template<class E>
+    static SUMOReal _2SUMOReal(const E* const data) {
+        if (data == 0 || data[0] == 0) {
             throw EmptyData();
         }
-        SUMOReal ret = 0;
         unsigned i = 0;
         SUMOReal sgn = 1;
         if (data[0] == '+') {
@@ -220,53 +173,35 @@ public:
             i++;
             sgn = -1;
         }
-        for (; i < length && data[i] != 0 && data[i] != '.' && data[i] != ',' && data[i] != 'e' && data[i] != 'E'; i++) {
-            ret = ret * 10;
+        // we try to parse it as a SUMOLong storing the decimal point pos
+        int pointPos = -1;
+        int digits = std::numeric_limits<SUMOLong>::digits10;
+        SUMOLong ret = 0;
+        for (; data[i] != 0 && data[i] != 'e' && data[i] != 'E'; i++) {
             char akt = (char) data[i];
             if (akt < '0' || akt > '9') {
+                if (pointPos < 0 && (akt == '.' || akt == ',')) {
+                    pointPos = i;
+                    continue;
+                }
                 throw NumberFormatException();
             }
-            ret = ret + akt - 48;
-        }
-        // check what has happened - end of string, e or decimal point
-        if ((char) data[i] != '.' && (char) data[i] != ',' && data[i] != 'e' && data[i] != 'E') {
-            if (i == 0) {
-                throw EmptyData();
-            }
-            return ret * sgn;
-        }
-        if (data[i] == 'e' || data[i] == 'E') {
-            // no decimal point, just an exponent
-            try {
-                int exp = _2int(data + i + 1, length - i - 1);
-                SUMOReal exp2 = (SUMOReal) pow(10.0, exp);
-                return ret * sgn * exp2;
-            } catch (EmptyData&) {
-                // the exponent was empty
-                throw NumberFormatException();
+            digits--;
+            if (digits >= 0) { // we skip the digits which don't fit into SUMOLong
+                ret = ret * 10 + akt - 48;
             }
         }
-        SUMOReal div = 10;
-        // skip the dot
-        i++;
-        // parse values behin decimal point
-        for (; i < length && data[i] != 0 && data[i] != 'e' && data[i] != 'E'; i++) {
-            char akt = (char) data[i];
-            if (akt < '0' || akt > '9') {
-                throw NumberFormatException();
-            }
-            ret = ret + ((SUMOReal)(akt - 48)) / div;
-            div = div * 10;
+        int exponent = digits >= 0 ? 0 : -digits;
+        if (pointPos != -1) {
+            exponent += pointPos - i + 1;
         }
-        if (data[i] != 'e' && data[i] != 'E') {
-            // no exponent
-            return ret * sgn;
+        // check what has happened - end of string or exponent
+        if (data[i] == 0) {
+            return ret * sgn * (SUMOReal) pow(10.0, exponent);
         }
-        // eponent and decimal dot
+        // now the exponent
         try {
-            int exp = _2int(data + i + 1, length - i - 1);
-            SUMOReal exp2 = (SUMOReal) pow(10.0, exp);
-            return ret * sgn * exp2;
+            return ret * sgn * (SUMOReal) pow(10.0, _2int(data + i + 1) + exponent);
         } catch (EmptyData&) {
             // the exponent was empty
             throw NumberFormatException();
@@ -274,44 +209,109 @@ public:
     }
 
 
-    /** converts a char-type array into the SUMOReal value described by it
-            considering the given length
-        returns true when the first char is one of the following: '1',
-            'x', 't', 'T'
-        throws an EmptyData - exception if the given string is empty */
-    static bool _2bool(const E* const data, unsigned length) {
-        if (data == 0 || length == 0 || data[0] == 0) {
+    /** converts a 0-terminated char-type array into the boolean value
+            described by it
+        returns true if the data* is one of the following (case insensitive):
+            '1', 'x', 'true', 'yes', 'on'
+        returns false if the data* is one of the following (case insensitive):
+            '0', '-', 'false', 'no', 'off'
+        throws an EmptyData - exception if the given string is empty or 0 pointer
+        throws a BoolFormatException in any other case
+    */
+    template<class E>
+    static bool _2bool(const E* const data) {
+        if (data == 0 || data[0] == 0) {
             throw EmptyData();
         }
-        char akt = (char) data[0];
-        if (akt == '1' || akt == 'x' || akt == 't' || akt == 'T') {
+        std::string s = _2str(data);
+        std::transform(s.begin(), s.end(), s.begin(), tolower);
+        if (s == "1" || s == "yes" || s == "true" || s == "on" || s == "x" || s == "t") {
             return true;
-        }
-        if (akt == '0' || akt == '-' || akt == 'f' || akt == 'F') {
+        } else if (s == "0" || s == "no" || s == "false" || s == "off" || s == "-" || s == "f") {
             return false;
+        } else {
+            throw BoolFormatException();
         }
-        throw BoolFormatException();
     }
 
 
-    /** converts a char-type array into a 0-terminated 0-terminated
-            c-char-string considering the given length
-        throws an EmptyData - exception if the given string is empty */
-    static char* _2charp(const E* const data, int length) {
-        if (length == 0 || data == 0) {
-            throw EmptyData();
+    // conversion methods not throwing an exception
+    /** converts a 0-terminated char-type array into std::string
+        returns the default value if the data is empty */
+    template<class E>
+    static std::string _2strSec(const E* const data,
+                                const std::string& def) {
+        return _2strSec(data, getLength(data), def);
+    }
+
+
+    /** converts a 0-terminated char-type array into the integer value
+            described by it
+        returns the default value if the data is empty */
+    template<class E>
+    static int _2intSec(const E* const data, int def) {
+        if (data == 0 || data[0] == 0) {
+            return def;
         }
-        char* ret = new char[length + 1];
-        unsigned i = 0;
-        for (; i < length; i++) {
-            ret[i] = (char) data[i];
+        return _2int(data);
+    }
+
+
+    /** converts a 0-terminated char-type array into the long value
+            described by it
+        returns the default value if the data is empty */
+    template<class E>
+    static SUMOLong _2longSec(const E* const data, long def) {
+        if (data == 0 || data[0] == 0) {
+            return def;
         }
-        ret[i] = 0;
-        return ret;
+        return _2long(data);
+    }
+
+
+    /** converts a 0-terminated char-type array into the SUMOReal value
+            described by it
+        returns the default value if the data is empty */
+    template<class E>
+    static SUMOReal _2SUMORealSec(const E* const data, SUMOReal def) {
+        if (data == 0 || data[0] == 0) {
+            return def;
+        }
+        return _2SUMOReal(data);
+    }
+
+
+    /** converts a 0-terminated char-type array into the SUMOReal value
+            described by it
+        returns true if the data* is one of the following (case insensitive):
+            '1', 'x', 'true', 'yes', 'on'
+        returns false if the data* is one of the following (case insensitive):
+            '0', '-', 'false', 'no', 'off'
+        returns the default value if the data is empty */
+    template<class E>
+    static bool _2boolSec(const E* const data, bool def) {
+        if (data == 0 || data[0] == 0) {
+            return def;
+        }
+        return _2bool(data);
+    }
+
+
+    /** converts a char-type array into std::string considering
+            the given length
+        returns the default value if the data is empty */
+    template<class E>
+    static std::string _2strSec(const E* const data, int length,
+                                const std::string& def) {
+        if (data == 0 || length == 0) {
+            return def;
+        }
+        return _2str(data, length);
     }
 
 
     /** returns the length of the string (the position of the 0-character) */
+    template<class E>
     static unsigned getLength(const E* const data) {
         if (data == 0) {
             return 0;
@@ -329,4 +329,3 @@ public:
 #endif
 
 /****************************************************************************/
-

@@ -174,9 +174,9 @@ PCLoaderDlrNavteq::loadPOIFile(const std::string& file,
             if (OptionsCont::getOptions().isInStringVector("prune.keep-list", name)) {
                 ignorePrunning = true;
             }
-            PointOfInterest* poi = new PointOfInterest(name, type, pos, color);
+            PointOfInterest* poi = new PointOfInterest(name, type, color, pos, (SUMOReal)layer);
             if (!toFill.insert(name, poi, layer, ignorePrunning)) {
-                WRITE_ERROR("POI '" + name + "' could not been added.");
+                WRITE_ERROR("POI '" + name + "' could not be added.");
                 delete poi;
             }
         }
@@ -221,8 +221,8 @@ PCLoaderDlrNavteq::loadPolyFile(const std::string& file,
             std::string xpos = values[index];
             std::string ypos = values[index + 1];
             index += 2;
-            SUMOReal x = TplConvert<char>::_2SUMOReal(xpos.c_str());
-            SUMOReal y = TplConvert<char>::_2SUMOReal(ypos.c_str());
+            SUMOReal x = TplConvert::_2SUMOReal(xpos.c_str());
+            SUMOReal y = TplConvert::_2SUMOReal(ypos.c_str());
             Position pos(x, y);
             if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for polygon '" + id + "'.");
@@ -264,9 +264,9 @@ PCLoaderDlrNavteq::loadPolyFile(const std::string& file,
             color = c;
         }
         if (!discard) {
-            Polygon* poly = new Polygon(name, type, color, vec, fill);
+            Polygon* poly = new Polygon(name, type, color, vec, fill, (SUMOReal)layer);
             if (!toFill.insert(name, poly, layer)) {
-                WRITE_ERROR("Polygon '" + name + "' could not been added.");
+                WRITE_ERROR("Polygon '" + name + "' could not be added.");
                 delete poly;
             }
         }

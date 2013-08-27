@@ -7,7 +7,7 @@
 /// @date    Mar, 2003
 /// @version $Id$
 ///
-// Main for NETGEN
+// Main for NETGENERATE
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
 // Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
@@ -205,22 +205,25 @@ main(int argc, char** argv) {
     OptionsCont& oc = OptionsCont::getOptions();
     // give some application descriptions
     oc.setApplicationDescription("Road network generator for the microscopic road traffic simulation SUMO.");
-    oc.setApplicationName("netgen", "SUMO netgen Version " + (std::string)VERSION_STRING);
+    oc.setApplicationName("netgenerate", "SUMO netgenerate Version " + (std::string)VERSION_STRING);
     int ret = 0;
     try {
         // initialise the application system (messaging, xml, options)
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
-            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
         MsgHandler::initOutputOptions();
         if (!checkOptions()) {
             throw ProcessError();
         }
+        GeoConvHelper::init("!",
+                            Position(oc.getFloat("offset.x"), oc.getFloat("offset.y")),
+                            Boundary(), Boundary());
         RandHelper::initRandGlobal();
         NBNetBuilder nb;
         nb.applyOptions(oc);
@@ -237,19 +240,24 @@ main(int argc, char** argv) {
         WRITE_MESSAGE("   " + toString<int>(nb.getEdgeCont().size()) + " edges generated.");
         nb.compute(oc);
         NWFrame::writeNetwork(oc, nb);
-    } catch (ProcessError& e) {
+    } catch (const ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
 #ifndef _DEBUG
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
     } catch (...) {
         MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
         ret = 1;
 #endif
     }
-    OutputDevice::closeAll();
     SystemFrame::close();
     if (ret == 0) {
         std::cout << "Success." << std::endl;

@@ -9,6 +9,7 @@ copy_test_path:input_types.typ.xml
 copy_test_path:elmar_links_unsplitted.txt
 copy_test_path:elmar_nodes_unsplitted.txt
 copy_test_path:elmar_traffic_signals.txt
+copy_test_path:elmar_names.txt
 copy_test_path:visum.net
 copy_test_path:vissim.inp
 copy_test_path:input_net.net.xml
@@ -30,6 +31,11 @@ foreign:foreign.net
 cfg:config.cfg
 log:log.txt
 joined_nodes:joined.nod.xml
+elmar_links:elmar_output_links_unsplitted.txt
+elmar_nodes:elmar_output_nodes_unsplitted.txt
+elmar_traffic_signals:elmar_output_traffic_signals.txt
+elmar_names:elmar_output_names.txt
+pois:pois.add.xml
 
 [run_dependent_text]
 output:\r{REPLACE \n}
@@ -39,9 +45,15 @@ plain_connections:<!--{[->]}-->
 plain_tllogic:<!--{[->]}-->
 joined_nodes:<!--{[->]}-->
 net:<!--{[->]}-->
+foreign:date="{[->]}"
+pois:<!--{[->]}-->
 errors:Leaked object at 
 errors:*** 9 leaks found
 errors:delete: freed
+elmar_links:# Generated
+elmar_nodes:# Generated
+elmar_names:# Generated
+elmar_traffic_signals:# Generated
 
 [floating_point_tolerance]
 net:0.0101

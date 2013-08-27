@@ -61,16 +61,15 @@ using namespace std;
 // method definitions
 // ===========================================================================
 AGActivityGenHandler::AGActivityGenHandler(AGCity& city, RONet* net)
-    : SUMOSAXHandler("sumo-stat"), net(net),
-      myCity(city) {}
+    : SUMOSAXHandler("sumo-stat"),
+      myCity(city), net(net) {}
 
 
 AGActivityGenHandler::~AGActivityGenHandler() {}
 
 
 void
-AGActivityGenHandler::myStartElement(int element, const SUMOSAXAttributes& attrs)
-{
+AGActivityGenHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
     try {
         switch (element) {
             case AGEN_TAG_GENERAL:
@@ -330,13 +329,10 @@ AGActivityGenHandler::parseStation(const SUMOSAXAttributes& attrs) {
 
     try {
         bool ok = true;
-        int refID = attrs.hasAttribute(SUMO_ATTR_REFID)
-                    ? attrs.getIntReporting(SUMO_ATTR_REFID, myCurrentObject.c_str(), ok)
-                    : attrs.getIntReporting(SUMO_ATTR_REFID__DEPRECATED, myCurrentObject.c_str(), ok);
+        int refID = attrs.getIntReporting(SUMO_ATTR_REFID, myCurrentObject.c_str(), ok);
         if (!ok) {
             throw ProcessError();
         }
-
         if (!isRevStation) {
             currentBusLine->locateStation(myCity.statData.busStations.find(refID)->second);
         } else {
@@ -379,7 +375,8 @@ AGActivityGenHandler::parsePopulation() {
 void
 AGActivityGenHandler::parseBracket(const SUMOSAXAttributes& attrs) {
     try {
-        int beginAge = attrs.getInt(AGEN_ATTR_BEGINAGE); //included in the bracket
+//TODO beginAge needs to be evaluated
+//        int beginAge = attrs.getInt(AGEN_ATTR_BEGINAGE); //included in the bracket
         int endAge = attrs.getInt(AGEN_ATTR_ENDAGE); //NOT included in the bracket
         if (myCurrentObject == "population") {
             myCity.statData.population[endAge] = attrs.getInt(AGEN_ATTR_PEOPLENBR);

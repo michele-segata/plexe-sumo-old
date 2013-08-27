@@ -77,8 +77,8 @@ public:
 
     /// Initialises the tls with information about incoming lanes
     void init(NLDetectorBuilder& nb,
-              const std::vector<MSLane*> &lanes,
-              std::map<std::string, std::vector<std::string> > &edgeContinuations,
+              const std::vector<MSLane*>& lanes,
+              std::map<std::string, std::vector<std::string> >& edgeContinuations,
               SUMOReal det_offset);
 
     /// destructor
@@ -95,7 +95,7 @@ public:
     bool gapControl();
 
     // Checkes wheter the tested phase is a neither a yellow nor a allred phase
-    bool isGreenPhase() const ;
+    bool isGreenPhase() const;
 
 protected:
     /// Returns the definition of the current phase

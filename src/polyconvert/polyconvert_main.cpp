@@ -132,6 +132,9 @@ fillOptions() {
     oc.addSynonyme("shapefile.id-column", "shape-files.id-name", true);
     oc.addDescription("shapefile.id-column", "Input", "Defines in which column the id can be found");
 
+    oc.doRegister("shapefile.use-running-id", new Option_Bool());
+    oc.addDescription("shapefile.use-running-id", "Input", "A running number will be used as id.");
+
     // typemap reading
     oc.doRegister("type-file", new Option_FileName());
     oc.addSynonyme("type-file", "typemap", true);
@@ -201,14 +204,14 @@ main(int argc, char** argv) {
     int ret = 0;
     try {
         // initialise subsystems
-        XMLSubSys::init(false);
+        XMLSubSys::init();
         fillOptions();
         OptionsIO::getOptions(true, argc, argv);
         if (oc.processMetaOptions(argc < 2)) {
-            OutputDevice::closeAll();
             SystemFrame::close();
             return 0;
         }
+        XMLSubSys::setValidation(oc.getBool("xml-validation"));
         MsgHandler::initOutputOptions();
         // build the projection
         Boundary origNetBoundary, pruningBoundary;
@@ -287,19 +290,24 @@ main(int argc, char** argv) {
         } else {
             throw ProcessError();
         }
-    } catch (ProcessError& e) {
+    } catch (const ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         ret = 1;
 #ifndef _DEBUG
+    } catch (const std::exception& e) {
+        if (std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
     } catch (...) {
         MsgHandler::getErrorInstance()->inform("Quitting (on unknown error).", false);
         ret = 1;
 #endif
     }
-    OutputDevice::closeAll();
     SystemFrame::close();
     // report about ending
     if (ret == 0) {

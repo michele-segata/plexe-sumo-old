@@ -85,7 +85,7 @@ class GUIVisualizationSettings {
 public:
 
     /// @brief constructor
-    GUIVisualizationSettings() ;
+    GUIVisualizationSettings();
 
     /// @brief The name of this setting
     std::string name;
@@ -112,7 +112,7 @@ public:
     /// @name lane visualization settings
     //@{
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     /// @brief The mesoscopic edge colorer
     GUIColorer edgeColorer;
 
@@ -131,6 +131,8 @@ public:
     GUIVisualizationTextSettings edgeName, internalEdgeName, streetName;
 
     bool hideConnectors;
+    /// @brief The lane exaggeration (upscale thickness)
+    float laneWidthExaggeration;
     //@}
 
 

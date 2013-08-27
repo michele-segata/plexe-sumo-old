@@ -28,7 +28,7 @@ _RETURN_VALUE_FUNC = {tc.VAR_TIME_STEP:                         traci.Storage.re
                       tc.VAR_TELEPORT_ENDING_VEHICLES_IDS:      traci.Storage.readStringList,
                       tc.VAR_DELTA_T:                           traci.Storage.readInt,
                       tc.VAR_NET_BOUNDING_BOX:                  lambda(result): (result.read("!dd"), result.read("!dd"))}
-subscriptionResults = {}
+subscriptionResults = traci.SubscriptionResults(_RETURN_VALUE_FUNC)
 
 def _getUniversal(varID):
     result = traci._sendReadOneStringCmd(tc.CMD_GET_SIM_VARIABLE, varID, "")
@@ -57,29 +57,25 @@ def getLoadedIDList():
 
 def getDepartedNumber():
     """getDepartedNumber() -> integer
-    
-    .
+    returns the number vehicles which departed in the last time step.
     """
     return _getUniversal(tc.VAR_DEPARTED_VEHICLES_NUMBER)
 
 def getDepartedIDList():
     """getDepartedIDList() -> list(string)
-    
-    .
+    returns the list of ids of all vehicles which departed in the last time step.
     """
     return _getUniversal(tc.VAR_DEPARTED_VEHICLES_IDS)
 
 def getArrivedNumber():
     """getArrivedNumber() -> integer
-    
-    .
+    returns the number vehicles which arrived in the last time step.
     """
     return _getUniversal(tc.VAR_ARRIVED_VEHICLES_NUMBER)
 
 def getArrivedIDList():
     """getArrivedIDList() -> list(string)
-    
-    .
+    returns the list of ids of all vehicles which arrived in the last time step.
     """
     return _getUniversal(tc.VAR_ARRIVED_VEHICLES_IDS)
 
@@ -136,22 +132,34 @@ def convert2D(edgeID, pos, laneIndex=0, toGeo=False):
     posType = tc.POSITION_2D
     if toGeo:
         posType = tc.POSITION_LAT_LON
-    traci._beginMessage(tc.CMD_GET_SIM_VARIABLE, tc.POSITION_CONVERSION, "", 1+4 + 1+4+len(edgeID)+8+1 + 1+8+8)
+    traci._beginMessage(tc.CMD_GET_SIM_VARIABLE, tc.POSITION_CONVERSION, "", 1+4 + 1+4+len(edgeID)+8+1 + 1+1)
     traci._message.string += struct.pack("!Bi", tc.TYPE_COMPOUND, 2)
     traci._message.string += struct.pack("!Bi", tc.POSITION_ROADMAP, len(edgeID)) + edgeID
-    traci._message.string += struct.pack("!dBBdd", pos, laneIndex, posType, 0., 0.)
+    traci._message.string += struct.pack("!dBBB", pos, laneIndex, tc.TYPE_UBYTE, posType)
     return traci._checkResult(tc.CMD_GET_SIM_VARIABLE, tc.POSITION_CONVERSION, "").read("!dd")
 
 def convertRoad(x, y, isGeo=False):
     posType = tc.POSITION_2D
     if isGeo:
         posType = tc.POSITION_LAT_LON
-    traci._beginMessage(tc.CMD_GET_SIM_VARIABLE, tc.POSITION_CONVERSION, "", 1+4 + 1+8+8 + 1+4+8+1)
+    traci._beginMessage(tc.CMD_GET_SIM_VARIABLE, tc.POSITION_CONVERSION, "", 1+4 + 1+8+8 + 1+1)
     traci._message.string += struct.pack("!Bi", tc.TYPE_COMPOUND, 2)
     traci._message.string += struct.pack("!Bdd", posType, x, y)
-    traci._message.string += struct.pack("!BidB", tc.POSITION_ROADMAP, 0, 0., 0)
+    traci._message.string += struct.pack("!BB", tc.TYPE_UBYTE, tc.POSITION_ROADMAP)
     result = traci._checkResult(tc.CMD_GET_SIM_VARIABLE, tc.POSITION_CONVERSION, "")
     return result.readString(), result.readDouble(), result.read("!B")[0]
+
+def convertGeo(x, y, fromGeo=False):
+    fromType = tc.POSITION_2D
+    toType = tc.POSITION_LAT_LON
+    if fromGeo:
+        fromType = tc.POSITION_LAT_LON
+        toType = tc.POSITION_2D
+    traci._beginMessage(tc.CMD_GET_SIM_VARIABLE, tc.POSITION_CONVERSION, "", 1+4 + 1+8+8 + 1+1)
+    traci._message.string += struct.pack("!Bi", tc.TYPE_COMPOUND, 2)
+    traci._message.string += struct.pack("!Bdd", fromType, x, y)
+    traci._message.string += struct.pack("!BB", tc.TYPE_UBYTE, toType)
+    return traci._checkResult(tc.CMD_GET_SIM_VARIABLE, tc.POSITION_CONVERSION, "").read("!dd")
 
 def getDistance2D(x1, y1, x2, y2, isGeo=False, isDriving=False):
     """getDistance2D(double, double, double, double, boolean, boolean) -> double
@@ -192,14 +200,8 @@ def subscribe(varIDs=(tc.VAR_DEPARTED_VEHICLES_IDS,), begin=0, end=2**31-1):
     Subscribe to one or more simulation values for the given interval.
     A call to this method clears all previous subscription results.
     """
-    _resetSubscriptionResults()
+    subscriptionResults.reset()
     traci._subscribe(tc.CMD_SUBSCRIBE_SIM_VARIABLE, begin, end, "x", varIDs)
-
-def _resetSubscriptionResults():
-    subscriptionResults.clear()
-
-def _addSubscriptionResult(objectID, varID, data):
-    subscriptionResults[varID] = _RETURN_VALUE_FUNC[varID](data)
 
 def getSubscriptionResults():
     """getSubscriptionResults() -> dict(integer: <value_type>)
@@ -208,4 +210,4 @@ def getSubscriptionResults():
     It is not possible to retrieve older subscription results than the ones
     from the last time step.
     """
-    return subscriptionResults
+    return subscriptionResults.get("x")

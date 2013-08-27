@@ -39,13 +39,13 @@
         <!-- Read XML-type defs from FILE -->
         <type-files value="" synonymes="t types xml-type-files xml-types" type="FILE"/>
 
-        <!-- Read shapefiles (ArcView, Tiger, ...) from files starting with 'FILE' -->
+        <!-- Read shapefiles (ArcView, Tiger, ...) from files starting with &apos;FILE&apos; -->
         <shapefile-prefix value="" synonymes="arcview shapefile tiger" type="FILE"/>
 
-        <!-- Read converted Navteq GDF data (unsplitted Elmar-network) from path 'FILE' -->
+        <!-- Read converted Navteq GDF data (unsplitted Elmar-network) from path &apos;FILE&apos; -->
         <dlr-navteq-prefix value="" synonymes="dlr-navteq elmar2" type="FILE"/>
 
-        <!-- Read OSM-network from path 'FILE(s)' -->
+        <!-- Read OSM-network from path &apos;FILE(s)&apos; -->
         <osm-files value="" synonymes="osm" type="FILE"/>
 
         <!-- Read openDrive-network from FILE -->
@@ -87,8 +87,17 @@
         <!-- The generated net will be written to FILE using openDRIVE format. -->
         <opendrive-output value="" type="FILE"/>
 
+        <!-- The generated net will be written to dlr-navteq files with the given PREFIX. -->
+        <dlr-navteq-output value="" type="FILE"/>
+
         <!-- Street names will be included in the output (if available). -->
         <output.street-names value="false" type="BOOL"/>
+
+        <!-- Writes original names, if given, as parameter. -->
+        <output.original-names value="false" type="BOOL"/>
+
+        <!-- Writes street signs as POIs to FILE. -->
+        <street-sign-output value="" type="FILE"/>
 
     </output>
 
@@ -117,6 +126,9 @@
     </projection>
 
     <tls_building>
+        <!-- Does not instatiate traffic lights loaded from other formats than XML -->
+        <tls.discard-loaded value="false" type="BOOL"/>
+
         <!-- Interprets STR as list of junctions to be controlled by TLS -->
         <tls.set value="" synonymes="explicite-tls" type="STR"/>
 
@@ -159,10 +171,10 @@
         <!-- Enable ramp-guessing -->
         <ramps.guess value="false" synonymes="guess-ramps" type="BOOL"/>
 
-        <!-- Treat edges with speed > FLOAT as no ramps -->
+        <!-- Treat edges with speed &gt; FLOAT as no ramps -->
         <ramps.max-ramp-speed value="-1" synonymes="ramp-guess.max-ramp-speed" type="FLOAT"/>
 
-        <!-- Treat edges with speed < FLOAT as no highways -->
+        <!-- Treat edges with speed &lt; FLOAT as no highways -->
         <ramps.min-highway-speed value="21.9444" synonymes="ramp-guess.min-highway-speed" type="FLOAT"/>
 
         <!-- Use FLOAT as ramp-length -->
@@ -171,10 +183,13 @@
         <!-- Tries to handle the given edges as ramps -->
         <ramps.set value="" synonymes="ramp-guess.explicite" type="STR"/>
 
+        <!-- Avoids edge splitting -->
+        <ramps.no-split value="false" synonymes="ramp-guess.no-split" type="BOOL"/>
+
     </ramp_guessing>
 
     <edge_removal>
-        <!-- Only keep edges with speed > FLOAT -->
+        <!-- Only keep edges with speed in meters/second &gt; FLOAT -->
         <keep-edges.min-speed value="" synonymes="edges-min-speed" type="FLOAT"/>
 
         <!-- Remove edges in STR -->
@@ -189,7 +204,7 @@
         <!-- Remove edges after joining -->
         <keep-edges.postload value="false" type="BOOL"/>
 
-        <!-- Only keep edges which are located within the given boundary (given either as CARTESIAN corner coordinates <xmin,ymin,xmax,ymax> or as polygon <x0,y0,x1,y1,...>) -->
+        <!-- Only keep edges which are located within the given boundary (given either as CARTESIAN corner coordinates &lt;xmin,ymin,xmax,ymax&gt; or as polygon &lt;x0,y0,x1,y1,...&gt;) -->
         <keep-edges.in-boundary value="" type="STR"/>
 
         <!-- Only keep edges which allow one of the vclasss in STR -->
@@ -228,14 +243,17 @@
         <!-- Continue on invalid connections -->
         <ignore-errors.connections value="false" type="BOOL"/>
 
+        <!-- Show errors in connections at parsing -->
+        <show-errors.connections-first-try value="false" type="BOOL"/>
+
         <!-- The factor for flow to no. lanes conversion. -->
         <lanes-from-capacity.norm value="1800" synonymes="capacity-norm" type="FLOAT"/>
 
         <!-- vmax is parsed as given in km/h (some) -->
         <speed-in-kmh value="false" type="BOOL"/>
 
-        <!-- No node positions are added to the edge shape -->
-        <plain.keep-edge-shape value="false" synonymes="xml.keep-shape" type="BOOL"/>
+        <!-- If edge shapes do not end at the node positions, extend them -->
+        <plain.extend-edge-shape value="false" synonymes="xml.keep-shape" type="BOOL"/>
 
         <!-- The edge lengths given in the MATSIM-file will be kept. -->
         <matsim.keep-length value="false" type="BOOL"/>
@@ -294,7 +312,7 @@
         <!-- Excludes connectors -->
         <visum.no-connectors value="false" type="BOOL"/>
 
-        <!-- Computes the number of lanes from the edges' capacities -->
+        <!-- Computes the number of lanes from the edges&apos; capacities -->
         <visum.recompute-lane-number value="false" synonymes="visum.recompute-laneno" type="BOOL"/>
 
         <!-- Prints all warnings, some of which are due to VISUM misbehaviour -->
@@ -302,9 +320,6 @@
 
         <!-- Skips the check for duplicate nodes and edges. -->
         <osm.skip-duplicates-check value="false" type="BOOL"/>
-
-        <!-- Discards all traffic lights. -->
-        <osm.discard-tls value="false" type="BOOL"/>
 
         <!-- Omits internal links -->
         <no-internal-links value="false" type="BOOL"/>
@@ -351,8 +366,8 @@
         <!-- Joins junctions that are close to each other (recommended for OSM import) -->
         <junctions.join value="false" type="BOOL"/>
 
-        <!-- Determines the maximal distance for joining junctions (defaults to 15) -->
-        <junctions.join-dist value="15" type="FLOAT"/>
+        <!-- Determines the maximal distance for joining junctions (defaults to 10) -->
+        <junctions.join-dist value="10" type="FLOAT"/>
 
         <!-- Interprets STR as list of junctions to exclude from joining -->
         <junctions.join-exclude value="" type="STR"/>
@@ -362,6 +377,9 @@
 
         <!-- Modifies all edge speeds by multiplying FLOAT -->
         <speed.factor value="1" type="FLOAT"/>
+
+        <!-- Determines the maximal distance for joining traffic lights (defaults to 20) -->
+        <tls.join-dist value="20" type="FLOAT"/>
 
     </processing>
 
@@ -389,6 +407,9 @@
 
         <!-- Prints the current version -->
         <version value="false" synonymes="V" type="BOOL"/>
+
+        <!-- Enable schema validation of XML inputs -->
+        <xml-validation value="false" synonymes="X" type="BOOL"/>
 
         <!-- Disables output of warnings -->
         <no-warnings value="false" synonymes="W suppress-warnings" type="BOOL"/>

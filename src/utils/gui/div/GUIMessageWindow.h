@@ -33,6 +33,7 @@
 #include <string>
 #include <fx.h>
 #include <utils/gui/events/GUIEvent.h>
+#include <utils/iodevices/OutputDevice.h>
 
 
 // ===========================================================================
@@ -56,15 +57,15 @@ public:
      *
      * @param[in] parent The parent window
      */
-    GUIMessageWindow(FXComposite* parent) ;
+    GUIMessageWindow(FXComposite* parent);
 
 
     /// @brief Destructor
-    ~GUIMessageWindow() ;
+    ~GUIMessageWindow();
 
 
     /// @brief Adds a a separator to this log window
-    void addSeparator() ;
+    void addSeparator();
 
 
     /** @brief Adds new text to the window
@@ -75,16 +76,50 @@ public:
      * @param[in] msg The message
      * @see GUIEventType
      */
-    void appendText(GUIEventType eType, const std::string& msg) ;
+    void appendText(GUIEventType eType, const std::string& msg);
 
 
     /// @brief Clears the window
-    void clear() ;
+    void clear();
+
+    /// @brief register and unregister message handlers
+    void registerMsgHandlers();
+    void unregisterMsgHandlers();
+
+
+private:
+    class MsgOutputDevice : public OutputDevice {
+    public:
+        MsgOutputDevice(GUIMessageWindow* msgWindow, GUIEventType type) :
+            myMsgWindow(msgWindow),
+            myType(type) { }
+
+        ~MsgOutputDevice() { }
+
+    protected:
+        std::ostream& getOStream() {
+            return myStream;
+        }
+        void postWriteHook() {
+            myMsgWindow->appendText(myType, myStream.str());
+            myStream.str("");
+        }
+
+    private:
+        GUIMessageWindow* myMsgWindow;
+        std::ostringstream myStream;
+        GUIEventType myType;
+    };
 
 
 private:
     /// @brief The text colors used
     FXHiliteStyle* myStyles;
+
+    /** @brief The instances of message retriever encapsulations */
+    OutputDevice* myErrorRetriever, *myMessageRetriever, *myWarningRetriever;
+
+
 
 };
 

@@ -38,7 +38,7 @@
 #include <microsim/MSVehicle.h>
 #include <utils/common/ToString.h>
 #include <utils/iodevices/OutputDevice.h>
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 #include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
 #endif
@@ -57,10 +57,10 @@ MSRouteProbe::MSRouteProbe(const std::string& id, const MSEdge* edge, SUMOTime b
     const std::string distID = id + "_" + toString(begin);
     myCurrentRouteDistribution = MSRoute::distDictionary(distID);
     if (myCurrentRouteDistribution == 0) {
-        myCurrentRouteDistribution = new RandomDistributor<const MSRoute*>();
+        myCurrentRouteDistribution = new RandomDistributor<const MSRoute*>(MSRoute::getMaxRouteDistSize(), &MSRoute::releaseRoute);
         MSRoute::dictionary(distID, myCurrentRouteDistribution);
     }
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         MESegment* seg = MSGlobals::gMesoNet->getSegmentForEdge(*edge);
         while (seg != 0) {
@@ -95,8 +95,8 @@ MSRouteProbe::writeXMLOutput(OutputDevice& dev,
                              SUMOTime startTime, SUMOTime stopTime) {
     if (myCurrentRouteDistribution->getOverallProb() > 0) {
         dev.openTag("routeDistribution") << " id=\"" << getID() + "_" + time2string(startTime) << "\">\n";
-        const std::vector<const MSRoute*> &routes = myCurrentRouteDistribution->getVals();
-        const std::vector<SUMOReal> &probs = myCurrentRouteDistribution->getProbs();
+        const std::vector<const MSRoute*>& routes = myCurrentRouteDistribution->getVals();
+        const std::vector<SUMOReal>& probs = myCurrentRouteDistribution->getProbs();
         for (unsigned int j = 0; j < routes.size(); ++j) {
             const MSRoute* r = routes[j];
             dev.openTag("route") << " id=\"" << r->getID() + "_" + time2string(startTime) << "\" edges=\"";
@@ -110,7 +110,7 @@ MSRouteProbe::writeXMLOutput(OutputDevice& dev,
             dev.closeTag(true);
         }
         dev.closeTag();
-        myCurrentRouteDistribution = new RandomDistributor<const MSRoute*>();
+        myCurrentRouteDistribution = new RandomDistributor<const MSRoute*>(MSRoute::getMaxRouteDistSize(), &MSRoute::releaseRoute);
         MSRoute::dictionary(getID() + "_" + toString(stopTime), myCurrentRouteDistribution);
     }
 }

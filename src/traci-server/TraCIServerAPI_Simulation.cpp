@@ -42,7 +42,6 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
 #include "TraCIConstants.h"
-#include "TraCIDijkstraRouter.h"
 #include "TraCIServerAPI_Simulation.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -62,7 +61,6 @@ using namespace traci;
 bool
 TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& inputStorage,
                                       tcpip::Storage& outputStorage) {
-    std::string warning = ""; // additional description for response
     // variable & id
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
@@ -76,6 +74,7 @@ TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& input
             && variable != VAR_DELTA_T && variable != VAR_NET_BOUNDING_BOX
             && variable != VAR_MIN_EXPECTED_VEHICLES
             && variable != POSITION_CONVERSION && variable != DISTANCE_REQUEST
+            && variable != VAR_BUS_STOP_WAITING
        ) {
         server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Get Simulation Variable: unsupported variable specified", outputStorage);
         return false;
@@ -93,61 +92,61 @@ TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& input
             tempMsg.writeInt(MSNet::getInstance()->getCurrentTimeStep());
             break;
         case VAR_LOADED_VEHICLES_NUMBER: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_BUILT)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_BUILT)->second;
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
             tempMsg.writeInt((int) ids.size());
         }
         break;
         case VAR_LOADED_VEHICLES_IDS: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_BUILT)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_BUILT)->second;
             tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
             tempMsg.writeStringList(ids);
         }
         break;
         case VAR_DEPARTED_VEHICLES_NUMBER: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_DEPARTED)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_DEPARTED)->second;
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
             tempMsg.writeInt((int) ids.size());
         }
         break;
         case VAR_DEPARTED_VEHICLES_IDS: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_DEPARTED)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_DEPARTED)->second;
             tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
             tempMsg.writeStringList(ids);
         }
         break;
         case VAR_TELEPORT_STARTING_VEHICLES_NUMBER: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_STARTING_TELEPORT)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_STARTING_TELEPORT)->second;
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
             tempMsg.writeInt((int) ids.size());
         }
         break;
         case VAR_TELEPORT_STARTING_VEHICLES_IDS: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_STARTING_TELEPORT)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_STARTING_TELEPORT)->second;
             tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
             tempMsg.writeStringList(ids);
         }
         break;
         case VAR_TELEPORT_ENDING_VEHICLES_NUMBER: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ENDING_TELEPORT)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ENDING_TELEPORT)->second;
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
             tempMsg.writeInt((int) ids.size());
         }
         break;
         case VAR_TELEPORT_ENDING_VEHICLES_IDS: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ENDING_TELEPORT)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ENDING_TELEPORT)->second;
             tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
             tempMsg.writeStringList(ids);
         }
         break;
         case VAR_ARRIVED_VEHICLES_NUMBER: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ARRIVED)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ARRIVED)->second;
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
             tempMsg.writeInt((int) ids.size());
         }
         break;
         case VAR_ARRIVED_VEHICLES_IDS: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ARRIVED)->second;
+            const std::vector<std::string>& ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ARRIVED)->second;
             tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
             tempMsg.writeStringList(ids);
         }
@@ -166,12 +165,10 @@ TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& input
             break;
         }
         break;
-        case VAR_MIN_EXPECTED_VEHICLES: {
-            const std::vector<std::string> &ids = server.getVehicleStateChanges().find(MSNet::VEHICLE_STATE_ARRIVED)->second;
+        case VAR_MIN_EXPECTED_VEHICLES:
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
             tempMsg.writeInt(MSNet::getInstance()->getVehicleControl().getActiveVehicleCount() + MSNet::getInstance()->getInsertionControl().getPendingFlowCount());
-        }
-        break;
+            break;
         case POSITION_CONVERSION:
             if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
                 server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Position conversion requires a compound object.", outputStorage);
@@ -198,10 +195,25 @@ TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& input
                 return false;
             }
             break;
+        case VAR_BUS_STOP_WAITING: {
+            if (inputStorage.readUnsignedByte() != TYPE_STRING) {
+                server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Retrieval of persons at busstop requires a string.", outputStorage);
+                return false;
+            }
+            std::string id = inputStorage.readString();
+            MSBusStop* s = MSNet::getInstance()->getBusStop(id);
+            if (s == 0) {
+                server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Unknown bus stop '" + id + "'.", outputStorage);
+                return false;
+            }
+            tempMsg.writeUnsignedByte(TYPE_INTEGER);
+            tempMsg.writeInt(s->getPersonNumber());
+            break;
+        }
         default:
             break;
     }
-    server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_OK, warning, outputStorage);
+    server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
     return true;
 }
@@ -215,7 +227,7 @@ TraCIServerAPI_Simulation::convertCartesianToRoadMap(Position pos) {
 
     allEdgeIds = MSNet::getInstance()->getEdgeControl().getEdgeNames();
     for (std::vector<std::string>::iterator itId = allEdgeIds.begin(); itId != allEdgeIds.end(); itId++) {
-        const std::vector<MSLane*> &allLanes = MSEdge::dictionary((*itId))->getLanes();
+        const std::vector<MSLane*>& allLanes = MSEdge::dictionary((*itId))->getLanes();
         for (std::vector<MSLane*>::const_iterator itLane = allLanes.begin(); itLane != allLanes.end(); itLane++) {
             const SUMOReal newDistance = (*itLane)->getShape().distance(pos);
             if (newDistance < minDistance) {
@@ -250,7 +262,6 @@ TraCIServerAPI_Simulation::getLaneChecking(std::string roadID, int laneIndex, SU
 bool
 TraCIServerAPI_Simulation::commandPositionConversion(traci::TraCIServer& server, tcpip::Storage& inputStorage,
         tcpip::Storage& outputStorage, int commandId) {
-    tcpip::Storage tmpResult;
     std::pair<MSLane*, SUMOReal> roadPos;
     Position cartesianPos;
     Position geoPos;
@@ -292,69 +303,48 @@ TraCIServerAPI_Simulation::commandPositionConversion(traci::TraCIServer& server,
         }
         break;
         default:
-            server.writeStatusCmd(commandId, RTYPE_ERR,
-                                  "Source position type not supported");
+            server.writeStatusCmd(commandId, RTYPE_ERR, "Source position type not supported");
             return false;
     }
 
+    int type = inputStorage.readUnsignedByte();
+    if (type != TYPE_UBYTE) {
+        server.writeStatusCmd(commandId, RTYPE_ERR, "Destination position type must be of type ubyte.");
+        return false;
+    }
     int destPosType = inputStorage.readUnsignedByte();
 
     switch (destPosType) {
         case POSITION_ROADMAP: {
-            if (commandId != CMD_POSITIONCONVERSION) {
-                // skip empty values
-                inputStorage.readString();
-                inputStorage.readDouble();
-                inputStorage.readUnsignedByte();
-            }
             // convert road map to 3D position
             roadPos = convertCartesianToRoadMap(cartesianPos);
-
             // write result that is added to response msg
-            tmpResult.writeUnsignedByte(POSITION_ROADMAP);
-            tmpResult.writeString(roadPos.first->getEdge().getID());
-            tmpResult.writeDouble(roadPos.second);
+            outputStorage.writeUnsignedByte(POSITION_ROADMAP);
+            outputStorage.writeString(roadPos.first->getEdge().getID());
+            outputStorage.writeDouble(roadPos.second);
             const std::vector<MSLane*> lanes = roadPos.first->getEdge().getLanes();
-            tmpResult.writeUnsignedByte((int)distance(lanes.begin(), find(lanes.begin(), lanes.end(), roadPos.first)));
+            outputStorage.writeUnsignedByte((int)distance(lanes.begin(), find(lanes.begin(), lanes.end(), roadPos.first)));
         }
         break;
         case POSITION_2D:
         case POSITION_3D:
         case POSITION_LAT_LON:
         case POSITION_LAT_LON_ALT:
-            if (commandId != CMD_POSITIONCONVERSION) {
-                // skip empty values
-                inputStorage.readDouble();
-                inputStorage.readDouble();
-                if (destPosType != POSITION_2D && destPosType != POSITION_LAT_LON) {
-                    inputStorage.readDouble();
-                }
-            }
-            tmpResult.writeUnsignedByte(destPosType);
-            if (srcPosType == POSITION_LAT_LON || srcPosType == POSITION_LAT_LON_ALT) {
-                tmpResult.writeDouble(geoPos.x());
-                tmpResult.writeDouble(geoPos.y());
+            outputStorage.writeUnsignedByte(destPosType);
+            if (destPosType == POSITION_LAT_LON || destPosType == POSITION_LAT_LON_ALT) {
+                outputStorage.writeDouble(geoPos.x());
+                outputStorage.writeDouble(geoPos.y());
             } else {
-                tmpResult.writeDouble(cartesianPos.x());
-                tmpResult.writeDouble(cartesianPos.y());
+                outputStorage.writeDouble(cartesianPos.x());
+                outputStorage.writeDouble(cartesianPos.y());
             }
             if (destPosType != POSITION_2D && destPosType != POSITION_LAT_LON) {
-                tmpResult.writeDouble(z);
+                outputStorage.writeDouble(z);
             }
             break;
         default:
-            server.writeStatusCmd(commandId, RTYPE_ERR,
-                                  "Destination position type not supported");
+            server.writeStatusCmd(commandId, RTYPE_ERR, "Destination position type not supported");
             return false;
-    }
-    if (commandId == CMD_POSITIONCONVERSION) {
-        // add converted Position to response
-        outputStorage.writeUnsignedByte(1 + 1 + (int)tmpResult.size() + 1);	// length
-        outputStorage.writeUnsignedByte(commandId);	// command id
-        outputStorage.writeStorage(tmpResult);	// position dependant part
-        outputStorage.writeUnsignedByte(destPosType);	// destination type
-    } else {
-        outputStorage.writeStorage(tmpResult);	// position dependant part
     }
     return true;
 }
@@ -435,33 +425,22 @@ TraCIServerAPI_Simulation::commandDistanceRequest(traci::TraCIServer& server, tc
     SUMOReal distance = 0.0;
     if (distType == REQUEST_DRIVINGDIST) {
         // compute driving distance
-        std::vector<const MSEdge*> edges;
-        TraCIDijkstraRouter<MSEdge> router(MSEdge::dictSize());
-
-        if ((roadPos1.first == roadPos2.first)
-                && (roadPos1.second <= roadPos2.second)) {
+        if ((roadPos1.first == roadPos2.first) && (roadPos1.second <= roadPos2.second)) {
+            // same edge
             distance = roadPos2.second - roadPos1.second;
         } else {
-            router.compute(&roadPos1.first->getEdge(), &roadPos2.first->getEdge(), NULL,
-                           MSNet::getInstance()->getCurrentTimeStep(), edges);
-            MSRoute route("", edges, false, RGBColor::DEFAULT_COLOR, std::vector<SUMOVehicleParameter::Stop>());
-            distance = route.getDistanceBetween(roadPos1.second, roadPos2.second,
-                                                &roadPos1.first->getEdge(), &roadPos2.first->getEdge());
+            MSEdgeVector newRoute;
+            MSNet::getInstance()->getRouterTT().compute(
+                &roadPos1.first->getEdge(), &roadPos2.first->getEdge(), 0, MSNet::getInstance()->getCurrentTimeStep(), newRoute);
+            MSRoute route("", newRoute, false, 0, std::vector<SUMOVehicleParameter::Stop>());
+            distance = route.getDistanceBetween(roadPos1.second, roadPos2.second, &roadPos1.first->getEdge(), &roadPos2.first->getEdge());
         }
     } else {
         // compute air distance (default)
-        // correct the distance type in case it was not valid
-        distType = REQUEST_AIRDIST;
         distance = pos1.distanceTo(pos2);
     }
     // write response command
-    if (commandId == CMD_DISTANCEREQUEST) {
-        outputStorage.writeUnsignedByte(1 + 1 + 1 + 8);	// length
-        outputStorage.writeUnsignedByte(commandId);
-        outputStorage.writeUnsignedByte(distType);
-    } else {
-        outputStorage.writeUnsignedByte(TYPE_DOUBLE);
-    }
+    outputStorage.writeUnsignedByte(TYPE_DOUBLE);
     outputStorage.writeDouble(distance);
     return true;
 }

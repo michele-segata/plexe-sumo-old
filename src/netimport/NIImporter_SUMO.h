@@ -92,7 +92,7 @@ protected:
 
 
     /// @brief Destructor
-    ~NIImporter_SUMO() ;
+    ~NIImporter_SUMO();
 
 
 
@@ -110,18 +110,7 @@ protected:
      * @see GenericSAXHandler::myStartElement
      */
     void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) ;
-
-
-    /** @brief Called when characters occure
-     *
-     * @param[in] element ID of the last opened element
-     * @param[in] chars The read characters (complete)
-     * @exception ProcessError If something fails
-     * @see GenericSAXHandler::myCharacters
-     */
-    void myCharacters(int element,
-                      const std::string& chars) ;
+                        const SUMOSAXAttributes& attrs);
 
 
     /** @brief Called when a closing tag occurs
@@ -130,7 +119,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myEndElement
      */
-    void myEndElement(int element) ;
+    void myEndElement(int element);
     //@}
 
 
@@ -158,19 +147,6 @@ private:
      */
     void addJunction(const SUMOSAXAttributes& attrs);
 
-
-    /** @brief (deprecated) Parses a succedge-definition and saves it
-     *    by assigning "myCurrentEdge" and "myCurrentLane" to the read values
-     * @param[in] attrs The attributes to get the succedge-definition from
-     */
-    void addSuccEdge(const SUMOSAXAttributes& attrs);
-
-
-    /** @brief (deprecated) Parses a succlane-definition and saves it
-     *    into the lane's definition stored in "myCurrentLane"
-     * @param[in] attrs The attributes to get the succlane-definition from
-     */
-    void addSuccLane(const SUMOSAXAttributes& attrs);
 
     /** @brief Parses a connection and saves it
      *    into the lane's definition stored in "myCurrentLane"
@@ -238,7 +214,7 @@ private:
         /// @brief This edge's type
         std::string type;
         /// @brief This edge's function
-        std::string func;
+        SumoXMLEdgeFunc func;
         /// @brief The node this edge starts at
         std::string fromNode;
         /// @brief The node this edge ends at
@@ -301,8 +277,6 @@ private:
     /// @brief whether we suspect a net that was built with xml.keep-shape
     bool mySuspectKeepShape;
 
-    bool myHaveWarnedAboutDeprecatedSpreadType;
-    bool myHaveWarnedAboutDeprecatedMaxSpeed;
 
     /** @brief Parses lane index from lane ID an retrieve lane from EdgeAttrs
      * @param[in] edge The EdgeAttrs* which should contain the lane

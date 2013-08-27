@@ -32,7 +32,6 @@
 #include <config.h>
 #endif
 
-#include <cassert>
 #include <microsim/MSEdgeControl.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
@@ -42,7 +41,7 @@
 #include <utils/iodevices/OutputDevice.h>
 #include "MSXMLRawOut.h"
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 #include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
 #endif
@@ -59,7 +58,7 @@ void
 MSXMLRawOut::write(OutputDevice& of, const MSEdgeControl& ec,
                    SUMOTime timestep) {
     of.openTag("timestep") << " time=\"" << time2string(timestep) << "\">\n";
-    const std::vector<MSEdge*> &edges = ec.getEdges();
+    const std::vector<MSEdge*>& edges = ec.getEdges();
     for (std::vector<MSEdge*>::const_iterator e = edges.begin(); e != edges.end(); ++e) {
         writeEdge(of, **e);
     }
@@ -72,7 +71,7 @@ MSXMLRawOut::writeEdge(OutputDevice& of, const MSEdge& edge) {
     //en
     bool dump = !MSGlobals::gOmitEmptyEdgesOnDump;
     if (!dump) {
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             MESegment* seg = MSGlobals::gMesoNet->getSegmentForEdge(edge);
             while (seg != 0) {
@@ -84,21 +83,21 @@ MSXMLRawOut::writeEdge(OutputDevice& of, const MSEdge& edge) {
             }
         } else {
 #endif
-            const std::vector<MSLane*> &lanes = edge.getLanes();
+            const std::vector<MSLane*>& lanes = edge.getLanes();
             for (std::vector<MSLane*>::const_iterator lane = lanes.begin(); lane != lanes.end(); ++lane) {
                 if (((**lane).getVehicleNumber() != 0)) {
                     dump = true;
                     break;
                 }
             }
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         }
 #endif
     }
     //en
     if (dump) {
         of.openTag("edge") << " id=\"" << edge.getID() << "\">\n";
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             MESegment* seg = MSGlobals::gMesoNet->getSegmentForEdge(edge);
             while (seg != 0) {
@@ -107,11 +106,11 @@ MSXMLRawOut::writeEdge(OutputDevice& of, const MSEdge& edge) {
             }
         } else {
 #endif
-            const std::vector<MSLane*> &lanes = edge.getLanes();
+            const std::vector<MSLane*>& lanes = edge.getLanes();
             for (std::vector<MSLane*>::const_iterator lane = lanes.begin(); lane != lanes.end(); ++lane) {
                 writeLane(of, **lane);
             }
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         }
 #endif
         of.closeTag();

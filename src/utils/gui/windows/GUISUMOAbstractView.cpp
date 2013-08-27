@@ -32,17 +32,12 @@
 #include <config.h>
 #endif
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #include <iostream>
 #include <utility>
 #include <cmath>
 #include <cassert>
+#include <limits>
 #include <fxkeys.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <foreign/polyfonts/polyfonts.h>
 #include <foreign/gl2ps/gl2ps.h>
 #include <utils/foxtools/FXSingleEventThread.h>
@@ -59,13 +54,13 @@
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GUIGlObjectStorage.h>
 #include <utils/gui/globjects/GUIGlObject.h>
-#include <utils/gui/globjects/GUIGlObjectStorage.h>
 #include <utils/shapes/PointOfInterest.h>
 #include <utils/gui/globjects/GUIPointOfInterest.h>
 #include <utils/gui/globjects/GUIPolygon.h>
 #include <utils/gui/windows/GUIDialog_ViewSettings.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
+#include <utils/gui/globjects/GLIncludes.h>
 
 #include "GUISUMOAbstractView.h"
 #include "GUIMainWindow.h"
@@ -74,7 +69,6 @@
 #include "GUIDialog_EditViewport.h"
 
 #ifdef WIN32
-#include <windows.h>
 #endif
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -147,6 +141,10 @@ GUISUMOAbstractView::~GUISUMOAbstractView() {
     delete myChanger;
     delete myViewportChooser;
     delete myVisualizationChanger;
+    // cleanup decals
+    for (std::vector<GUISUMOAbstractView::Decal>::iterator it = myDecals.begin(); it != myDecals.end(); ++it) {
+        delete it->image;
+    }
 }
 
 
@@ -263,7 +261,7 @@ GUISUMOAbstractView::getObjectAtPosition(Position pos) {
     const std::vector<GUIGlID> ids = getObjectsInBoundary(selection);
     // Interpret results
     unsigned int idMax = 0;
-    int prevLayer = -1000;
+    SUMOReal maxLayer = std::numeric_limits<SUMOReal>::min();
     for (std::vector<GUIGlID>::const_iterator it = ids.begin(); it != ids.end(); it++) {
         GUIGlID id = *it;
         GUIGlObject* o = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
@@ -276,32 +274,17 @@ GUISUMOAbstractView::getObjectAtPosition(Position pos) {
         //std::cout << "point selection hit " << o->getMicrosimID() << "\n";
         GUIGlObjectType type = o->getType();
         if (type != 0) {
-            int clayer = (int) type;
+            SUMOReal layer = (SUMOReal)type;
             // determine an "abstract" layer for shapes
             //  this "layer" resembles the layer of the shape
             //  taking into account the stac of other objects
-            if (type == GLO_SHAPE) {
-                if (dynamic_cast<GUIPolygon*>(o) != 0) {
-                    if (dynamic_cast<GUIPolygon*>(o)->getLayer() > 0) {
-                        clayer = GLO_MAX + dynamic_cast<GUIPolygon*>(o)->getLayer();
-                    }
-                    if (dynamic_cast<GUIPolygon*>(o)->getLayer() < 0) {
-                        clayer = dynamic_cast<GUIPolygon*>(o)->getLayer();
-                    }
-                }
-                if (dynamic_cast<GUIPointOfInterest*>(o) != 0) {
-                    if (dynamic_cast<GUIPointOfInterest*>(o)->getLayer() > 0) {
-                        clayer = GLO_MAX + dynamic_cast<GUIPointOfInterest*>(o)->getLayer();
-                    }
-                    if (dynamic_cast<GUIPointOfInterest*>(o)->getLayer() < 0) {
-                        clayer = dynamic_cast<GUIPointOfInterest*>(o)->getLayer();
-                    }
-                }
+            if (type == GLO_POI || type == GLO_POLYGON) {
+                layer = dynamic_cast<Shape*>(o)->getLayer();
             }
             // check whether the current object is above a previous one
-            if (prevLayer == -1000 || prevLayer < clayer) {
+            if (layer > maxLayer) {
                 idMax = id;
-                prevLayer = clayer;
+                maxLayer = layer;
             }
         }
         GUIGlObjectStorage::gIDStorage.unblockObject(id);
@@ -393,17 +376,14 @@ GUISUMOAbstractView::displayLegend() {
     size_t length = 1;
     const std::string text("10000000000");
     size_t noDigits = 1;
-    size_t pixelSize = 0;
-    while (true) {
-        pixelSize = (size_t) m2p((SUMOReal) length);
-        if (pixelSize > 20) {
-            break;
-        }
+    size_t pixelSize = (size_t) m2p((SUMOReal) length);
+    while (pixelSize <= 20) {
         length *= 10;
         noDigits++;
         if (noDigits > text.length()) {
             return;
         }
+        pixelSize = (size_t) m2p((SUMOReal) length);
     }
     SUMOReal lineWidth = 1.0;
     glLineWidth((SUMOReal) lineWidth);
@@ -486,6 +466,7 @@ GUISUMOAbstractView::centerTo(GUIGlID id, bool applyZoom, SUMOReal zoomDist) {
         } else {
             myChanger->centerTo(o->getCenteringBoundary().getCenter(), zoomDist, applyZoom);
         }
+        update();
     }
     GUIGlObjectStorage::gIDStorage.unblockObject(id);
 }
@@ -931,7 +912,7 @@ GUISUMOAbstractView::getColoringSchemesCombo() {
 
 void
 GUISUMOAbstractView::drawDecals() {
-    glTranslated(0, 0, .99);
+    glPushName(0);
     myDecalsLock.lock();
     for (std::vector<GUISUMOAbstractView::Decal>::iterator l = myDecals.begin(); l != myDecals.end();) {
         GUISUMOAbstractView::Decal& d = *l;
@@ -943,6 +924,7 @@ GUISUMOAbstractView::drawDecals() {
                 }
                 d.glID = GUITexturesHelper::add(i);
                 d.initialised = true;
+                d.image = i;
             } catch (InvalidArgument& e) {
                 WRITE_ERROR("Could not load '" + d.filename + "'.\n" + e.what());
                 l = myDecals.erase(l);
@@ -950,7 +932,7 @@ GUISUMOAbstractView::drawDecals() {
             }
         }
         glPushMatrix();
-        glTranslated(d.centerX, d.centerY, 0);
+        glTranslated(d.centerX, d.centerY, d.layer);
         glRotated(d.rot, 0, 0, 1);
         glColor3d(1, 1, 1);
         SUMOReal halfWidth((d.width / 2.));
@@ -960,7 +942,7 @@ GUISUMOAbstractView::drawDecals() {
         ++l;
     }
     myDecalsLock.unlock();
-    glTranslated(0, 0, -.99);
+    glPopName();
 }
 
 

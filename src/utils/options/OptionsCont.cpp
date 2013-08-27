@@ -149,6 +149,20 @@ OptionsCont::isSet(const std::string& name, bool failOnNonExistant) const {
 }
 
 
+void
+OptionsCont::unSet(const std::string& name, bool failOnNonExistant) const {
+    KnownContType::const_iterator i = myValues.find(name);
+    if (i == myValues.end()) {
+        if (failOnNonExistant) {
+            throw ProcessError("Internal request for unknown option '" + name + "'!");
+        } else {
+            return;
+        }
+    }
+    (*i).second->unSet();
+}
+
+
 bool
 OptionsCont::isDefault(const std::string& name) const {
     KnownContType::const_iterator i = myValues.find(name);
@@ -631,7 +645,7 @@ OptionsCont::printHelp(std::ostream& os) {
     size_t tooLarge = 40;
     size_t maxSize = 0;
     for (i = mySubTopics.begin(); i != mySubTopics.end(); ++i) {
-        const std::vector<std::string> &entries = mySubTopicEntries[*i];
+        const std::vector<std::string>& entries = mySubTopicEntries[*i];
         for (j = entries.begin(); j != entries.end(); ++j) {
             Option* o = getSecure(*j);
             // name, two leading spaces and "--"
@@ -655,7 +669,7 @@ OptionsCont::printHelp(std::ostream& os) {
 
     for (i = mySubTopics.begin(); i != mySubTopics.end(); ++i) {
         os << *i << " Options:" << std::endl;
-        const std::vector<std::string> &entries = mySubTopicEntries[*i];
+        const std::vector<std::string>& entries = mySubTopicEntries[*i];
         for (j = entries.begin(); j != entries.end(); ++j) {
             // start length computation
             size_t csize = (*j).length() + 2;
@@ -693,7 +707,7 @@ OptionsCont::printHelp(std::ostream& os) {
     // print usage examples, calc size first
     if (myCallExamples.size() != 0) {
         os << "Examples:" << std::endl;
-        for (std::vector<std::pair<std::string,std::string> >::const_iterator e = myCallExamples.begin(); e != myCallExamples.end(); ++e) {
+        for (std::vector<std::pair<std::string, std::string> >::const_iterator e = myCallExamples.begin(); e != myCallExamples.end(); ++e) {
             os << "  " << myAppName << ' ' << e->first << std::endl;
             os << "    " << e->second << std::endl;
         }
@@ -706,7 +720,7 @@ OptionsCont::printHelp(std::ostream& os) {
 
 void
 OptionsCont::writeConfiguration(std::ostream& os, bool filled,
-                                bool complete, bool addComments) {
+                                bool complete, bool addComments) const {
     os << "<?xml version=\"1.0\"" << SUMOSAXAttributes::ENCODING << "?>\n\n";
     os << "<configuration xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/" << myAppName << "Configuration.xsd\">" << std::endl << std::endl;
     for (std::vector<std::string>::const_iterator i = mySubTopics.begin(); i != mySubTopics.end(); ++i) {
@@ -716,7 +730,7 @@ OptionsCont::writeConfiguration(std::ostream& os, bool filled,
         }
         std::replace(subtopic.begin(), subtopic.end(), ' ', '_');
         std::transform(subtopic.begin(), subtopic.end(), subtopic.begin(), tolower);
-        const std::vector<std::string> &entries = mySubTopicEntries[*i];
+        const std::vector<std::string>& entries = mySubTopicEntries.find(*i)->second;
         bool hadOne = false;
         for (std::vector<std::string>::const_iterator j = entries.begin(); j != entries.end(); ++j) {
             Option* o = getSecure(*j);
@@ -729,7 +743,7 @@ OptionsCont::writeConfiguration(std::ostream& os, bool filled,
             }
             // add the comment if wished
             if (addComments) {
-                os << "        <!-- " << o->getDescription() << " -->" << std::endl;
+                os << "        <!-- " << StringUtils::escapeXML(o->getDescription()) << " -->" << std::endl;
             }
             // write the option and the value (if given)
             os << "        <" << *j << " value=\"";
@@ -749,7 +763,7 @@ OptionsCont::writeConfiguration(std::ostream& os, bool filled,
                 }
                 os << "\" type=\"" << o->getTypeName();
                 if (!addComments) {
-                    os << "\" help=\"" << o->getDescription();
+                    os << "\" help=\"" << StringUtils::escapeXML(o->getDescription());
                 }
             }
             os << "\"/>" << std::endl;
@@ -768,12 +782,13 @@ OptionsCont::writeConfiguration(std::ostream& os, bool filled,
 
 
 void
-OptionsCont::writeSchema(std::ostream& os, bool addComments) {
+OptionsCont::writeSchema(std::ostream& os, bool /* addComments */) {
     os << "<?xml version=\"1.0\"" << SUMOSAXAttributes::ENCODING << "?>\n\n";
     os << "<xsd:schema elementFormDefault=\"qualified\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n\n";
+    os << "    <xsd:include schemaLocation=\"baseTypes.xsd\"/>\n";
     os << "    <xsd:element name=\"configuration\" type=\"configurationType\"/>\n\n";
     os << "    <xsd:complexType name=\"configurationType\">\n";
-    os << "        <xsd:sequence>\n";
+    os << "        <xsd:all>\n";
     for (std::vector<std::string>::const_iterator i = mySubTopics.begin(); i != mySubTopics.end(); ++i) {
         std::string subtopic = *i;
         if (subtopic == "Configuration") {
@@ -781,9 +796,9 @@ OptionsCont::writeSchema(std::ostream& os, bool addComments) {
         }
         std::replace(subtopic.begin(), subtopic.end(), ' ', '_');
         std::transform(subtopic.begin(), subtopic.end(), subtopic.begin(), tolower);
-        os << "            <xsd:element name=\"" << subtopic << "\" type=\"" << subtopic << "Type\" minOccurs=\"0\" maxOccurs=\"1\"/>\n";
+        os << "            <xsd:element name=\"" << subtopic << "\" type=\"" << subtopic << "Type\" minOccurs=\"0\"/>\n";
     }
-    os << "        </xsd:sequence>\n";
+    os << "        </xsd:all>\n";
     os << "    </xsd:complexType>\n\n";
     for (std::vector<std::string>::const_iterator i = mySubTopics.begin(); i != mySubTopics.end(); ++i) {
         std::string subtopic = *i;
@@ -793,34 +808,19 @@ OptionsCont::writeSchema(std::ostream& os, bool addComments) {
         std::replace(subtopic.begin(), subtopic.end(), ' ', '_');
         std::transform(subtopic.begin(), subtopic.end(), subtopic.begin(), tolower);
         os << "    <xsd:complexType name=\"" << subtopic << "Type\">\n";
-        os << "        <xsd:sequence>\n";
-        const std::vector<std::string> &entries = mySubTopicEntries[*i];
-        for (std::vector<std::string>::const_iterator j = entries.begin(); j != entries.end(); ++j) {
-            os << "            <xsd:element name=\"" << *j << "\" type=\"" << *j << "Type\" minOccurs=\"0\" maxOccurs=\"1\"/>\n";
-        }
-        os << "        </xsd:sequence>\n";
-        os << "    </xsd:complexType>\n\n";
+        os << "        <xsd:all>\n";
+        const std::vector<std::string>& entries = mySubTopicEntries[*i];
         for (std::vector<std::string>::const_iterator j = entries.begin(); j != entries.end(); ++j) {
             Option* o = getSecure(*j);
             std::string type = o->getTypeName();
             std::transform(type.begin(), type.end(), type.begin(), tolower);
-            if (type == "bool") {
-                type = "boolean";
-            } else {
-                if (type != "int" && type != "float") {
-                    type = "string";
-                }
+            if (type == "int[]") {
+                type = "intArray";
             }
-            os << "    <xsd:complexType name=\"" << *j << "Type\">\n";
-            if (addComments) {
-                os << "        <!-- " << o->getDescription() << " -->\n";
-            }
-            os << "        <xsd:attribute name=\"value\" type=\"xsd:" << type << "\" use=\"required\"/>\n";
-            os << "        <xsd:attribute name=\"synonymes\" type=\"xsd:string\" use=\"optional\"/>\n";
-            os << "        <xsd:attribute name=\"type\" type=\"xsd:string\" use=\"optional\"/>\n";
-            os << "        <xsd:attribute name=\"help\" type=\"xsd:string\" use=\"optional\"/>\n";
-            os << "    </xsd:complexType>\n\n";
+            os << "            <xsd:element name=\"" << *j << "\" type=\"" << type << "OptionType\" minOccurs=\"0\"/>\n";
         }
+        os << "        </xsd:all>\n";
+        os << "    </xsd:complexType>\n\n";
     }
     os << "</xsd:schema>\n";
 }

@@ -1,5 +1,6 @@
-<turns>
-	<sink>xxx</sink>
-	<sink>right2end</sink>
-	<sink>left2end</sink>
+<?xml version="1.0" encoding="UTF-8"?>
+<turns xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/turns_file.xsd">
+	<sink edges="xxx"/>
+	<sink edges="right2end"/>
+	<sink edges="left2end"/>
 </turns>

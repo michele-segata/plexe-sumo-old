@@ -37,6 +37,7 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/TplConvert.h>
+#include <utils/common/ToString.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/importio/LineReader.h>
 #include <utils/geom/GeoConvHelper.h>
@@ -56,6 +57,10 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+// ---------------------------------------------------------------------------
+// static members
+// ---------------------------------------------------------------------------
+const int NIImporter_DlrNavteq::GEO_SCALE = 5;
 
 // ===========================================================================
 // method definitions
@@ -82,26 +87,42 @@ NIImporter_DlrNavteq::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     lr.readAll(handler1);
     PROGRESS_DONE_MESSAGE();
 
-    // load traffic lights
-    file = oc.getString("dlr-navteq-prefix") + "_traffic_signals.txt";
-    if (lr.setFile(file)) {
-        PROGRESS_BEGIN_MESSAGE("Loading traffic lights");
-        TrafficlightsHandler handler3(nb.getNodeCont(), nb.getTLLogicCont(), file);
-        lr.readAll(handler3);
-        PROGRESS_DONE_MESSAGE();
+    // load street names if given and wished
+    std::map<std::string, std::string> streetNames; // nameID : name
+    if (oc.getBool("output.street-names")) {
+        file = oc.getString("dlr-navteq-prefix") + "_names.txt";
+        if (lr.setFile(file)) {
+            PROGRESS_BEGIN_MESSAGE("Loading Street Names");
+            NamesHandler handler4(file, streetNames);
+            lr.readAll(handler4);
+            PROGRESS_DONE_MESSAGE();
+        } else {
+            WRITE_WARNING("Output will not contain street names because the file '" + file + "' was not found");
+        }
     }
 
     // load edges
     PROGRESS_BEGIN_MESSAGE("Loading edges");
     file = oc.getString("dlr-navteq-prefix") + "_links_unsplitted.txt";
     // parse the file
-    EdgesHandler handler2(nb.getNodeCont(), nb.getEdgeCont(), file, myGeoms);
+    EdgesHandler handler2(nb.getNodeCont(), nb.getEdgeCont(), file, myGeoms, streetNames);
     if (!lr.setFile(file)) {
         throw ProcessError("The file '" + file + "' could not be opened.");
     }
     lr.readAll(handler2);
     nb.getEdgeCont().recheckLaneSpread();
     PROGRESS_DONE_MESSAGE();
+
+    // load traffic lights if given and not explicitly unwished
+    if (!oc.getBool("tls.discard-loaded")) {
+        file = oc.getString("dlr-navteq-prefix") + "_traffic_signals.txt";
+        if (lr.setFile(file)) {
+            PROGRESS_BEGIN_MESSAGE("Loading traffic lights");
+            TrafficlightsHandler handler3(nb.getNodeCont(), nb.getTLLogicCont(), nb.getEdgeCont(), file);
+            lr.readAll(handler3);
+            PROGRESS_DONE_MESSAGE();
+        }
+    }
 }
 
 
@@ -110,7 +131,7 @@ NIImporter_DlrNavteq::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
 // ---------------------------------------------------------------------------
 NIImporter_DlrNavteq::NodesHandler::NodesHandler(NBNodeCont& nc,
         const std::string& file,
-        std::map<std::string, PositionVector> &geoms)
+        std::map<std::string, PositionVector>& geoms)
     : myNodeCont(nc), myGeoms(geoms) {
     UNUSED_PARAMETER(file);
 }
@@ -183,9 +204,9 @@ NIImporter_DlrNavteq::NodesHandler::report(const std::string& result) {
 // ---------------------------------------------------------------------------
 NIImporter_DlrNavteq::EdgesHandler::EdgesHandler(NBNodeCont& nc, NBEdgeCont& ec,
         const std::string& file,
-        std::map < std::string,
-        PositionVector > &geoms)
-    : myNodeCont(nc), myEdgeCont(ec), myGeoms(geoms) {
+        std::map<std::string, PositionVector>& geoms,
+        std::map<std::string, std::string>& streetNames):
+    myNodeCont(nc), myEdgeCont(ec), myGeoms(geoms), myStreetNames(streetNames) {
     UNUSED_PARAMETER(file);
 }
 
@@ -210,7 +231,8 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
     SUMOReal length;
     SUMOReal speed = (SUMOReal) 30.0 / (SUMOReal) 3.6;
     int nolanes = 1;
-    int priority = -1;
+    int priority;
+    int form_of_way;
     // parse
     StringTokenizer st(result, StringTokenizer::WHITECHARS);
     // id
@@ -223,33 +245,54 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
     interID = st.next();
     // length
     try {
-        length = TplConvert<char>::_2SUMOReal(st.next().c_str());
+        length = TplConvert::_2SUMOReal(st.next().c_str());
     } catch (NumberFormatException&) {
         throw ProcessError("Non-numerical value for an edge's length occured (edge '" + id + "'.");
     }
     // vehicle_type
     std::string veh_type = st.next();
     // form_of_way
-    std::string form_of_way = st.next();
+    try {
+        form_of_way = TplConvert::_2int(st.next().c_str());
+    } catch (NumberFormatException&) {
+        throw ProcessError("Non-numerical value for an edge's form_of_way occured (edge '" + id + "'.");
+    }
     // brunnel_type
     std::string brunnel_type = st.next();
-    // street_type
-    std::string street_type = st.next();
+    // street_type used for priority
+    try {
+        priority = -TplConvert::_2int(st.next().c_str());
+    } catch (NumberFormatException&) {
+        throw ProcessError("Non-numerical value for an edge's street_type occured (edge '" + id + "'.");
+    }
+    // modify priority using form_of_way
+    if (form_of_way == 11) {
+        priority -= 1; // frontage road, very often with lowered curb
+    } else if (form_of_way > 11) {
+        priority -= 2; // parking/service access assume lowered curb
+    }
     speed = NINavTeqHelper::getSpeed(id, st.next());
     // number of lanes
     nolanes = NINavTeqHelper::getLaneNumber(id, st.next(), speed);
+    // average_speed (reportedly this is simply the speed from speed_category minus 10km/h)
+    std::string average_speed = st.next();
+    // regional street name id
+    std::string nameID_regional = st.next();
+    // local street name id
+    std::string nameID_local = st.next();
+    std::string streetName = getStreetNameFromIDs(nameID_regional, nameID_local);
     std::vector<std::string> theRest = st.getVector();
-    bool connection = (theRest.size() == 11) && (theRest[10] == "1");
-    if (theRest.size() > 11) {
+    bool connection = (theRest.size() == 8) && (theRest[7] == "1");
+    if (theRest.size() > 8) {
         // post 05/2009 network
-        if (theRest[11] != "-1") {
+        if (theRest[8] != "-1") {
             try {
-                nolanes = TplConvert<char>::_2int(theRest[11].c_str());
+                nolanes = TplConvert::_2int(theRest[8].c_str());
             } catch (NumberFormatException&) {
                 throw ProcessError("Non-numerical value for the extended number of lanes (edge '" + id + "'.");
             }
         }
-        connection = (theRest.size() == 13) && (theRest[12] == "1");
+        connection = (theRest.size() == 10) && (theRest[9] == "1");
     }
     // try to get the nodes
     NBNode* from = myNodeCont.retrieve(fromID);
@@ -263,22 +306,25 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
     // build the edge
     NBEdge* e = 0;
     if (interID == "-1") {
-        e = new NBEdge(id, from, to, "", speed, nolanes, priority, -1, -1);
+        e = new NBEdge(id, from, to, "", speed, nolanes, priority,
+                       NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET, streetName);
     } else {
         PositionVector geoms = myGeoms[interID];
         if (connection) {
             geoms = geoms.reverse();
-            geoms.push_front(from->getPosition());
-            geoms.push_back(to->getPosition());
-            e = new NBEdge(id, from, to, "", speed, nolanes, priority, -1, -1, geoms, "", LANESPREAD_CENTER);
-        } else {
-            geoms.push_front(from->getPosition());
-            geoms.push_back(to->getPosition());
-            e = new NBEdge(id, from, to, "", speed, nolanes, priority, -1, -1, geoms, "", LANESPREAD_CENTER);
         }
+        geoms.push_front(from->getPosition());
+        geoms.push_back(to->getPosition());
+        e = new NBEdge(id, from, to, "", speed, nolanes, priority,
+                       NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET, geoms, streetName, LANESPREAD_CENTER);
     }
     // add vehicle type information to the edge
     NINavTeqHelper::addVehicleClasses(*e, veh_type);
+    // permission modifications based on form_of_way
+    if (form_of_way == 14) { // pedestrian area (fussgaengerzone)
+        // unfortunately, the veh_type string is misleading in this case
+        e->disallowVehicleClass(-1, SVC_PASSENGER);
+    }
     // insert the edge to the network
     if (!myEdgeCont.insert(e)) {
         delete e;
@@ -288,13 +334,34 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
 }
 
 
+std::string
+NIImporter_DlrNavteq::EdgesHandler::getStreetNameFromIDs(
+    const std::string& regionalID, const std::string& localID) const {
+    std::string result = "";
+    bool hadRegional = false;
+    if (myStreetNames.count(regionalID) > 0) {
+        hadRegional = true;
+        result += myStreetNames[regionalID];
+    }
+    if (myStreetNames.count(localID) > 0) {
+        if (hadRegional) {
+            result += " / ";
+        }
+        result += myStreetNames[localID];
+    }
+    return result;
+}
+
 // ---------------------------------------------------------------------------
 // definitions of NIImporter_DlrNavteq::TrafficlightsHandler-methods
 // ---------------------------------------------------------------------------
 NIImporter_DlrNavteq::TrafficlightsHandler::TrafficlightsHandler(NBNodeCont& nc,
         NBTrafficLightLogicCont& tlc,
-        const std::string& file)
-    : myNodeCont(nc), myTLLogicCont(tlc) {
+        NBEdgeCont& ne,
+        const std::string& file) :
+    myNodeCont(nc),
+    myTLLogicCont(tlc),
+    myEdgeCont(ne) {
     UNUSED_PARAMETER(file);
 }
 
@@ -310,22 +377,53 @@ NIImporter_DlrNavteq::TrafficlightsHandler::report(const std::string& result) {
         return true;
     }
     StringTokenizer st(result, StringTokenizer::WHITECHARS);
-    std::string nodeID = st.getVector().back();
-    NBNode* node = myNodeCont.retrieve(nodeID);
-    if (node == 0) {
-        WRITE_WARNING("The traffic light node '" + nodeID + "' could not be found");
+    const std::string edgeID = st.get(5);
+    NBEdge* edge = myEdgeCont.retrieve(edgeID);
+    if (edge == 0) {
+        WRITE_WARNING("The traffic light edge '" + edgeID + "' could not be found");
     } else {
+        NBNode* node = edge->getToNode();
         if (node->getType() != NODETYPE_TRAFFIC_LIGHT) {
             node->reinit(node->getPosition(), NODETYPE_TRAFFIC_LIGHT);
-            NBTrafficLightDefinition* tlDef = new NBOwnTLDef(nodeID, node);
+            // @note actually we could use the navteq node ID here
+            NBTrafficLightDefinition* tlDef = new NBOwnTLDef(node->getID(), node, 0);
             if (!myTLLogicCont.insert(tlDef)) {
                 // actually, nothing should fail here
                 delete tlDef;
-                throw ProcessError("Could not allocate tls for '" + nodeID + "'.");
+                throw ProcessError("Could not allocate tls for '" + node->getID() + "'.");
             }
         }
     }
     return true;
 }
 
+
+// ---------------------------------------------------------------------------
+// definitions of NIImporter_DlrNavteq::NamesHandler-methods
+// ---------------------------------------------------------------------------
+NIImporter_DlrNavteq::NamesHandler::NamesHandler(
+    const std::string& file, std::map<std::string, std::string>& streetNames) :
+    myStreetNames(streetNames) {
+    UNUSED_PARAMETER(file);
+}
+
+
+NIImporter_DlrNavteq::NamesHandler::~NamesHandler() {}
+
+
+bool
+NIImporter_DlrNavteq::NamesHandler::report(const std::string& result) {
+// # NAME_ID    Name
+    if (result[0] == '#') {
+        return true;
+    }
+    StringTokenizer st(result, StringTokenizer::WHITECHARS);
+    if (st.size() == 1) {
+        return true; // one line with the number of data containing lines in it
+    }
+    assert(st.size() >= 2);
+    const std::string id = st.next();
+    myStreetNames[id] = joinToString(st.getVector(), " ");
+    return true;
+}
 /****************************************************************************/

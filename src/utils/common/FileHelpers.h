@@ -31,8 +31,10 @@
 #include <config.h>
 #endif
 
+#include <cassert>
 #include <fstream>
 #include <string>
+#include <vector>
 #include "SUMOTime.h"
 
 
@@ -178,7 +180,7 @@ public:
      * @return Reference to the stream
      */
     static std::ostream& writeString(std::ostream& strm, const std::string& value);
-    //@}
+
 
     /** @brief Writes a time description binary
      *
@@ -192,9 +194,132 @@ public:
     static std::ostream& writeTime(std::ostream& strm, SUMOTime value);
 
 
+    /** @brief Writes an edge vector binary
+     *
+     * @param[in, out] os The stream to write into
+     * @param[in] edges The edges to write
+     * @return Reference to the stream
+     */
+    template <typename E>
+    static std::ostream& writeEdgeVector(std::ostream& os, const std::vector<E>& edges);
+
+
+    /** @brief Reads an edge vector binary
+     *
+     * @param[in] is The stream to read from
+     * @param[out] edges The edge vector to write into
+     * @return Reference to the stream
+     */
+    template <typename E>
+    static void readEdgeVector(std::istream& in, std::vector<const E*>& edges, const std::string& rid);
+    //@}
+
+
 };
 
 
+template <typename E>
+std::ostream& FileHelpers::writeEdgeVector(std::ostream& os, const std::vector<E>& edges) {
+    FileHelpers::writeUInt(os, (unsigned int)edges.size());
+    std::vector<unsigned int> follow;
+    unsigned int maxFollow = 0;
+    E prev = edges.front();
+    for (typename std::vector<E>::const_iterator i = edges.begin() + 1; i != edges.end(); ++i) {
+        unsigned int idx = 0;
+        for (; idx < prev->getNoFollowing(); ++idx) {
+            if (idx > 15) {
+                break;
+            }
+            if (prev->getFollower(idx) == (*i)) {
+                follow.push_back(idx);
+                if (idx > maxFollow) {
+                    maxFollow = idx;
+                }
+                break;
+            }
+        }
+        if (idx > 15 || idx == prev->getNoFollowing()) {
+            follow.clear();
+            break;
+        }
+        prev = *i;
+    }
+    if (follow.empty()) {
+        for (typename std::vector<E>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
+            FileHelpers::writeInt(os, (*i)->getNumericalID());
+        }
+    } else {
+        const int bits = maxFollow > 3 ? 4 : 2;
+        const unsigned int numFields = 8 * sizeof(unsigned int) / bits;
+        FileHelpers::writeInt(os, -bits);
+        FileHelpers::writeUInt(os, edges.front()->getNumericalID());
+        unsigned int data = 0;
+        unsigned int field = 0;
+        for (std::vector<unsigned int>::const_iterator i = follow.begin(); i != follow.end(); ++i) {
+            data |= *i;
+            field++;
+            if (field == numFields) {
+                FileHelpers::writeUInt(os, data);
+                data = 0;
+                field = 0;
+            } else {
+                data <<= bits;
+            }
+        }
+        if (field > 0) {
+            FileHelpers::writeUInt(os, data << ((numFields - field - 1) * bits));
+        }
+    }
+    return os;
+}
+
+
+template <typename E>
+void FileHelpers::readEdgeVector(std::istream& in, std::vector<const E*>& edges, const std::string& rid) {
+    int size;
+    in.read((char*) &size, sizeof(int));
+    edges.reserve(size);
+    int bitsOrEntry;
+    in.read((char*) &bitsOrEntry, sizeof(int));
+    if (bitsOrEntry < 0) {
+        const unsigned int bits = -bitsOrEntry;
+        const unsigned int numFields = 8 * sizeof(unsigned int) / bits;
+        const unsigned int mask = (1 << bits) - 1;
+        unsigned int edgeID;
+        in.read((char*) &edgeID, sizeof(int));
+        const E* prev = E::dictionary(edgeID);
+        assert(prev != 0);
+        edges.push_back(prev);
+        size--;
+        unsigned int data = 0;
+        unsigned int field = numFields;
+        for (; size > 0; size--) {
+            if (field == numFields) {
+                in.read((char*) &data, sizeof(int));
+                field = 0;
+            }
+            unsigned int followIndex = (data >> ((numFields - field - 1) * bits)) & mask;
+            if (followIndex >= prev->getNoFollowing()) {
+                throw ProcessError("Invalid follower index in route '" + rid + "'!");
+            }
+            prev = prev->getFollower(followIndex);
+            edges.push_back(prev);
+            field++;
+        }
+    } else {
+        while (size > 0) {
+            const E* edge = E::dictionary(bitsOrEntry);
+            if (edge == 0) {
+                throw ProcessError("An edge within the route '" + rid + "' is not known!");
+            }
+            edges.push_back(edge);
+            size--;
+            if (size > 0) {
+                in.read((char*) &bitsOrEntry, sizeof(int));
+            }
+        }
+    }
+}
 #endif
 
 /****************************************************************************/

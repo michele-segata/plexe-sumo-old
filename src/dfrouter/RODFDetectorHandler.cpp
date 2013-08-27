@@ -36,7 +36,7 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/UtilExceptions.h>
-#include <utils/common/TplConvertSec.h>
+#include <utils/common/TplConvert.h>
 #include <utils/common/ToString.h>
 #include <utils/xml/SUMOSAXHandler.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
@@ -54,8 +54,7 @@
 RODFDetectorHandler::RODFDetectorHandler(RODFNet* optNet, bool ignoreErrors, RODFDetectorCon& con,
         const std::string& file)
     : SUMOSAXHandler(file),
-      myNet(optNet), myIgnoreErrors(ignoreErrors), myContainer(con),
-      myHaveWarnedAboutDeprecatedDetectorDefinition(false) {}
+      myNet(optNet), myIgnoreErrors(ignoreErrors), myContainer(con) {}
 
 
 RODFDetectorHandler::~RODFDetectorHandler() {}
@@ -64,11 +63,7 @@ RODFDetectorHandler::~RODFDetectorHandler() {}
 void
 RODFDetectorHandler::myStartElement(int element,
                                     const SUMOSAXAttributes& attrs) {
-    if (element == SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED && !myHaveWarnedAboutDeprecatedDetectorDefinition) {
-        myHaveWarnedAboutDeprecatedDetectorDefinition = true;
-        WRITE_WARNING("Using '" + toString(SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED) + "' is deprecated. Please use '" + toString(SUMO_TAG_DETECTOR_DEFINITION) + "' instead.");
-    }
-    if (element == SUMO_TAG_DETECTOR_DEFINITION || element == SUMO_TAG_DETECTOR_DEFINITION__DEPRECATED) {
+    if (element == SUMO_TAG_DETECTOR_DEFINITION) {
         try {
             bool ok = true;
             // get the id, report an error if not given or empty...
@@ -81,7 +76,7 @@ RODFDetectorHandler::myStartElement(int element,
                 throw ProcessError();
             }
             ROEdge* edge = myNet->getEdge(lane.substr(0, lane.rfind('_')));
-            unsigned int laneIndex = TplConvertSec<char>::_2intSec(lane.substr(lane.rfind('_') + 1).c_str(), INT_MAX);
+            unsigned int laneIndex = TplConvert::_2intSec(lane.substr(lane.rfind('_') + 1).c_str(), INT_MAX);
             if (edge == 0 || laneIndex >= edge->getLaneNo()) {
                 throw ProcessError("Unknown lane '" + lane + "' for detector '" + id + "' in '" + getFileName() + "'.");
             }

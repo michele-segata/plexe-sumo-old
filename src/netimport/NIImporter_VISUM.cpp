@@ -38,7 +38,6 @@
 #include <utils/options/OptionsCont.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <netbuild/NBDistrict.h>
-#include <utils/common/TplConvertSec.h>
 
 #include <netbuild/NBNetBuilder.h>
 #include "NILoader.h"
@@ -205,8 +204,10 @@ NIImporter_VISUM::load() {
         PROGRESS_DONE_MESSAGE();
     }
     // build traffic lights
-    for (NIVisumTL_Map::iterator j = myTLS.begin(); j != myTLS.end(); j++) {
-        j->second->build(myNetBuilder.getTLLogicCont());
+    if (!OptionsCont::getOptions().getBool("tls.discard-loaded")) {
+        for (NIVisumTL_Map::iterator j = myTLS.begin(); j != myTLS.end(); j++) {
+            j->second->build(myNetBuilder.getTLLogicCont());
+        }
     }
     // build district shapes
     for (std::map<NBDistrict*, PositionVector>::const_iterator k = myDistrictShapes.begin(); k != myDistrictShapes.end(); ++k) {
@@ -233,7 +234,7 @@ NIImporter_VISUM::parse_Types() {
     // get the maximum speed
     SUMOReal speed = getNamedFloat("v0-IV", "V0IV");
     // get the priority
-    int priority = 1000 - TplConvert<char>::_2int(myLineParser.get("Rang").c_str());
+    int priority = 1000 - TplConvert::_2int(myLineParser.get("Rang").c_str());
     // try to retrieve the number of lanes
     SUMOReal cap = getNamedFloat("Kap-IV", "KAPIV");
     int nolanes = myCapacity2Lanes.get(cap);
@@ -285,7 +286,7 @@ NIImporter_VISUM::parse_Districts() {
         return;
     }
     if (myLineParser.know("FLAECHEID")) {
-        long flaecheID = TplConvert<char>::_2long(myLineParser.get("FLAECHEID").c_str());
+        SUMOLong flaecheID = TplConvert::_2long(myLineParser.get("FLAECHEID").c_str());
         myShapeDistrictMap[flaecheID] = district;
     }
 }
@@ -293,9 +294,9 @@ NIImporter_VISUM::parse_Districts() {
 
 void
 NIImporter_VISUM::parse_Point() {
-    long id = TplConvert<char>::_2long(myLineParser.get("ID").c_str());
-    SUMOReal x = TplConvert<char>::_2SUMOReal(myLineParser.get("XKOORD").c_str());
-    SUMOReal y = TplConvert<char>::_2SUMOReal(myLineParser.get("YKOORD").c_str());
+    SUMOLong id = TplConvert::_2long(myLineParser.get("ID").c_str());
+    SUMOReal x = TplConvert::_2SUMOReal(myLineParser.get("XKOORD").c_str());
+    SUMOReal y = TplConvert::_2SUMOReal(myLineParser.get("YKOORD").c_str());
     Position pos(x, y);
     if (!NILoader::transformCoordinates(pos, false)) {
         WRITE_ERROR("Unable to project coordinates for point " + toString(id) + ".");
@@ -325,9 +326,11 @@ NIImporter_VISUM::parse_Edges() {
     SUMOReal speed = myNetBuilder.getTypeCont().getSpeed(type);
     if (!OptionsCont::getOptions().getBool("visum.use-type-speed")) {
         try {
-            speed = myLineParser.know("v0-IV")
-                    ? TplConvertSec<char>::_2SUMORealSec(myLineParser.get("v0-IV").c_str(), -1)
-                    : TplConvertSec<char>::_2SUMORealSec(myLineParser.get("V0IV").c_str(), -1);
+            std::string speedS = myLineParser.know("v0-IV") ? myLineParser.get("v0-IV") : myLineParser.get("V0IV");
+            if (speedS.find("km/h") != std::string::npos) {
+                speedS = speedS.substr(0, speedS.find("km/h"));
+            }
+            speed = TplConvert::_2SUMORealSec(speedS.c_str(), -1);
             speed = speed / (SUMOReal) 3.6;
         } catch (OutOfBoundsException) {}
     }
@@ -337,7 +340,7 @@ NIImporter_VISUM::parse_Edges() {
 
     // get the information whether the edge is a one-way
     bool oneway = myLineParser.know("Einbahn")
-                  ? TplConvert<char>::_2bool(myLineParser.get("Einbahn").c_str())
+                  ? TplConvert::_2bool(myLineParser.get("Einbahn").c_str())
                   : true;
     // get the number of lanes
     int nolanes = myNetBuilder.getTypeCont().getNumLanes(type);
@@ -345,15 +348,15 @@ NIImporter_VISUM::parse_Edges() {
         try {
             if (!OptionsCont::getOptions().getBool("visum.use-type-laneno")) {
                 nolanes = myLineParser.know("Fahrstreifen")
-                          ? TplConvertSec<char>::_2intSec(myLineParser.get("Fahrstreifen").c_str(), 0)
-                          : TplConvertSec<char>::_2intSec(myLineParser.get("ANZFAHRSTREIFEN").c_str(), 0);
+                          ? TplConvert::_2intSec(myLineParser.get("Fahrstreifen").c_str(), 0)
+                          : TplConvert::_2intSec(myLineParser.get("ANZFAHRSTREIFEN").c_str(), 0);
             }
         } catch (UnknownElement) {
         }
     } else {
         SUMOReal cap = myLineParser.know("KAPIV")
-                       ? TplConvertSec<char>::_2SUMORealSec(myLineParser.get("KAPIV").c_str(), -1)
-                       : TplConvertSec<char>::_2SUMORealSec(myLineParser.get("KAP-IV").c_str(), -1);
+                       ? TplConvert::_2SUMORealSec(myLineParser.get("KAPIV").c_str(), -1)
+                       : TplConvert::_2SUMORealSec(myLineParser.get("KAP-IV").c_str(), -1);
         nolanes = myCapacity2Lanes.get(cap);
     }
     // check whether the id is already used
@@ -411,19 +414,19 @@ NIImporter_VISUM::parse_Edges() {
 
 void
 NIImporter_VISUM::parse_Kante() {
-    long id = TplConvert<char>::_2long(myLineParser.get("ID").c_str());
-    long from = TplConvert<char>::_2long(myLineParser.get("VONPUNKTID").c_str());
-    long to = TplConvert<char>::_2long(myLineParser.get("NACHPUNKTID").c_str());
+    SUMOLong id = TplConvert::_2long(myLineParser.get("ID").c_str());
+    SUMOLong from = TplConvert::_2long(myLineParser.get("VONPUNKTID").c_str());
+    SUMOLong to = TplConvert::_2long(myLineParser.get("NACHPUNKTID").c_str());
     myEdges[id] = std::make_pair(from, to);
 }
 
 
 void
 NIImporter_VISUM::parse_PartOfArea() {
-    long flaecheID = TplConvert<char>::_2long(myLineParser.get("FLAECHEID").c_str());
-    long flaechePartID = TplConvert<char>::_2long(myLineParser.get("TFLAECHEID").c_str());
+    SUMOLong flaecheID = TplConvert::_2long(myLineParser.get("FLAECHEID").c_str());
+    SUMOLong flaechePartID = TplConvert::_2long(myLineParser.get("TFLAECHEID").c_str());
     if (mySubPartsAreas.find(flaechePartID) == mySubPartsAreas.end()) {
-        mySubPartsAreas[flaechePartID] = std::vector<long>();
+        mySubPartsAreas[flaechePartID] = std::vector<SUMOLong>();
     }
     mySubPartsAreas[flaechePartID].push_back(flaecheID);
 }
@@ -449,11 +452,11 @@ NIImporter_VISUM::parse_Connectors() {
     } else {
         proz = 1;
     }
-    // get the duration to wait
-    SUMOReal retard = -1;
-    if (myLineParser.know("t0-IV")) {
-        retard = getNamedFloat("t0-IV", -1);
-    }
+    // get the duration to wait (unused)
+//     SUMOReal retard = -1;
+//     if (myLineParser.know("t0-IV")) {
+//         retard = getNamedFloat("t0-IV", -1);
+//     }
     // get the type;
     //  use a standard type with a large speed when a type is not given
     std::string type = myLineParser.know("Typ")
@@ -604,7 +607,7 @@ NIImporter_VISUM::parse_EdgePolys() {
     int index;
     SUMOReal x, y;
     try {
-        index = TplConvert<char>::_2int(myLineParser.get("INDEX").c_str());
+        index = TplConvert::_2int(myLineParser.get("INDEX").c_str());
         x = getNamedFloat("XKoord");
         y = getNamedFloat("YKoord");
     } catch (NumberFormatException&) {
@@ -660,7 +663,7 @@ NIImporter_VISUM::parse_Lanes() {
                         : NBHelpers::normalIDRepresentation(myLineParser.get("NR"));
     int lane = -1;
     try {
-        lane = TplConvert<char>::_2int(laneS.c_str());
+        lane = TplConvert::_2int(laneS.c_str());
     } catch (NumberFormatException&) {
         WRITE_ERROR("A lane number for edge '" + edge->getID() + "' is not numeric (" + laneS + ").");
         return;
@@ -681,7 +684,7 @@ NIImporter_VISUM::parse_Lanes() {
     std::string lengthS = NBHelpers::normalIDRepresentation(myLineParser.get("LAENGE"));
     SUMOReal length = -1;
     try {
-        length = TplConvert<char>::_2SUMOReal(lengthS.c_str());
+        length = TplConvert::_2SUMOReal(lengthS.c_str());
     } catch (NumberFormatException&) {
         WRITE_ERROR("A lane length for edge '" + edge->getID() + "' is not numeric (" + lengthS + ").");
         return;
@@ -718,7 +721,6 @@ NIImporter_VISUM::parse_Lanes() {
         // nope, we have to split the edge...
         //  maybe it is not the proper edge to split - VISUM seems not to sort the splits...
         bool mustRecheck = true;
-        NBNode* nextNode = node;
         SUMOReal seenLength = 0;
         while (mustRecheck) {
             if (edge->getID().substr(edge->getID().length() - node->getID().length() - 1) == "_" + node->getID()) {
@@ -726,19 +728,15 @@ NIImporter_VISUM::parse_Lanes() {
                 std::string sub = edge->getID();
                 sub = sub.substr(sub.rfind('_', sub.rfind('_') - 1));
                 sub = sub.substr(1, sub.find('_', 1) - 1);
-                SUMOReal dist = TplConvert<char>::_2SUMOReal(sub.c_str());
+                SUMOReal dist = TplConvert::_2SUMOReal(sub.c_str());
                 if (dist < length) {
                     seenLength += edge->getLength();
                     if (dirS == "1") {
                         // incoming -> move back
                         edge = edge->getFromNode()->getIncomingEdges()[0];
-                        nextNode = edge->getToNode();
-                        nextNode = edge->getFromNode();
                     } else {
                         // outgoing -> move forward
                         edge = edge->getToNode()->getOutgoingEdges()[0];
-                        nextNode = edge->getFromNode();
-                        nextNode = edge->getToNode();
                     }
                 } else {
                     mustRecheck = false;
@@ -777,18 +775,15 @@ NIImporter_VISUM::parse_Lanes() {
 
 void
 NIImporter_VISUM::parse_TrafficLights() {
-    // get the id
     myCurrentID = NBHelpers::normalIDRepresentation(myLineParser.get("Nr"));
-    // cycle time
-    SUMOReal CycleTime = getNamedFloat("Umlaufzeit", "UMLZEIT");
-    // IntermediateTime
-    SUMOReal IntermediateTime = getNamedFloat("StdZwischenzeit", "STDZWZEIT");
-    // PhaseBased
-    bool PhaseBased = myLineParser.know("PhasenBasiert")
-                      ? TplConvert<char>::_2bool(myLineParser.get("PhasenBasiert").c_str())
+    SUMOTime cycleTime = (SUMOTime) getNamedFloat("Umlaufzeit", "UMLZEIT");
+    SUMOTime intermediateTime = (SUMOTime) getNamedFloat("StdZwischenzeit", "STDZWZEIT");
+    bool phaseBased = myLineParser.know("PhasenBasiert")
+                      ? TplConvert::_2bool(myLineParser.get("PhasenBasiert").c_str())
                       : false;
+    SUMOTime offset = myLineParser.know("ZEITVERSATZ") ? TIME2STEPS(getNamedFloat("ZEITVERSATZ")) : 0;
     // add to the list
-    myTLS[myCurrentID] = new NIVisumTL(myCurrentID, (SUMOTime) CycleTime, (SUMOTime) IntermediateTime, PhaseBased);
+    myTLS[myCurrentID] = new NIVisumTL(myCurrentID, cycleTime, offset, intermediateTime, phaseBased);
 }
 
 
@@ -803,19 +798,17 @@ NIImporter_VISUM::parse_NodesToTrafficLights() {
 
 void
 NIImporter_VISUM::parse_SignalGroups() {
-    // get the id
     myCurrentID = NBHelpers::normalIDRepresentation(myLineParser.get("Nr"));
     std::string LSAid = NBHelpers::normalIDRepresentation(myLineParser.get("LsaNr"));
-    // StartTime
     SUMOReal startTime = getNamedFloat("GzStart", "GRUENANF");
-    // EndTime
     SUMOReal endTime = getNamedFloat("GzEnd", "GRUENENDE");
+    SUMOReal yellowTime = myLineParser.know("GELB") ? getNamedFloat("GELB") : -1;
     // add to the list
     if (myTLS.find(LSAid) == myTLS.end()) {
         WRITE_ERROR("Could not find TLS '" + LSAid + "' for setting the signal group.");
         return;
     }
-    myTLS.find(LSAid)->second->addSignalGroup(myCurrentID, (SUMOTime) startTime, (SUMOTime) endTime);
+    myTLS.find(LSAid)->second->addSignalGroup(myCurrentID, (SUMOTime) startTime, (SUMOTime) endTime, (SUMOTime) yellowTime);
 }
 
 
@@ -874,21 +867,22 @@ NIImporter_VISUM::parse_TurnsToSignalGroups() {
 
 void
 NIImporter_VISUM::parse_AreaSubPartElement() {
-    long id = TplConvert<char>::_2long(myLineParser.get("TFLAECHEID").c_str());
-    long edgeid = TplConvert<char>::_2long(myLineParser.get("KANTEID").c_str());
+    SUMOLong id = TplConvert::_2long(myLineParser.get("TFLAECHEID").c_str());
+    SUMOLong edgeid = TplConvert::_2long(myLineParser.get("KANTEID").c_str());
     if (myEdges.find(edgeid) == myEdges.end()) {
         WRITE_ERROR("Unknown edge in TEILFLAECHENELEMENT");
         return;
     }
     std::string dir = myLineParser.get("RICHTUNG");
-    std::string indexS = NBHelpers::normalIDRepresentation(myLineParser.get("INDEX"));
-    int index = -1;
-    try {
-        index = TplConvert<char>::_2int(indexS.c_str()) - 1;
-    } catch (NumberFormatException&) {
-        WRITE_ERROR("An index for a TEILFLAECHENELEMENT is not numeric (id='" + toString(id) + "').");
-        return;
-    }
+// get index (unused)
+//     std::string indexS = NBHelpers::normalIDRepresentation(myLineParser.get("INDEX"));
+//     int index = -1;
+//     try {
+//         index = TplConvert::_2int(indexS.c_str()) - 1;
+//     } catch (NumberFormatException&) {
+//         WRITE_ERROR("An index for a TEILFLAECHENELEMENT is not numeric (id='" + toString(id) + "').");
+//         return;
+//     }
     PositionVector shape;
     shape.push_back(myPoints[myEdges[edgeid].first]);
     shape.push_back(myPoints[myEdges[edgeid].second]);
@@ -900,8 +894,8 @@ NIImporter_VISUM::parse_AreaSubPartElement() {
         return;
     }
 
-    const std::vector<long> &areas = mySubPartsAreas.find(id)->second;
-    for (std::vector<long>::const_iterator i = areas.begin(); i != areas.end(); ++i) {
+    const std::vector<SUMOLong>& areas = mySubPartsAreas.find(id)->second;
+    for (std::vector<SUMOLong>::const_iterator i = areas.begin(); i != areas.end(); ++i) {
         NBDistrict* d = myShapeDistrictMap[*i];
         if (d == 0) {
             continue;
@@ -923,14 +917,12 @@ NIImporter_VISUM::parse_AreaSubPartElement() {
 void
 NIImporter_VISUM::parse_Phases() {
     // get the id
-    std::string Phaseid = NBHelpers::normalIDRepresentation(myLineParser.get("Nr"));
+    std::string phaseid = NBHelpers::normalIDRepresentation(myLineParser.get("Nr"));
     std::string LSAid = NBHelpers::normalIDRepresentation(myLineParser.get("LsaNr"));
-    // StartTime
-    SUMOReal StartTime = getNamedFloat("GzStart", "GRUENANF");
-    // EndTime
-    SUMOReal EndTime = getNamedFloat("GzEnd", "GRUENENDE");
-    // add to the list
-    myTLS.find(LSAid)->second->addPhase(Phaseid, (SUMOTime) StartTime, (SUMOTime) EndTime);
+    SUMOReal startTime = getNamedFloat("GzStart", "GRUENANF");
+    SUMOReal endTime = getNamedFloat("GzEnd", "GRUENENDE");
+    SUMOReal yellowTime = myLineParser.know("GELB") ? getNamedFloat("GELB") : -1;
+    myTLS.find(LSAid)->second->addPhase(phaseid, (SUMOTime) startTime, (SUMOTime) endTime, (SUMOTime) yellowTime);
 }
 
 
@@ -982,7 +974,7 @@ void NIImporter_VISUM::parse_LanesConnections() {
     std::string fromLaneS = NBHelpers::normalIDRepresentation(myLineParser.get("VONFSNR"));
     int fromLane = -1;
     try {
-        fromLane = TplConvert<char>::_2int(fromLaneS.c_str());
+        fromLane = TplConvert::_2int(fromLaneS.c_str());
     } catch (NumberFormatException&) {
         WRITE_ERROR("A from-lane number for edge '" + fromEdge->getID() + "' is not numeric (" + fromLaneS + ").");
         return;
@@ -996,7 +988,7 @@ void NIImporter_VISUM::parse_LanesConnections() {
     std::string toLaneS = NBHelpers::normalIDRepresentation(myLineParser.get("NACHFSNR"));
     int toLane = -1;
     try {
-        toLane = TplConvert<char>::_2int(toLaneS.c_str());
+        toLane = TplConvert::_2int(toLaneS.c_str());
     } catch (NumberFormatException&) {
         WRITE_ERROR("A to-lane number for edge '" + toEdge->getID() + "' is not numeric (" + toLaneS + ").");
         return;
@@ -1045,10 +1037,10 @@ void NIImporter_VISUM::parse_LanesConnections() {
 SUMOReal
 NIImporter_VISUM::getWeightedFloat(const std::string& name) {
     try {
-        return TplConvert<char>::_2SUMOReal(myLineParser.get(name).c_str());
+        return TplConvert::_2SUMOReal(myLineParser.get(name).c_str());
     } catch (...) {}
     try {
-        return TplConvert<char>::_2SUMOReal(myLineParser.get((name + "(IV)")).c_str());
+        return TplConvert::_2SUMOReal(myLineParser.get((name + "(IV)")).c_str());
     } catch (...) {}
     return -1;
 }
@@ -1057,10 +1049,10 @@ NIImporter_VISUM::getWeightedFloat(const std::string& name) {
 bool
 NIImporter_VISUM::getWeightedBool(const std::string& name) {
     try {
-        return TplConvert<char>::_2bool(myLineParser.get(name).c_str());
+        return TplConvert::_2bool(myLineParser.get(name).c_str());
     } catch (...) {}
     try {
-        return TplConvert<char>::_2bool(myLineParser.get((name + "(IV)")).c_str());
+        return TplConvert::_2bool(myLineParser.get((name + "(IV)")).c_str());
     } catch (...) {}
     return false;
 }
@@ -1223,7 +1215,7 @@ NIImporter_VISUM::getEdge(NBNode* FromNode, NBNode* ToNode) {
 SUMOReal
 NIImporter_VISUM::getNamedFloat(const std::string& fieldName) throw(OutOfBoundsException, NumberFormatException, UnknownElement) {
     std::string valS = NBHelpers::normalIDRepresentation(myLineParser.get(fieldName));
-    return TplConvert<char>::_2SUMOReal(valS.c_str());
+    return TplConvert::_2SUMOReal(valS.c_str());
 }
 
 
@@ -1231,7 +1223,7 @@ SUMOReal
 NIImporter_VISUM::getNamedFloat(const std::string& fieldName, SUMOReal defaultValue) {
     try {
         std::string valS = NBHelpers::normalIDRepresentation(myLineParser.get(fieldName));
-        return TplConvert<char>::_2SUMOReal(valS.c_str());
+        return TplConvert::_2SUMOReal(valS.c_str());
     } catch (...) {
         return defaultValue;
     }

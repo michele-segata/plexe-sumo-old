@@ -65,11 +65,11 @@ public:
      *
      * @param[in] net The net to add loaded turning percentages into
      */
-    ROJTRTurnDefLoader(RONet& net) ;
+    ROJTRTurnDefLoader(RONet& net);
 
 
     /// @brief Destructor
-    ~ROJTRTurnDefLoader() ;
+    ~ROJTRTurnDefLoader();
 
 
 protected:
@@ -83,19 +83,7 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myStartElement
      */
-    void myStartElement(int element,
-                        const SUMOSAXAttributes& attrs) ;
-
-
-    /** @brief Called when characters occure
-     *
-     * @param[in] element ID of the last opened element
-     * @param[in] chars The read characters (complete)
-     * @exception ProcessError If something fails
-     * @see GenericSAXHandler::myCharacters
-     */
-    void myCharacters(int element,
-                      const std::string& chars) ;
+    void myStartElement(int element, const SUMOSAXAttributes& attrs);
     //@}
 
 
@@ -110,7 +98,7 @@ private:
      *
      * @param[in] attrs The SAX-attributes to parse incoming edge from
      */
-    void beginFromEdge(const SUMOSAXAttributes& attrs) ;
+    void beginFromEdge(const SUMOSAXAttributes& attrs);
 
 
     /** @brief Parses the probability to use a certain outgoing edge
@@ -126,7 +114,7 @@ private:
      *
      * @param[in] attrs The SAX-attributes to parse the destination edge and the probability to use it from
      */
-    void addToEdge(const SUMOSAXAttributes& attrs) ;
+    void addToEdge(const SUMOSAXAttributes& attrs);
 
 
 private:
@@ -138,10 +126,6 @@ private:
 
     /// @brief The current incoming edge the turning probabilities are set into
     ROJTREdge* myEdge;
-
-    /// @brief Whether the loader has warned about deprecated usage of characters
-    bool myHaveWarnedAboutDeprecatedSources, myHaveWarnedAboutDeprecatedSinks;
-    bool myHaveWarnedAboutDeprecatedFromEdge, myHaveWarnedAboutDeprecatedToEdge;
 
 
 };

@@ -33,9 +33,11 @@
 #endif
 
 #include <string>
+#include <utils/foxtools/MFXMutex.h>
 #include <utils/shapes/Polygon.h>
 #include <utils/gui/globjects/GUIGlObject_AbstractAdd.h>
-
+#include <utils/gui/globjects/GLIncludes.h>
+using namespace SUMO;
 
 // ===========================================================================
 // class definitions
@@ -47,20 +49,21 @@
 class GUIPolygon : public Polygon, public GUIGlObject_AbstractAdd {
 public:
     /** @brief Constructor
-     * @param[in] layer The layer the polygon will be located in
-     * @param[in] name The name (id) of the polygon
-     * @param[in] type The type of the polygon
+     * @param[in] id The name of the polygon
+     * @param[in] type The (abstract) type of the polygon
      * @param[in] color The color of the polygon
+     * @param[in] layer The layer of the polygon
+     * @param[in] angle The rotation of the polygon
+     * @param[in] imgFile The raster image of the polygon
      * @param[in] shape The shape of the polygon
      * @param[in] fill Whether the polygon shall be filled
      */
-    GUIPolygon(int layer,
-               const std::string name, const std::string type,
-               const RGBColor& color, const PositionVector& shape,
-               bool fill) ;
+    GUIPolygon(const std::string& id, const std::string& type,
+               const RGBColor& color, const PositionVector& shape, bool fill,
+               SUMOReal layer = 0, SUMOReal angle = 0, const std::string& imgFile = "");
 
     /// @brief Destructor
-    ~GUIPolygon() ;
+    ~GUIPolygon();
 
 
 
@@ -75,7 +78,7 @@ public:
      * @see GUIGlObject::getPopUpMenu
      */
     GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
-                                       GUISUMOAbstractView& parent) ;
+                                       GUISUMOAbstractView& parent);
 
 
     /** @brief Returns an own parameter window
@@ -86,7 +89,7 @@ public:
      * @see GUIGlObject::getParameterWindow
      */
     GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app,
-            GUISUMOAbstractView& parent) ;
+            GUISUMOAbstractView& parent);
 
 
     /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -94,26 +97,30 @@ public:
      * @return The boundary the object is within
      * @see GUIGlObject::getCenteringBoundary
      */
-    Boundary getCenteringBoundary() const ;
+    Boundary getCenteringBoundary() const;
 
 
     /** @brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const ;
+    void drawGL(const GUIVisualizationSettings& s) const;
     //@}
 
 
+    /// @brief set a new shape and update the tesselation
+    virtual void setShape(const PositionVector& shape);
 
-    /// Returns the layer the object is located in
-    int getLayer() const;
 
-protected:
-    /** @brief The layer this object is located in
-     * This value is used for determining which object to choose as being on top under the cursor
-     */
-    int myLayer;
+private:
+    /// The mutex used to avoid concurrent updates of the shape
+    mutable MFXMutex myLock;
+
+    /// @brief id of the display list for the cached tesselation
+    mutable GLuint myDisplayList;
+
+    /// @brief erform the tesselation and store it in a display list
+    void storeTesselation() const;
 
 };
 

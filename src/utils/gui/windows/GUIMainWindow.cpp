@@ -31,16 +31,25 @@
 #endif
 
 #include <string>
-#include "GUIMainWindow.h"
 #include <algorithm>
-#include "GUIAppEnum.h"
+#include <fx.h>
 #include <fx3d.h>
+#include <utils/foxtools/MFXImageHelper.h>
+#include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/common/StringUtils.h>
+#include <utils/common/MsgHandler.h>
+#include "GUIAppEnum.h"
+#include "GUIMainWindow.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+
+// ===========================================================================
+// static member definitions
+// ===========================================================================
+GUIMainWindow* GUIMainWindow::myInstance = 0;
 
 // ===========================================================================
 // member method definitions
@@ -59,6 +68,10 @@ GUIMainWindow::GUIMainWindow(FXApp* a)
     myBottomDock = new FXDockSite(this, LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X);
     myLeftDock = new FXDockSite(this, LAYOUT_SIDE_LEFT | LAYOUT_FILL_Y);
     myRightDock = new FXDockSite(this, LAYOUT_SIDE_RIGHT | LAYOUT_FILL_Y);
+    if (myInstance != 0) {
+        throw ProcessError("MainWindow initialized twice");
+    }
+    myInstance = this;
 }
 
 
@@ -160,6 +173,16 @@ FXLabel&
 GUIMainWindow::getGeoLabel() {
     return *myGeoCoordinate;
 }
+
+
+GUIMainWindow*
+GUIMainWindow::getInstance() {
+    if (myInstance != 0) {
+        return myInstance;
+    }
+    throw ProcessError("A GUIMainWindow instance was not yet constructed.");
+}
+
 
 /****************************************************************************/
 

@@ -42,12 +42,7 @@
 #include <microsim/MSLane.h>
 #include <microsim/output/MSInductLoop.h>
 #include "GUIEdge.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
+#include <utils/gui/globjects/GLIncludes.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -76,40 +71,34 @@ GUIInductLoop::buildDetectorGUIRepresentation() {
 
 void
 GUIInductLoop::reset() {
-    myLock.lock();
+    AbstractMutex::ScopedLocker locker(myLock);
     MSInductLoop::reset();
-    myLock.unlock();
 }
 
 
 void
 GUIInductLoop::enterDetectorByMove(SUMOVehicle& veh, SUMOReal entryTimestep) {
-    myLock.lock();
+    AbstractMutex::ScopedLocker locker(myLock);
     MSInductLoop::enterDetectorByMove(veh, entryTimestep);
-    myLock.unlock();
 }
 
 void
 GUIInductLoop::leaveDetectorByMove(SUMOVehicle& veh, SUMOReal leaveTimestep) {
-    myLock.lock();
+    AbstractMutex::ScopedLocker locker(myLock);
     MSInductLoop::leaveDetectorByMove(veh, leaveTimestep);
-    myLock.unlock();
 }
 
 void
 GUIInductLoop::leaveDetectorByLaneChange(SUMOVehicle& veh) {
-    myLock.lock();
+    AbstractMutex::ScopedLocker locker(myLock);
     MSInductLoop::leaveDetectorByLaneChange(veh);
-    myLock.unlock();
 }
 
 
 std::vector<MSInductLoop::VehicleData>
 GUIInductLoop::collectVehiclesOnDet(SUMOTime t) const {
-    myLock.lock();
-    std::vector<VehicleData> ret = MSInductLoop::collectVehiclesOnDet(t);
-    myLock.unlock();
-    return ret;
+    AbstractMutex::ScopedLocker locker(myLock);
+    return MSInductLoop::collectVehiclesOnDet(t);
 }
 
 
@@ -123,7 +112,6 @@ GUIInductLoop::MyWrapper::MyWrapper(GUIInductLoop& detector,
     const PositionVector& v = wrapper.getShape();
     myFGPosition = v.positionAtLengthPosition(pos);
     Line l(v.getBegin(), v.getEnd());
-    SUMOReal sgPos = pos / v.length() * l.length();
     myBoundary.add(myFGPosition.x() + (SUMOReal) 5.5, myFGPosition.y() + (SUMOReal) 5.5);
     myBoundary.add(myFGPosition.x() - (SUMOReal) 5.5, myFGPosition.y() - (SUMOReal) 5.5);
     myFGRotation = -v.rotationDegreeAtLengthPosition(pos);

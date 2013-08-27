@@ -76,7 +76,7 @@ protected:
 
 
     /// @brief Destructor
-    ~NIImporter_RobocupRescue() ;
+    ~NIImporter_RobocupRescue();
 
 
     /** @brief Loads nodes from the given file
@@ -98,6 +98,9 @@ protected:
     /// @brief The edge container to fill
     NBEdgeCont& myEdgeCont;
 
+private:
+    /// @brief Invalidated assignment operator
+    NIImporter_RobocupRescue& operator=(const NIImporter_RobocupRescue& s);
 };
 
 

@@ -169,7 +169,7 @@ public:
      *
      * @return The set of all selected objects (ids)
      */
-    const std::set<GUIGlID> &getSelected() const;
+    const std::set<GUIGlID>& getSelected() const;
 
 
     /**  @brief Returns the set of ids of all selected objects' of a certain type
@@ -178,7 +178,7 @@ public:
      * @return A set containing the ids of all selected objects of the given type
      * @see SingleTypeSelections::getSelected
      */
-    const std::set<GUIGlID> &getSelected(GUIGlObjectType type);
+    const std::set<GUIGlID>& getSelected(GUIGlObjectType type);
 
 
     /** @brief Clears the list of selected objects
@@ -205,9 +205,10 @@ public:
      * @param[in] filename The name of the file to load the list of selected objects from
      * @param[out] msg Any error messages while loading or the empty string
      * @param[in] type The type of the objects to load if changed from default
+     * @param[in] maxErrors The maximum Number of errors to return
      * @return the set of loaded ids
      */
-    std::set<GUIGlID> loadIDs(const std::string& filename, std::string& msgOut, GUIGlObjectType type = GLO_MAX);
+    std::set<GUIGlID> loadIDs(const std::string& filename, std::string& msgOut, GUIGlObjectType type = GLO_MAX, int maxErrors = 16);
 
 
     /** @brief Saves a selection list
@@ -280,7 +281,7 @@ public:
         /** @brief Returns the list of selected ids
          * @return A list containing the ids of all selected objects
          */
-        const std::set<GUIGlID> &getSelected() const;
+        const std::set<GUIGlID>& getSelected() const;
 
     private:
         /// @brief The list of selected ids

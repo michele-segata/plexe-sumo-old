@@ -87,10 +87,10 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
                     PCTypeMap& tm) {
     GeoConvHelper& geoConvHelper = GeoConvHelper::getProcessing();
     std::string what;
-    std::map<long, Position> punkte;
-    std::map<long, PositionVector> kanten;
-    std::map<long, PositionVector> teilflaechen;
-    std::map<long, long> flaechenelemente;
+    std::map<SUMOLong, Position> punkte;
+    std::map<SUMOLong, PositionVector> kanten;
+    std::map<SUMOLong, PositionVector> teilflaechen;
+    std::map<SUMOLong, SUMOLong> flaechenelemente;
     NamedColumnsParser lineParser;
     LineReader lr(file);
     while (lr.hasMore()) {
@@ -102,9 +102,9 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
         // read items
         if (what == "$PUNKT") {
             lineParser.parseLine(line);
-            long id = TplConvert<char>::_2long(lineParser.get("ID").c_str());
-            SUMOReal x = TplConvert<char>::_2SUMOReal(lineParser.get("XKOORD").c_str());
-            SUMOReal y = TplConvert<char>::_2SUMOReal(lineParser.get("YKOORD").c_str());
+            SUMOLong id = TplConvert::_2long(lineParser.get("ID").c_str());
+            SUMOReal x = TplConvert::_2SUMOReal(lineParser.get("XKOORD").c_str());
+            SUMOReal y = TplConvert::_2SUMOReal(lineParser.get("YKOORD").c_str());
             Position pos(x, y);
             if (!geoConvHelper.x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for point '" + toString(id) + "'.");
@@ -113,9 +113,9 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
             continue;
         } else if (what == "$KANTE") {
             lineParser.parseLine(line);
-            long id = TplConvert<char>::_2long(lineParser.get("ID").c_str());
-            long fromID = TplConvert<char>::_2long(lineParser.get("VONPUNKTID").c_str());
-            long toID = TplConvert<char>::_2long(lineParser.get("NACHPUNKTID").c_str());
+            SUMOLong id = TplConvert::_2long(lineParser.get("ID").c_str());
+            SUMOLong fromID = TplConvert::_2long(lineParser.get("VONPUNKTID").c_str());
+            SUMOLong toID = TplConvert::_2long(lineParser.get("NACHPUNKTID").c_str());
             PositionVector vec;
             vec.push_back(punkte[fromID]);
             vec.push_back(punkte[toID]);
@@ -123,10 +123,10 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
             continue;
         } else if (what == "$ZWISCHENPUNKT") {
             lineParser.parseLine(line);
-            long id = TplConvert<char>::_2long(lineParser.get("KANTEID").c_str());
-            int index = TplConvert<char>::_2int(lineParser.get("INDEX").c_str());
-            SUMOReal x = TplConvert<char>::_2SUMOReal(lineParser.get("XKOORD").c_str());
-            SUMOReal y = TplConvert<char>::_2SUMOReal(lineParser.get("YKOORD").c_str());
+            SUMOLong id = TplConvert::_2long(lineParser.get("KANTEID").c_str());
+            int index = TplConvert::_2int(lineParser.get("INDEX").c_str());
+            SUMOReal x = TplConvert::_2SUMOReal(lineParser.get("XKOORD").c_str());
+            SUMOReal y = TplConvert::_2SUMOReal(lineParser.get("YKOORD").c_str());
             Position pos(x, y);
             if (!geoConvHelper.x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for edge '" + toString(id) + "'.");
@@ -135,11 +135,11 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
             continue;
         } else if (what == "$TEILFLAECHENELEMENT") {
             lineParser.parseLine(line);
-            long id = TplConvert<char>::_2long(lineParser.get("TFLAECHEID").c_str());
-            //int index = TplConvert<char>::_2int(lineParser.get("INDEX").c_str());
+            SUMOLong id = TplConvert::_2long(lineParser.get("TFLAECHEID").c_str());
+            //int index = TplConvert::_2int(lineParser.get("INDEX").c_str());
             //index = 0; /// hmmmm - assume it's sorted...
-            long kid = TplConvert<char>::_2long(lineParser.get("KANTEID").c_str());
-            int dir = TplConvert<char>::_2int(lineParser.get("RICHTUNG").c_str());
+            SUMOLong kid = TplConvert::_2long(lineParser.get("KANTEID").c_str());
+            int dir = TplConvert::_2int(lineParser.get("RICHTUNG").c_str());
             if (teilflaechen.find(id) == teilflaechen.end()) {
                 teilflaechen[id] = PositionVector();
             }
@@ -155,9 +155,9 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
             continue;
         } else if (what == "$FLAECHENELEMENT") {
             lineParser.parseLine(line);
-            long id = TplConvert<char>::_2long(lineParser.get("FLAECHEID").c_str());
-            long tid = TplConvert<char>::_2long(lineParser.get("TFLAECHEID").c_str());
-            int enklave = TplConvert<char>::_2int(lineParser.get("ENKLAVE").c_str()); // !!! unused
+            SUMOLong id = TplConvert::_2long(lineParser.get("FLAECHEID").c_str());
+            SUMOLong tid = TplConvert::_2long(lineParser.get("TFLAECHEID").c_str());
+            int enklave = TplConvert::_2int(lineParser.get("ENKLAVE").c_str()); // !!! unused
             enklave = 0;
             flaechenelemente[id] = tid;
             continue;
@@ -223,12 +223,12 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
             // parse the poi
             // $POI:Nr;CATID;CODE;NAME;Kommentar;XKoord;YKoord;
             lineParser.parseLine(line);
-            long idL = TplConvert<char>::_2long(lineParser.get("Nr").c_str());
+            SUMOLong idL = TplConvert::_2long(lineParser.get("Nr").c_str());
             std::string id = toString(idL);
             std::string catid = lineParser.get("CATID");
             // process read values
-            SUMOReal x = TplConvert<char>::_2SUMOReal(lineParser.get("XKoord").c_str());
-            SUMOReal y = TplConvert<char>::_2SUMOReal(lineParser.get("YKoord").c_str());
+            SUMOReal x = TplConvert::_2SUMOReal(lineParser.get("XKoord").c_str());
+            SUMOReal y = TplConvert::_2SUMOReal(lineParser.get("YKoord").c_str());
             Position pos(x, y);
             if (!geoConvHelper.x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for POI '" + id + "'.");
@@ -251,9 +251,9 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
                 color = c;
             }
             if (!discard) {
-                PointOfInterest* poi = new PointOfInterest(id, type, pos, color);
+                PointOfInterest* poi = new PointOfInterest(id, type, color, pos, (SUMOReal)layer);
                 if (!toFill.insert(id, poi, layer)) {
-                    WRITE_ERROR("POI '" + id + "' could not been added.");
+                    WRITE_ERROR("POI '" + id + "' could not be added.");
                     delete poi;
                 }
             }
@@ -282,9 +282,9 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
                     color = c;
                 }
                 if (!discard) {
-                    Polygon* poly = new Polygon(id, type, color, vec, false);
+                    Polygon* poly = new Polygon(id, type, color, vec, false, (SUMOReal)layer);
                     if (!toFill.insert(id, poly, 1)) {
-                        WRITE_ERROR("Polygon '" + id + "' could not been added.");
+                        WRITE_ERROR("Polygon '" + id + "' could not be added.");
                         delete poly;
                     }
                 }
@@ -307,11 +307,11 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
         if (parsingDistrictsDirectly) {
             //$BEZIRK:NR	CODE	NAME	TYPNR	XKOORD	YKOORD	FLAECHEID	BEZART	IVANTEIL_Q	IVANTEIL_Z	OEVANTEIL	METHODEANBANTEILE	ZWERT1	ZWERT2	ZWERT3	ISTINAUSWAHL	OBEZNR	NOM_COM	COD_COM
             lineParser.parseLine(line);
-            long idL = TplConvert<char>::_2long(lineParser.get("NR").c_str());
+            SUMOLong idL = TplConvert::_2long(lineParser.get("NR").c_str());
             std::string id = toString(idL);
-            long area = TplConvert<char>::_2long(lineParser.get("FLAECHEID").c_str());
-            SUMOReal x = TplConvert<char>::_2SUMOReal(lineParser.get("XKOORD").c_str());
-            SUMOReal y = TplConvert<char>::_2SUMOReal(lineParser.get("YKOORD").c_str());
+            SUMOLong area = TplConvert::_2long(lineParser.get("FLAECHEID").c_str());
+            SUMOReal x = TplConvert::_2SUMOReal(lineParser.get("XKOORD").c_str());
+            SUMOReal y = TplConvert::_2SUMOReal(lineParser.get("YKOORD").c_str());
             // patch the values
             std::string type = "district";
             bool discard = oc.getBool("discard");
@@ -331,9 +331,9 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
             }
             if (!discard) {
                 if (teilflaechen[flaechenelemente[area]].size() > 0) {
-                    Polygon* poly = new Polygon(id, type, color, teilflaechen[flaechenelemente[area]], false);
+                    Polygon* poly = new Polygon(id, type, color, teilflaechen[flaechenelemente[area]], false, (SUMOReal)layer);
                     if (!toFill.insert(id, poly, layer)) {
-                        WRITE_ERROR("Polygon '" + id + "' could not been added.");
+                        WRITE_ERROR("Polygon '" + id + "' could not be added.");
                         delete poly;
                     }
                 } else {
@@ -341,9 +341,9 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
                     if (!geoConvHelper.x2cartesian(pos)) {
                         WRITE_WARNING("Unable to project coordinates for POI '" + id + "'.");
                     }
-                    PointOfInterest* poi = new PointOfInterest(id, type, pos, color);
+                    PointOfInterest* poi = new PointOfInterest(id, type, color, pos, (SUMOReal)layer);
                     if (!toFill.insert(id, poi, layer)) {
-                        WRITE_ERROR("POI '" + id + "' could not been added.");
+                        WRITE_ERROR("POI '" + id + "' could not be added.");
                         delete poi;
                     }
                 }

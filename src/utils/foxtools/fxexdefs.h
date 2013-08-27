@@ -31,7 +31,9 @@
 #include <fx.h>
 
 #ifdef WIN32
+#define NOMINMAX
 #include <windows.h>
+#undef NOMINMAX
 #endif
 
 // loads the FOX defs
@@ -303,7 +305,6 @@ typedef void*		FXThreadCondition;    // handle to a condition variable
 typedef void*		FXThreadSemaphore;    // handle to a semaphore
 typedef FXInputHandle*	FXThreadEventHandle;  // handle to a thread event object
 #else
-#include <windows.h>
 typedef HANDLE		FXThreadHandle;       // handle to a thread
 typedef HANDLE	 	FXThreadMutex;        // handle to a mutex
 typedef HANDLE		FXThreadCondition;    // handle to a condition variable

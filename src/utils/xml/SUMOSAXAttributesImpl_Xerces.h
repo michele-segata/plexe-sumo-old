@@ -33,18 +33,12 @@
 #endif
 
 #include <string>
-#include <utils/common/SUMOTime.h>
-#include "SUMOSAXAttributes.h"
-#include <xercesc/sax2/Attributes.hpp>
 #include <map>
-
-
-// ===========================================================================
-// xerces 2.2 compatibility
-// ===========================================================================
-#if defined(XERCES_HAS_CPP_NAMESPACE)
-using namespace XERCES_CPP_NAMESPACE;
-#endif
+#include <iostream>
+#include <xercesc/sax2/Attributes.hpp>
+#include <utils/common/SUMOTime.h>
+#include <utils/common/TplConvert.h>
+#include "SUMOSAXAttributes.h"
 
 
 // ===========================================================================
@@ -64,14 +58,14 @@ public:
      * @param[in] predefinedTags Map of attribute ids to their xerces-representation
      * @param[in] predefinedTagsMML Map of attribute ids to their (readable) string-representation
      */
-    SUMOSAXAttributesImpl_Xerces(const Attributes& attrs,
-                                 const std::map<int, XMLCh*> &predefinedTags,
-                                 const std::map<int, std::string> &predefinedTagsMML,
-                                 const std::string& objectType) ;
+    SUMOSAXAttributesImpl_Xerces(const XERCES_CPP_NAMESPACE::Attributes& attrs,
+                                 const std::map<int, XMLCh*>& predefinedTags,
+                                 const std::map<int, std::string>& predefinedTagsMML,
+                                 const std::string& objectType);
 
 
     /// @brief Destructor
-    virtual ~SUMOSAXAttributesImpl_Xerces() ;
+    virtual ~SUMOSAXAttributesImpl_Xerces();
 
 
 
@@ -84,7 +78,7 @@ public:
      * @param[in] id The id of the searched attribute
      * @return Whether the attribute is within the attributes
      */
-    bool hasAttribute(int id) const ;
+    bool hasAttribute(int id) const;
 
 
     /**
@@ -136,7 +130,7 @@ public:
      * @exception EmptyData If the attribute is not known or the attribute value is an empty string
      * @exception NumberFormatException If the attribute value can not be parsed to an int
      */
-    int getInt(int id) const throw(EmptyData, NumberFormatException);
+    int getInt(int id) const;
 
     /**
      * @brief Returns the int-value of the named (by its enum-value) attribute
@@ -155,7 +149,7 @@ public:
      * @exception EmptyData If the attribute value is an empty string
      * @exception NumberFormatException If the attribute value can not be parsed to an int
      */
-    int getIntSecure(int id, int def) const throw(EmptyData, NumberFormatException);
+    int getIntSecure(int id, int def) const;
 
 
     /**
@@ -173,7 +167,7 @@ public:
      * @exception EmptyData If the attribute is not known or the attribute value is an empty string
      * @exception NumberFormatException If the attribute value can not be parsed to an int
      */
-    long getLong(int id) const throw(EmptyData, NumberFormatException);
+    SUMOLong getLong(int id) const;
 
 
     /**
@@ -221,7 +215,7 @@ public:
      * @exception EmptyData If the attribute is not known or the attribute value is an empty string
      * @exception NumberFormatException If the attribute value can not be parsed to an SUMOReal
      */
-    SUMOReal getFloat(int id) const throw(EmptyData, NumberFormatException);
+    SUMOReal getFloat(int id) const;
 
     /**
      * @brief Returns the SUMOReal-value of the named (by its enum-value) attribute
@@ -240,13 +234,13 @@ public:
      * @exception EmptyData If the attribute is not known or the attribute value is an empty string
      * @exception NumberFormatException If the attribute value can not be parsed to an SUMOReal
      */
-    SUMOReal getFloatSecure(int id, SUMOReal def) const throw(EmptyData, NumberFormatException);
+    SUMOReal getFloatSecure(int id, SUMOReal def) const;
 
 
     /**
      * @brief Returns the information whether the named attribute is within the current list
      */
-    bool hasAttribute(const std::string& id) const ;
+    bool hasAttribute(const std::string& id) const;
 
 
     /**
@@ -264,7 +258,7 @@ public:
      * @exception EmptyData If the attribute is not known or the attribute value is an empty string
      * @exception NumberFormatException If the attribute value can not be parsed to an SUMOReal
      */
-    SUMOReal getFloat(const std::string& id) const throw(EmptyData, NumberFormatException);
+    SUMOReal getFloat(const std::string& id) const;
 
 
     /**
@@ -277,8 +271,68 @@ public:
      * @return The attribute's value as a string, if it could be read and parsed
      */
     std::string getStringSecure(const std::string& id,
-                                const std::string& def) const ;
+                                const std::string& def) const;
     //}
+
+
+    /**
+     * @brief Returns the value of the named attribute
+     *
+     * Tries to retrieve the attribute from the the attribute list.
+     * @return The attribute's value as a SumoXMLEdgeFunc, if it could be read and parsed
+     */
+    SumoXMLEdgeFunc getEdgeFunc(bool& ok) const;
+
+
+    /**
+     * @brief Returns the value of the named attribute
+     *
+     * Tries to retrieve the attribute from the the attribute list.
+     * @return The attribute's value as a SumoXMLNodeType, if it could be read and parsed
+     */
+    SumoXMLNodeType getNodeType(bool& ok) const;
+
+
+    /**
+     * @brief Returns the value of the named attribute
+     *
+     * Tries to retrieve the attribute from the the attribute list.
+     * @return The attribute's value as a RGBColor, if it could be read and parsed
+     */
+    RGBColor getColorReporting(const char* objectid, bool& ok) const;
+
+
+    /** @brief Tries to read given attribute assuming it is a PositionVector
+     *
+     * If an error occurs (the attribute is not there, it's empty), "ok" is
+     *  set to false and an error message is written to MsgHandler::getErrorInstance.
+     *
+     * Otherwise, "ok" is not changed.
+     *
+     * @param[in] attr The id of the attribute to read
+     * @param[in] objectid The name of the parsed object; used for error message generation
+     * @param[out] ok Whether the value could be read
+     * @param[in] report Whether errors shall be written to msg handler's error instance
+     * @return The read value if given and not empty; "" if an error occured
+     */
+    PositionVector getShapeReporting(int attr, const char* objectid, bool& ok,
+                                     bool allowEmpty) const;
+
+
+    /** @brief Tries to read given attribute assuming it is a Boundary
+     *
+     * If an error occurs (the attribute is not there, it's empty), "ok" is
+     *  set to false and an error message is written to MsgHandler::getErrorInstance.
+     *
+     * Otherwise, "ok" is not changed.
+     *
+     * @param[in] attr The id of the attribute to read
+     * @param[in] objectid The name of the parsed object; used for error message generation
+     * @param[out] ok Whether the value could be read
+     * @param[in] report Whether errors shall be written to msg handler's error instance
+     * @return The read value if given and not empty; "" if an error occured
+     */
+    Boundary getBoundaryReporting(int attr, const char* objectid, bool& ok) const;
 
 
     /** @brief Converts the given attribute id into a man readable string
@@ -288,7 +342,14 @@ public:
      * @param[in] attr The id of the attribute to return the name of
      * @return The name of the described attribute
      */
-    std::string getName(int attr) const ;
+    std::string getName(int attr) const;
+
+
+    /** @brief Prints all attribute names and values into the given stream
+     *
+     * @param[in] os The stream to use
+     */
+    void serialize(std::ostream& os) const;
 
 
 private:
@@ -298,12 +359,12 @@ private:
      * @param[in] id The id of the attribute to retrieve the vale of
      * @return The xerces-value of the attribute
      */
-    const XMLCh* getAttributeValueSecure(int id) const ;
+    const XMLCh* getAttributeValueSecure(int id) const;
 
 
 private:
     /// @brief The encapsulated attributes
-    const Attributes& myAttrs;
+    const XERCES_CPP_NAMESPACE::Attributes& myAttrs;
 
     /// @brief Definition of a map of attribute ids to their xerces-representation
     typedef std::map<int, XMLCh*> AttrMap;
@@ -311,7 +372,7 @@ private:
     const AttrMap& myPredefinedTags;
 
     /// @brief Map of attribute ids to their (readable) string-representation
-    const std::map<int, std::string> &myPredefinedTagsMML;
+    const std::map<int, std::string>& myPredefinedTagsMML;
 
 
 private:

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/netgenConfiguration.xsd">
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/netgenerateConfiguration.xsd">
 
     <configuration>
         <!-- Loads the named config on startup -->
@@ -129,8 +129,17 @@
         <!-- The generated net will be written to FILE using openDRIVE format. -->
         <opendrive-output value="" type="FILE"/>
 
+        <!-- The generated net will be written to dlr-navteq files with the given PREFIX. -->
+        <dlr-navteq-output value="" type="FILE"/>
+
         <!-- Street names will be included in the output (if available). -->
         <output.street-names value="false" type="BOOL"/>
+
+        <!-- Writes original names, if given, as parameter. -->
+        <output.original-names value="false" type="BOOL"/>
+
+        <!-- Writes street signs as POIs to FILE. -->
+        <street-sign-output value="" type="FILE"/>
 
     </output>
 
@@ -171,7 +180,7 @@
     </tls_building>
 
     <edge_removal>
-        <!-- Only keep edges with speed > FLOAT -->
+        <!-- Only keep edges with speed in meters/second > FLOAT -->
         <keep-edges.min-speed value="" synonymes="edges-min-speed" type="FLOAT"/>
 
         <!-- Remove edges in STR -->
@@ -234,8 +243,11 @@
         <!-- Joins junctions that are close to each other (recommended for OSM import) -->
         <junctions.join value="false" type="BOOL"/>
 
-        <!-- Determines the maximal distance for joining junctions (defaults to 15) -->
-        <junctions.join-dist value="15" type="FLOAT"/>
+        <!-- Determines the maximal distance for joining junctions (defaults to 10) -->
+        <junctions.join-dist value="10" type="FLOAT"/>
+
+        <!-- Determines the maximal distance for joining traffic lights (defaults to 20) -->
+        <tls.join-dist value="20" type="FLOAT"/>
 
     </processing>
 
@@ -266,6 +278,9 @@
 
         <!-- Prints the current version -->
         <version value="false" synonymes="V" type="BOOL"/>
+
+        <!-- Enable schema validation of XML inputs -->
+        <xml-validation value="false" synonymes="X" type="BOOL"/>
 
         <!-- Disables output of warnings -->
         <no-warnings value="false" synonymes="W suppress-warnings" type="BOOL"/>

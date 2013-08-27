@@ -39,7 +39,7 @@
 #include "MSMeanData_Net.h"
 #include <limits>
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 #include <microsim/MSGlobals.h>
 #include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
@@ -61,9 +61,10 @@ MSMeanData_Net::MSLaneMeanDataValues::MSLaneMeanDataValues(MSLane* const lane,
         const bool doAdd,
         const std::set<std::string>* const vTypes,
         const MSMeanData_Net* parent)
-    : MSMeanData::MeanDataValues(lane, length, doAdd, vTypes), myParent(parent),
+    : MSMeanData::MeanDataValues(lane, length, doAdd, vTypes),
       nVehDeparted(0), nVehArrived(0), nVehEntered(0), nVehLeft(0),
-      nVehLaneChangeFrom(0), nVehLaneChangeTo(0), waitSeconds(0), vehLengthSum(0) {}
+      nVehVaporized(0), nVehLaneChangeFrom(0), nVehLaneChangeTo(0),
+      waitSeconds(0), vehLengthSum(0), myParent(parent) {}
 
 
 MSMeanData_Net::MSLaneMeanDataValues::~MSLaneMeanDataValues() {
@@ -76,6 +77,7 @@ MSMeanData_Net::MSLaneMeanDataValues::reset(bool) {
     nVehArrived = 0;
     nVehEntered = 0;
     nVehLeft = 0;
+    nVehVaporized = 0;
     nVehLaneChangeFrom = 0;
     nVehLaneChangeTo = 0;
     sampleSeconds = 0.;
@@ -92,6 +94,7 @@ MSMeanData_Net::MSLaneMeanDataValues::addTo(MSMeanData::MeanDataValues& val) con
     v.nVehArrived += nVehArrived;
     v.nVehEntered += nVehEntered;
     v.nVehLeft += nVehLeft;
+    v.nVehVaporized += nVehVaporized;
     v.nVehLaneChangeFrom += nVehLaneChangeFrom;
     v.nVehLaneChangeTo += nVehLaneChangeTo;
     v.sampleSeconds += sampleSeconds;
@@ -115,7 +118,7 @@ MSMeanData_Net::MSLaneMeanDataValues::notifyMoveInternal(SUMOVehicle& veh, SUMOR
 bool
 MSMeanData_Net::MSLaneMeanDataValues::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/, MSMoveReminder::Notification reason) {
     if (vehicleApplies(veh) && (getLane() == 0 || getLane() == static_cast<MSVehicle&>(veh).getLane())) {
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             myLastVehicleUpdateValues.erase(&veh);
         }
@@ -126,9 +129,12 @@ MSMeanData_Net::MSLaneMeanDataValues::notifyLeave(SUMOVehicle& veh, SUMOReal /*l
             ++nVehLaneChangeFrom;
         } else if (myParent == 0 || reason != MSMoveReminder::NOTIFICATION_SEGMENT) {
             ++nVehLeft;
+            if (reason == MSMoveReminder::NOTIFICATION_VAPORIZED) {
+                ++nVehVaporized;
+            }
         }
     }
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         return false;
     }
@@ -157,7 +163,8 @@ MSMeanData_Net::MSLaneMeanDataValues::notifyEnter(SUMOVehicle& veh, MSMoveRemind
 
 bool
 MSMeanData_Net::MSLaneMeanDataValues::isEmpty() const {
-    return sampleSeconds == 0 && nVehDeparted == 0 && nVehArrived == 0 && nVehEntered == 0 && nVehLeft == 0 && nVehLaneChangeFrom == 0 && nVehLaneChangeTo == 0;
+    return sampleSeconds == 0 && nVehDeparted == 0 && nVehArrived == 0 && nVehEntered == 0
+           && nVehLeft == 0 && nVehVaporized == 0 && nVehLaneChangeFrom == 0 && nVehLaneChangeTo == 0;
 }
 
 
@@ -175,7 +182,10 @@ MSMeanData_Net::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime pe
             "\" arrived=\"" << nVehArrived <<
             "\" entered=\"" << nVehEntered <<
             "\" left=\"" << nVehLeft << "\"";
-		dev.closeTag(true);
+        if (nVehVaporized > 0) {
+            dev << " vaporized=\"" << nVehVaporized << "\"";
+        }
+        dev.closeTag(true);
         return;
     }
     if (sampleSeconds > myParent->myMinSamples) {
@@ -204,7 +214,10 @@ MSMeanData_Net::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime pe
         "\" left=\"" << nVehLeft <<
         "\" laneChangedFrom=\"" << nVehLaneChangeFrom <<
         "\" laneChangedTo=\"" << nVehLaneChangeTo << "\"";
-	dev.closeTag(true);
+    if (nVehVaporized > 0) {
+        dev << " vaporized=\"" << nVehVaporized << "\"";
+    }
+    dev.closeTag(true);
 }
 
 // ---------------------------------------------------------------------------
@@ -220,9 +233,9 @@ MSMeanData_Net::MSMeanData_Net(const std::string& id,
                                const SUMOReal minSamples,
                                const SUMOReal haltSpeed,
                                const std::set<std::string> vTypes)
-      : MSMeanData(id, dumpBegin, dumpEnd, useLanes, withEmpty, printDefaults,
-                   withInternal, trackVehicles, maxTravelTime, minSamples, vTypes),
-      myHaltSpeed(haltSpeed) {
+    : MSMeanData(id, dumpBegin, dumpEnd, useLanes, withEmpty, printDefaults,
+                 withInternal, trackVehicles, maxTravelTime, minSamples, vTypes),
+    myHaltSpeed(haltSpeed) {
 }
 
 

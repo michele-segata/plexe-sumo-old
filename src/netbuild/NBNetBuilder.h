@@ -114,10 +114,10 @@ class NBNetBuilder {
 
 public:
     /// @brief Constructor
-    NBNetBuilder() ;
+    NBNetBuilder();
 
     /// @brief Destructor
-    ~NBNetBuilder() ;
+    ~NBNetBuilder();
 
 
     /** @brief Initialises the storage by applying given options
@@ -128,7 +128,7 @@ public:
      * @param[in] oc The options container to read options from
      * @exception ProcessError If something fails (message is included)
      */
-    void applyOptions(OptionsCont& oc) ;
+    void applyOptions(OptionsCont& oc);
 
 
     /** @brief Performs the network building steps
@@ -139,7 +139,7 @@ public:
      * @exception ProcessError (recheck)
      */
     void compute(OptionsCont& oc,
-                 const std::set<std::string> &explicitTurnarounds = std::set<std::string>(),
+                 const std::set<std::string>& explicitTurnarounds = std::set<std::string>(),
                  bool removeUnwishedNodes = true);
 
 
@@ -190,7 +190,7 @@ public:
     /** @brief Returns the determined roundabouts
      * @return The list of roundabout edges
      */
-    const std::vector<std::set<NBEdge*> > &getRoundabouts() const {
+    const std::vector<std::set<NBEdge*> >& getRoundabouts() const {
         return myRoundabouts;
     }
 

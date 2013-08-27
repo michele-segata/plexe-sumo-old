@@ -158,7 +158,7 @@ private:
     SUMOReal _v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal mySpeed, SUMOReal predSpeed, SUMOReal desSpeed) const;
 
     SUMOReal desiredSpeed(const MSVehicle* const veh) const {
-        return MIN2(myType->getMaxSpeed(), veh->getLane()->getMaxSpeed());
+        return MIN2(myType->getMaxSpeed(), veh->getLane()->getVehicleMaxSpeed(veh));
     }
 
 
@@ -180,6 +180,10 @@ private:
 
     /// @brief A computational shortcut
     const SUMOReal myTwoSqrtAccelDecel;
+
+private:
+    /// @brief Invalidated assignment operator
+    MSCFModel_IDM& operator=(const MSCFModel_IDM& s);
 };
 
 #endif	/* MSCFMODEL_IDM_H */

@@ -60,8 +60,8 @@
 #include <utils/common/RandHelper.h>
 #include <ctime>
 
-#ifdef HAVE_MESOSIM
-#include <mesosim/MEVehicleControl.h>
+#ifdef HAVE_INTERNAL
+#include <mesogui/GUIMEVehicleControl.h>
 #endif
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -95,6 +95,7 @@ GUILoadThread::run() {
     GUINet* net = 0;
     int simStartTime = 0;
     int simEndTime = 0;
+    std::vector<std::string> guiSettingsFiles;
     OptionsCont& oc = OptionsCont::getOptions();
 
     // within gui-based applications, nothing is reported to the console
@@ -109,7 +110,7 @@ GUILoadThread::run() {
     // try to load the given configuration
     if (!initOptions()) {
         // the options are not valid but maybe we want to quit
-	    GUIGlobals::gQuitOnEnd = oc.getBool("quit-on-end");
+        GUIGlobals::gQuitOnEnd = oc.getBool("quit-on-end");
         submitEndAndCleanup(net, simStartTime, simEndTime);
         return 0;
     }
@@ -117,6 +118,7 @@ GUILoadThread::run() {
     MsgHandler::initOutputOptions();
     GUIGlobals::gRunAfterLoad = oc.getBool("start");
     GUIGlobals::gQuitOnEnd = oc.getBool("quit-on-end");
+
     if (!MSFrame::checkOptions()) {
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
         submitEndAndCleanup(net, simStartTime, simEndTime);
@@ -125,22 +127,23 @@ GUILoadThread::run() {
 
     // initialise global settings
     RandHelper::initRandGlobal();
+    RandHelper::initRandGlobal(&MSVehicleControl::myVehicleParamsRNG);
     MSFrame::setMSGlobals(oc);
     gAllowTextures = !oc.getBool("disable-textures");
     MSVehicleControl* vehControl = 0;
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     GUIVisualizationSettings::UseMesoSim = MSGlobals::gUseMesoSim;
     if (MSGlobals::gUseMesoSim) {
-        vehControl = new MEVehicleControl();
-    } else 
+        vehControl = new GUIMEVehicleControl();
+    } else
 #endif
         vehControl = new GUIVehicleControl();
-    
+
     net = new GUINet(
-            vehControl,
-            new GUIEventControl(),
-            new GUIEventControl(), 
-            new GUIEventControl());
+        vehControl,
+        new GUIEventControl(),
+        new GUIEventControl(),
+        new GUIEventControl());
     GUIEdgeControlBuilder* eb = new GUIEdgeControlBuilder();
     GUIDetectorBuilder db(*net);
     NLJunctionControlBuilder jb(*net, db);
@@ -158,6 +161,7 @@ GUILoadThread::run() {
             net->initGUIStructures();
             simStartTime = string2time(oc.getString("begin"));
             simEndTime = string2time(oc.getString("end"));
+            guiSettingsFiles = oc.getStringVector("gui-settings-file");
         }
     } catch (ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
@@ -177,7 +181,7 @@ GUILoadThread::run() {
         MSNet::clearAll();
     }
     delete eb;
-    submitEndAndCleanup(net, simStartTime, simEndTime);
+    submitEndAndCleanup(net, simStartTime, simEndTime, guiSettingsFiles);
     return 0;
 }
 
@@ -186,14 +190,14 @@ GUILoadThread::run() {
 void
 GUILoadThread::submitEndAndCleanup(GUINet* net,
                                    SUMOTime simStartTime,
-                                   SUMOTime simEndTime) {
+                                   SUMOTime simEndTime,
+                                   const std::vector<std::string>& guiSettingsFiles) {
     // remove message callbacks
     MsgHandler::getErrorInstance()->removeRetriever(myErrorRetriever);
     MsgHandler::getWarningInstance()->removeRetriever(myWarningRetriever);
     MsgHandler::getMessageInstance()->removeRetriever(myMessageRetriever);
     // inform parent about the process
-    GUIEvent* e = new GUIEvent_SimulationLoaded(net, simStartTime, simEndTime, myFile,
-            OptionsCont::getOptions().getString("gui-settings-file"));
+    GUIEvent* e = new GUIEvent_SimulationLoaded(net, simStartTime, simEndTime, myFile, guiSettingsFiles);
     myEventQue.add(e);
     myEventThrow.signal();
 }

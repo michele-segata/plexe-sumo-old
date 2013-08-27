@@ -16,11 +16,11 @@ write_template_commented_full
 # Tests configuration writing
 write_config
 
-# Tests configuration with invalid boolean values
-invalid_bool
-
 # Tests configuration with boolean values
 bool_value
+
+# Tests xml validation
+xml_validation
 
 # Tests deprecated options
 deprecated_option

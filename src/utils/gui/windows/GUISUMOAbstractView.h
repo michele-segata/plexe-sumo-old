@@ -37,7 +37,15 @@
 #include <vector>
 #include <map>
 #include <fx.h>
+// fx3d includes windows.h so we need to guard against macro pollution
+#ifdef WIN32
+#define NOMINMAX
+#endif
 #include <fx3d.h>
+#ifdef WIN32
+#undef NOMINMAX
+#endif
+
 #include <utils/foxtools/MFXMutex.h>
 #include <utils/geom/Boundary.h>
 #include <utils/geom/Position.h>
@@ -86,7 +94,7 @@ public:
     virtual void buildViewToolBars(GUIGlChildWindow&) { }
 
     /// recenters the view
-    void recenterView();
+    virtual void recenterView();
 
     /** @brief centers to the chosen artifact
      * @param[in] id The id of the artifact to center to
@@ -230,15 +238,6 @@ public:
 
 
 public:
-    /**
-     * JunctionColoringScheme
-     * This enumeration holds the possible vehicle colouring schemes
-     */
-    enum JunctionColoringScheme {
-        /// colouring by vehicle speed
-        VCS_BY_TYPE = 0
-    };
-
 
     /** @struct Decal
      * @brief A decal (an image) that can be shown
@@ -247,8 +246,8 @@ public:
         /// @brief Constructor
         Decal()
             : filename(), centerX(0), centerY(0),
-              width(1000), height(1000), rot(0),
-              initialised(false), glID(-1) { }
+              width(1000), height(1000), rot(0), layer(0),
+              initialised(false), glID(-1), image(0) { }
 
         /// @brief The path to the file the image is located at
         std::string filename;
@@ -262,10 +261,14 @@ public:
         SUMOReal height;
         /// @brief The rotation of the image (in degrees)
         SUMOReal rot;
+        /// @brief The layer of the image
+        SUMOReal layer;
         /// @brief Whether this image was initialised (inserted as a texture)
         bool initialised;
         /// @brief The gl-id of the texture that holds this image
         int glID;
+        /// @brief The image pointer for later cleanup
+        FXImage* image;
     };
 
 
@@ -278,7 +281,7 @@ public:
      */
     Position getPositionInformation() const;
 
-    void addDecals(const std::vector<Decal> &decals) {
+    void addDecals(const std::vector<Decal>& decals) {
         myDecals.insert(myDecals.end(), decals.begin(), decals.end());
     }
 

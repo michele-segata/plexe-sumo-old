@@ -13,6 +13,7 @@ copy_test_path:busnet.net.xml
 copy_test_path:sumo.sumocfg
 copy_test_path:settings.xml
 copy_test_path:dlr.gif
+copy_test_path:input_state.bin
 
 [collate_file]
 detector:detector.xml
@@ -27,11 +28,13 @@ rawdump:rawdump.xml
 tripinfos:tripinfos.xml
 vtypeprobe:vtypeprobe.xml
 vehroutes:vehroutes.xml
+vehroutes_ignore_arrival:vehroutes_ignore_arrival.xml
 tls_state:tls_state.xml
 tls_switch:tls_switch.xml
 tls_state_switch:tls_state_switch.xml
 physstates:physstates.xml
 cfg:config.cfg
+fcd:fcd.xml
 tol_sql:tol_sql.txt
 tol_plain:tol_plain.txt
 tol_la_sql:tol_la_sql.txt
@@ -46,12 +49,15 @@ c2x_vehicle_in_range:c2x_vehicle_in_range.xml
 c2x_saved_info_freq:c2x_saved_info_freq.xml
 c2x_edge_near_info:c2x_edge_near_info.xml
 log:log.txt
+state:state.bin
+calibrator_log:calibrator.log.xml
 
 [run_dependent_text]
 output:\r{REPLACE \n}
 output:\([0-9]*ms\){REPLACE (TIME)}
 output:^Performance:{->}^Vehicles:
 log:\([0-9]*ms\){REPLACE (TIME)}
+calibrator_log:<!--{[->]}-->
 detector:<!--{[->]}-->
 summary:<!--{[->]}-->
 aggregated1:<!--{[->]}-->
@@ -64,6 +70,9 @@ rawdump:<!--{[->]}-->
 tripinfos:<!--{[->]}-->
 vtypeprobe:<!--{[->]}-->
 vehroutes:<!--{[->]}-->
+fcd:<!--{[->]}-->
+vehroutes_ignore_arrival:<!--{[->]}-->
+vehroutes_ignore_arrival:arrival="[^"]*"{REPLACE arrival="<ignored>"}
 tls_state:<!--{[->]}-->
 tls_switch:<!--{[->]}-->
 tls_state_switch:<!--{[->]}-->
@@ -77,6 +86,7 @@ c2x_edge_near_info:<!--{[->]}-->
 errors:Leaked object at 
 errors:\*\*\* \d+ leaks found
 errors:delete: freed
+errors:warning: debug_new used with placement new
 
 [floating_point_tolerance]
 detector:0.0101
@@ -89,6 +99,7 @@ aggregated300:0.0101
 aggregated900:0.0101
 tripinfos:0.0101
 rawdump:0.0101
+errors:0.0101
 
 [relative_float_tolerance]
 aggregated1:0.00001
@@ -98,6 +109,6 @@ gcc4:perf
 gcc4_64:perf
 msvc10Win32:perf
 msvc10x64:perf
-meso:meso
-msvc10mesoWin32:meso
-msvc10mesox64:meso
+
+[unordered_text]
+vehroutes_ignore_arrival:arrival

@@ -63,11 +63,11 @@ class NBJoinedEdgesMap;
 class NBNodeCont {
 public:
     /// @brief Constructor
-    NBNodeCont() ;
+    NBNodeCont();
 
 
     /// @brief Destructor
-    ~NBNodeCont() ;
+    ~NBNodeCont();
 
 
 
@@ -81,7 +81,7 @@ public:
      * @return Whether the node could be added (no other with the same id or position is stored)
      */
     bool insert(const std::string& id, const Position& position,
-                NBDistrict* district) ;
+                NBDistrict* district);
 
 
     /** @brief Inserts a node into the map
@@ -89,28 +89,28 @@ public:
      * @param[in] position The node's position
      * @return Whether the node could be added (no other with the same id or position is stored)
      */
-    bool insert(const std::string& id, const Position& position) ;
+    bool insert(const std::string& id, const Position& position);
 
 
     /** @brief Inserts a node into the map
      * @param[in] id The node's id
      * @return Whether the node could be added (no other with the same id is stored)
      */
-    Position insert(const std::string& id) ;
+    Position insert(const std::string& id);
 
 
     /** @brief Inserts a node into the map
      * @param[in] node The node to insert
      * @return Whether the node could be added (no other with the same id or position is stored)
      */
-    bool insert(NBNode* node) ;
+    bool insert(NBNode* node);
 
 
     /** @brief Removes the given node, deleting it
      * @param[in] node The node to delete and remove
      * @return Whether the node could be removed (existed)
      */
-    bool erase(NBNode* node) ;
+    bool erase(NBNode* node);
 
 
     /** @brief Removes the given node but does not delete it
@@ -118,13 +118,13 @@ public:
      * @param[in] remember Whether to keep the node for future reference
      * @return Whether the node could be removed (existed)
      */
-    bool extract(NBNode* node, bool remember = false) ;
+    bool extract(NBNode* node, bool remember = false);
 
     /** @brief Returns the node with the given name
      * @param[in] id The id of the node to retrieve
      * @return The node with the given id, or 0 if no such node exists
      */
-    NBNode* retrieve(const std::string& id) const ;
+    NBNode* retrieve(const std::string& id) const;
 
 
     /** @brief Returns the node with the given coordinates
@@ -132,7 +132,7 @@ public:
      * @param[in] offset An offset which can be applied in the case positions are blurred
      * @return The node at the given position, or 0 if no such node exists
      */
-    NBNode* retrieve(const Position& position, SUMOReal offset = 0.) const ;
+    NBNode* retrieve(const Position& position, SUMOReal offset = 0.) const;
 
 
     /** @brief Returns the pointer to the begin of the stored nodes
@@ -161,7 +161,7 @@ public:
      * @param[in] check Whether to check if these nodes are known
      * @note checking is off by default because all nodes may not have been loaded yet
      */
-    void addJoinExclusion(const std::vector<std::string> &ids, bool check = false);
+    void addJoinExclusion(const std::vector<std::string>& ids, bool check = false);
 
 
     /** @brief add ids of nodes which shall be joined into a single node
@@ -248,9 +248,10 @@ public:
 
     /** @brief Builds clusters of tls-controlled junctions and joins the control if possible
      * @param[changed] tlc The traffic lights control for adding/removing new/prior tls
+     * @param[in] maxdist The maximum distance between nodes for clustering
      * @todo Recheck exception handling
      */
-    void joinTLS(NBTrafficLightLogicCont& tlc);
+    void joinTLS(NBTrafficLightLogicCont& tlc, SUMOReal maxdist);
 
 
     /** @brief Sets the given node as being controlled by a tls
@@ -291,7 +292,6 @@ public:
     void computeNodeShapes(bool leftHand);
 
 
-    void guessRamps(OptionsCont& oc, NBEdgeCont& ec, NBDistrictCont& dc);
 
 
     /** @brief Prints statistics about built nodes
@@ -299,11 +299,11 @@ public:
      * Goes through stored nodes, computes the numbers of unregulated, priority and right-before-left
      *  junctions and prints them.
      */
-    void printBuiltNodesStatistics() const ;
+    void printBuiltNodesStatistics() const;
 
 
     /// @brief get all node names
-    std::vector<std::string> getAllNames() const ;
+    std::vector<std::string> getAllNames() const;
 
 
     /* @brief analyzes a cluster of nodes which shall be joined
@@ -324,18 +324,6 @@ public:
 
 
 private:
-    bool mayNeedOnRamp(OptionsCont& oc, NBNode* cur) const;
-    bool mayNeedOffRamp(OptionsCont& oc, NBNode* cur) const;
-    bool buildOnRamp(OptionsCont& oc, NBNode* cur,
-                     NBEdgeCont& ec, NBDistrictCont& dc, EdgeVector& incremented);
-
-    void buildOffRamp(OptionsCont& oc, NBNode* cur,
-                      NBEdgeCont& ec, NBDistrictCont& dc, EdgeVector& incremented);
-
-    void checkHighwayRampOrder(NBEdge *&pot_highway, NBEdge *&pot_ramp);
-
-
-
     /// @name Helper methods for for joining nodes
     /// @{
 
@@ -352,7 +340,7 @@ private:
      */
     void generateNodeClusters(SUMOReal maxDist, NodeClusters& into) const;
 
- 
+
     // @brief joins the given node clusters
     void joinNodeClusters(NodeClusters clusters,
                           NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLightLogicCont& tlc);
@@ -368,7 +356,7 @@ private:
      * @param[in] c The node cluster
      * @return Whether this node cluster shall be controlled by a tls
      */
-    bool shouldBeTLSControlled(const std::set<NBNode*> &c) const;
+    bool shouldBeTLSControlled(const std::set<NBNode*>& c) const;
     /// @}
 
 

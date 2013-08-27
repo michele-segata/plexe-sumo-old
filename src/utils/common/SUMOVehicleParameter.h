@@ -62,6 +62,8 @@ const int VEHPARS_ARRIVALSPEED_SET = 2 << 10;
 const int VEHPARS_LINE_SET = 2 << 11;
 const int VEHPARS_TAZ_SET = 2 << 12;
 const int VEHPARS_FORCE_REROUTE = 2 << 13;
+const int VEHPARS_PERSON_CAPACITY_SET = 2 << 14;
+const int VEHPARS_PERSON_NUMBER_SET = 2 << 15;
 
 const int STOP_INDEX_END = -1;
 const int STOP_INDEX_FIT = -2;
@@ -223,7 +225,7 @@ public:
      *
      * Initialises the structure with default values
      */
-    SUMOVehicleParameter() ;
+    SUMOVehicleParameter();
 
 
     /** @brief Returns whether the given parameter was set
@@ -251,56 +253,100 @@ public:
      * @param[in] optionName The name of the option to determine whether its value shall be used
      * @return Whether the option is set and --defaults-override was set
      */
-    bool defaultOptionOverrides(const OptionsCont& oc, const std::string& optionName) const ;
+    bool defaultOptionOverrides(const OptionsCont& oc, const std::string& optionName) const;
 
 
 
     /// @name Depart/arrival-attributes verification
     /// @{
 
-    /** @brief Validates a given departlane value
-     * @param[in] val The departlane value to validate
-     * @return Whether the given value is a valid departlane definition
+    /** @brief Validates a given departLane value
+     * @param[in] val The departLane value to parse
+     * @param[in] element The name of the type of the parsed element, for building the error message
+     * @param[in] id The id of the parsed element, for building the error message
+     * @param[out] lane The parsed lane, if given
+     * @param[out] dld The parsed departLane definition
+     * @param[out] error Error message, if an error occures
+     * @return Whether the given value is a valid departLane definition
      */
-    static bool departlaneValidate(const std::string& val) ;
+    static bool parseDepartLane(const std::string& val, const std::string& element, const std::string& id,
+                                int& lane, DepartLaneDefinition& dld, std::string& error);
 
 
-    /** @brief Validates a given departpos value
-     * @param[in] val The departpos value to validate
-     * @return Whether the given value is a valid departpos definition
+    /** @brief Validates a given departPos value
+     * @param[in] val The departPos value to parse
+     * @param[in] element The name of the type of the parsed element, for building the error message
+     * @param[in] id The id of the parsed element, for building the error message
+     * @param[out] pos The parsed position, if given
+     * @param[out] dpd The parsed departPos definition
+     * @param[out] error Error message, if an error occures
+     * @return Whether the given value is a valid departPos definition
      */
-    static bool departposValidate(const std::string& val) ;
+    static bool parseDepartPos(const std::string& val, const std::string& element, const std::string& id,
+                               SUMOReal& pos, DepartPosDefinition& dpd, std::string& error);
 
 
-    /** @brief Validates a given departspeed value
-     * @param[in] val The departspeed value to validate
-     * @return Whether the given value is a valid departspeed definition
+    /** @brief Validates a given departSpeed value
+     * @param[in] val The departSpeed value to parse
+     * @param[in] element The name of the type of the parsed element, for building the error message
+     * @param[in] id The id of the parsed element, for building the error message
+     * @param[out] speed The parsed speed, if given
+     * @param[out] dsd The parsed departSpeed definition
+     * @param[out] error Error message, if an error occures
+     * @return Whether the given value is a valid departSpeed definition
      */
-    static bool departspeedValidate(const std::string& val) ;
+    static bool parseDepartSpeed(const std::string& val, const std::string& element, const std::string& id,
+                                 SUMOReal& speed, DepartSpeedDefinition& dsd, std::string& error);
 
 
-    /** @brief Validates a given arrivallane value
-     * @param[in] val The arrivallane value to validate
-     * @return Whether the given value is a valid arrivallane definition
+    /** @brief Validates a given arrivalLane value
+     * @param[in] val The arrivalLane value to parse
+     * @param[in] element The name of the type of the parsed element, for building the error message
+     * @param[in] id The id of the parsed element, for building the error message
+     * @param[out] lane The parsed lane, if given
+     * @param[out] ald The parsed arrivalLane definition
+     * @param[out] error Error message, if an error occures
+     * @return Whether the given value is a valid arrivalLane definition
      */
-    static bool arrivallaneValidate(const std::string& val) ;
+    static bool parseArrivalLane(const std::string& val, const std::string& element, const std::string& id,
+                                 int& lane, ArrivalLaneDefinition& ald, std::string& error);
 
 
-    /** @brief Validates a given arrivalpos value
-     * @param[in] val The arrivalpos value to validate
-     * @return Whether the given value is a valid arrivalpos definition
+    /** @brief Validates a given arrivalPos value
+     * @param[in] val The arrivalPos value to parse
+     * @param[in] element The name of the type of the parsed element, for building the error message
+     * @param[in] id The id of the parsed element, for building the error message
+     * @param[out] pos The parsed position, if given
+     * @param[out] apd The parsed arrivalPos definition
+     * @param[out] error Error message, if an error occures
+     * @return Whether the given value is a valid arrivalPos definition
      */
-    static bool arrivalposValidate(const std::string& val) ;
+    static bool parseArrivalPos(const std::string& val, const std::string& element, const std::string& id,
+                                SUMOReal& pos, ArrivalPosDefinition& apd, std::string& error);
 
 
-    /** @brief Validates a given arrivalspeed value
-     * @param[in] val The arrivalspeed value to validate
-     * @return Whether the given value is a valid arrivalspeed definition
+    /** @brief Validates a given arrivalSpeed value
+     * @param[in] val The arrivalSpeed value to parse
+     * @param[in] element The name of the type of the parsed element, for building the error message
+     * @param[in] id The id of the parsed element, for building the error message
+     * @param[out] speed The parsed speed, if given
+     * @param[out] asd The parsed arrivalSpeed definition
+     * @param[out] error Error message, if an error occures
+     * @return Whether the given value is a valid arrivalSpeed definition
      */
-    static bool arrivalspeedValidate(const std::string& val) ;
+    static bool parseArrivalSpeed(const std::string& val, const std::string& element, const std::string& id,
+                                  SUMOReal& speed, ArrivalSpeedDefinition& asd, std::string& error);
     /// @}
 
 
+    /** @brief Interprets negative edge positions and fits them onto a given edge
+     * @param[in] pos The position to be interpreted
+     * @param[in] maximumValue The maximum allowed value (edge length)
+     * @param[in] attr The attribute from which the value originated
+     * @param[in] id The id of the object to which this attribute belongs
+     * @return Whether the interpreted position
+     */
+    static SUMOReal interpretEdgePos(SUMOReal pos, SUMOReal maximumValue, SumoXMLAttr attr, const std::string& id);
 
     /// @brief The vehicle's id
     std::string id;
@@ -405,8 +451,15 @@ public:
     /// @brief List of the stops the vehicle will make
     std::vector<Stop> stops;
 
+    /// @brief The vehicle's capacity (persons)
+    unsigned int personCapacity;
+
+    /// @brief The number of persons in the vehicle
+    unsigned int personNumber;
+
     /// @brief Information for the router which parameter were set
-    int setParameter;
+    mutable int setParameter;
+
 
 };
 

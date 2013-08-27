@@ -36,7 +36,6 @@
 #include "Line.h"
 #include "GeomHelper.h"
 #include <utils/common/ToString.h>
-#include <cassert>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -154,6 +153,13 @@ Line::atan2PositiveAngle() const {
     }
     return angle;
 }
+
+
+SUMOReal
+Line::atan2TiltDegree() const {
+    return (SUMOReal) atan2(myP1.distanceTo2D(myP2), myP1.z() - myP2.z()) * (SUMOReal) 180.0 / (SUMOReal) PI;
+}
+
 
 Position
 Line::intersectsAt(const Line& l) const {

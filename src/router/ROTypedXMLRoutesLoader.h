@@ -32,9 +32,8 @@
 #endif
 
 #include <string>
-#include <xercesc/sax2/SAX2XMLReader.hpp>
-#include <xercesc/framework/XMLPScanToken.hpp>
 #include <utils/xml/SUMOSAXHandler.h>
+#include <utils/xml/SUMOSAXReader.h>
 
 
 // ===========================================================================
@@ -69,11 +68,11 @@ public:
      * @exception ProcessError If an error occured during initialisation of parsing the xml-file
      */
     ROTypedXMLRoutesLoader(RONet& net,
-                           SUMOTime begin, SUMOTime end, const std::string& file = "") ;
+                           SUMOTime begin, SUMOTime end, const std::string& file = "");
 
 
     /// @brief Destructor
-    virtual ~ROTypedXMLRoutesLoader() ;
+    virtual ~ROTypedXMLRoutesLoader();
 
 
     /** @brief Adds routes from the file until the given time is reached
@@ -122,10 +121,7 @@ protected:
     SUMOTime myEnd;
 
     /// @brief The parser used
-    SAX2XMLReader* myParser;
-
-    /// @brief Information about the current position within the file
-    XMLPScanToken myToken;
+    SUMOSAXReader* myParser;
 
     /// @brief The currently read vehicle's depart
     SUMOTime myCurrentDepart;

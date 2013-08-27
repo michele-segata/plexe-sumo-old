@@ -81,18 +81,22 @@ FXDEFMAP(GUIDialog_ViewSettings) GUIDialog_ViewSettingsMap[] = {
 
 FXIMPLEMENT(GUIDialog_ViewSettings, FXDialogBox, GUIDialog_ViewSettingsMap, ARRAYNUMBER(GUIDialog_ViewSettingsMap))
 
+// ===========================================================================
+// static members
+// ===========================================================================
+unsigned int GUIDialog_ViewSettings::myCustomSchemes = 0;
+
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
-GUIDialog_ViewSettings::GUIDialog_ViewSettings(
-    GUISUMOAbstractView* parent,
-    GUIVisualizationSettings* settings,
-    std::vector<GUISUMOAbstractView::Decal> *decals,
-    MFXMutex* decalsLock)
-    : FXDialogBox(parent, "View Settings", DECOR_TITLE | DECOR_BORDER, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-      myParent(parent), mySettings(settings),
-      myDecals(decals), myDecalsLock(decalsLock), myDecalsTable(0) {
+GUIDialog_ViewSettings::GUIDialog_ViewSettings(GUISUMOAbstractView* parent,
+        GUIVisualizationSettings* settings,
+        std::vector<GUISUMOAbstractView::Decal>* decals,
+        MFXMutex* decalsLock) :
+    FXDialogBox(parent, "View Settings", DECOR_TITLE | DECOR_BORDER, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    myParent(parent), mySettings(settings),
+    myDecals(decals), myDecalsLock(decalsLock), myDecalsTable(0) {
     myBackup = (*mySettings);
 
     FXVerticalFrame* contentFrame =
@@ -103,7 +107,7 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(
         FXHorizontalFrame* frame0 =
             new FXHorizontalFrame(contentFrame, FRAME_THICK, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2);
         mySchemeName = new FXComboBox(frame0, 20, this, MID_SIMPLE_VIEW_NAMECHANGE, COMBOBOX_INSERT_LAST | FRAME_SUNKEN | LAYOUT_LEFT | LAYOUT_CENTER_Y | COMBOBOX_STATIC);
-        const std::vector<std::string> &names = gSchemeStorage.getNames();
+        const std::vector<std::string>& names = gSchemeStorage.getNames();
         for (std::vector<std::string>::const_iterator i = names.begin(); i != names.end(); ++i) {
             size_t index = mySchemeName->appendItem((*i).c_str());
             if ((*i) == mySettings->name) {
@@ -200,13 +204,13 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(
         myLaneColorSettingFrame =
             new FXVerticalFrame(genScroll, LAYOUT_FILL_X | LAYOUT_FILL_Y,  0, 0, 0, 0, 10, 10, 2, 8, 5, 2);
 //we should insert a FXScrollWindow around the frame2
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         if (GUIVisualizationSettings::UseMesoSim) {
             mySettings->edgeColorer.fill(*myLaneEdgeColorMode);
         } else {
 #endif
             mySettings->laneColorer.fill(*myLaneEdgeColorMode);
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         }
 #endif
 
@@ -226,6 +230,13 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(
         myHideMacroConnectors = new FXCheckButton(m22, "Hide macro connectors", this, MID_SIMPLE_VIEW_COLORCHANGE);
         myHideMacroConnectors->setCheck(mySettings->hideConnectors);
         new FXLabel(m22, " ", 0, LAYOUT_CENTER_Y);
+        new FXLabel(m22, "Exaggerate width by", 0, LAYOUT_CENTER_Y);
+        myLaneWidthUpscaleDialer =
+            new FXRealSpinDial(m22, 10, this, MID_SIMPLE_VIEW_COLORCHANGE,
+                               LAYOUT_TOP | FRAME_SUNKEN | FRAME_THICK);
+        myLaneWidthUpscaleDialer->setRange(0, 10000);
+        myLaneWidthUpscaleDialer->setValue(mySettings->laneWidthExaggeration);
+
         // edge name
         myEdgeNamePanel = new NamePanel(m22, this, "Show edge name", mySettings->edgeName);
         myStreetNamePanel = new NamePanel(m22, this, "Show street name", mySettings->streetName);
@@ -244,7 +255,8 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(
         myVehicleShapeDetail->appendItem("'triangles'");
         myVehicleShapeDetail->appendItem("'boxes'");
         myVehicleShapeDetail->appendItem("'simple shapes'");
-        myVehicleShapeDetail->setNumVisible(3);
+        myVehicleShapeDetail->appendItem("'raster images'");
+        myVehicleShapeDetail->setNumVisible(4);
         myVehicleShapeDetail->setCurrentItem(settings->vehicleQuality);
 
         new FXHorizontalSeparator(frame3, SEPARATOR_GROOVE | LAYOUT_FILL_X);
@@ -306,7 +318,7 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(
         myVehicleUpscaleDialer =
             new FXRealSpinDial(m342, 10, this, MID_SIMPLE_VIEW_COLORCHANGE,
                                LAYOUT_TOP | FRAME_SUNKEN | FRAME_THICK);
-        myVehicleUpscaleDialer->setRange(1, 100);
+        myVehicleUpscaleDialer->setRange(0, 10000);
         myVehicleUpscaleDialer->setValue(mySettings->vehicleExaggeration);
     } {
         new FXTabItem(tabbook, "Nodes", NULL, TAB_LEFT_NORMAL, 0, 0, 0, 0, 4, 8, 4, 4);
@@ -356,7 +368,7 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(
         myDetectorUpscaleDialer =
             new FXRealSpinDial(m522, 10, this, MID_SIMPLE_VIEW_COLORCHANGE,
                                LAYOUT_TOP | FRAME_SUNKEN | FRAME_THICK);
-        myDetectorUpscaleDialer->setRange(1, 100);
+        myDetectorUpscaleDialer->setRange(0, 10000);
         myDetectorUpscaleDialer->setValue(mySettings->addExaggeration);
 
 
@@ -396,7 +408,7 @@ GUIDialog_ViewSettings::GUIDialog_ViewSettings(
         myPOIUpscaleDialer =
             new FXRealSpinDial(m622, 10, this, MID_SIMPLE_VIEW_COLORCHANGE,
                                LAYOUT_TOP | FRAME_SUNKEN | FRAME_THICK);
-        myPOIUpscaleDialer->setRange(1, 1000);
+        myPOIUpscaleDialer->setRange(0, 10000);
         myPOIUpscaleDialer->setValue(mySettings->addExaggeration);
 
 
@@ -497,6 +509,7 @@ GUIDialog_ViewSettings::onCmdNameChange(FXObject*, FXSelector, void* data) {
     myInternalEdgeNamePanel->update(mySettings->internalEdgeName);
     myStreetNamePanel->update(mySettings->streetName);
     myHideMacroConnectors->setCheck(mySettings->hideConnectors);
+    myLaneWidthUpscaleDialer->setValue(mySettings->laneWidthExaggeration);
 
     myVehicleColorMode->setCurrentItem((FXint) mySettings->vehicleColorer.getActive());
     myVehicleShapeDetail->setCurrentItem(mySettings->vehicleQuality);
@@ -547,13 +560,13 @@ GUIDialog_ViewSettings::onCmdColorChange(FXObject* sender, FXSelector, void* /*v
     tmpSettings.gridXSize = (SUMOReal) myGridXSizeDialer->getValue();
     tmpSettings.gridYSize = (SUMOReal) myGridYSizeDialer->getValue();
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     if (GUIVisualizationSettings::UseMesoSim) {
         tmpSettings.edgeColorer.setActive(myLaneEdgeColorMode->getCurrentItem());
     } else {
 #endif
         tmpSettings.laneColorer.setActive(myLaneEdgeColorMode->getCurrentItem());
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
     }
 #endif
     tmpSettings.laneShowBorders = (myShowLaneBorders->getCheck() != FALSE);
@@ -563,6 +576,7 @@ GUIDialog_ViewSettings::onCmdColorChange(FXObject* sender, FXSelector, void* /*v
     tmpSettings.internalEdgeName = myInternalEdgeNamePanel->getSettings();
     tmpSettings.streetName = myStreetNamePanel->getSettings();
     tmpSettings.hideConnectors = (myHideMacroConnectors->getCheck() != FALSE);
+    tmpSettings.laneWidthExaggeration = (SUMOReal) myLaneWidthUpscaleDialer->getValue();
 
     tmpSettings.vehicleColorer.setActive(myVehicleColorMode->getCurrentItem());
     tmpSettings.vehicleQuality = myVehicleShapeDetail->getCurrentItem();
@@ -710,24 +724,25 @@ GUIDialog_ViewSettings::onCmdColorChange(FXObject* sender, FXSelector, void* /*v
         return 1;
     }
 
-    if (tmpSettings.name[0] != '*') {
-        tmpSettings.name = '*' + tmpSettings.name;
-    }
-    gSchemeStorage.add(tmpSettings);
     int index = mySchemeName->getCurrentItem();
     if (index < (int) gSchemeStorage.getNumInitialSettings()) {
+        // one of the initial settings is modified
+        // every time this happens we create a new scheme
+        ++myCustomSchemes; // 1-based counting for the masses
+        tmpSettings.name = "custom_" + toString(myCustomSchemes);
+        // the newly created settings must be entered in several places:
+        // - the comboBox mySchemeName of this dialog
+        // - the comboBox of the parent view (set as active)
+        // - the comboBox of all other views (only append) XXX @todo
         index = mySchemeName->appendItem(tmpSettings.name.c_str());
-        gSchemeStorage.add(tmpSettings);
         mySchemeName->setCurrentItem(index);
         myParent->getColoringSchemesCombo().appendItem(tmpSettings.name.c_str());
-        myParent->getColoringSchemesCombo().setCurrentItem(index);
-        myParent->setColorScheme(tmpSettings.name);
-    } else {
-        mySchemeName->setItemText(index, tmpSettings.name.c_str());
-        myParent->getColoringSchemesCombo().setItemText(index, tmpSettings.name.c_str());
-        myParent->setColorScheme(tmpSettings.name);
     }
+    myParent->getColoringSchemesCombo().setCurrentItem(
+        myParent->getColoringSchemesCombo().findItem(tmpSettings.name.c_str()));
+    gSchemeStorage.add(tmpSettings); // overwrites existing
     mySettings = &gSchemeStorage.get(tmpSettings.name);
+    myParent->setColorScheme(tmpSettings.name);
 
     if (doRebuildColorMatrices) {
         rebuildColorMatrices(true);
@@ -764,12 +779,13 @@ GUIDialog_ViewSettings::saveDecals(const std::string& file) const {
                 << "\" width=\"" << d.width
                 << "\" height=\"" << d.height
                 << "\" rotation=\"" << d.rot
+                << "\" layer=\"" << d.layer
                 << "\"/>\n";
         }
         dev << "</decals>\n";
         dev.close();
     } catch (IOError& e) {
-        FXMessageBox::error(myParent, MBOX_OK, "Storing failed!", e.what());
+        FXMessageBox::error(myParent, MBOX_OK, "Storing failed!", "%s", e.what());
     }
 }
 
@@ -794,7 +810,8 @@ GUIDialog_ViewSettings::onCmdSaveSetting(FXObject*, FXSelector, void* /*data*/) 
         return 1;
     }
     // get the name
-    while (true) {
+    std::string name = "";
+    while (name.length() == 0) {
         FXDialogBox dialog(this, "Enter a name", DECOR_TITLE | DECOR_BORDER);
         FXVerticalFrame* content = new FXVerticalFrame(&dialog, LAYOUT_FILL_X | LAYOUT_FILL_Y, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10);
         new FXLabel(content, "Please enter an alphanumeric name: ", NULL, LAYOUT_FILL_X | JUSTIFY_LEFT);
@@ -805,34 +822,27 @@ GUIDialog_ViewSettings::onCmdSaveSetting(FXObject*, FXSelector, void* /*data*/) 
         new FXButton(buttons, "&Cancel", NULL, &dialog, FXDialogBox::ID_CANCEL, BUTTON_DEFAULT | FRAME_RAISED | FRAME_THICK | LAYOUT_RIGHT, 0, 0, 0, 0, 20, 20);
         dialog.create();
         text->setFocus();
-        if (dialog.execute()) {
-            std::string name = text->getText().text();
-            bool isAlphaNum = true;
-            for (size_t i = 0; i < name.length(); ++i) {
-                if (name[i] == '_' || (name[i] >= 'a' && name[i] <= 'z') || (name[i] >= 'A' && name[i] <= 'Z') || (name[i] >= '0' && name[i] <= '9')) {
-                    continue;
-                }
-                isAlphaNum = false;
-            }
-            isAlphaNum = isAlphaNum & (name.length() > 0);
-            if (isAlphaNum) {
-                GUIVisualizationSettings tmpSettings = *mySettings;
-                gSchemeStorage.remove(mySettings->name);
-                tmpSettings.name = name;
-                gSchemeStorage.add(tmpSettings);
-                mySchemeName->setItemText(index, tmpSettings.name.c_str());
-                myParent->getColoringSchemesCombo().setItemText(index, tmpSettings.name.c_str());
-                myParent->setColorScheme(tmpSettings.name);
-                mySettings = &gSchemeStorage.get(name);
-                myBackup = *mySettings;
-                gSchemeStorage.writeSettings(getApp());
-                return 1;
-            }
-        } else {
+        if (!dialog.execute()) {
             return 1;
         }
+        name = text->getText().text();
+        for (size_t i = 0; i < name.length(); ++i) {
+            if (name[i] != '_' && (name[i] < 'a' || name[i] > 'z') && (name[i] < 'A' || name[i] > 'Z') && (name[i] < '0' || name[i] > '9')) {
+                name = "";
+                break;
+            }
+        }
     }
-    // save
+    GUIVisualizationSettings tmpSettings = *mySettings;
+    gSchemeStorage.remove(mySettings->name);
+    tmpSettings.name = name;
+    gSchemeStorage.add(tmpSettings);
+    mySchemeName->setItemText(index, tmpSettings.name.c_str());
+    myParent->getColoringSchemesCombo().setItemText(index, tmpSettings.name.c_str());
+    myParent->setColorScheme(tmpSettings.name);
+    mySettings = &gSchemeStorage.get(name);
+    myBackup = *mySettings;
+    gSchemeStorage.writeSettings(getApp());
     return 1;
 }
 
@@ -889,7 +899,7 @@ GUIDialog_ViewSettings::onCmdExportSetting(FXObject*, FXSelector, void* /*data*/
         mySettings->save(dev);
         dev.close();
     } catch (IOError& e) {
-        FXMessageBox::error(this, MBOX_OK, "Storing failed!", e.what());
+        FXMessageBox::error(this, MBOX_OK, "Storing failed!", "%s", e.what());
     }
     return 1;
 }
@@ -984,17 +994,18 @@ void
 GUIDialog_ViewSettings::rebuildList() {
     myDecalsTable->clearItems();
     // set table attributes
-    myDecalsTable->setTableSize(10, 6);
+    myDecalsTable->setTableSize(10, 7);
     myDecalsTable->setColumnText(0, "picture file");
     myDecalsTable->setColumnText(1, "center x");
     myDecalsTable->setColumnText(2, "center y");
     myDecalsTable->setColumnText(3, "width");
     myDecalsTable->setColumnText(4, "height");
     myDecalsTable->setColumnText(5, "rotation");
+    myDecalsTable->setColumnText(6, "layer");
     FXHeader* header = myDecalsTable->getColumnHeader();
     header->setHeight(getApp()->getNormalFont()->getFontHeight() + getApp()->getNormalFont()->getFontAscent());
     int k;
-    for (k = 0; k < 6; k++) {
+    for (k = 0; k < 7; k++) {
         header->setItemJustify(k, JUSTIFY_CENTER_X | JUSTIFY_TOP);
         header->setItemSize(k, 60);
     }
@@ -1010,10 +1021,11 @@ GUIDialog_ViewSettings::rebuildList() {
         myDecalsTable->setItemText(row, 3, toString<SUMOReal>(d.width).c_str());
         myDecalsTable->setItemText(row, 4, toString<SUMOReal>(d.height).c_str());
         myDecalsTable->setItemText(row, 5, toString<SUMOReal>(d.rot).c_str());
+        myDecalsTable->setItemText(row, 6, toString<SUMOReal>(d.layer).c_str());
         row++;
     }
     // insert dummy last field
-    for (k = 0; k < 6; k++) {
+    for (k = 0; k < 7; k++) {
         myDecalsTable->setItemText(row, k, " ");
     }
 }
@@ -1026,16 +1038,14 @@ GUIDialog_ViewSettings::rebuildColorMatrices(bool doCreate) {
     myDecalsTable = new MFXAddEditTypedTable(myDecalsFrame, this, MID_TABLE,
             LAYOUT_FILL_Y | LAYOUT_FIX_WIDTH/*|LAYOUT_FIX_HEIGHT*/, 0, 0, 470, 0);
     myDecalsTable->setVisibleRows(5);
-    myDecalsTable->setVisibleColumns(6);
-    myDecalsTable->setTableSize(5, 6);
+    myDecalsTable->setVisibleColumns(7);
+    myDecalsTable->setTableSize(5, 7);
     myDecalsTable->setBackColor(FXRGB(255, 255, 255));
     myDecalsTable->getRowHeader()->setWidth(0);
-    for (int i = 1; i < 5; ++i) {
+    for (int i = 1; i <= 5; ++i) {
         myDecalsTable->setCellType(i, CT_REAL);
         myDecalsTable->setNumberCellParams(i, -10000000, 10000000, 1, 10, 100, "%.2f");
     }
-    myDecalsTable->setCellType(5, CT_REAL);
-    myDecalsTable->setNumberCellParams(5, -10000000, 10000000, .1, 1, 10, "%.2f");
     rebuildList();
     if (doCreate) {
         myDecalsTable->create();
@@ -1051,7 +1061,7 @@ GUIDialog_ViewSettings::rebuildColorMatrices(bool doCreate) {
         myLaneButtons.clear();
         GUIColorScheme& scheme = mySettings->getLaneEdgeScheme();
         const bool fixed = scheme.isFixed();
-        const std::vector<RGBColor> &colors = scheme.getColors();
+        const std::vector<RGBColor>& colors = scheme.getColors();
         std::vector<RGBColor>::const_iterator colIt = colors.begin();
         std::vector<SUMOReal>::const_iterator threshIt = scheme.getThresholds().begin();
         std::vector<std::string>::const_iterator nameIt = scheme.getNames().begin();
@@ -1107,7 +1117,7 @@ GUIDialog_ViewSettings::rebuildColorMatrices(bool doCreate) {
         myVehicleThresholds.clear();
         myVehicleButtons.clear();
         const bool fixed = mySettings->vehicleColorer.getScheme().isFixed();
-        const std::vector<RGBColor> &colors = mySettings->vehicleColorer.getScheme().getColors();
+        const std::vector<RGBColor>& colors = mySettings->vehicleColorer.getScheme().getColors();
         std::vector<RGBColor>::const_iterator colIt = colors.begin();
         std::vector<SUMOReal>::const_iterator threshIt = mySettings->vehicleColorer.getScheme().getThresholds().begin();
         std::vector<std::string>::const_iterator nameIt = mySettings->vehicleColorer.getScheme().getNames().begin();
@@ -1178,6 +1188,7 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
         d.height = SUMOReal(myParent->getGridHeight());
         d.initialised = false;
         d.rot = 0;
+        d.layer = 0;
         myDecalsLock->lock();
         myDecals->push_back(d);
         myDecalsLock->unlock();
@@ -1197,42 +1208,50 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
             break;
         case 1:
             try {
-                d.centerX = TplConvert<char>::_2SUMOReal(value.c_str());
+                d.centerX = TplConvert::_2SUMOReal(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
-                FXMessageBox::error(this, MBOX_OK, "Number format error", msg.c_str());
+                FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
             }
             break;
         case 2:
             try {
-                d.centerY = TplConvert<char>::_2SUMOReal(value.c_str());
+                d.centerY = TplConvert::_2SUMOReal(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
-                FXMessageBox::error(this, MBOX_OK, "Number format error", msg.c_str());
+                FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
             }
             break;
         case 3:
             try {
-                d.width = TplConvert<char>::_2SUMOReal(value.c_str());
+                d.width = TplConvert::_2SUMOReal(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
-                FXMessageBox::error(this, MBOX_OK, "Number format error", msg.c_str());
+                FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
             }
             break;
         case 4:
             try {
-                d.height = TplConvert<char>::_2SUMOReal(value.c_str());
+                d.height = TplConvert::_2SUMOReal(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
-                FXMessageBox::error(this, MBOX_OK, "Number format error", msg.c_str());
+                FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
             }
             break;
         case 5:
             try {
-                d.rot = TplConvert<char>::_2SUMOReal(value.c_str());
+                d.rot = TplConvert::_2SUMOReal(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
-                FXMessageBox::error(this, MBOX_OK, "Number format error", msg.c_str());
+                FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
+            }
+            break;
+        case 6:
+            try {
+                d.layer = TplConvert::_2SUMOReal(value.c_str());
+            } catch (NumberFormatException&) {
+                std::string msg = "The value must be a float, is:" + value;
+                FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
             }
             break;
         default:
@@ -1284,7 +1303,7 @@ GUIDialog_ViewSettings::NamePanel::NamePanel(
     mySizeDial->setValue(settings.size);
     FXMatrix* m2 = new FXMatrix(parent, 2, LAYOUT_FILL_X | LAYOUT_BOTTOM | LAYOUT_LEFT | MATRIX_BY_COLUMNS,
                                 0, 0, 0, 0, 10, 10, 0, 0, 5, 5);
-    FXLabel(m2, "Color", 0, LAYOUT_CENTER_Y);
+    new FXLabel(m2, "Color", 0, LAYOUT_CENTER_Y);
     myColorWell = new FXColorWell(m2, convert(settings.color),
                                   target, MID_SIMPLE_VIEW_COLORCHANGE,
                                   LAYOUT_FIX_WIDTH | LAYOUT_CENTER_Y | LAYOUT_SIDE_TOP | FRAME_SUNKEN | FRAME_THICK | ICON_AFTER_TEXT,

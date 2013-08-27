@@ -32,6 +32,7 @@
 #include <version.h>
 #endif
 
+#include <utils/common/RGBColor.h>
 #include <utils/common/ToString.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
@@ -54,7 +55,7 @@ BinaryFormatter::BinaryFormatter() {
 void
 BinaryFormatter::writeStringList(std::ostream& into, const std::vector<std::string>& list) {
     FileHelpers::writeByte(into, BF_LIST);
-    FileHelpers::writeInt(into, list.size());
+    FileHelpers::writeInt(into, (int)list.size());
     for (std::vector<std::string>::const_iterator it = list.begin(); it != list.end(); ++it) {
         FileHelpers::writeByte(into, BF_STRING);
         FileHelpers::writeString(into, *it);
@@ -64,9 +65,9 @@ BinaryFormatter::writeStringList(std::ostream& into, const std::vector<std::stri
 bool
 BinaryFormatter::writeXMLHeader(std::ostream& into,
                                 const std::string& rootElement,
-                                const std::string xmlParams,
-                                const std::string& attrs,
-                                const std::string& comment) {
+                                const std::string /* xmlParams */,
+                                const std::string& /* attrs */,
+                                const std::string& /* comment */) {
     if (myXMLStack.empty()) {
         FileHelpers::writeByte(into, BF_BYTE);
         FileHelpers::writeByte(into, 1);
@@ -76,8 +77,11 @@ BinaryFormatter::writeXMLHeader(std::ostream& into,
         writeStringList(into, SUMOXMLDefinitions::Attrs.getStrings());
         writeStringList(into, SUMOXMLDefinitions::NodeTypes.getStrings());
         writeStringList(into, SUMOXMLDefinitions::EdgeFunctions.getStrings());
+        writeStringList(into, std::vector<std::string>());
+        writeStringList(into, std::vector<std::string>());
+
         if (SUMOXMLDefinitions::Tags.hasString(rootElement)) {
-            openTag(into, (const SumoXMLTag)(SUMOXMLDefinitions::Tags.get(rootElement)));
+            openTag(into, rootElement);
             return true;
         }
     }
@@ -97,20 +101,20 @@ void
 BinaryFormatter::openTag(std::ostream& into, const SumoXMLTag& xmlElement) {
     myXMLStack.push_back(xmlElement);
     FileHelpers::writeByte(into, BF_XML_TAG_START);
-    FileHelpers::writeInt(into, xmlElement);
+    FileHelpers::writeByte(into, xmlElement);
 }
 
 
 void
-BinaryFormatter::closeOpener(std::ostream& into) {
+BinaryFormatter::closeOpener(std::ostream& /* into */) {
 }
 
 
 bool
-BinaryFormatter::closeTag(std::ostream& into, bool abbreviated) {
+BinaryFormatter::closeTag(std::ostream& into, bool /* abbreviated */) {
     if (!myXMLStack.empty()) {
         FileHelpers::writeByte(into, BF_XML_TAG_END);
-        FileHelpers::writeInt(into, myXMLStack.back());
+        FileHelpers::writeByte(into, myXMLStack.back());
         myXMLStack.pop_back();
         return true;
     }
@@ -126,9 +130,20 @@ BinaryFormatter::writeAttr(std::ostream& into, const std::string& attr, const st
 }
 
 
+void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const bool& val) {
+    BinaryFormatter::writeAttrHeader(into, attr, BF_BYTE);
+    FileHelpers::writeByte(into, val);
+}
+
+
 void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const SUMOReal& val) {
-    BinaryFormatter::writeAttrHeader(into, attr, BF_FLOAT);
-    FileHelpers::writeFloat(into, val);
+    if (into.precision() == 2 && val < 2e7 && val > -2e7) { // 2e7 is roughly INT_MAX/100
+        BinaryFormatter::writeAttrHeader(into, attr, BF_SCALED2INT);
+        FileHelpers::writeInt(into, int(val * 100. + .5));
+    } else {
+        BinaryFormatter::writeAttrHeader(into, attr, BF_FLOAT);
+        FileHelpers::writeFloat(into, val);
+    }
 }
 
 
@@ -138,60 +153,85 @@ void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, cons
 }
 
 
+void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const unsigned int& val) {
+    BinaryFormatter::writeAttrHeader(into, attr, BF_INTEGER);
+    FileHelpers::writeInt(into, val);
+}
+
+
 void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const SumoXMLNodeType& val) {
     BinaryFormatter::writeAttrHeader(into, attr, BF_NODE_TYPE);
-    FileHelpers::writeByte(into, val);
+    FileHelpers::writeByte(into, (unsigned char) val);
 }
 
 
 void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const SumoXMLEdgeFunc& val) {
     BinaryFormatter::writeAttrHeader(into, attr, BF_EDGE_FUNCTION);
-    FileHelpers::writeByte(into, val);
+    FileHelpers::writeByte(into, (unsigned char) val);
 }
 
 
-void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const Position& val) {
+void BinaryFormatter::writePosition(std::ostream& into, const Position& val) {
     if (val.z() != 0.) {
-        BinaryFormatter::writeAttrHeader(into, attr, BF_POSITION_3D);
-        FileHelpers::writeFloat(into, val.x());
-        FileHelpers::writeFloat(into, val.y());
-        FileHelpers::writeFloat(into, val.z());
-    } else {
-        BinaryFormatter::writeAttrHeader(into, attr, BF_POSITION_2D);
-        FileHelpers::writeFloat(into, val.x());
-        FileHelpers::writeFloat(into, val.y());
-    }
-}
-
-
-void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const PositionVector& val) {
-    BinaryFormatter::writeAttrHeader(into, attr, BF_LIST);
-    FileHelpers::writeInt(into, val.size());
-    for (PositionVector::ContType::const_iterator pos = val.begin(); pos != val.end(); ++pos) {
-        if (pos->z() != 0.) {
+        if (into.precision() == 2 && val.x() < 2e7 && val.x() > -2e7 &&
+                val.y() < 2e7 && val.y() > -2e7 && val.z() < 2e7 && val.z() > -2e7) { // 2e7 is roughly INT_MAX/100
+            FileHelpers::writeByte(into, BF_SCALED2INT_POSITION_3D);
+            FileHelpers::writeInt(into, int(val.x() * 100. + .5));
+            FileHelpers::writeInt(into, int(val.y() * 100. + .5));
+            FileHelpers::writeInt(into, int(val.z() * 100. + .5));
+        } else {
             FileHelpers::writeByte(into, BF_POSITION_3D);
-            FileHelpers::writeFloat(into, pos->x());
-            FileHelpers::writeFloat(into, pos->y());
-            FileHelpers::writeFloat(into, pos->z());
+            FileHelpers::writeFloat(into, val.x());
+            FileHelpers::writeFloat(into, val.y());
+            FileHelpers::writeFloat(into, val.z());
+        }
+    } else {
+        if (into.precision() == 2 && val.x() < 2e7 && val.x() > -2e7 &&
+                val.y() < 2e7 && val.y() > -2e7) { // 2e7 is roughly INT_MAX/100
+            FileHelpers::writeByte(into, BF_SCALED2INT_POSITION_2D);
+            FileHelpers::writeInt(into, int(val.x() * 100. + .5));
+            FileHelpers::writeInt(into, int(val.y() * 100. + .5));
         } else {
             FileHelpers::writeByte(into, BF_POSITION_2D);
-            FileHelpers::writeFloat(into, pos->x());
-            FileHelpers::writeFloat(into, pos->y());
+            FileHelpers::writeFloat(into, val.x());
+            FileHelpers::writeFloat(into, val.y());
         }
     }
 }
 
 
-void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const Boundary& val) {
+void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const Position& val) {
+    FileHelpers::writeByte(into, static_cast<unsigned char>(BF_XML_ATTRIBUTE));
+    FileHelpers::writeByte(into, attr);
+    writePosition(into, val);
+}
+
+
+void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const PositionVector& val) {
     BinaryFormatter::writeAttrHeader(into, attr, BF_LIST);
-    FileHelpers::writeInt(into, 2);
-    FileHelpers::writeByte(into, BF_POSITION_2D);
+    FileHelpers::writeInt(into, (int)val.size());
+    for (PositionVector::ContType::const_iterator pos = val.begin(); pos != val.end(); ++pos) {
+        writePosition(into, *pos);
+    }
+}
+
+
+void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const Boundary& val) {
+    BinaryFormatter::writeAttrHeader(into, attr, BF_BOUNDARY);
     FileHelpers::writeFloat(into, val.xmin());
     FileHelpers::writeFloat(into, val.ymin());
-    FileHelpers::writeByte(into, BF_POSITION_2D);
     FileHelpers::writeFloat(into, val.xmax());
     FileHelpers::writeFloat(into, val.ymax());
 }
 
-/****************************************************************************/
 
+void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const RGBColor& val) {
+    BinaryFormatter::writeAttrHeader(into, attr, BF_COLOR);
+    FileHelpers::writeByte(into, char(val.red() * 255 + .5));
+    FileHelpers::writeByte(into, char(val.green() * 255 + .5));
+    FileHelpers::writeByte(into, char(val.blue() * 255 + .5));
+    FileHelpers::writeByte(into, 0);
+}
+
+
+/****************************************************************************/

@@ -30,7 +30,7 @@
 #endif
 
 #include "Polygon.h"
-#include <utils/common/RGBColor.h>
+using namespace SUMO;
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -40,10 +40,13 @@
 // ===========================================================================
 // member definitions
 // ===========================================================================
-Polygon::Polygon(const std::string& name, const std::string& type,
-                 const RGBColor& color, const PositionVector& shape,
-                 bool fill)
-    : myName(name),  myType(type), myColor(color), myShape(shape), myFill(fill) {}
+Polygon::Polygon(const std::string& id, const std::string& type,
+                 const RGBColor& color, const PositionVector& shape, bool fill,
+                 SUMOReal layer, SUMOReal angle, const std::string& imgFile) :
+    Shape(id, type, color, layer, angle, imgFile),
+    myShape(shape),
+    myFill(fill)
+{}
 
 
 Polygon::~Polygon() {}

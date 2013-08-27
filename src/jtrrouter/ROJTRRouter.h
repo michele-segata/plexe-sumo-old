@@ -82,7 +82,7 @@ public:
      * @param[filled] into The list of edges to store the route into
      */
     void compute(const ROEdge* from, const ROEdge* to, const ROVehicle* const vehicle,
-                 SUMOTime time, std::vector<const ROEdge*> &into);
+                 SUMOTime time, std::vector<const ROEdge*>& into);
 
 
     /** @brief Recomputes the costs of a route
@@ -91,7 +91,7 @@ public:
      * @param[in] time The departure time of the vehicle
      * @return The route costs
      */
-    SUMOReal recomputeCosts(const std::vector<const ROEdge*> &edges, const ROVehicle* const v, SUMOTime time) const;
+    SUMOReal recomputeCosts(const std::vector<const ROEdge*>& edges, const ROVehicle* const v, SUMOTime time) const;
     /// @}
 
 
@@ -99,20 +99,20 @@ private:
     /// @brief The network to use
     RONet& myNet;
 
-    /// @brief The maximum number of edges a route may have
-    int myMaxEdges;
-
     /// @brief Whether unbuildable routes shall be reported as warniings, not errors
-    bool myUnbuildIsWarningOnly;
+    const bool myUnbuildIsWarningOnly;
 
     /// @brief Whether all edges may be used as route end
-    bool myAcceptAllDestination;
+    const bool myAcceptAllDestination;
+
+    /// @brief The maximum number of edges a route may have
+    const int myMaxEdges;
 
     /// @brief Whether vehicle class information shall be ignored
-    bool myIgnoreClasses;
+    const bool myIgnoreClasses;
 
     /// @brief Whether a vehicle may reuse a road
-    bool myAllowLoops;
+    const bool myAllowLoops;
 
 };
 

@@ -30,16 +30,11 @@
 #include <config.h>
 #endif
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
-
 #include "GLHelper.h"
 #include <utils/geom/GeomHelper.h>
 #include <utils/common/StdDefs.h>
 #include <foreign/polyfonts/polyfonts.h>
+#include <utils/gui/globjects/GLIncludes.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -109,8 +104,8 @@ GLHelper::drawBoxLine(const Position& beg1, const Position& beg2,
 
 void
 GLHelper::drawBoxLines(const PositionVector& geom,
-                       const std::vector<SUMOReal> &rots,
-                       const std::vector<SUMOReal> &lengths,
+                       const std::vector<SUMOReal>& rots,
+                       const std::vector<SUMOReal>& lengths,
                        SUMOReal width) {
     int e = (int) geom.size() - 1;
     for (int i = 0; i < e; i++) {
@@ -122,8 +117,8 @@ GLHelper::drawBoxLines(const PositionVector& geom,
 void
 GLHelper::drawBoxLines(const PositionVector& geom1,
                        const PositionVector& geom2,
-                       const std::vector<SUMOReal> &rots,
-                       const std::vector<SUMOReal> &lengths,
+                       const std::vector<SUMOReal>& rots,
+                       const std::vector<SUMOReal>& lengths,
                        SUMOReal width) {
     int minS = (int) MIN4(rots.size(), lengths.size(), geom1.size(), geom2.size());
     for (int i = 0; i < minS; i++) {
@@ -216,7 +211,7 @@ GLHelper::drawFilledCircle(SUMOReal width, int steps, SUMOReal beg, SUMOReal end
     std::pair<SUMOReal, SUMOReal> p1 =
         beg == 0 ? myCircleCoords[0] : myCircleCoords[((int) beg / 10) % 36];
     for (int i = (int)(beg / 10); i < steps && (36.0 / (SUMOReal) steps * (SUMOReal) i) * 10 < end; i++) {
-        const std::pair<SUMOReal, SUMOReal> &p2 =
+        const std::pair<SUMOReal, SUMOReal>& p2 =
             myCircleCoords[(size_t)(36.0 / (SUMOReal) steps * (SUMOReal) i)];
         glBegin(GL_TRIANGLES);
         glVertex2d(p1.first * width, p1.second * width);
@@ -225,7 +220,7 @@ GLHelper::drawFilledCircle(SUMOReal width, int steps, SUMOReal beg, SUMOReal end
         glEnd();
         p1 = p2;
     }
-    const std::pair<SUMOReal, SUMOReal> &p2 =
+    const std::pair<SUMOReal, SUMOReal>& p2 =
         end == 360 ? myCircleCoords[0] : myCircleCoords[((int) end / 10) % 36];
     glBegin(GL_TRIANGLES);
     glVertex2d(p1.first * width, p1.second * width);
@@ -255,7 +250,7 @@ GLHelper::drawOutlineCircle(SUMOReal width, SUMOReal iwidth, int steps,
     std::pair<SUMOReal, SUMOReal> p1 =
         beg == 0 ? myCircleCoords[0] : myCircleCoords[((int) beg / 10) % 36];
     for (int i = (int)(beg / 10); i < steps && (36.0 / (SUMOReal) steps * (SUMOReal) i) * 10 < end; i++) {
-        const std::pair<SUMOReal, SUMOReal> &p2 =
+        const std::pair<SUMOReal, SUMOReal>& p2 =
             myCircleCoords[(size_t)(36.0 / (SUMOReal) steps * (SUMOReal) i)];
         glBegin(GL_TRIANGLES);
         glVertex2d(p1.first * width, p1.second * width);
@@ -268,7 +263,7 @@ GLHelper::drawOutlineCircle(SUMOReal width, SUMOReal iwidth, int steps,
         glEnd();
         p1 = p2;
     }
-    const std::pair<SUMOReal, SUMOReal> &p2 =
+    const std::pair<SUMOReal, SUMOReal>& p2 =
         end == 360 ? myCircleCoords[0] : myCircleCoords[((int) end / 10) % 36];
     glBegin(GL_TRIANGLES);
     glVertex2d(p1.first * width, p1.second * width);

@@ -508,7 +508,7 @@ private:
     SUMOReal _actuator(SUMOReal acceleration, SUMOReal currentAcceleration) const;
 
     SUMOReal desiredSpeed(const MSVehicle* const veh) const {
-        return MIN2(myType->getMaxSpeed(), veh->getLane()->getMaxSpeed());
+        return MIN2(myType->getMaxSpeed(), veh->getLane()->getSpeedLimit());
     }
 
 

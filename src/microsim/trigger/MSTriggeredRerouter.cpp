@@ -51,7 +51,7 @@
 #include <microsim/MSGlobals.h>
 #include "MSTriggeredRerouter.h"
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 #include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
 #endif
@@ -62,18 +62,16 @@
 
 
 // ===========================================================================
-// method definitions
+// static member defintion
 // ===========================================================================
-bool MSTriggeredRerouter::myHaveWarnedAboutDeprecatedDestProbReroute = false;
-bool MSTriggeredRerouter::myHaveWarnedAboutDeprecatedClosingReroute = false;
-bool MSTriggeredRerouter::myHaveWarnedAboutDeprecatedRouteReroute = false;
-
+MSEdge MSTriggeredRerouter::mySpecialDest_keepDestination("MSTriggeredRerouter_keepDestination", -1, MSEdge::EDGEFUNCTION_UNKNOWN);
+MSEdge MSTriggeredRerouter::mySpecialDest_terminateRoute("MSTriggeredRerouter_terminateRoute", -1, MSEdge::EDGEFUNCTION_UNKNOWN);
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
 MSTriggeredRerouter::MSTriggeredRerouter(const std::string& id,
-        const std::vector<MSEdge*> &edges,
+        const std::vector<MSEdge*>& edges,
         SUMOReal prob, const std::string& file, bool off)
     : MSTrigger(id), MSMoveReminder(), SUMOSAXHandler(file),
       myProbability(prob), myUserProbability(prob), myAmInUserMode(false) {
@@ -83,14 +81,14 @@ MSTriggeredRerouter::MSTriggeredRerouter(const std::string& id,
     }
     // build actors
     for (std::vector<MSEdge*>::const_iterator j = edges.begin(); j != edges.end(); ++j) {
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             MESegment* s = MSGlobals::gMesoNet->getSegmentForEdge(**j);
             s->addDetector(this);
             continue;
         }
 #endif
-        const std::vector<MSLane*> &destLanes = (*j)->getLanes();
+        const std::vector<MSLane*>& destLanes = (*j)->getLanes();
         for (std::vector<MSLane*>::const_iterator i = destLanes.begin(); i != destLanes.end(); ++i) {
             (*i)->addMoveReminder(this);
         }
@@ -114,12 +112,7 @@ MSTriggeredRerouter::myStartElement(int element,
         myCurrentIntervalBegin = attrs.getOptSUMOTimeReporting(SUMO_ATTR_BEGIN, 0, ok, -1);
         myCurrentIntervalEnd = attrs.getOptSUMOTimeReporting(SUMO_ATTR_END, 0, ok, -1);
     }
-
-    if (element == SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED && !myHaveWarnedAboutDeprecatedDestProbReroute) {
-        myHaveWarnedAboutDeprecatedDestProbReroute = true;
-        WRITE_WARNING("'" + toString(SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_DEST_PROB_REROUTE) + "'.");
-    }
-    if (element == SUMO_TAG_DEST_PROB_REROUTE || element == SUMO_TAG_DEST_PROB_REROUTE__DEPRECATED) {
+    if (element == SUMO_TAG_DEST_PROB_REROUTE) {
         // by giving probabilities of new destinations
         // get the destination edge
         std::string dest = attrs.getStringSecure(SUMO_ATTR_ID, "");
@@ -128,7 +121,13 @@ MSTriggeredRerouter::myStartElement(int element,
         }
         MSEdge* to = MSEdge::dictionary(dest);
         if (to == 0) {
-            throw ProcessError("MSTriggeredRerouter " + getID() + ": Destination edge '" + dest + "' is not known.");
+            if (dest == "keepDestination") {
+                to = &mySpecialDest_keepDestination;
+            } else if (dest == "terminateRoute") {
+                to = &mySpecialDest_terminateRoute;
+            } else {
+                throw ProcessError("MSTriggeredRerouter " + getID() + ": Destination edge '" + dest + "' is not known.");
+            }
         }
         // get the probability to reroute
         bool ok = true;
@@ -143,11 +142,7 @@ MSTriggeredRerouter::myStartElement(int element,
         myCurrentEdgeProb.add(prob, to);
     }
 
-    if (element == SUMO_TAG_CLOSING_REROUTE__DEPRECATED && !myHaveWarnedAboutDeprecatedClosingReroute) {
-        myHaveWarnedAboutDeprecatedClosingReroute = true;
-        WRITE_WARNING("'" + toString(SUMO_TAG_CLOSING_REROUTE__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_CLOSING_REROUTE) + "'.");
-    }
-    if (element == SUMO_TAG_CLOSING_REROUTE || element == SUMO_TAG_CLOSING_REROUTE) {
+    if (element == SUMO_TAG_CLOSING_REROUTE) {
         // by closing
         std::string closed_id = attrs.getStringSecure(SUMO_ATTR_ID, "");
         if (closed_id == "") {
@@ -160,11 +155,7 @@ MSTriggeredRerouter::myStartElement(int element,
         myCurrentClosed.push_back(closed);
     }
 
-    if (element == SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED && !myHaveWarnedAboutDeprecatedRouteReroute) {
-        myHaveWarnedAboutDeprecatedRouteReroute = true;
-        WRITE_WARNING("'" + toString(SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_TAG_ROUTE_PROB_REROUTE) + "'.");
-    }
-    if (element == SUMO_TAG_ROUTE_PROB_REROUTE || element == SUMO_TAG_ROUTE_PROB_REROUTE__DEPRECATED) {
+    if (element == SUMO_TAG_ROUTE_PROB_REROUTE) {
         // by explicit rerouting using routes
         // check if route exists
         std::string routeStr = attrs.getStringSecure(SUMO_ATTR_ID, "");
@@ -217,7 +208,11 @@ MSTriggeredRerouter::hasCurrentReroute(SUMOTime time, SUMOVehicle& veh) const {
     const MSRoute& route = veh.getRoute();
     while (i != myIntervals.end()) {
         if ((*i).begin <= time && (*i).end >= time) {
-            if ((*i).edgeProbs.getOverallProb() != 0 || (*i).routeProbs.getOverallProb() != 0 || route.containsAnyOf((*i).closed)) {
+            if (
+                // affected by closingReroute, possibly combined with destProbReroute (route prob makes no sense)
+                route.containsAnyOf((*i).closed) ||
+                // no closingReroute but destProbReroute or routeProbReroute
+                ((*i).closed.size() == 0 && (*i).edgeProbs.getOverallProb() + (*i).routeProbs.getOverallProb() > 0)) {
                 return true;
             }
         }
@@ -299,19 +294,30 @@ MSTriggeredRerouter::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification 
         veh.replaceRoute(newRoute);
         return false;
     }
+    const MSEdge* newEdge = lastEdge;
     // ok, try using a new destination
-    const MSEdge* newEdge = rerouteDef.edgeProbs.getOverallProb() > 0 ? rerouteDef.edgeProbs.get() : route.getLastEdge();
-    if (newEdge == 0) {
-        newEdge = lastEdge;
+    const bool destUnreachable = std::find(rerouteDef.closed.begin(), rerouteDef.closed.end(), lastEdge) != rerouteDef.closed.end();
+    // if we have a closingReroute, only assign new destinations to vehicles which cannot reach their original destination
+    if (rerouteDef.closed.size() == 0 || destUnreachable) {
+        newEdge = rerouteDef.edgeProbs.getOverallProb() > 0 ? rerouteDef.edgeProbs.get() : route.getLastEdge();
+        if (newEdge == &mySpecialDest_terminateRoute) {
+            newEdge = veh.getEdge();
+        } else if (newEdge == &mySpecialDest_keepDestination || newEdge == lastEdge) {
+            if (destUnreachable) {
+                WRITE_WARNING("Cannot keep destination for vehicle '" + veh.getID() + "' due to closed edges. Terminating route.");
+                newEdge = veh.getEdge();
+            } else {
+                newEdge = lastEdge;
+            }
+        } else if (newEdge == 0) {
+            assert(false); // this should never happen
+            newEdge = veh.getEdge();
+        }
     }
-
     // we have a new destination, let's replace the vehicle route
-    MSEdgeWeightsStorage empty;
-    MSNet::EdgeWeightsProxi proxi(empty, MSNet::getInstance()->getWeightsStorage());
-    DijkstraRouterTT_ByProxi<MSEdge, SUMOVehicle, prohibited_withRestrictions<MSEdge, SUMOVehicle>, MSNet::EdgeWeightsProxi> router(MSEdge::dictSize(), true, &proxi, &MSNet::EdgeWeightsProxi::getTravelTime);
-    router.prohibit(rerouteDef.closed);
     std::vector<const MSEdge*> edges;
-    router.compute(veh.getEdge(), newEdge, &veh, MSNet::getInstance()->getCurrentTimeStep(), edges);
+    MSNet::getInstance()->getRouterTT(rerouteDef.closed).compute(
+        veh.getEdge(), newEdge, &veh, MSNet::getInstance()->getCurrentTimeStep(), edges);
     veh.replaceRouteEdges(edges);
     return false;
 }

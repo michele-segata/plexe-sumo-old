@@ -172,7 +172,7 @@ NIImporter_Vissim::VissimSingleTypeParser::readEndSecure(std::istream& from,
 
 std::string
 NIImporter_Vissim::VissimSingleTypeParser::readEndSecure(std::istream& from,
-        const std::vector<std::string> &excl) {
+        const std::vector<std::string>& excl) {
     std::vector<std::string> myExcl;
     std::vector<std::string>::const_iterator i;
     for (i = excl.begin(); i != excl.end(); i++) {
@@ -240,7 +240,7 @@ NIImporter_Vissim::VissimSingleTypeParser::parseAssignedVehicleTypes(
         return ret;
     }
     while (tmp != "DATAEND" && tmp != next) {
-        ret.push_back(TplConvert<char>::_2int(tmp.c_str()));
+        ret.push_back(TplConvert::_2int(tmp.c_str()));
         tmp = readEndSecure(from);
     }
     return ret;
@@ -259,7 +259,7 @@ NIImporter_Vissim::VissimSingleTypeParser::readExtEdgePointDef(
     while (tag != "bei") {
         tag = readEndSecure(from);
         if (tag != "bei") {
-            int lane = TplConvert<char>::_2int(tag.c_str());
+            int lane = TplConvert::_2int(tag.c_str());
             lanes.push_back(lane - 1);
         }
     }
@@ -468,20 +468,16 @@ NIImporter_Vissim::postLoadBuild(SUMOReal offset) {
     NIVissimDistrictConnection::dict_BuildDistrictNodes(
         myNetBuilder.getDistrictCont(), myNetBuilder.getNodeCont());
     NIVissimEdge::dict_propagateSpeeds();
-    NIVissimEdge::dict_buildNBEdges(myNetBuilder.getDistrictCont(),
-                                    myNetBuilder.getNodeCont(), myNetBuilder.getEdgeCont(),
-                                    offset);
+    NIVissimEdge::dict_buildNBEdges(myNetBuilder.getDistrictCont(), myNetBuilder.getNodeCont(), myNetBuilder.getEdgeCont(), offset);
     if (OptionsCont::getOptions().getBool("vissim.report-unset-speeds")) {
         NIVissimEdge::reportUnsetSpeeds();
     }
-    NIVissimDistrictConnection::dict_BuildDistricts(myNetBuilder.getDistrictCont(),
-            myNetBuilder.getEdgeCont(), myNetBuilder.getNodeCont());
+    NIVissimDistrictConnection::dict_BuildDistricts(myNetBuilder.getDistrictCont(), myNetBuilder.getEdgeCont(), myNetBuilder.getNodeCont());
     NIVissimConnection::dict_buildNBEdgeConnections(myNetBuilder.getEdgeCont());
-    NIVissimNodeCluster::dict_addDisturbances(myNetBuilder.getDistrictCont(),
-            myNetBuilder.getNodeCont(), myNetBuilder.getEdgeCont());
-    NIVissimTL::dict_SetSignals(myNetBuilder.getTLLogicCont(),
-                                myNetBuilder.getEdgeCont());
-
+    NIVissimNodeCluster::dict_addDisturbances(myNetBuilder.getDistrictCont(), myNetBuilder.getNodeCont(), myNetBuilder.getEdgeCont());
+    if (!OptionsCont::getOptions().getBool("tls.discard-loaded")) {
+        NIVissimTL::dict_SetSignals(myNetBuilder.getTLLogicCont(), myNetBuilder.getEdgeCont());
+    }
 }
 
 

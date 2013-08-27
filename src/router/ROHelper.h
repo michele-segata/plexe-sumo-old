@@ -91,20 +91,20 @@ namespace ROHelper {
 /*
 SUMOReal recomputeCosts(SUMOAbstractRouter<ROEdge,ROVehicle> &router,
                     const std::vector<const ROEdge*> &edges,
-                    const ROVehicle * const v, SUMOTime time) ;
+                    const ROVehicle * const v, SUMOTime time);
 */
 
 /** @brief Checks whether the given edge list contains loops and removes them
  *
  * @param[in] edges The list of edges to remove loops from
  */
-void recheckForLoops(std::vector<const ROEdge*> &edges) ;
+void recheckForLoops(std::vector<const ROEdge*>& edges);
 
 }
 
 
 /// @brief Output operator for edge lists (edges will be written as their ids, divided by spaces)
-std::ostream& operator<<(std::ostream& os, const std::vector<const ROEdge*> &ev);
+std::ostream& operator<<(std::ostream& os, const std::vector<const ROEdge*>& ev);
 
 
 

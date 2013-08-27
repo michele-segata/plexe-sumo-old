@@ -34,6 +34,7 @@
 
 #include <vector>
 #include <string>
+#include <foreign/rtree/SUMORTree.h>
 #include <microsim/trigger/MSTriggeredRerouter.h>
 #include <utils/foxtools/FXRealSpinDial.h>
 #include <utils/gui/globjects/GUIGlObject_AbstractAdd.h>
@@ -47,6 +48,9 @@
 /**
  * @class GUITriggeredRerouter
  * @brief Reroutes vehicles passing an edge
+ * One rerouter can be active on multiple edges. To reduce drawing load we
+ * instantiate GUIGlObjects for every edge
+ * XXX multiple rerouters active on the same edge are problematic
  */
 class GUITriggeredRerouter
     : public MSTriggeredRerouter,
@@ -60,13 +64,13 @@ public:
      * @param[in] off Whether the rerouter is off (not working) initially
      */
     GUITriggeredRerouter(const std::string& id,
-                         const std::vector<MSEdge*> &edges, SUMOReal prob,
-                         const std::string& aXMLFilename, bool off);
+                         const std::vector<MSEdge*>& edges, SUMOReal prob,
+                         const std::string& aXMLFilename, bool off,
+                         SUMORTree& rtree);
 
 
     /// @brief Destructor
-    ~GUITriggeredRerouter() ;
-
+    ~GUITriggeredRerouter();
 
 
     /// @name inherited from GUIGlObject
@@ -80,7 +84,7 @@ public:
      * @see GUIGlObject::getPopUpMenu
      */
     GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
-                                       GUISUMOAbstractView& parent) ;
+                                       GUISUMOAbstractView& parent);
 
 
     /** @brief Returns an own parameter window
@@ -91,7 +95,7 @@ public:
      * @see GUIGlObject::getParameterWindow
      */
     GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app,
-            GUISUMOAbstractView& parent) ;
+            GUISUMOAbstractView& parent);
 
 
     /** @brief Returns the boundary to which the view shall be centered in order to show the object
@@ -99,20 +103,95 @@ public:
      * @return The boundary the object is within
      * @see GUIGlObject::getCenteringBoundary
      */
-    Boundary getCenteringBoundary() const ;
+    Boundary getCenteringBoundary() const;
 
 
     /** @brief Draws the object
      * @param[in] s The settings for the current view (may influence drawing)
      * @see GUIGlObject::drawGL
      */
-    void drawGL(const GUIVisualizationSettings& s) const ;
+    void drawGL(const GUIVisualizationSettings& s) const;
     //@}
 
 
 
     GUIManipulator* openManipulator(GUIMainWindow& app,
                                     GUISUMOAbstractView& parent);
+
+public:
+    class GUITriggeredRerouterEdge : public GUIGlObject {
+
+    public:
+        GUITriggeredRerouterEdge(GUIEdge* edge, GUITriggeredRerouter* parent, bool closed);
+
+        virtual ~GUITriggeredRerouterEdge();
+
+        /// @name inherited from GUIGlObject
+        //@{
+
+        /** @brief Returns an own popup-menu
+         *
+         * @param[in] app The application needed to build the popup-menu
+         * @param[in] parent The parent window needed to build the popup-menu
+         * @return The built popup-menu
+         * @see GUIGlObject::getPopUpMenu
+         */
+        GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
+                                           GUISUMOAbstractView& parent);
+
+
+        /** @brief Returns an own parameter window
+         *
+         * @param[in] app The application needed to build the parameter window
+         * @param[in] parent The parent window needed to build the parameter window
+         * @return The built parameter window
+         * @see GUIGlObject::getParameterWindow
+         */
+        GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app,
+                GUISUMOAbstractView& parent);
+
+
+        /** @brief Returns the boundary to which the view shall be centered in order to show the object
+         *
+         * @return The boundary the object is within
+         * @see GUIGlObject::getCenteringBoundary
+         */
+        Boundary getCenteringBoundary() const;
+
+
+        /** @brief Draws the object
+         * @param[in] s The settings for the current view (may influence drawing)
+         * @see GUIGlObject::drawGL
+         */
+        void drawGL(const GUIVisualizationSettings& s) const;
+        //@}
+
+    private:
+        /// Definition of a positions container
+        typedef std::vector<Position> PosCont;
+
+        /// Definition of a rotation container
+        typedef std::vector<SUMOReal> RotCont;
+
+    private:
+        /// The parent rerouter to which this edge instance belongs
+        GUITriggeredRerouter* myParent;
+
+        /// The edge for which this visualization applies
+        MSEdge* myEdge;
+
+        /// whether this edge instance visualizes a closed edge
+        const bool myAmClosedEdge;
+
+        /// The positions in full-geometry mode
+        PosCont myFGPositions;
+
+        /// The rotations in full-geometry mode
+        RotCont myFGRotations;
+
+        /// The boundary of this rerouter
+        Boundary myBoundary;
+    };
 
 public:
     class GUITriggeredRerouterPopupMenu : public GUIGLObjectPopupMenu {
@@ -122,7 +201,7 @@ public:
         GUITriggeredRerouterPopupMenu(GUIMainWindow& app,
                                       GUISUMOAbstractView& parent, GUIGlObject& o);
 
-        ~GUITriggeredRerouterPopupMenu() ;
+        ~GUITriggeredRerouterPopupMenu();
 
         /** @brief Called if the object's manipulator shall be shown */
         long onCmdOpenManip(FXObject*, FXSelector, void*);
@@ -177,22 +256,12 @@ public:
 
     };
 
-private:
-    /// Definition of a positions container
-    typedef std::vector<Position> PosCont;
-
-    /// Definition of a rotation container
-    typedef std::vector<SUMOReal> RotCont;
 
 private:
-    /// The positions in full-geometry mode
-    PosCont myFGPositions;
-
-    /// The rotations in full-geometry mode
-    RotCont myFGRotations;
-
     /// The boundary of this rerouter
     Boundary myBoundary;
+
+    std::vector<GUITriggeredRerouterEdge*> myEdgeVisualizations;
 
 };
 

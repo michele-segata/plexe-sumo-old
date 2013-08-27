@@ -68,7 +68,7 @@ SUMOReal factrl(int n) {
 
     if (n < 0) {
         throw 1;
-    } //cout << "\nNegative factorial in routine FACTRL\n" ;
+    } //cout << "\nNegative factorial in routine FACTRL\n";
     if (n > 32) {
         throw 1;
     } //cout << "\nFactorial value too large in routine FACTRL\n";

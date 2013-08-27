@@ -198,11 +198,11 @@ public:
         and whether another lane may be more preferable */
     virtual int wantsChangeToRight(
         MSLCMessager& msgPass, int blocked,
-        const std::pair<MSVehicle*, SUMOReal> &leader,
-        const std::pair<MSVehicle*, SUMOReal> &neighLead,
-        const std::pair<MSVehicle*, SUMOReal> &neighFollow,
+        const std::pair<MSVehicle*, SUMOReal>& leader,
+        const std::pair<MSVehicle*, SUMOReal>& neighLead,
+        const std::pair<MSVehicle*, SUMOReal>& neighFollow,
         const MSLane& neighLane,
-        const std::vector<MSVehicle::LaneQ> &preb,
+        const std::vector<MSVehicle::LaneQ>& preb,
         MSVehicle** lastBlocked) = 0;
 
     /** @brief Called to examine whether the vehicle wants to change to left
@@ -210,11 +210,11 @@ public:
         and whether another lane may be more preferable */
     virtual int wantsChangeToLeft(
         MSLCMessager& msgPass, int blocked,
-        const std::pair<MSVehicle*, SUMOReal> &leader,
-        const std::pair<MSVehicle*, SUMOReal> &neighLead,
-        const std::pair<MSVehicle*, SUMOReal> &neighFollow,
+        const std::pair<MSVehicle*, SUMOReal>& leader,
+        const std::pair<MSVehicle*, SUMOReal>& neighLead,
+        const std::pair<MSVehicle*, SUMOReal>& neighFollow,
         const MSLane& neighLane,
-        const std::vector<MSVehicle::LaneQ> &preb,
+        const std::vector<MSVehicle::LaneQ>& preb,
         MSVehicle** lastBlocked) = 0;
 
     virtual void* inform(void* info, MSVehicle* sender) = 0;
@@ -267,7 +267,7 @@ protected:
         // Congested situation are relevant only on highways (maxSpeed > 70km/h)
         // and congested on German Highways means that the vehicles have speeds
         // below 60km/h. Overtaking on the right is allowed then.
-        if ((myVehicle.getLane()->getMaxSpeed() <= 70.0 / 3.6) || (neighLeader->getLane()->getMaxSpeed() <= 70.0 / 3.6)) {
+        if ((myVehicle.getLane()->getSpeedLimit() <= 70.0 / 3.6) || (neighLeader->getLane()->getSpeedLimit() <= 70.0 / 3.6)) {
 
             return false;
         }
@@ -306,6 +306,9 @@ protected:
     /// @brief The vehicle's car following model
     const MSCFModel& myCarFollowModel;
 
+private:
+    /// @brief Invalidated assignment operator
+    MSAbstractLaneChangeModel& operator=(const MSAbstractLaneChangeModel& s);
 };
 
 

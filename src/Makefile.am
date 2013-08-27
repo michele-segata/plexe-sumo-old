@@ -8,7 +8,7 @@ if WITH_GDAL
 GDAL_LIBS = -l$(LIB_GDAL)
 endif
 
-if MESOSIM
+if INTERNAL
 MESO_LIBS = ./mesosim/libmesosim.a
 MESOGUI_LIBS = ./mesogui/libmesogui.a ./osgview/libosgview.a
 INTERNAL_LIBS = ./internal/libinternal.a
@@ -16,7 +16,7 @@ endif
 
 if WITH_GUI
 GUI_APPS = sumo-gui
-GUI_DIRS = gui guinetload guisim $(MESOGUI_DIRS)
+GUI_DIRS = gui guinetload guisim $(GUI_INTERNAL_DIRS)
 endif
 
 if CHECK_MEMORY_LEAKS
@@ -24,15 +24,15 @@ MEM_LIBS  = ./foreign/nvwa/libnvwa.a
 endif
 
 if TRACI
-TRACI_LIBS = ./traci-server/libtraciserver.a
+TRACI_LIBS = ./traci-server/libtraciserver.a ./utils/traci/libtraci.a
 TRACI_DIRS = traci-server traci_testclient
 endif
 
 bin_PROGRAMS = sumo netconvert $(GUI_APPS)
 
 COMMON_LIBS = ./utils/options/liboptions.a \
-./utils/common/libcommon.a \
 ./utils/xml/libxml.a \
+./utils/common/libcommon.a \
 ./utils/importio/libimportio.a \
 ./utils/iodevices/libiodevices.a \
 ./foreign/tcpip/libtcpip.a \
@@ -110,7 +110,7 @@ endif
 
 SUBDIRS = foreign utils microsim netbuild netwrite netgen netimport netload \
 od2trips polyconvert router dfrouter duarouter jtrrouter activitygen \
-$(MESO_DIRS) $(TRACI_DIRS) $(GUI_DIRS)
+$(INTERNAL_DIRS) $(TRACI_DIRS) $(GUI_DIRS)
 
 EXTRA_DIST = config.h config.h.in \
 guisim.rc \
@@ -118,6 +118,6 @@ windows_config.h
 
 if WITH_VERSION_H
 all: version.h
-version.h: .svn/entries
+version.h: ../.svn/entries
 	../tools/build/version.py $(CURDIR)
 endif

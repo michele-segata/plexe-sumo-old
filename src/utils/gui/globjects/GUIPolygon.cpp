@@ -32,6 +32,7 @@
 
 #include <string>
 #include "GUIPolygon.h"
+#include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/gui/globjects/GUIGlObject.h>
 #include <utils/gui/div/GUIParameterTableWindow.h>
 #include <utils/gui/globjects/GUIGLObjectPopupMenu.h>
@@ -43,24 +44,17 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
-#ifdef WIN32
-#include <windows.h>
-#endif
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
-GUIPolygon::GUIPolygon(int layer,
-                       const std::string name, const std::string type,
-                       const RGBColor& color,
-                       const PositionVector& Pos,
-                       bool fill)
-    : Polygon(name, type, color, Pos, fill),
-      GUIGlObject_AbstractAdd("poly", GLO_SHAPE, name), myLayer(layer) {}
+GUIPolygon::GUIPolygon(const std::string& id, const std::string& type,
+                       const RGBColor& color, const PositionVector& shape, bool fill,
+                       SUMOReal layer, SUMOReal angle, const std::string& imgFile):
+    Polygon(id, type, color, shape, fill, layer, angle, imgFile),
+    GUIGlObject_AbstractAdd("poly", GLO_POLYGON, id),
+    myDisplayList(0)
+{}
 
 
 GUIPolygon::~GUIPolygon() {}
@@ -116,9 +110,6 @@ void APIENTRY endCallback(void) {
 }
 
 void APIENTRY vertexCallback(GLvoid* vertex) {
-    const GLdouble* pointer;
-
-    pointer = (GLdouble*) vertex;
     glVertex3dv((GLdouble*) vertex);
 }
 
@@ -137,11 +128,19 @@ void APIENTRY combineCallback(GLdouble coords[3],
     *dataOut = vertex;
 }
 
-double glvert[6];
+
+SUMOReal POLY_TEX_DIM = 256;
+GLfloat xPlane[] = {1.0 / POLY_TEX_DIM, 0.0, 0.0, 0.0};
+GLfloat yPlane[] = {0.0, 1.0 / POLY_TEX_DIM, 0.0, 0.0};
+
 void
 GUIPolygon::drawGL(const GUIVisualizationSettings& s) const {
     UNUSED_PARAMETER(s);
-    if (fill()) {
+    AbstractMutex::ScopedLocker locker(myLock);
+    if (myDisplayList == 0) {
+        storeTesselation();
+    }
+    if (getFill()) {
         if (myShape.size() < 3) {
             return;
         }
@@ -153,9 +152,75 @@ GUIPolygon::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     glPushMatrix();
     glTranslated(0, 0, getLayer());
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // XXX shape should be rotated around its center when initializing the polygon. do we even need this?
+    //glRotated(getAngle(), 0, 0, 1);
     GLHelper::setColor(getColor());
-    if (fill()) {
+
+    int textureID = -1;
+    if (getFill()) {
+        const std::string& file = getImgFile();
+        if (file != "") {
+            textureID = GUITexturesHelper::getTextureID(file);
+        }
+    }
+    // init generation of texture coordinates
+    if (textureID >= 0) {
+        glEnable(GL_TEXTURE_2D);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_DEPTH_TEST); // without DEPTH_TEST vehicles may be drawn below roads
+        glDisable(GL_LIGHTING);
+        glDisable(GL_COLOR_MATERIAL);
+        glDisable(GL_ALPHA_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        // http://www.gamedev.net/topic/133564-glutesselation-and-texture-mapping/
+        glEnable(GL_TEXTURE_GEN_S);
+        glEnable(GL_TEXTURE_GEN_T);
+        glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+        glTexGenfv(GL_S, GL_OBJECT_PLANE, xPlane);
+        glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+        glTexGenfv(GL_T, GL_OBJECT_PLANE, yPlane);
+    }
+    // recall tesselation
+    glCallList(myDisplayList);
+    // de-init generation of texture coordinates
+    if (textureID >= 0) {
+        glEnable(GL_DEPTH_TEST);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_TEXTURE_GEN_S);
+        glDisable(GL_TEXTURE_GEN_T);
+    }
+    glPopName();
+    glPopMatrix();
+}
+
+
+void
+GUIPolygon::setShape(const PositionVector& shape) {
+    AbstractMutex::ScopedLocker locker(myLock);
+    Polygon::setShape(shape);
+    storeTesselation();
+}
+
+
+void
+GUIPolygon::storeTesselation() const {
+    if (myDisplayList > 0) {
+        glDeleteLists(myDisplayList, 1);
+    }
+    myDisplayList = glGenLists(1);
+    if (myDisplayList == 0) {
+        throw ProcessError("GUIPolygon::storeTesselation() could not create display list");
+    }
+    glNewList(myDisplayList, GL_COMPILE);
+    if (getFill()) {
+        // draw the tesselated shape
         double* points = new double[myShape.size() * 3];
         GLUtesselator* tobj = gluNewTess();
         gluTessCallback(tobj, GLU_TESS_VERTEX, (GLvoid(APIENTRY*)()) &glVertex3dv);
@@ -170,34 +235,21 @@ GUIPolygon::drawGL(const GUIVisualizationSettings& s) const {
             points[3 * i]  = myShape[(int) i].x();
             points[3 * i + 1]  = myShape[(int) i].y();
             points[3 * i + 2]  = 0;
-            glvert[0] = myShape[(int) i].x();
-            glvert[1] = myShape[(int) i].y();
-            glvert[2] = 0;
-            glvert[3] = 1;
-            glvert[4] = 1;
-            glvert[5] = 1;
-            gluTessVertex(tobj, points + 3 * i, points + 3 * i) ;
+            gluTessVertex(tobj, points + 3 * i, points + 3 * i);
         }
         gluTessEndContour(tobj);
 
         gluTessEndPolygon(tobj);
         gluDeleteTess(tobj);
         delete[] points;
+
     } else {
         GLHelper::drawLine(myShape);
         GLHelper::drawBoxLines(myShape, 1.);
     }
-    glPopName();
-    glPopMatrix();
+    //std::cout << "OpenGL says: '" << gluErrorString(glGetError()) << "'\n";
+    glEndList();
 }
-
-
-
-int
-GUIPolygon::getLayer() const {
-    return myLayer;
-}
-
 
 
 /****************************************************************************/

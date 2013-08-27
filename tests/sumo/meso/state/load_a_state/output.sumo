@@ -1,0 +1,18 @@
+Loading net-file from 'net.net.xml'...  done (4ms).
+Loading state from 'input_state.bin'... 
+    1 routes
+    0 route distributions
+done (13ms).
+Loading done.
+Simulation started with time: 35.00
+Simulation ended at time: 58.00
+Reason: All vehicles have left the simulation.
+Performance: 
+ Duration: 14 ms
+ Real time factor: 1642.86
+ UPS: 1571.428571
+Vehicles: 
+ Emitted: 1
+ Running: 0
+ Waiting: 0
+

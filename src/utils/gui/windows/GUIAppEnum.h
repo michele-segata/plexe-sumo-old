@@ -163,8 +163,10 @@ enum {
     MID_LOCATETLS,
     /// Locate addtional structure - button
     MID_LOCATEADD,
-    /// Locate shape - button
-    MID_LOCATESHAPE,
+    /// Locate poi - button
+    MID_LOCATEPOI,
+    /// Locate polygons - button
+    MID_LOCATEPOLY,
     /// Open viewport editor - button
     MID_EDITVIEWPORT,
     /// Open view editor - button
@@ -363,6 +365,7 @@ enum {
 
     /// processing menu messages
     MID_GNE_COMPUTE_JUNCTIONS,
+    MID_GNE_CLEAN_JUNCTIONS,
     MID_GNE_JOIN_JUNCTIONS,
     MID_GNE_OPTIONS,
 
@@ -386,12 +389,14 @@ enum {
     MID_GNE_NEW_NETWORK,
     MID_GNE_OPEN_FOREIGN,
     MID_GNE_VIS_HEIGHT,
+    MID_GNE_LOAD_POIS,
     // MID_GNE_WIZARD,
     /** save network*/
     MID_GNE_SAVE_NETWORK,
     MID_GNE_SAVE_AS_NETWORK,
     MID_GNE_SAVE_PLAIN_XML,
     MID_GNE_SAVE_JOINED,
+    MID_GNE_SAVE_POIS,
     /** insert contents of another network */
     MID_GNE_INSERT_NETWORK,
     /** attribute edited */
@@ -400,6 +405,10 @@ enum {
     MID_GNE_OPEN_ATTRIBUTE_EDITOR,
     /** split an edge */
     MID_GNE_SPLIT_EDGE,
+    /** set non-default geometry endpoint */
+    MID_GNE_SET_EDGE_ENDPOINT,
+    /** restore geometry endpoint to node position */
+    MID_GNE_RESET_EDGE_ENDPOINT,
     /** set object as template*/
     MID_GNE_SET_TEMPLATE,
     /** copy template*/
@@ -410,6 +419,8 @@ enum {
     MID_GNE_SELECT_DEAD_STARTS,
     /** select lanes that are connected from concurrent lanes */
     MID_GNE_SELECT_CONFLICTS,
+    /** select lanes with connections that have the pass attribute set to 'true' */
+    MID_GNE_SELECT_PASS,
     /** changes the visual scaling of selected items */
     MID_GNE_SELECT_SCALE,
 

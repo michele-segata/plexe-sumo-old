@@ -3,3 +3,18 @@ vclass
 
 # testing traffic lights
 tls
+
+# whether discarding traffic lights works
+tls-discard
+
+# set priority based on street_type
+priority
+
+# import street names from _names.txt
+street_names
+
+# tests for input data generated with gdfExtractor version 3.1
+version_3.1
+
+# read and write dlr_navteq format
+roundtrip

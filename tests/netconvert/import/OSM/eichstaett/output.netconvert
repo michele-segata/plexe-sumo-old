@@ -6,14 +6,13 @@ Removing duplicate edges... done.
  Import done:
    1026 nodes loaded.
    34 types loaded.
-   2651 edges loaded.
+   2647 edges loaded.
 Proj projection parameters used: '+proj=utm +zone=32 +ellps=WGS84 +datum=WGS84 +units=m +no_defs'.
 Removing self-loops... done.
 Removing empty nodes... done.
    2 nodes removed.
 Joining similar edges... done.
 Moving network to origin... done.
-Assigning nodes to traffic lights... done.
 Computing turning directions... 
 done.
 Sorting nodes' edges... done.
@@ -42,6 +41,7 @@ Lane '27456224#5' has calculated shape length near zero. Revert it back to old s
 Lane '27875772#7' has calculated shape length near zero. Revert it back to old shape.
 Lane '27875772#7' has calculated shape length near zero. Revert it back to old shape.
 done.
+Assigning nodes to traffic lights... done.
 Computing traffic light control information... done.
 Computing node logics... done.
 Computing traffic light logics... done.
@@ -49,9 +49,9 @@ Computing traffic light logics... done.
 -----------------------------------------------------
 Summary:
  Node type statistics:
-  Unregulated junctions       : 0
-  Priority junctions          : 881
-  Right-before-left junctions : 143
+  Unregulated junctions       : 4
+  Priority junctions          : 892
+  Right-before-left junctions : 128
  Network boundaries:
   Original boundary  : 11.07,48.83,11.37,49.00
   Applied offset     : -651925.45,-5410956.58

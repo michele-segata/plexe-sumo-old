@@ -1,4 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""
+@file    detector.py
+@author  Michael Behrisch
+@date    2007-06-28
+@version $Id$
+
+<documentation missing>
+
+SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+Copyright (C) 2007-2012 DLR (http://www.dlr.de/) and contributors
+All rights reserved
+"""
 import sys
 
 from xml.sax import make_parser, handler
@@ -59,7 +71,7 @@ class DetectorReader(handler.ContentHandler):
         self._det2edge[id] = edge
 
     def startElement(self, name, attrs):
-        if name == 'detector_definition':
+        if name == 'detectorDefinition':
             self.addDetector(attrs['id'], float(attrs['pos']),
                              self._laneMap.get(attrs['lane'], self._currentEdge))
         elif name == 'group':

@@ -82,18 +82,18 @@ public:
      */
     GUIDialog_ViewSettings(GUISUMOAbstractView* parent,
                            GUIVisualizationSettings* settings,
-                           std::vector<GUISUMOAbstractView::Decal> *decals,
-                           MFXMutex* decalsLock) ;
+                           std::vector<GUISUMOAbstractView::Decal>* decals,
+                           MFXMutex* decalsLock);
 
 
     /// @brief Destructor
-    ~GUIDialog_ViewSettings() ;
+    ~GUIDialog_ViewSettings();
 
 
     /** @brief Sets current settings (called if reopened)
      * @param[in, out] settings The current settings that can be changed
      */
-    void setCurrent(GUIVisualizationSettings* settings) ;
+    void setCurrent(GUIVisualizationSettings* settings);
 
 
 
@@ -146,13 +146,13 @@ public:
     /** @brief Returns the name of the currently chosen scheme
      * @return The name of the edited (chosen) scheme)
      */
-    std::string getCurrentScheme() const ;
+    std::string getCurrentScheme() const;
 
 
     /** @brief Sets the named scheme as the current
      * @param[in] The name of the scheme that shall be set as current
      */
-    void setCurrentScheme(const std::string&) ;
+    void setCurrentScheme(const std::string&);
 
 
     /** @brief Converts a FOX-color into a RGBColor
@@ -174,32 +174,35 @@ protected:
     /** @brief Rebuilds color changing dialogs after choosing another coloring scheme
      * @param[in] doCreate Whether "create" shall be called (only if built the first time)
      */
-    void rebuildColorMatrices(bool doCreate = false) ;
+    void rebuildColorMatrices(bool doCreate = false);
 
 
     /** @brief Rebuilds the decals table */
-    void rebuildList() ;
+    void rebuildList();
 
 
     /** @brief Loads a scheme from a file
      * @param[in] file The name of the file to read the settings from
      */
-    void loadSettings(const std::string& file) ;
+    void loadSettings(const std::string& file);
 
 
     /** @brief Writes the currently used decals into a file
      * @param[in] file The name of the file to write the decals into
      */
-    void saveDecals(const std::string& file) const ;
+    void saveDecals(const std::string& file) const;
 
 
     /** @brief Loads decals from a file
      * @param[in] file The name of the file to read the decals from
      */
-    void loadDecals(const std::string& file) ;
+    void loadDecals(const std::string& file);
 
 
 private:
+    /// @brief the number of newly created custom schemes
+    static unsigned int myCustomSchemes;
+
     /// @brief The parent view (which settings are changed)
     GUISUMOAbstractView* myParent;
 
@@ -210,11 +213,10 @@ private:
     GUIVisualizationSettings myBackup;
 
     /// @brief The parent's decals
-    std::vector<GUISUMOAbstractView::Decal> *myDecals;
+    std::vector<GUISUMOAbstractView::Decal>* myDecals;
 
     /// @brief Lock used when changing the decals
     MFXMutex* myDecalsLock;
-
 
     /// @name Dialog elements
     /// @{
@@ -235,6 +237,7 @@ private:
 
     FXCheckButton* myShowLaneBorders, *myShowLaneDecals, *myShowRails,
                    *myHideMacroConnectors;
+    FXRealSpinDial* myLaneWidthUpscaleDialer;
 
     FXComboBox* myVehicleColorMode, *myVehicleShapeDetail;
     FXVerticalFrame* myVehicleColorSettingFrame;

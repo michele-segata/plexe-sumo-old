@@ -36,7 +36,7 @@
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/common/ToString.h>
-#include <utils/common/TplConvertSec.h>
+#include <utils/common/TplConvert.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <utils/xml/SUMOSAXHandler.h>
 #include <utils/xml/XMLSubSys.h>
@@ -47,6 +47,7 @@
 #include <netbuild/NBEdgeCont.h>
 #include <netbuild/NBNode.h>
 #include <netbuild/NBNodeCont.h>
+#include <netbuild/NBAlgorithms_Ramps.h>
 #include <netbuild/NBNetBuilder.h>
 #include "NILoader.h"
 #include "NIImporter_SUMO.h"
@@ -81,9 +82,7 @@ NIImporter_SUMO::NIImporter_SUMO(NBNetBuilder& nb)
       myCurrentLane(0),
       myCurrentTL(0),
       myLocation(0),
-      mySuspectKeepShape(false),
-      myHaveWarnedAboutDeprecatedSpreadType(false),
-      myHaveWarnedAboutDeprecatedMaxSpeed(false) {}
+      mySuspectKeepShape(false) {}
 
 
 NIImporter_SUMO::~NIImporter_SUMO() {
@@ -120,7 +119,7 @@ NIImporter_SUMO::_loadNetwork(const OptionsCont& oc) {
     for (std::map<std::string, EdgeAttrs*>::const_iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
         EdgeAttrs* ed = (*i).second;
         // skip internal edges
-        if (ed->func == toString(EDGEFUNC_INTERNAL)) {
+        if (ed->func == EDGEFUNC_INTERNAL) {
             continue;
         }
         // get and check the nodes
@@ -168,7 +167,7 @@ NIImporter_SUMO::_loadNetwork(const OptionsCont& oc) {
         for (unsigned int fromLaneIndex = 0; fromLaneIndex < (unsigned int) ed->lanes.size(); ++fromLaneIndex) {
             LaneAttrs* lane = ed->lanes[fromLaneIndex];
             // connections
-            const std::vector<Connection> &connections = lane->connections;
+            const std::vector<Connection>& connections = lane->connections;
             for (std::vector<Connection>::const_iterator c_it = connections.begin(); c_it != connections.end(); c_it++) {
                 const Connection& c = *c_it;
                 if (myEdges.count(c.toEdgeID) == 0) {
@@ -184,7 +183,7 @@ NIImporter_SUMO::_loadNetwork(const OptionsCont& oc) {
                     false, c.mayDefinitelyPass);
 
                 // maybe we have a tls-controlled connection
-                if (c.tlID != "") {
+                if (c.tlID != "" && !OptionsCont::getOptions().getBool("tls.discard-loaded")) {
                     const std::map<std::string, NBTrafficLightDefinition*>& programs = myTLLCont.getPrograms(c.tlID);
                     if (programs.size() > 0) {
                         std::map<std::string, NBTrafficLightDefinition*>::const_iterator it;
@@ -193,8 +192,7 @@ NIImporter_SUMO::_loadNetwork(const OptionsCont& oc) {
                             if (tlDef) {
                                 tlDef->addConnection(nbe, toEdge, fromLaneIndex, c.toLaneIdx, c.tlLinkNo);
                             } else {
-                                throw ProcessError("Corrupt traffic light definition '"
-                                                   + c.tlID + "' (program '" + it->first + "')");
+                                throw ProcessError("Corrupt traffic light definition '" + c.tlID + "' (program '" + it->first + "')");
                             }
                         }
                     } else {
@@ -260,21 +258,18 @@ NIImporter_SUMO::myStartElement(int element,
         case SUMO_TAG_JUNCTION:
             addJunction(attrs);
             break;
-        case SUMO_TAG_SUCC:
-            addSuccEdge(attrs);
-            break;
-        case SUMO_TAG_SUCCLANE:
-            addSuccLane(attrs);
-            break;
         case SUMO_TAG_CONNECTION:
             addConnection(attrs);
             break;
-        case SUMO_TAG_TLLOGIC__DEPRECATED:
         case SUMO_TAG_TLLOGIC:
-            myCurrentTL = initTrafficLightLogic(attrs, myCurrentTL);
+            if (!OptionsCont::getOptions().getBool("tls.discard-loaded")) {
+                myCurrentTL = initTrafficLightLogic(attrs, myCurrentTL);
+            }
             break;
         case SUMO_TAG_PHASE:
-            addPhase(attrs, myCurrentTL);
+            if (!OptionsCont::getOptions().getBool("tls.discard-loaded")) {
+                addPhase(attrs, myCurrentTL);
+            }
             break;
         case SUMO_TAG_LOCATION:
             myLocation = loadLocation(attrs);
@@ -285,14 +280,6 @@ NIImporter_SUMO::myStartElement(int element,
         default:
             break;
     }
-}
-
-
-void
-NIImporter_SUMO::myCharacters(int element,
-                              const std::string& chars) {
-    UNUSED_PARAMETER(element);
-    UNUSED_PARAMETER(chars);
 }
 
 
@@ -314,17 +301,17 @@ NIImporter_SUMO::myEndElement(int element) {
             }
             myCurrentLane = 0;
             break;
-        case SUMO_TAG_TLLOGIC__DEPRECATED:
         case SUMO_TAG_TLLOGIC:
-            if (!myCurrentTL) {
-                WRITE_ERROR("Unmatched closing tag for tl-logic.");
-            } else {
-                if (!myTLLCont.insert(myCurrentTL)) {
-                    WRITE_WARNING("Could not add program '" + myCurrentTL->getProgramID() +
-                                  "' for traffic light '" + myCurrentTL->getID() + "'");
-                    delete myCurrentTL;
+            if (!OptionsCont::getOptions().getBool("tls.discard-loaded")) {
+                if (!myCurrentTL) {
+                    WRITE_ERROR("Unmatched closing tag for tl-logic.");
+                } else {
+                    if (!myTLLCont.insert(myCurrentTL)) {
+                        WRITE_WARNING("Could not add program '" + myCurrentTL->getProgramID() + "' for traffic light '" + myCurrentTL->getID() + "'");
+                        delete myCurrentTL;
+                    }
+                    myCurrentTL = 0;
                 }
-                myCurrentTL = 0;
             }
             break;
         default:
@@ -345,8 +332,8 @@ NIImporter_SUMO::addEdge(const SUMOSAXAttributes& attrs) {
     myCurrentEdge->builtEdge = 0;
     myCurrentEdge->id = id;
     // get the function
-    myCurrentEdge->func = attrs.getOptStringReporting(SUMO_ATTR_FUNCTION, id.c_str(), ok, "normal");
-    if (myCurrentEdge->func == toString(EDGEFUNC_INTERNAL)) {
+    myCurrentEdge->func = attrs.getEdgeFunc(ok);
+    if (myCurrentEdge->func == EDGEFUNC_INTERNAL) {
         return; // skip internal edges
     }
     // get the type
@@ -356,24 +343,14 @@ NIImporter_SUMO::addEdge(const SUMOSAXAttributes& attrs) {
     myCurrentEdge->toNode = attrs.getOptStringReporting(SUMO_ATTR_TO, id.c_str(), ok, "");
     myCurrentEdge->priority = attrs.getOptIntReporting(SUMO_ATTR_PRIORITY, id.c_str(), ok, -1);
     myCurrentEdge->type = attrs.getOptStringReporting(SUMO_ATTR_TYPE, id.c_str(), ok, "");
-    myCurrentEdge->shape = GeomConvHelper::parseShapeReporting(
-                               attrs.getOptStringReporting(SUMO_ATTR_SHAPE, id.c_str(), ok, ""),
-                               attrs.getObjectType(), id.c_str(), ok, true);
+    myCurrentEdge->shape = attrs.getShapeReporting(SUMO_ATTR_SHAPE, id.c_str(), ok, true);
     NILoader::transformCoordinates(myCurrentEdge->shape, true, myLocation);
     myCurrentEdge->length = attrs.getOptSUMORealReporting(SUMO_ATTR_LENGTH, id.c_str(), ok, NBEdge::UNSPECIFIED_LOADED_LENGTH);
     myCurrentEdge->maxSpeed = 0;
     myCurrentEdge->streetName = attrs.getOptStringReporting(SUMO_ATTR_NAME, id.c_str(), ok, "");
 
     std::string lsfS = toString(LANESPREAD_RIGHT);
-    if (attrs.hasAttribute(SUMO_ATTR_SPREADFUNC__DEPRECATED)) {
-        lsfS = attrs.getStringReporting(SUMO_ATTR_SPREADFUNC__DEPRECATED, id.c_str(), ok);
-        if (!myHaveWarnedAboutDeprecatedSpreadType) {
-            WRITE_WARNING("'" + toString(SUMO_ATTR_SPREADFUNC__DEPRECATED) + "' is deprecated; please use '" + toString(SUMO_ATTR_SPREADTYPE) + "'.");
-            myHaveWarnedAboutDeprecatedSpreadType = true;
-        }
-    } else {
-        lsfS = attrs.getOptStringReporting(SUMO_ATTR_SPREADTYPE, id.c_str(), ok, lsfS);
-    }
+    lsfS = attrs.getOptStringReporting(SUMO_ATTR_SPREADTYPE, id.c_str(), ok, lsfS);
     if (SUMOXMLDefinitions::LaneSpreadFunctions.hasString(lsfS)) {
         myCurrentEdge->lsf = SUMOXMLDefinitions::LaneSpreadFunctions.get(lsfS);
     } else {
@@ -394,25 +371,15 @@ NIImporter_SUMO::addLane(const SUMOSAXAttributes& attrs) {
         return;
     }
     myCurrentLane = new LaneAttrs;
-    if (myCurrentEdge->func == toString(EDGEFUNC_INTERNAL)) {
+    if (myCurrentEdge->func == EDGEFUNC_INTERNAL) {
         return; // skip internal lanes
     }
-    if (attrs.hasAttribute(SUMO_ATTR_MAXSPEED__DEPRECATED)) {
-        myCurrentLane->maxSpeed = attrs.getSUMORealReporting(SUMO_ATTR_MAXSPEED__DEPRECATED, id.c_str(), ok);
-        if (!myHaveWarnedAboutDeprecatedMaxSpeed) {
-            myHaveWarnedAboutDeprecatedMaxSpeed = true;
-            WRITE_WARNING("'" + toString(SUMO_ATTR_MAXSPEED__DEPRECATED) + "' is deprecated, please use '" + toString(SUMO_ATTR_SPEED) + "' instead.");
-        }
-    } else {
-        myCurrentLane->maxSpeed = attrs.getSUMORealReporting(SUMO_ATTR_SPEED, id.c_str(), ok);
-    }
+    myCurrentLane->maxSpeed = attrs.getSUMORealReporting(SUMO_ATTR_SPEED, id.c_str(), ok);
     myCurrentLane->allow = attrs.getOptStringReporting(SUMO_ATTR_ALLOW, id.c_str(), ok, "");
     myCurrentLane->disallow = attrs.getOptStringReporting(SUMO_ATTR_DISALLOW, id.c_str(), ok, "");
     myCurrentLane->width = attrs.getOptSUMORealReporting(SUMO_ATTR_WIDTH, id.c_str(), ok, (SUMOReal) NBEdge::UNSPECIFIED_WIDTH);
     myCurrentLane->offset = attrs.getOptSUMORealReporting(SUMO_ATTR_ENDOFFSET, id.c_str(), ok, (SUMOReal) NBEdge::UNSPECIFIED_OFFSET);
-    myCurrentLane->shape = GeomConvHelper::parseShapeReporting(
-                               attrs.getStringReporting(SUMO_ATTR_SHAPE, id.c_str(), ok),
-                               attrs.getObjectType(), id.c_str(), ok, false);
+    myCurrentLane->shape = attrs.getShapeReporting(SUMO_ATTR_SHAPE, id.c_str(), ok, false);
     // lane coordinates are derived (via lane spread) do not include them in convex boundary
     NILoader::transformCoordinates(myCurrentLane->shape, false, myLocation);
 }
@@ -429,28 +396,26 @@ NIImporter_SUMO::addJunction(const SUMOSAXAttributes& attrs) {
     if (id[0] == ':') { // internal node
         return;
     }
-    SumoXMLNodeType type = NODETYPE_UNKNOWN;
-    std::string typeS = attrs.getStringReporting(SUMO_ATTR_TYPE, id.c_str(), ok);
-    if (SUMOXMLDefinitions::NodeTypes.hasString(typeS)) {
-        type = SUMOXMLDefinitions::NodeTypes.get(typeS);
+    SumoXMLNodeType type = attrs.getNodeType(ok);
+    if (ok) {
         if (type == NODETYPE_DEAD_END_DEPRECATED) { // patch legacy type
             type = NODETYPE_DEAD_END;
         }
     } else {
-        WRITE_WARNING("Unknown node type '" + typeS + "' for junction '" + id + "'.");
+        WRITE_WARNING("Unknown node type for junction '" + id + "'.");
     }
     Position pos = readPosition(attrs, id, ok);
     NILoader::transformCoordinates(pos, true, myLocation);
-    // the network may have been built with the option "plain.keep-edge-shape" this
-    // makes accurate reconstruction of legacy networks impossible. We ought to warn about this
-    std::string shapeS = attrs.getStringReporting(SUMO_ATTR_SHAPE, id.c_str(), ok, false);
-    if (shapeS != "") {
-        PositionVector shape = GeomConvHelper::parseShapeReporting(
-                                   shapeS, attrs.getObjectType(), id.c_str(), ok, false);
-        shape.push_back_noDoublePos(shape[0]); // need closed shape
-        if (!shape.around(pos) && shape.distance(pos) > 1) { // MAGIC_THRESHOLD
-            // WRITE_WARNING("Junction '" + id + "': distance between pos and shape is " + toString(shape.distance(pos)));
-            mySuspectKeepShape = true;
+    // the network may have non-default edge geometry.
+    // accurate reconstruction of legacy networks is not possible. We ought to warn about this
+    if (attrs.hasAttribute(SUMO_ATTR_SHAPE)) {
+        PositionVector shape = attrs.getShapeReporting(SUMO_ATTR_SHAPE, id.c_str(), ok, true);
+        if (shape.size() > 0) {
+            shape.push_back_noDoublePos(shape[0]); // need closed shape
+            if (!shape.around(pos) && shape.distance(pos) > 1) { // MAGIC_THRESHOLD
+                // WRITE_WARNING("Junction '" + id + "': distance between pos and shape is " + toString(shape.distance(pos)));
+                mySuspectKeepShape = true;
+            }
         }
     }
     NBNode* node = new NBNode(id, pos, type);
@@ -459,46 +424,6 @@ NIImporter_SUMO::addJunction(const SUMOSAXAttributes& attrs) {
         delete node;
         return;
     }
-}
-
-
-void
-NIImporter_SUMO::addSuccEdge(const SUMOSAXAttributes& attrs) {
-    bool ok = true;
-    std::string edge_id = attrs.getStringReporting(SUMO_ATTR_EDGE, 0, ok);
-    myCurrentEdge = 0;
-    if (myEdges.count(edge_id) == 0) {
-        WRITE_ERROR("Unknown edge '" + edge_id + "' given in succedge.");
-        return;
-    }
-    myCurrentEdge = myEdges[edge_id];
-    std::string lane_id = attrs.getStringReporting(SUMO_ATTR_LANE, 0, ok);
-    myCurrentLane = getLaneAttrsFromID(myCurrentEdge, lane_id);
-}
-
-
-void
-NIImporter_SUMO::addSuccLane(const SUMOSAXAttributes& attrs) {
-    if (myCurrentLane == 0) {
-        WRITE_ERROR("Found succlane outside succ element");
-        return;
-    }
-    bool ok = true;
-    Connection conn;
-    std::string laneID = attrs.getStringReporting(SUMO_ATTR_LANE, 0, ok);
-    if (laneID == "SUMO_NO_DESTINATION") { // legacy check
-        // deprecated
-        return;
-    }
-    interpretLaneID(laneID, conn.toEdgeID, conn.toLaneIdx);
-    conn.tlID = attrs.getOptStringReporting(SUMO_ATTR_TLID, 0, ok, "");
-    conn.mayDefinitelyPass = false; // (attrs.getStringReporting(SUMO_ATTR_STATE, 0, ok, "") == "M");
-    if (conn.tlID != "") {
-        conn.tlLinkNo = attrs.hasAttribute(SUMO_ATTR_TLLINKINDEX)
-                        ? attrs.getIntReporting(SUMO_ATTR_TLLINKINDEX, 0, ok)
-                        : attrs.getIntReporting(SUMO_ATTR_TLLINKNO__DEPRECATED, 0, ok);
-    }
-    myCurrentLane->connections.push_back(conn);
 }
 
 
@@ -516,7 +441,13 @@ NIImporter_SUMO::addConnection(const SUMOSAXAttributes& attrs) {
     unsigned int fromLaneIdx = attrs.getIntReporting(SUMO_ATTR_FROM_LANE, 0, ok);
     conn.toLaneIdx = attrs.getIntReporting(SUMO_ATTR_TO_LANE, 0, ok);
     conn.tlID = attrs.getOptStringReporting(SUMO_ATTR_TLID, 0, ok, "");
-    conn.mayDefinitelyPass = false; // (attrs.getStringReporting(SUMO_ATTR_STATE, 0, ok, "") == "M");
+    conn.mayDefinitelyPass = attrs.getOptBoolReporting(SUMO_ATTR_PASS, 0, ok, false);
+    const size_t suffixSize = NBRampsComputer::ADDED_ON_RAMP_EDGE.size();
+    if (!conn.mayDefinitelyPass && conn.toEdgeID.size() > suffixSize &&
+            conn.toEdgeID.substr(conn.toEdgeID.size() - suffixSize) == NBRampsComputer::ADDED_ON_RAMP_EDGE) {
+        WRITE_MESSAGE("Infering connection attribute pass=\"1\" from to-edge id '" + conn.toEdgeID + "'");
+        conn.mayDefinitelyPass = true;
+    }
     if (conn.tlID != "") {
         conn.tlLinkNo = attrs.getIntReporting(SUMO_ATTR_TLLINKINDEX, 0, ok);
     }
@@ -572,7 +503,7 @@ NIImporter_SUMO::interpretLaneID(const std::string& lane_id, std::string& edge_i
     edge_id = lane_id.substr(0, sep_index);
     std::string index_string = lane_id.substr(sep_index + 1);
     try {
-        index = (unsigned int)TplConvert<char>::_2int(index_string.c_str());
+        index = (unsigned int)TplConvert::_2int(index_string.c_str());
     } catch (NumberFormatException) {
         WRITE_ERROR("Invalid lane index '" + index_string + "' for lane '" + lane_id + "'.");
     }
@@ -671,15 +602,9 @@ NIImporter_SUMO::loadLocation(const SUMOSAXAttributes& attrs) {
     // @todo refactor parsing of location since its duplicated in NLHandler and PCNetProjectionLoader
     bool ok = true;
     GeoConvHelper* result = 0;
-    PositionVector s = GeomConvHelper::parseShapeReporting(
-                           attrs.getStringReporting(SUMO_ATTR_NET_OFFSET, 0, ok),
-                           attrs.getObjectType(), 0, ok, false);
-    Boundary convBoundary = GeomConvHelper::parseBoundaryReporting(
-                                attrs.getStringReporting(SUMO_ATTR_CONV_BOUNDARY, 0, ok),
-                                attrs.getObjectType(), 0, ok);
-    Boundary origBoundary = GeomConvHelper::parseBoundaryReporting(
-                                attrs.getStringReporting(SUMO_ATTR_ORIG_BOUNDARY, 0, ok),
-                                attrs.getObjectType(), 0, ok);
+    PositionVector s = attrs.getShapeReporting(SUMO_ATTR_NET_OFFSET, 0, ok, false);
+    Boundary convBoundary = attrs.getBoundaryReporting(SUMO_ATTR_CONV_BOUNDARY, 0, ok);
+    Boundary origBoundary = attrs.getBoundaryReporting(SUMO_ATTR_ORIG_BOUNDARY, 0, ok);
     std::string proj = attrs.getStringReporting(SUMO_ATTR_ORIG_PROJ, 0, ok);
     if (ok) {
         Position networkOffset = s[0];

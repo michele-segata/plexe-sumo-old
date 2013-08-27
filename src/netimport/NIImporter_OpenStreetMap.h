@@ -81,7 +81,7 @@ protected:
      */
     struct NIOSMNode {
         /// @brief The node's id
-        long id;
+        SUMOLong id;
         /// @brief The longitude the node is located at
         double lon;
         /// @brief The latitude the node is located at
@@ -107,7 +107,7 @@ protected:
         /// @brief Information whether this is an one-way road
         std::string  myIsOneWay;
         /// @brief The list of nodes this edge is made of
-        std::vector<long> myCurrentNodes;
+        std::vector<SUMOLong> myCurrentNodes;
         /// @brief Information whether this is a road
         bool myCurrentIsRoad;
     };
@@ -124,10 +124,10 @@ private:
      * to their coordinates
      */
     class CompareNodes {
-        public:
-            bool operator()(const NIOSMNode* n1, const NIOSMNode* n2) const {
-                return (n1->lat > n2->lat) || (n1->lat == n2->lat && n1->lon > n2->lon);
-            }
+    public:
+        bool operator()(const NIOSMNode* n1, const NIOSMNode* n2) const {
+            return (n1->lat > n2->lat) || (n1->lat == n2->lat && n1->lon > n2->lon);
+        }
     };
 
 
@@ -139,7 +139,7 @@ private:
     /** @brief the map from OSM node ids to actual nodes
      * @note: NIOSMNodes may appear multiple times due to substition
      */
-    std::map<long, NIOSMNode*> myOSMNodes;
+    std::map<SUMOLong, NIOSMNode*> myOSMNodes;
 
     /// @brief the set of unique nodes used in NodesHandler, used when freeing memory
     std::set<NIOSMNode*, CompareNodes> myUniqueNodes;
@@ -161,7 +161,7 @@ private:
      * @return The built/found node
      * @exception ProcessError If the tls could not be added to the container
      */
-    NBNode* insertNodeChecking(long id, NBNodeCont& nc, NBTrafficLightLogicCont& tlsc);
+    NBNode* insertNodeChecking(SUMOLong id, NBNodeCont& nc, NBTrafficLightLogicCont& tlsc);
 
 
     /** @brief Builds an NBEdge
@@ -177,11 +177,11 @@ private:
      * @exception ProcessError If the edge could not be added to the container
      */
     int insertEdge(Edge* e, int index, NBNode* from, NBNode* to,
-                    const std::vector<long> &passed, NBNetBuilder& nb);
+                   const std::vector<SUMOLong>& passed, NBNetBuilder& nb);
 
 
-    protected:
-        static const SUMOReal MAXSPEED_UNGIVEN;
+protected:
+    static const SUMOReal MAXSPEED_UNGIVEN;
 
     /**
      * @class NodesHandler
@@ -195,12 +195,12 @@ private:
          * @param[in, out] uniqueNodes The nodes container for ensuring uniqueness
          * @param[in] options The options to use
          */
-        NodesHandler(std::map<long, NIOSMNode*> &toFill, 
-                std::set<NIOSMNode*, CompareNodes> &uniqueNodes);
+        NodesHandler(std::map<SUMOLong, NIOSMNode*>& toFill,
+                     std::set<NIOSMNode*, CompareNodes>& uniqueNodes);
 
 
         /// @brief Destructor
-        ~NodesHandler() ;
+        ~NodesHandler();
 
 
     protected:
@@ -214,7 +214,7 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myStartElement
          */
-        void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
+        void myStartElement(int element, const SUMOSAXAttributes& attrs);
 
 
         /** @brief Called when a closing tag occurs
@@ -223,17 +223,17 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myEndElement
          */
-        void myEndElement(int element) ;
+        void myEndElement(int element);
         //@}
 
 
     private:
 
         /// @brief The nodes container to fill
-        std::map<long, NIOSMNode*> &myToFill;
+        std::map<SUMOLong, NIOSMNode*>& myToFill;
 
         /// @brief ID of the currently parsed node, for reporting mainly
-        long myLastNodeID;
+        SUMOLong myLastNodeID;
 
         /// @brief Hierarchy helper for parsing a node's tags
         bool myIsInValidNodeTag;
@@ -242,7 +242,7 @@ private:
         int myHierarchyLevel;
 
         /// @brief the set of unique nodes (used for duplicate detection/substitution)
-        std::set<NIOSMNode*, CompareNodes> &myUniqueNodes;
+        std::set<NIOSMNode*, CompareNodes>& myUniqueNodes;
 
 
     private:
@@ -267,12 +267,12 @@ private:
          * @param[in] osmNodes The previously parsed (osm-)nodes
          * @param[in, out] toFill The edges container to fill with read edges
          */
-        EdgesHandler(const std::map<long, NIOSMNode*> &osmNodes,
-                     std::map<std::string, Edge*> &toFill) ;
+        EdgesHandler(const std::map<SUMOLong, NIOSMNode*>& osmNodes,
+                     std::map<std::string, Edge*>& toFill);
 
 
         /// @brief Destructor
-        ~EdgesHandler() ;
+        ~EdgesHandler();
 
 
     protected:
@@ -286,7 +286,7 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myStartElement
          */
-        void myStartElement(int element, const SUMOSAXAttributes& attrs) ;
+        void myStartElement(int element, const SUMOSAXAttributes& attrs);
 
 
         /** @brief Called when a closing tag occurs
@@ -295,16 +295,16 @@ private:
          * @exception ProcessError If something fails
          * @see GenericSAXHandler::myEndElement
          */
-        void myEndElement(int element) ;
+        void myEndElement(int element);
         //@}
 
 
     private:
         /// @brief The previously parsed nodes
-        const std::map<long, NIOSMNode*> &myOSMNodes;
+        const std::map<SUMOLong, NIOSMNode*>& myOSMNodes;
 
         /// @brief A map of built edges
-        std::map<std::string, Edge*> &myEdgeMap;
+        std::map<std::string, Edge*>& myEdgeMap;
 
         /// @brief The currently built edge
         Edge* myCurrentEdge;

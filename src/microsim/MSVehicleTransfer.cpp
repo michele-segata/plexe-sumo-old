@@ -31,7 +31,6 @@
 #endif
 
 #include <iostream>
-#include <cassert>
 #include <utils/common/MsgHandler.h>
 #include "MSNet.h"
 #include "MSLane.h"
@@ -49,6 +48,7 @@
 // static member definitions
 // ===========================================================================
 MSVehicleTransfer* MSVehicleTransfer::myInstance = 0;
+const SUMOReal MSVehicleTransfer::TeleportMinSpeed = 1;
 
 
 // ===========================================================================
@@ -56,20 +56,19 @@ MSVehicleTransfer* MSVehicleTransfer::myInstance = 0;
 // ===========================================================================
 void
 MSVehicleTransfer::addVeh(const SUMOTime t, MSVehicle* veh) {
-    // get the current edge of the vehicle
-    const MSEdge* e = veh->getEdge();
     if (veh->isParking()) {
         veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_PARKING);
     } else {
+        veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_TELEPORT);
+        MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_STARTING_TELEPORT);
         if ((veh->succEdge(1) == 0) || veh->enterLaneAtMove(veh->succEdge(1)->getLanes()[0], true)) {
-            veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_TELEPORT_ARRIVED);
             MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(veh);
             return;
         }
-        veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_TELEPORT);
-        MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_STARTING_TELEPORT);
     }
-    myVehicles.push_back(VehicleInformation(veh, t + TIME2STEPS(e->getCurrentTravelTime()), veh->isParking()));
+    myVehicles.push_back(VehicleInformation(veh,
+                                            t + TIME2STEPS(veh->getEdge()->getCurrentTravelTime(TeleportMinSpeed)),
+                                            veh->isParking()));
 }
 
 
@@ -107,28 +106,26 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) {
             }
         } else {
             // handle teleporting vehicles
-            if (l->freeInsertion(*(desc.myVeh), MIN2(l->getMaxSpeed(), desc.myVeh->getMaxSpeed()), MSMoveReminder::NOTIFICATION_TELEPORT)) {
+            if (l->freeInsertion(*(desc.myVeh), MIN2(l->getSpeedLimit(), desc.myVeh->getMaxSpeed()), MSMoveReminder::NOTIFICATION_TELEPORT)) {
                 WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' ends teleporting on edge '" + e->getID() + "', simulation time " + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
                 MSNet::getInstance()->informVehicleStateListener(desc.myVeh, MSNet::VEHICLE_STATE_ENDING_TELEPORT);
                 i = myVehicles.erase(i);
             } else {
                 // could not insert. maybe we should proceed in virtual space
                 if (desc.myProceedTime < time) {
-                    // get the lanes of the next edge (the one the vehicle wiil be
-                    //  virtually on after all these computations)
+                    // active move reminders
                     desc.myVeh->leaveLane(MSMoveReminder::NOTIFICATION_TELEPORT);
-                    // get the one beyond the one the vehicle moved to
-                    // !!! only move reminders are called but the edge is not advanced
-                    const MSEdge* nextEdge = desc.myVeh->succEdge(1);
                     // let the vehicle move to the next edge
-                    if (nextEdge == 0) {
+                    const bool hasArrived = (desc.myVeh->succEdge(1) == 0 ||
+                                             desc.myVeh->enterLaneAtMove(desc.myVeh->succEdge(1)->getLanes()[0], true));
+                    if (hasArrived) {
                         WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' ends teleporting on end edge '" + e->getID() + "'.");
                         MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(desc.myVeh);
                         i = myVehicles.erase(i);
                         continue;
                     }
                     // use current travel time to determine when to move the vehicle forward
-                    desc.myProceedTime = time + TIME2STEPS(e->getCurrentTravelTime());
+                    desc.myProceedTime = time + TIME2STEPS(e->getCurrentTravelTime(TeleportMinSpeed));
                 }
                 ++i;
             }

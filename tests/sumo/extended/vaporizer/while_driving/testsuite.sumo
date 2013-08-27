@@ -6,3 +6,6 @@ routes_same_route
 
 # tests for using plain inserted vehicles, each having an own route
 routes_explicite_routes
+
+# if any vehicles are vaporizied they should be counted in 'left' and also in an additional attribute 'vaporized'
+count_in_meanData

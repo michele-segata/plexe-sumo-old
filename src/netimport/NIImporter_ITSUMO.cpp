@@ -150,7 +150,7 @@ NIImporter_ITSUMO::Handler::~Handler() {}
 
 
 void
-NIImporter_ITSUMO::Handler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
+NIImporter_ITSUMO::Handler::myStartElement(int element, const SUMOSAXAttributes& /* attrs */) {
     switch (element) {
         case ITSUMO_TAG_NODE:
             myParameter.clear();
@@ -221,7 +221,7 @@ NIImporter_ITSUMO::Handler::myEndElement(int element) {
             for (std::vector<Section*>::iterator i = mySections.begin(); i != mySections.end(); ++i) {
                 for (std::vector<LaneSet*>::iterator j = (*i)->myLaneSets.begin(); j != (*i)->myLaneSets.end(); ++j) {
                     LaneSet* ls = (*j);
-                    NBEdge* edge = new NBEdge(ls->myID, ls->myFrom, ls->myTo, "", ls->myV, (unsigned int)ls->myLanes.size(), -1, -1, -1);
+                    NBEdge* edge = new NBEdge(ls->myID, ls->myFrom, ls->myTo, "", ls->myV, (unsigned int)ls->myLanes.size(), -1, NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET);
                     if (!myNetBuilder.getEdgeCont().insert(edge)) {
                         delete edge;
                         WRITE_ERROR("Could not add edge '" + ls->myID + "'. Probably declared twice.");
@@ -235,8 +235,8 @@ NIImporter_ITSUMO::Handler::myEndElement(int element) {
         case ITSUMO_TAG_NODE: {
             try {
                 std::string id = myParameter["id"];
-                SUMOReal x = TplConvert<char>::_2SUMOReal(myParameter["x"].c_str());
-                SUMOReal y = TplConvert<char>::_2SUMOReal(myParameter["y"].c_str());
+                SUMOReal x = TplConvert::_2SUMOReal(myParameter["x"].c_str());
+                SUMOReal y = TplConvert::_2SUMOReal(myParameter["y"].c_str());
                 Position pos(x, y);
                 if (!NILoader::transformCoordinates(pos)) {
                     WRITE_ERROR("Unable to project coordinates for node '" + id + "'.");
@@ -261,7 +261,7 @@ NIImporter_ITSUMO::Handler::myEndElement(int element) {
         case ITSUMO_TAG_LANESET: {
             try {
                 std::string id = myParameter["lanesetID"];
-                int i = TplConvert<char>::_2int(myParameter["i"].c_str());
+                int i = TplConvert::_2int(myParameter["i"].c_str());
                 std::string fromID = myParameter["from"];
                 std::string toID = myParameter["to"];
                 NBNode* from = myNetBuilder.getNodeCont().retrieve(fromID);
@@ -293,9 +293,8 @@ NIImporter_ITSUMO::Handler::myEndElement(int element) {
         case ITSUMO_TAG_LANE: {
             try {
                 std::string id = myParameter["laneID"];
-                int pos = TplConvert<char>::_2int(myParameter["pos"].c_str());
-                int i = TplConvert<char>::_2int(myParameter["i"].c_str());
-                SUMOReal v = TplConvert<char>::_2SUMOReal(myParameter["v"].c_str());
+                int i = TplConvert::_2int(myParameter["i"].c_str());
+                SUMOReal v = TplConvert::_2SUMOReal(myParameter["v"].c_str());
                 myCurrentLanes.push_back(Lane(id, (unsigned int) i, v));
             } catch (NumberFormatException&) {
                 WRITE_ERROR("Not numeric value in lane '" + myParameter["laneID"] + "'.");

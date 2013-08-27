@@ -29,7 +29,6 @@
 #endif
 
 #include <string>
-#include <cassert>
 #include "MSLane.h"
 #include "MSMoveReminder.h"
 
@@ -46,21 +45,44 @@ MSMoveReminder::MSMoveReminder(MSLane* const lane, const bool doAdd)
 }
 
 
-#ifdef HAVE_MESOSIM
+#ifdef HAVE_INTERNAL
 void
 MSMoveReminder::updateDetector(SUMOVehicle& veh, SUMOReal entryPos, SUMOReal leavePos,
                                SUMOTime entryTime, SUMOTime currentTime, SUMOTime leaveTime) {
+    // each vehicle is tracked linearly across its segment. For each vehicle,
+    // the time and position of the previous call are maintained and only
+    // the increments are sent to notifyMoveInternal
+    if (entryTime > currentTime) {
+        return; // calibrator may insert vehicles a tiny bit into the future; ignore those
+    }
     std::map<SUMOVehicle*, std::pair<SUMOTime, SUMOReal> >::iterator j = myLastVehicleUpdateValues.find(&veh);
     if (j != myLastVehicleUpdateValues.end()) {
         // the vehicle already has reported its values before; use these
-        entryTime = (*j).second.first;
-        entryPos = (*j).second.second;
+        // however, if this was called from prepareDetectorForWriting the time
+        // only has a resolution of DELTA_T and might be invalid
+        const SUMOTime previousEntryTime = j->second.first;
+        if (previousEntryTime <= currentTime) {
+            entryTime = previousEntryTime;
+            entryPos = j->second.second;
+        }
         myLastVehicleUpdateValues.erase(j);
     }
-    const SUMOReal timeOnLane = STEPS2TIME(currentTime - entryTime);
-    const SUMOReal speed = (leavePos - entryPos) / STEPS2TIME(leaveTime - entryTime);
-    myLastVehicleUpdateValues[&veh] = std::pair<SUMOTime, SUMOReal>(currentTime, entryPos + speed * timeOnLane);
-    notifyMoveInternal(veh, timeOnLane, speed);
+    assert(entryTime <= currentTime);
+    if ((entryTime < leaveTime) && (entryPos < leavePos)) {
+        const SUMOReal timeOnLane = STEPS2TIME(currentTime - entryTime);
+        const SUMOReal speed = (leavePos - entryPos) / STEPS2TIME(leaveTime - entryTime);
+        myLastVehicleUpdateValues[&veh] = std::pair<SUMOTime, SUMOReal>(currentTime, entryPos + speed * timeOnLane);
+        assert(timeOnLane >= 0);
+        assert(speed >= 0);
+        notifyMoveInternal(veh, timeOnLane, speed);
+    } else {
+        // it would be natrual to
+        // assert(entryTime == leaveTime);
+        // assert(entryPos == leavePos);
+        // However, in the presence of calibrators, vehicles may jump a bit
+        myLastVehicleUpdateValues[&veh] = std::pair<SUMOTime, SUMOReal>(leaveTime, leavePos);
+    }
+
 }
 #endif
 /****************************************************************************/

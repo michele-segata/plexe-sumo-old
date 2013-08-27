@@ -65,7 +65,7 @@ FXIMPLEMENT(GUIParameterTableWindow, FXMainWindow, GUIParameterTableWindowMap, A
 GUIParameterTableWindow::GUIParameterTableWindow(GUIMainWindow& app,
         GUIGlObject& o, size_t noRows)
     : FXMainWindow(app.getApp(), (o.getFullName() + " Parameter").c_str(),
-                   NULL, NULL, DECOR_ALL, 20, 20, 300, (FXint)(noRows * 20 + 60)),
+                   NULL, NULL, DECOR_ALL, 20, 20, 400, (FXint)(noRows * 20 + 60)),
     myObject(&o),
     myApplication(&app), myCurrentPos(0) {
     myTable = new FXTable(this, this, MID_TABLE, TABLE_COL_SIZABLE | TABLE_ROW_SIZABLE | LAYOUT_FILL_X | LAYOUT_FILL_Y);
@@ -79,7 +79,7 @@ GUIParameterTableWindow::GUIParameterTableWindow(GUIMainWindow& app,
     myTable->getRowHeader()->setWidth(0);
     FXHeader* header = myTable->getColumnHeader();
     header->setItemJustify(0, JUSTIFY_CENTER_X);
-    header->setItemSize(0, 150);
+    header->setItemSize(0, 250);
     header->setItemJustify(1, JUSTIFY_CENTER_X);
     header->setItemSize(1, 80);
     header->setItemJustify(2, JUSTIFY_CENTER_X);
@@ -106,9 +106,8 @@ GUIParameterTableWindow::~GUIParameterTableWindow() {
 
 void
 GUIParameterTableWindow::removeObject(GUIGlObject* /*i*/) {
-    myLock.lock();
+    AbstractMutex::ScopedLocker locker(myLock);
     myObject = 0;
-    myLock.unlock();
 }
 
 
@@ -162,7 +161,7 @@ GUIParameterTableWindow::onRightButtonPress(FXObject* sender,
 
 void
 GUIParameterTableWindow::mkItem(const char* name, bool dynamic,
-                                ValueSource<unsigned> *src) {
+                                ValueSource<unsigned>* src) {
     GUIParameterTableItemInterface* i = new GUIParameterTableItem<unsigned>(myTable, myCurrentPos++, name, dynamic, src);
     myItems.push_back(i);
 }
@@ -170,7 +169,7 @@ GUIParameterTableWindow::mkItem(const char* name, bool dynamic,
 
 void
 GUIParameterTableWindow::mkItem(const char* name, bool dynamic,
-                                ValueSource<SUMOReal> *src) {
+                                ValueSource<SUMOReal>* src) {
     GUIParameterTableItemInterface* i = new GUIParameterTableItem<SUMOReal>(myTable, myCurrentPos++, name, dynamic, src);
     myItems.push_back(i);
 }
@@ -179,7 +178,7 @@ GUIParameterTableWindow::mkItem(const char* name, bool dynamic,
 #ifndef HAVE_SUBSECOND_TIMESTEPS
 void
 GUIParameterTableWindow::mkItem(const char* name, bool dynamic,
-                                ValueSource<SUMOTime> *src) {
+                                ValueSource<SUMOTime>* src) {
     GUIParameterTableItemInterface* i = new GUIParameterTableItem<SUMOTime>(myTable, myCurrentPos++, name, dynamic, src);
     myItems.push_back(i);
 }
@@ -223,15 +222,13 @@ GUIParameterTableWindow::mkItem(const char* name, bool dynamic,
 
 void
 GUIParameterTableWindow::updateTable() {
-    myLock.lock();
+    AbstractMutex::ScopedLocker locker(myLock);
     if (myObject == 0) {
-        myLock.unlock();
         return;
     }
     for (std::vector<GUIParameterTableItemInterface*>::iterator i = myItems.begin(); i != myItems.end(); i++) {
         (*i)->update();
     }
-    myLock.unlock();
 }
 
 

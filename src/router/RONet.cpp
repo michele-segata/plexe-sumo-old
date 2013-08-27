@@ -60,10 +60,10 @@
 // method definitions
 // ===========================================================================
 RONet::RONet()
-    : myVehicleTypes(),
-	  myRoutesOutput(0), myRouteAlternativesOutput(0), myTypesOutput(0),
+    : myVehicleTypes(), myDefaultVTypeMayBeDeleted(true),
+      myRoutesOutput(0), myRouteAlternativesOutput(0), myTypesOutput(0),
       myReadRouteNo(0), myDiscardedRouteNo(0), myWrittenRouteNo(0),
-      myHaveRestrictions(false), myDefaultVTypeMayBeDeleted(true) {
+      myHaveRestrictions(false) {
     SUMOVTypeParameter* type = new SUMOVTypeParameter();
     type->id = DEFAULT_VTYPE_ID;
     type->onlyReferenced = true;
@@ -109,20 +109,26 @@ RONet::addRouteDef(RORouteDef* def) {
 void
 RONet::openOutput(const std::string& filename, bool useAlternatives, const std::string& typefilename) {
     myRoutesOutput = &OutputDevice::getDevice(filename);
-    myRoutesOutput->writeXMLHeader("routes", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
     if (useAlternatives) {
-        size_t len = filename.length();
+        const size_t len = filename.length();
         if (len > 4 && filename.substr(len - 4) == ".xml") {
             myRouteAlternativesOutput = &OutputDevice::getDevice(filename.substr(0, len - 4) + ".alt.xml");
         } else {
-            myRouteAlternativesOutput = &OutputDevice::getDevice(filename + ".alt");
+            if (len > 4 && filename.substr(len - 4) == ".sbx") {
+                myRouteAlternativesOutput = &OutputDevice::getDevice(filename.substr(0, len - 4) + ".alt.sbx");
+            } else {
+                myRouteAlternativesOutput = &OutputDevice::getDevice(filename + ".alt");
+            }
         }
-        myRouteAlternativesOutput->writeXMLHeader("route-alternatives", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
     }
-	if (typefilename != "") {
-		myTypesOutput = &OutputDevice::getDevice(typefilename);
-	    myTypesOutput->writeXMLHeader("routes", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
-	}
+    myRoutesOutput->writeHeader<ROEdge>(SUMO_TAG_ROUTES);
+    if (useAlternatives) {
+        myRouteAlternativesOutput->writeHeader<ROEdge>(SUMO_TAG_ROUTES);
+    }
+    if (typefilename != "") {
+        myTypesOutput = &OutputDevice::getDevice(typefilename);
+        myTypesOutput->writeXMLHeader("routes", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
+    }
 }
 
 
@@ -154,11 +160,15 @@ RONet::getVehicleTypeSecure(const std::string& id) {
     if (type != 0) {
         return type;
     }
+    VTypeDistDictType::iterator it2 = myVTypeDistDict.find(id);
+    if (it2 != myVTypeDistDict.end()) {
+        return it2->second->get();
+    }
     if (id == "") {
         // ok, no vehicle type was given within the user input
         //  return the default type
         myDefaultVTypeMayBeDeleted = false;
-		return myVehicleTypes.get(DEFAULT_VTYPE_ID);
+        return myVehicleTypes.get(DEFAULT_VTYPE_ID);
     }
     // Assume, the user will define the type somewhere else
     //  return a type which contains the id only
@@ -171,17 +181,43 @@ RONet::getVehicleTypeSecure(const std::string& id) {
 
 
 bool
-RONet::addVehicleType(SUMOVTypeParameter* type) {
-    if (type->id == DEFAULT_VTYPE_ID && myDefaultVTypeMayBeDeleted) {
-		myVehicleTypes.remove(DEFAULT_VTYPE_ID);
-        myDefaultVTypeMayBeDeleted = false;
+RONet::checkVType(const std::string& id) {
+    if (id == DEFAULT_VTYPE_ID) {
+        if (myDefaultVTypeMayBeDeleted) {
+            myVehicleTypes.remove(id);
+            myDefaultVTypeMayBeDeleted = false;
+        } else {
+            return false;
+        }
+    } else {
+        if (myVehicleTypes.get(id) != 0 || myVTypeDistDict.find(id) != myVTypeDistDict.end()) {
+            return false;
+        }
     }
-    if (!myVehicleTypes.add(type->id, type)) {
+    return true;
+}
+
+
+bool
+RONet::addVehicleType(SUMOVTypeParameter* type) {
+    if (checkVType(type->id)) {
+        myVehicleTypes.add(type->id, type);
+    } else {
         WRITE_ERROR("The vehicle type '" + type->id + "' occurs at least twice.");
         delete type;
         return false;
     }
     return true;
+}
+
+
+bool
+RONet::addVTypeDistribution(const std::string& id, RandomDistributor<SUMOVTypeParameter*>* vehTypeDistribution) {
+    if (checkVType(id)) {
+        myVTypeDistDict[id] = vehTypeDistribution;
+        return true;
+    }
+    return false;
 }
 
 
@@ -198,7 +234,7 @@ RONet::addVehicle(const std::string& id, ROVehicle* veh) {
 
 
 bool
-RONet::computeRoute(OptionsCont& options, SUMOAbstractRouter<ROEdge, ROVehicle> &router,
+RONet::computeRoute(OptionsCont& options, SUMOAbstractRouter<ROEdge, ROVehicle>& router,
                     const ROVehicle* const veh) {
     MsgHandler* mh = MsgHandler::getErrorInstance();
     std::string noRouteMsg = "The vehicle '" + veh->getID() + "' has no valid route.";
@@ -239,7 +275,7 @@ RONet::computeRoute(OptionsCont& options, SUMOAbstractRouter<ROEdge, ROVehicle> 
 
 
 SUMOTime
-RONet::saveAndRemoveRoutesUntil(OptionsCont& options, SUMOAbstractRouter<ROEdge, ROVehicle> &router,
+RONet::saveAndRemoveRoutesUntil(OptionsCont& options, SUMOAbstractRouter<ROEdge, ROVehicle>& router,
                                 SUMOTime time) {
     SUMOTime lastTime = -1;
     // write all vehicles (and additional structures)
@@ -264,18 +300,17 @@ RONet::saveAndRemoveRoutesUntil(OptionsCont& options, SUMOAbstractRouter<ROEdge,
         // ok, compute the route (try it)
         if (computeRoute(options, router, veh)) {
             // write the route
-            veh->saveAllAsXML(router, *myRoutesOutput, myRouteAlternativesOutput, myTypesOutput, options.getBool("exit-times"));
+            veh->saveAllAsXML(*myRoutesOutput, myRouteAlternativesOutput, myTypesOutput, options.getBool("exit-times"));
             myWrittenRouteNo++;
-            // remove the route if it is not longer used
-            /*
-            if (!myRoutes.erase(route->getID())) {
-                WRITE_WARNING("Could not remove " + route->getID());
-            }
-            */
         } else {
             myDiscardedRouteNo++;
         }
-        // and the vehicle
+        // delete routes and the vehicle
+        if (veh->getRouteDefinition()->getID()[0] == '!') {
+            if (!myRoutes.erase(veh->getRouteDefinition()->getID())) {
+                delete veh->getRouteDefinition();
+            }
+        }
         myVehicles.erase(veh->getID());
     }
     return lastTime;
@@ -342,7 +377,7 @@ RONet::checkSourceAndDestinations() const {
     if (myDestinationEdges.size() != 0 || mySourceEdges.size() != 0) {
         return;
     }
-    const std::map<std::string, ROEdge*> &edges = myEdges.getMyMap();
+    const std::map<std::string, ROEdge*>& edges = myEdges.getMyMap();
     for (std::map<std::string, ROEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
         ROEdge* e = (*i).second;
         ROEdge::EdgeType type = e->getType();
@@ -363,7 +398,7 @@ RONet::getEdgeNo() const {
 }
 
 
-const std::map<std::string, ROEdge*> &
+const std::map<std::string, ROEdge*>&
 RONet::getEdgeMap() const {
     return myEdges.getMyMap();
 }

@@ -34,13 +34,15 @@
 #endif
 
 #include <vector>
+#include <map>
+#include "MSPerson.h"
 
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
-class MSPerson;
 class MSNet;
+class MSVehicle;
 
 
 // ===========================================================================
@@ -62,22 +64,25 @@ public:
     MSPersonControl();
 
     /// destructor
-    ~MSPersonControl();
+    virtual ~MSPersonControl();
 
-    /// adds a single person, returns false iff an id clash occured
+    /// adds a single person, returns false if an id clash occured
     bool add(const std::string& id, MSPerson* person);
 
     /// removes a single person
-    void erase(MSPerson* person);
+    virtual void erase(MSPerson* person);
 
     /// sets the arrival time for a waiting or walking person
-    void setArrival(SUMOTime time, MSPerson* person);
+    void setDeparture(SUMOTime time, MSPerson* person);
+
+    /// sets the arrival time for a waiting or walking person
+    void setWaitEnd(SUMOTime time, MSPerson* person);
 
     /// checks whether any persons waiting or walking time is over
-    void checkArrivedPersons(MSNet* net, const SUMOTime time);
+    void checkWaitingPersons(MSNet* net, const SUMOTime time);
 
     /// adds a person to the list of persons waiting for a vehicle on the specified edge
-    void addWaiting(const MSEdge* edge, MSPerson* person) ;
+    void addWaiting(const MSEdge* edge, MSPerson* person);
 
     /** @brief board any applicable persons
      * Boards any people who wait on that edge for the given vehicle and removes them from myWaiting
@@ -85,26 +90,46 @@ public:
      * @param[in] the vehicle which is taking on passengers
      * @return Whether any persons have been boarded
      */
-    bool boardAnyWaiting(const MSEdge* edge, MSVehicle* vehicle) ;
+    bool boardAnyWaiting(MSEdge* edge, MSVehicle* vehicle);
 
     /// checks whether any person waits to finish her plan
-    bool hasPersons() const ;
+    bool hasPersons() const;
 
     /// checks whether any person is still engaged in walking / stopping
-    bool hasPedestrians() const ;
+    bool hasNonWaiting() const;
 
     /// aborts the plan for any person that is still waiting for a ride
-    void abortWaiting() ;
+    void abortWaiting();
+
+
+    /** @brief Builds a new person
+     * @param[in] pars The parameter
+     * @param[in] vtype The type (reusing vehicle type container here)
+     * @param[in] plan This person's plan
+     */
+    virtual MSPerson* buildPerson(const SUMOVehicleParameter* pars, const MSVehicleType* vtype, MSPerson::MSPersonPlan* plan) const;
+
+    void setWalking(MSPerson* p);
+    void unsetWalking(MSPerson* p);
+
+    /// @brief returns whether the the given person is waiting for a vehicle on the given edge
+    bool isWaiting4Vehicle(const MSEdge* const edge, MSPerson* p) const;
 
 private:
     /// all persons by id
     std::map<std::string, MSPerson*> myPersons;
 
+    /// all persons by id
+    std::map<std::string, MSPerson*> myWalking;
+
+    /// @brief Persons waiting for departure
+    std::map<SUMOTime, PersonVector> myWaiting4Departure;
+
     /// the lists of walking / stopping persons
-    std::map<SUMOTime, PersonVector> myArrivals;
+    std::map<SUMOTime, PersonVector> myWaitingUntil;
 
     /// the lists of waiting persons
-    std::map<const MSEdge*, PersonVector> myWaiting;
+    std::map<const MSEdge*, PersonVector> myWaiting4Vehicle;
 
 };
 
