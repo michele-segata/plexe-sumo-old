@@ -18,9 +18,7 @@ DELTA_T = 1000
 def runSingle(sumoEndTime, traciEndTime):
     fdi = open("sumo.sumocfg")
     fdo = open("used.sumocfg", "w")
-    for line in fdi:
-        line = line.replace("%end%", str(sumoEndTime))
-        fdo.write(line)
+    fdo.write(fdi.read() % { "end": sumoEndTime })
     fdi.close()
     fdo.close()
     doClose = True
@@ -28,7 +26,7 @@ def runSingle(sumoEndTime, traciEndTime):
     sumoProcess = subprocess.Popen("%s -c used.sumocfg %s" % (sumoBinary, addOption), shell=True, stdout=sys.stdout)
     traci.init(PORT)
     while not step>traciEndTime:
-        traci.simulationStep(DELTA_T)
+        traci.simulationStep()
         vehs = traci.vehicle.getIDList()
         if vehs.index("horiz")<0 or len(vehs)>1:
             print "Something is false"

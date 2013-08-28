@@ -9,7 +9,7 @@
 // Sets and checks options for netbuild
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,6 +47,7 @@
 #include <utils/common/ToString.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/iodevices/OutputDevice.h>
+#include <utils/xml/SUMOXMLDefinitions.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -103,6 +104,9 @@ NBFrame::fillOptions(bool forNetgen) {
 
         oc.doRegister("geometry.max-segment-length", new Option_Float(0));
         oc.addDescription("geometry.max-segment-length", "Processing", "splits geometry to restrict segment length");
+
+        oc.doRegister("geometry.min-dist", new Option_Float());
+        oc.addDescription("geometry.min-dist", "Processing", "reduces too similar geometry points");
     }
 
     oc.doRegister("offset.disable-normalization", new Option_Bool(false));
@@ -205,6 +209,9 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addSynonyme("tls.quarter-offset", "tl-logics.quarter-offset", true);
     oc.addDescription("tls.quarter-offset", "TLS Building", "TLSs in STR will be shifted by quarter-phase");
 
+    // tls type
+    oc.doRegister("tls.default-type", new Option_String("static"));
+    oc.addDescription("tls.default-type", "TLS Building", "TLSs with unspecified type will use STR as their algorithm.");
 
 
     // edge pruning
@@ -297,6 +304,7 @@ NBFrame::fillOptions(bool forNetgen) {
 bool
 NBFrame::checkOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
+    bool ok = true;
     //
     if (!oc.isDefault("tls-guess.joining")) {
         WRITE_WARNING("'--tls-guess.joining' was joined with '--tls.join'.\n Please use '--tls.join' in future only.");
@@ -304,7 +312,11 @@ NBFrame::checkOptions() {
             oc.set("tls.join", "true");
         }
     }
-    return true;
+    if (!SUMOXMLDefinitions::TrafficLightTypes.hasString(oc.getString("tls.default-type"))) {
+        WRITE_ERROR("unsupported value '" + oc.getString("tls.default-type") + "' for option '--tls.default-type'");
+        ok = false;
+    }
+    return ok;
 }
 
 

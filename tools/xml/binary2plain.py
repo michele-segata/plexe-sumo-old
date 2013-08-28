@@ -8,7 +8,7 @@
 Converter between SUMO's binary XML and plain XML
 
 SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2012-2012 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2012-2013 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 import sys, struct
@@ -127,7 +127,7 @@ def typedValueStr(content):
                                         readDouble(content),readDouble(content))
     elif valType == COLOR:
         val = read(content, "BBBB")
-        return '%s,%s,%s' % (val[0]/255.,val[1]/255.,val[2]/255.)
+        return '%.2f,%.2f,%.2f' % (val[0]/255.,val[1]/255.,val[2]/255.)
     elif valType == NODE_TYPE:
         return nodeTypes[readByte(content)]
     elif valType == EDGE_FUNCTION:

@@ -8,7 +8,7 @@
 // The base class for traffic light logic definitions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -97,11 +97,13 @@ public:
      * @param[in] junctions List of junctions controlled by this tls
      * @param[in] programID The id of the added program ("subID")
      * @param[in] offset The offset of the plan
+     * @param[in] type The algorithm type for the computed traffic light
      */
     NBTrafficLightDefinition(const std::string& id,
                              const std::vector<NBNode*>& junctions,
                              const std::string& programID,
-                             SUMOTime offset);
+                             SUMOTime offset,
+                             TrafficLightType type);
 
 
     /** @brief Constructor
@@ -109,19 +111,24 @@ public:
      * @param[in] junction The (single) junction controlled by this tls
      * @param[in] programID The id of the added program ("subID")
      * @param[in] offset The offset of the plan
+     * @param[in] type The algorithm type for the computed traffic light
      */
     NBTrafficLightDefinition(const std::string& id,
                              NBNode* junction,
                              const std::string& programID,
-                             SUMOTime offset);
+                             SUMOTime offset,
+                             TrafficLightType type);
 
 
     /** @brief Constructor
      * @param[in] id The id of the tls
      * @param[in] programID The id of the added program ("subID")
      * @param[in] offset The offset of the plan
+     * @param[in] type The algorithm type for the computed traffic light
      */
-    NBTrafficLightDefinition(const std::string& id, const std::string& programID, SUMOTime offset);
+    NBTrafficLightDefinition(const std::string& id, const std::string& programID,
+                             SUMOTime offset,
+                             TrafficLightType type);
 
 
     /// @brief Destructor
@@ -314,6 +321,11 @@ public:
     }
 
 
+    /// @brief get the algorithm type (static etc..)
+    TrafficLightType getType() const {
+        return myType;
+    }
+
 protected:
     /** @brief Computes the traffic light logic finally in dependence to the type
      * @param[in] ec The edge container
@@ -346,6 +358,9 @@ protected:
     // @return whether this traffic light is invalid and should be computed
     virtual bool amInvalid() const;
 
+    /// @brief helper method for use in NBOwnTLDef and NBLoadedSUMOTLDef
+    void collectAllLinks();
+
 
 protected:
     /// @brief The container with participating nodes
@@ -369,6 +384,8 @@ protected:
     /// @brief The offset in the program
     SUMOTime myOffset;
 
+    /// @brief The algorithm type for the traffic light
+    TrafficLightType myType;
 };
 
 

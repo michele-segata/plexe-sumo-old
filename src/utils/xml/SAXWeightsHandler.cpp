@@ -9,7 +9,7 @@
 // An XML-handler for network weights
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -90,13 +90,13 @@ void SAXWeightsHandler::myStartElement(int element,
     switch (element) {
         case SUMO_TAG_INTERVAL: {
             bool ok = true;
-            myCurrentTimeBeg = attrs.getSUMORealReporting(SUMO_ATTR_BEGIN, 0, ok);
-            myCurrentTimeEnd = attrs.getSUMORealReporting(SUMO_ATTR_END, 0, ok);
+            myCurrentTimeBeg = attrs.get<SUMOReal>(SUMO_ATTR_BEGIN, 0, ok);
+            myCurrentTimeEnd = attrs.get<SUMOReal>(SUMO_ATTR_END, 0, ok);
         }
         break;
         case SUMO_TAG_EDGE: {
             bool ok = true;
-            myCurrentEdgeID = attrs.getOptStringReporting(SUMO_ATTR_ID, 0, ok, "");
+            myCurrentEdgeID = attrs.getOpt<std::string>(SUMO_ATTR_ID, 0, ok, "");
             tryParse(attrs, true);
         }
         break;

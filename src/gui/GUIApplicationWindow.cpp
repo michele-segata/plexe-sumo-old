@@ -10,7 +10,7 @@
 // The main window of the SUMO-gui.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -252,7 +252,7 @@ GUIApplicationWindow::create() {
     myWindowsMenu->create();
     myHelpMenu->create();
 
-    FXint width = getApp()->getNormalFont()->getTextWidth("8", 1) * 22;
+    FXint width = getApp()->getNormalFont()->getTextWidth("8", 1) * 24;
     myCartesianFrame->setWidth(width);
     myGeoFrame->setWidth(width);
 
@@ -900,16 +900,23 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
         myWasStarted = false;
         // initialise views
         myViewNumber = 0;
-
+        const GUISUMOViewParent::ViewType defaultType = ec->myOsgView ? GUISUMOViewParent::VIEW_3D_OSG : GUISUMOViewParent::VIEW_2D_OPENGL;
         if (ec->mySettingsFiles.size() > 0) {
             // open a view for each file and apply settings
             for (std::vector<std::string>::const_iterator it = ec->mySettingsFiles.begin();
                     it != ec->mySettingsFiles.end(); ++it) {
-                GUISUMOAbstractView* view = openNewView();
+                GUISettingsHandler settings(*it);
+                GUISUMOViewParent::ViewType vt = defaultType;
+                if (settings.getViewType() == "osg" || settings.getViewType() == "3d") {
+                    vt = GUISUMOViewParent::VIEW_3D_OSG;
+                }
+                if (settings.getViewType() == "opengl" || settings.getViewType() == "2d") {
+                    vt = GUISUMOViewParent::VIEW_2D_OPENGL;
+                }
+                GUISUMOAbstractView* view = openNewView(vt);
                 if (view == 0) {
                     break;
                 }
-                GUISettingsHandler settings(*it);
                 std::string settingsName = settings.addSettings(view);
                 view->addDecals(settings.getDecals());
                 settings.setViewport(view);
@@ -917,9 +924,12 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
                 if (settings.getDelay() > 0) {
                     mySimDelayTarget->setValue(settings.getDelay());
                 }
+                if (settings.getBreakpoints().size() > 0) {
+                    GUIGlobals::gBreakpoints = settings.getBreakpoints();
+                }
             }
         } else {
-            openNewView();
+            openNewView(defaultType);
         }
 
         if (isGaming()) {

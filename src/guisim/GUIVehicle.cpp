@@ -9,7 +9,7 @@
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,6 +33,10 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#ifdef HAVE_OSG
+#include <osg/ShapeDrawable>
+#include <osgview/GUIOSGView.h>
+#endif
 #include <foreign/polyfonts/polyfonts.h>
 #include <utils/common/StringUtils.h>
 #include <utils/common/SUMOVehicleParameter.h>
@@ -248,6 +252,11 @@ GUIVehicle::~GUIVehicle() {
     for (std::map<GUISUMOAbstractView*, int>::iterator i = myAdditionalVisualizations.begin(); i != myAdditionalVisualizations.end(); ++i) {
         while (i->first->removeAdditionalGLVisualisation(this));
     }
+#ifdef HAVE_OSG
+    for (std::map<GUIOSGView*, osg::ShapeDrawable*>::iterator i = myGeom.begin(); i != myGeom.end(); ++i) {
+        i->first->remove(this);
+    }
+#endif
     myLock.unlock();
     GLObjectValuePassConnector<SUMOReal>::removeObject(*this);
     delete myRoutes;
@@ -407,8 +416,8 @@ GUIVehicle::drawPoly(double* poses, SUMOReal offset) {
 void
 GUIVehicle::drawAction_drawVehicleAsPoly(const GUIVisualizationSettings& s) const {
     RGBColor current = GLHelper::getColor();
-    RGBColor lighter = current.changedBrightness(.2);
-    RGBColor darker = current.changedBrightness(-.2);
+    RGBColor lighter = current.changedBrightness(51);
+    RGBColor darker = current.changedBrightness(-51);
 
     const SUMOReal length = getVehicleType().getLength();
     const SUMOReal width = getVehicleType().getWidth();
@@ -877,10 +886,10 @@ void
 GUIVehicle::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     glPushMatrix();
-    Position p1 = myLane->getShape().positionAtLengthPosition(
+    Position p1 = myLane->getShape().positionAtOffset(
                       myLane->interpolateLanePosToGeometryPos(myState.pos()));
     // one seat in the center of the vehicle by default
-    mySeatPositions[0] = myLane->getShape().positionAtLengthPosition(
+    mySeatPositions[0] = myLane->getShape().positionAtOffset(
                              myLane->interpolateLanePosToGeometryPos(
                                  myState.pos() - getVehicleType().getLength() / 2));
     glTranslated(p1.x(), p1.y(), getType());
@@ -1020,7 +1029,7 @@ GUIVehicle::drawGL(const GUIVisualizationSettings& s) const {
     }
     */
     glPopMatrix();
-    drawName(myLane->getShape().positionAtLengthPosition(
+    drawName(myLane->getShape().positionAtOffset(
                  myLane->interpolateLanePosToGeometryPos(
                      myState.pos() - MIN2(getVehicleType().getLength() / 2, SUMOReal(5)))),
              s.scale, s.vehicleName);
@@ -1074,14 +1083,16 @@ GUIVehicle::drawGLAdditional(GUISUMOAbstractView* const parent, const GUIVisuali
                 } else {
                     glColor3d(.8, 0, 0);
                 }
-                glTranslated(p.x(), p.y(), -.1);
-                GLHelper::drawFilledCircle(1);
-
-                const SUMOTime leaveTime = (*i).myArrivalTime + TIME2STEPS(((*i).myLink->getLength() + getVehicleType().getLength()) / (*i).myArrivalSpeed);
-                std::string times = toString(STEPS2TIME((*i).myArrivalTime)) + "/" + toString(STEPS2TIME(leaveTime));
-                GLHelper::drawText(times.c_str(), Position(), .1, 1.6 * s.addExaggeration, RGBColor(0, 1, 0), 0);
-
-                glTranslated(-p.x(), -p.y(), .1);
+                const SUMOTime leaveTime = (*i).myLink->getLeaveTime(
+                                               (*i).myArrivalTime, (*i).myArrivalSpeed, (*i).getLeaveSpeed(), getVehicleType().getLengthWithGap());
+                drawLinkItem(p, (*i).myArrivalTime, leaveTime, s.addExaggeration);
+                // the time slot that ego vehicle uses when checking opened may
+                // differ from the one it requests in setApproaching
+                MSLink::ApproachingVehicleInformation avi = (*i).myLink->getApproaching(this);
+                if (avi.arrivalTime != (*i).myArrivalTime || avi.leavingTime != leaveTime) {
+                    glColor3d(1, 0.65, 0);
+                    drawLinkItem(p + Position(0, -1), avi.arrivalTime, avi.leavingTime, s.addExaggeration * 0.7);
+                }
             }
         }
     }
@@ -1089,6 +1100,15 @@ GUIVehicle::drawGLAdditional(GUISUMOAbstractView* const parent, const GUIVisuali
     glPopName();
 }
 
+
+void
+GUIVehicle::drawLinkItem(const Position& pos, SUMOTime arrivalTime, SUMOTime leaveTime, SUMOReal exagerate) {
+    glTranslated(pos.x(), pos.y(), -.1);
+    GLHelper::drawFilledCircle(1);
+    std::string times = toString(STEPS2TIME(arrivalTime)) + "/" + toString(STEPS2TIME(leaveTime));
+    GLHelper::drawText(times.c_str(), Position(), .1, 1.6 * exagerate, RGBColor::GREEN, 0);
+    glTranslated(-pos.x(), -pos.y(), .1);
+}
 
 const std::vector<MSVehicle::LaneQ>&
 GUIVehicle::getBestLanes() const {
@@ -1223,20 +1243,20 @@ GUIVehicle::hasActiveAddVisualisation(GUISUMOAbstractView* const parent, int whi
 }
 
 
-bool
+void
 GUIVehicle::addActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) {
     if (myAdditionalVisualizations.find(parent) == myAdditionalVisualizations.end()) {
         myAdditionalVisualizations[parent] = 0;
     }
     myAdditionalVisualizations[parent] |= which;
-    return parent->addAdditionalGLVisualisation(this);
+    parent->addAdditionalGLVisualisation(this);
 }
 
 
-bool
+void
 GUIVehicle::removeActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) {
     myAdditionalVisualizations[parent] &= ~which;
-    return parent->removeAdditionalGLVisualisation(this);
+    parent->removeAdditionalGLVisualisation(this);
 }
 
 
@@ -1359,7 +1379,7 @@ GUIVehicle::getPreviousLane(MSLane* current, int& routeIndex) const {
 void
 GUIVehicle::drawAction_drawRailCarriages(const GUIVisualizationSettings& s, SUMOReal defaultLength, int firstPassengerCarriage, bool asImage) const {
     RGBColor current = GLHelper::getColor();
-    RGBColor darker = current.changedBrightness(-.2);
+    RGBColor darker = current.changedBrightness(-51);
     const SUMOReal length = getVehicleType().getLength() * s.vehicleExaggeration;
     const SUMOReal halfWidth = getVehicleType().getWidth() / 2.0 * s.vehicleExaggeration;
     glPopMatrix(); // undo scaling and 90 degree rotation
@@ -1399,8 +1419,8 @@ GUIVehicle::drawAction_drawRailCarriages(const GUIVisualizationSettings& s, SUMO
             backLane = getPreviousLane(backLane, backRouteIndex);
             carriageBackOffset += backLane->getLength();
         }
-        const Position front = lane->getShape().positionAtLengthPosition2D(carriageOffset);
-        const Position back = backLane->getShape().positionAtLengthPosition2D(carriageBackOffset);
+        const Position front = lane->getShape().positionAtOffset2D(carriageOffset);
+        const Position back = backLane->getShape().positionAtOffset2D(carriageBackOffset);
         const SUMOReal angle = atan2((front.x() - back.x()), (back.y() - front.y())) * (SUMOReal) 180.0 / (SUMOReal) PI;
         if (i >= firstPassengerCarriage) {
             computeSeats(front, back, requiredSeats);
@@ -1462,6 +1482,16 @@ GUIVehicle::computeSeats(const Position& front, const Position& back, int& requi
         }
     }
 }
+
+
+#ifdef HAVE_OSG
+void
+GUIVehicle::updateColor(GUIOSGView* view) {
+    const GUIVisualizationSettings* s = view->getVisualisationSettings();
+    const RGBColor& col = s->vehicleColorer.getScheme().getColor(getColorValue(s->vehicleColorer.getActive()));
+    myGeom[view]->setColor(osg::Vec4(col.red() / 255., col.green() / 255., col.blue() / 255., col.alpha() / 255.));
+}
+#endif
 
 /****************************************************************************/
 

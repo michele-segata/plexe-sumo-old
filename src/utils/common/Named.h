@@ -8,7 +8,7 @@
 // Base class for objects which have an id.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -72,8 +72,8 @@ public:
 
     /// @brief Function-object for stable sorting in containers
     struct ComparatorIdLess {
-        bool operator()(Named* const a, Named* const b) {
-            return (a->getID() < b->getID());
+        bool operator()(Named* const a, Named* const b) const {
+            return a->getID() < b->getID();
         }
     };
 

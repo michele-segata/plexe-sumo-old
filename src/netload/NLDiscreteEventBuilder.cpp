@@ -10,7 +10,7 @@
 // }
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -67,7 +67,7 @@ void
 NLDiscreteEventBuilder::addAction(const SUMOSAXAttributes& attrs,
                                   const std::string& basePath) {
     bool ok = true;
-    const std::string type = attrs.getOptStringReporting(SUMO_ATTR_TYPE, 0, ok, "");
+    const std::string type = attrs.getOpt<std::string>(SUMO_ATTR_TYPE, 0, ok, "");
     // check whether the type was given
     if (type == "" || !ok) {
         throw InvalidArgument("An action's type is not given.");
@@ -96,8 +96,8 @@ void
 NLDiscreteEventBuilder::buildSaveTLStateCommand(const SUMOSAXAttributes& attrs,
         const std::string& basePath) {
     bool ok = true;
-    const std::string dest = attrs.getOptStringReporting(SUMO_ATTR_DEST, 0, ok, "");
-    const std::string source = attrs.getOptStringReporting(SUMO_ATTR_SOURCE, 0, ok, "");
+    const std::string dest = attrs.getOpt<std::string>(SUMO_ATTR_DEST, 0, ok, "");
+    const std::string source = attrs.getOpt<std::string>(SUMO_ATTR_SOURCE, 0, ok, "");
     // check the parameter
     if (dest == "" || !ok) {
         throw InvalidArgument("Incomplete description of an 'SaveTLSState'-action occured.");
@@ -106,7 +106,7 @@ NLDiscreteEventBuilder::buildSaveTLStateCommand(const SUMOSAXAttributes& attrs,
         const std::vector<std::string> ids = myNet.getTLSControl().getAllTLIds();
         for (std::vector<std::string>::const_iterator tls = ids.begin(); tls != ids.end(); ++tls) {
             const MSTLLogicControl::TLSLogicVariants& logics = myNet.getTLSControl().get(*tls);
-            new Command_SaveTLSState(logics, OutputDevice::getDevice(dest, basePath));
+            new Command_SaveTLSState(logics, OutputDevice::getDevice(FileHelpers::checkForRelativity(dest, basePath)));
         }
     } else {
         // get the logic
@@ -115,7 +115,7 @@ NLDiscreteEventBuilder::buildSaveTLStateCommand(const SUMOSAXAttributes& attrs,
         }
         const MSTLLogicControl::TLSLogicVariants& logics = myNet.getTLSControl().get(source);
         // build the action
-        new Command_SaveTLSState(logics, OutputDevice::getDevice(dest, basePath));
+        new Command_SaveTLSState(logics, OutputDevice::getDevice(FileHelpers::checkForRelativity(dest, basePath)));
     }
 }
 
@@ -124,8 +124,8 @@ void
 NLDiscreteEventBuilder::buildSaveTLSwitchesCommand(const SUMOSAXAttributes& attrs,
         const std::string& basePath) {
     bool ok = true;
-    const std::string dest = attrs.getOptStringReporting(SUMO_ATTR_DEST, 0, ok, "");
-    const std::string source = attrs.getOptStringReporting(SUMO_ATTR_SOURCE, 0, ok, "");
+    const std::string dest = attrs.getOpt<std::string>(SUMO_ATTR_DEST, 0, ok, "");
+    const std::string source = attrs.getOpt<std::string>(SUMO_ATTR_SOURCE, 0, ok, "");
     // check the parameter
     if (dest == "" || !ok) {
         throw InvalidArgument("Incomplete description of an 'SaveTLSSwitchTimes'-action occured.");
@@ -134,7 +134,7 @@ NLDiscreteEventBuilder::buildSaveTLSwitchesCommand(const SUMOSAXAttributes& attr
         const std::vector<std::string> ids = myNet.getTLSControl().getAllTLIds();
         for (std::vector<std::string>::const_iterator tls = ids.begin(); tls != ids.end(); ++tls) {
             const MSTLLogicControl::TLSLogicVariants& logics = myNet.getTLSControl().get(*tls);
-            new Command_SaveTLSSwitches(logics, OutputDevice::getDevice(dest, basePath));
+            new Command_SaveTLSSwitches(logics, OutputDevice::getDevice(FileHelpers::checkForRelativity(dest, basePath)));
         }
     } else {
         // get the logic
@@ -143,7 +143,7 @@ NLDiscreteEventBuilder::buildSaveTLSwitchesCommand(const SUMOSAXAttributes& attr
         }
         const MSTLLogicControl::TLSLogicVariants& logics = myNet.getTLSControl().get(source);
         // build the action
-        new Command_SaveTLSSwitches(logics, OutputDevice::getDevice(dest, basePath));
+        new Command_SaveTLSSwitches(logics, OutputDevice::getDevice(FileHelpers::checkForRelativity(dest, basePath)));
     }
 }
 
@@ -152,8 +152,8 @@ void
 NLDiscreteEventBuilder::buildSaveTLSwitchStatesCommand(const SUMOSAXAttributes& attrs,
         const std::string& basePath) {
     bool ok = true;
-    const std::string dest = attrs.getOptStringReporting(SUMO_ATTR_DEST, 0, ok, "");
-    const std::string source = attrs.getOptStringReporting(SUMO_ATTR_SOURCE, 0, ok, "");
+    const std::string dest = attrs.getOpt<std::string>(SUMO_ATTR_DEST, 0, ok, "");
+    const std::string source = attrs.getOpt<std::string>(SUMO_ATTR_SOURCE, 0, ok, "");
     // check the parameter
     if (dest == "" || !ok) {
         throw InvalidArgument("Incomplete description of an 'SaveTLSSwitchStates'-action occured.");
@@ -162,7 +162,7 @@ NLDiscreteEventBuilder::buildSaveTLSwitchStatesCommand(const SUMOSAXAttributes& 
         const std::vector<std::string> ids = myNet.getTLSControl().getAllTLIds();
         for (std::vector<std::string>::const_iterator tls = ids.begin(); tls != ids.end(); ++tls) {
             const MSTLLogicControl::TLSLogicVariants& logics = myNet.getTLSControl().get(*tls);
-            new Command_SaveTLSSwitchStates(logics, OutputDevice::getDevice(dest, basePath));
+            new Command_SaveTLSSwitchStates(logics, OutputDevice::getDevice(FileHelpers::checkForRelativity(dest, basePath)));
         }
     } else {
         // get the logic
@@ -171,10 +171,9 @@ NLDiscreteEventBuilder::buildSaveTLSwitchStatesCommand(const SUMOSAXAttributes& 
         }
         const MSTLLogicControl::TLSLogicVariants& logics = myNet.getTLSControl().get(source);
         // build the action
-        new Command_SaveTLSSwitchStates(logics, OutputDevice::getDevice(dest, basePath));
+        new Command_SaveTLSSwitchStates(logics, OutputDevice::getDevice(FileHelpers::checkForRelativity(dest, basePath)));
     }
 }
-
 
 
 /****************************************************************************/

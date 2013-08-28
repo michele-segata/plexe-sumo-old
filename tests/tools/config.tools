@@ -3,6 +3,7 @@ binary:$TEXTTEST_HOME/toolrunner.py
 copy_test_path:routes.rou.xml
 copy_test_path:routes2.rou.xml
 copy_test_path:net.net.xml
+copy_test_path:three_split.net.xml
 copy_test_path:input_net.net.xml
 copy_test_path:input_trips.trips.xml
 copy_test_path:input_routes.rou.xml
@@ -45,6 +46,7 @@ copy_test_path:dest.edg.xml
 copy_test_path:dest.con.xml
 copy_test_path:dest.tll.xml
 copy_test_path:dest.xml
+copy_test_path:fcd.xml
 
 [collate_file]
 detectors:e1.add.xml
@@ -71,6 +73,13 @@ diff_edg:diff.edg.xml
 diff_con:diff.con.xml
 diff_tll:diff.tll.xml
 diff_xml:diff.xml
+omnet:omnet.xml
+shawn:shawn.xml
+dri:test.dri
+fzp:test.fzp
+flt:test.flt
+str:test.str
+gpsdat:gpsdat.txt
 
 [run_dependent_text]
 output:Begin time
@@ -85,6 +94,8 @@ errors:Leaked object at
 errors:*** 9 leaks found
 errors:delete: freed
 errors:Traceback{->}XMLSyntaxError
+omnet:<!-- generated on
+shawn:<!-- generated on
 
 [unordered_text]
 errors:ERROR:SCHEMA

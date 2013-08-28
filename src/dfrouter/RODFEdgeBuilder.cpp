@@ -9,7 +9,7 @@
 // Interface for building instances of dfrouter-edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,8 +47,8 @@ RODFEdgeBuilder::~RODFEdgeBuilder() {}
 
 
 ROEdge*
-RODFEdgeBuilder::buildEdge(const std::string& name, RONode* from, RONode* to) {
-    return new RODFEdge(name, from, to, getNextIndex());
+RODFEdgeBuilder::buildEdge(const std::string& name, RONode* from, RONode* to, const int priority) {
+    return new RODFEdge(name, from, to, getNextIndex(), priority);
 }
 
 

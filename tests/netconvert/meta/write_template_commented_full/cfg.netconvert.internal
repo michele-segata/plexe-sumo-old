@@ -132,6 +132,9 @@
         <!-- Does not instatiate traffic lights loaded from other formats than XML -->
         <tls.discard-loaded value="false" type="BOOL"/>
 
+        <!-- Does not instatiate traffic lights at geometry-like nodes loaded from other formats than XML -->
+        <tls.discard-simple value="false" type="BOOL"/>
+
         <!-- Interprets STR as list of junctions to be controlled by TLS -->
         <tls.set value="" synonymes="explicite-tls" type="STR"/>
 
@@ -167,6 +170,9 @@
 
         <!-- TLSs in STR will be shifted by quarter-phase -->
         <tls.quarter-offset value="" synonymes="tl-logics.quarter-offset" type="STR"/>
+
+        <!-- TLSs with unspecified type will use STR as their algorithm. -->
+        <tls.default-type value="static" type="STR"/>
 
     </tls_building>
 
@@ -324,6 +330,12 @@
         <!-- Skips the check for duplicate nodes and edges. -->
         <osm.skip-duplicates-check value="false" type="BOOL"/>
 
+        <!-- Imports all lane types. -->
+        <opendrive.import-all-lanes value="false" type="BOOL"/>
+
+        <!-- Whether lane widths shall be imported. -->
+        <opendrive.import-widths value="false" type="BOOL"/>
+
         <!-- Omits internal links -->
         <no-internal-links value="false" type="BOOL"/>
 
@@ -347,6 +359,9 @@
 
         <!-- splits geometry to restrict segment length -->
         <geometry.max-segment-length value="0" type="FLOAT"/>
+
+        <!-- reduces too similar geometry points -->
+        <geometry.min-dist value="" type="FLOAT"/>
 
         <!-- Turn off normalizing node positions -->
         <offset.disable-normalization value="false" synonymes="disable-normalize-node-positions" type="BOOL"/>

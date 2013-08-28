@@ -8,7 +8,7 @@
 // A complete router's route
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -176,6 +176,9 @@ public:
     writeXMLDefinition(OutputDevice& dev, const ROVehicle* const veh,
                        const bool withCosts, const bool withExitTimes) const;
 
+    /** @brief add additional vehicles/probability
+     */
+    void addProbability(SUMOReal prob);
 
 private:
     /// @brief The costs of the route
@@ -189,6 +192,7 @@ private:
 
     /// @brief The color of the route
     const RGBColor* myColor;
+
 
 private:
     /// @brief Invalidated assignment operator

@@ -10,7 +10,7 @@
 // A vehicle route
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -113,14 +113,7 @@ public:
      *
      * @param[in] os The stream to write the routes into (binary)
      */
-    static void dict_saveState(std::ostream& os);
-
-
-    /** @brief Loads routes from the state.
-     *
-     * @param[in] bis The input to read the routes from (binary)
-     */
-    static void dict_loadState(BinaryInputDevice& bis);
+    static void dict_saveState(OutputDevice& out);
     /// @}
 #endif
 

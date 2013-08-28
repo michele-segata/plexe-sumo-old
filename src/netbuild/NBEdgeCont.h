@@ -9,7 +9,7 @@
 // Storage for edges, including some functionality operating on multiple edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -299,6 +299,13 @@ public:
      * @see NBEdge::splitGeometry
      */
     void splitGeometry(NBNodeCont& nc);
+
+
+    /** @brief
+     * @param[in] nc The node container needed to build (geometry) nodes
+     * @see NBEdge::reduceGeometry
+     */
+    void reduceGeometries(const SUMOReal minDist);
     /// @}
 
 
@@ -386,7 +393,7 @@ public:
      * @todo Recheck usage
      * @see NBEdge::computeLaneShapes
      */
-    void recomputeLaneShapes();
+    void computeLaneShapes();
 
 
     /** @brief Clears information about controlling traffic lights for all connenections of all edges
@@ -417,7 +424,7 @@ public:
     /** @brief Determines which edges belong to roundabouts and increases their priority
      * @param[out] marked Edges which belong to a roundabout are stored here
      */
-    void guessRoundabouts(std::vector<std::set<NBEdge*> >& marked);
+    void guessRoundabouts(std::vector<EdgeVector>& marked);
 
 
     /** @brief Returns whether the built edges are left-handed

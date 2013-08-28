@@ -9,7 +9,7 @@
 // static methods for processing the coordinates conversion for the current net
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -32,6 +32,8 @@
 
 #include <map>
 #include <cmath>
+#include <cassert>
+#include <climits>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/ToString.h>
 #include <utils/geom/GeomHelper.h>
@@ -55,7 +57,7 @@ int GeoConvHelper::myNumLoaded = 0;
 // method definitions
 // ===========================================================================
 GeoConvHelper::GeoConvHelper(const std::string& proj, const Position& offset,
-                             const Boundary& orig, const Boundary& conv, int shift, bool inverse, bool baseFound):
+                             const Boundary& orig, const Boundary& conv, int shift, bool inverse):
     myProjString(proj),
 #ifdef HAVE_PROJ
     myProjection(0),
@@ -64,9 +66,6 @@ GeoConvHelper::GeoConvHelper(const std::string& proj, const Position& offset,
     myGeoScale(pow(10, (double) - shift)),
     myProjectionMethod(NONE),
     myUseInverseProjection(inverse),
-    myBaseFound(baseFound),
-    myBaseX(0),
-    myBaseY(0),
     myOrigBoundary(orig),
     myConvBoundary(conv) {
     if (proj == "!") {
@@ -108,9 +107,6 @@ GeoConvHelper::operator=(const GeoConvHelper& orig) {
     myConvBoundary = orig.myConvBoundary;
     myGeoScale = orig.myGeoScale;
     myUseInverseProjection = orig.myUseInverseProjection;
-    myBaseFound = orig.myBaseFound;
-    myBaseX = orig.myBaseX;
-    myBaseY = orig.myBaseY;
 #ifdef HAVE_PROJ
     if (myProjection != 0) {
         pj_free(myProjection);
@@ -130,10 +126,6 @@ GeoConvHelper::init(OptionsCont& oc) {
     int shift = oc.getInt("proj.scale");
     Position offset = Position(oc.getFloat("offset.x"), oc.getFloat("offset.y"));
     bool inverse = oc.exists("proj.inverse") && oc.getBool("proj.inverse");
-    bool baseFound = !oc.exists("offset.disable-normalization") ||
-                     oc.getBool("offset.disable-normalization") ||
-                     !oc.isDefault("offset.x") ||
-                     !oc.isDefault("offset.y");
 
     if (oc.getBool("simple-projection")) {
         proj = "-";
@@ -158,7 +150,7 @@ GeoConvHelper::init(OptionsCont& oc) {
         proj = oc.getString("proj");
     }
 #endif
-    myProcessing = GeoConvHelper(proj, offset, Boundary(), Boundary(), shift, inverse, baseFound);
+    myProcessing = GeoConvHelper(proj, offset, Boundary(), Boundary(), shift, inverse);
     myFinal = myProcessing;
     return true;
 }
@@ -168,8 +160,9 @@ void
 GeoConvHelper::init(const std::string& proj,
                     const Position& offset,
                     const Boundary& orig,
-                    const Boundary& conv) {
-    myProcessing = GeoConvHelper(proj, offset, orig, conv);
+                    const Boundary& conv,
+                    int shift) {
+    myProcessing = GeoConvHelper(proj, offset, orig, conv, shift);
     myFinal = myProcessing;
 }
 
@@ -270,16 +263,6 @@ GeoConvHelper::x2cartesian(Position& from, bool includeInBoundary) {
     // perform conversion
     bool ok = x2cartesian_const(from);
     if (ok) {
-        if (!myBaseFound) {
-            // avoid very large coordinates to reduce numerical errors
-            if (myProjectionMethod == SIMPLE || from.x() > 100000 || from.y() > 100000) {
-                myBaseX = from.x();
-                myBaseY = from.y();
-                from.set(0, 0);
-            }
-            myBaseFound = true;
-        }
-
         if (includeInBoundary) {
             myConvBoundary.add(from);
         }
@@ -313,8 +296,6 @@ GeoConvHelper::x2cartesian_const(Position& from) const {
 #endif
         if (myProjectionMethod == SIMPLE) {
             double ys = y;
-            x -= myBaseX;
-            y -= myBaseY;
             x *= 111320. * cos(ys * PI / 180.0);
             y *= 111136.;
             from.set((SUMOReal)x, (SUMOReal)y);
@@ -322,9 +303,11 @@ GeoConvHelper::x2cartesian_const(Position& from) const {
             from.add(myOffset);
         }
     }
+    if (x > std::numeric_limits<double>::max() ||
+            y > std::numeric_limits<double>::max()) {
+        return false;
+    }
     if (myProjectionMethod != SIMPLE) {
-        x -= myBaseX;
-        y -= myBaseY;
         from.set((SUMOReal)x, (SUMOReal)y);
         from.add(myOffset);
     }
@@ -359,7 +342,7 @@ GeoConvHelper::getOffset() const {
 
 const Position
 GeoConvHelper::getOffsetBase() const {
-    return Position(myOffset.x() - myBaseX, myOffset.y() - myBaseY);
+    return myOffset;
 }
 
 

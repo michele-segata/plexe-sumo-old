@@ -9,7 +9,7 @@
 // A device which collects vehicular emissions (using HBEFA-reformulation)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -125,7 +125,7 @@ MSDevice_HBEFA::generateOutput() const {
      "\" PMx_abs=\"" << OutputDevice::realString(myPMx, 6) <<
      "\" NOx_abs=\"" << OutputDevice::realString(myNOx, 6) <<
      "\" fuel_abs=\"" << OutputDevice::realString(myFuel, 6) <<
-     "\"").closeTag(true);
+     "\"").closeTag();
 }
 
 

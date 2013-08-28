@@ -9,7 +9,7 @@
 // APIs for getting/setting induction loop values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -64,8 +64,7 @@ TraCIServerAPI_InductionLoop::processGet(TraCIServer& server, tcpip::Storage& in
             && variable != LAST_STEP_LENGTH && variable != LAST_STEP_TIME_SINCE_DETECTION
             && variable != LAST_STEP_VEHICLE_DATA && variable != ID_COUNT
             && variable != VAR_POSITION && variable != VAR_LANE_ID) {
-        server.writeStatusCmd(CMD_GET_INDUCTIONLOOP_VARIABLE, RTYPE_ERR, "Get Induction Loop Variable: unsupported variable specified", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_GET_INDUCTIONLOOP_VARIABLE, "Get Induction Loop Variable: unsupported variable specified", outputStorage);
     }
     // begin response building
     tcpip::Storage tempMsg;
@@ -87,8 +86,7 @@ TraCIServerAPI_InductionLoop::processGet(TraCIServer& server, tcpip::Storage& in
     } else {
         MSInductLoop* il = static_cast<MSInductLoop*>(MSNet::getInstance()->getDetectorControl().getTypedDetectors(SUMO_TAG_INDUCTION_LOOP).get(id));
         if (il == 0) {
-            server.writeStatusCmd(CMD_GET_INDUCTIONLOOP_VARIABLE, RTYPE_ERR, "Induction loop '" + id + "' is not known", outputStorage);
-            return false;
+            return server.writeErrorStatusCmd(CMD_GET_INDUCTIONLOOP_VARIABLE, "Induction loop '" + id + "' is not known", outputStorage);
         }
         switch (variable) {
             case ID_LIST:
@@ -174,7 +172,7 @@ TraCIServerAPI_InductionLoop::getPosition(const std::string& id, Position& p) {
     if (il == 0) {
         return false;
     }
-    p = il->getLane()->getShape().positionAtLengthPosition(il->getPosition());
+    p = il->getLane()->getShape().positionAtOffset(il->getPosition());
     return true;
 }
 
@@ -185,7 +183,7 @@ TraCIServerAPI_InductionLoop::getTree() {
     const std::map<std::string, MSDetectorFileOutput*>& dets = MSNet::getInstance()->getDetectorControl().getTypedDetectors(SUMO_TAG_INDUCTION_LOOP).getMyMap();
     for (std::map<std::string, MSDetectorFileOutput*>::const_iterator i = dets.begin(); i != dets.end(); ++i) {
         MSInductLoop* il = static_cast<MSInductLoop*>((*i).second);
-        Position p = il->getLane()->getShape().positionAtLengthPosition(il->getPosition());
+        Position p = il->getLane()->getShape().positionAtOffset(il->getPosition());
         t->addObject(il, p);
     }
     return t;

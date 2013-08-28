@@ -10,7 +10,7 @@
 // Storage for edges, including some functionality operating on multiple edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -371,9 +371,9 @@ NBEdgeCont::splitAt(NBDistrictCont& dc, NBEdge* edge, NBNode* node,
                     const std::string& secondEdgeName,
                     unsigned int noLanesFirstEdge, unsigned int noLanesSecondEdge) {
     SUMOReal pos;
-    pos = edge->getGeometry().nearest_position_on_line_to_point2D(node->getPosition());
+    pos = edge->getGeometry().nearest_offset_to_point2D(node->getPosition());
     if (pos <= 0) {
-        pos = GeomHelper::nearest_position_on_line_to_point2D(
+        pos = GeomHelper::nearest_offset_on_line_to_point2D(
                   edge->myFrom->getPosition(), edge->myTo->getPosition(),
                   node->getPosition());
     }
@@ -406,14 +406,14 @@ NBEdgeCont::splitAt(NBDistrictCont& dc,
     // build and insert the edges
     NBEdge* one = new NBEdge(firstEdgeName,
                              edge->myFrom, node, edge->myType, edge->mySpeed, noLanesFirstEdge,
-                             edge->getPriority(), edge->myWidth, 0, geoms.first,
+                             edge->getPriority(), edge->myLaneWidth, 0, geoms.first,
                              edge->getStreetName(), edge->myLaneSpreadFunction, true);
     for (unsigned int i = 0; i < noLanesFirstEdge && i < edge->getNumLanes(); i++) {
         one->setSpeed(i, edge->getLaneSpeed(i));
     }
     NBEdge* two = new NBEdge(secondEdgeName,
                              node, edge->myTo, edge->myType, edge->mySpeed, noLanesSecondEdge,
-                             edge->getPriority(), edge->myWidth, edge->myOffset, geoms.second,
+                             edge->getPriority(), edge->myLaneWidth, edge->myOffset, geoms.second,
                              edge->getStreetName(), edge->myLaneSpreadFunction, true);
     for (unsigned int i = 0; i < noLanesSecondEdge && i < edge->getNumLanes(); i++) {
         two->setSpeed(i, edge->getLaneSpeed(i));
@@ -503,6 +503,14 @@ NBEdgeCont::splitGeometry(NBNodeCont& nc) {
 }
 
 
+void
+NBEdgeCont::reduceGeometries(const SUMOReal minDist) {
+    for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
+        (*i).second->reduceGeometry(minDist);
+    }
+}
+
+
 // ----- processing methods
 void
 NBEdgeCont::clearControllingTLInformation() const {
@@ -569,7 +577,7 @@ NBEdgeCont::computeEdgeShapes() {
 
 
 void
-NBEdgeCont::recomputeLaneShapes() {
+NBEdgeCont::computeLaneShapes() {
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
         (*i).second->computeLaneShapes();
     }
@@ -754,7 +762,7 @@ NBEdgeCont::getGeneratedFrom(const std::string& id) const {
 
 
 void
-NBEdgeCont::guessRoundabouts(std::vector<std::set<NBEdge*> >& marked) {
+NBEdgeCont::guessRoundabouts(std::vector<EdgeVector>& marked) {
     // step 1: keep only those edges which have no turnarounds
     std::set<NBEdge*> candidates;
     for (EdgeCont::const_iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
@@ -787,9 +795,20 @@ NBEdgeCont::guessRoundabouts(std::vector<std::set<NBEdge*> >& marked) {
                 doLoop = false;
                 break;
             }
+            if (e->getTurnDestination() != 0 || e->getToNode()->getConnectionTo(e->getFromNode()) != 0) {
+                // do not follow turn-arounds while in a (tentative) loop
+                doLoop = false;
+                break;
+            }
             EdgeVector::const_iterator me = find(edges.begin(), edges.end(), e);
             NBContHelper::nextCW(edges, me);
             NBEdge* left = *me;
+            SUMOReal angle = fabs(NBHelpers::relAngle(e->getAngleAtNode(e->getToNode()), left->getAngleAtNode(e->getToNode())));
+            if (angle >= 90) {
+                // roundabouts do not have sharp turns (or they wouldn't be called 'round')
+                doLoop = false;
+                break;
+            }
             EdgeVector::const_iterator loopClosed = find(loopEdges.begin(), loopEdges.end(), left);
             const size_t loopSize = loopEdges.end() - loopClosed;
             if (loopSize > 0) {
@@ -799,6 +818,16 @@ NBEdgeCont::guessRoundabouts(std::vector<std::set<NBEdge*> >& marked) {
                 } else if (loopSize < loopEdges.size()) {
                     // remove initial edges not belonging to the loop
                     EdgeVector(loopEdges.begin() + (loopEdges.size() - loopSize), loopEdges.end()).swap(loopEdges);
+                }
+                // count attachments to the outside. need at least 3 or a roundabout doesn't make much sense
+                int attachments = 0;
+                for (EdgeVector::const_iterator j = loopEdges.begin(); j != loopEdges.end(); ++j) {
+                    if ((*j)->getToNode()->getEdges().size() > 2) {
+                        attachments++;
+                    }
+                }
+                if (attachments < 3) {
+                    doLoop = false;
                 }
                 break;
             }
@@ -830,7 +859,7 @@ NBEdgeCont::guessRoundabouts(std::vector<std::set<NBEdge*> >& marked) {
                 // let the connections to succeeding roundabout edge have a higher priority
                 (*j)->setJunctionPriority(node, 1000);
             }
-            marked.push_back(loopEdgesSet);
+            marked.push_back(loopEdges);
         }
     }
 }

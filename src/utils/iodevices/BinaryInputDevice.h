@@ -8,7 +8,7 @@
 // Encapsulates binary reading operations on a file
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -87,11 +87,6 @@ public:
      */
     int peek();
 
-
-    /// @brief Returns the associated istream
-    std::istream& getIStream() {
-        return myStream;
-    }
 
     /** @brief Returns the next character to be read by an actual parse.
      *
@@ -242,7 +237,7 @@ private:
     const bool myEnableValidation;
 
     /// @brief The buffer used for string parsing
-    char myBuffer[1000];
+    char myBuffer[10000];
 
 };
 

@@ -8,7 +8,7 @@
 Checks svn property settings for all files.
 
 SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2010-2012 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2010-2013 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -18,6 +18,7 @@ from optparse import OptionParser
 _SOURCE_EXT = [".h", ".cpp", ".py", ".pl", ".java", ".am"]
 _TESTDATA_EXT = [".xml", ".prog", ".csv",
                  ".complex", ".dfrouter", ".duarouter", ".jtrrouter",
+                 ".astar", ".chrouter", ".tcl", ".txt",
                  ".netconvert", ".netgen", ".od2trips", ".polyconvert", ".sumo",
                  ".meso", ".tools", ".traci", ".activitygen", ".scenario",
                  ".sumocfg", ".netccfg", ".netgcfg"]

@@ -8,7 +8,7 @@
 // An edge within the DFROUTER
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -60,7 +60,7 @@ public:
      * @param[in] to The node the edge ends at
      * @param[in] index The numeric id of the edge
      */
-    RODFEdge(const std::string& id, RONode* from, RONode* to, unsigned int index);
+    RODFEdge(const std::string& id, RONode* from, RONode* to, unsigned int index, const int priority);
 
 
     /// @brief Destructor

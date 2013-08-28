@@ -10,7 +10,7 @@
 // }
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -156,8 +156,8 @@ Line::atan2PositiveAngle() const {
 
 
 SUMOReal
-Line::atan2TiltDegree() const {
-    return (SUMOReal) atan2(myP1.distanceTo2D(myP2), myP1.z() - myP2.z()) * (SUMOReal) 180.0 / (SUMOReal) PI;
+Line::atan2DegreeSlope() const {
+    return (SUMOReal) atan2(myP2.z() - myP1.z(), myP1.distanceTo2D(myP2)) * (SUMOReal) 180.0 / (SUMOReal) PI;
 }
 
 
@@ -220,7 +220,7 @@ SUMOReal
 Line::intersectsAtLength2D(const Line& v) {
     Position pos =
         GeomHelper::intersection_position2D(myP1, myP2, v.myP1, v.myP2);
-    return GeomHelper::nearest_position_on_line_to_point2D(myP1, myP2, pos);
+    return GeomHelper::nearest_offset_on_line_to_point2D(myP1, myP2, pos);
 }
 
 

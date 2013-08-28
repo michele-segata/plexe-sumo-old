@@ -10,7 +10,7 @@
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -52,6 +52,12 @@ class GUISUMOAbstractView;
 class GUIGLObjectPopupMenu;
 class GUILaneWrapper;
 class MSDevice_Vehroutes;
+#ifdef HAVE_OSG
+class GUIOSGView;
+namespace osg {
+class ShapeDrawable;
+}
+#endif
 
 
 // ===========================================================================
@@ -146,19 +152,17 @@ public:
     /** @brief Adds the named visualisation feature to the given view
      * @param[in] parent The view for which the feature shall be enabled
      * @param[in] which The visualisation feature to enable
-     * @return Always true
      * @see GUISUMOAbstractView::addAdditionalGLVisualisation
      */
-    bool addActiveAddVisualisation(GUISUMOAbstractView* const parent, int which);
+    void addActiveAddVisualisation(GUISUMOAbstractView* const parent, int which);
 
 
     /** @brief Adds the named visualisation feature to the given view
      * @param[in] parent The view for which the feature shall be enabled
      * @param[in] which The visualisation feature to enable
-     * @return Whether the vehicle was known to the view
      * @see GUISUMOAbstractView::removeAdditionalGLVisualisation
      */
-    bool removeActiveAddVisualisation(GUISUMOAbstractView* const parent, int which);
+    void removeActiveAddVisualisation(GUISUMOAbstractView* const parent, int which);
     /// @}
 
 
@@ -278,16 +282,16 @@ public:
     void drawBestLanes() const;
     /// @}
 
+#ifdef HAVE_OSG
+    void setGeometry(GUIOSGView* view, osg::ShapeDrawable* geom) {
+        myGeom[view] = geom;
+    }
+
+    void updateColor(GUIOSGView* view);
+#endif
+
 
 private:
-
-    /// The mutex used to avoid concurrent updates of the vehicle buffer
-    mutable MFXMutex myLock;
-
-    MSDevice_Vehroutes* myRoutes;
-
-private:
-
     /// @brief sets the color according to the currente settings
     void setColor(const GUIVisualizationSettings& s) const;
 
@@ -329,14 +333,28 @@ private:
     /// @brief returns the seat position for the person with the given index
     const Position& getSeatPosition(size_t personIndex) const;
 
-    /// @brief positions of seats in the vehicle (updated at every drawing step)
-    mutable PositionVector mySeatPositions;
-
     /// @brief return the number of passengers
     int getNumPassengers() const;
 
     /// @brief add seats to mySeatPositions and update requiredSeats
     void computeSeats(const Position& front, const Position& back, int& requiredSeats) const;
+
+    static void drawLinkItem(const Position& pos, SUMOTime arrivalTime, SUMOTime leaveTime, SUMOReal exagerate);
+
+
+private:
+    /// The mutex used to avoid concurrent updates of the vehicle buffer
+    mutable MFXMutex myLock;
+
+    MSDevice_Vehroutes* myRoutes;
+
+    /// @brief positions of seats in the vehicle (updated at every drawing step)
+    mutable PositionVector mySeatPositions;
+
+#ifdef HAVE_OSG
+    std::map<GUIOSGView*, osg::ShapeDrawable*> myGeom;
+#endif
+
 };
 
 

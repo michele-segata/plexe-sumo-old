@@ -10,7 +10,7 @@
 // The car-following model abstraction
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -92,9 +92,7 @@ public:
      * @param[in] maxSpeed The maximum allowed speed
      * @return EGO's safe speed
      */
-    virtual SUMOReal freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const {
-        return followSpeed(veh, speed, seen, maxSpeed, 0);
-    }
+    virtual SUMOReal freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const;
 
 
     /** @brief Computes the vehicle's safe speed (no dawdling)
@@ -129,12 +127,6 @@ public:
      * @todo evaluate signature
      */
     virtual SUMOReal interactionGap(const MSVehicle* const veh, SUMOReal vL) const;
-
-
-    /** @brief Saves the model's definition into the state
-     * @param[in] os The output to write the definition into
-     */
-    virtual void saveState(std::ostream& os);
 
 
     /** @brief Returns the model's ID; the XML-Tag number is used
@@ -218,9 +210,10 @@ public:
      *  speed may depend on the vehicle's current speed (given).
      *
      * @param[in] speed The vehicle's current speed
+     * @param[in] speed The vehicle itself, for obtaining other values
      * @return The maximum possible speed for the next step
      */
-    virtual SUMOReal maxNextSpeed(SUMOReal speed) const;
+    virtual SUMOReal maxNextSpeed(SUMOReal speed, const MSVehicle* const veh) const;
 
 
     /** @brief Returns the distance the vehicle needs to halt including driver's reaction time

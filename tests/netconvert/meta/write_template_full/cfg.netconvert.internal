@@ -54,6 +54,7 @@
 
     <tls_building>
         <tls.discard-loaded value="false" type="BOOL" help="Does not instatiate traffic lights loaded from other formats than XML"/>
+        <tls.discard-simple value="false" type="BOOL" help="Does not instatiate traffic lights at geometry-like nodes loaded from other formats than XML"/>
         <tls.set value="" synonymes="explicite-tls" type="STR" help="Interprets STR as list of junctions to be controlled by TLS"/>
         <tls.unset value="" synonymes="explicite-no-tls" type="STR" help="Interprets STR as list of junctions to be not controlled by TLS"/>
         <tls.guess value="false" synonymes="guess-tls" type="BOOL" help="Turns on TLS guessing"/>
@@ -66,6 +67,7 @@
         <tls.yellow.time value="" synonymes="traffic-light-yellow" type="INT" help="Set INT as fixed time for yellow phase durations"/>
         <tls.half-offset value="" synonymes="tl-logics.half-offset" type="STR" help="TLSs in STR will be shifted by half-phase"/>
         <tls.quarter-offset value="" synonymes="tl-logics.quarter-offset" type="STR" help="TLSs in STR will be shifted by quarter-phase"/>
+        <tls.default-type value="static" type="STR" help="TLSs with unspecified type will use STR as their algorithm."/>
     </tls_building>
 
     <ramp_guessing>
@@ -126,6 +128,8 @@
         <visum.recompute-lane-number value="false" synonymes="visum.recompute-laneno" type="BOOL" help="Computes the number of lanes from the edges&apos; capacities"/>
         <visum.verbose-warnings value="false" type="BOOL" help="Prints all warnings, some of which are due to VISUM misbehaviour"/>
         <osm.skip-duplicates-check value="false" type="BOOL" help="Skips the check for duplicate nodes and edges."/>
+        <opendrive.import-all-lanes value="false" type="BOOL" help="Imports all lane types."/>
+        <opendrive.import-widths value="false" type="BOOL" help="Whether lane widths shall be imported."/>
         <no-internal-links value="false" type="BOOL" help="Omits internal links"/>
         <dismiss-vclasses value="false" type="BOOL" help="Removes vehicle class restrictions from imported edges."/>
         <no-turnarounds value="false" type="BOOL" help="Disables building turnarounds"/>
@@ -134,6 +138,7 @@
         <geometry.split value="false" synonymes="split-geometry" type="BOOL" help="Splits edges across geometry nodes"/>
         <geometry.remove value="false" synonymes="R remove-geometry" type="BOOL" help="Replace nodes which only define edge geometry by geometry points (joins edges)"/>
         <geometry.max-segment-length value="0" type="FLOAT" help="splits geometry to restrict segment length"/>
+        <geometry.min-dist value="" type="FLOAT" help="reduces too similar geometry points"/>
         <offset.disable-normalization value="false" synonymes="disable-normalize-node-positions" type="BOOL" help="Turn off normalizing node positions"/>
         <offset.x value="0" synonymes="x-offset-to-apply" type="FLOAT" help="Adds FLOAT to net x-positions"/>
         <offset.y value="0" synonymes="y-offset-to-apply" type="FLOAT" help="Adds FLOAT to net y-positions"/>

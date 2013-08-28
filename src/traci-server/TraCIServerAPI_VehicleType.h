@@ -8,7 +8,7 @@
 // APIs for getting/setting vehicle type values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -77,12 +77,8 @@ public:
 
 
     /** @brief Processes a set value for the given type
-     *
-     * @param[in] server The TraCI-server-instance which schedules this request
-     * @param[in] inputStorage The storage to read the command from
-     * @param[out] outputStorage The storage to write the result to
      */
-    static bool setVariable(const int cmd, const int variable, const int valueDataType,
+    static bool setVariable(const int cmd, const int variable,
                             MSVehicleType& v, traci::TraCIServer& server,
                             tcpip::Storage& inputStorage, tcpip::Storage& outputStorage);
 

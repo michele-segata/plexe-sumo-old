@@ -10,7 +10,7 @@
 // A reader of pois and polygons stored in VISUM-format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -242,7 +242,7 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
                 const PCTypeMap::TypeDef& def = tm.get(type);
                 id = def.prefix + id;
                 type = def.id;
-                color = RGBColor::parseColor(def.color);
+                color = def.color;
                 discard = def.discard;
                 layer = def.layer;
             } else {
@@ -273,7 +273,7 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
                     const PCTypeMap::TypeDef& def = tm.get(polyType);
                     id = def.prefix + id;
                     type = def.id;
-                    color = RGBColor::parseColor(def.color);
+                    color = def.color;
                     discard = def.discard;
                     layer = def.layer;
                 } else {
@@ -321,7 +321,7 @@ PCLoaderVisum::load(const std::string& file, OptionsCont& oc, PCPolyContainer& t
                 const PCTypeMap::TypeDef& def = tm.get(type);
                 id = def.prefix + id;
                 type = def.id;
-                color = RGBColor::parseColor(def.color);
+                color = def.color;
                 discard = def.discard;
                 layer = def.layer;
             } else {

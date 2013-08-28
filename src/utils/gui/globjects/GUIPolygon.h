@@ -9,7 +9,7 @@
 // The GUI-version of a polygon
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -119,8 +119,14 @@ private:
     /// @brief id of the display list for the cached tesselation
     mutable GLuint myDisplayList;
 
-    /// @brief erform the tesselation and store it in a display list
-    void storeTesselation() const;
+    /// @brief the previous line width for deciding whether the display list must be refreshed
+    mutable SUMOReal myLineWidth;
+
+    /// @brief store the drawing commands in a display list
+    void storeTesselation(SUMOReal lineWidth) const;
+
+    // @brief perform the tesselation / drawing
+    void performTesselation(SUMOReal lineWidth) const;
 
 };
 

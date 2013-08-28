@@ -8,7 +8,7 @@
 // Functions for an easier usage of files
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -30,9 +30,14 @@
 #endif
 
 #include <string>
-#include <cstring>
+#ifdef _MSC_VER
+// this is how fox does it in xincs.h
+#include <io.h>
+#define access _access
+#else
+#include <unistd.h>
+#endif
 #include <fstream>
-#include <sys/stat.h>
 #include "FileHelpers.h"
 #include "StringTokenizer.h"
 #include "MsgHandler.h"
@@ -59,9 +64,7 @@ FileHelpers::exists(std::string path) {
     if (path.length() == 0) {
         return false;
     }
-    struct stat st;
-    bool ret = (stat(path.c_str(), &st) == 0);
-    return ret;
+    return access(path.c_str(), 0) != -1;
 }
 
 
@@ -117,10 +120,16 @@ FileHelpers::isAbsolute(const std::string& path) {
 
 
 std::string
-FileHelpers::checkForRelativity(std::string filename,
+FileHelpers::checkForRelativity(const std::string& filename,
                                 const std::string& basePath) {
-    if (!isAbsolute(filename)) {
-        filename = getConfigurationRelative(basePath, filename);
+    if (filename == "stdout" || filename == "STDOUT" || filename == "-") {
+        return "stdout";
+    }
+    if (filename == "stderr" || filename == "STDERR") {
+        return "stderr";
+    }
+    if (!isSocket(filename) && !isAbsolute(filename)) {
+        return getConfigurationRelative(basePath, filename);
     }
     return filename;
 }

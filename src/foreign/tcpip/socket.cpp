@@ -17,6 +17,7 @@
 
 
 #ifndef WIN32
+	#include <unistd.h>
 	#include <sys/types.h>
 	#include <sys/socket.h>
 	#include <netinet/in.h>
@@ -25,6 +26,7 @@
 	#include <netdb.h>
 	#include <errno.h>
 	#include <fcntl.h>
+	#include <unistd.h>
 #else
 	#ifdef ERROR
 		#undef ERROR
@@ -613,8 +615,8 @@ namespace tcpip
 
 /*-----------------------------------------------------------------------
 * Source  $Source: $
-* Version $Revision: 612 $
-* Date    $Date: 2011-06-14 15:16:52 +0200 (Tue, 14 Jun 2011) $
+* Version $Revision: 645 $
+* Date    $Date: 2012-04-27 05:03:33 -0700 (Fri, 27 Apr 2012) $
 *-----------------------------------------------------------------------
 * $Log: $
 *-----------------------------------------------------------------------*/

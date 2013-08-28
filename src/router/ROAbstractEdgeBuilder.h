@@ -7,7 +7,7 @@
 // Interface for building instances of router-edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -75,9 +75,10 @@ public:
      * @param[in] name The name of the edge
      * @param[in] from The node the edge begins at
      * @param[in] to The node the edge ends at
+     * @param[in] priority The edge priority (road class)
      * @return A proper instance of the named edge
      */
-    virtual ROEdge* buildEdge(const std::string& name, RONode* from, RONode* to) = 0;
+    virtual ROEdge* buildEdge(const std::string& name, RONode* from, RONode* to, const int priority) = 0;
     /// @}
 
 

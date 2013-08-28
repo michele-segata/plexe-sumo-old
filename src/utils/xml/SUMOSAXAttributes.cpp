@@ -9,7 +9,7 @@
 // Encapsulated SAX-Attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -31,11 +31,14 @@
 #endif
 
 #include <string>
-#include "SUMOSAXAttributes.h"
-#include <utils/common/MsgHandler.h>
-#include <utils/common/StringTokenizer.h>
 #include <iostream>
 #include <sstream>
+#include <utils/common/MsgHandler.h>
+#include <utils/common/RGBColor.h>
+#include <utils/common/StringTokenizer.h>
+#include <utils/geom/Boundary.h>
+#include <utils/geom/PositionVector.h>
+#include "SUMOSAXAttributes.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -54,220 +57,6 @@ const std::string SUMOSAXAttributes::ENCODING = " encoding=\"UTF-8\"";
 // ===========================================================================
 SUMOSAXAttributes::SUMOSAXAttributes(const std::string& objectType):
     myObjectType(objectType) {}
-
-
-int
-SUMOSAXAttributes::getIntReporting(int attr, const char* objectid,
-                                   bool& ok, bool report) const {
-    if (!hasAttribute(attr)) {
-        if (report) {
-            emitUngivenError(getName(attr), objectid);
-        }
-        ok = false;
-        return -1;
-    }
-    try {
-        return getInt(attr);
-    } catch (NumberFormatException&) {
-        if (report) {
-            emitFormatError(getName(attr), "an int", objectid);
-        }
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return -1;
-}
-
-
-int
-SUMOSAXAttributes::getOptIntReporting(int attr, const char* objectid,
-                                      bool& ok, int defaultValue, bool report) const {
-    if (!hasAttribute(attr)) {
-        return defaultValue;
-    }
-    try {
-        return getInt(attr);
-    } catch (NumberFormatException&) {
-        if (report) {
-            emitFormatError(getName(attr), "an int", objectid);
-        }
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return -1;
-}
-
-
-SUMOLong
-SUMOSAXAttributes::getLongReporting(int attr, const char* objectid,
-                                    bool& ok, bool report) const {
-    if (!hasAttribute(attr)) {
-        if (report) {
-            emitUngivenError(getName(attr), objectid);
-        }
-        ok = false;
-        return -1;
-    }
-    try {
-        return getLong(attr);
-    } catch (NumberFormatException&) {
-        if (report) {
-            emitFormatError(getName(attr), "an int", objectid);
-        }
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return -1;
-}
-
-
-SUMOReal
-SUMOSAXAttributes::getSUMORealReporting(int attr, const char* objectid,
-                                        bool& ok, bool report) const {
-    if (!hasAttribute(attr)) {
-        if (report) {
-            emitUngivenError(getName(attr), objectid);
-        }
-        ok = false;
-        return -1;
-    }
-    try {
-        return getFloat(attr);
-    } catch (NumberFormatException&) {
-        if (report) {
-            emitFormatError(getName(attr), "a real number", objectid);
-        }
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return (SUMOReal) - 1;
-}
-
-
-SUMOReal
-SUMOSAXAttributes::getOptSUMORealReporting(int attr, const char* objectid,
-        bool& ok, SUMOReal defaultValue, bool report) const {
-    if (!hasAttribute(attr)) {
-        return defaultValue;
-    }
-    try {
-        return getFloat(attr);
-    } catch (NumberFormatException&) {
-        if (report) {
-            emitFormatError(getName(attr), "a real number", objectid);
-        }
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return (SUMOReal) - 1;
-}
-
-
-bool
-SUMOSAXAttributes::getBoolReporting(int attr, const char* objectid,
-                                    bool& ok, bool report) const {
-    if (!hasAttribute(attr)) {
-        if (report) {
-            emitUngivenError(getName(attr), objectid);
-        }
-        ok = false;
-        return false;
-    }
-    try {
-        return getBool(attr);
-    } catch (BoolFormatException&) {
-        if (report) {
-            emitFormatError(getName(attr), "a boolean", objectid);
-        }
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return false;
-}
-
-
-bool
-SUMOSAXAttributes::getOptBoolReporting(int attr, const char* objectid,
-                                       bool& ok, bool defaultValue, bool report) const {
-    if (!hasAttribute(attr)) {
-        return defaultValue;
-    }
-    try {
-        return getBool(attr);
-    } catch (BoolFormatException&) {
-        if (report) {
-            emitFormatError(getName(attr), "a boolean", objectid);
-        }
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return false;
-}
-
-
-std::string
-SUMOSAXAttributes::getStringReporting(int attr, const char* objectid,
-                                      bool& ok, bool report) const {
-    if (!hasAttribute(attr)) {
-        if (report) {
-            emitUngivenError(getName(attr), objectid);
-        }
-        ok = false;
-        return "";
-    }
-    try {
-        std::string ret = getString(attr);
-        if (ret == "") {
-            throw EmptyData();
-        }
-        return ret;
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return "";
-}
-
-
-std::string
-SUMOSAXAttributes::getOptStringReporting(int attr, const char* objectid,
-        bool& ok, const std::string& defaultValue, bool report) const {
-    if (!hasAttribute(attr)) {
-        return defaultValue;
-    }
-    try {
-        return getString(attr);
-    } catch (EmptyData&) {
-        if (report) {
-            emitEmptyError(getName(attr), objectid);
-        }
-    }
-    ok = false;
-    return "";
-}
 
 
 SUMOTime
@@ -295,7 +84,7 @@ SUMOSAXAttributes::getSUMOTimeReporting(int attr, const char* objectid,
     ok = false;
     return (SUMOTime) - 1;
 #else
-    return getIntReporting(attr, objectid, ok, report);
+    return get<int>(attr, objectid, ok, report);
 #endif
 }
 
@@ -321,7 +110,7 @@ SUMOSAXAttributes::getOptSUMOTimeReporting(int attr, const char* objectid,
     ok = false;
     return (SUMOTime) - 1;
 #else
-    return getOptIntReporting(attr, objectid, ok, defaultValue, report);
+    return getOpt<int>(attr, objectid, ok, defaultValue, report);
 #endif
 }
 
@@ -389,6 +178,74 @@ SUMOSAXAttributes::parseStringVector(const std::string& def, std::vector<std::st
     while (st.hasNext()) {
         into.push_back(st.next());
     }
+}
+
+
+template<> const int invalid_return<int>::value = -1;
+template<> const std::string invalid_return<int>::type = "int";
+template<>
+int SUMOSAXAttributes::getInternal(const int attr) const {
+    return getInt(attr);
+}
+
+
+template<> const SUMOLong invalid_return<SUMOLong>::value = -1;
+template<> const std::string invalid_return<SUMOLong>::type = "long";
+template<>
+SUMOLong SUMOSAXAttributes::getInternal(const int attr) const {
+    return getLong(attr);
+}
+
+
+template<> const SUMOReal invalid_return<SUMOReal>::value = -1;
+template<> const std::string invalid_return<SUMOReal>::type = "float";
+template<>
+SUMOReal SUMOSAXAttributes::getInternal(const int attr) const {
+    return getFloat(attr);
+}
+
+
+template<> const bool invalid_return<bool>::value = false;
+template<> const std::string invalid_return<bool>::type = "bool";
+template<>
+bool SUMOSAXAttributes::getInternal(const int attr) const {
+    return getBool(attr);
+}
+
+
+template<> const std::string invalid_return<std::string>::value = "";
+template<> const std::string invalid_return<std::string>::type = "string";
+template<>
+std::string SUMOSAXAttributes::getInternal(const int attr) const {
+    const std::string ret = getString(attr);
+    if (ret == "") {
+        throw EmptyData();
+    }
+    return ret;
+}
+
+
+template<> const RGBColor invalid_return<RGBColor>::value = RGBColor();
+template<> const std::string invalid_return<RGBColor>::type = "color";
+template<>
+RGBColor SUMOSAXAttributes::getInternal(const int attr) const {
+    return getColor();
+}
+
+
+template<> const PositionVector invalid_return<PositionVector>::value = PositionVector();
+template<> const std::string invalid_return<PositionVector>::type = "PositionVector";
+template<>
+PositionVector SUMOSAXAttributes::getInternal(const int attr) const {
+    return getShape(attr);
+}
+
+
+template<> const Boundary invalid_return<Boundary>::value = Boundary();
+template<> const std::string invalid_return<Boundary>::type = "Boundary";
+template<>
+Boundary SUMOSAXAttributes::getInternal(const int attr) const {
+    return getBoundary(attr);
 }
 
 

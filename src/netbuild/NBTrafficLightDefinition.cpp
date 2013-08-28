@@ -9,7 +9,7 @@
 // The base class for traffic light logic definitions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -56,8 +56,12 @@ const std::string NBTrafficLightDefinition::DefaultProgramID = "0";
 // method definitions
 // ===========================================================================
 NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id,
-        const std::vector<NBNode*>& junctions, const std::string& programID, SUMOTime offset)
-    : Named(id), myControlledNodes(junctions), mySubID(programID), myOffset(offset) {
+        const std::vector<NBNode*>& junctions, const std::string& programID,
+        SUMOTime offset, TrafficLightType type) :
+    Named(id),
+    myControlledNodes(junctions),
+    mySubID(programID), myOffset(offset),
+    myType(type) {
     std::vector<NBNode*>::iterator i = myControlledNodes.begin();
     while (i != myControlledNodes.end()) {
         for (std::vector<NBNode*>::iterator j = i + 1; j != myControlledNodes.end();) {
@@ -77,15 +81,22 @@ NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id,
 
 
 NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id,
-        NBNode* junction, const std::string& programID, SUMOTime offset)
-    : Named(id), mySubID(programID), myOffset(offset) {
+        NBNode* junction, const std::string& programID, SUMOTime offset, TrafficLightType type) :
+    Named(id),
+    mySubID(programID),
+    myOffset(offset),
+    myType(type) {
     addNode(junction);
     junction->addTrafficLight(this);
 }
 
 
-NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id, const std::string& programID, SUMOTime offset)
-    : Named(id), mySubID(programID), myOffset(offset) {}
+NBTrafficLightDefinition::NBTrafficLightDefinition(const std::string& id, const std::string& programID,
+        SUMOTime offset, TrafficLightType type) :
+    Named(id),
+    mySubID(programID),
+    myOffset(offset),
+    myType(type) {}
 
 
 NBTrafficLightDefinition::~NBTrafficLightDefinition() {}
@@ -349,6 +360,29 @@ NBTrafficLightDefinition::getIncomingEdges() const {
     return myIncomingEdges;
 }
 
+
+void
+NBTrafficLightDefinition::collectAllLinks() {
+    myControlledLinks.clear();
+    // build the list of links which are controled by the traffic light
+    for (EdgeVector::iterator i = myIncomingEdges.begin(); i != myIncomingEdges.end(); i++) {
+        NBEdge* incoming = *i;
+        unsigned int noLanes = incoming->getNumLanes();
+        for (unsigned int j = 0; j < noLanes; j++) {
+            std::vector<NBEdge::Connection> connected = incoming->getConnectionsFromLane(j);
+            for (std::vector<NBEdge::Connection>::iterator k = connected.begin(); k != connected.end(); k++) {
+                const NBEdge::Connection& el = *k;
+                if (incoming->mayBeTLSControlled(el.fromLane, el.toEdge, el.toLane)) {
+                    if (el.toEdge != 0 && el.toLane >= (int) el.toEdge->getNumLanes()) {
+                        throw ProcessError("Connection '" + incoming->getID() + "_" + toString(j) + "->" + el.toEdge->getID() + "_" + toString(el.toLane) + "' yields in a not existing lane.");
+                    }
+                    int tlIndex = (int)myControlledLinks.size();
+                    myControlledLinks.push_back(NBConnection(incoming, el.fromLane, el.toEdge, el.toLane, tlIndex));
+                }
+            }
+        }
+    }
+}
 
 /****************************************************************************/
 

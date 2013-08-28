@@ -10,7 +10,7 @@
 // Importer for edge connections stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -74,8 +74,8 @@ NIXMLConnectionsHandler::myStartElement(int element,
                                         const SUMOSAXAttributes& attrs) {
     if (element == SUMO_TAG_DELETE) {
         bool ok = true;
-        std::string from = attrs.getStringReporting(SUMO_ATTR_FROM, 0, ok);
-        std::string to = attrs.getStringReporting(SUMO_ATTR_TO, 0, ok);
+        std::string from = attrs.get<std::string>(SUMO_ATTR_FROM, 0, ok);
+        std::string to = attrs.get<std::string>(SUMO_ATTR_TO, 0, ok);
         if (!ok) {
             return;
         }
@@ -93,7 +93,7 @@ NIXMLConnectionsHandler::myStartElement(int element,
             myErrorMsgHandler->inform("The connection-destination edge '" + to + "' to reset is not known.");
             return;
         }
-        if (!fromEdge->isConnectedTo(toEdge)) {
+        if (!fromEdge->isConnectedTo(toEdge) && fromEdge->getStep() >= NBEdge::EDGE2EDGES) {
             WRITE_WARNING("Target edge '" + toEdge->getID() + "' is not connected with '" + fromEdge->getID() + "'; the connection cannot be reset.");
             return;
         }
@@ -107,17 +107,17 @@ NIXMLConnectionsHandler::myStartElement(int element,
             }
             // we could be trying to reset a connection loaded from a sumo net and which has become obsolete.
             // In this case it's ok to encounter invalid lance indices
-            if (!fromEdge->hasConnectionTo(toEdge, toLane)) {
+            if (!fromEdge->hasConnectionTo(toEdge, toLane) && fromEdge->getStep() >= NBEdge::LANES2EDGES) {
                 WRITE_WARNING("Edge '" + fromEdge->getID() + "' has no connection to lane " + toString(toLane) + " of edge '" + toEdge->getID() + "'; the connection cannot be reset.");
             }
         }
-        fromEdge->removeFromConnections(toEdge, fromLane, toLane);
+        fromEdge->removeFromConnections(toEdge, fromLane, toLane, true);
     }
 
     if (element == SUMO_TAG_CONNECTION) {
         bool ok = true;
-        std::string from = attrs.getStringReporting(SUMO_ATTR_FROM, "connection", ok);
-        std::string to = attrs.getOptStringReporting(SUMO_ATTR_TO, "connection", ok, "");
+        std::string from = attrs.get<std::string>(SUMO_ATTR_FROM, "connection", ok);
+        std::string to = attrs.getOpt<std::string>(SUMO_ATTR_TO, "connection", ok, "");
         if (!ok || myEdgeCont.wasIgnored(from) || myEdgeCont.wasIgnored(to)) {
             return;
         }
@@ -142,8 +142,8 @@ NIXMLConnectionsHandler::myStartElement(int element,
     }
     if (element == SUMO_TAG_PROHIBITION) {
         bool ok = true;
-        std::string prohibitor = attrs.getOptStringReporting(SUMO_ATTR_PROHIBITOR, 0, ok, "");
-        std::string prohibited = attrs.getOptStringReporting(SUMO_ATTR_PROHIBITED, 0, ok, "");
+        std::string prohibitor = attrs.getOpt<std::string>(SUMO_ATTR_PROHIBITOR, 0, ok, "");
+        std::string prohibited = attrs.getOpt<std::string>(SUMO_ATTR_PROHIBITED, 0, ok, "");
         if (!ok) {
             return;
         }
@@ -201,7 +201,7 @@ NIXMLConnectionsHandler::parseLaneBound(const SUMOSAXAttributes& attrs, NBEdge* 
         return;
     }
     bool ok = true;
-    const bool mayDefinitelyPass = attrs.getOptBoolReporting(SUMO_ATTR_PASS, 0, ok, false);
+    const bool mayDefinitelyPass = attrs.getOpt<bool>(SUMO_ATTR_PASS, 0, ok, false);
     if (!ok) {
         return;
     }
@@ -249,7 +249,7 @@ NIXMLConnectionsHandler::parseLaneBound(const SUMOSAXAttributes& attrs, NBEdge* 
         myErrorMsgHandler->inform("At least one of the defined lanes was not numeric");
     }
     //
-    bool keepUncontrolled = attrs.getOptBoolReporting(SUMO_ATTR_UNCONTROLLED, 0, ok, false);
+    bool keepUncontrolled = attrs.getOpt<bool>(SUMO_ATTR_UNCONTROLLED, 0, ok, false);
     if (keepUncontrolled) {
         from->disableConnection4TLS(fromLane, to, toLane);
     }
@@ -278,7 +278,7 @@ NIXMLConnectionsHandler::parseDeprecatedLaneDefinition(const SUMOSAXAttributes& 
                       "' instead.");
     }
 
-    std::string laneConn = attributes.getStringReporting(SUMO_ATTR_LANE, 0, ok);
+    std::string laneConn = attributes.get<std::string>(SUMO_ATTR_LANE, 0, ok);
     StringTokenizer st(laneConn, ':');
     if (!ok || st.size() != 2) {
         myErrorMsgHandler->inform("Invalid lane to lane connection from '" +
@@ -298,8 +298,8 @@ NIXMLConnectionsHandler::parseLaneDefinition(const SUMOSAXAttributes& attributes
         int* fromLane,
         int* toLane) {
     bool ok = true;
-    *fromLane = attributes.getIntReporting(SUMO_ATTR_FROM_LANE, 0, ok);
-    *toLane = attributes.getIntReporting(SUMO_ATTR_TO_LANE, 0, ok);
+    *fromLane = attributes.get<int>(SUMO_ATTR_FROM_LANE, 0, ok);
+    *toLane = attributes.get<int>(SUMO_ATTR_TO_LANE, 0, ok);
     return ok;
 }
 

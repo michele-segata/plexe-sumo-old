@@ -9,7 +9,7 @@
 // A device which collects info on the vehicle trip
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -100,7 +100,9 @@ MSDevice_Tripinfo::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/,
         if (!MSGlobals::gUseMesoSim) {
             myArrivalLane = static_cast<MSVehicle&>(veh).getLane()->getID();
         }
-        myArrivalPos = myHolder.getPositionOnLane();
+        // @note vehicle may have moved past its arrivalPos during the last step
+        // due to non-zero arrivalspeed but we consider it as arrived at the desired position
+        myArrivalPos = myHolder.getArrivalPos();
         myArrivalSpeed = veh.getSpeed();
     }
     return true;
@@ -142,9 +144,6 @@ MSDevice_Tripinfo::generateOutput() const {
        << "\" vType=\"" << myHolder.getVehicleType().getID()
        << "\" vaporized=\"" << (myHolder.getEdge() == *(myHolder.getRoute().end() - 1) ? "" : "0")
        << "\"";
-    if (devices.size() > 1) {
-        os << ">\n";
-    }
 }
 
 

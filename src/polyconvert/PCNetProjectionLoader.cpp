@@ -9,7 +9,7 @@
 // A reader for a SUMO network's projection description
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -62,20 +62,12 @@
 // static interface
 // ---------------------------------------------------------------------------
 void
-PCNetProjectionLoader::loadIfSet(OptionsCont& oc,
-                                 Position& netOffset, Boundary& origNetBoundary,
-                                 Boundary& convNetBoundary,
-                                 std::string& projParameter) {
-    if (!oc.isSet("net")) {
-        return;
-    }
-    // check file
-    std::string file = oc.getString("net");
+PCNetProjectionLoader::load(const std::string& file, int shift) {
     if (!FileHelpers::exists(file)) {
         throw ProcessError("Could not open net-file '" + file + "'.");
     }
     // build handler and parser
-    PCNetProjectionLoader handler(netOffset, origNetBoundary, convNetBoundary, projParameter);
+    PCNetProjectionLoader handler(shift);
     handler.setFileName(file);
     SUMOSAXReader* parser = XMLSubSys::getSAXReader(handler);
     PROGRESS_BEGIN_MESSAGE("Parsing network projection from '" + file + "'");
@@ -98,14 +90,11 @@ PCNetProjectionLoader::loadIfSet(OptionsCont& oc,
 // ---------------------------------------------------------------------------
 // handler methods
 // ---------------------------------------------------------------------------
-PCNetProjectionLoader::PCNetProjectionLoader(Position& netOffset,
-        Boundary& origNetBoundary, Boundary& convNetBoundary,
-        std::string& projParameter)
-    : SUMOSAXHandler("sumo-network"), myNetOffset(netOffset),
-      myOrigNetBoundary(origNetBoundary), myConvNetBoundary(convNetBoundary),
-      myProjParameter(projParameter),
-      myFoundOffset(false), myFoundOrigNetBoundary(false),
-      myFoundConvNetBoundary(false), myFoundProj(false) {}
+PCNetProjectionLoader::PCNetProjectionLoader(int shift) :
+    SUMOSAXHandler("sumo-network"),
+    myFoundLocation(false),
+    myShift(shift)
+{}
 
 
 PCNetProjectionLoader::~PCNetProjectionLoader() {}
@@ -117,21 +106,22 @@ PCNetProjectionLoader::myStartElement(int element,
     if (element != SUMO_TAG_LOCATION) {
         return;
     }
-    bool ok = true;
-    PositionVector tmp = attrs.getShapeReporting(SUMO_ATTR_NET_OFFSET, 0, ok, false);
-    if (ok) {
-        myNetOffset = tmp[0];
+    // @todo refactor parsing of location since its duplicated in NLHandler and PCNetProjectionLoader
+    myFoundLocation = true;
+    PositionVector s = attrs.get<PositionVector>(SUMO_ATTR_NET_OFFSET, 0, myFoundLocation);
+    Boundary convBoundary = attrs.get<Boundary>(SUMO_ATTR_CONV_BOUNDARY, 0, myFoundLocation);
+    Boundary origBoundary = attrs.get<Boundary>(SUMO_ATTR_ORIG_BOUNDARY, 0, myFoundLocation);
+    std::string proj = attrs.get<std::string>(SUMO_ATTR_ORIG_PROJ, 0, myFoundLocation);
+    if (myFoundLocation) {
+        Position networkOffset = s[0];
+        GeoConvHelper::init(proj, networkOffset, origBoundary, convBoundary, myShift);
     }
-    myOrigNetBoundary = attrs.getBoundaryReporting(SUMO_ATTR_ORIG_BOUNDARY, 0, ok);
-    myConvNetBoundary = attrs.getBoundaryReporting(SUMO_ATTR_CONV_BOUNDARY, 0, ok);
-    myProjParameter = attrs.getOptStringReporting(SUMO_ATTR_ORIG_PROJ, 0, ok, "");
-    myFoundOffset = myFoundOrigNetBoundary = myFoundConvNetBoundary = myFoundProj = ok;
 }
 
 
 bool
 PCNetProjectionLoader::hasReadAll() const {
-    return myFoundOffset && myFoundOrigNetBoundary && myFoundConvNetBoundary && myFoundProj;
+    return myFoundLocation;
 }
 
 

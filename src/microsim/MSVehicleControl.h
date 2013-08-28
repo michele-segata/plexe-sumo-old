@@ -9,7 +9,7 @@
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -362,15 +362,14 @@ public:
     /// @name State I/O (mesosim only)
     /// @{
 
-    /** @brief Loads the state of this control from the given stream
-     * @todo Does not work for microsim
+    /** @brief Sets the current state variables as loaded from the stream
      */
-    virtual void saveState(std::ostream& os);
+    void setState(int runningVehNo, int endedVehNo, SUMOReal totalDepartureDelay, SUMOReal totalTravelTime);
 
     /** @brief Saves the current state into the given stream
      * @todo Does not work for microsim
      */
-    virtual void loadState(BinaryInputDevice& bis, const SUMOTime offset);
+    virtual void saveState(OutputDevice& out);
     /// @}
 
 

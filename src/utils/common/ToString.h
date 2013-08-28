@@ -9,7 +9,7 @@
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,7 @@
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <utils/common/SUMOVehicleClass.h>
 #include "StdDefs.h"
+
 
 // ===========================================================================
 // class definitions
@@ -117,6 +118,20 @@ inline std::string toString<TrafficLightType>(const TrafficLightType& type, std:
 }
 
 
+template <typename V>
+inline std::string toString(const std::vector<V*>& v, std::streamsize accuracy = OUTPUT_ACCURACY) {
+    UNUSED_PARAMETER(accuracy);
+    std::ostringstream oss;
+    for (typename std::vector<V*>::const_iterator it = v.begin(); it != v.end(); ++it) {
+        if (it != v.begin()) {
+            oss << " ";
+        }
+        oss << (*it)->getID();
+    }
+    return oss.str();
+}
+
+
 template <typename T, typename T_BETWEEN>
 inline std::string joinToString(const std::vector<T>& v, const T_BETWEEN& between, std::streamsize accuracy = OUTPUT_ACCURACY) {
     std::ostringstream oss;
@@ -130,6 +145,18 @@ inline std::string joinToString(const std::vector<T>& v, const T_BETWEEN& betwee
         oss << toString(*it, accuracy);
     }
     return oss.str();
+}
+
+
+template <>
+inline std::string toString(const std::vector<int>& v, std::streamsize accuracy) {
+    return joinToString(v, " ", accuracy);
+}
+
+
+template <>
+inline std::string toString(const std::vector<SUMOReal>& v, std::streamsize accuracy) {
+    return joinToString(v, " ", accuracy);
 }
 
 

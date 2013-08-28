@@ -9,7 +9,7 @@
 // Static storage of an output device and its base (abstract) implementation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -74,18 +74,16 @@ public:
 
     /** @brief Returns the described OutputDevice
      *
-     * Creates and returns the named device. "stdout" and "-" refer to standard out,
+     * Creates and returns the named device. "stdout" and "stderr" refer to the relevant console streams,
      * "hostname:port" initiates socket connection. Otherwise a filename
-     * is assumed and the second parameter may be used to give a base directory.
+     * is assumed (where "nul" and "/dev/null" do what you would expect on both platforms).
      * If there already is a device with the same name this one is returned.
      *
      * @param[in] name The description of the output name/port/whatever
-     * @param[in] base The base path the application is run within
      * @return The corresponding (built or existing) device
      * @exception IOError If the output could not be built for any reason (error message is supplied)
      */
-    static OutputDevice& getDevice(const std::string& name,
-                                   const std::string& base = "");
+    static OutputDevice& getDevice(const std::string& name);
 
 
     /** @brief Creates the device using the output definition stored in the named option
@@ -173,7 +171,6 @@ public:
      *  is written and false returned.
      *
      * @param[in] rootElement The root element to use
-     * @param[in] xmlParams Additional parameters (such as encoding) to include in the <?xml> declaration
      * @param[in] attrs Additional attributes to save within the rootElement
      * @param[in] comment Additional comment (saved in front the rootElement)
      * @return Whether the header could be written (stack was empty)
@@ -181,7 +178,6 @@ public:
      * @todo Describe what is saved
      */
     bool writeXMLHeader(const std::string& rootElement,
-                        const std::string xmlParams = "",
                         const std::string& attrs = "",
                         const std::string& comment = "");
 
@@ -191,10 +187,7 @@ public:
         if (myAmBinary) {
             return static_cast<BinaryFormatter*>(myFormatter)->writeHeader<E>(getOStream(), rootElement);
         }
-        if (rootElement == SUMO_TAG_ROUTES) {
-            return myFormatter->writeXMLHeader(getOStream(), "routes", "", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
-        }
-        return myFormatter->writeXMLHeader(getOStream(), toString(rootElement));
+        return static_cast<PlainXMLFormatter*>(myFormatter)->writeHeader(getOStream(), rootElement);
     }
 
 
@@ -220,23 +213,17 @@ public:
     OutputDevice& openTag(const SumoXMLTag& xmlElement);
 
 
-    /** @brief Ends the most recently opened element start.
-     *
-     * Writes more or less nothing but ">" and a line feed.
-     */
-    void closeOpener();
-
     /** @brief Closes the most recently opened tag
      *
      * The topmost xml-element from the stack is written into the stream
-     *  as a closing element ("</" + element + ">") and is then removed from
-     *  the stack. If abbreviated closing is requested, only "/>" is the output.
+     *  as a closing element. Depending on the formatter used
+     *  this may be something like "</" + element + ">" or "/>" or
+     *  nothing at all.
      *
-     * @param[in] name whether abbreviated closing is performed
      * @return Whether a further element existed in the stack and could be closed
      * @todo it is not verified that the topmost element was closed
      */
-    bool closeTag(bool abbreviated = false);
+    bool closeTag();
 
     /** @brief writes an arbitrary attribute
      *

@@ -8,7 +8,7 @@
 // The main interface for loading a microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -51,7 +51,7 @@ class NLEdgeControlBuilder;
 class NLJunctionControlBuilder;
 class NLDetectorBuilder;
 class NLTriggerBuilder;
-class MSRouteLoader;
+class SUMORouteLoader;
 
 
 // ===========================================================================
@@ -131,7 +131,7 @@ protected:
      * @return The built route loader control
      * @exception ProcessError If an error occured
      */
-    MSRouteLoaderControl* buildRouteLoaderControl(const OptionsCont& oc);
+    SUMORouteLoaderControl* buildRouteLoaderControl(const OptionsCont& oc);
 
 
 

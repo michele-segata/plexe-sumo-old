@@ -7,7 +7,7 @@
 // Exporter writing networks using the openDRIVE format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -91,7 +91,11 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         unsigned int li = (unsigned int)lanes.size() - 1;
         PositionVector ls = e->getLaneShape(li);
         SUMOReal width = lanes[li].width < 0 || !e->hasLaneSpecificWidth() ? SUMO_const_laneWidth : lanes[li].width;
-        ls.move2side(-width / 2.);
+        try {
+            ls.move2side(-width / 2.);
+        } catch (InvalidArgument&) {
+            // we do not write anything, as this should have been reported, already
+        }
         writePlanView(ls, device);
         device << "        <elevationProfile><elevation s=\"0\" a=\"0\" b=\"0\" c=\"0\" d=\"0\"/></elevationProfile>\n";
         device << "        <lateralProfile/>\n";
@@ -135,15 +139,15 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
                 const NBEdge::Connection& c = *k;
                 PositionVector shape = c.shape;
                 if (c.haveVia) {
-                    shape.appendWithCrossingPoint(c.viaShape);
+                    shape.append(c.viaShape);
                 }
                 const SUMOReal width = SUMO_const_laneWidth;
                 // @todo: this if-clause is a hack which assures that the code also works with connections of zero length, what may be possible
                 // probably, it would make sense to mark such connections and connect the incoming/outgoing streets directly in such cases.
-                if (shape.length() != 0) {
+                try {
                     shape.move2side(-width / 2.);
-                } else {
-                    WRITE_WARNING("Same position problem at internal edge '" + c.id + "'.");
+                } catch (InvalidArgument&) {
+                    // we do not write anything, maybe we should
                 }
                 device << "    <road name=\"" << c.id << "\" length=\"" << shape.length() << "\" id=\"" << getID(c.id, edgeMap, edgeID) << "\" junction=\"" << getID(n->getID(), nodeMap, nodeID) << "\">\n";
                 device << "        <link>\n";

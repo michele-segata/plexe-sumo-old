@@ -129,6 +129,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "y_osgview", "y_osgview\y_os
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "marouter", "marouter\marouter.vcxproj", "{90205628-51D7-4194-9FC0-7D74C35A3471}"
 	ProjectSection(ProjectDependencies) = postProject
+		{F5D8313C-621D-4CCE-A6DA-83EFFBDE7CE6} = {F5D8313C-621D-4CCE-A6DA-83EFFBDE7CE6}
 		{A003A0ED-38C6-4E03-84D1-BA42D25ABC4D} = {A003A0ED-38C6-4E03-84D1-BA42D25ABC4D}
 	EndProjectSection
 EndProject
@@ -1158,8 +1159,10 @@ Global
 		{F5218B3F-4CE3-47F7-8A3D-41683281EAA0}.Release|x64.ActiveCfg = InternalRelease|x64
 		{90205628-51D7-4194-9FC0-7D74C35A3471}.Debug|Win32.ActiveCfg = InternalDebug|Win32
 		{90205628-51D7-4194-9FC0-7D74C35A3471}.Debug|x64.ActiveCfg = InternalDebug|x64
-		{90205628-51D7-4194-9FC0-7D74C35A3471}.Fastbuild|Win32.ActiveCfg = Fastbuild|Win32
-		{90205628-51D7-4194-9FC0-7D74C35A3471}.Fastbuild|x64.ActiveCfg = Fastbuild|x64
+		{90205628-51D7-4194-9FC0-7D74C35A3471}.Fastbuild|Win32.ActiveCfg = InternalFastbuild|Win32
+		{90205628-51D7-4194-9FC0-7D74C35A3471}.Fastbuild|Win32.Build.0 = InternalFastbuild|Win32
+		{90205628-51D7-4194-9FC0-7D74C35A3471}.Fastbuild|x64.ActiveCfg = InternalFastbuild|x64
+		{90205628-51D7-4194-9FC0-7D74C35A3471}.Fastbuild|x64.Build.0 = InternalFastbuild|x64
 		{90205628-51D7-4194-9FC0-7D74C35A3471}.InternalDebug|Win32.ActiveCfg = InternalDebug|Win32
 		{90205628-51D7-4194-9FC0-7D74C35A3471}.InternalDebug|Win32.Build.0 = InternalDebug|Win32
 		{90205628-51D7-4194-9FC0-7D74C35A3471}.InternalDebug|x64.ActiveCfg = InternalDebug|x64

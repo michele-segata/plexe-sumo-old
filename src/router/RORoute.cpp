@@ -8,7 +8,7 @@
 // A complete router's route
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -91,6 +91,11 @@ RORoute::recheckForLoops() {
     ROHelper::recheckForLoops(myRoute);
 }
 
+void
+RORoute::addProbability(SUMOReal prob) {
+    myProbability += prob;
+}
+
 
 OutputDevice&
 RORoute::writeXMLDefinition(OutputDevice& dev, const ROVehicle* const veh,
@@ -106,7 +111,12 @@ RORoute::writeXMLDefinition(OutputDevice& dev, const ROVehicle* const veh,
     if (myColor != 0) {
         dev.writeAttr(SUMO_ATTR_COLOR, *myColor);
     }
-    dev.writeAttr(SUMO_ATTR_EDGES, myRoute);
+    if (!myRoute.empty() && myRoute.front()->getType() == ROEdge::ET_DISTRICT) {
+        std::vector<const ROEdge*> temp(myRoute.begin() + 1, myRoute.end() - 1);
+        dev.writeAttr(SUMO_ATTR_EDGES, temp);
+    } else {
+        dev.writeAttr(SUMO_ATTR_EDGES, myRoute);
+    }
     if (withExitTimes) {
         std::string exitTimes;
         SUMOReal time = STEPS2TIME(veh->getDepartureTime());
@@ -119,12 +129,9 @@ RORoute::writeXMLDefinition(OutputDevice& dev, const ROVehicle* const veh,
         }
         dev.writeAttr("exitTimes", exitTimes);
     }
-    dev.closeTag(true);
+    dev.closeTag();
     return dev;
 }
 
 
-
-
 /****************************************************************************/
-

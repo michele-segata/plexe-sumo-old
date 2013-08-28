@@ -8,7 +8,7 @@
 // Network state mean data collector for edges/lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -185,7 +185,7 @@ MSMeanData_Net::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime pe
         if (nVehVaporized > 0) {
             dev << " vaporized=\"" << nVehVaporized << "\"";
         }
-        dev.closeTag(true);
+        dev.closeTag();
         return;
     }
     if (sampleSeconds > myParent->myMinSamples) {
@@ -217,7 +217,7 @@ MSMeanData_Net::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime pe
     if (nVehVaporized > 0) {
         dev << " vaporized=\"" << nVehVaporized << "\"";
     }
-    dev.closeTag(true);
+    dev.closeTag();
 }
 
 // ---------------------------------------------------------------------------

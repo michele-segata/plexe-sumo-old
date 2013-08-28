@@ -12,7 +12,7 @@
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -140,7 +140,7 @@ enum SumoXMLTag {
     SUMO_TAG_WAUT,
     SUMO_TAG_WAUT_SWITCH,
     SUMO_TAG_WAUT_JUNCTION,
-    SUMO_TAG_RESET,
+    SUMO_TAG_SEGMENT,
     SUMO_TAG_DELETE,
     SUMO_TAG_STOP,
     SUMO_TAG_DEST_PROB_REROUTE,
@@ -163,28 +163,32 @@ enum SumoXMLTag {
     SUMO_TAG_WAY,
     SUMO_TAG_ND,
     SUMO_TAG_TAG,
+    SUMO_TAG_RELATION,
+    SUMO_TAG_MEMBER,
 
+    SUMO_TAG_VIEWSETTINGS,
     SUMO_TAG_VIEWSETTINGS_DECAL,
     SUMO_TAG_VIEWSETTINGS_SCHEME,
     SUMO_TAG_VIEWSETTINGS_OPENGL,
     SUMO_TAG_VIEWSETTINGS_BACKGROUND,
     SUMO_TAG_VIEWSETTINGS_EDGES,
-    SUMO_TAG_VIEWSETTINGS_EDGE_COLOR_ITEM,
     SUMO_TAG_VIEWSETTINGS_VEHICLES,
-    SUMO_TAG_VIEWSETTINGS_VEHICLE_COLOR_ITEM,
     SUMO_TAG_VIEWSETTINGS_JUNCTIONS,
     SUMO_TAG_VIEWSETTINGS_ADDITIONALS,
     SUMO_TAG_VIEWSETTINGS_POIS,
+    SUMO_TAG_VIEWSETTINGS_POLYS,
     SUMO_TAG_VIEWSETTINGS_LEGEND,
     SUMO_TAG_INCLUDE,
     SUMO_TAG_DELAY,
     SUMO_TAG_VIEWPORT,
     SUMO_TAG_SNAPSHOT,
+    SUMO_TAG_BREAKPOINTS_FILE,
     SUMO_TAG_LOCATION,
     SUMO_TAG_COLORSCHEME,
     SUMO_TAG_ENTRY,
 
     SUMO_TAG_CF_KRAUSS,
+    SUMO_TAG_CF_KRAUSS_PLUS_SLOPE,
     SUMO_TAG_CF_KRAUSS_ORIG1,
     SUMO_TAG_CF_SMART_SK,
     SUMO_TAG_CF_DANIEL1,
@@ -263,6 +267,9 @@ enum SumoXMLAttr {
     SUMO_ATTR_X,
     SUMO_ATTR_Y,
     SUMO_ATTR_Z,
+    SUMO_ATTR_CENTER_X,
+    SUMO_ATTR_CENTER_Y,
+    SUMO_ATTR_CENTER_Z,
     /* sumo-junction attributes */
     SUMO_ATTR_KEY,
     SUMO_ATTR_REQUESTSIZE,
@@ -339,8 +346,10 @@ enum SumoXMLAttr {
     SUMO_ATTR_BEGIN,
     /** weights: time range end */
     SUMO_ATTR_END,
-    /** link: the traffic light id responsible for this link */
+    /** link,node: the traffic light id responsible for this link */
     SUMO_ATTR_TLID,
+    /** node: the type of traffic light */
+    SUMO_ATTR_TLTYPE,
     /** link: the index of the link within the traffic light */
     SUMO_ATTR_TLLINKINDEX,
     /** edge: the shape in xml-definition */
@@ -477,6 +486,8 @@ enum SumoXMLAttr {
 
     SUMO_ATTR_GENERATE_WALKS,
     SUMO_ATTR_ACTTYPE,
+    SUMO_ATTR_SLOPE,
+    SUMO_ATTR_VERSION,
 
 
     /**

@@ -10,7 +10,7 @@
 // A lane change model developed by D. Krajzewicz between 2004 and 2010
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -569,13 +569,13 @@ MSLCM_DK2004::patchSpeed(const SUMOReal min, const SUMOReal wanted, const SUMORe
     // decelerate if being a blocking follower
     //  (and does not have to change lanes)
     if ((state & LCA_AMBLOCKINGFOLLOWER) != 0) {
-        if (fabs(max - myVehicle.getCarFollowModel().maxNextSpeed(myVehicle.getSpeed())) < 0.001 && min == 0) { // !!! was standing
+        if (fabs(max - myVehicle.getCarFollowModel().maxNextSpeed(myVehicle.getSpeed(), &myVehicle)) < 0.001 && min == 0) { // !!! was standing
             return 0;
         }
         return (min + wanted) / (SUMOReal) 2.0;
     }
     if ((state & LCA_AMBACKBLOCKER) != 0) {
-        if (max <= myVehicle.getCarFollowModel().maxNextSpeed(myVehicle.getSpeed()) && min == 0) { // !!! was standing
+        if (max <= myVehicle.getCarFollowModel().maxNextSpeed(myVehicle.getSpeed(), &myVehicle) && min == 0) { // !!! was standing
             return min;
         }
     }
@@ -588,7 +588,7 @@ MSLCM_DK2004::patchSpeed(const SUMOReal min, const SUMOReal wanted, const SUMORe
         return (max + wanted) / (SUMOReal) 2.0;
     }
     if ((state & LCA_AMBLOCKINGFOLLOWER_DONTBRAKE) != 0) {
-        if (max <= myVehicle.getCarFollowModel().maxNextSpeed(myVehicle.getSpeed()) && min == 0) { // !!! was standing
+        if (max <= myVehicle.getCarFollowModel().maxNextSpeed(myVehicle.getSpeed(), &myVehicle) && min == 0) { // !!! was standing
             return wanted;
         }
         return (min + wanted) / (SUMOReal) 2.0;
@@ -653,6 +653,8 @@ MSLCM_DK2004::prepareStep() {
     myLeftSpace = 0;
     myVSafes.clear();
     myDontBrake = false;
+    // truncate myChangeProbability to work around numerical instability between different builds
+    myChangeProbability = ceil(myChangeProbability * 100000.0) * 0.00001;
 }
 
 

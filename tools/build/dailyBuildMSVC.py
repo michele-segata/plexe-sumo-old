@@ -13,7 +13,7 @@ Some paths especially for the temp dir and the compiler are
 hard coded into this script.
 
 SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2013 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 from __future__ import with_statement
@@ -168,7 +168,7 @@ for platform in ["Win32", "x64"]:
     env["TEXTTEST_TMP"] = os.path.join(options.rootDir, env["FILEPREFIX"]+"texttesttmp")
     env["TEXTTEST_HOME"] = os.path.join(options.rootDir, options.testsDir)
     if "SUMO_HOME" not in env:
-        env["SUMO_HOME"] = options.rootDir
+        env["SUMO_HOME"] = os.path.join(os.path.dirname(__file__), '..', '..')
     shutil.rmtree(env["TEXTTEST_TMP"], True)
     shutil.rmtree(env["SUMO_REPORT"], True)
     os.mkdir(env["SUMO_REPORT"])

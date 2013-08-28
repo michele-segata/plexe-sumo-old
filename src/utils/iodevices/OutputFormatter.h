@@ -7,7 +7,7 @@
 // Abstract base class for output formatters
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -68,14 +68,12 @@ public:
      *
      * @param[in] into The output stream to use
      * @param[in] rootElement The root element to use
-     * @param[in] xmlParams Additional parameters (such as encoding) to include in the <?xml> declaration
      * @param[in] attrs Additional attributes to save within the rootElement
      * @param[in] comment Additional comment (saved in front the rootElement)
      * @todo Check which parameter is used herein
      * @todo Describe what is saved
      */
     virtual bool writeXMLHeader(std::ostream& into, const std::string& rootElement,
-                                const std::string xmlParams = "",
                                 const std::string& attrs = "",
                                 const std::string& comment = "") = 0;
 
@@ -103,23 +101,13 @@ public:
     virtual void openTag(std::ostream& into, const SumoXMLTag& xmlElement) = 0;
 
 
-    /** @brief Ends the most recently opened element start.
-     *
-     * Writes more or less nothing but ">" and a line feed.
-     *
-     * @param[in] into The output stream to use
-     */
-    virtual void closeOpener(std::ostream& into) = 0;
-
-
     /** @brief Closes the most recently opened tag
      *
      * @param[in] into The output stream to use
-     * @param[in] name whether abbreviated closing is performed
      * @return Whether a further element existed in the stack and could be closed
      * @todo it is not verified that the topmost element was closed
      */
-    virtual bool closeTag(std::ostream& into, bool abbreviated = false) = 0;
+    virtual bool closeTag(std::ostream& into) = 0;
 
 
     /** @brief writes an arbitrary attribute

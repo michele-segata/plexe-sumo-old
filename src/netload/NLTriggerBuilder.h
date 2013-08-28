@@ -10,7 +10,7 @@
 // Builds trigger objects for microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -48,6 +48,7 @@ class MSTriggeredRerouter;
 class MSLane;
 class MSEdge;
 class MSBusStop;
+class MSCalibrator;
 
 #ifdef HAVE_INTERNAL
 class METriggeredCalibrator;
@@ -115,7 +116,7 @@ public:
      * @see buildLaneSpeedTrigger
      */
     void parseAndBuildLaneSpeedTrigger(MSNet& net, const SUMOSAXAttributes& attrs,
-                                       const std::string& base) throw(InvalidArgument);
+                                       const std::string& base);
 
 
     /** @brief Parses his values and builds a rerouter
@@ -126,7 +127,7 @@ public:
      * @exception InvalidArgument If a parameter (edge) is not valid
      */
     void parseAndBuildRerouter(MSNet& net, const SUMOSAXAttributes& attrs,
-                               const std::string& base) throw(InvalidArgument);
+                               const std::string& base);
 
 
     /** @brief Parses his values and builds a bus stop
@@ -135,10 +136,9 @@ public:
      * @param[in] attrs SAX-attributes which define the trigger
      * @exception InvalidArgument If a parameter (lane/position) is not valid
      */
-    void parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attrs) throw(InvalidArgument);
+    void parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attrs);
 
 
-#ifdef HAVE_INTERNAL
     /** @brief Parses his values and builds a mesoscopic or microscopic calibrator
      *
      * @param[in] net The network the calibrator belongs to
@@ -147,8 +147,7 @@ public:
      * @exception InvalidArgument If a parameter (edge/position) is not valid
      */
     void parseAndBuildCalibrator(MSNet& net, const SUMOSAXAttributes& attrs,
-                                 const std::string& base) throw(InvalidArgument);
-#endif
+                                 const std::string& base);
     //@}
 
 
@@ -193,9 +192,24 @@ protected:
      */
     virtual void buildBusStop(MSNet& net,
                               const std::string& id, const std::vector<std::string>& lines,
-                              MSLane* lane, SUMOReal frompos, SUMOReal topos) throw(InvalidArgument);
+                              MSLane* lane, SUMOReal frompos, SUMOReal topos);
 
 
+    /** @brief builds a microscopic calibrator
+     *
+     * Simply calls the MSCalibrator constructor.
+     *
+     * @param[in] net The net the calibrator belongs to
+     * @param[in] id The id of the calibrator
+     * @param[in] edge The edge the calibrator is placed at
+     * @param[in] pos The position on the edge the calibrator lies at
+     * @param[in] file The file to read the flows from
+     * @todo Is the position correct/needed
+     */
+    MSCalibrator* buildCalibrator(MSNet& net,
+                                  const std::string& id, MSEdge* edge, SUMOReal pos,
+                                  const std::string& file, const std::string& outfile,
+                                  const SUMOTime freq);
 #ifdef HAVE_INTERNAL
     /** @brief builds a mesoscopic calibrator
      *
@@ -208,10 +222,10 @@ protected:
      * @param[in] file The file to read the flows from
      * @todo Is the position correct/needed
      */
-    METriggeredCalibrator* buildCalibrator(MSNet& net,
-                                           const std::string& id, const MSEdge* edge, SUMOReal pos,
-                                           const std::string& file, const std::string& outfile,
-                                           const SUMOTime freq);
+    METriggeredCalibrator* buildMECalibrator(MSNet& net,
+            const std::string& id, const MSEdge* edge, SUMOReal pos,
+            const std::string& file, const std::string& outfile,
+            const SUMOTime freq);
 #endif
 
 
@@ -248,7 +262,7 @@ protected:
      */
     std::string getFileName(const SUMOSAXAttributes& attrs,
                             const std::string& base,
-                            const bool allowEmpty = false) throw(InvalidArgument);
+                            const bool allowEmpty = false);
 
 
     /** @brief Returns the lane defined by attribute "lane"
@@ -263,7 +277,7 @@ protected:
      * @exception InvalidArgument If the named lane does not exist or a lane is not named
      */
     MSLane* getLane(const SUMOSAXAttributes& attrs,
-                    const std::string& tt, const std::string& tid) throw(InvalidArgument);
+                    const std::string& tt, const std::string& tid);
 
 
     /** @brief returns the position on the lane checking it
@@ -280,7 +294,7 @@ protected:
      * @exception InvalidArgument If the position is beyond the lane
      */
     SUMOReal getPosition(const SUMOSAXAttributes& attrs,
-                         MSLane* lane, const std::string& tt, const std::string& tid) throw(InvalidArgument);
+                         MSLane* lane, const std::string& tt, const std::string& tid);
     /// @}
 
 

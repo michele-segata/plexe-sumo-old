@@ -10,7 +10,7 @@
 // Stores all persons in the net and handles their waiting for cars.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -77,7 +77,7 @@ MSPersonControl::erase(MSPerson* person) {
     if (OptionsCont::getOptions().isSet("tripinfo-output")) {
         OutputDevice& od = OutputDevice::getDeviceByOption("tripinfo-output");
         od.openTag("personinfo") << " id=\"" << id << "\" ";
-        od << "depart=\"" << time2string(person->getDesiredDepart()) << "\">\n";
+        od << "depart=\"" << time2string(person->getDesiredDepart()) << "\"";
         person->tripInfoOutput(od);
         od.closeTag();
     }
@@ -86,7 +86,7 @@ MSPersonControl::erase(MSPerson* person) {
         od.openTag("person") << " id=\"" << id
                              << "\" depart=\"" << time2string(person->getDesiredDepart())
                              << "\" arrival=\"" << time2string(MSNet::getInstance()->getCurrentTimeStep())
-                             << "\">\n";
+                             << "\"";
         od.closeTag();
         od << "\n";
     }

@@ -9,7 +9,7 @@
 // A point-of-interest (2D)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,6 +33,7 @@
 #endif
 
 #include <utils/geom/Position.h>
+#include <utils/common/Parameterised.h>
 #include "Shape.h"
 
 
@@ -43,7 +44,7 @@
  * @class PointOfInterest
  * @brief A point-of-interest
  */
-class PointOfInterest : public Shape, public Position {
+class PointOfInterest : public Shape, public Position, public Parameterised {
 public:
     /** @brief Constructor
      * @param[in] id The name of the POI

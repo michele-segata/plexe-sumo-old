@@ -11,7 +11,7 @@
 // A fixed traffic light logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,7 @@
 #include <bitset>
 #include <sstream>
 #include <microsim/MSEventControl.h>
+#include "MSTLLogicControl.h"
 #include "MSTrafficLightLogic.h"
 #include "MSSimpleTrafficLightLogic.h"
 
@@ -51,9 +52,11 @@
 // ===========================================================================
 MSSimpleTrafficLightLogic::MSSimpleTrafficLightLogic(MSTLLogicControl& tlcontrol,
         const std::string& id, const std::string& subid, const Phases& phases,
-        unsigned int step, SUMOTime delay)
-    : MSTrafficLightLogic(tlcontrol, id, subid, delay), myPhases(phases),
-      myStep(step) {
+        unsigned int step, SUMOTime delay,
+        const ParameterMap& parameters) :
+    MSTrafficLightLogic(tlcontrol, id, subid, delay, parameters),
+    myPhases(phases),
+    myStep(step) {
     for (size_t i = 0; i < myPhases.size(); i++) {
         myDefaultCycleTime += myPhases[i]->duration;
     }
@@ -192,7 +195,11 @@ MSSimpleTrafficLightLogic::changeStepAndDuration(MSTLLogicControl& tlcontrol,
         SUMOTime simStep, unsigned int step, SUMOTime stepDuration) {
     mySwitchCommand->deschedule(this);
     mySwitchCommand = new SwitchCommand(tlcontrol, this, stepDuration + simStep);
-    myStep = step;
+    if (step != myStep) {
+        myStep = step;
+        setTrafficLightSignals(simStep);
+        tlcontrol.get(getID()).executeOnSwitchActions();
+    }
     MSNet::getInstance()->getBeginOfTimestepEvents().addEvent(
         mySwitchCommand, stepDuration + simStep,
         MSEventControl::ADAPT_AFTER_EXECUTION);

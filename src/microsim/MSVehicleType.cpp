@@ -11,7 +11,7 @@
 // The car-following model and parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -44,6 +44,7 @@
 #include "cfmodels/MSCFModel_Kerner.h"
 #include "cfmodels/MSCFModel_Krauss.h"
 #include "cfmodels/MSCFModel_KraussOrig1.h"
+#include "cfmodels/MSCFModel_KraussPS.h"
 #include "cfmodels/MSCFModel_SmartSK.h"
 #include "cfmodels/MSCFModel_Daniel1.h"
 #include "cfmodels/MSCFModel_PWag2009.h"
@@ -80,33 +81,10 @@ MSVehicleType::computeChosenSpeedDeviation(MTRand& rng) const {
 }
 
 
-void
-MSVehicleType::saveState(std::ostream& os) {
-    FileHelpers::writeString(os, myParameter.id);
-    FileHelpers::writeFloat(os, myParameter.length);
-    FileHelpers::writeFloat(os, myParameter.minGap);
-    FileHelpers::writeFloat(os, getMaxSpeed());
-    FileHelpers::writeInt(os, (int) myParameter.vehicleClass);
-    FileHelpers::writeInt(os, (int) myParameter.emissionClass);
-    FileHelpers::writeInt(os, (int) myParameter.shape);
-    FileHelpers::writeFloat(os, myParameter.width);
-    FileHelpers::writeFloat(os, myParameter.defaultProbability);
-    FileHelpers::writeFloat(os, myParameter.speedFactor);
-    FileHelpers::writeFloat(os, myParameter.speedDev);
-    FileHelpers::writeFloat(os, myParameter.color.red());
-    FileHelpers::writeFloat(os, myParameter.color.green());
-    FileHelpers::writeFloat(os, myParameter.color.blue());
-    FileHelpers::writeInt(os, myCarFollowModel->getModelID());
-    FileHelpers::writeString(os, myParameter.lcModel);
-    //myCarFollowModel->saveState(os);
-}
-
-
 // ------------ Setter methods
 void
 MSVehicleType::setLength(const SUMOReal& length) {
-    assert(myOriginalType != 0);
-    if (length < 0) {
+    if (myOriginalType != 0 && length < 0) {
         myParameter.length = myOriginalType->getLength();
     } else {
         myParameter.length = length;
@@ -116,8 +94,7 @@ MSVehicleType::setLength(const SUMOReal& length) {
 
 void
 MSVehicleType::setMinGap(const SUMOReal& minGap) {
-    assert(myOriginalType != 0);
-    if (minGap < 0) {
+    if (myOriginalType != 0 && minGap < 0) {
         myParameter.minGap = myOriginalType->getMinGap();
     } else {
         myParameter.minGap = minGap;
@@ -127,8 +104,7 @@ MSVehicleType::setMinGap(const SUMOReal& minGap) {
 
 void
 MSVehicleType::setMaxSpeed(const SUMOReal& maxSpeed) {
-    assert(myOriginalType != 0);
-    if (maxSpeed < 0) {
+    if (myOriginalType != 0 && maxSpeed < 0) {
         myParameter.maxSpeed = myOriginalType->getMaxSpeed();
     } else {
         myParameter.maxSpeed = maxSpeed;
@@ -144,8 +120,7 @@ MSVehicleType::setVClass(SUMOVehicleClass vclass) {
 
 void
 MSVehicleType::setDefaultProbability(const SUMOReal& prob) {
-    assert(myOriginalType != 0);
-    if (prob < 0) {
+    if (myOriginalType != 0 && prob < 0) {
         myParameter.defaultProbability = myOriginalType->getDefaultProbability();
     } else {
         myParameter.defaultProbability = prob;
@@ -155,8 +130,7 @@ MSVehicleType::setDefaultProbability(const SUMOReal& prob) {
 
 void
 MSVehicleType::setSpeedFactor(const SUMOReal& factor) {
-    assert(myOriginalType != 0);
-    if (factor < 0) {
+    if (myOriginalType != 0 && factor < 0) {
         myParameter.speedFactor = myOriginalType->getSpeedFactor();
     } else {
         myParameter.speedFactor = factor;
@@ -166,8 +140,7 @@ MSVehicleType::setSpeedFactor(const SUMOReal& factor) {
 
 void
 MSVehicleType::setSpeedDeviation(const SUMOReal& dev) {
-    assert(myOriginalType != 0);
-    if (dev < 0) {
+    if (myOriginalType != 0 && dev < 0) {
         myParameter.speedDev = myOriginalType->getSpeedDeviation();
     } else {
         myParameter.speedDev = dev;
@@ -189,8 +162,7 @@ MSVehicleType::setColor(const RGBColor& color) {
 
 void
 MSVehicleType::setWidth(const SUMOReal& width) {
-    assert(myOriginalType != 0);
-    if (width < 0) {
+    if (myOriginalType != 0 && width < 0) {
         myParameter.width = myOriginalType->getWidth();
     } else {
         myParameter.width = width;
@@ -242,6 +214,13 @@ MSVehicleType::build(SUMOVTypeParameter& from) {
                                               from.get(SUMO_ATTR_DECEL, DEFAULT_VEH_DECEL),
                                               from.get(SUMO_ATTR_SIGMA, DEFAULT_VEH_SIGMA),
                                               from.get(SUMO_ATTR_TAU, DEFAULT_VEH_TAU));
+            break;
+        case SUMO_TAG_CF_KRAUSS_PLUS_SLOPE:
+            model = new MSCFModel_KraussPS(vtype,
+                                           from.get(SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL),
+                                           from.get(SUMO_ATTR_DECEL, DEFAULT_VEH_DECEL),
+                                           from.get(SUMO_ATTR_SIGMA, DEFAULT_VEH_SIGMA),
+                                           from.get(SUMO_ATTR_TAU, DEFAULT_VEH_TAU));
             break;
         case SUMO_TAG_CF_SMART_SK:
             model = new MSCFModel_SmartSK(vtype,

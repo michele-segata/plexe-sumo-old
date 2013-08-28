@@ -8,7 +8,7 @@
 // A district (origin/destination)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,6 +36,7 @@
 #include <utils/common/Named.h>
 #include <utils/common/MsgHandler.h>
 #include "ODDistrict.h"
+
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -86,6 +87,7 @@ unsigned int
 ODDistrict::sourceNumber() const {
     return (unsigned int) mySources.getVals().size();
 }
+
 
 
 /****************************************************************************/

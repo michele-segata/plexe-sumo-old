@@ -6,7 +6,7 @@
 // Export the queueing length in front of a junction (very experimental!)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -175,7 +175,7 @@ MSQueueExport::writeLane(OutputDevice& of, const MSLane& lane) {
     if (queueing_length > 1 || queueing_length2 > 1) {
         of.openTag("lane") << " id=\"" << lane.getID() << "\"";
         of << " queueing_time=\"" << queueing_time << "\" queueing_length=\"" << queueing_length << "\" queueing_length_experimental=\"" << queueing_length2 << "\"";
-        of.closeTag(true);
+        of.closeTag();
     }
 
 }

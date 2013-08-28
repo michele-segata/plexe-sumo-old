@@ -12,7 +12,7 @@
 // Olstam, Tapani - Comparison of Car-following models
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -89,7 +89,7 @@ MSCFModel_Wiedemann::stopSpeed(const MSVehicle* const veh, SUMOReal gap) const {
      * does a lousy job of closing in on a stop / junction
      * hence we borrow from Krauss here
      */
-    return MAX2(getSpeedAfterMaxDecel(veh->getSpeed()), MIN2(krauss_vsafe(gap, 0), maxNextSpeed(veh->getSpeed())));
+    return MAX2(getSpeedAfterMaxDecel(veh->getSpeed()), MIN2(krauss_vsafe(gap, 0), maxNextSpeed(veh->getSpeed(), veh)));
 }
 
 

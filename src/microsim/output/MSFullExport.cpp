@@ -6,7 +6,7 @@
 // Dumping a hugh List of Parameters available in the Simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -88,7 +88,7 @@ MSFullExport::writeVehicles(OutputDevice& of) {
             std::string fclass = veh->getVehicleType().getID();
             fclass = fclass.substr(0, fclass.find_first_of("@"));
 
-            Position pos = veh->getLane()->getShape().positionAtLengthPosition(veh->getPositionOnLane());
+            Position pos = veh->getLane()->getShape().positionAtOffset(veh->getPositionOnLane());
 
             of.openTag("vehicle") << " id=\"" << veh->getID() << "\" eclass=\"" <<  veh->getVehicleType().getEmissionClass() << "\" co2=\"" << veh->getHBEFA_CO2Emissions()
                                   << "\" co=\"" <<  veh->getHBEFA_COEmissions() << "\" hc=\"" <<  veh->getHBEFA_HCEmissions()
@@ -99,7 +99,7 @@ MSFullExport::writeVehicles(OutputDevice& of) {
                                   << "\" pos_lane=\"" << veh->getPositionOnLane() << "\" speed=\"" << veh->getSpeed() * 3.6
                                   << "\" angle=\"" << veh->getAngle() << "\" x=\"" << pos.x() << "\" y=\"" << pos.y() << "\"";
 
-            of.closeTag(true);
+            of.closeTag();
 
         }
 
@@ -157,7 +157,7 @@ MSFullExport::writeLane(OutputDevice& of, const MSLane& lane) {
             << "\" occupancy=\"" << lane.getOccupancy()
             << "\" vehicle_count=\"" << lane.getVehicleNumber() << "\"";
 
-    of.closeTag(true);
+    of.closeTag();
 
 }
 
@@ -185,7 +185,7 @@ MSFullExport::writeTLS(OutputDevice& of, SUMOTime /* timestep */) {
 
         std::string state = vars.getActive()->getCurrentPhaseDef().getState();
         of.openTag("trafficlight") << " id=\"" << *id_it << "\" state=\"" << state << "\"";
-        of.closeTag(true);
+        of.closeTag();
 
     }
 

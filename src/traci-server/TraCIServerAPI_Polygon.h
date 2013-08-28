@@ -8,7 +8,7 @@
 // APIs for getting/setting polygon values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -85,10 +85,9 @@ public:
 private:
     /** @brief Returns the named polygon
      * @param[in] id The id of the searched polygon
-     * @param[out] layer The layer the polygon is located in
      * @return The named polygon, or 0 if it is not known
      */
-    static Polygon* getPolygon(const std::string& id, int& layer);
+    static Polygon* getPolygon(const std::string& id);
 
 
 private:

@@ -11,7 +11,7 @@ This file contains a content handler for parsing sumo network xml files.
 It uses other classes from this module to represent the road network.
 
 SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2013 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -21,6 +21,11 @@ from xml.sax import saxutils, parse, handler
 from copy import copy
 from itertools import *
 import lane, edge, node, connection, roundabout
+from lane import Lane
+from edge import Edge
+from node import Node
+from connection import Connection
+from roundabout import Roundabout
 
 
 class TLS:
@@ -74,6 +79,7 @@ class TLSProgram:
 class Net:
     """The whole sumo network."""
     def __init__(self):
+        self._location = {}
         self._id2node = {}
         self._id2edge = {}
         self._id2tls = {}
@@ -83,6 +89,12 @@ class Net:
         self._ranges = [ [10000, -10000], [10000, -10000] ]
         self._roundabouts = []
 
+    def setLocation(self, netOffset, convBoundary, origBoundary, projParameter):
+        self._location["netOffset"] = netOffset
+        self._location["convBoundary"] = convBoundary
+        self._location["origBoundary"] = origBoundary
+        self._location["projParameter"] = projParameter
+        
     def addNode(self, id, type=None, coord=None, incLanes=None):
         if id not in self._id2node:
             n = node.Node(id, type, coord, incLanes)
@@ -137,6 +149,9 @@ class Net:
         
     def getEdge(self, id):
         return self._id2edge[id]
+
+    def hasNode(self, id):
+        return id in self._id2node
 
     def getNode(self, id):
         return self._id2node[id]
@@ -209,6 +224,28 @@ class Net:
                 (self._ranges[1][0] - self._ranges[1][1]) ** 2)
 
 
+    def getGeoProj(self):
+        import pyproj
+        p1 = self._location["projParameter"].split()
+        params= {}
+        for p in p1:
+          ps = p.split("=")    
+          if len(ps)==2:
+            params[ps[0]] = ps[1]
+          else:
+            params[ps[0]] = True
+        return pyproj.Proj(projparams=params)
+
+    def getLocationOffset(self):
+        """ offset to be added after converting from geo-coordinates to UTM"""
+        return map(float,self._location["netOffset"].split(","))
+
+
+    def convertLatLon2XY(self, lat, lon):
+        x,y = self.getGeoProj()(lon,lat)
+        x_off, y_off = self.getLocationOffset()
+        return x + x_off, y + y_off
+
     
 class NetReader(handler.ContentHandler):
     """Reads a network, storing the edge geometries, lane numbers and max. speeds"""
@@ -224,6 +261,8 @@ class NetReader(handler.ContentHandler):
         self._withFoes = others.get('withFoes', True)
 
     def startElement(self, name, attrs):
+        if name == 'location':
+            self._net.setLocation(attrs["netOffset"], attrs["convBoundary"], attrs["origBoundary"], attrs["projParameter"])
         if name == 'edge':
             if not attrs.has_key('function') or attrs['function'] != 'internal':
                 prio = -1
@@ -302,6 +341,9 @@ class NetReader(handler.ContentHandler):
             self._currentProgram.addPhase(attrs['state'], int(attrs['duration']))
         if name == 'roundabout':
             self._net.addRoundabout(attrs['nodes'].split())
+        if name == 'param':
+            if self._currentLane!=None:
+                self._currentLane._params[attrs['key']] = attrs['value']
 
     def characters(self, content):
         if self._currentLane!=None:
@@ -341,9 +383,9 @@ def readNet(filename, **others):
     try:
         if not os.path.isfile(filename):
             print >> sys.stderr, "Network file '%s' not found" % filename
-            raise
+            sys.exit(1)
         parse(filename, netreader)
     except KeyError:
         print >> sys.stderr, "Please mind that the network format has changed in 0.13.0, you may need to update your network!"
-        raise
+        sys.exit(1)
     return netreader.getNet()

@@ -6,7 +6,7 @@
 // Realises VTK Export
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -76,7 +76,7 @@ MSVTKExport::write(OutputDevice& of, SUMOTime /* timestep */) {
     of.openTag("CellData");
 
     //close CellData
-    of.closeTag(true);
+    of.closeTag();
 
     of.openTag("Points")  << ">\n";
     of.openTag("DataArray") << " type=\"Float64\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\" >" << List2String(getPositions());
@@ -97,30 +97,30 @@ MSVTKExport::write(OutputDevice& of, SUMOTime /* timestep */) {
 
     of.openTag("Lines")  << ">\n";
     of.openTag("DataArray") << " type=\"Int64\" Name=\"connectivity\" format=\"ascii\"";
-    of.closeTag(true);
+    of.closeTag();
 
     of.openTag("DataArray") << " type=\"Int64\" Name=\"offsets\" format=\"ascii\"";
-    of.closeTag(true);
+    of.closeTag();
 
     //Close Lines
     of.closeTag();
 
     of.openTag("Strips")  << ">\n";
     of.openTag("DataArray") << " type=\"Int64\" Name=\"connectivity\" format=\"ascii\"";
-    of.closeTag(true);
+    of.closeTag();
 
     of.openTag("DataArray") << " type=\"Int64\" Name=\"offsets\" format=\"ascii\"";
-    of.closeTag(true);
+    of.closeTag();
 
     //Close Strips
     of.closeTag();
 
     of.openTag("Polys")  << ">\n";
     of.openTag("DataArray") << " type=\"Int64\" Name=\"connectivity\" format=\"ascii\"";
-    of.closeTag(true);
+    of.closeTag();
 
     of.openTag("DataArray") << " type=\"Int64\" Name=\"offsets\" format=\"ascii\"";
-    of.closeTag(true);
+    of.closeTag();
 
     //close Polys
     of.closeTag();
@@ -151,7 +151,7 @@ MSVTKExport::getSpeed() {
 
         if (veh->isOnRoad()) {
 
-            Position pos = veh->getLane()->getShape().positionAtLengthPosition(veh->getPositionOnLane());
+            Position pos = veh->getLane()->getShape().positionAtOffset(veh->getPositionOnLane());
             output.push_back(veh->getSpeed() * 3.6);
         }
 

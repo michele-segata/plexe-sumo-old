@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Wed Nov 21 13:22:14 2012 by SUMO netgenerate Version dev-SVN-r13008
+<!-- generated on 12/18/12 09:24:02 by SUMO netgenerate Version dev-SVN-r13169
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/netgenerateConfiguration.xsd">
@@ -342,8 +342,7 @@
         <phase duration="4" state="yyyyrrrrr"/>
     </tlLogic>
 
-    <junction id="1" type="unregulated" x="100.00" y="100.00" incLanes="2/1to1_0 1/1to1_0 4/1to1_0 3/1to1_0" intLanes=":1_0_0 :1_1_0 :1_2_0 :1_3_0 :1_4_0 :1_5_0 :1_6_0 :1_7_0 :1_8_0 :1_9_0 :1_10_0 :1_11_0 :1_12_0 :1_13_0 :1_14_0 :1_15_0" shape="96.75,104.75 103.25,104.75 104.75,103.25 104.75,96.75 103.25,95.25 96.75,95.25 95.25,96.75 95.25,103.25">
-    </junction>
+    <junction id="1" type="unregulated" x="100.00" y="100.00" incLanes="2/1to1_0 1/1to1_0 4/1to1_0 3/1to1_0" intLanes=":1_0_0 :1_1_0 :1_2_0 :1_3_0 :1_4_0 :1_5_0 :1_6_0 :1_7_0 :1_8_0 :1_9_0 :1_10_0 :1_11_0 :1_12_0 :1_13_0 :1_14_0 :1_15_0" shape="96.75,104.75 103.25,104.75 104.75,103.25 104.75,96.75 103.25,95.25 96.75,95.25 95.25,96.75 95.25,103.25"/>
     <junction id="1/1" type="traffic_light" x="200.00" y="100.00" incLanes="4/1to1/1_0 1to1/1_0 2/1to1/1_0" intLanes=":1/1_9_0 :1/1_10_0 :1/1_11_0 :1/1_3_0 :1/1_12_0 :1/1_13_0 :1/1_6_0 :1/1_7_0 :1/1_14_0" shape="195.69,91.09 191.09,95.69 190.65,96.75 190.65,103.25 191.09,104.31 195.69,108.91">
         <request index="0" response="000000000" foes="100010000" cont="1"/>
         <request index="1" response="011000000" foes="011110000" cont="1"/>
@@ -392,22 +391,22 @@
     <junction id=":1/1_9_0" type="internal" x="198.27" y="100.69" incLanes=":1/1_0_0" intLanes=":1/1_4_0 :1/1_8_0"/>
     <junction id=":1/1_10_0" type="internal" x="194.65" y="101.20" incLanes=":1/1_1_0 2/1to1/1_0" intLanes=":1/1_4_0 :1/1_5_0 :1/1_6_0 :1/1_7_0"/>
     <junction id=":1/1_11_0" type="internal" x="194.56" y="94.56" incLanes=":1/1_2_0 1to1/1_0 2/1to1/1_0" intLanes=":1/1_3_0 :1/1_7_0"/>
-    <junction id=":1/1_12_0" type="internal" x="194.65" y="98.80" incLanes=":1/1_4_0 2/1to1/1_0" intLanes=":1/1_0_0 :1/1_1_0 :1/1_7_0 :1/1_8_0"/>
+    <junction id=":1/1_12_0" type="internal" x="194.65" y="98.80" incLanes=":1/1_4_0 2/1to1/1_0 4/1to1/1_0" intLanes=":1/1_0_0 :1/1_1_0 :1/1_7_0 :1/1_8_0"/>
     <junction id=":1/1_13_0" type="internal" x="192.30" y="100.00" incLanes=":1/1_5_0 2/1to1/1_0 4/1to1/1_0" intLanes=":1/1_1_0 :1/1_6_0"/>
     <junction id=":1/1_14_0" type="internal" x="194.56" y="105.44" incLanes=":1/1_8_0 1to1/1_0 4/1to1/1_0" intLanes=":1/1_0_0 :1/1_4_0"/>
     <junction id=":2/1_9_0" type="internal" x="99.31" y="198.27" incLanes=":2/1_0_0" intLanes=":2/1_4_0 :2/1_8_0"/>
     <junction id=":2/1_10_0" type="internal" x="98.80" y="194.65" incLanes=":2/1_1_0 3/1to2/1_0" intLanes=":2/1_4_0 :2/1_5_0 :2/1_6_0 :2/1_7_0"/>
     <junction id=":2/1_11_0" type="internal" x="105.44" y="194.56" incLanes=":2/1_2_0 1to2/1_0 3/1to2/1_0" intLanes=":2/1_3_0 :2/1_7_0"/>
-    <junction id=":2/1_12_0" type="internal" x="101.20" y="194.65" incLanes=":2/1_4_0 3/1to2/1_0" intLanes=":2/1_0_0 :2/1_1_0 :2/1_7_0 :2/1_8_0"/>
+    <junction id=":2/1_12_0" type="internal" x="101.20" y="194.65" incLanes=":2/1_4_0 1/1to2/1_0 3/1to2/1_0" intLanes=":2/1_0_0 :2/1_1_0 :2/1_7_0 :2/1_8_0"/>
     <junction id=":2/1_13_0" type="internal" x="100.00" y="192.30" incLanes=":2/1_5_0 1/1to2/1_0 3/1to2/1_0" intLanes=":2/1_1_0 :2/1_6_0"/>
     <junction id=":2/1_14_0" type="internal" x="94.56" y="194.56" incLanes=":2/1_8_0 1/1to2/1_0 1to2/1_0" intLanes=":2/1_0_0 :2/1_4_0"/>
     <junction id=":3/1_9_0" type="internal" x="1.73" y="99.31" incLanes=":3/1_0_0" intLanes=":3/1_4_0 :3/1_8_0"/>
     <junction id=":3/1_10_0" type="internal" x="5.35" y="98.80" incLanes=":3/1_1_0 4/1to3/1_0" intLanes=":3/1_4_0 :3/1_5_0 :3/1_6_0 :3/1_7_0"/>
     <junction id=":3/1_11_0" type="internal" x="5.44" y="105.44" incLanes=":3/1_2_0 1to3/1_0 4/1to3/1_0" intLanes=":3/1_3_0 :3/1_7_0"/>
-    <junction id=":3/1_12_0" type="internal" x="5.35" y="101.20" incLanes=":3/1_4_0 4/1to3/1_0" intLanes=":3/1_0_0 :3/1_1_0 :3/1_7_0 :3/1_8_0"/>
+    <junction id=":3/1_12_0" type="internal" x="5.35" y="101.20" incLanes=":3/1_4_0 2/1to3/1_0 4/1to3/1_0" intLanes=":3/1_0_0 :3/1_1_0 :3/1_7_0 :3/1_8_0"/>
     <junction id=":3/1_13_0" type="internal" x="7.70" y="100.00" incLanes=":3/1_5_0 2/1to3/1_0 4/1to3/1_0" intLanes=":3/1_1_0 :3/1_6_0"/>
     <junction id=":3/1_14_0" type="internal" x="5.44" y="94.56" incLanes=":3/1_8_0 1to3/1_0 2/1to3/1_0" intLanes=":3/1_0_0 :3/1_4_0"/>
-    <junction id=":4/1_9_0" type="internal" x="98.80" y="5.35" incLanes=":4/1_1_0 1/1to4/1_0" intLanes=":4/1_4_0 :4/1_5_0 :4/1_6_0 :4/1_7_0"/>
+    <junction id=":4/1_9_0" type="internal" x="98.80" y="5.35" incLanes=":4/1_1_0 1/1to4/1_0 3/1to4/1_0" intLanes=":4/1_4_0 :4/1_5_0 :4/1_6_0 :4/1_7_0"/>
     <junction id=":4/1_10_0" type="internal" x="100.00" y="7.70" incLanes=":4/1_2_0 1/1to4/1_0 3/1to4/1_0" intLanes=":4/1_3_0 :4/1_7_0"/>
     <junction id=":4/1_11_0" type="internal" x="105.44" y="5.44" incLanes=":4/1_5_0 1to4/1_0 3/1to4/1_0" intLanes=":4/1_1_0 :4/1_6_0"/>
     <junction id=":4/1_12_0" type="internal" x="100.69" y="1.73" incLanes=":4/1_6_0" intLanes=":4/1_1_0 :4/1_5_0"/>

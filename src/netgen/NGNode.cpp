@@ -10,7 +10,7 @@
 // A netgen-representation of a node
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -54,20 +54,16 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-NGNode::NGNode()
-    : xID(-1), yID(-1), myID(""), myAmCenter(false) {}
-
-
 NGNode::NGNode(const std::string& id)
-    : xID(-1), yID(-1), myID(id), myAmCenter(false) {}
+    : Named(id), xID(-1), yID(-1), myAmCenter(false) {}
 
 
 NGNode::NGNode(const std::string& id, int xIDa, int yIDa)
-    : xID(xIDa), yID(yIDa), myID(id), myAmCenter(false) {}
+    : Named(id), xID(xIDa), yID(yIDa), myAmCenter(false) {}
 
 
 NGNode::NGNode(const std::string& id, int xIDa, int yIDa, bool amCenter)
-    : xID(xIDa), yID(yIDa), myID(id), myAmCenter(amCenter) {}
+    : Named(id), xID(xIDa), yID(yIDa), myAmCenter(amCenter) {}
 
 
 NGNode::~NGNode() {
@@ -97,7 +93,9 @@ NGNode::buildNBNode(NBNetBuilder& nb) const {
 
         // check whether it is a traffic light junction
         if (type == NODETYPE_TRAFFIC_LIGHT) {
-            NBTrafficLightDefinition* tlDef = new NBOwnTLDef(myID, node, 0);
+            TrafficLightType type = SUMOXMLDefinitions::TrafficLightTypes.get(
+                                        OptionsCont::getOptions().getString("tls.default-type"));
+            NBTrafficLightDefinition* tlDef = new NBOwnTLDef(myID, node, 0, type);
             if (!nb.getTLLogicCont().insert(tlDef)) {
                 // actually, nothing should fail here
                 delete tlDef;
@@ -127,7 +125,7 @@ NGNode::removeLink(NGEdge* link) {
 
 bool
 NGNode::connected(NGNode* node) const {
-    for (NGEdgeList::const_iterator i = LinkList.begin(); i != LinkList.end(); i++) {
+    for (NGEdgeList::const_iterator i = LinkList.begin(); i != LinkList.end(); ++i) {
         if (find(node->LinkList.begin(), node->LinkList.end(), *i) != node->LinkList.end()) {
             return true;
         }

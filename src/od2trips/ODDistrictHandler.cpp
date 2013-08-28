@@ -9,7 +9,7 @@
 // An XML-Handler for districts
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -90,11 +90,18 @@ ODDistrictHandler::openDistrict(const SUMOSAXAttributes& attrs) {
     myCurrentDistrict = 0;
     // get the id, report an error if not given or empty...
     bool ok = true;
-    std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
+    std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
     if (!ok) {
         return;
     }
     myCurrentDistrict = new ODDistrict(id);
+    if (attrs.hasAttribute(SUMO_ATTR_EDGES)) {
+        std::vector<std::string> desc = attrs.getStringVector(SUMO_ATTR_EDGES);
+        for (std::vector<std::string>::const_iterator i = desc.begin(); i != desc.end(); ++i) {
+            myCurrentDistrict->addSource(*i, 1.);
+            myCurrentDistrict->addSink(*i, 1.);
+        }
+    }
 }
 
 
@@ -125,12 +132,12 @@ ODDistrictHandler::parseConnection(const SUMOSAXAttributes& attrs) {
     }
     // get the id, report an error if not given or empty...
     bool ok = true;
-    std::string id = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
+    std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
     if (!ok) {
         return std::pair<std::string, SUMOReal>("", -1);
     }
     // get the weight
-    SUMOReal weight = attrs.getSUMORealReporting(SUMO_ATTR_WEIGHT, id.c_str(), ok);
+    SUMOReal weight = attrs.get<SUMOReal>(SUMO_ATTR_WEIGHT, id.c_str(), ok);
     if (ok) {
         if (weight < 0) {
             WRITE_ERROR("'probability' must be positive (in definition of " + attrs.getObjectType() + " '" + id + "').");

@@ -11,7 +11,7 @@
 // Methods for the representation of a single edge
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -161,7 +161,7 @@ NBEdge::MainDirections::includes(Direction d) const {
  * ----------------------------------------------------------------------- */
 NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
                std::string type, SUMOReal speed, unsigned int nolanes,
-               int priority, SUMOReal width, SUMOReal offset,
+               int priority, SUMOReal laneWidth, SUMOReal offset,
                const std::string& streetName,
                LaneSpreadFunction spread) :
     Named(StringUtils::convertUmlaute(id)),
@@ -171,7 +171,7 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
     myPriority(priority), mySpeed(speed),
     myTurnDestination(0),
     myFromJunctionPriority(-1), myToJunctionPriority(-1),
-    myLaneSpreadFunction(spread), myOffset(offset), myWidth(width),
+    myLaneSpreadFunction(spread), myOffset(offset), myLaneWidth(laneWidth),
     myLoadedLength(UNSPECIFIED_LOADED_LENGTH), myAmLeftHand(false),
     myAmInnerEdge(false), myAmMacroscopicConnector(false),
     myStreetName(streetName) {
@@ -181,7 +181,7 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
 
 NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
                std::string type, SUMOReal speed, unsigned int nolanes,
-               int priority, SUMOReal width, SUMOReal offset,
+               int priority, SUMOReal laneWidth, SUMOReal offset,
                PositionVector geom,
                const std::string& streetName,
                LaneSpreadFunction spread, bool tryIgnoreNodePositions) :
@@ -192,7 +192,7 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to,
     myPriority(priority), mySpeed(speed),
     myTurnDestination(0),
     myFromJunctionPriority(-1), myToJunctionPriority(-1),
-    myGeom(geom), myLaneSpreadFunction(spread), myOffset(offset), myWidth(width),
+    myGeom(geom), myLaneSpreadFunction(spread), myOffset(offset), myLaneWidth(laneWidth),
     myLoadedLength(UNSPECIFIED_LOADED_LENGTH), myAmLeftHand(false),
     myAmInnerEdge(false), myAmMacroscopicConnector(false),
     myStreetName(streetName) {
@@ -210,7 +210,7 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to, NBEdge* tpl) :
     myFromJunctionPriority(-1), myToJunctionPriority(-1),
     myLaneSpreadFunction(tpl->getLaneSpreadFunction()),
     myOffset(tpl->getOffset()),
-    myWidth(tpl->getWidth()),
+    myLaneWidth(tpl->getLaneWidth()),
     myLoadedLength(UNSPECIFIED_LOADED_LENGTH), myAmLeftHand(false),
     myAmInnerEdge(false), myAmMacroscopicConnector(false),
     myStreetName(tpl->getStreetName()) {
@@ -225,7 +225,7 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to, NBEdge* tpl) :
 void
 NBEdge::reinit(NBNode* from, NBNode* to, const std::string& type,
                SUMOReal speed, unsigned int nolanes, int priority,
-               PositionVector geom, SUMOReal width, SUMOReal offset,
+               PositionVector geom, SUMOReal laneWidth, SUMOReal offset,
                const std::string& streetName,
                LaneSpreadFunction spread,
                bool tryIgnoreNodePositions) {
@@ -245,7 +245,7 @@ NBEdge::reinit(NBNode* from, NBNode* to, const std::string& type,
     myGeom = geom;
     myLaneSpreadFunction = spread;
     myOffset = offset;
-    myWidth = width;
+    myLaneWidth = laneWidth;
     myLoadedLength = UNSPECIFIED_LOADED_LENGTH;
     myStreetName = streetName;
     //?, myAmTurningWithAngle(0), myAmTurningOf(0),
@@ -352,15 +352,15 @@ NBEdge::hasDefaultGeometry() const {
 
 bool
 NBEdge::hasDefaultGeometryEndpoints() const {
-    return myGeom.getBegin() == myFrom->getPosition() &&
-           myGeom.getEnd() == myTo->getPosition();
+    return myGeom.front() == myFrom->getPosition() &&
+           myGeom.back() == myTo->getPosition();
 }
 
 
 void
 NBEdge::setGeometry(const PositionVector& s, bool inner) {
-    Position begin = myGeom.getBegin(); // may differ from node position
-    Position end = myGeom.getEnd(); // may differ from node position
+    Position begin = myGeom.front(); // may differ from node position
+    Position end = myGeom.back(); // may differ from node position
     myGeom = s;
     if (inner) {
         myGeom.push_front(begin);
@@ -375,21 +375,29 @@ NBEdge::computeEdgeShape() {
     for (unsigned int i = 0; i < myLanes.size(); i++) {
         PositionVector& shape = myLanes[i].shape;
         PositionVector old = shape;
-        shape = startShapeAt(shape, myFrom, i);
+        shape = startShapeAt(shape, myFrom);
         if (shape.size() >= 2) {
-            shape = startShapeAt(shape.reverse(), myTo, i).reverse();
+            shape = startShapeAt(shape.reverse(), myTo).reverse();
         }
         // sanity checks
         if (shape.length() < POSITION_EPS) {
-            WRITE_MESSAGE("Lane '" + myID + "' has calculated shape length near zero. Revert it back to old shape.");
-            // @note old shape may still be shorter than POSITION_EPS
-            shape = old;
+            if (old.length() < 2 * POSITION_EPS) {
+                shape = old;
+            } else {
+                const SUMOReal midpoint = old.length() / 2;
+                // EPS*2 because otherwhise shape has only a single point
+                shape = old.getSubpart(midpoint - POSITION_EPS, midpoint + POSITION_EPS);
+                assert(shape.size() >= 2);
+                assert(shape.length() > 0);
+            }
         } else {
             // @note If the node shapes are overlapping we may get a shape which goes in the wrong direction
+            // in this case the result shape should shortened
             Line lc(shape[0], shape[-1]);
             Line lo(old[0], old[-1]);
             if (135 < GeomHelper::getMinAngleDiff(lc.atan2DegreeAngle(), lo.atan2DegreeAngle())) {
                 shape = shape.reverse();
+                shape = shape.getSubpart(0, 2 * POSITION_EPS); // *2 because otherwhise shape has only a single point
             }
         }
     }
@@ -404,9 +412,7 @@ NBEdge::computeEdgeShape() {
 
 
 PositionVector
-NBEdge::startShapeAt(const PositionVector& laneShape, const NBNode* startNode, unsigned int laneIndex) const {
-    const std::string error = "Could not find a way to attach lane '" + getLaneID(laneIndex) +
-                              "' at node shape of '" + startNode->getID() + "'.";
+NBEdge::startShapeAt(const PositionVector& laneShape, const NBNode* startNode) const {
     const PositionVector& nodeShape = startNode->getShape();
     Line lb = laneShape.getBegLine();
     // this doesn't look reasonable @todo use lb.extrapolateFirstBy(100.0);
@@ -417,11 +423,9 @@ NBEdge::startShapeAt(const PositionVector& laneShape, const NBNode* startNode, u
         assert(pbv.size() > 0);
         SUMOReal pb = VectorHelper<SUMOReal>::maxValue(pbv);
         assert(pb >= 0);
-        if (pb <= laneShape.length()) {
-            return laneShape.getSubpart2D(pb, laneShape.length());
-        } else {
-            return laneShape; // @todo do not ignore this error silently
-        }
+        PositionVector ns = pb <= laneShape.length() ? laneShape.getSubpart2D(pb, laneShape.length()) : laneShape;
+        ns[0].set(ns[0].x(), ns[0].y(), startNode->getPosition().z());
+        return ns;
     } else if (nodeShape.intersects(lb.p1(), lb.p2())) {
         // extension of first segment intersects
         std::vector<SUMOReal> pbv = lb.intersectsAtLengths2D(nodeShape);
@@ -430,7 +434,8 @@ NBEdge::startShapeAt(const PositionVector& laneShape, const NBNode* startNode, u
         assert(pb >= 0);
         PositionVector result = laneShape;
         result.eraseAt(0);
-        result.push_front_noDoublePos(lb.getPositionAtDistance2D(pb));
+        Position np = lb.getPositionAtDistance2D(pb);
+        result.push_front_noDoublePos(Position(np.x(), np.y(), startNode->getPosition().z()));
         return result;
         //if (result.size() >= 2) {
         //    return result;
@@ -495,7 +500,7 @@ NBEdge::splitGeometry(NBEdgeCont& ec, NBNodeCont& nc) {
             std::string edgename = myID + "[" + toString(i - 1) + "]";
             // @bug lane-specific width, speed, overall offset and restrictions are ignored
             currentEdge = new NBEdge(edgename, newFrom, newTo, myType, mySpeed, (unsigned int) myLanes.size(),
-                                     myPriority, myWidth, UNSPECIFIED_OFFSET, myStreetName, myLaneSpreadFunction);
+                                     myPriority, myLaneWidth, UNSPECIFIED_OFFSET, myStreetName, myLaneSpreadFunction);
             if (!ec.insert(currentEdge, true)) {
                 throw ProcessError("Error on adding splitted edge '" + edgename + "'.");
             }
@@ -507,6 +512,12 @@ NBEdge::splitGeometry(NBEdgeCont& ec, NBNodeCont& nc) {
     myGeom.push_back(myTo->getPosition());
     myStep = INIT;
     return true;
+}
+
+
+void
+NBEdge::reduceGeometry(const SUMOReal minDist) {
+    myGeom.removeDoublePoints(minDist, true);
 }
 
 
@@ -598,7 +609,11 @@ NBEdge::setConnection(unsigned int lane, NBEdge* destEdge,
         return;
     }
     if (myLanes.size() <= lane) {
-        WRITE_ERROR("Could not set connection from '" + getLaneID(lane) + "' to '" + destEdge->getLaneID(destLane) + "'.");
+        WRITE_ERROR("Could not set connection from '" + getLaneIDInsecure(lane) + "' to '" + destEdge->getLaneIDInsecure(destLane) + "'.");
+        return;
+    }
+    if (destEdge->getNumLanes() <= destLane) {
+        WRITE_ERROR("Could not set connection from '" + getLaneIDInsecure(lane) + "' to '" + destEdge->getLaneIDInsecure(destLane) + "'.");
         return;
     }
     for (std::vector<Connection>::iterator i = myConnections.begin(); i != myConnections.end();) {
@@ -743,7 +758,7 @@ NBEdge::remapConnections(const EdgeVector& incoming) {
 
 
 void
-NBEdge::removeFromConnections(NBEdge* toEdge, int fromLane, int toLane) {
+NBEdge::removeFromConnections(NBEdge* toEdge, int fromLane, int toLane, bool tryLater) {
     // remove from "myConnections"
     for (std::vector<Connection>::iterator i = myConnections.begin(); i != myConnections.end();) {
         Connection& c = *i;
@@ -751,6 +766,7 @@ NBEdge::removeFromConnections(NBEdge* toEdge, int fromLane, int toLane) {
                 && (fromLane < 0 || c.fromLane == fromLane)
                 && (toLane < 0 || c.toLane == toLane)) {
             i = myConnections.erase(i);
+            tryLater = false;
         } else {
             ++i;
         }
@@ -758,6 +774,9 @@ NBEdge::removeFromConnections(NBEdge* toEdge, int fromLane, int toLane) {
     // check whether it was the turn destination
     if (myTurnDestination == toEdge && fromLane < 0) {
         myTurnDestination = 0;
+    }
+    if (tryLater) {
+        myConnectionsToDelete.push_back(Connection(fromLane, toEdge, toLane));
     }
 }
 
@@ -957,9 +976,8 @@ NBEdge::buildInnerEdges(const NBNode& n, unsigned int noInternalNoSplits, unsign
                             foeInternalLanes += (":" + n.getID() + "_" + toString(index) + "_0");
                         }
                         // compute foe incoming lanes
-                        NBEdge* e = getToNode()->getOppositeIncoming(this);
-                        if ((e == *i2 && needsCont && !n.forbids(this, con.toEdge, *i2, (*k2).toEdge, true))
-                                || (dir == LINKDIR_TURN && this != *i2 && con.toEdge == (*k2).toEdge)) {
+                        const bool signalised = hasSignalisedConnectionTo(con.toEdge);
+                        if (n.forbids(*i2, (*k2).toEdge, this, con.toEdge, signalised) && (needsCont || dir == LINKDIR_TURN)) {
                             tmpFoeIncomingLanes.insert((*i2)->getID() + "_" + toString((*k2).fromLane));
                         }
                         index++;
@@ -979,14 +997,14 @@ NBEdge::buildInnerEdges(const NBNode& n, unsigned int noInternalNoSplits, unsign
         // compute the maximum speed allowed
         //  see !!! for an explanation (with a_lat_mean ~0.3)
         SUMOReal vmax = (SUMOReal) 0.3 * (SUMOReal) 9.80778 *
-                        getLaneShape(con.fromLane).getEnd().distanceTo(
-                            con.toEdge->getLaneShape(con.toLane).getBegin())
+                        getLaneShape(con.fromLane).back().distanceTo(
+                            con.toEdge->getLaneShape(con.toLane).front())
                         / (SUMOReal) 2.0 / (SUMOReal) PI;
         vmax = MIN2(vmax, ((getSpeed() + con.toEdge->getSpeed()) / (SUMOReal) 2.0));
         vmax = (getSpeed() + con.toEdge->getSpeed()) / (SUMOReal) 2.0;
         //
-        Position end = con.toEdge->getLaneShape(con.toLane).getBegin();
-        Position beg = getLaneShape(con.fromLane).getEnd();
+        Position end = con.toEdge->getLaneShape(con.toLane).front();
+        Position beg = getLaneShape(con.fromLane).back();
 
         assert(shape.size() >= 2);
         // get internal splits if any
@@ -1070,10 +1088,39 @@ NBEdge::computeLaneShapes() {
     if (myFrom == myTo) {
         return;
     }
+    // compute lane offset, first
+    std::vector<SUMOReal> offsets;
+    for (unsigned int i = 0; i < myLanes.size(); ++i) {
+        offsets.push_back(0);
+    }
+    SUMOReal offset = 0;
+    for (int i = myLanes.size() - 2; i >= 0; --i) {
+        offset += (getLaneWidth(i) + getLaneWidth(i + 1)) / 2. + SUMO_const_laneOffset;
+        offsets[i] = offset;
+    }
+    offset -= SUMO_const_laneOffset;
+    if (myLaneSpreadFunction == LANESPREAD_RIGHT) {
+        SUMOReal laneWidth = myLanes.back().width != UNSPECIFIED_WIDTH ? myLanes.back().width : SUMO_const_laneWidth;
+        offset = (laneWidth + SUMO_const_laneOffset) / 2.; // @todo: why is the lane offset counted in here?
+    } else {
+        SUMOReal width = 0;
+        for (unsigned int i = 0; i < myLanes.size(); ++i) {
+            width += getLaneWidth(i);
+        }
+        width += SUMO_const_laneOffset * SUMOReal(myLanes.size() - 1);
+        offset = -width / 2. + getLaneWidth(myLanes.size() - 1) / 2.;
+    }
+    for (unsigned int i = 0; i < myLanes.size(); ++i) {
+        offsets[i] += offset;
+        if (myAmLeftHand) {
+            offsets[i] *= -1.;
+        }
+    }
+
     // build the shape of each lane
-    for (unsigned int i = 0; i < myLanes.size(); i++) {
+    for (unsigned int i = 0; i < myLanes.size(); ++i) {
         try {
-            myLanes[i].shape = computeLaneShape(i);
+            myLanes[i].shape = computeLaneShape(i, offsets[i]);
         } catch (InvalidArgument& e) {
             WRITE_WARNING("In edge '" + getID() + "': lane shape could not be determined (" + e.what() + ")");
             myLanes[i].shape = myGeom;
@@ -1083,21 +1130,21 @@ NBEdge::computeLaneShapes() {
 
 
 PositionVector
-NBEdge::computeLaneShape(unsigned int lane) throw(InvalidArgument) {
+NBEdge::computeLaneShape(unsigned int lane, SUMOReal offset) {
     PositionVector shape;
     bool haveWarned = false;
     for (int i = 0; i < (int) myGeom.size(); i++) {
         if (i == 0) {
             Position from = myGeom[i];
             Position to = myGeom[i + 1];
-            std::pair<SUMOReal, SUMOReal> offsets = laneOffset(from, to, SUMO_const_laneWidthAndOffset, (unsigned int)(myLanes.size() - 1 - lane));
+            std::pair<SUMOReal, SUMOReal> offsets = laneOffset(from, to, offset, false);
             shape.push_back(
                 // (methode umbenennen; was heisst hier "-")
                 Position(from.x() - offsets.first, from.y() - offsets.second, from.z()));
         } else if (i == static_cast<int>(myGeom.size() - 1)) {
             Position from = myGeom[i - 1];
             Position to = myGeom[i];
-            std::pair<SUMOReal, SUMOReal> offsets = laneOffset(from, to, SUMO_const_laneWidthAndOffset, (unsigned int)(myLanes.size() - 1 - lane));
+            std::pair<SUMOReal, SUMOReal> offsets = laneOffset(from, to, offset, false);
             shape.push_back(
                 // (methode umbenennen; was heisst hier "-")
                 Position(to.x() - offsets.first, to.y() - offsets.second, to.z()));
@@ -1105,8 +1152,8 @@ NBEdge::computeLaneShape(unsigned int lane) throw(InvalidArgument) {
             Position from = myGeom[i - 1];
             Position me = myGeom[i];
             Position to = myGeom[i + 1];
-            std::pair<SUMOReal, SUMOReal> offsets = laneOffset(from, me, SUMO_const_laneWidthAndOffset, (unsigned int)(myLanes.size() - 1 - lane));
-            std::pair<SUMOReal, SUMOReal> offsets2 = laneOffset(me, to, SUMO_const_laneWidthAndOffset, (unsigned int)(myLanes.size() - 1 - lane));
+            std::pair<SUMOReal, SUMOReal> offsets = laneOffset(from, me, offset, false);
+            std::pair<SUMOReal, SUMOReal> offsets2 = laneOffset(me, to, offset, false);
             Line l1(
                 Position(from.x() - offsets.first, from.y() - offsets.second),
                 Position(me.x() - offsets.first, me.y() - offsets.second));
@@ -1137,33 +1184,19 @@ NBEdge::computeLaneShape(unsigned int lane) throw(InvalidArgument) {
 }
 
 
-std::pair<SUMOReal, SUMOReal>
-NBEdge::laneOffset(const Position& from, const Position& to,
-                   SUMOReal lanewidth, unsigned int lane) throw(InvalidArgument) {
-    return laneOffset(from, to, lanewidth, lane,
-                      myLanes.size(), myLaneSpreadFunction, myAmLeftHand);
+/*std::pair<SUMOReal, SUMOReal>
+NBEdge::laneOffset(const Position& from, const Position& to, SUMOReal laneCenterOffset) {
+    return laneOffset(from, to, laneCenterOffset, myAmLeftHand);
 }
-
+*/
 
 std::pair<SUMOReal, SUMOReal>
-NBEdge::laneOffset(const Position& from, const Position& to,
-                   SUMOReal lanewidth, unsigned int lane,
-                   size_t noLanes, LaneSpreadFunction lsf, bool leftHand) {
-    std::pair<SUMOReal, SUMOReal> offsets =
-        GeomHelper::getNormal90D_CW(from, to, lanewidth);
-    SUMOReal xoff = offsets.first / (SUMOReal) 2.0;
-    SUMOReal yoff = offsets.second / (SUMOReal) 2.0;
-    if (lsf == LANESPREAD_RIGHT) {
-        xoff += (offsets.first * (SUMOReal) lane);
-        yoff += (offsets.second * (SUMOReal) lane);
-    } else {
-        xoff += (offsets.first * (SUMOReal) lane) - (offsets.first * (SUMOReal) noLanes / (SUMOReal) 2.0);
-        yoff += (offsets.second * (SUMOReal) lane) - (offsets.second * (SUMOReal) noLanes / (SUMOReal) 2.0);
-    }
+NBEdge::laneOffset(const Position& from, const Position& to, SUMOReal laneCenterOffset, bool leftHand) {
+    std::pair<SUMOReal, SUMOReal> offsets = GeomHelper::getNormal90D_CW(from, to, laneCenterOffset);
     if (leftHand) {
-        return std::pair<SUMOReal, SUMOReal>(-xoff, -yoff);
+        return std::pair<SUMOReal, SUMOReal>(-offsets.first, -offsets.second);
     } else {
-        return std::pair<SUMOReal, SUMOReal>(xoff, yoff);
+        return std::pair<SUMOReal, SUMOReal>(offsets.first, offsets.second);
     }
 }
 
@@ -1196,7 +1229,7 @@ NBEdge::hasLaneSpecificPermissions() const {
 bool
 NBEdge::hasLaneSpecificWidth() const {
     for (std::vector<Lane>::const_iterator i = myLanes.begin(); i != myLanes.end(); ++i) {
-        if (i->width != getWidth()) {
+        if (i->width != getLaneWidth()) {
             return true;
         }
     }
@@ -1306,6 +1339,10 @@ NBEdge::recheckLanes() {
                 }
             }
         }
+    }
+    // check delayed removals
+    for (std::vector<Connection>::iterator it = myConnectionsToDelete.begin(); it != myConnectionsToDelete.end(); ++it) {
+        removeFromConnections(it->toEdge, it->fromLane, it->toLane);
     }
     return true;
 }
@@ -1525,44 +1562,6 @@ NBEdge::getMaxLaneOffset() {
 }
 
 
-Position
-NBEdge::getMinLaneOffsetPositionAt(NBNode* node, SUMOReal width) const {
-    const PositionVector& shape0 = myLanes[0].shape;
-    const PositionVector& shapel = myLanes.back().shape;
-    width = width < shape0.length() / (SUMOReal) 2.0
-            ? width
-            : shape0.length() / (SUMOReal) 2.0;
-    if (node == myFrom) {
-        Position pos =  shapel.positionAtLengthPosition(width);
-        GeomHelper::transfer_to_side(pos, shapel[0], shapel[-1], SUMO_const_halfLaneAndOffset);
-        return pos;
-    } else {
-        Position pos = shape0.positionAtLengthPosition(shape0.length() - width);
-        GeomHelper::transfer_to_side(pos, shape0[-1], shape0[0], SUMO_const_halfLaneAndOffset);
-        return pos;
-    }
-}
-
-
-Position
-NBEdge::getMaxLaneOffsetPositionAt(NBNode* node, SUMOReal width) const {
-    const PositionVector& shape0 = myLanes[0].shape;
-    const PositionVector& shapel = myLanes.back().shape;
-    width = width < shape0.length() / (SUMOReal) 2.0
-            ? width
-            : shape0.length() / (SUMOReal) 2.0;
-    if (node == myFrom) {
-        Position pos = shape0.positionAtLengthPosition(width);
-        GeomHelper::transfer_to_side(pos, shape0[0], shape0[-1], -SUMO_const_halfLaneAndOffset);
-        return pos;
-    } else {
-        Position pos = shapel.positionAtLengthPosition(shapel.length() - width);
-        GeomHelper::transfer_to_side(pos, shapel[-1], shapel[0], -SUMO_const_halfLaneAndOffset);
-        return pos;
-    }
-}
-
-
 bool
 NBEdge::mayBeTLSControlled(int fromLane, NBEdge* toEdge, int toLane) const {
     TLSDisabledConnection tpl;
@@ -1758,9 +1757,9 @@ NBEdge::expandableBy(NBEdge* possContinuation) const {
 void
 NBEdge::append(NBEdge* e) {
     // append geometry
-    myGeom.appendWithCrossingPoint(e->myGeom);
+    myGeom.append(e->myGeom);
     for (unsigned int i = 0; i < myLanes.size(); i++) {
-        myLanes[i].shape.appendWithCrossingPoint(e->myLanes[i].shape);
+        myLanes[i].shape.append(e->myLanes[i].shape);
     }
     // recompute length
     myLength += e->myLength;
@@ -1796,6 +1795,12 @@ NBEdge::getTurnDestination() const {
 std::string
 NBEdge::getLaneID(unsigned int lane) const {
     assert(lane < myLanes.size());
+    return myID + "_" + toString(lane);
+}
+
+
+std::string
+NBEdge::getLaneIDInsecure(unsigned int lane) const {
     return myID + "_" + toString(lane);
 }
 
@@ -1896,13 +1901,13 @@ NBEdge::preferVehicleClass(int lane, SUMOVehicleClass vclass) {
 
 
 void
-NBEdge::setWidth(int lane, SUMOReal width) {
+NBEdge::setLaneWidth(int lane, SUMOReal width) {
     if (lane < 0) {
         // all lanes are meant...
-        myWidth = width;
+        myLaneWidth = width;
         for (unsigned int i = 0; i < myLanes.size(); i++) {
             // ... do it for each lane
-            setWidth((int) i, width);
+            setLaneWidth((int) i, width);
         }
         return;
     }
@@ -1910,6 +1915,13 @@ NBEdge::setWidth(int lane, SUMOReal width) {
     myLanes[lane].width = width;
 }
 
+
+SUMOReal
+NBEdge::getLaneWidth(int lane) const {
+    return myLanes[lane].width != UNSPECIFIED_WIDTH
+           ? myLanes[lane].width
+           : getLaneWidth() != UNSPECIFIED_WIDTH ? getLaneWidth() : SUMO_const_laneWidth;
+}
 
 void
 NBEdge::setOffset(int lane, SUMOReal offset) {

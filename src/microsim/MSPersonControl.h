@@ -10,7 +10,7 @@
 // Stores all persons in the net and handles their waiting for cars.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -114,6 +114,10 @@ public:
 
     /// @brief returns whether the the given person is waiting for a vehicle on the given edge
     bool isWaiting4Vehicle(const MSEdge* const edge, MSPerson* p) const;
+
+    const std::map<std::string, MSPerson*>& getPersons() const {
+        return myPersons;
+    }
 
 private:
     /// all persons by id

@@ -14,7 +14,7 @@
 /// TraCI server used to control sumo by a remote TraCI client
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -79,6 +79,13 @@ public:
     typedef bool(*CmdExecutor)(traci::TraCIServer& server, tcpip::Storage& inputStorage, tcpip::Storage& outputStorage);
 
 
+    SUMOTime getTargetTime() {
+        return myTargetTime;
+    }
+    static TraCIServer* getInstance() {
+        return myInstance;
+    }
+
     /// @name Initialisation and Shutdown
     /// @{
 
@@ -104,6 +111,11 @@ public:
     /// @brief process all commands until a simulation step is wanted
     static void processCommandsUntilSimStep(SUMOTime step);
 
+    void setVTDControlled(MSVehicle* v, MSLane* l, SUMOReal pos, int edgeOffset, MSEdgeVector route);
+
+    void postProcessVTD();
+
+    bool vtdDebug() const;
 
 
 
@@ -117,8 +129,35 @@ public:
 
     void vehicleStateChanged(const SUMOVehicle* const vehicle, MSNet::VehicleState to);
 
-    void writeStatusCmd(int commandId, int status, const std::string& description);
+    /// @name Writing Status Messages
+    /// @{
+
+    /** @brief Writes a status command to the given storage
+     * @param[in] commandId The id of the command to respond to
+     * @param[in] status The status to send
+     * @param[in] description The status description (error message, for example)
+     * @param[in, filled] outputStorage The storage to write the status into
+     */
     void writeStatusCmd(int commandId, int status, const std::string& description, tcpip::Storage& outputStorage);
+
+
+    /** @brief Writes a status command to myOutputStorage
+     * @param[in] commandId The id of the command to respond to
+     * @param[in] status The status to send
+     * @param[in] description The status description (error message, for example)
+     */
+    void writeStatusCmd(int commandId, int status, const std::string& description);
+
+
+    /** @brief Writes a status command to the given storage with status = RTYPE_ERR
+     * @param[in] commandId The id of the command to respond to
+     * @param[in] description The status description (error message, for example)
+     * @param[in, filled] outputStorage The storage to write the status into
+     */
+    bool writeErrorStatusCmd(int commandId, const std::string& description, tcpip::Storage& outputStorage);
+    /// @}
+
+
 
     const std::map<MSNet::VehicleState, std::vector<std::string> >& getVehicleStateChanges() const {
         return myVehicleStateChanges;
@@ -128,6 +167,99 @@ public:
 
     void collectObjectsInRange(int domain, const PositionVector& shape, SUMOReal range, std::set<std::string>& into);
 
+
+    /// @name Helpers for reading and checking values
+    /// @{
+
+    /** @brief Reads the value type and an int, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether an integer value was given (by data type)
+     */
+    bool readTypeCheckingInt(tcpip::Storage& inputStorage, int& into);
+
+
+    /** @brief Reads the value type and a double, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether a double value was given (by data type)
+     */
+    bool readTypeCheckingDouble(tcpip::Storage& inputStorage, double& into);
+
+
+    /** @brief Reads the value type and a string, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether a string value was given (by data type)
+     */
+    bool readTypeCheckingString(tcpip::Storage& inputStorage, std::string& into);
+
+
+    /** @brief Reads the value type and a string list, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether a double value was given (by data type)
+     */
+    bool readTypeCheckingStringList(tcpip::Storage& inputStorage, std::vector<std::string>& into);
+
+
+    /** @brief Reads the value type and a color, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether a color was given (by data type)
+     */
+    bool readTypeCheckingColor(tcpip::Storage& inputStorage, RGBColor& into);
+
+
+    /** @brief Reads the value type and a 2D position, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether a 2D position was given (by data type)
+     */
+    bool readTypeCheckingPosition2D(tcpip::Storage& inputStorage, Position& into);
+
+
+    /** @brief Reads the value type and a 2D bounding box, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether a 2D bounding box was given (by data type)
+     */
+    bool readTypeCheckingBoundary(tcpip::Storage& inputStorage, Boundary& into);
+
+
+    /** @brief Reads the value type and a byte, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether a byte was given (by data type)
+     */
+    bool readTypeCheckingByte(tcpip::Storage& inputStorage, int& into);
+
+
+    /** @brief Reads the value type and an unsigned byte, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether an unsigned byte was given (by data type)
+     */
+    bool readTypeCheckingUnsignedByte(tcpip::Storage& inputStorage, int& into);
+
+
+    /** @brief Reads the value type and a polygon, verifying the type
+     *
+     * @param[in, changed] inputStorage The storage to read from
+     * @param[out] into Holder of the read value
+     * @return Whether an unsigned byte was given (by data type)
+     */
+    bool readTypeCheckingPolygon(tcpip::Storage& inputStorage, PositionVector& into);
+    /// @}
 
 private:
     /** @brief Constructor
@@ -174,6 +306,10 @@ private:
     int dispatchCommand();
 
 
+
+
+
+
 private:
     /// @brief Singleton instance of the server
     static TraCIServer* myInstance;
@@ -205,6 +341,8 @@ private:
 
     /// @brief Map of commandIds -> their executors; applicable if the executor applies to the method footprint
     std::map<int, CmdExecutor> myExecutors;
+
+    std::map<std::string, MSVehicle*> myVTDControlledVehicles;
 
 
     /** @class Subscription

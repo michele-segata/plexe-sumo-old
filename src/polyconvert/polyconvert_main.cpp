@@ -10,7 +10,7 @@
 // Main for POLYCONVERT
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -127,7 +127,7 @@ fillOptions() {
     oc.addSynonyme("shapefile.guess-projection", "arcview.guess-projection", true);
     oc.addDescription("shapefile.guess-projection", "Input", "Guesses the shapefile's projection");
 
-    oc.doRegister("shapefile.id-column", new Option_FileName());
+    oc.doRegister("shapefile.id-column", new Option_String());
     oc.addSynonyme("shapefile.id-column", "shapefile.id-name", true);
     oc.addSynonyme("shapefile.id-column", "shape-files.id-name", true);
     oc.addDescription("shapefile.id-column", "Input", "Defines in which column the id can be found");
@@ -177,6 +177,12 @@ fillOptions() {
     oc.addSynonyme("offset.y", "y-offset-to-apply", true);
     oc.addDescription("offset.y", "Processing", "Adds FLOAT to net y-positions");
 
+    oc.doRegister("all-attributes", new Option_Bool(false));
+    oc.addDescription("all-attributes", "Processing", "Imports all attributes as key/value pairs");
+
+    oc.doRegister("ignore-errors", new Option_Bool(false));
+    oc.addDescription("ignore-errors", "Processing", "Continue on broken input");
+
 
     // building defaults options
     oc.doRegister("color", new Option_String("0.2,0.5,1."));
@@ -214,34 +220,28 @@ main(int argc, char** argv) {
         XMLSubSys::setValidation(oc.getBool("xml-validation"));
         MsgHandler::initOutputOptions();
         // build the projection
-        Boundary origNetBoundary, pruningBoundary;
-        Position netOffset;
-        std::string proj;
-        PCNetProjectionLoader::loadIfSet(oc, netOffset, origNetBoundary, pruningBoundary, proj);
-        if (proj != "") {
-            if (oc.isDefault("proj")) {
-                oc.set("proj", proj);
-            }
-            if (oc.isDefault("offset.x")) {
-                oc.set("offset.x", toString(netOffset.x()));
-            }
-            if (oc.isDefault("offset.y")) {
-                oc.set("offset.y", toString(netOffset.y()));
-            }
-        }
-#ifdef HAVE_PROJ
-        unsigned numProjections = oc.getBool("simple-projection") + oc.getBool("proj.utm") + oc.getBool("proj.dhdn") + (oc.getString("proj").length() > 1);
-        if ((oc.isSet("osm-files") || oc.isSet("dlr-navteq-poly-files") || oc.isSet("dlr-navteq-poi-files")) && numProjections == 0) {
-            oc.set("proj.utm", "true");
-        }
+        int shift = 0;
         if ((oc.isSet("dlr-navteq-poly-files") || oc.isSet("dlr-navteq-poi-files")) && oc.isDefault("proj.scale")) {
-            oc.set("proj.scale", std::string("5"));
+            shift = 5;
         }
+        if (!oc.isSet("net")) {
+            // from the given options
+#ifdef HAVE_PROJ
+            unsigned numProjections = oc.getBool("simple-projection") + oc.getBool("proj.utm") + oc.getBool("proj.dhdn") + (oc.getString("proj").length() > 1);
+            if ((oc.isSet("osm-files") || oc.isSet("dlr-navteq-poly-files") || oc.isSet("dlr-navteq-poi-files")) && numProjections == 0) {
+                oc.set("proj.utm", "true");
+            }
+            oc.set("proj.scale", toString(shift));
 #endif
-        if (!GeoConvHelper::init(oc)) {
-            throw ProcessError("Could not build projection!");
+            if (!GeoConvHelper::init(oc)) {
+                throw ProcessError("Could not build projection!");
+            }
+        } else {
+            // from the supplied network
+            // @todo warn about given options being ignored
+            PCNetProjectionLoader::load(oc.getString("net"), shift);
         }
-
+        Boundary pruningBoundary = GeoConvHelper::getFinal().getConvBoundary();
         // check whether the input shall be pruned
         bool prune = false;
         if (oc.getBool("prune.in-net")) {
@@ -268,7 +268,7 @@ main(int argc, char** argv) {
         PCPolyContainer toFill(prune, pruningBoundary, oc.getStringVector("remove"));
 
         // read in the type defaults
-        PCTypeMap tm;
+        PCTypeMap tm(oc);
         if (oc.isSet("type-file")) {
             PCTypeDefHandler handler(oc, tm);
             if (!XMLSubSys::runParser(handler, oc.getString("type-file"))) {
@@ -283,7 +283,10 @@ main(int argc, char** argv) {
         PCLoaderDlrNavteq::loadIfSet(oc, toFill, tm); // Elmar-files
         PCLoaderVisum::loadIfSet(oc, toFill, tm); // VISUM
         PCLoaderArcView::loadIfSet(oc, toFill, tm); // shape-files
-        // check whether any errors occured
+        // error processing
+        if (MsgHandler::getErrorInstance()->wasInformed() && oc.getBool("ignore-errors")) {
+            MsgHandler::getErrorInstance()->clear();
+        }
         if (!MsgHandler::getErrorInstance()->wasInformed()) {
             // no? ok, save
             toFill.save(oc.getString("output-file"));

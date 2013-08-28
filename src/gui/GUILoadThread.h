@@ -9,7 +9,7 @@
 // Class describing the thread that performs the loading of a simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -82,8 +82,9 @@ protected:
      * This method is called both on success and failure.
      * All message callbacks to this instance are removed and the parent
      * application is informed about the loading */
-    void submitEndAndCleanup(GUINet* net, SUMOTime simStartTime, SUMOTime simEndTime,
-                             const std::vector<std::string>& guiSettingsFiles = std::vector<std::string>());
+    void submitEndAndCleanup(GUINet* net, const SUMOTime simStartTime, const SUMOTime simEndTime,
+                             const std::vector<std::string>& guiSettingsFiles = std::vector<std::string>(),
+                             const bool osgView = false);
 
 protected:
     /// the parent window to inform about the loading

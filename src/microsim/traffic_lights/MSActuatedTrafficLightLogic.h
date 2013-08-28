@@ -8,7 +8,7 @@
 // An actuated (adaptive) traffic light logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -54,8 +54,7 @@ class NLDetectorBuilder;
  * @class MSActuatedTrafficLightLogic
  * @brief An actuated (adaptive) traffic light logic
  */
-class MSActuatedTrafficLightLogic :
-    public MSSimpleTrafficLightLogic {
+class MSActuatedTrafficLightLogic : public MSSimpleTrafficLightLogic {
 public:
     /// @brief Definition of a map from lanes to induct loops lying on them
     typedef std::map<MSLane*, MSInductLoop*> InductLoopMap;
@@ -74,7 +73,7 @@ public:
                                 const std::string& id, const std::string& programID,
                                 const MSSimpleTrafficLightLogic::Phases& phases,
                                 unsigned int step, SUMOTime delay,
-                                const std::map<std::string, std::string>& parameter);
+                                const ParameterMap& parameter);
 
 
     /** @brief Initialises the tls with information about incoming lanes

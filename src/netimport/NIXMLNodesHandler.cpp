@@ -10,7 +10,7 @@
 // Importer for network nodes stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -105,7 +105,7 @@ void
 NIXMLNodesHandler::addNode(const SUMOSAXAttributes& attrs) {
     bool ok = true;
     // get the id, report a warning if not given or empty...
-    myID = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
+    myID = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
     if (!ok) {
         return;
     }
@@ -120,17 +120,17 @@ NIXMLNodesHandler::addNode(const SUMOSAXAttributes& attrs) {
         needConversion = false;
     }
     if (attrs.hasAttribute(SUMO_ATTR_X)) {
-        myPosition.set(attrs.getSUMORealReporting(SUMO_ATTR_X, myID.c_str(), ok), myPosition.y());
+        myPosition.set(attrs.get<SUMOReal>(SUMO_ATTR_X, myID.c_str(), ok), myPosition.y());
         xOk = true;
         needConversion = true;
     }
     if (attrs.hasAttribute(SUMO_ATTR_Y)) {
-        myPosition.set(myPosition.x(), attrs.getSUMORealReporting(SUMO_ATTR_Y, myID.c_str(), ok));
+        myPosition.set(myPosition.x(), attrs.get<SUMOReal>(SUMO_ATTR_Y, myID.c_str(), ok));
         yOk = true;
         needConversion = true;
     }
     if (attrs.hasAttribute(SUMO_ATTR_Z)) {
-        myPosition.set(myPosition.x(), myPosition.y(), attrs.getSUMORealReporting(SUMO_ATTR_Z, myID.c_str(), ok));
+        myPosition.set(myPosition.x(), myPosition.y(), attrs.get<SUMOReal>(SUMO_ATTR_Z, myID.c_str(), ok));
     }
     if (xOk && yOk) {
         if (needConversion && !NILoader::transformCoordinates(myPosition, true, myLocation)) {
@@ -149,7 +149,7 @@ NIXMLNodesHandler::addNode(const SUMOSAXAttributes& attrs) {
     if (node != 0) {
         type = node->getType();
     }
-    std::string typeS = attrs.getOptStringReporting(SUMO_ATTR_TYPE, myID.c_str(), ok, "");
+    std::string typeS = attrs.getOpt<std::string>(SUMO_ATTR_TYPE, myID.c_str(), ok, "");
     if (SUMOXMLDefinitions::NodeTypes.hasString(typeS)) {
         type = SUMOXMLDefinitions::NodeTypes.get(typeS);
     }
@@ -183,7 +183,7 @@ void
 NIXMLNodesHandler::deleteNode(const SUMOSAXAttributes& attrs) {
     bool ok = true;
     // get the id, report a warning if not given or empty...
-    myID = attrs.getStringReporting(SUMO_ATTR_ID, 0, ok);
+    myID = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
     if (!ok) {
         return;
     }
@@ -201,7 +201,7 @@ NIXMLNodesHandler::deleteNode(const SUMOSAXAttributes& attrs) {
 void
 NIXMLNodesHandler::addJoinCluster(const SUMOSAXAttributes& attrs) {
     bool ok = true;
-    const std::string clusterString = attrs.getStringReporting(SUMO_ATTR_NODES, 0, ok);
+    const std::string clusterString = attrs.get<std::string>(SUMO_ATTR_NODES, 0, ok);
     const std::vector<std::string> ids = StringTokenizer(clusterString).getVector();
     if (ok) {
         myNodeCont.addCluster2Join(std::set<std::string>(ids.begin(), ids.end()));
@@ -213,7 +213,7 @@ void
 NIXMLNodesHandler::addJoinExclusion(const SUMOSAXAttributes& attrs) {
     bool ok = true;
     const std::vector<std::string> ids = StringTokenizer(
-            attrs.getStringReporting(SUMO_ATTR_NODES, 0, ok)).getVector();
+            attrs.get<std::string>(SUMO_ATTR_NODES, 0, ok)).getVector();
     if (ok) {
         myNodeCont.addJoinExclusion(ids);
     }
@@ -229,19 +229,33 @@ NIXMLNodesHandler::processTrafficLightDefinitions(const SUMOSAXAttributes& attrs
     // if no tl-id exists, we will build a tl with the node's id
     std::set<NBTrafficLightDefinition*> tlDefs;
     bool ok = true;
-    std::string tlID = attrs.getOptStringReporting(SUMO_ATTR_TLID, 0, ok, "");
+    std::string tlID = attrs.getOpt<std::string>(SUMO_ATTR_TLID, 0, ok, "");
+    std::string typeS = attrs.getOpt<std::string>(SUMO_ATTR_TLTYPE, 0, ok,
+                        OptionsCont::getOptions().getString("tls.default-type"));
+    TrafficLightType type;
+    if (SUMOXMLDefinitions::TrafficLightTypes.hasString(typeS)) {
+        type = SUMOXMLDefinitions::TrafficLightTypes.get(typeS);
+    } else {
+        WRITE_ERROR("Unknown traffic light type '" + typeS + "' for node '" + myID + "'.");
+        ok = false;
+    }
     if (tlID != "" && myTLLogicCont.getPrograms(tlID).size() > 0) {
         // we already have definitions for this tlID
         const std::map<std::string, NBTrafficLightDefinition*>& programs = myTLLogicCont.getPrograms(tlID);
         std::map<std::string, NBTrafficLightDefinition*>::const_iterator it;
         for (it = programs.begin(); it != programs.end(); it++) {
-            tlDefs.insert(it->second);
-            it->second->addNode(currentNode);
+            if (it->second->getType() != type) {
+                WRITE_ERROR("Mismatched traffic light type '" + typeS + "' for tl '" + tlID + "'.");
+                ok = false;
+            } else {
+                tlDefs.insert(it->second);
+                it->second->addNode(currentNode);
+            }
         }
     } else {
         // we need to add a new defition
-        tlID = tlID == "" ? myID : tlID;
-        NBTrafficLightDefinition* tlDef = new NBOwnTLDef(tlID, currentNode, 0);
+        tlID = (tlID == "" ? myID : tlID);
+        NBTrafficLightDefinition* tlDef = new NBOwnTLDef(tlID, currentNode, 0, type);
         if (!myTLLogicCont.insert(tlDef)) {
             // actually, nothing should fail here
             delete tlDef;
@@ -251,7 +265,7 @@ NIXMLNodesHandler::processTrafficLightDefinitions(const SUMOSAXAttributes& attrs
     }
     // process inner edges which shall be controlled
     std::vector<std::string> controlledInner;
-    SUMOSAXAttributes::parseStringVector(attrs.getOptStringReporting(SUMO_ATTR_CONTROLLED_INNER, 0, ok, ""), controlledInner);
+    SUMOSAXAttributes::parseStringVector(attrs.getOpt<std::string>(SUMO_ATTR_CONTROLLED_INNER, 0, ok, ""), controlledInner);
     if (controlledInner.size() != 0) {
         for (std::set<NBTrafficLightDefinition*>::iterator it = tlDefs.begin(); it != tlDefs.end(); it++) {
             (*it)->addControlledInnerEdges(controlledInner);

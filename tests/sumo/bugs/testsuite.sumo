@@ -55,6 +55,7 @@ initialization_of_triggered_stops
 # Long stops should not cause a teleport
 teleport_after_long_stop
 ticket435_parking
+ticket586
 
 # invalid teleport message in connection with arrivalpos. 
 # Note that this behaviour highly nondeterministic:
@@ -62,6 +63,7 @@ ticket435_parking
 # and ranges from 0 to 100%.
 ticket604
 ticket609
+ticket611
 ticket651
 ticket720
 ticket747
@@ -70,7 +72,6 @@ ticket747
 
 # ticket777 (automatically commented due to no test directory being found)
 
-# 
 ticket748
 ticket788
 
@@ -88,3 +89,31 @@ ticket802
 ticket803
 ticket806
 ticket807
+
+# vehicle's route length should not depend on their arrivalSpeed
+ticket814
+ticket836
+ticket837
+ticket838
+ticket840
+
+# test against a collision where one vehicles violates its registered approach time and breaks while on the junction
+break_on_junction
+ticket846
+ticket847
+ticket848
+ticket849
+ticket851
+ticket852
+ticket853
+ticket856
+ticket859
+ticket879
+ticket881
+
+# test error with inductionLoop detectors at the beginning of the lane
+ticket881b
+
+# test error with instantInductionLoop detectors at the beginning of the lane
+ticket881c
+ticket882

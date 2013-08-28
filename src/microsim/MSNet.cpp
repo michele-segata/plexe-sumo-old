@@ -13,7 +13,7 @@
 // The simulated network and simulation perfomer
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,8 +58,9 @@
 #include "MSLane.h"
 #include "MSVehicleTransfer.h"
 #include "MSRoute.h"
-#include "MSRouteLoaderControl.h"
+#include <utils/xml/SUMORouteLoaderControl.h>
 #include "trigger/MSTrigger.h"
+#include "trigger/MSCalibrator.h"
 #include "traffic_lights/MSTLLogicControl.h"
 #include "MSVehicleControl.h"
 #include <utils/common/MsgHandler.h>
@@ -96,6 +97,7 @@
 
 #ifdef HAVE_INTERNAL
 #include <mesosim/MELoop.h>
+#include <mesosim/StateHandler.h>
 #include <utils/iodevices/BinaryInputDevice.h>
 #endif
 
@@ -202,7 +204,7 @@ MSNet::MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
 
 void
 MSNet::closeBuilding(MSEdgeControl* edges, MSJunctionControl* junctions,
-                     MSRouteLoaderControl* routeLoaders,
+                     SUMORouteLoaderControl* routeLoaders,
                      MSTLLogicControl* tlc,
                      std::vector<SUMOTime> stateDumpTimes,
                      std::vector<std::string> stateDumpFiles) {
@@ -347,6 +349,10 @@ void
 MSNet::simulationStep() {
 #ifndef NO_TRACI
     traci::TraCIServer::processCommandsUntilSimStep(myStep);
+    traci::TraCIServer* t = traci::TraCIServer::getInstance();
+    if (t != 0 && t->getTargetTime() != 0 && t->getTargetTime() < myStep) {
+        return;
+    }
 #endif
     // execute beginOfTimestepEvents
     if (myLogExecutionTime) {
@@ -357,18 +363,15 @@ MSNet::simulationStep() {
     std::vector<SUMOTime>::iterator timeIt = find(myStateDumpTimes.begin(), myStateDumpTimes.end(), myStep);
     if (timeIt != myStateDumpTimes.end()) {
         const int dist = distance(myStateDumpTimes.begin(), timeIt);
-        std::ofstream strm(myStateDumpFiles[dist].c_str(), std::fstream::out | std::fstream::binary);
-        saveState(strm);
+        StateHandler::saveState(myStateDumpFiles[dist], myStep);
     }
 #endif
     myBeginOfTimestepEvents->execute(myStep);
     if (MSGlobals::gCheck4Accidents) {
-        myEdges->detectCollisions(myStep);
+        myEdges->detectCollisions(myStep, 0);
     }
     // check whether the tls programs need to be switched
     myLogics->check2Switch(myStep);
-    // set the signals
-    myLogics->setTrafficLightSignals(myStep);
 
 #ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
@@ -379,23 +382,21 @@ MSNet::simulationStep() {
         // assure all lanes with vehicles are 'active'
         myEdges->patchActiveLanes();
 
-        // move vehicles
-        //  precompute possible positions for vehicles that do interact with
-        //   their lane's end
-        myEdges->moveCritical(myStep);
+        // compute safe velocities for all vehicles for the next few lanes
+        // also register ApproachingVehicleInformation for all links
+        myEdges->planMovements(myStep);
 
-        // move vehicles which do interact with their lane's end
-        //  (it is now known whether they may drive
-        myEdges->moveFirst(myStep);
+        // decide right-of-way and execute movements
+        myEdges->executeMovements(myStep);
         if (MSGlobals::gCheck4Accidents) {
-            myEdges->detectCollisions(myStep);
+            myEdges->detectCollisions(myStep, 1);
         }
 
         // Vehicles change Lanes (maybe)
         myEdges->changeLanes(myStep);
 
         if (MSGlobals::gCheck4Accidents) {
-            myEdges->detectCollisions(myStep);
+            myEdges->detectCollisions(myStep, 2);
         }
 #ifdef HAVE_INTERNAL
     }
@@ -411,13 +412,18 @@ MSNet::simulationStep() {
     myInsertionEvents->execute(myStep);
     myInserter->emitVehicles(myStep);
     if (MSGlobals::gCheck4Accidents) {
-        myEdges->detectCollisions(myStep);
+        myEdges->detectCollisions(myStep, 3);
     }
     MSVehicleTransfer::getInstance()->checkInsertions(myStep);
 
     // execute endOfTimestepEvents
     myEndOfTimestepEvents->execute(myStep);
 
+#ifndef NO_TRACI
+    if (traci::TraCIServer::getInstance() != 0) {
+        traci::TraCIServer::getInstance()->postProcessVTD();
+    }
+#endif
     // update and write (if needed) detector values
     writeOutput();
 
@@ -491,6 +497,7 @@ MSNet::clearAll() {
     delete MSVehicleTransfer::getInstance();
     MSDevice_Routing::cleanup();
     MSTrigger::cleanup();
+    MSCalibrator::cleanup();
 }
 
 
@@ -576,55 +583,6 @@ bool
 MSNet::logSimulationDuration() const {
     return myLogExecutionTime;
 }
-
-
-#ifdef HAVE_INTERNAL
-void
-MSNet::saveState(std::ostream& os) {
-    FileHelpers::writeString(os, VERSION_STRING);
-    FileHelpers::writeUInt(os, sizeof(size_t));
-    FileHelpers::writeUInt(os, sizeof(SUMOReal));
-    FileHelpers::writeUInt(os, MSEdge::dictSize());
-    FileHelpers::writeTime(os, myStep);
-    MSRoute::dict_saveState(os);
-    myVehicleControl->saveState(os);
-    if (MSGlobals::gUseMesoSim) {
-        MSGlobals::gMesoNet->saveState(os);
-    }
-}
-
-
-SUMOTime
-MSNet::loadState(BinaryInputDevice& bis) {
-    std::string version;
-    unsigned int sizeT, fpSize, numEdges;
-    SUMOTime step;
-    bis >> version;
-    bis >> sizeT;
-    bis >> fpSize;
-    bis >> numEdges;
-    bis >> step;
-    if (version != VERSION_STRING) {
-        WRITE_WARNING("State was written with sumo version " + version + " (present: " + VERSION_STRING + ")!");
-    }
-    if (sizeT != sizeof(size_t)) {
-        WRITE_WARNING("State was written on a different platform (32bit vs. 64bit)!");
-    }
-    if (fpSize != sizeof(SUMOReal)) {
-        WRITE_WARNING("State was written with a different precision for SUMOReal!");
-    }
-    if (numEdges != MSEdge::dictSize()) {
-        WRITE_WARNING("State was written for a different net!");
-    }
-    const SUMOTime offset = string2time(OptionsCont::getOptions().getString("load-state.offset"));
-    MSRoute::dict_loadState(bis);
-    myVehicleControl->loadState(bis, offset);
-    if (MSGlobals::gUseMesoSim) {
-        MSGlobals::gMesoNet->loadState(bis, *myVehicleControl, offset);
-    }
-    return step;
-}
-#endif
 
 
 MSPersonControl&

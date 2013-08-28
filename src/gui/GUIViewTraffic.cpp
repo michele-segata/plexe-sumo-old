@@ -11,7 +11,7 @@
 // A view on the simulation; this view is a microscopic one
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -190,11 +190,15 @@ GUIViewTraffic::doPaintGL(int mode, const Boundary& bound) {
     glEnable(GL_POLYGON_OFFSET_LINE);
     int hits2 = myGrid->Search(minB, maxB, *myVisualizationSettings);
     //
-    glTranslated(0, 0, -.01);
-    for (std::map<GUIGlObject*, int>::iterator i = myAdditionallyDrawn.begin(); i != myAdditionallyDrawn.end(); ++i) {
-        (i->first)->drawGLAdditional(this, *myVisualizationSettings);
+    if (myAdditionallyDrawn.size() > 0) {
+        glTranslated(0, 0, -.01);
+        GUINet::getGUIInstance()->lock();
+        for (std::map<GUIGlObject*, int>::iterator i = myAdditionallyDrawn.begin(); i != myAdditionallyDrawn.end(); ++i) {
+            (i->first)->drawGLAdditional(this, *myVisualizationSettings);
+        }
+        GUINet::getGUIInstance()->unlock();
+        glTranslated(0, 0, .01);
     }
-    glTranslated(0, 0, .01);
     glPopMatrix();
     /*
     // draw legends
@@ -228,21 +232,6 @@ GUIViewTraffic::getTrackedID() const {
 
 
 void
-GUIViewTraffic::showViewschemeEditor() {
-    if (myVisualizationChanger == 0) {
-        myVisualizationChanger =
-            new GUIDialog_ViewSettings(
-            this, myVisualizationSettings,
-            &myDecals, &myDecalsLock);
-        myVisualizationChanger->create();
-    } else {
-        myVisualizationChanger->setCurrent(myVisualizationSettings);
-    }
-    myVisualizationChanger->show();
-}
-
-
-void
 GUIViewTraffic::onGamingClick(Position pos) {
     MSTLLogicControl& tlsControl = MSNet::getInstance()->getTLSControl();
     const std::vector<MSTrafficLightLogic*>& logics = tlsControl.getAllLogics();
@@ -255,7 +244,7 @@ GUIViewTraffic::onGamingClick(Position pos) {
             // get the links
             const MSTrafficLightLogic::LaneVector& lanes = tll->getLanesAt(0);
             if (lanes.size() > 0) {
-                const Position& endPos = lanes[0]->getShape().getEnd();
+                const Position& endPos = lanes[0]->getShape().back();
                 if (endPos.distanceTo(pos) < minDist) {
                     minDist = endPos.distanceTo(pos);
                     minTll = tll;
@@ -268,7 +257,7 @@ GUIViewTraffic::onGamingClick(Position pos) {
         const std::vector<MSTrafficLightLogic*> logics = vars.getAllLogics();
         if (logics.size() > 1) {
             MSSimpleTrafficLightLogic* l = (MSSimpleTrafficLightLogic*) logics[0];
-            for (unsigned int i = 0; i < logics.size() - 1; i++) {
+            for (unsigned int i = 0; i < logics.size() - 1; ++i) {
                 if (minTll->getProgramID() == logics[i]->getProgramID()) {
                     l = (MSSimpleTrafficLightLogic*) logics[i + 1];
                     tlsControl.switchTo(minTll->getID(), l->getProgramID());

@@ -10,7 +10,7 @@
 // Some geometrical helpers
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -41,6 +41,9 @@
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
+
+#define DEG2RAD(x) static_cast<SUMOReal>((x) * PI / 180.)
+#define RAD2DEG(x) static_cast<SUMOReal>((x) * 180. / PI)
 
 // ===========================================================================
 // class definitions
@@ -75,7 +78,7 @@ public:
     static Position extrapolate_second(const Position& p1,
                                        const Position& p2, SUMOReal length);
 
-    static SUMOReal nearest_position_on_line_to_point2D(
+    static SUMOReal nearest_offset_on_line_to_point2D(
         const Position& l1, const Position& l2,
         const Position& p, bool perpendicular = true);
 

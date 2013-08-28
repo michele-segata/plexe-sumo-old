@@ -5,7 +5,7 @@
 // Realises dumping Floating Car Data (FCD) Data
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -57,14 +57,14 @@ MSFCDExport::write(OutputDevice& of, SUMOTime timestep) {
     MSVehicleControl::constVehIt it = vc.loadedVehBegin();
     MSVehicleControl::constVehIt end = vc.loadedVehEnd();
 
-    of.openTag("timestep") << " time=\"" << time2string(timestep) << "\">\n";
+    of.openTag("timestep").writeAttr(SUMO_ATTR_TIME, time2string(timestep));
     for (; it != end; ++it) {
         const MSVehicle* veh = static_cast<const MSVehicle*>((*it).second);
         if (veh->isOnRoad()) {
-            std::string fclass = veh->getVehicleType().getID();
-            fclass = fclass.substr(0, fclass.find_first_of("@"));
-            Position pos = veh->getLane()->getShape().positionAtLengthPosition(
-                               veh->getLane()->interpolateLanePosToGeometryPos(veh->getPositionOnLane()));
+            MSLane* lane = veh->getLane();
+            SUMOReal lp = veh->getPositionOnLane();
+            SUMOReal gp = lane->interpolateLanePosToGeometryPos(lp);
+            Position pos = lane->getShape().positionAtOffset(gp);
             if (useGeo) {
                 of.setPrecision(GEO_OUTPUT_ACCURACY);
                 GeoConvHelper::getFinal().cartesian2geo(pos);
@@ -74,9 +74,12 @@ MSFCDExport::write(OutputDevice& of, SUMOTime timestep) {
             of.writeAttr(SUMO_ATTR_X, pos.x());
             of.writeAttr(SUMO_ATTR_Y, pos.y());
             of.writeAttr(SUMO_ATTR_ANGLE, veh->getAngle());
-            of.writeAttr(SUMO_ATTR_TYPE, fclass);
+            of.writeAttr(SUMO_ATTR_TYPE, veh->getVehicleType().getID());
             of.writeAttr(SUMO_ATTR_SPEED, veh->getSpeed());
-            of.closeTag(true);
+            of.writeAttr(SUMO_ATTR_POSITION, lp);
+            of.writeAttr(SUMO_ATTR_LANE, lane->getID());
+            of.writeAttr(SUMO_ATTR_SLOPE, lane->getShape().slopeDegreeAtOffset(gp));
+            of.closeTag();
         }
     }
     of.closeTag();

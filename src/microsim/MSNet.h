@@ -13,7 +13,7 @@
 // The simulated network and simulation perfomer
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -64,7 +64,7 @@ class MSEdge;
 class MSEdgeControl;
 class MSJunctionControl;
 class MSInsertionControl;
-class MSRouteLoaderControl;
+class SUMORouteLoaderControl;
 class MSPersonControl;
 class MSVehicle;
 class MSRoute;
@@ -73,7 +73,6 @@ class MSTLLogicControl;
 class MSDetectorControl;
 class ShapeContainer;
 class BinaryInputDevice;
-class MSRouteLoader;
 class MSEdgeWeightsStorage;
 class SUMOVehicle;
 #ifdef _MESSAGES
@@ -152,7 +151,7 @@ public:
      * @todo Try to move all this to the constructor?
      */
     void closeBuilding(MSEdgeControl* edges, MSJunctionControl* junctions,
-                       MSRouteLoaderControl* routeLoaders, MSTLLogicControl* tlc,
+                       SUMORouteLoaderControl* routeLoaders, MSTLLogicControl* tlc,
                        std::vector<SUMOTime> stateDumpTimes, std::vector<std::string> stateDumpFiles);
 
 
@@ -237,26 +236,6 @@ public:
     void postSimStepOutput() const;
     //}
 
-
-
-#ifdef HAVE_INTERNAL
-    /// @name State I/O (mesosim only)
-    /// @{
-
-    /** @brief Saves the current state
-     *
-     * @param[in] os The stream to write the state into (binary)
-     */
-    void saveState(std::ostream& os);
-
-
-    /** @brief Loads the network state
-     *
-     * @param[in] bis The input to read the state from (binary)
-     */
-    SUMOTime loadState(BinaryInputDevice& bis);
-    /// @}
-#endif
 
     /// @name Retrieval of references to substructures
     /// @{
@@ -541,7 +520,7 @@ protected:
     static MSNet* myInstance;
 
     /// @brief Route loader for dynamic loading of routes
-    MSRouteLoaderControl* myRouteLoaders;
+    SUMORouteLoaderControl* myRouteLoaders;
 
     /// @brief Current time step.
     SUMOTime myStep;

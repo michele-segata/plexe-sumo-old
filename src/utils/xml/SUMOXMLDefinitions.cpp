@@ -12,7 +12,7 @@
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -97,7 +97,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "WAUT",	          SUMO_TAG_WAUT },
     { "wautSwitch",       SUMO_TAG_WAUT_SWITCH },
     { "wautJunction",     SUMO_TAG_WAUT_JUNCTION },
-    { "reset",        	  SUMO_TAG_RESET },
+    { "segment",      	  SUMO_TAG_SEGMENT },
     { "delete",        	  SUMO_TAG_DELETE },
     { "stop",        	  SUMO_TAG_STOP },
     { "destProbReroute",  SUMO_TAG_DEST_PROB_REROUTE },
@@ -120,24 +120,27 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "way",              SUMO_TAG_WAY },
     { "nd",               SUMO_TAG_ND },
     { "tag",              SUMO_TAG_TAG },
+    { "relation",         SUMO_TAG_RELATION },
+    { "member",           SUMO_TAG_MEMBER },
 
+    { "viewsettings",     SUMO_TAG_VIEWSETTINGS },
     { "decal",            SUMO_TAG_VIEWSETTINGS_DECAL },
     { "scheme",           SUMO_TAG_VIEWSETTINGS_SCHEME },
     { "opengl",           SUMO_TAG_VIEWSETTINGS_OPENGL },
     { "background",       SUMO_TAG_VIEWSETTINGS_BACKGROUND },
     { "edges",            SUMO_TAG_VIEWSETTINGS_EDGES },
-    { "nlcC",             SUMO_TAG_VIEWSETTINGS_EDGE_COLOR_ITEM },
     { "vehicles",         SUMO_TAG_VIEWSETTINGS_VEHICLES },
-    { "nvcC",             SUMO_TAG_VIEWSETTINGS_VEHICLE_COLOR_ITEM },
     { "junctions",        SUMO_TAG_VIEWSETTINGS_JUNCTIONS },
     { "additionals",      SUMO_TAG_VIEWSETTINGS_ADDITIONALS },
     { "pois",             SUMO_TAG_VIEWSETTINGS_POIS },
+    { "polys",            SUMO_TAG_VIEWSETTINGS_POLYS },
     { "legend",           SUMO_TAG_VIEWSETTINGS_LEGEND },
     { "include",          SUMO_TAG_INCLUDE },
     { "xi:include",       SUMO_TAG_INCLUDE },
     { "delay",            SUMO_TAG_DELAY },
     { "viewport",         SUMO_TAG_VIEWPORT },
     { "snapshot",         SUMO_TAG_SNAPSHOT },
+    { "breakpoints-file", SUMO_TAG_BREAKPOINTS_FILE },
     { "location",         SUMO_TAG_LOCATION },
     { "colorScheme",      SUMO_TAG_COLORSCHEME },
     { "entry",            SUMO_TAG_ENTRY },
@@ -145,6 +148,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "carFollowing-IDM",         SUMO_TAG_CF_IDM },
     { "carFollowing-IDMM",        SUMO_TAG_CF_IDMM },
     { "carFollowing-Krauss",      SUMO_TAG_CF_KRAUSS },
+    { "carFollowing-KraussPS",    SUMO_TAG_CF_KRAUSS_PLUS_SLOPE },
     { "carFollowing-KraussOrig1", SUMO_TAG_CF_KRAUSS_ORIG1 },
     { "carFollowing-SmartSK",     SUMO_TAG_CF_SMART_SK },
     { "carFollowing-Daniel1",     SUMO_TAG_CF_DANIEL1 },
@@ -199,6 +203,9 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "x",              SUMO_ATTR_X },
     { "y",              SUMO_ATTR_Y },
     { "z",              SUMO_ATTR_Z },
+    { "centerX",        SUMO_ATTR_CENTER_X },
+    { "centerY",        SUMO_ATTR_CENTER_Y },
+    { "centerZ",        SUMO_ATTR_CENTER_Z },
 
     { "key",            SUMO_ATTR_KEY },
     { "requestSize",    SUMO_ATTR_REQUESTSIZE },
@@ -273,6 +280,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "begin",          SUMO_ATTR_BEGIN },
     { "end",            SUMO_ATTR_END },
     { "tl",             SUMO_ATTR_TLID },
+    { "tlType",         SUMO_ATTR_TLTYPE },
     { "linkIndex",      SUMO_ATTR_TLLINKINDEX },
     { "shape",          SUMO_ATTR_SHAPE },
     { "spreadType",     SUMO_ATTR_SPREADTYPE },
@@ -387,6 +395,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     { "generateWalks",  SUMO_ATTR_GENERATE_WALKS },
     { "actType",        SUMO_ATTR_ACTTYPE },
+    { "slope",          SUMO_ATTR_SLOPE },
+    { "version",        SUMO_ATTR_VERSION },
 
     // ActivityGen statistics file
     { "inhabitants",    AGEN_ATTR_INHABITANTS },

@@ -11,7 +11,7 @@
 // APIs for getting/setting edge values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -72,8 +72,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             && variable != LAST_STEP_VEHICLE_NUMBER && variable != LAST_STEP_MEAN_SPEED && variable != LAST_STEP_OCCUPANCY
             && variable != LAST_STEP_VEHICLE_HALTING_NUMBER && variable != LAST_STEP_LENGTH
             && variable != LAST_STEP_VEHICLE_ID_LIST && variable != ID_COUNT) {
-        server.writeStatusCmd(CMD_GET_EDGE_VARIABLE, RTYPE_ERR, "Get Edge Variable: unsupported variable specified", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "Get Edge Variable: unsupported variable specified", outputStorage);
     }
     // begin response building
     tcpip::Storage tempMsg;
@@ -95,17 +94,15 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
     } else {
         MSEdge* e = MSEdge::dictionary(id);
         if (e == 0) {
-            server.writeStatusCmd(CMD_GET_EDGE_VARIABLE, RTYPE_ERR, "Edge '" + id + "' is not known", outputStorage);
-            return false;
+            return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "Edge '" + id + "' is not known", outputStorage);
         }
         switch (variable) {
             case VAR_EDGE_TRAVELTIME: {
                 // time
-                if (inputStorage.readUnsignedByte() != TYPE_INTEGER) {
-                    server.writeStatusCmd(CMD_GET_EDGE_VARIABLE, RTYPE_ERR, "The message must contain the time definition.", outputStorage);
-                    return false;
+                SUMOTime time = 0;
+                if (!server.readTypeCheckingInt(inputStorage, time)) {
+                    return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "The message must contain the time definition.", outputStorage);
                 }
-                SUMOTime time = inputStorage.readInt();
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
                 SUMOReal value;
                 if (!MSNet::getInstance()->getWeightsStorage().retrieveExistingTravelTime(e, 0, time, value)) {
@@ -117,11 +114,10 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             break;
             case VAR_EDGE_EFFORT: {
                 // time
-                if (inputStorage.readUnsignedByte() != TYPE_INTEGER) {
-                    server.writeStatusCmd(CMD_GET_EDGE_VARIABLE, RTYPE_ERR, "The message must contain the time definition.", outputStorage);
-                    return false;
+                SUMOTime time = 0;
+                if (!server.readTypeCheckingInt(inputStorage, time)) {
+                    return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "The message must contain the time definition.", outputStorage);
                 }
-                SUMOTime time = inputStorage.readInt();
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
                 SUMOReal value;
                 if (!MSNet::getInstance()->getWeightsStorage().retrieveExistingEffort(e, 0, time, value)) {
@@ -306,25 +302,23 @@ TraCIServerAPI_Edge::processSet(TraCIServer& server, tcpip::Storage& inputStorag
     // variable
     int variable = inputStorage.readUnsignedByte();
     if (variable != VAR_EDGE_TRAVELTIME && variable != VAR_EDGE_EFFORT && variable != VAR_MAXSPEED) {
-        server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "Change Edge State: unsupported variable specified", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "Change Edge State: unsupported variable specified", outputStorage);
     }
     // id
     std::string id = inputStorage.readString();
     MSEdge* e = MSEdge::dictionary(id);
     if (e == 0) {
-        server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "Edge '" + id + "' is not known", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "Edge '" + id + "' is not known", outputStorage);
     }
     // process
-    int valueDataType = inputStorage.readUnsignedByte();
     switch (variable) {
         case LANE_ALLOWED: {
-            if (inputStorage.readUnsignedByte() != TYPE_STRINGLIST) {
-                server.writeStatusCmd(CMD_GET_EDGE_VARIABLE, RTYPE_ERR, "Allowed vehicle classes must be given as a list of strings.", outputStorage);
-                return false;
+            // read and set allowed vehicle classes
+            std::vector<std::string> classes;
+            if (!server.readTypeCheckingStringList(inputStorage, classes)) {
+                return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "Allowed vehicle classes must be given as a list of strings.", outputStorage);
             }
-            SVCPermissions permissions = parseVehicleClasses(inputStorage.readStringList());
+            SVCPermissions permissions = parseVehicleClasses(classes);
             const std::vector<MSLane*>& lanes = e->getLanes();
             for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                 (*i)->setPermissions(permissions);
@@ -333,12 +327,12 @@ TraCIServerAPI_Edge::processSet(TraCIServer& server, tcpip::Storage& inputStorag
         }
         break;
         case LANE_DISALLOWED: {
-            // time
-            if (inputStorage.readUnsignedByte() != TYPE_STRINGLIST) {
-                server.writeStatusCmd(CMD_GET_EDGE_VARIABLE, RTYPE_ERR, "Not allowed vehicle classes must be given as a list of strings.", outputStorage);
-                return false;
+            // read and set disallowed vehicle classes
+            std::vector<std::string> classes;
+            if (!server.readTypeCheckingStringList(inputStorage, classes)) {
+                return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "Not allowed vehicle classes must be given as a list of strings.", outputStorage);
             }
-            SVCPermissions permissions = ~parseVehicleClasses(inputStorage.readStringList()); // negation yields allowed
+            SVCPermissions permissions = ~parseVehicleClasses(classes); // negation yields allowed
             const std::vector<MSLane*>& lanes = e->getLanes();
             for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                 (*i)->setPermissions(permissions);
@@ -347,99 +341,78 @@ TraCIServerAPI_Edge::processSet(TraCIServer& server, tcpip::Storage& inputStorag
         }
         break;
         case VAR_EDGE_TRAVELTIME: {
-            if (valueDataType != TYPE_COMPOUND) {
-                server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Setting travel time requires a compound object.", outputStorage);
-                return false;
+            // read and set travel time
+            if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
+                return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Setting travel time requires a compound object.", outputStorage);
             }
             int parameterCount = inputStorage.readInt();
             if (parameterCount == 3) {
-                // begin
-                if (inputStorage.readUnsignedByte() != TYPE_INTEGER) {
-                    server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The first variable must be the begin time given as int.", outputStorage);
-                    return false;
+                // bound by time
+                SUMOTime begTime = 0, endTime = 0;
+                double value = 0;
+                if (!server.readTypeCheckingInt(inputStorage, begTime)) {
+                    return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "The first variable must be the begin time given as int.", outputStorage);
                 }
-                SUMOTime begTime = inputStorage.readInt();
-                // end
-                if (inputStorage.readUnsignedByte() != TYPE_INTEGER) {
-                    server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The second variable must be the end time given as int.", outputStorage);
-                    return false;
+                if (!server.readTypeCheckingInt(inputStorage, endTime)) {
+                    return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "The second variable must be the end time given as int.", outputStorage);
                 }
-                SUMOTime endTime = inputStorage.readInt();
-                // value
-                if (inputStorage.readUnsignedByte() != TYPE_DOUBLE) {
-                    server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The second variable must be the value given as double", outputStorage);
-                    return false;
+                if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                    return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "The third variable must be the value given as double", outputStorage);
                 }
-                SUMOReal value = inputStorage.readDouble();
-                // set
                 MSNet::getInstance()->getWeightsStorage().addTravelTime(e, begTime, endTime, value);
             } else if (parameterCount == 1) {
-                // value
-                if (inputStorage.readUnsignedByte() != TYPE_DOUBLE) {
-                    server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The variable must be the value given as double", outputStorage);
-                    return false;
+                // unbound
+                double value = 0;
+                if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                    return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "The variable must be the value given as double", outputStorage);
                 }
-                SUMOReal value = inputStorage.readDouble();
-                // set
                 MSNet::getInstance()->getWeightsStorage().addTravelTime(e, 0, SUMOTime_MAX, value);
             } else {
-                server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Setting travel time requires either begin time, end time, and value, or only value as parameter.", outputStorage);
-                return false;
+                return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Setting travel time requires either begin time, end time, and value, or only value as parameter.", outputStorage);
             }
         }
         break;
         case VAR_EDGE_EFFORT: {
-            if (valueDataType != TYPE_COMPOUND) {
-                server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Setting effort requires a compound object.", outputStorage);
-                return false;
+            // read and set effort
+            if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
+                return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Setting effort requires a compound object.", outputStorage);
             }
             int parameterCount = inputStorage.readInt();
             if (parameterCount == 3) {
-                // begin
-                if (inputStorage.readUnsignedByte() != TYPE_INTEGER) {
-                    server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The first variable must be the begin time given as int.", outputStorage);
-                    return false;
+                // bound by time
+                SUMOTime begTime = 0, endTime = 0;
+                double value = 0;
+                if (!server.readTypeCheckingInt(inputStorage, begTime)) {
+                    return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "The first variable must be the begin time given as int.", outputStorage);
                 }
-                SUMOTime begTime = inputStorage.readInt();
-                // end
-                if (inputStorage.readUnsignedByte() != TYPE_INTEGER) {
-                    server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The second variable must be the end time given as int.", outputStorage);
-                    return false;
+                if (!server.readTypeCheckingInt(inputStorage, endTime)) {
+                    return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "The second variable must be the end time given as int.", outputStorage);
                 }
-                SUMOTime endTime = inputStorage.readInt();
-                // value
-                if (inputStorage.readUnsignedByte() != TYPE_DOUBLE) {
-                    server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The second variable must be the value given as double", outputStorage);
-                    return false;
+                if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                    return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "The third variable must be the value given as double", outputStorage);
                 }
-                SUMOReal value = inputStorage.readDouble();
-                // set
                 MSNet::getInstance()->getWeightsStorage().addEffort(e, begTime, endTime, value);
             } else if (parameterCount == 1) {
-                // value
-                if (inputStorage.readUnsignedByte() != TYPE_DOUBLE) {
-                    server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The variable must be the value given as double", outputStorage);
-                    return false;
+                // unbound
+                double value = 0;
+                if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                    return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "The variable must be the value given as double", outputStorage);
                 }
-                SUMOReal value = inputStorage.readDouble();
-                // set
                 MSNet::getInstance()->getWeightsStorage().addEffort(e, 0, SUMOTime_MAX, value);
             } else {
-                server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Setting effort requires either begin time, end time, and value, or only value as parameter.", outputStorage);
-                return false;
+                return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Setting effort requires either begin time, end time, and value, or only value as parameter.", outputStorage);
             }
         }
         break;
         case VAR_MAXSPEED: {
-            // speed
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(CMD_SET_EDGE_VARIABLE, RTYPE_ERR, "The speed must be given as a double.", outputStorage);
-                return false;
+            // read and set max. speed
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "The speed must be given as a double.", outputStorage);
             }
-            SUMOReal val = inputStorage.readDouble();
             const std::vector<MSLane*>& lanes = e->getLanes();
             for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
-                (*i)->setMaxSpeed(val);
+                (*i)->setMaxSpeed(value);
             }
         }
         break;

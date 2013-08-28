@@ -8,7 +8,7 @@
 // Base class for a vehicle's route definition
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -135,17 +135,22 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
         return;
     }
     std::vector<const ROEdge*> newEdges;
-    newEdges.push_back(*(oldEdges.begin()));
-    for (std::vector<const ROEdge*>::const_iterator i = oldEdges.begin() + 1; i != oldEdges.end(); ++i) {
-        if ((*(i - 1))->isConnectedTo(*i)) {
-            newEdges.push_back(*i);
-        } else {
-            std::vector<const ROEdge*> edges;
-            router.compute(*(i - 1), *i, &veh, begin, edges);
-            if (edges.size() == 0) {
-                return;
+    if (oldEdges.size() == 1) {
+        /// should happen with jtrrouter only
+        router.compute(oldEdges.front(), oldEdges.front(), &veh, begin, newEdges);
+    } else {
+        newEdges.push_back(*(oldEdges.begin()));
+        for (std::vector<const ROEdge*>::const_iterator i = oldEdges.begin() + 1; i != oldEdges.end(); ++i) {
+            if ((*(i - 1))->isConnectedTo(*i)) {
+                newEdges.push_back(*i);
+            } else {
+                std::vector<const ROEdge*> edges;
+                router.compute(*(i - 1), *i, &veh, begin, edges);
+                if (edges.size() == 0) {
+                    return;
+                }
+                std::copy(edges.begin() + 1, edges.end(), back_inserter(newEdges));
             }
-            std::copy(edges.begin() + 1, edges.end(), back_inserter(newEdges));
         }
     }
     if (myAlternatives[0]->getEdgeVector() != newEdges) {
@@ -257,7 +262,7 @@ OutputDevice&
 RORouteDef::writeXMLDefinition(OutputDevice& dev, const ROVehicle* const veh,
                                bool asAlternatives, bool withExitTimes) const {
     if (asAlternatives) {
-        dev.openTag(SUMO_TAG_ROUTE_DISTRIBUTION).writeAttr(SUMO_ATTR_LAST, myLastUsed).closeOpener();
+        dev.openTag(SUMO_TAG_ROUTE_DISTRIBUTION).writeAttr(SUMO_ATTR_LAST, myLastUsed);
         for (size_t i = 0; i != myAlternatives.size(); i++) {
             myAlternatives[i]->writeXMLDefinition(dev, veh, true, withExitTimes);
         }

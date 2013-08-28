@@ -9,7 +9,7 @@
 // Stores the information about how to visualize structures
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -100,8 +100,6 @@ public:
 
     /// @brief The background color to use
     RGBColor backgroundColor;
-    /// @brief Information whether background decals (textures) shall be used
-    bool showBackgroundDecals;
     /// @brief Information whether a grid shall be shown
     bool showGrid;
     /// @brief Information about the grid spacings
@@ -161,8 +159,8 @@ public:
     /// @name junction visualization settings
     //@{
 
-    /// @brief The junction visualization (color assignment) scheme
-    int junctionMode;
+    /// @brief The junction colorer
+    GUIColorer junctionColorer;
     /// @brief Information whether a link's tls index shall be drawn
     bool drawLinkTLIndex;
     /// @brief Information whether a link's junction index shall be drawn
@@ -180,6 +178,7 @@ public:
     //@{
 
     /// @brief The additional structures visualization scheme
+    // @todo decouple addExageration for POIs, Polygons, Triggers etc
     int addMode;
     /// @brief The minimum size of additional structures to let them be drawn
     float minAddSize;
@@ -199,6 +198,13 @@ public:
     float poiExaggeration;
     // Setting bundles for optional drawing poi names
     GUIVisualizationTextSettings poiName;
+
+    /// @brief The minimum size of shapes to let them be drawn
+    float minPolySize;
+    /// @brief The additional shapes (upscale)
+    float polyExaggeration;
+    // Setting bundles for optional drawing poi names
+    GUIVisualizationTextSettings polyName;
     //@}
 
     /// @brief Information whether the size legend shall be drawn

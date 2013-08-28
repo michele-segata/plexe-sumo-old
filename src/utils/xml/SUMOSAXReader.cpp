@@ -7,7 +7,7 @@
 // SAX-reader encapsulation containing binary reader
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -70,7 +70,7 @@ SUMOSAXReader::setHandler(GenericSAXHandler& handler) {
 
 void
 SUMOSAXReader::parse(std::string systemID) {
-    if (systemID.substr(systemID.length() - 4) == ".sbx") {
+    if (systemID.length() >= 4 && systemID.substr(systemID.length() - 4) == ".sbx") {
         if (parseFirst(systemID)) {
             while (parseNext());
         }

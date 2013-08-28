@@ -9,7 +9,7 @@
 // This class computes shapes of junctions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -35,6 +35,7 @@
 #include <utils/options/OptionsCont.h>
 #include <utils/geom/GeomHelper.h>
 #include <utils/common/StdDefs.h>
+#include <utils/common/MsgHandler.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/ToString.h>
 #include <utils/iodevices/OutputDevice.h>
@@ -140,12 +141,12 @@ NBNodeShapeComputer::replaceLastChecking(PositionVector& g, bool decenter,
         size_t counterLanes, SUMOReal counterDist,
         int laneDiff) {
     counter.extrapolate(100);
-    Position counterPos = counter.positionAtLengthPosition2D(counterDist);
+    Position counterPos = counter.positionAtOffset2D(counterDist);
     PositionVector t = g;
     t.extrapolate(100);
-    SUMOReal p = t.nearest_position_on_line_to_point2D(counterPos);
+    SUMOReal p = t.nearest_offset_to_point2D(counterPos);
     if (p >= 0) {
-        counterPos = t.positionAtLengthPosition2D(p);
+        counterPos = t.positionAtOffset2D(p);
     }
     if (g[-1].distanceTo(counterPos) < SUMO_const_laneWidth * (SUMOReal) counterLanes) {
         g.replaceAt(g.size() - 1, counterPos);
@@ -167,12 +168,12 @@ NBNodeShapeComputer::replaceFirstChecking(PositionVector& g, bool decenter,
         size_t counterLanes, SUMOReal counterDist,
         int laneDiff) {
     counter.extrapolate(100);
-    Position counterPos = counter.positionAtLengthPosition2D(counterDist);
+    Position counterPos = counter.positionAtOffset2D(counterDist);
     PositionVector t = g;
     t.extrapolate(100);
-    SUMOReal p = t.nearest_position_on_line_to_point2D(counterPos);
+    SUMOReal p = t.nearest_offset_to_point2D(counterPos);
     if (p >= 0) {
-        counterPos = t.positionAtLengthPosition2D(p);
+        counterPos = t.positionAtOffset2D(p);
     }
     if (g[0].distanceTo(counterPos) < SUMO_const_laneWidth * (SUMOReal) counterLanes) {
         g.replaceAt(0, counterPos);
@@ -289,7 +290,7 @@ NBNodeShapeComputer::computeContinuationNodeShape(bool simpleContinuation) {
                 p.mul(0.25);
             }
             // ... compute the distance to this point ...
-            SUMOReal dist = geomsCCW[*i].nearest_position_on_line_to_point2D(p);
+            SUMOReal dist = geomsCCW[*i].nearest_offset_to_point2D(p);
             if (dist < 0) {
                 // ok, we have the problem that even the extrapolated geometry
                 //  does not reach the point
@@ -402,11 +403,11 @@ NBNodeShapeComputer::computeContinuationNodeShape(bool simpleContinuation) {
         assert(geomsCW.find(*ccwi) != geomsCW.end());
         assert(geomsCW.find(*cwi) != geomsCW.end());
         Position p1 = distances.find(*cwi) != distances.end() && distances[*cwi] != -1
-                      ? geomsCCW[*cwi].positionAtLengthPosition2D(distances[*cwi])
-                      : geomsCCW[*cwi].positionAtLengthPosition2D((SUMOReal) - .1);
+                      ? geomsCCW[*cwi].positionAtOffset2D(distances[*cwi])
+                      : geomsCCW[*cwi].positionAtOffset2D((SUMOReal) - .1);
         Position p2 = distances.find(*ccwi) != distances.end() && distances[*ccwi] != -1
-                      ? geomsCW[*ccwi].positionAtLengthPosition2D(distances[*ccwi])
-                      : geomsCW[*ccwi].positionAtLengthPosition2D((SUMOReal) - .1);
+                      ? geomsCW[*ccwi].positionAtOffset2D(distances[*ccwi])
+                      : geomsCW[*ccwi].positionAtOffset2D((SUMOReal) - .1);
         Line l(p1, p2);
         l.extrapolateBy(1000);
         SUMOReal angleI = geomsCCW[*i].lineAt(0).atan2PositiveAngle();
@@ -583,19 +584,21 @@ NBNodeShapeComputer::computeContinuationNodeShape(bool simpleContinuation) {
         }
         Position p;
         if (len >= offset) {
-            p = l.positionAtLengthPosition2D(offset);
+            p = l.positionAtOffset2D(offset);
         } else {
-            p = l.positionAtLengthPosition2D(len);
+            p = l.positionAtOffset2D(len);
         }
+        p.set(p.x(), p.y(), myNode.getPosition().z());
         ret.push_back_noDoublePos(p);
         //
         l = geomsCW[*i];
         len = l.length();
         if (len >= offset) {
-            p = l.positionAtLengthPosition2D(offset);
+            p = l.positionAtOffset2D(offset);
         } else {
-            p = l.positionAtLengthPosition2D(len);
+            p = l.positionAtOffset2D(len);
         }
+        p.set(p.x(), p.y(), myNode.getPosition().z());
         ret.push_back_noDoublePos(p);
     }
     return ret;
@@ -610,8 +613,18 @@ NBNodeShapeComputer::joinSameDirectionEdges(std::map<NBEdge*, EdgeVector >& same
     EdgeVector::const_iterator i, j;
     for (i = myNode.myAllEdges.begin(); i != myNode.myAllEdges.end() - 1; i++) {
         // store current edge's boundary as current ccw/cw boundary
-        geomsCCW[*i] = (*i)->getCCWBoundaryLine(myNode, SUMO_const_halfLaneWidth);
-        geomsCW[*i] = (*i)->getCWBoundaryLine(myNode, SUMO_const_halfLaneWidth);
+        try {
+            geomsCCW[*i] = (*i)->getCCWBoundaryLine(myNode, SUMO_const_halfLaneWidth);
+        } catch (InvalidArgument& e) {
+            WRITE_WARNING(std::string("While computing intersection geometry: ") + std::string(e.what()));
+            geomsCCW[*i] = (*i)->getGeometry();
+        }
+        try {
+            geomsCW[*i] = (*i)->getCWBoundaryLine(myNode, SUMO_const_halfLaneWidth);
+        } catch (InvalidArgument& e) {
+            WRITE_WARNING(std::string("While computing intersection geometry: ") + std::string(e.what()));
+            geomsCW[*i] = (*i)->getGeometry();
+        }
         // extend the boundary by extroplating it by 100m
         PositionVector g1 =
             myNode.hasIncoming(*i)
@@ -721,10 +734,14 @@ NBNodeShapeComputer::computeNodeShapeByCrosses() {
         edgebound1.extrapolateBy(500);
         edgebound2.extrapolateBy(500);
         if (cross.intersects(edgebound1)) {
-            ret.push_back_noDoublePos(cross.intersectsAt(edgebound1));
+            Position np = cross.intersectsAt(edgebound1);
+            np.set(np.x(), np.y(), myNode.getPosition().z());
+            ret.push_back_noDoublePos(np);
         }
         if (cross.intersects(edgebound2)) {
-            ret.push_back_noDoublePos(cross.intersectsAt(edgebound2));
+            Position np = cross.intersectsAt(edgebound2);
+            np.set(np.x(), np.y(), myNode.getPosition().z());
+            ret.push_back_noDoublePos(np);
         }
     }
     return ret;

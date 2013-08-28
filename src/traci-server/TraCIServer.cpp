@@ -15,7 +15,7 @@
 /// TraCI server used to control sumo by a remote TraCI client (e.g., ns2)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -200,6 +200,31 @@ TraCIServer::close() {
 bool
 TraCIServer::wasClosed() {
     return myDoCloseConnection;
+}
+
+
+void
+TraCIServer::setVTDControlled(MSVehicle* v, MSLane* l, SUMOReal pos, int edgeOffset, MSEdgeVector route) {
+    myVTDControlledVehicles[v->getID()] = v;
+    v->getInfluencer().setVTDControlled(true, l, pos, edgeOffset, route);
+}
+
+void
+TraCIServer::postProcessVTD() {
+    for (std::map<std::string, MSVehicle*>::const_iterator i = myVTDControlledVehicles.begin(); i != myVTDControlledVehicles.end(); ++i) {
+        if (MSNet::getInstance()->getVehicleControl().getVehicle((*i).first) != 0) {
+            (*i).second->getInfluencer().postProcessVTD((*i).second);
+        } else {
+            WRITE_WARNING("Vehicle '" + (*i).first + "' was removed though being controlled by VTD");
+        }
+    }
+    myVTDControlledVehicles.clear();
+}
+
+
+bool
+TraCIServer::vtdDebug() const {
+    return true;
 }
 
 
@@ -526,15 +551,13 @@ TraCIServer::commandAddVehicle() {
     // find vehicleType
     MSVehicleType* vehicleType = MSNet::getInstance()->getVehicleControl().getVType(vehicleTypeId);
     if (!vehicleType) {
-        writeStatusCmd(CMD_ADDVEHICLE, RTYPE_ERR, "Invalid vehicleTypeId: '" + vehicleTypeId + "'");
-        return false;
+        return writeErrorStatusCmd(CMD_ADDVEHICLE, "Invalid vehicleTypeId: '" + vehicleTypeId + "'", myOutputStorage);
     }
 
     // find route
     const MSRoute* route = MSRoute::dictionary(routeId);
     if (!route) {
-        writeStatusCmd(CMD_ADDVEHICLE, RTYPE_ERR, "Invalid routeId: '" + routeId + "'");
-        return false;
+        return writeErrorStatusCmd(CMD_ADDVEHICLE, "Invalid routeId: '" + routeId + "'", myOutputStorage);
     }
 
     // find lane
@@ -542,20 +565,17 @@ TraCIServer::commandAddVehicle() {
     if (laneId != "") {
         lane = MSLane::dictionary(laneId);
         if (!lane) {
-            writeStatusCmd(CMD_ADDVEHICLE, RTYPE_ERR, "Invalid laneId: '" + laneId + "'");
-            return false;
+            return writeErrorStatusCmd(CMD_ADDVEHICLE, "Invalid laneId: '" + laneId + "'", myOutputStorage);
         }
     } else {
         lane = route->getEdges()[0]->getLanes()[0];
         if (!lane) {
-            writeStatusCmd(CMD_STOP, RTYPE_ERR, "Could not find first lane of first edge in routeId '" + routeId + "'");
-            return false;
+            return writeErrorStatusCmd(CMD_STOP, "Could not find first lane of first edge in routeId '" + routeId + "'", myOutputStorage);
         }
     }
 
     if (&lane->getEdge() != *route->begin()) {
-        writeStatusCmd(CMD_STOP, RTYPE_ERR, "The route must start at the edge the lane starts at.");
-        return false;
+        return writeErrorStatusCmd(CMD_STOP, "The route must start at the edge the lane starts at.", myOutputStorage);
     }
 
     // build vehicle
@@ -564,8 +584,7 @@ TraCIServer::commandAddVehicle() {
     vehicleParams->depart = MSNet::getInstance()->getCurrentTimeStep() + 1;
     MSVehicle* vehicle = static_cast<MSVehicle*>(MSNet::getInstance()->getVehicleControl().buildVehicle(vehicleParams, route, vehicleType));
     if (vehicle == NULL) {
-        writeStatusCmd(CMD_STOP, RTYPE_ERR, "Could not build vehicle");
-        return false;
+        return writeErrorStatusCmd(CMD_STOP, "Could not build vehicle", myOutputStorage);
     }
 
     // calculate speed
@@ -578,15 +597,13 @@ TraCIServer::commandAddVehicle() {
 
     // insert vehicle into the dictionary
     if (!MSNet::getInstance()->getVehicleControl().addVehicle(vehicle->getID(), vehicle)) {
-        writeStatusCmd(CMD_ADDVEHICLE, RTYPE_ERR, "Could not add vehicle to VehicleControl");
-        return false;
+        return writeErrorStatusCmd(CMD_ADDVEHICLE, "Could not add vehicle to VehicleControl", myOutputStorage);
     }
 
     // try to emit
     if (!lane->isInsertionSuccess(vehicle, clippedInsertionSpeed, insertionPosition, true)) {
         MSNet::getInstance()->getVehicleControl().deleteVehicle(vehicle);
-        writeStatusCmd(CMD_ADDVEHICLE, RTYPE_ERR, "Could not insert vehicle");
-        return false;
+        return writeErrorStatusCmd(CMD_ADDVEHICLE, "Could not insert vehicle", myOutputStorage);
     }
 
     // exec callback
@@ -616,6 +633,13 @@ TraCIServer::writeStatusCmd(int commandId, int status, const std::string& descri
     outputStorage.writeUnsignedByte(commandId); // command type
     outputStorage.writeUnsignedByte(status); // status
     outputStorage.writeString(description); // description
+}
+
+
+bool
+TraCIServer::writeErrorStatusCmd(int commandId, const std::string& description, tcpip::Storage& outputStorage) {
+    writeStatusCmd(commandId, RTYPE_ERR, description, outputStorage);
+    return false;
 }
 
 
@@ -990,6 +1014,123 @@ TraCIServer::writeResponseWithLength(tcpip::Storage& outputStorage, tcpip::Stora
         outputStorage.writeInt(1 + 4 + (int)tempMsg.size());
     }
     outputStorage.writeStorage(tempMsg);
+}
+
+
+bool
+TraCIServer::readTypeCheckingInt(tcpip::Storage& inputStorage, int& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_INTEGER) {
+        return false;
+    }
+    into = inputStorage.readInt();
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingDouble(tcpip::Storage& inputStorage, double& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_DOUBLE) {
+        return false;
+    }
+    into = inputStorage.readDouble();
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingString(tcpip::Storage& inputStorage, std::string& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_STRING) {
+        return false;
+    }
+    into = inputStorage.readString();
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingStringList(tcpip::Storage& inputStorage, std::vector<std::string>& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_STRINGLIST) {
+        return false;
+    }
+    into = inputStorage.readStringList();
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingColor(tcpip::Storage& inputStorage, RGBColor& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_COLOR) {
+        return false;
+    }
+    unsigned char r = static_cast<unsigned char>(inputStorage.readUnsignedByte());
+    unsigned char g = static_cast<unsigned char>(inputStorage.readUnsignedByte());
+    unsigned char b = static_cast<unsigned char>(inputStorage.readUnsignedByte());
+    unsigned char a = static_cast<unsigned char>(inputStorage.readUnsignedByte());
+    into.set(r, g, b, a);
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingPosition2D(tcpip::Storage& inputStorage, Position& into) {
+    if (inputStorage.readUnsignedByte() != POSITION_2D) {
+        return false;
+    }
+    SUMOReal x = inputStorage.readDouble();
+    SUMOReal y = inputStorage.readDouble();
+    into.set(x, y, 0);
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingBoundary(tcpip::Storage& inputStorage, Boundary& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_BOUNDINGBOX) {
+        return false;
+    }
+    const SUMOReal xmin = inputStorage.readDouble();
+    const SUMOReal ymin = inputStorage.readDouble();
+    const SUMOReal xmax = inputStorage.readDouble();
+    const SUMOReal ymax = inputStorage.readDouble();
+    into.set(xmin, ymin, xmax, ymax);
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingByte(tcpip::Storage& inputStorage, int& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_BYTE) {
+        return false;
+    }
+    into = inputStorage.readByte();
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingUnsignedByte(tcpip::Storage& inputStorage, int& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_UBYTE) {
+        return false;
+    }
+    into = inputStorage.readUnsignedByte();
+    return true;
+}
+
+
+bool
+TraCIServer::readTypeCheckingPolygon(tcpip::Storage& inputStorage, PositionVector& into) {
+    if (inputStorage.readUnsignedByte() != TYPE_POLYGON) {
+        return false;
+    }
+    into.clear();
+    unsigned int noEntries = inputStorage.readUnsignedByte();
+    PositionVector shape;
+    for (unsigned int i = 0; i < noEntries; ++i) {
+        SUMOReal x = inputStorage.readDouble();
+        SUMOReal y = inputStorage.readDouble();
+        into.push_back(Position(x, y));
+    }
+    return true;
 }
 
 }

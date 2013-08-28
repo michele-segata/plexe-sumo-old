@@ -6,7 +6,7 @@ copy_test_path:input_flows.flows.xml
 copy_test_path:input_trips.trips.xml
 copy_test_path:input_weights.dump.xml
 copy_test_path:input_net.net.xml
-copy_test_path:input_districts.net.xml
+copy_test_path:input_districts.taz.xml
 
 [collate_file]
 routes:routes.rou.xml
@@ -24,8 +24,9 @@ alts:<!--{[->]}-->
 vtypes:<!--{[->]}-->
 output:ms answering queries
 log:ms answering queries
-output:done (\d+ ms).
-log:done (\d+ ms).
+output:\([0-9]* ms\){REPLACE (TIME)}
+log:\([0-9]* ms\){REPLACE (TIME)}
 
 [floating_point_tolerance]
-alts:0.0000001
+routes:0.0101
+alts:0.0101

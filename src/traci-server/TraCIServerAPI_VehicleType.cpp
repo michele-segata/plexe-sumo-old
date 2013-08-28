@@ -10,7 +10,7 @@
 // APIs for getting/setting vehicle type values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -66,8 +66,7 @@ TraCIServerAPI_VehicleType::processGet(TraCIServer& server, tcpip::Storage& inpu
             && variable != VAR_TAU && variable != VAR_VEHICLECLASS && variable != VAR_EMISSIONCLASS && variable != VAR_SHAPECLASS
             && variable != VAR_SPEED_FACTOR && variable != VAR_SPEED_DEVIATION && variable != VAR_IMPERFECTION
             && variable != VAR_MINGAP && variable != VAR_WIDTH && variable != VAR_COLOR && variable != ID_COUNT) {
-        server.writeStatusCmd(CMD_GET_VEHICLETYPE_VARIABLE, RTYPE_ERR, "Get Vehicle Type Variable: unsupported variable specified", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_GET_VEHICLETYPE_VARIABLE, "Get Vehicle Type Variable: unsupported variable specified", outputStorage);
     }
     // begin response building
     tcpip::Storage tempMsg;
@@ -89,8 +88,7 @@ TraCIServerAPI_VehicleType::processGet(TraCIServer& server, tcpip::Storage& inpu
     } else {
         MSVehicleType* v = MSNet::getInstance()->getVehicleControl().getVType(id);
         if (v == 0) {
-            server.writeStatusCmd(CMD_GET_VEHICLETYPE_VARIABLE, RTYPE_ERR, "Vehicle type '" + id + "' is not known", outputStorage);
-            return false;
+            return server.writeErrorStatusCmd(CMD_GET_VEHICLETYPE_VARIABLE, "Vehicle type '" + id + "' is not known", outputStorage);
         }
         getVariable(variable, *v, tempMsg);
     }
@@ -156,10 +154,10 @@ TraCIServerAPI_VehicleType::getVariable(const int variable, const MSVehicleType&
             break;
         case VAR_COLOR:
             tempMsg.writeUnsignedByte(TYPE_COLOR);
-            tempMsg.writeUnsignedByte(static_cast<int>(v.getColor().red() * 255. + 0.5));
-            tempMsg.writeUnsignedByte(static_cast<int>(v.getColor().green() * 255. + 0.5));
-            tempMsg.writeUnsignedByte(static_cast<int>(v.getColor().blue() * 255. + 0.5));
-            tempMsg.writeUnsignedByte(255);
+            tempMsg.writeUnsignedByte(v.getColor().red());
+            tempMsg.writeUnsignedByte(v.getColor().green());
+            tempMsg.writeUnsignedByte(v.getColor().blue());
+            tempMsg.writeUnsignedByte(v.getColor().alpha());
             break;
         default:
             break;
@@ -179,159 +177,147 @@ TraCIServerAPI_VehicleType::processSet(TraCIServer& server, tcpip::Storage& inpu
             && variable != VAR_ACCEL && variable != VAR_DECEL && variable != VAR_IMPERFECTION
             && variable != VAR_TAU && variable != VAR_COLOR
        ) {
-        server.writeStatusCmd(CMD_SET_VEHICLETYPE_VARIABLE, RTYPE_ERR, "Change Vehicle Type State: unsupported variable specified", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_SET_VEHICLETYPE_VARIABLE, "Change Vehicle Type State: unsupported variable specified", outputStorage);
     }
     // id
     std::string id = inputStorage.readString();
     MSVehicleType* v = MSNet::getInstance()->getVehicleControl().getVType(id);
     if (v == 0) {
-        server.writeStatusCmd(CMD_SET_VEHICLETYPE_VARIABLE, RTYPE_ERR, "Vehicle type '" + id + "' is not known", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_SET_VEHICLETYPE_VARIABLE, "Vehicle type '" + id + "' is not known", outputStorage);
     }
     // process
     try {
-        if (setVariable(CMD_SET_VEHICLETYPE_VARIABLE, variable, inputStorage.readUnsignedByte(),
-                        *v, server, inputStorage, outputStorage)) {
+        if (setVariable(CMD_SET_VEHICLETYPE_VARIABLE, variable, *v, server, inputStorage, outputStorage)) {
             server.writeStatusCmd(CMD_SET_VEHICLETYPE_VARIABLE, RTYPE_OK, warning, outputStorage);
             return true;
         }
     } catch (ProcessError& e) {
-        server.writeStatusCmd(CMD_SET_VEHICLETYPE_VARIABLE, RTYPE_ERR, e.what(), outputStorage);
+        return server.writeErrorStatusCmd(CMD_SET_VEHICLETYPE_VARIABLE, e.what(), outputStorage);
     }
     return false;
 }
 
 
 bool
-TraCIServerAPI_VehicleType::setVariable(const int cmd, const int variable, const int valueDataType,
+TraCIServerAPI_VehicleType::setVariable(const int cmd, const int variable,
                                         MSVehicleType& v, traci::TraCIServer& server,
                                         tcpip::Storage& inputStorage, tcpip::Storage& outputStorage) {
     switch (variable) {
         case VAR_LENGTH: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting length requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting length requires a double.", outputStorage);
             }
-            double val = inputStorage.readDouble();
-            if (val == 0.0 || fabs(val) == std::numeric_limits<double>::infinity()) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Invalid length.", outputStorage);
-                return false;
+            if (value == 0.0 || fabs(value) == std::numeric_limits<double>::infinity()) {
+                return server.writeErrorStatusCmd(cmd, "Invalid length.", outputStorage);
             }
-            v.setLength(val);
+            v.setLength(value);
         }
         break;
         case VAR_MAXSPEED: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting maximum speed requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting maximum speed requires a double.", outputStorage);
             }
-            double val = inputStorage.readDouble();
-            if (val == 0.0 || fabs(val) == std::numeric_limits<double>::infinity()) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Invalid maximum speed.", outputStorage);
-                return false;
+            if (value == 0.0 || fabs(value) == std::numeric_limits<double>::infinity()) {
+                return server.writeErrorStatusCmd(cmd, "Invalid maximum speed.", outputStorage);
             }
-            v.setMaxSpeed(val);
+            v.setMaxSpeed(value);
         }
         break;
         case VAR_VEHICLECLASS: {
-            if (valueDataType != TYPE_STRING) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting vehicle class requires a string.", outputStorage);
-                return false;
+            std::string vclass;
+            if (!server.readTypeCheckingString(inputStorage, vclass)) {
+                return server.writeErrorStatusCmd(cmd, "Setting vehicle class requires a string.", outputStorage);
             }
-            v.setVClass(getVehicleClassID(inputStorage.readString()));
+            v.setVClass(getVehicleClassID(vclass));
         }
         break;
         case VAR_SPEED_FACTOR: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting speed factor requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting speed factor requires a double.", outputStorage);
             }
-            v.setSpeedFactor(inputStorage.readDouble());
+            v.setSpeedFactor(value);
         }
         break;
         case VAR_SPEED_DEVIATION: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting speed deviation requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting speed deviation requires a double.", outputStorage);
             }
-            v.setSpeedDeviation(inputStorage.readDouble());
+            v.setSpeedDeviation(value);
         }
         break;
         case VAR_EMISSIONCLASS: {
-            if (valueDataType != TYPE_STRING) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting emission class requires a string.", outputStorage);
-                return false;
+            std::string eclass;
+            if (!server.readTypeCheckingString(inputStorage, eclass)) {
+                return server.writeErrorStatusCmd(cmd, "Setting emission class requires a string.", outputStorage);
             }
-            v.setEmissionClass(getVehicleEmissionTypeID(inputStorage.readString()));
+            v.setEmissionClass(getVehicleEmissionTypeID(eclass));
         }
         break;
         case VAR_WIDTH: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting width requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage,  value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting width requires a double.", outputStorage);
             }
-            v.setWidth(inputStorage.readDouble());
+            v.setWidth(value);
         }
         break;
         case VAR_MINGAP: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting minimum gap requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting minimum gap requires a double.", outputStorage);
             }
-            v.setMinGap(inputStorage.readDouble());
+            v.setMinGap(value);
         }
         break;
         case VAR_SHAPECLASS: {
-            if (valueDataType != TYPE_STRING) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting vehicle shape requires a string.", outputStorage);
-                return false;
+            std::string sclass;
+            if (!server.readTypeCheckingString(inputStorage, sclass)) {
+                return server.writeErrorStatusCmd(cmd, "Setting vehicle shape requires a string.", outputStorage);
             }
-            v.setShape(getVehicleShapeID(inputStorage.readString()));
+            v.setShape(getVehicleShapeID(sclass));
         }
         break;
         case VAR_ACCEL: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting acceleration requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting acceleration requires a double.", outputStorage);
             }
-            v.getCarFollowModel().setMaxAccel(inputStorage.readDouble());
+            v.getCarFollowModel().setMaxAccel(value);
         }
         break;
         case VAR_DECEL: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting deceleration requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting deceleration requires a double.", outputStorage);
             }
-            v.getCarFollowModel().setMaxDecel(inputStorage.readDouble());
+            v.getCarFollowModel().setMaxDecel(value);
         }
         break;
         case VAR_IMPERFECTION: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting driver imperfection requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting driver imperfection requires a double.", outputStorage);
             }
-            v.getCarFollowModel().setImperfection(inputStorage.readDouble());
+            v.getCarFollowModel().setImperfection(value);
         }
         break;
         case VAR_TAU: {
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "Setting headway time requires a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(cmd, "Setting headway time requires a double.", outputStorage);
             }
-            v.getCarFollowModel().setHeadwayTime(inputStorage.readDouble());
+            v.getCarFollowModel().setHeadwayTime(value);
         }
         break;
         case VAR_COLOR: {
-            if (valueDataType != TYPE_COLOR) {
-                server.writeStatusCmd(cmd, RTYPE_ERR, "The color must be given using the according type.", outputStorage);
-                return false;
+            RGBColor col;
+            if (!server.readTypeCheckingColor(inputStorage, col)) {
+                return server.writeErrorStatusCmd(cmd, "The color must be given using the according type.", outputStorage);
             }
-            SUMOReal r = (SUMOReal) inputStorage.readUnsignedByte() / 255.;
-            SUMOReal g = (SUMOReal) inputStorage.readUnsignedByte() / 255.;
-            SUMOReal b = (SUMOReal) inputStorage.readUnsignedByte() / 255.;
-            inputStorage.readUnsignedByte(); // skip alpha level
-            RGBColor col(r, g, b);
             v.setColor(col);
         }
         break;

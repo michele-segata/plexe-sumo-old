@@ -10,7 +10,7 @@
 // Main for OD2TRIPS
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -102,6 +102,9 @@ fillOptions() {
     oc.addSynonyme("output-file", "output", true);
     oc.addDescription("output-file", "Output", "Writes trip definitions into FILE");
 
+    oc.doRegister("flow-output", new Option_FileName());
+    oc.addDescription("flow-output", "Output", "Writes flow definitions into FILE");
+
     oc.doRegister("ignore-vehicle-type", new Option_Bool(false));
     oc.addSynonyme("ignore-vehicle-type", "no-vtype", true);
     oc.addDescription("ignore-vehicle-type", "Output", "Does not save vtype information");
@@ -134,8 +137,9 @@ fillOptions() {
     oc.doRegister("timeline.day-in-hours", new Option_Bool(false));
     oc.addDescription("timeline.day-in-hours", "Processing", "Uses STR as a 24h-timeline definition");
 
-    oc.doRegister("dismiss-loading-errors", new Option_Bool(false)); // !!! describe, document
-    oc.addDescription("dismiss-loading-errors", "Processing", "Continue on broken input");
+    oc.doRegister("ignore-errors", new Option_Bool(false)); // !!! describe, document
+    oc.addSynonyme("ignore-errors", "dismiss-loading-errors", true);
+    oc.addDescription("ignore-errors", "Processing", "Continue on broken input");
 
     oc.doRegister("no-step-log", new Option_Bool(false));
     oc.addDescription("no-step-log", "Processing", "Disable console output of current time step");
@@ -163,37 +167,6 @@ fillOptions() {
     // add rand options
     RandHelper::insertRandOptions();
 }
-
-
-Distribution_Points
-parseTimeLine(const std::vector<std::string>& def, bool timelineDayInHours) {
-    bool interpolating = !timelineDayInHours;
-    PositionVector points;
-    SUMOReal prob = 0;
-    if (timelineDayInHours) {
-        if (def.size() != 24) {
-            throw ProcessError("Assuming 24 entries for a day timeline, but got " + toString(def.size()) + ".");
-        }
-        for (int chour = 0; chour < 24; ++chour) {
-            prob = TplConvert::_2SUMOReal(def[chour].c_str());
-            points.push_back(Position((SUMOReal)(chour * 3600), prob));
-        }
-        points.push_back(Position((SUMOReal)(24 * 3600), prob));
-    } else {
-        size_t i = 0;
-        while (i < def.size()) {
-            StringTokenizer st2(def[i++], ":");
-            if (st2.size() != 2) {
-                throw ProcessError("Broken time line definition: missing a value in '" + def[i - 1] + "'.");
-            }
-            int time = TplConvert::_2int(st2.next().c_str());
-            prob = TplConvert::_2SUMOReal(st2.next().c_str());
-            points.push_back(Position((SUMOReal) time, prob));
-        }
-    }
-    return Distribution_Points("N/A", points, interpolating);
-}
-
 
 bool
 checkOptions() {
@@ -242,239 +215,6 @@ checkOptions() {
 }
 
 
-void
-loadDistricts(ODDistrictCont& districts, OptionsCont& oc) {
-    // check whether the user gave a net filename
-    if (!oc.isSet("net-file")) {
-        WRITE_ERROR("You must supply a network ('-n').");
-        return;
-    }
-    // get the file name and set it
-    std::string file = oc.getString("net-file");
-    if (!FileHelpers::exists(file)) {
-        throw ProcessError("Could not find network '" + file + "' to load.");
-    }
-    PROGRESS_BEGIN_MESSAGE("Loading districts from '" + file + "'");
-    // build the xml-parser and handler
-    ODDistrictHandler handler(districts, file);
-    if (!XMLSubSys::runParser(handler, file)) {
-        PROGRESS_FAILED_MESSAGE();
-    } else {
-        PROGRESS_DONE_MESSAGE();
-    }
-}
-
-
-std::string
-getNextNonCommentLine(LineReader& lr) {
-    std::string line;
-    do {
-        line = lr.readLine();
-        if (line[0] != '*') {
-            return StringUtils::prune(line);
-        }
-    } while (lr.good() && lr.hasMore());
-    throw ProcessError();
-}
-
-
-SUMOTime
-parseSingleTime(const std::string& time) {
-    if (time.find('.') == std::string::npos) {
-        throw OutOfBoundsException();
-    }
-    std::string hours = time.substr(0, time.find('.'));
-    std::string minutes = time.substr(time.find('.') + 1);
-    return TIME2STEPS(TplConvert::_2int(hours.c_str()) * 3600 + TplConvert::_2int(minutes.c_str()) * 60);
-}
-
-
-std::pair<SUMOTime, SUMOTime>
-readTime(LineReader& lr) {
-    std::string line = getNextNonCommentLine(lr);
-    try {
-        StringTokenizer st(line, StringTokenizer::WHITECHARS);
-        SUMOTime begin = parseSingleTime(st.next());
-        SUMOTime end = parseSingleTime(st.next());
-        if (begin >= end) {
-            throw ProcessError("Begin time is larger than end time.");
-        }
-        return std::make_pair(begin, end);
-    } catch (OutOfBoundsException&) {
-        throw ProcessError("Broken period definition '" + line + "'.");
-    } catch (NumberFormatException&) {
-        throw ProcessError("Broken period definition '" + line + "'.");
-    }
-}
-
-
-SUMOReal
-readFactor(LineReader& lr, SUMOReal scale) {
-    std::string line = getNextNonCommentLine(lr);
-    SUMOReal factor = -1;
-    try {
-        factor = TplConvert::_2SUMOReal(line.c_str()) * scale;
-    } catch (NumberFormatException&) {
-        throw ProcessError("Broken factor: '" + line + "'.");
-    }
-    return factor;
-}
-
-
-
-void
-readV(LineReader& lr, ODMatrix& into, SUMOReal scale,
-      std::string vehType, bool matrixHasVehType) {
-    PROGRESS_BEGIN_MESSAGE("Reading matrix '" + lr.getFileName() + "' stored as VMR");
-    // parse first defs
-    std::string line;
-    if (matrixHasVehType) {
-        line = getNextNonCommentLine(lr);
-        if (vehType == "") {
-            vehType = StringUtils::prune(line);
-        }
-    }
-
-    // parse time
-    std::pair<SUMOTime, SUMOTime> times = readTime(lr);
-    SUMOTime begin = times.first;
-    SUMOTime end = times.second;
-
-    // factor
-    SUMOReal factor = readFactor(lr, scale);
-
-    // districts
-    line = getNextNonCommentLine(lr);
-    int districtNo = TplConvert::_2int(StringUtils::prune(line).c_str());
-    // parse district names (normally ints)
-    std::vector<std::string> names;
-    do {
-        line = getNextNonCommentLine(lr);
-        StringTokenizer st2(line, StringTokenizer::WHITECHARS);
-        while (st2.hasNext()) {
-            names.push_back(st2.next());
-        }
-    } while ((int) names.size() != districtNo);
-
-    // parse the cells
-    for (std::vector<std::string>::iterator si = names.begin(); si != names.end(); ++si) {
-        std::vector<std::string>::iterator di = names.begin();
-        //
-        do {
-            line = getNextNonCommentLine(lr);
-            if (line.length() == 0) {
-                continue;
-            }
-            try {
-                StringTokenizer st2(line, StringTokenizer::WHITECHARS);
-                while (st2.hasNext()) {
-                    assert(di != names.end());
-                    SUMOReal vehNumber = TplConvert::_2SUMOReal(st2.next().c_str()) * factor;
-                    if (vehNumber != 0) {
-                        into.add(vehNumber, begin, end, *si, *di, vehType);
-                    }
-                    if (di == names.end()) {
-                        throw ProcessError("More entries than districts found.");
-                    }
-                    ++di;
-                }
-            } catch (NumberFormatException&) {
-                throw ProcessError("Not numeric vehicle number in line '" + line + "'.");
-            }
-            if (!lr.hasMore()) {
-                break;
-            }
-        } while (di != names.end());
-    }
-    PROGRESS_DONE_MESSAGE();
-}
-
-
-void
-readO(LineReader& lr, ODMatrix& into, SUMOReal scale,
-      std::string vehType, bool matrixHasVehType) {
-    PROGRESS_BEGIN_MESSAGE("Reading matrix '" + lr.getFileName() + "' stored as OR");
-    // parse first defs
-    std::string line;
-    if (matrixHasVehType) {
-        line = getNextNonCommentLine(lr);
-        int type = TplConvert::_2int(StringUtils::prune(line).c_str());
-        if (vehType == "") {
-            vehType = toString(type);
-        }
-    }
-
-    // parse time
-    std::pair<SUMOTime, SUMOTime> times = readTime(lr);
-    SUMOTime begin = times.first;
-    SUMOTime end = times.second;
-
-    // factor
-    SUMOReal factor = readFactor(lr, scale);
-
-    // parse the cells
-    while (lr.hasMore()) {
-        line = getNextNonCommentLine(lr);
-        if (line.length() == 0) {
-            continue;
-        }
-        StringTokenizer st2(line, StringTokenizer::WHITECHARS);
-        if (st2.size() == 0) {
-            continue;
-        }
-        try {
-            std::string sourceD = st2.next();
-            std::string destD = st2.next();
-            SUMOReal vehNumber = TplConvert::_2SUMOReal(st2.next().c_str()) * factor;
-            if (vehNumber != 0) {
-                into.add(vehNumber, begin, end, sourceD, destD, vehType);
-            }
-        } catch (OutOfBoundsException&) {
-            throw ProcessError("Missing at least one information in line '" + line + "'.");
-        } catch (NumberFormatException&) {
-            throw ProcessError("Not numeric vehicle number in line '" + line + "'.");
-        }
-    }
-    PROGRESS_DONE_MESSAGE();
-}
-
-
-void
-loadMatrix(OptionsCont& oc, ODMatrix& into) {
-    std::vector<std::string> files = oc.getStringVector("od-files");
-    //  check
-    if (files.size() == 0) {
-        throw ProcessError("No files to parse are given.");
-    }
-    //  parse
-    for (std::vector<std::string>::iterator i = files.begin(); i != files.end(); ++i) {
-        LineReader lr(*i);
-        if (!lr.good()) {
-            throw ProcessError("Could not open '" + (*i) + "'.");
-        }
-        std::string type = lr.readLine();
-        // get the type only
-        if (type.find(';') != std::string::npos) {
-            type = type.substr(0, type.find(';'));
-        }
-        // parse type-dependant
-        if (type.length() > 1 && type[1] == 'V') {
-            // process ptv's 'V'-matrices
-            if (type.find('N') != std::string::npos) {
-                throw ProcessError("'" + *i + "' does not contain the needed information about the time described.");
-            }
-            readV(lr, into, oc.getFloat("scale"), oc.getString("vtype"), type.find('M') != std::string::npos);
-        } else if (type.length() > 1 && type[1] == 'O') {
-            // process ptv's 'O'-matrices
-            if (type.find('N') != std::string::npos) {
-                throw ProcessError("'" + *i + "' does not contain the needed information about the time described.");
-            }
-            readO(lr, into, oc.getFloat("scale"), oc.getString("vtype"), type.find('M') != std::string::npos);
-        } else {
-            throw ProcessError("'" + *i + "' uses an unknown matrix type '" + type + "'.");
-        }
-    }
-}
 
 
 /* -------------------------------------------------------------------------
@@ -503,33 +243,48 @@ main(int argc, char** argv) {
         }
         RandHelper::initRandGlobal();
         // load the districts
+        // check whether the user gave a net filename
+        if (!oc.isSet("net-file")) {
+            throw ProcessError("You must supply a network or districts file ('-n').");
+        }
+        // get the file name and set it
         ODDistrictCont districts;
-        loadDistricts(districts, oc);
+        districts.loadDistricts(oc.getString("net-file"));
         if (districts.size() == 0) {
-            throw ProcessError("No districts loaded...");
+            throw ProcessError("No districts loaded.");
         }
         // load the matrix
         ODMatrix matrix(districts);
-        loadMatrix(oc, matrix);
+        matrix.loadMatrix(oc);
         if (matrix.getNoLoaded() == 0) {
-            throw ProcessError("No vehicles loaded...");
+            throw ProcessError("No vehicles loaded.");
         }
-        if (MsgHandler::getErrorInstance()->wasInformed() && !oc.getBool("dismiss-loading-errors")) {
-            throw ProcessError("Loading failed...");
+        if (MsgHandler::getErrorInstance()->wasInformed() && !oc.getBool("ignore-errors")) {
+            throw ProcessError("Loading failed.");
         }
         WRITE_MESSAGE(toString(matrix.getNoLoaded()) + " vehicles loaded.");
         // apply a curve if wished
         if (oc.isSet("timeline")) {
-            matrix.applyCurve(parseTimeLine(oc.getStringVector("timeline"), oc.getBool("timeline.day-in-hours")));
+            matrix.applyCurve(matrix.parseTimeLine(oc.getStringVector("timeline"), oc.getBool("timeline.day-in-hours")));
         }
         // write
-        if (!OutputDevice::createDeviceByOption("output-file", "trips")) {
-            throw ProcessError("No output name is given.");
+        bool haveOutput = false;
+        if (OutputDevice::createDeviceByOption("output-file", "routes")) {
+            matrix.write(string2time(oc.getString("begin")), string2time(oc.getString("end")),
+                         OutputDevice::getDeviceByOption("output-file"),
+                         oc.getBool("spread.uniform"), oc.getBool("ignore-vehicle-type"),
+                         oc.getString("prefix"), !oc.getBool("no-step-log"));
+            haveOutput = true;
         }
-        OutputDevice& dev = OutputDevice::getDeviceByOption("output-file");
-        matrix.write(string2time(oc.getString("begin")), string2time(oc.getString("end")),
-                     dev, oc.getBool("spread.uniform"), oc.getBool("ignore-vehicle-type"),
-                     oc.getString("prefix"), !oc.getBool("no-step-log"));
+        if (OutputDevice::createDeviceByOption("flow-output", "routes")) {
+            matrix.writeFlows(string2time(oc.getString("begin")), string2time(oc.getString("end")),
+                              OutputDevice::getDeviceByOption("flow-output"),
+                              oc.getBool("ignore-vehicle-type"), oc.getString("prefix"));
+            haveOutput = true;
+        }
+        if (!haveOutput) {
+            throw ProcessError("No output file given.");
+        }
         WRITE_MESSAGE(toString(matrix.getNoDiscarded()) + " vehicles discarded.");
         WRITE_MESSAGE(toString(matrix.getNoWritten()) + " vehicles written.");
     } catch (const ProcessError& e) {

@@ -10,7 +10,7 @@
 // A basic edge for routing applications
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -62,12 +62,12 @@ std::vector<ROEdge*> ROEdge::myEdges;
 // ===========================================================================
 // method definitions
 // ===========================================================================
-ROEdge::ROEdge(const std::string& id, RONode* from, RONode* to, unsigned int index)
-    : myID(id), mySpeed(-1),
-      myIndex(index), myLength(-1),
+ROEdge::ROEdge(const std::string& id, RONode* from, RONode* to, unsigned int index, const int priority)
+    : Named(id), myFromNode(from), myToNode(to), myIndex(index), myPriority(priority),
+      mySpeed(-1), myLength(-1),
       myUsingTTTimeLine(false),
       myUsingETimeLine(false),
-      myFromNode(from), myToNode(to) {
+      myCombinedPermissions(0) {
     while (myEdges.size() <= index) {
         myEdges.push_back(0);
     }

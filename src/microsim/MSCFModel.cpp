@@ -11,7 +11,7 @@
 // The car-following model abstraction
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -32,6 +32,7 @@
 #include <config.h>
 #endif
 
+#include <math.h>
 #include "MSCFModel.h"
 #include "MSVehicleType.h"
 #include "MSVehicle.h"
@@ -60,7 +61,7 @@ MSCFModel::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
     //  vSafe does not incorporate speed reduction due to interaction
     //  on lane changing
     const SUMOReal vMin = getSpeedAfterMaxDecel(oldV);
-    const SUMOReal vMax = MIN3(veh->getLane()->getVehicleMaxSpeed(veh), maxNextSpeed(oldV), vSafe);
+    const SUMOReal vMax = MIN3(veh->getLane()->getVehicleMaxSpeed(veh), maxNextSpeed(oldV, veh), vSafe);
     assert(vMin <= vMax);
     return veh->getLaneChangeModel().patchSpeed(vMin, vMax, vMax, *this);
 }
@@ -71,7 +72,7 @@ MSCFModel::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
     // Resolve the vsafe equation to gap. Assume predecessor has
     // speed != 0 and that vsafe will be the current speed plus acceleration,
     // i.e that with this gap there will be no interaction.
-    const SUMOReal vNext = MIN2(maxNextSpeed(veh->getSpeed()), veh->getLane()->getVehicleMaxSpeed(veh));
+    const SUMOReal vNext = MIN2(maxNextSpeed(veh->getSpeed(), veh), veh->getLane()->getVehicleMaxSpeed(veh));
     const SUMOReal gap = (vNext - vL) *
                          ((veh->getSpeed() + vL) / (2.*myDecel) + myHeadwayTime) +
                          vL * myHeadwayTime;
@@ -94,7 +95,7 @@ MSCFModel::leftVehicleVsafe(const MSVehicle* const ego, const MSVehicle* const n
 
 
 SUMOReal
-MSCFModel::maxNextSpeed(SUMOReal speed) const {
+MSCFModel::maxNextSpeed(SUMOReal speed, const MSVehicle* const /*veh*/) const {
     return MIN2(speed + (SUMOReal) ACCEL2SPEED(getMaxAccel()), myType->getMaxSpeed());
 }
 
@@ -109,7 +110,19 @@ MSCFModel::brakeGap(SUMOReal speed) const {
 }
 
 
-void MSCFModel::saveState(std::ostream& /*os*/) {}
-
+SUMOReal
+MSCFModel::freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const {
+    UNUSED_PARAMETER(veh);
+    // adapt speed to succeeding lane, no reaction time is involved
+    // when breaking for y steps the following distance g is covered
+    // (drive with v in the final step)
+    // g = (y^2 + y) * 0.5 * b + y * v
+    // y = ((((sqrt((b + 2.0*v)*(b + 2.0*v) + 8.0*b*g)) - b)*0.5 - v)/b)
+    const SUMOReal b = ACCEL2SPEED(myDecel);
+    const SUMOReal y = MAX2(0.0, ((sqrt((b + 2.0 * maxSpeed) * (b + 2.0 * maxSpeed) + 8.0 * b * seen) - b) * 0.5 - maxSpeed) / b);
+    const SUMOReal yFull = floor(y);
+    const SUMOReal exactGap = (yFull * yFull + yFull) * 0.5 * b + yFull * maxSpeed + (y > yFull ? maxSpeed : 0.0);
+    return MAX2((SUMOReal)0.0, seen - exactGap) / (yFull + 1) + yFull * myDecel + maxSpeed;
+}
 
 /****************************************************************************/

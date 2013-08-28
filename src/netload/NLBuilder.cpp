@@ -9,7 +9,7 @@
 // The main interface for loading a microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,8 +47,8 @@
 #include "NLTriggerBuilder.h"
 #include <microsim/MSVehicleControl.h>
 #include <microsim/MSVehicleTransfer.h>
-#include <microsim/MSRouteLoaderControl.h>
-#include <microsim/MSRouteLoader.h>
+#include <utils/xml/SUMORouteLoaderControl.h>
+#include <utils/xml/SUMORouteLoader.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/StringTokenizer.h>
 #include <utils/options/Option.h>
@@ -62,7 +62,9 @@
 #include <microsim/MSFrame.h>
 #include <microsim/MSEdgeWeightsStorage.h>
 #include <utils/iodevices/BinaryInputDevice.h>
-
+#ifdef HAVE_INTERNAL
+#include <mesosim/StateHandler.h>
+#endif
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
@@ -129,18 +131,15 @@ NLBuilder::build() {
     // load the previous state if wished
     if (myOptions.isSet("load-state")) {
         long before = SysUtils::getCurrentMillis();
-        BinaryInputDevice strm(myOptions.getString("load-state"));
-        if (!strm.good()) {
-            WRITE_ERROR("Could not read state from '" + myOptions.getString("load-state") + "'!");
-        } else {
-            PROGRESS_BEGIN_MESSAGE("Loading state from '" + myOptions.getString("load-state") + "'");
-            SUMOTime step = myNet.loadState(strm);
-            if (myOptions.isDefault("begin")) {
-                myOptions.set("begin", time2string(step));
-            }
-            if (step != string2time(myOptions.getString("begin"))) {
-                WRITE_WARNING("State was written at a different time " + time2string(step) + " than the begin time " + myOptions.getString("begin") + "!");
-            }
+        const std::string& f = myOptions.getString("load-state");
+        PROGRESS_BEGIN_MESSAGE("Loading state from '" + f + "'");
+        StateHandler h(f, string2time(OptionsCont::getOptions().getString("load-state.offset")));
+        XMLSubSys::runParser(h, f);
+        if (myOptions.isDefault("begin")) {
+            myOptions.set("begin", time2string(h.getTime()));
+        }
+        if (h.getTime() != string2time(myOptions.getString("begin"))) {
+            WRITE_WARNING("State was written at a different time " + time2string(h.getTime()) + " than the begin time " + myOptions.getString("begin") + "!");
         }
         if (MsgHandler::getErrorInstance()->wasInformed()) {
             return false;
@@ -201,7 +200,7 @@ void
 NLBuilder::buildNet() {
     MSEdgeControl* edges = 0;
     MSJunctionControl* junctions = 0;
-    MSRouteLoaderControl* routeLoaders = 0;
+    SUMORouteLoaderControl* routeLoaders = 0;
     MSTLLogicControl* tlc = 0;
     try {
         edges = myEdgeBuilder.build();
@@ -224,7 +223,7 @@ NLBuilder::buildNet() {
         } else {
             const std::string prefix = myOptions.getString("save-state.prefix");
             for (std::vector<SUMOTime>::iterator i = stateDumpTimes.begin(); i != stateDumpTimes.end(); ++i) {
-                stateDumpFiles.push_back(prefix + "_" + time2string(*i) + ".bin");
+                stateDumpFiles.push_back(prefix + "_" + time2string(*i) + ".sbx");
             }
         }
 #endif
@@ -264,10 +263,10 @@ NLBuilder::load(const std::string& mmlWhat) {
 }
 
 
-MSRouteLoaderControl*
+SUMORouteLoaderControl*
 NLBuilder::buildRouteLoaderControl(const OptionsCont& oc) {
     // build the loaders
-    MSRouteLoaderControl::LoaderVector loaders;
+    SUMORouteLoaderControl* loaders =  new SUMORouteLoaderControl(string2time(oc.getString("route-steps")));
     // check whether a list is existing
     if (oc.isSet("route-files") && string2time(oc.getString("route-steps")) > 0) {
         std::vector<std::string> files = oc.getStringVector("route-files");
@@ -278,13 +277,11 @@ NLBuilder::buildRouteLoaderControl(const OptionsCont& oc) {
         }
         // open files for reading
         for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
-            loaders.push_back(new MSRouteLoader(myNet, new MSRouteHandler(*fileIt, false)));
+            loaders->add(new SUMORouteLoader(new MSRouteHandler(*fileIt, false)));
         }
     }
-    // build the route control
-    return new MSRouteLoaderControl(myNet, string2time(oc.getString("route-steps")), loaders);
+    return loaders;
 }
 
 
 /****************************************************************************/
-

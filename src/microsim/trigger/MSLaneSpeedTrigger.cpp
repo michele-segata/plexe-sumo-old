@@ -11,7 +11,7 @@
 // Changes the speed allowed on a set of lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -155,7 +155,7 @@ MSLaneSpeedTrigger::myStartElement(int element,
     // extract the values
     bool ok = true;
     SUMOTime next = attrs.getSUMOTimeReporting(SUMO_ATTR_TIME, getID().c_str(), ok);
-    SUMOReal speed = attrs.getOptSUMORealReporting(SUMO_ATTR_SPEED, getID().c_str(), ok, -1);
+    SUMOReal speed = attrs.getOpt<SUMOReal>(SUMO_ATTR_SPEED, getID().c_str(), ok, -1);
     // check the values
     if (next < 0) {
         WRITE_ERROR("Wrong time in vss '" + getID() + "'.");

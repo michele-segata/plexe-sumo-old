@@ -11,7 +11,7 @@
 // An agentbased traffic light logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -55,9 +55,9 @@ MSAgentbasedTrafficLightLogic::MSAgentbasedTrafficLightLogic(
     MSTLLogicControl& tlcontrol,
     const std::string& id, const std::string& programID,
     const Phases& phases, unsigned int step, SUMOTime delay,
-    const std::map<std::string, std::string>& parameter)
-    : MSSimpleTrafficLightLogic(tlcontrol, id, programID, phases, step, delay),
-      tSinceLastDecision(0), stepOfLastDecision(0) {
+    const ParameterMap& parameter) :
+    MSSimpleTrafficLightLogic(tlcontrol, id, programID, phases, step, delay, parameter),
+    tSinceLastDecision(0), stepOfLastDecision(0) {
 
     tDecide = 1;
     if (parameter.find("decision-horizon") != parameter.end()) {

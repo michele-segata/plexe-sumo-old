@@ -10,7 +10,7 @@
 // APIs for getting/setting edge values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -76,8 +76,7 @@ TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& input
             && variable != POSITION_CONVERSION && variable != DISTANCE_REQUEST
             && variable != VAR_BUS_STOP_WAITING
        ) {
-        server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Get Simulation Variable: unsupported variable specified", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_GET_SIM_VARIABLE, "Get Simulation Variable: unsupported variable specified", outputStorage);
     }
     // begin response building
     tcpip::Storage tempMsg;
@@ -171,12 +170,10 @@ TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& input
             break;
         case POSITION_CONVERSION:
             if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
-                server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Position conversion requires a compound object.", outputStorage);
-                return false;
+                return server.writeErrorStatusCmd(CMD_GET_SIM_VARIABLE, "Position conversion requires a compound object.", outputStorage);
             }
             if (inputStorage.readInt() != 2) {
-                server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Position conversion requires a source position and a position type as parameter.", outputStorage);
-                return false;
+                return server.writeErrorStatusCmd(CMD_GET_SIM_VARIABLE, "Position conversion requires a source position and a position type as parameter.", outputStorage);
             }
             if (!commandPositionConversion(server, inputStorage, tempMsg, CMD_GET_SIM_VARIABLE)) {
                 return false;
@@ -184,27 +181,23 @@ TraCIServerAPI_Simulation::processGet(TraCIServer& server, tcpip::Storage& input
             break;
         case DISTANCE_REQUEST:
             if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
-                server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Retrieval of distance requires a compound object.", outputStorage);
-                return false;
+                return server.writeErrorStatusCmd(CMD_GET_SIM_VARIABLE, "Retrieval of distance requires a compound object.", outputStorage);
             }
             if (inputStorage.readInt() != 3) {
-                server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Retrieval of distance requires two positions and a distance type as parameter.", outputStorage);
-                return false;
+                return server.writeErrorStatusCmd(CMD_GET_SIM_VARIABLE, "Retrieval of distance requires two positions and a distance type as parameter.", outputStorage);
             }
             if (!commandDistanceRequest(server, inputStorage, tempMsg, CMD_GET_SIM_VARIABLE)) {
                 return false;
             }
             break;
         case VAR_BUS_STOP_WAITING: {
-            if (inputStorage.readUnsignedByte() != TYPE_STRING) {
-                server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Retrieval of persons at busstop requires a string.", outputStorage);
-                return false;
+            std::string id;
+            if (!server.readTypeCheckingString(inputStorage, id)) {
+                return server.writeErrorStatusCmd(CMD_GET_SIM_VARIABLE, "Retrieval of persons at busstop requires a string.", outputStorage);
             }
-            std::string id = inputStorage.readString();
             MSBusStop* s = MSNet::getInstance()->getBusStop(id);
             if (s == 0) {
-                server.writeStatusCmd(CMD_GET_SIM_VARIABLE, RTYPE_ERR, "Unknown bus stop '" + id + "'.", outputStorage);
-                return false;
+                return server.writeErrorStatusCmd(CMD_GET_SIM_VARIABLE, "Unknown bus stop '" + id + "'.", outputStorage);
             }
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
             tempMsg.writeInt(s->getPersonNumber());
@@ -237,7 +230,7 @@ TraCIServerAPI_Simulation::convertCartesianToRoadMap(Position pos) {
         }
     }
     // @todo this may be a place where 3D is required but 2D is delivered
-    result.second = result.first->getShape().nearest_position_on_line_to_point2D(pos, false);
+    result.second = result.first->getShape().nearest_offset_to_point2D(pos, false);
     return result;
 }
 
@@ -294,7 +287,7 @@ TraCIServerAPI_Simulation::commandPositionConversion(traci::TraCIServer& server,
             SUMOReal pos = inputStorage.readDouble();
             int laneIdx = inputStorage.readUnsignedByte();
             try {
-                cartesianPos = geoPos = getLaneChecking(roadID, laneIdx, pos)->getShape().positionAtLengthPosition(pos);
+                cartesianPos = geoPos = getLaneChecking(roadID, laneIdx, pos)->getShape().positionAtOffset(pos);
                 GeoConvHelper::getFinal().cartesian2geo(geoPos);
             } catch (TraCIException& e) {
                 server.writeStatusCmd(commandId, RTYPE_ERR, e.what());
@@ -307,12 +300,11 @@ TraCIServerAPI_Simulation::commandPositionConversion(traci::TraCIServer& server,
             return false;
     }
 
-    int type = inputStorage.readUnsignedByte();
-    if (type != TYPE_UBYTE) {
+    int destPosType = 0;
+    if (!server.readTypeCheckingUnsignedByte(inputStorage, destPosType)) {
         server.writeStatusCmd(commandId, RTYPE_ERR, "Destination position type must be of type ubyte.");
         return false;
     }
-    int destPosType = inputStorage.readUnsignedByte();
 
     switch (destPosType) {
         case POSITION_ROADMAP: {
@@ -367,7 +359,7 @@ TraCIServerAPI_Simulation::commandDistanceRequest(traci::TraCIServer& server, tc
                 std::string roadID = inputStorage.readString();
                 roadPos1.second = inputStorage.readDouble();
                 roadPos1.first = getLaneChecking(roadID, inputStorage.readUnsignedByte(), roadPos1.second);
-                pos1 = roadPos1.first->getShape().positionAtLengthPosition(roadPos1.second);
+                pos1 = roadPos1.first->getShape().positionAtOffset(roadPos1.second);
             } catch (TraCIException& e) {
                 server.writeStatusCmd(commandId, RTYPE_ERR, e.what());
                 return false;
@@ -397,7 +389,7 @@ TraCIServerAPI_Simulation::commandDistanceRequest(traci::TraCIServer& server, tc
                 std::string roadID = inputStorage.readString();
                 roadPos2.second = inputStorage.readDouble();
                 roadPos2.first = getLaneChecking(roadID, inputStorage.readUnsignedByte(), roadPos2.second);
-                pos2 = roadPos2.first->getShape().positionAtLengthPosition(roadPos2.second);
+                pos2 = roadPos2.first->getShape().positionAtOffset(roadPos2.second);
             } catch (TraCIException& e) {
                 server.writeStatusCmd(commandId, RTYPE_ERR, e.what());
                 return false;

@@ -9,7 +9,7 @@
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -117,7 +117,7 @@ MSVehicleControl::scheduleVehicleRemoval(SUMOVehicle* veh) {
         (*i)->generateOutput();
     }
     if (OptionsCont::getOptions().isSet("tripinfo-output")) {
-        OutputDevice::getDeviceByOption("tripinfo-output").closeTag(veh->getDevices().size() == 1);
+        OutputDevice::getDeviceByOption("tripinfo-output").closeTag();
     }
     myTotalTravelTime += STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep() - veh->getDeparture());
     myRunningVehNo--;
@@ -155,12 +155,16 @@ MSVehicleControl::vehicleDeparted(const SUMOVehicle& v) {
 
 
 void
-MSVehicleControl::saveState(std::ostream& /*os*/) {
+MSVehicleControl::setState(int runningVehNo, int endedVehNo, SUMOReal totalDepartureDelay, SUMOReal totalTravelTime) {
+    myRunningVehNo = runningVehNo;
+    myEndedVehNo = endedVehNo;
+    myTotalDepartureDelay = totalDepartureDelay;
+    myTotalTravelTime = totalTravelTime;
 }
 
 
 void
-MSVehicleControl::loadState(BinaryInputDevice& /*bis*/, const SUMOTime /*offset*/) {
+MSVehicleControl::saveState(OutputDevice& /*out*/) {
 }
 
 

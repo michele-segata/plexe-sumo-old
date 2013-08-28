@@ -9,7 +9,7 @@
 // Exporter writing networks using the SUMO format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -164,7 +164,7 @@ protected:
      * @param[in] into The device to write the edge into
      * @param[in] r The roundabout to write
      */
-    static void writeRoundabout(OutputDevice& into, const std::set<NBEdge*>& r);
+    static void writeRoundabout(OutputDevice& into, const EdgeVector& r);
 
 
     /** @brief Writes a district

@@ -10,7 +10,7 @@ Checks schema for files matching certain file names using either
 lxml or SAX2Count.exe depending on availability.
 
 SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2009-2012 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2009-2013 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """
 
@@ -22,16 +22,8 @@ try:
 except ImportError:
     haveLxml = False
 
-def relative_to_sumo_home(path):
-    if "/sumo/" in path:
-        return path[path.index("/sumo/")+6:]
-    else:
-        return path
-
-
 def validate(root, f):
     root = os.path.abspath(root)
-    rs = root.replace('\\', '/')
     try:
         doc = etree.parse(f)
         schemaLoc = doc.getroot().get('{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation')
@@ -42,14 +34,12 @@ def validate(root, f):
             if schemaLoc not in schemes:
                 schemes[schemaLoc] = etree.XMLSchema(etree.parse(schemaLoc))
             schemes[schemaLoc].validate(doc)
-            errors = list(schemes[schemaLoc].error_log)
-            errors.sort()
-            for entry in errors:
-                e = os.path.abspath(str(entry)).replace('\\', '/')
-                e = e[e.find("file:")+7+len(rs):]
-                print >> sys.stderr, e
+            for entry in schemes[schemaLoc].error_log:
+                s = str(entry)
+                s = s[s.find(f.replace('\\', '/'))+len(f):] # remove everything before (and including) the filename
+                print >> sys.stderr, os.path.abspath(f)[len(root)+1:].replace('\\', '/') + s
     except:
-        print >> sys.stderr, "Error on parsing '%s'!" % os.path.abspath(f)[len(root):].replace('\\', '/')
+        print >> sys.stderr, "Error on parsing '%s'!" % os.path.abspath(f)[len(root)+1:].replace('\\', '/')
         traceback.print_exc()
 
 def main(srcRoot, toCheck, err):
@@ -58,7 +48,8 @@ def main(srcRoot, toCheck, err):
                 "*.net.xml", "*.rou.xml", "*.add.xml", "*.????cfg",
                 "net.netgen", "net.netconvert",
                 "net.scenario", "tls.scenario",
-                "routes.duarouter", "alts.duarouter", "routes.jtrrouter",
+                "routes.duarouter", "alts.duarouter", "routes.jtrrouter", "routes.marouter",
+                "vehroutes.sumo", "vehroutes.sumo.meso", "trips.od2trips",
                 "*.turns.xml" ]
     sax2count = "SAX2Count.exe"
     if 'XERCES_64' in os.environ:
@@ -75,7 +66,7 @@ def main(srcRoot, toCheck, err):
                         if haveLxml:
                             validate(srcRoot, name)
                         elif os.name != "posix":
-                            subprocess.call(sax2count + " -v=always -f " + name, stdout=open(os.devnull), stderr=err)
+                            subprocess.call(sax2count + " " + name, stdout=open(os.devnull), stderr=err)
                         fileNo += 1
                     if '.svn' in dirs:
                         dirs.remove('.svn')
@@ -83,7 +74,7 @@ def main(srcRoot, toCheck, err):
             if haveLxml:
                 validate("", srcRoot)
             elif os.name != "posix":
-                subprocess.call(sax2count + " -v=always -f " + srcRoot, stdout=open(os.devnull), stderr=err)
+                subprocess.call(sax2count + " " + srcRoot, stdout=open(os.devnull), stderr=err)
             fileNo += 1
     else:
         print >> err, "cannot open", srcRoot
@@ -104,6 +95,9 @@ if __name__ == "__main__":
     srcRoot = "."
     if len(sys.argv) > 1:
         srcRoot = sys.argv[1]
+        if "$SUMO_HOME" in srcRoot:
+            srcRoot = srcRoot.replace("$SUMO_HOME",
+                    os.path.join(os.path.dirname(__file__), '..', '..'))
     toCheck = None
     if len(sys.argv) > 2:
         toCheck = sys.argv[2].split(",")

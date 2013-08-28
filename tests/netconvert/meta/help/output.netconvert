@@ -1,5 +1,5 @@
-SUMO netconvert Version dev-SVN-r13111
- Copyright (C) 2001-2012 DLR and contributors; http://sumo.sourceforge.net
+SUMO netconvert Version dev-SVN-rUNKNOWN
+ Copyright (C) 2001-2013 DLR and contributors; http://sumo.sourceforge.net
 Road network importer / builder for the road traffic simulation SUMO.
 
 Usage: netconvert [OPTION]*
@@ -70,6 +70,9 @@ Projection Options:
 TLS Building Options:
   --tls.discard-loaded                Does not instatiate traffic lights loaded
                                         from other formats than XML
+  --tls.discard-simple                Does not instatiate traffic lights at
+                                        geometry-like nodes loaded from other
+                                        formats than XML
   --tls.set STR                       Interprets STR as list of junctions to be
                                         controlled by TLS
   --tls.unset STR                     Interprets STR as list of junctions to be
@@ -87,6 +90,8 @@ TLS Building Options:
   --tls.half-offset STR               TLSs in STR will be shifted by half-phase
   --tls.quarter-offset STR            TLSs in STR will be shifted by
                                         quarter-phase
+  --tls.default-type STR              TLSs with unspecified type will use STR
+                                        as their algorithm.
 
 Ramp Guessing Options:
   --ramps.guess                       Enable ramp-guessing
@@ -160,6 +165,8 @@ Processing Options:
                                         due to VISUM misbehaviour
   --osm.skip-duplicates-check         Skips the check for duplicate nodes and
                                         edges.
+  --opendrive.import-all-lanes        Imports all lane types.
+  --opendrive.import-widths           Whether lane widths shall be imported.
   --no-internal-links                 Omits internal links
   --dismiss-vclasses                  Removes vehicle class restrictions from
                                         imported edges.
@@ -173,6 +180,7 @@ Processing Options:
                                         edges)
   --geometry.max-segment-length FLOAT  splits geometry to restrict segment
                                         length
+  --geometry.min-dist FLOAT           reduces too similar geometry points
   --offset.disable-normalization      Turn off normalizing node positions
   --offset.x FLOAT                    Adds FLOAT to net x-positions
   --offset.y FLOAT                    Adds FLOAT to net y-positions

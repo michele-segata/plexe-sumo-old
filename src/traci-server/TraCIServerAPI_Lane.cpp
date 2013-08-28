@@ -10,7 +10,7 @@
 // APIs for getting/setting lane values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -69,8 +69,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             && variable != LAST_STEP_VEHICLE_ID_LIST && variable != LAST_STEP_OCCUPANCY && variable != LAST_STEP_VEHICLE_HALTING_NUMBER
             && variable != LAST_STEP_LENGTH && variable != VAR_CURRENT_TRAVELTIME
             && variable != LANE_ALLOWED && variable != LANE_DISALLOWED && variable != VAR_WIDTH && variable != ID_COUNT) {
-        server.writeStatusCmd(CMD_GET_LANE_VARIABLE, RTYPE_ERR, "Get Lane Variable: unsupported variable specified", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_GET_LANE_VARIABLE, "Get Lane Variable: unsupported variable specified", outputStorage);
     }
     // begin response building
     tcpip::Storage tempMsg;
@@ -91,8 +90,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
     } else {
         MSLane* lane = MSLane::dictionary(id);
         if (lane == 0) {
-            server.writeStatusCmd(CMD_GET_LANE_VARIABLE, RTYPE_ERR, "Lane '" + id + "' is not known", outputStorage);
-            return false;
+            return server.writeErrorStatusCmd(CMD_GET_LANE_VARIABLE, "Lane '" + id + "' is not known", outputStorage);
         }
         switch (variable) {
             case LANE_LINK_NUMBER:
@@ -293,54 +291,47 @@ TraCIServerAPI_Lane::processSet(TraCIServer& server, tcpip::Storage& inputStorag
     // variable
     int variable = inputStorage.readUnsignedByte();
     if (variable != VAR_MAXSPEED && variable != VAR_LENGTH && variable != LANE_ALLOWED && variable != LANE_DISALLOWED) {
-        server.writeStatusCmd(CMD_SET_LANE_VARIABLE, RTYPE_ERR, "Change Lane State: unsupported variable specified", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_SET_LANE_VARIABLE, "Change Lane State: unsupported variable specified", outputStorage);
     }
     // id
     std::string id = inputStorage.readString();
     MSLane* l = MSLane::dictionary(id);
     if (l == 0) {
-        server.writeStatusCmd(CMD_SET_LANE_VARIABLE, RTYPE_ERR, "Lane '" + id + "' is not known", outputStorage);
-        return false;
+        return server.writeErrorStatusCmd(CMD_SET_LANE_VARIABLE, "Lane '" + id + "' is not known", outputStorage);
     }
     // process
-    int valueDataType = inputStorage.readUnsignedByte();
     switch (variable) {
         case VAR_MAXSPEED: {
-            // speed
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(CMD_SET_LANE_VARIABLE, RTYPE_ERR, "The speed must be given as a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(CMD_SET_LANE_VARIABLE, "The speed must be given as a double.", outputStorage);
             }
-            SUMOReal val = inputStorage.readDouble();
-            l->setMaxSpeed(val);
+            l->setMaxSpeed(value);
         }
         break;
         case VAR_LENGTH: {
-            // speed
-            if (valueDataType != TYPE_DOUBLE) {
-                server.writeStatusCmd(CMD_SET_LANE_VARIABLE, RTYPE_ERR, "The length must be given as a double.", outputStorage);
-                return false;
+            double value = 0;
+            if (!server.readTypeCheckingDouble(inputStorage, value)) {
+                return server.writeErrorStatusCmd(CMD_SET_LANE_VARIABLE, "The length must be given as a double.", outputStorage);
             }
-            SUMOReal val = inputStorage.readDouble();
-            l->setLength(val);
+            l->setLength(value);
         }
         break;
         case LANE_ALLOWED: {
-            if (valueDataType != TYPE_STRINGLIST) {
-                server.writeStatusCmd(CMD_SET_LANE_VARIABLE, RTYPE_ERR, "Allowed classes must be given as a list of strings.", outputStorage);
-                return false;
+            std::vector<std::string> classes;
+            if (!server.readTypeCheckingStringList(inputStorage, classes)) {
+                return server.writeErrorStatusCmd(CMD_SET_LANE_VARIABLE, "Allowed classes must be given as a list of strings.", outputStorage);
             }
-            l->setPermissions(parseVehicleClasses(inputStorage.readStringList()));
+            l->setPermissions(parseVehicleClasses(classes));
             l->getEdge().rebuildAllowedLanes();
         }
         break;
         case LANE_DISALLOWED: {
-            if (valueDataType != TYPE_STRINGLIST) {
-                server.writeStatusCmd(CMD_SET_LANE_VARIABLE, RTYPE_ERR, "Not allowed classes must be given as a list of strings.", outputStorage);
-                return false;
+            std::vector<std::string> classes;
+            if (!server.readTypeCheckingStringList(inputStorage, classes)) {
+                return server.writeErrorStatusCmd(CMD_SET_LANE_VARIABLE, "Not allowed classes must be given as a list of strings.", outputStorage);
             }
-            l->setPermissions(~parseVehicleClasses(inputStorage.readStringList())); // negation yields allowed
+            l->setPermissions(~parseVehicleClasses(classes)); // negation yields allowed
             l->getEdge().rebuildAllowedLanes();
         }
         break;
@@ -371,6 +362,7 @@ TraCIServerAPI_Lane::getTree() {
         const std::vector<MSLane*>& lanes = (*i)->getLanes();
         for (std::vector<MSLane*>::const_iterator j = lanes.begin(); j != lanes.end(); ++j) {
             Boundary b = (*j)->getShape().getBoxBoundary();
+            b.grow(3.);
             t->addObject(*j, b);
         }
     }

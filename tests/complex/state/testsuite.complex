@@ -1,6 +1,9 @@
 # two vehicles saved and reloaded
 plain
 
+# include route and vtype dists
+dists
+
 # two vehicles saved and reloaded with prefix file
 prefix
 
@@ -9,3 +12,9 @@ diff_begin
 
 # save and reload with broken route
 disconnected
+
+# two vehicles saved and reloaded with xml output
+xml
+
+# include route and vtype dists with xml output
+dists_xml

@@ -19,6 +19,9 @@ simulation_routing
 # vehicle removal via vaporizer
 vaporizer
 
+# Tests whether calibrators work
+calibrator
+
 # Tests for HBEFA-based per-vehicle emissions
 device_hbefa
 
@@ -27,3 +30,7 @@ hbefa
 
 # Tests for bus stops
 busses
+
+# test loading of shapes 
+# (relevant for cmd-line sumo since they can be access via TraCI)
+shapes

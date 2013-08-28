@@ -15,7 +15,7 @@
 // Representation of a vehicle in the micro simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -207,25 +207,6 @@ public:
     //@}
 
 
-
-
-
-
-    /** @brief Moves the vehicle after the responds (right-of-way rules) are known
-     *
-     * In this second step, vehicles are moved. The right-of-way - conditions
-     *  have been computed and the vehicle knows which intersections may be passed.
-     *
-     * The vehicle computes the allowed velocity, first. Then, it is moved along the
-     *  previously computed links. If the vehicle enters a new lane, it is set in
-     *  myLane.
-     *
-     * The vehicle also sets the lanes it is in-lapping into and informs them about it.
-     * @return Whether the vehicle has moved to the next edge
-     */
-    bool moveChecked();
-
-
     /** @brief Returns the gap between pred and this vehicle.
      *
      * Assumes both vehicles are on the same or on are on parallel lanes.
@@ -279,15 +260,41 @@ public:
     //@}
 
 
-
-    /** @brief Moves vehicles
+    /** @brief Compute safe velocities for the upcoming lanes based on positions and
+     * speeds from the last time step. Also registers
+     * ApproachingVehicleInformation for all links
      *
-     * @param[in] lane The lane the vehicle is on
+     * This method goes through the best continuation lanes of the current lane and
+     * computes the safe velocities for passing/stopping at the next link as a DriveProcessItem
+     *
+     * Afterwards it checks if any DriveProcessItem should be discared to avoid
+     * blocking a junction (checkRewindLinkLanes).
+     *
+     * Finally the ApproachingVehicleInformation is registed for all links that
+     * shall be passed
+     *
+     * @param[in] t The current timeStep
      * @param[in] pred The leader (may be 0)
      * @param[in] neigh The neighbor vehicle (may be 0)
      * @param[in] lengthsInFront Sum of vehicle lengths in front of the vehicle
      */
-    void move(SUMOTime t, MSLane* lane, MSVehicle* pred, MSVehicle* neigh, SUMOReal lengthsInFront);
+    void planMove(SUMOTime t, MSVehicle* pred, MSVehicle* neigh, SUMOReal lengthsInFront);
+
+
+    /** @brief Executes planned vehicle movements with regards to right-of-way
+     *
+     * This method goes through all DriveProcessItems in myLFLinkLanes in order
+     * to find a speed that is safe for all upcoming links.
+     *
+     * Using this speed the position is updated and the vehicle is moved to the
+     * next lane (myLane is updated) if the end of the current lane is reached (this may happen
+     * multiple times in this method)
+     *
+     * The vehicle also sets the lanes it is in-lapping into and informs them about it.
+     * @return Whether the vehicle has moved to the next edge
+     */
+    bool executeMove();
+
 
     /// @name state setter/getter
     //@{
@@ -323,7 +330,7 @@ public:
 
     /** @brief Return current position (x/y, cartesian)
      *
-     * If the vehicle's myLane is 0, -1000/-1000 is returned.
+     * If the vehicle's myLane is 0, Position::INVALID.
      * @todo Recheck myLane usage in this context, think about a proper "invalid" return value
      * @return The current position (in cartesian coordinates)
      * @see myLane
@@ -775,6 +782,14 @@ public:
     bool addTraciStop(MSLane* lane, SUMOReal pos, SUMOReal radius, SUMOTime duration);
 
 
+#ifdef HAVE_INTERNAL_LANES
+    /// @brief return whether this vehicle is currently following the given veh
+    bool hasLinkLeader(MSVehicle* veh) const {
+        return myLinkLeaders.count(veh->getID()) > 0;
+    }
+#endif
+
+
     /** @class Influencer
      * @brief Changes the wished vehicle speed / lanes
      *
@@ -849,6 +864,20 @@ public:
             return myOriginalSpeed;
         }
 
+        void setVTDControlled(bool c, MSLane* l, SUMOReal pos, int edgeOffset, const MSEdgeVector& route) {
+            myAmVTDControlled = c;
+            myVTDLane = l;
+            myVTDPos = pos;
+            myVTDEdgeOffset = edgeOffset;
+            myVTDRoute = route;
+        }
+
+        void postProcessVTD(MSVehicle* v);
+
+        bool isVTDControlled() const {
+            return myAmVTDControlled;
+        }
+
     private:
         /// @brief The velocity time line to apply
         std::vector<std::pair<SUMOTime, SUMOReal> > mySpeedTimeLine;
@@ -870,6 +899,13 @@ public:
 
         /// @brief Whether the maximum deceleration shall be regarded
         bool myConsiderMaxDeceleration;
+
+        bool myAmVTDControlled;
+        MSLane* myVTDLane;
+        SUMOReal myVTDPos;
+        int myVTDEdgeOffset;
+        MSEdgeVector myVTDRoute;
+
     };
 
 
@@ -879,6 +915,10 @@ public:
      * @return Reference to this vehicle's speed influencer
      */
     Influencer& getInfluencer();
+
+    bool hasInfluencer() const {
+        return myInfluencer != 0;
+    }
 
 
 #endif
@@ -995,6 +1035,24 @@ protected:
     /// Container for used Links/visited Lanes during lookForward.
     DriveItemVector myLFLinkLanes;
 
+    /// @brief estimate leaving speed when accelerating across a link
+    SUMOReal estimateLeaveSpeed(MSLink* link, SUMOReal vLinkPass);
+
+    /* @brief estimate speed while accelerating for the given distance
+     * @param[in] dist The distance during which accelerating takes place
+     * @param[in] v The initial speed
+     */
+    SUMOReal estimateSpeedAfterDistance(SUMOReal dist, SUMOReal v);
+
+    /* @brief estimate speed while accelerating for the given distance
+     * @param[in] leaderInfo The leading vehicle and the (virtual) distance to it
+     * @param[in] seen the distance to the end of the current lane
+     * @param[in] lastLink the lastLink index
+     * @param[in] lane The current Lane the vehicle is on
+     * @param[in,out] the safe velocity for driving
+     * @param[in,out] the safe velocity for arriving at the next link
+     */
+    void adaptToLeader(std::pair<MSVehicle*, SUMOReal> leaderInfo, SUMOReal seen, int lastLink, MSLane* lane, SUMOReal& v, SUMOReal& vLinkPass);
 
 private:
     /* @brief The vehicle's knowledge about edge efforts/travel times; @see MSEdgeWeightsStorage
@@ -1007,6 +1065,13 @@ private:
 #ifndef NO_TRACI
     /// @brief An instance of a velicty/lane influencing instance; built in "getInfluencer"
     Influencer* myInfluencer;
+#endif
+
+#ifdef HAVE_INTERNAL_LANES
+    /// @brief ids of vehicles being followed across a link (for resolving priority)
+    std::set<std::string> myLinkLeaders;
+    /// @brief map from the links to link leader ids
+    std::map<const MSLink*, std::string> myLeaderForLink;
 #endif
 
 private:

@@ -1,5 +1,5 @@
-SUMO sumo Version dev-SVN-r13078
- Copyright (C) 2001-2012 DLR and contributors; http://sumo.sourceforge.net
+SUMO sumo Version 0.17.0
+ Copyright (C) 2001-2013 DLR and contributors; http://sumo.sourceforge.net
 A microscopic road traffic simulation.
 
 Usage: sumo [OPTION]*
@@ -93,6 +93,7 @@ Report Options:
   -p, --print-options                 Prints option values before processing
   -?, --help                          Prints this screen
   -V, --version                       Prints the current version
+  -X, --xml-validation                Enable schema validation of XML inputs
   -W, --no-warnings                   Disables output of warnings
   -l, --log FILE                      Writes all messages to FILE (implies
                                         verbose)
@@ -171,6 +172,8 @@ GUI Only Options:
   -G, --game                          Start the GUI in gaming mode
   -S, --start                         Start the simulation after loading
   -T, --disable-textures              Do not load background pictures
+  --osg-view                          Start with an OpenSceneGraph view instead
+                                        of the regular 2D view
 
 
 Examples:

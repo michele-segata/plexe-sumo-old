@@ -1,5 +1,5 @@
-SUMO netconvert Version dev-SVN-r13036
- Copyright (C) 2001-2012 DLR and contributors; http://sumo.sourceforge.net
+SUMO netconvert Version 0.17.0
+ Copyright (C) 2001-2013 DLR and contributors; http://sumo.sourceforge.net
 Road network importer / builder for the road traffic simulation SUMO.
 
 Usage: netconvert [OPTION]*
@@ -71,6 +71,9 @@ Projection Options:
 TLS Building Options:
   --tls.discard-loaded                Does not instatiate traffic lights loaded
                                         from other formats than XML
+  --tls.discard-simple                Does not instatiate traffic lights at
+                                        geometry-like nodes loaded from other
+                                        formats than XML
   --tls.set STR                       Interprets STR as list of junctions to be
                                         controlled by TLS
   --tls.unset STR                     Interprets STR as list of junctions to be
@@ -88,6 +91,8 @@ TLS Building Options:
   --tls.half-offset STR               TLSs in STR will be shifted by half-phase
   --tls.quarter-offset STR            TLSs in STR will be shifted by
                                         quarter-phase
+  --tls.default-type STR              TLSs with unspecified type will use STR
+                                        as their algorithm.
 
 Ramp Guessing Options:
   --ramps.guess                       Enable ramp-guessing
@@ -100,7 +105,8 @@ Ramp Guessing Options:
   --ramps.no-split                    Avoids edge splitting
 
 Edge Removal Options:
-  --keep-edges.min-speed FLOAT        Only keep edges with speed > FLOAT
+  --keep-edges.min-speed FLOAT        Only keep edges with speed in
+                                        meters/second > FLOAT
   --remove-edges.explicit STR         Remove edges in STR
   --keep-edges.explicit STR           Only keep edges in STR
   --keep-edges.input-file FILE        Only keep edges in FILE
@@ -160,6 +166,8 @@ Processing Options:
                                         due to VISUM misbehaviour
   --osm.skip-duplicates-check         Skips the check for duplicate nodes and
                                         edges.
+  --opendrive.import-all-lanes        Imports all lane types.
+  --opendrive.import-widths           Whether lane widths shall be imported.
   --no-internal-links                 Omits internal links
   --dismiss-vclasses                  Removes vehicle class restrictions from
                                         imported edges.
@@ -173,6 +181,7 @@ Processing Options:
                                         edges)
   --geometry.max-segment-length FLOAT  splits geometry to restrict segment
                                         length
+  --geometry.min-dist FLOAT           reduces too similar geometry points
   --offset.disable-normalization      Turn off normalizing node positions
   --offset.x FLOAT                    Adds FLOAT to net x-positions
   --offset.y FLOAT                    Adds FLOAT to net y-positions
@@ -201,6 +210,7 @@ Report Options:
   -p, --print-options                 Prints option values before processing
   -?, --help                          Prints this screen
   -V, --version                       Prints the current version
+  -X, --xml-validation                Enable schema validation of XML inputs
   -W, --no-warnings                   Disables output of warnings
   -l, --log FILE                      Writes all messages to FILE (implies
                                         verbose)

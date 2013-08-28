@@ -8,7 +8,7 @@
 // APIs for getting/setting POI values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -84,10 +84,9 @@ public:
 private:
     /** @brief Returns the named PoI
      * @param[in] id The id of the searched PoI
-     * @param[out] layer The layer the PoI is located in
      * @return The named PoI, or 0 if it is not known
      */
-    static PointOfInterest* getPoI(const std::string& id, int& layer);
+    static PointOfInterest* getPoI(const std::string& id);
 
 
 private:

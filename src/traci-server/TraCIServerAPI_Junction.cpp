@@ -9,7 +9,7 @@
 // APIs for getting/setting junction values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2012 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -35,8 +35,11 @@
 #include "TraCIConstants.h"
 #include <microsim/MSNet.h>
 #include <microsim/MSJunction.h>
+#include <microsim/MSNoLogicJunction.h>
+#include <microsim/MSLogicJunction.h>
 #include <microsim/MSJunctionControl.h>
 #include <microsim/MSNet.h>
+#include <microsim/MSLane.h>
 #include "TraCIServerAPI_Junction.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -60,9 +63,8 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
     // check variable
-    if (variable != ID_LIST && variable != VAR_POSITION && variable != ID_COUNT) {
-        server.writeStatusCmd(CMD_GET_JUNCTION_VARIABLE, RTYPE_ERR, "Get Junction Variable: unsupported variable specified", outputStorage);
-        return false;
+    if (variable != ID_LIST && variable != VAR_POSITION && variable != ID_COUNT && variable != TL_CONTROLLED_LANES) {
+        return server.writeErrorStatusCmd(CMD_GET_JUNCTION_VARIABLE, "Get Junction Variable: unsupported variable specified", outputStorage);
     }
     // begin response building
     tcpip::Storage tempMsg;
@@ -83,8 +85,7 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
     } else {
         MSJunction* j = MSNet::getInstance()->getJunctionControl().get(id);
         if (j == 0) {
-            server.writeStatusCmd(CMD_GET_JUNCTION_VARIABLE, RTYPE_ERR, "Junction '" + id + "' is not known", outputStorage);
-            return false;
+            return server.writeErrorStatusCmd(CMD_GET_JUNCTION_VARIABLE, "Junction '" + id + "' is not known", outputStorage);
         }
         switch (variable) {
             case ID_LIST:
@@ -93,6 +94,19 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
                 tempMsg.writeUnsignedByte(POSITION_2D);
                 tempMsg.writeDouble(j->getPosition().x());
                 tempMsg.writeDouble(j->getPosition().y());
+                break;
+            case TL_CONTROLLED_LANES:
+                {
+                    std::vector<MSLane*> lanes;
+                    if (dynamic_cast<MSNoLogicJunction*>(j)) lanes = dynamic_cast<MSNoLogicJunction*>(j)->getIncomingLanes();
+                    if (dynamic_cast<MSLogicJunction*>(j)) lanes = dynamic_cast<MSLogicJunction*>(j)->getIncomingLanes();
+                    tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
+                    std::vector<std::string> laneIDs;
+                    for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
+                        laneIDs.push_back((*i)->getID());
+                    }
+                    tempMsg.writeStringList(laneIDs);
+                }
                 break;
             default:
                 break;
