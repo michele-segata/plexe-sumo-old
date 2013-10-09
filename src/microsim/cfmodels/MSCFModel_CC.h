@@ -242,8 +242,11 @@ public:
      * @param[in] veh the vehicle for which the data is requested
      * @param[out] speed where the speed is written
      * @param[out] acceleration where the acceleration is written
+     * @param[out] controllerAcceleration the last acceleration value computed by
+     * the controller will be written in this variable. This might be different from
+     * acceleration because of actuation lag
      */
-    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration) const;
+    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration) const;
 
     /**
      * @brief switch on the ACC, so disabling the human driver car control
@@ -377,7 +380,7 @@ public:
             platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
             ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
-            crashed(false) {
+            crashed(false), controllerAcceleration(0) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -393,6 +396,8 @@ public:
         SUMOReal egoAcceleration;
         /// @brief vehicle speed at previous timestep
         SUMOReal egoPreviousSpeed;
+        /// @brief acceleration as computed by the controller, to be sent to other vehicles
+        SUMOReal controllerAcceleration;
 
         /// @brief last time front vehicle data (speed and acceleration) has been updated
         SUMOTime frontDataLastUpdate;

@@ -223,8 +223,6 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
 
-    std::string id = veh->getID();
-
     if (vars->activeController != MSCFModel_CC::DRIVER && vars->useFixedAcceleration) {
         controllerAcceleration = vars->fixedAcceleration;
     }
@@ -299,6 +297,8 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     //DO NOT change the state of the vehicle
     if (!vars->ignoreModifications) {
 
+        vars->controllerAcceleration = controllerAcceleration;
+
         if (invoker == MSCFModel_CC::FOLLOW_SPEED && vars->followSpeedSetTime != MSNet::getInstance()->getCurrentTimeStep()) {
             vars->controllerFollowSpeed = speed;
             vars->followSpeedSetTime = MSNet::getInstance()->getCurrentTimeStep();
@@ -371,10 +371,11 @@ MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed
 }
 
 void
-MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration) const {
+MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     speed = vars->egoSpeed;
     acceleration = vars->egoAcceleration;
+    controllerAcceleration = vars->controllerAcceleration;
 }
 
 void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {

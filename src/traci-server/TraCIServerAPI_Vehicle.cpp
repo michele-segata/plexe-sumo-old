@@ -358,17 +358,20 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
 
             SUMOReal speed;
             SUMOReal acceleration;
+            SUMOReal controllerAcceleration;
 
             model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
             assert(model);
 
-            model->getVehicleInformation((const MSVehicle *)v, speed, acceleration);
+            model->getVehicleInformation((const MSVehicle *)v, speed, acceleration, controllerAcceleration);
 
             tempMsg.writeUnsignedByte(TYPE_DOUBLE);
             tempMsg.writeDouble(speed);
 
             tempMsg.writeUnsignedByte(TYPE_DOUBLE);
             tempMsg.writeDouble(acceleration);
+
+            tempMsg.writeDouble(controllerAcceleration);
 
             break;
 
