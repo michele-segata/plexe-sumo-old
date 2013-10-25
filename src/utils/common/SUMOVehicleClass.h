@@ -178,7 +178,9 @@ enum SUMOVehicleClass {
     /// @brief vehicle is a bicycle
     SVC_BICYCLE = 262144,
     /// @brief is a pedestrian
-    SVC_PEDESTRIAN = 524288
+    SVC_PEDESTRIAN = 524288,
+    /// @brief is an automated car (ACC/CACC capable)
+    SVC_AUTOMATED = 1048576
                      //@}
 };
 
