@@ -380,7 +380,7 @@ public:
             platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
             ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
-            crashed(false), controllerAcceleration(0) {
+            crashed(false), controllerAcceleration(0), followControllerAcceleration(0), freeControllerAcceleration(0) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -398,6 +398,10 @@ public:
         SUMOReal egoPreviousSpeed;
         /// @brief acceleration as computed by the controller, to be sent to other vehicles
         SUMOReal controllerAcceleration;
+        /// @brief acceleration as computed by the controller when followSpeed is invoked
+        SUMOReal followControllerAcceleration;
+        /// @brief acceleration as computed by the controller when freeSpeed is invoked
+        SUMOReal freeControllerAcceleration;
 
         /// @brief last time front vehicle data (speed and acceleration) has been updated
         SUMOTime frontDataLastUpdate;

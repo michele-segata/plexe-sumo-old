@@ -64,10 +64,12 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
         //if during this simulation step the speed has been set by the followSpeed() method, then use such value
         if (vars->followSpeedSetTime == MSNet::getInstance()->getCurrentTimeStep()) {
             vNext = vars->controllerFollowSpeed;
+            vars->controllerAcceleration = vars->followControllerAcceleration;
         }
         //otherwise use the value set by the freeSpeed() method
         else {
             vNext = vars->controllerFreeSpeed;
+            vars->controllerAcceleration = vars->freeControllerAcceleration;
         }
     }
     else
@@ -297,15 +299,16 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     //DO NOT change the state of the vehicle
     if (!vars->ignoreModifications) {
 
-        vars->controllerAcceleration = controllerAcceleration;
-
         if (invoker == MSCFModel_CC::FOLLOW_SPEED && vars->followSpeedSetTime != MSNet::getInstance()->getCurrentTimeStep()) {
             vars->controllerFollowSpeed = speed;
             vars->followSpeedSetTime = MSNet::getInstance()->getCurrentTimeStep();
+            vars->followControllerAcceleration = controllerAcceleration;
         }
 
-        if (invoker == MSCFModel_CC::FREE_SPEED)
+        if (invoker == MSCFModel_CC::FREE_SPEED) {
             vars->controllerFreeSpeed = speed;
+            vars->freeControllerAcceleration = controllerAcceleration;
+        }
 
     }
 
