@@ -357,15 +357,17 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             default:
 
         case VAR_GET_SPEED_AND_ACCELERATION:
-
+        {
             SUMOReal speed;
             SUMOReal acceleration;
             SUMOReal controllerAcceleration;
+            Position position;
+            SUMOReal time;
 
             model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
             assert(model);
 
-            model->getVehicleInformation((const MSVehicle *)v, speed, acceleration, controllerAcceleration);
+            model->getVehicleInformation((const MSVehicle *)v, speed, acceleration, controllerAcceleration, position, time);
 
             tempMsg.writeUnsignedByte(TYPE_DOUBLE);
             tempMsg.writeDouble(speed);
@@ -375,8 +377,12 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
 
             tempMsg.writeDouble(controllerAcceleration);
 
-            break;
+            tempMsg.writeDouble(position.x());
+            tempMsg.writeDouble(position.y());
+            tempMsg.writeDouble(time);
 
+            break;
+        }
         case VAR_GET_LANES_COUNT:
 
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
@@ -1176,30 +1182,44 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
     {
         SUMOReal leaderSpeed;
         SUMOReal leaderAcc;
+        SUMOReal x,y;
+        Position leaderPosition;
+        SUMOReal leaderTime;
 
         leaderSpeed = inputStorage.readDouble();
         leaderAcc = inputStorage.readDouble();
+        x=inputStorage.readDouble();
+        y=inputStorage.readDouble();
+        leaderPosition.set(x, y);
+        leaderTime = inputStorage.readDouble();
 
         const MSCFModel_CC * model;
         model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
         assert(model);
 
-        model->setLeaderInformation((MSVehicle *)v, leaderSpeed, leaderAcc);
+        model->setLeaderInformation((MSVehicle *)v, leaderSpeed, leaderAcc, leaderPosition, leaderTime);
     }
     break;
     case VAR_SET_PRECEDING_SPEED_AND_ACCELERATION:
     {
         SUMOReal precSpeed;
         SUMOReal precAcc;
+        SUMOReal x,y;
+        Position precPosition;
+        SUMOReal precTime;
 
         precSpeed = inputStorage.readDouble();
         precAcc = inputStorage.readDouble();
+        x=inputStorage.readDouble();
+        y=inputStorage.readDouble();
+        precPosition.set(x, y);
+        precTime = inputStorage.readDouble();
 
         const MSCFModel_CC * model;
         model = dynamic_cast<const MSCFModel_CC *>(&v->getVehicleType().getCarFollowModel());
         assert(model);
 
-        model->setPrecedingInformation((MSVehicle *)v, precSpeed, precAcc);
+        model->setPrecedingInformation((MSVehicle *)v, precSpeed, precAcc, precPosition, precTime);
     }
     break;
     case VAR_SET_ACTIVE_CONTROLLER: {

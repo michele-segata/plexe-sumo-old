@@ -235,8 +235,10 @@ public:
      * @param[in] veh the vehicle for which the data must be saved
      * @param[in] speed the leader speed
      * @param[in] acceleration the leader acceleration
+     * @param[in] position the position of the leader
+     * @param[in] time the time at which this data was read from leader's sensors
      */
-    void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration)  const;
+    void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time)  const;
 
     /**
      * @brief set the information about preceding vehicle. This method should be invoked
@@ -246,9 +248,11 @@ public:
      * @param[in] veh the vehicle for which the data must be saved
      * @param[in] speed the speed of the preceding vehicle
      * @param[in] acceleration the acceleration of the preceding vehicle
+     * @param[in] position the position of the preceding vehicle
+     * @param[in] time the time at which this data was read from preceding vehicle's sensors
      *
      */
-    void setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration) const;
+    void setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time) const;
 
     /**
      * @brief get the information about a vehicle. This can be used by TraCI in order to
@@ -262,7 +266,7 @@ public:
      * the controller will be written in this variable. This might be different from
      * acceleration because of actuation lag
      */
-    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration) const;
+    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration, Position &position, SUMOReal time) const;
 
     /**
      * @brief switch on the ACC, so disabling the human driver car control
@@ -411,12 +415,15 @@ public:
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
             ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
             crashed(false), controllerAcceleration(0), followControllerAcceleration(0), freeControllerAcceleration(0),
-            accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0), caccSpacing(5) {
+            accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0), caccSpacing(5),
+            leaderDataReadTime(0), frontDataReadTime(0) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
             fakeData.leaderAcceleration = 0;
             fakeData.leaderSpeed = 0;
+            leaderPosition.set(0, 0);
+            frontPosition.set(0, 0);
         }
 
         /// @brief last time ego data has been updated
@@ -440,6 +447,10 @@ public:
         SUMOReal frontSpeed;
         /// @brief current front vehicle acceleration (used by CACC)
         SUMOReal frontAcceleration;
+        /// @brief current front vehicle position
+        Position frontPosition;
+        /// @brief when front vehicle data has been readed from GPS
+        SUMOReal frontDataReadTime;
         /// @brief last timestep at which front vehicle data (distance) has been updated
         SUMOTime radarLastUpdate;
         /// @brief current front vehicle distance as provided by the radar
@@ -458,6 +469,10 @@ public:
         SUMOReal leaderSpeed;
         /// @brief platoon's leader acceleration (used by CACC)
         SUMOReal leaderAcceleration;
+        /// @brief platoon's leader position
+        Position leaderPosition;
+        /// @brief when leader data has been readed from GPS
+        SUMOReal leaderDataReadTime;
 
         //time at which followSpeed has been invoked. In this way
         //we can tell moveHelper whether controllerFollowSpeed must

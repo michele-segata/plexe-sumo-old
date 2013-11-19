@@ -398,26 +398,32 @@ MSCFModel_CC::getCACCConstantSpacing(const MSVehicle * veh) const {
 }
 
 void
-MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration) const {
+MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->leaderAcceleration = acceleration;
     vars->leaderSpeed = speed;
+    vars->leaderPosition = position;
+    vars->leaderDataReadTime = time;
 }
 
 void
-MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration) const {
+MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->frontAcceleration = acceleration;
     vars->frontSpeed = speed;
     vars->frontDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
+    vars->frontPosition = position;
+    vars->frontDataReadTime = time;
 }
 
 void
-MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration) const {
+MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration, Position &position, SUMOReal time) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     speed = vars->egoSpeed;
     acceleration = vars->egoAcceleration;
     controllerAcceleration = vars->controllerAcceleration;
+    position = veh->getPosition();
+    time = STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep());
 }
 
 void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {
