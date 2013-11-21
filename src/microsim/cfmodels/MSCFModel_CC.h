@@ -61,9 +61,6 @@ public:
      */
     enum PLATOONING_LANE_CHANGE_ACTION {
         DRIVER_CHOICE = 0, //the platooning management is not active, so just let the driver choose the lane
-        MOVE_TO_MANAGEMENT_LANE = 1, //the platooning manager tells the driver to move to the management lane, either for join or leave the platoon
-        MOVE_TO_PLATOONING_LANE = 2, //the car is in position for joining a platoon and may now move to the dedicated platooning lane for joining
-        //TODO: maybe change with STAY_IN_CURRENT_LANE
         STAY_IN_CURRENT_LANE = 3,//the car is part of a platoon, so it has to stay on the dedicated platooning lane
         MOVE_TO_FIXED_LANE = 4//move the car to a specific lane. this is going to substitute MOVE_TO_MANAGEMENT_LANE and MOVE_TO_PLATOONING_LANE
     };

@@ -67,6 +67,21 @@ public:
      */
     void laneChange(SUMOTime t);
 
+    /**
+     * Override original change2left method. This way different conditions to check
+     * whether lane change is blocked or not can be considered. For example, if the
+     * car behind is controlled by CACC, then we want to let the car move to the left
+     * even if there is a short gap, for example for joining. When the car behind is
+     * controlled by and ACC, or by a human, then we want to be more careful before
+     * moving in front of it
+     */
+    int change2left(const std::pair<MSVehicle* const, SUMOReal>& leader, const std::pair<MSVehicle* const, SUMOReal>& rLead, const std::pair<MSVehicle* const, SUMOReal>& rFollow, const std::vector<MSVehicle::LaneQ>& preb) const;
+
+    /**
+     * Override original change2right method, as for change2left
+     */
+    int change2right(const std::pair<MSVehicle* const, SUMOReal>& leader, const std::pair<MSVehicle* const, SUMOReal>& rLead, const std::pair<MSVehicle* const, SUMOReal>& rFollow, const std::vector<MSVehicle::LaneQ>& preb) const;
+
 protected:
 
     /**
