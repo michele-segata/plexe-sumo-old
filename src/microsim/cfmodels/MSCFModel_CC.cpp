@@ -51,6 +51,7 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
 
     //instantiate the driver model. For now, use Krauss as default, then needs to be parameterized
     myHumanDriver = new MSCFModel_Krauss(vtype, accel, decel, 0.5, 1.5);
+
 }
 
 MSCFModel_CC::~MSCFModel_CC() {}
@@ -65,11 +66,13 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
         if (vars->followSpeedSetTime == MSNet::getInstance()->getCurrentTimeStep()) {
             vNext = vars->controllerFollowSpeed;
             vars->controllerAcceleration = vars->followControllerAcceleration;
+            vars->accAcceleration = vars->followAccAcceleration;
         }
         //otherwise use the value set by the freeSpeed() method
         else {
             vNext = vars->controllerFreeSpeed;
             vars->controllerAcceleration = vars->freeControllerAcceleration;
+            vars->accAcceleration = vars->freeAccAcceleration;
         }
     }
     else
@@ -220,6 +223,8 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     double accAcceleration;
     //acceleration computed by the Cooperative Adaptive Cruise Control
     double caccAcceleration;
+    //variables needed by CACC
+    double predAcceleration, leaderAcceleration, leaderSpeed;
 
     bool debug = true;
 
@@ -249,8 +254,6 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
             case MSCFModel_CC::CACC:
 
-                double predAcceleration, leaderAcceleration, leaderSpeed;
-
                 if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
                     predAcceleration = vars->frontAcceleration;
                     leaderAcceleration = vars->leaderAcceleration;
@@ -269,6 +272,23 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                 //TODO: again modify probably range/range-rate controller is needed
                 ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
                 caccAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration);
+                controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+
+                break;
+
+            case MSCFModel_CC::FAKED_CACC:
+
+                if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
+                    //compute ACC acceleration that will be then used to check for vehicles in front
+                    vars->followAccAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
+                }
+                else {
+                    //compute ACC acceleration that will be then used to check for vehicles in front
+                    vars->freeAccAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
+                }
+
+                ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
+                caccAcceleration = _cacc(egoSpeed, vars->fakeData.frontSpeed, vars->fakeData.frontAcceleration, vars->fakeData.frontDistance, vars->fakeData.leaderSpeed, vars->fakeData.leaderAcceleration);
                 controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
 
                 break;
@@ -430,8 +450,14 @@ void MSCFModel_CC::setFixedLane(const MSVehicle *veh, int lane) const {
 
 void MSCFModel_CC::getRadarMeasurements(const MSVehicle * veh, double &distance, double &relativeSpeed) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-    distance = vars->radarFrontDistance;
-    relativeSpeed = vars->radarFrontSpeed - vars->egoSpeed;
+    if (MSNet::getInstance()->getCurrentTimeStep() == vars->radarLastUpdate + DELTA_T) {
+        distance = vars->radarFrontDistance;
+        relativeSpeed = vars->radarFrontSpeed - vars->egoSpeed;
+    }
+    else {
+        distance = -1;
+        relativeSpeed = 0;
+    }
 }
 
 void MSCFModel_CC::setControllerFakeData(const MSVehicle *veh, double frontDistance, double frontSpeed, double frontAcceleration,
@@ -458,6 +484,11 @@ void MSCFModel_CC::setCrashed(const MSVehicle *veh, bool crashed) const {
 bool MSCFModel_CC::isCrashed(const MSVehicle *veh) const {
     VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
     return vars->crashed;
+}
+
+double MSCFModel_CC::getACCAcceleration(const MSVehicle *veh) const {
+    VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
+    return vars->accAcceleration;
 }
 
 MSCFModel*

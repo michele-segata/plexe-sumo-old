@@ -669,6 +669,8 @@
 // track vehicle
 #define VAR_TRACK_VEHICLE 0xa6
 
+// get ACC computed acceleration when faked CACC controller is enabled
+#define VAR_GET_ACC_ACCELERATION 0xed
 
 // determine whether a vehicle has crashed or not
 #define VAR_GET_CRASHED 0xee

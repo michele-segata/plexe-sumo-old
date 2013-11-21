@@ -106,6 +106,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             && variable != VAR_GET_ACTIVE_CONTROLLER
             && variable != VAR_GET_DISTANCE_FROM_BEGIN
             && variable != VAR_GET_CRASHED
+            && variable != VAR_GET_ACC_ACCELERATION
        ) {
         return server.writeErrorStatusCmd(CMD_GET_VEHICLE_VARIABLE, "Get Vehicle Variable: unsupported variable specified", outputStorage);
     }
@@ -491,6 +492,15 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
 
             tempMsg.writeUnsignedByte(TYPE_INTEGER);
             tempMsg.writeInt(model->getActiveController(v));
+
+            break;
+
+        case VAR_GET_ACC_ACCELERATION:
+
+            model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
+            assert(model);
+
+            tempMsg.writeDouble(model->getACCAcceleration(v));
 
             break;
 
@@ -1186,7 +1196,6 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
 
         int activeController = inputStorage.readInt();
 
-        assert(activeController >= 0 && activeController <= 2);
         model->setActiveController((const MSVehicle *)v, (enum MSCFModel_CC::ACTIVE_CONTROLLER)activeController);
 
     }
@@ -1243,6 +1252,8 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         frontAcceleration = inputStorage.readDouble();
         leaderSpeed = inputStorage.readDouble();
         leaderAcceleration = inputStorage.readDouble();
+
+        model->setControllerFakeData(v, frontDistance, frontSpeed, frontAcceleration, leaderSpeed, leaderAcceleration);
 
     }
     break;

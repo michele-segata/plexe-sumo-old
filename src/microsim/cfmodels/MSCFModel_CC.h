@@ -74,7 +74,7 @@ public:
      * leave the control to the mobility model which reproduces a human driver
      */
     enum ACTIVE_CONTROLLER
-    {DRIVER = 0, ACC = 1, CACC = 2};
+    {DRIVER = 0, ACC = 1, CACC = 2, FAKED_CACC = 3};
 
     /**
      * @struct FAKE_CONTROLLER_DATA
@@ -359,6 +359,13 @@ public:
      */
     bool isCrashed(const MSVehicle *veh) const;
 
+    /**
+     * @brief returns the ACC computed acceleration when the faked
+     * CACC is controlling the car. This can be used to check for
+     * vehicles in front
+     */
+    double getACCAcceleration(const MSVehicle *veh) const;
+
 private:
 
     /**
@@ -380,7 +387,8 @@ public:
             platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
             ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
-            crashed(false), controllerAcceleration(0), followControllerAcceleration(0), freeControllerAcceleration(0) {
+            crashed(false), controllerAcceleration(0), followControllerAcceleration(0), freeControllerAcceleration(0),
+            accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -459,6 +467,10 @@ public:
 
         /// @brief fake controller data. @see FAKE_CONTROLLER_DATA
         struct FAKE_CONTROLLER_DATA fakeData;
+        /** acceleration computed by the ACC system. This can be used during the approach phase to understand whether
+         *  a slow vehicles is in front
+         */
+        double accAcceleration, followAccAcceleration, freeAccAcceleration;
 
         /// @brief lane change action to be performed as given by the platoon management application
         enum PLATOONING_LANE_CHANGE_ACTION laneChangeAction;
