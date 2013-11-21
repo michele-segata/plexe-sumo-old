@@ -43,11 +43,18 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
                            SUMOReal accel, SUMOReal decel,
                            SUMOReal ccDecel, SUMOReal headwayTime, SUMOReal constantSpacing,
                            SUMOReal kp, SUMOReal lambda, SUMOReal c1, SUMOReal xi,
-                           SUMOReal omegaN, SUMOReal tau)
+                           SUMOReal omegaN, SUMOReal tau, int lanesCount)
     : MSCFModel(vtype, accel, decel, headwayTime), myCcDecel(ccDecel), myConstantSpacing(constantSpacing)
     , myKp(kp), myLambda(lambda), myC1(c1), myXi(xi), myOmegaN(omegaN), myTau(tau), myAlpha1(1 - myC1), myAlpha2(myC1),
     myAlpha3(-(2 * myXi - myC1 *(myXi + sqrt(myXi* myXi - 1))) * myOmegaN), myAlpha4(-(myXi + sqrt(myXi* myXi - 1)) * myOmegaN* myC1),
-    myAlpha5(-myOmegaN* myOmegaN), myAlpha(TS / (myTau + TS)), myOneMinusAlpha(1 - myAlpha) {
+    myAlpha5(-myOmegaN* myOmegaN), myAlpha(TS / (myTau + TS)), myOneMinusAlpha(1 - myAlpha), myLanesCount(lanesCount) {
+
+    //if the lanes count has not been specified in the attributes of the model, lane changing cannot properly work
+    if (lanesCount == -1) {
+        std::cerr << "The number of lanes needs to be specified in the attributes of carFollowing-CC with the \"lanesCount\" attribute\n";
+        WRITE_ERROR("The number of lanes needs to be specified in the attributes of carFollowing-CC with the \"lanesCount\" attribute");
+        assert(false);
+    }
 
     //instantiate the driver model. For now, use Krauss as default, then needs to be parameterized
     myHumanDriver = new MSCFModel_Krauss(vtype, accel, decel, 0.5, 1.5);
@@ -491,11 +498,15 @@ double MSCFModel_CC::getACCAcceleration(const MSVehicle *veh) const {
     return vars->accAcceleration;
 }
 
+int MSCFModel_CC::getMyLanesCount() const {
+    return myLanesCount;
+}
+
 MSCFModel*
 MSCFModel_CC::duplicate(const MSVehicleType* vtype) const {
     return new MSCFModel_CC(vtype,
                             myAccel, myDecel,
                             myCcDecel, myHeadwayTime, myConstantSpacing,
                             myKp, myLambda, myC1, myXi,
-                            myOmegaN, myTau);
+                            myOmegaN, myTau, myLanesCount);
 }

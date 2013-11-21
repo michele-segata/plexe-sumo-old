@@ -391,7 +391,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "c1",             SUMO_ATTR_CF_CC_C1 },
     { "xi",             SUMO_ATTR_CF_CC_XI },
     { "omegaN",         SUMO_ATTR_CF_CC_OMEGAN },
-    { "tau",             SUMO_ATTR_CF_CC_TAU },
+    { "tau",            SUMO_ATTR_CF_CC_TAU },
+    { "lanesCount",     SUMO_ATTR_CF_CC_LANES_COUNT },
 
     { "generateWalks",  SUMO_ATTR_GENERATE_WALKS },
     { "actType",        SUMO_ATTR_ACTTYPE },

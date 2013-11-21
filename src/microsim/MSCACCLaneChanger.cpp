@@ -66,16 +66,6 @@ enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCACCLaneChanger::getLaneChang
     else
         return model->getLaneChangeAction(vehicle);
 
-    /*if (MSNet::getInstance()->getCurrentTimeStep() <= 25000 || MSNet::getInstance()->getCurrentTimeStep() >= 60000) {
-        return MSCFModel_CC::DRIVER_CHOICE;
-    } else {
-        if (vehicle->getLaneIndex() != 2) {
-            return GOTO_LEFT;
-        } else {
-            return STAY_THERE;
-        }
-    }*/
-
 }
 
 void MSCACCLaneChanger::setLaneChangeAction(MSVehicle* vehicle, enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION action) {
@@ -123,11 +113,15 @@ bool MSCACCLaneChanger::change() {
 
     case MSCFModel_CC::MOVE_TO_FIXED_LANE: {
 
-        if (vehicle->getLaneIndex() == vars->fixedLane) {
+        //see below for an explanation of this offset variable
+        int offset = vehicle->getEdge()->getLanes().size() - ((const MSCFModel_CC&)vehicle->getCarFollowModel()).getMyLanesCount();
+        if (vehicle->getLaneIndex() == vars->fixedLane + offset) {
             setLaneChangeAction(vehicle, MSCFModel_CC::STAY_IN_CURRENT_LANE);
         }
 
         break;
+
+    }
 
     case MSCFModel_CC::STAY_IN_CURRENT_LANE: {
 
@@ -135,8 +129,6 @@ bool MSCACCLaneChanger::change() {
         vehicle->getLaneChangeModel().setOwnState(LCA_NONE);
 
         break;
-
-    }
 
     }
 
@@ -150,8 +142,24 @@ bool MSCACCLaneChanger::change() {
         int destination;
         int state = 0;
 
+        /**
+         * compute the lane index offset. If the highway in the scenario has 4 lanes, and the simulation requires the car
+         * to move to lane index 1, we need to check whether we are in a part of the highway where there are really 4 lanes,
+         * or if there are more due, for example, to an off-ramp. If there is a lane for the off-ramp, then the number of
+         * lanes in such edge will be 5. We need to increment the index of the destination lane of (5-4)=1. So the car will
+         * move to lane index 2, on a total number of lanes of 5. When changing edge and coming back to 4 lanes, then the car
+         * will automatically be in the right lane (index 1)
+         */
+        int offset = vehicle->getEdge()->getLanes().size() - ((const MSCFModel_CC&)vehicle->getCarFollowModel()).getMyLanesCount();
+
         //compute where we want to go
-        destination = vars->fixedLane;
+        destination = vars->fixedLane + offset;
+        /**
+         * a negative destination could happen when the scenario changes the number of lane in the highway, decreasing it.
+         * For example, if the highway has in general 4 lanes, and then switches to 3, and the simulator requires the car
+         * to move to lane index=0 in the 4-lane edge, then the car should continue on lane index=-1 in the 3-lane edge,
+         * which can't obviously be done
+         */
         assert(destination < vehicle->getEdge()->getLanes().size() && destination >= 0);
 
         //compute the difference between where we are and where we are heading at

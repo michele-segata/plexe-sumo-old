@@ -109,11 +109,12 @@ public:
      * @param[in] xi design constant for CACC (def. 1)
      * @param[in] omegaN design constant for CACC (def. 0.2)
      * @param[in] tau engine time constant used for actuation lag (def. 0.5 s)
+     * @param[in] lanesCount number of lanes of the highway
      */
     MSCFModel_CC(const MSVehicleType* vtype, SUMOReal accel, SUMOReal decel,
                  SUMOReal ccDecel, SUMOReal headwayTime, SUMOReal constantSpacing,
                  SUMOReal kp, SUMOReal lambda, SUMOReal c1, SUMOReal xi,
-                 SUMOReal omegaN, SUMOReal tau);
+                 SUMOReal omegaN, SUMOReal tau, int lanesCount);
 
     /// @brief Destructor
     ~MSCFModel_CC();
@@ -363,6 +364,11 @@ public:
      */
     double getACCAcceleration(const MSVehicle *veh) const;
 
+    /**
+     * @brief returns the number of lanes set in the configuration file
+     */
+    int getMyLanesCount() const;
+
 private:
 
     /**
@@ -573,6 +579,10 @@ private:
     const SUMOReal myAlpha4;
     /// @brief A computational shortcut for CACC
     const SUMOReal myAlpha5;
+
+    /// @brief number of lanes in the highway, in the absence of on-/off-ramps. This is used
+    /// to move to the correct lane even when a lane is added for on-/off-ramps
+    const int myLanesCount;
 
 };
 
