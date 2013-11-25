@@ -278,7 +278,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 //TODO: again modify probably range/range-rate controller is needed
                 ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
-                caccAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration);
+                caccAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration, vars->caccSpacing);
                 controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
 
                 break;
@@ -295,7 +295,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                 }
 
                 ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
-                caccAcceleration = _cacc(egoSpeed, vars->fakeData.frontSpeed, vars->fakeData.frontAcceleration, vars->fakeData.frontDistance, vars->fakeData.leaderSpeed, vars->fakeData.leaderAcceleration);
+                caccAcceleration = _cacc(egoSpeed, vars->fakeData.frontSpeed, vars->fakeData.frontAcceleration, vars->fakeData.frontDistance, vars->fakeData.leaderSpeed, vars->fakeData.leaderAcceleration, vars->caccSpacing);
                 controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
 
                 break;
@@ -359,10 +359,10 @@ MSCFModel_CC::_acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUM
 }
 
 SUMOReal
-MSCFModel_CC::_cacc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration) const {
+MSCFModel_CC::_cacc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const {
 
     //compute epsilon, i.e., the desired distance error
-    double epsilon = -gap2pred + myConstantSpacing; //NOTICE: error (if any) should already be included in gap2pred
+    double epsilon = -gap2pred + spacing; //NOTICE: error (if any) should already be included in gap2pred
     //compute epsilon_dot, i.e., the desired speed error
     double epsilon_dot = egoSpeed - predSpeed;
     //Eq. 7.39 of the Rajamani book
@@ -383,6 +383,18 @@ void
 MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->ccDesiredSpeed = ccDesiredSpeed;
+}
+
+void
+MSCFModel_CC::setCACCConstantSpacing(const MSVehicle * veh, SUMOReal spacing) const {
+	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+	vars->caccSpacing = spacing;
+}
+
+SUMOReal
+MSCFModel_CC::getCACCConstantSpacing(const MSVehicle * veh) const {
+	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+	return vars->caccSpacing;
 }
 
 void

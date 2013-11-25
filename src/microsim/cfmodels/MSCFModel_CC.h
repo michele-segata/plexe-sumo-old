@@ -196,7 +196,9 @@ public:
 
 
     VehicleVariables* createVehicleVariables() const {
-        return new VehicleVariables();
+        MSCFModel_CC::VehicleVariables *vars = new MSCFModel_CC::VehicleVariables();
+        vars->caccSpacing = myConstantSpacing;
+        return (VehicleVariables *)vars;
     }
 
     /**
@@ -208,6 +210,22 @@ public:
      * @param[in] ccDesiredSpeed the desired speed in m/s
      */
     void setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) const;
+
+    /**
+     * @brief set CACC desired constant spacing
+     *
+     * @param[in] veh the vehicle to set constant spacing for
+     * @param[in] spacing the spacing in meters
+     */
+    void setCACCConstantSpacing(const MSVehicle * veh, SUMOReal spacing) const;
+
+    /**
+     * @brief returns CACC desired constant spacing
+     *
+     * @param[in] veh the vehicle to get constant spacing of
+     * @return spacing the spacing in meters
+     */
+    SUMOReal getCACCConstantSpacing(const MSVehicle * veh) const;
 
     /**
      * @brief set the information about the platoon leader. This method should be invoked
@@ -393,7 +411,7 @@ public:
             laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
             ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
             crashed(false), controllerAcceleration(0), followControllerAcceleration(0), freeControllerAcceleration(0),
-            accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0) {
+            accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0), caccSpacing(5) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -431,6 +449,8 @@ public:
 
         /// @brief headway time for ACC
         SUMOReal accHeadwayTime;
+        /// @brief fixed spacing for CACC
+        SUMOReal caccSpacing;
 
         /// @brief last time leader vehicle data has been updated
         SUMOTime leaderDataLastUpdate;
@@ -520,9 +540,10 @@ private:
      * @param[in] gap2pred the distance to preceding vehicle
      * @param[in] leaderSpeed the speed of the platoon leader
      * @param[in] leaderAcceleration the acceleration of the platoon leader
+     * @param[in] spacing the spacing to be kept
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _cacc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration) const;
+    SUMOReal _cacc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const;
 
     /** @brief computes the actual acceleration the actuator is able to apply to the car, given engine time constant and previous
      * acceleration

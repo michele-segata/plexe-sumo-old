@@ -669,6 +669,12 @@
 // track vehicle
 #define VAR_TRACK_VEHICLE 0xa6
 
+// set CACC constant spacing
+#define VAR_SET_CACC_SPACING 0xeb
+
+// get CACC constant spacing
+#define VAR_GET_CACC_SPACING 0xec
+
 // get ACC computed acceleration when faked CACC controller is enabled
 #define VAR_GET_ACC_ACCELERATION 0xed
 

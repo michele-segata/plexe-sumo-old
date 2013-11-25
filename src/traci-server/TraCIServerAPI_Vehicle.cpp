@@ -107,6 +107,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             && variable != VAR_GET_DISTANCE_FROM_BEGIN
             && variable != VAR_GET_CRASHED
             && variable != VAR_GET_ACC_ACCELERATION
+            && variable != VAR_GET_CACC_SPACING
        ) {
         return server.writeErrorStatusCmd(CMD_GET_VEHICLE_VARIABLE, "Get Vehicle Variable: unsupported variable specified", outputStorage);
     }
@@ -495,7 +496,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
 
             break;
 
-        case VAR_GET_ACC_ACCELERATION:
+        case VAR_GET_ACC_ACCELERATION: {
 
             model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
             assert(model);
@@ -504,9 +505,21 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
 
             break;
 
-                TraCIServerAPI_VehicleType::getVariable(variable, v->getVehicleType(), tempMsg);
-                break;
+
         }
+        case VAR_GET_CACC_SPACING: {
+            model = dynamic_cast<const MSCFModel_CC *>(&v->getCarFollowModel());
+            assert(model);
+
+            tempMsg.writeDouble(model->getCACCConstantSpacing(v));
+
+            break;
+        }
+
+        TraCIServerAPI_VehicleType::getVariable(variable, v->getVehicleType(), tempMsg);
+        break;
+        }
+
     }
     server.writeStatusCmd(CMD_GET_VEHICLE_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
@@ -543,6 +556,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             && variable != VAR_SET_FIXED_LANE
             && variable != VAR_SET_ACC_HEADWAY_TIME
             && variable != VAR_SET_FIXED_ACCELERATION
+            && variable != VAR_SET_CACC_SPACING
        ) {
         return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Change Vehicle State: unsupported variable specified", outputStorage);
     }
@@ -1288,9 +1302,19 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         int activate = inputStorage.readInt();
         double acceleration = inputStorage.readDouble();
         model->setFixedAcceleration((const MSVehicle *)v, activate, acceleration);
+        break;
 
     }
-    break;
+    case VAR_SET_CACC_SPACING: {
+
+        const MSCFModel_CC * model;
+        model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
+        assert(model);
+
+        double spacing = inputStorage.readDouble();
+        model->setCACCConstantSpacing((const MSVehicle *)v, spacing);
+        break;
+    }
         default:
             try {
                 if (!TraCIServerAPI_VehicleType::setVariable(CMD_SET_VEHICLE_VARIABLE, variable, getSingularType(v), server, inputStorage, outputStorage)) {
