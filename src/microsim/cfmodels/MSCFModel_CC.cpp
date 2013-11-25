@@ -471,11 +471,15 @@ void MSCFModel_CC::setControllerFakeData(const MSVehicle *veh, double frontDista
             double leaderSpeed, double leaderAcceleration) const {
 
     VehicleVariables *vars = (VehicleVariables *) veh->getCarFollowVariables();
-    vars->fakeData.frontAcceleration = frontAcceleration;
-    vars->fakeData.frontDistance = frontDistance;
-    vars->fakeData.frontSpeed = frontSpeed;
-    vars->fakeData.leaderAcceleration = leaderAcceleration;
-    vars->fakeData.leaderSpeed = leaderSpeed;
+    if (frontSpeed >= 0) {
+        vars->fakeData.frontAcceleration = frontAcceleration;
+        vars->fakeData.frontDistance = frontDistance;
+        vars->fakeData.frontSpeed = frontSpeed;
+    }
+    if (leaderSpeed >= 0) {
+        vars->fakeData.leaderAcceleration = leaderAcceleration;
+        vars->fakeData.leaderSpeed = leaderSpeed;
+    }
 }
 
 void MSCFModel_CC::setIgnoreModifications(const MSVehicle *veh, bool ignore) const {

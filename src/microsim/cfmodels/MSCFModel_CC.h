@@ -327,7 +327,9 @@ public:
 
     /**
      * @brief set the fake data which the controller will use for joining while in the
-     * management lane
+     * management lane. Notice that the function can be used to set data about both leader and
+     * front vehicle, or either one or the other. If the speed of one of the two is set to a
+     * negative value, then the data about such vehicle is ignored
      */
     void setControllerFakeData(const MSVehicle *veh, double frontDistance, double frontSpeed, double frontAcceleration,
             double leaderSpeed, double leaderAcceleration) const;
