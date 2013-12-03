@@ -32,6 +32,7 @@
 #include <config.h>
 #endif
 
+#include <typeinfo>
 #include <vector>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/SUMOAbstractRouter.h>
