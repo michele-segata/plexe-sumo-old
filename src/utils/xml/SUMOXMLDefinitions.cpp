@@ -155,7 +155,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "carFollowing-PWagner2009", SUMO_TAG_CF_PWAGNER2009 },
     { "carFollowing-BKerner",     SUMO_TAG_CF_BKERNER },
     { "carFollowing-Wiedemann",   SUMO_TAG_CF_WIEDEMANN },
-    { "carFollowing-CACC",   	  SUMO_TAG_CF_CACC },
     { "carFollowing-CC",          SUMO_TAG_CF_CC },
 
     { "person",           SUMO_TAG_PERSON },

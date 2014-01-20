@@ -10,5 +10,4 @@ MSCFModel_KraussPS.cpp MSCFModel_KraussPS.h \
 MSCFModel_PWag2009.cpp MSCFModel_PWag2009.h \
 MSCFModel_SmartSK.cpp MSCFModel_SmartSK.h \
 MSCFModel_Wiedemann.cpp MSCFModel_Wiedemann.h \
-MSCFModel_CACC.cpp MSCFModel_CACC.h \
 MSCFModel_CC.cpp MSCFModel_CC.h

@@ -38,7 +38,6 @@
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOVTypeParameter.h>
 #include "MSNet.h"
-#include "cfmodels/MSCFModel_CACC.h"
 #include "cfmodels/MSCFModel_CC.h"
 #include "cfmodels/MSCFModel_IDM.h"
 #include "cfmodels/MSCFModel_Kerner.h"
@@ -262,13 +261,6 @@ MSVehicleType::build(SUMOVTypeParameter& from) {
                                             from.get(SUMO_ATTR_CF_WIEDEMANN_SECURITY, 0.5),
                                             from.get(SUMO_ATTR_CF_WIEDEMANN_ESTIMATION, 0.5));
             break;
-        case SUMO_TAG_CF_CACC:
-            model = new MSCFModel_CACC(vtype,
-                                       from.get(SUMO_ATTR_ACCEL, DEFAULT_VEH_ACCEL),
-                                       from.get(SUMO_ATTR_DECEL, DEFAULT_VEH_DECEL),
-                                       from.get(SUMO_ATTR_DESIRED_GAP, 5));
-            break;
-    
         case SUMO_TAG_CF_CC:
             model = new MSCFModel_CC(vtype,
                                      from.get(SUMO_ATTR_ACCEL, 1.5),
@@ -283,7 +275,7 @@ MSVehicleType::build(SUMOVTypeParameter& from) {
                                      from.get(SUMO_ATTR_CF_CC_OMEGAN, 0.2),
                                      from.get(SUMO_ATTR_CF_CC_TAU, 0.5),
                                      from.get(SUMO_ATTR_CF_CC_LANES_COUNT, -1));
-    
+
             break;
         case SUMO_TAG_CF_KRAUSS:
         default:
