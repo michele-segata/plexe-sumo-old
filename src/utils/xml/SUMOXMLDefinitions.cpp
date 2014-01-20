@@ -6,6 +6,7 @@
 /// @author  Piotr Woznica
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
+/// @author  Michele Segata
 /// @date    Sept 2002
 /// @version $Id$
 ///
@@ -13,6 +14,7 @@
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
 //   This file is part of SUMO.
