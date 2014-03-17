@@ -109,6 +109,8 @@ public:
 	virtual void writePacket(unsigned char* packet, int length);
     virtual void writePacket(const std::vector<unsigned char> &packet);
 
+    virtual void readBuffer(unsigned char *buffer, int length);
+
 	virtual void writeStorage(tcpip::Storage& store);
 
 	// Some enabled functions of the underlying std::list

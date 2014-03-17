@@ -332,6 +332,10 @@ namespace tcpip
 		return value;
 	}
 
+	void Storage::readBuffer(unsigned char *buffer, int length) {
+		readByEndianess(buffer, length);
+	}
+
 
 	// ----------------------------------------------------------------------
 	void Storage::writePacket(unsigned char* packet, int length)

@@ -671,6 +671,9 @@
 // track vehicle
 #define VAR_TRACK_VEHICLE 0xa6
 
+// set generic information
+#define VAR_SET_GENERIC_INFORMATION 0xea
+
 // set CACC constant spacing
 #define VAR_SET_CACC_SPACING 0xeb
 

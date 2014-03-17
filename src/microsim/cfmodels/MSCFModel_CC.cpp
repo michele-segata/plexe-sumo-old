@@ -263,9 +263,9 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
             case MSCFModel_CC::CACC:
 
                 if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
-                    predAcceleration = vars->frontAcceleration;
-                    leaderAcceleration = vars->leaderAcceleration;
-                    leaderSpeed = vars->leaderSpeed;
+                    predAcceleration = vars->vehicles[vars->position-1].acceleration;
+                    leaderAcceleration = vars->vehicles[0].acceleration;
+                    leaderSpeed = vars->vehicles[0].speed;
                 }
                 else {
                     /* if the method has not been invoked from followSpeed() then it has been
@@ -425,6 +425,31 @@ MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOR
     controllerAcceleration = vars->controllerAcceleration;
     position = veh->getPosition();
     time = STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep());
+}
+
+void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct CCDataHeader &header, const void *content) const {
+	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+	switch (header.type) {
+	//TODO: extend
+	case 0: {
+		const struct VEHICLE_DATA* vehicle = (const struct VEHICLE_DATA*)content;
+		vars->vehicles[vehicle->index] = *vehicle;
+		break;
+	}
+	case 1: {
+		int *myPosition = (int *)content;
+		vars->position = *myPosition;
+		break;
+	}
+	case 2: {
+		int *nCars = (int*)content;
+		vars->nCars = *nCars;
+		break;
+	}
+	default: {
+		break;
+	}
+	}
 }
 
 void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {

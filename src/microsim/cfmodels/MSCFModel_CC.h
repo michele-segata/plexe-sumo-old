@@ -75,6 +75,15 @@ public:
     {DRIVER = 0, ACC = 1, CACC = 2, FAKED_CACC = 3};
 
     /**
+     * @brief struct used as header for generic data passing to this model through
+     * traci
+     */
+    struct CCDataHeader {
+		int type;	//type of message. indicates what comes after the header
+		int size;	//size of message. indicates how many bytes comes after the header
+    };
+
+    /**
      * @struct FAKE_CONTROLLER_DATA
      * @brief represent the set of fake data which is sent to the controller in
      * order to automatically make the car move to a precise position before
@@ -98,6 +107,20 @@ public:
         double leaderAcceleration;
     };
 
+    /**
+     * Struct defining data passed about a vehicle
+     */
+    struct VEHICLE_DATA {
+		int index;				//position in the platoon (0 = first)
+		double speed;			//vehicle speed
+		double acceleration;	//vehicle acceleration
+		double positionX;		//position of the vehicle in the simulation
+		double positionY;		//position of the vehicle in the simulation
+		double time;			//time at which such information was read from vehicle's sensors
+		double length;			//vehicle length
+    };
+
+#define MAX_N_CARS 8
     /** @brief Constructor
      * @param[in] accel The maximum acceleration that controllers can output (def. 1.5 m/s^2)
      * @param[in] decel The maximum deceleration that ACC and CACC controllers can output (def. 6 m/s^2)
@@ -254,6 +277,28 @@ public:
      *
      */
     void setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time) const;
+
+    /**
+     * @brief set the information about a generic car. This method should be invoked
+     * by TraCI when a wireless message with such data is received. For testing, it might
+     * be also invoked from SUMO source code
+     *
+     * @param[in] veh the vehicle for which the data must be saved
+     * @param[in] speed the leader speed
+     * @param[in] acceleration the leader acceleration
+     * @param[in] position the position of the leader
+     * @param[in] time the time at which this data was read from leader's sensors
+     */
+//    void setVehicleInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time)  const;
+
+    /**
+     * @brief generic data passing method to this class
+     *
+     * @param[in] veh the vehicle to which data is directed to
+     * @param[in] header header including information about the actual message
+     * @param[in] content pointer to the actual content
+     */
+    void setGenericInformation(const MSVehicle* veh, const struct CCDataHeader &header, const void *content) const;
 
     /**
      * @brief get the information about a vehicle. This can be used by TraCI in order to
@@ -417,7 +462,7 @@ public:
             ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
             crashed(false), controllerAcceleration(0), followControllerAcceleration(0), freeControllerAcceleration(0),
             accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0), caccSpacing(5),
-            leaderDataReadTime(0), frontDataReadTime(0) {
+            leaderDataReadTime(0), frontDataReadTime(0), position(-1), nCars(8) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -524,6 +569,13 @@ public:
         std::string platoonId;
         /// @brief is ego vehicle the leader?
         bool isPlatoonLeader;
+
+        /// @brief data about vehicles in the platoon
+        struct VEHICLE_DATA vehicles[MAX_N_CARS];
+        /// @brief my position within the platoon (0 = first car)
+        int position;
+        /// @brief number of cars in the platoon
+        int nCars;
     };
 
 

@@ -565,6 +565,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             && variable != VAR_SET_ACC_HEADWAY_TIME
             && variable != VAR_SET_FIXED_ACCELERATION
             && variable != VAR_SET_CACC_SPACING
+            && variable != VAR_SET_GENERIC_INFORMATION
        ) {
         return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Change Vehicle State: unsupported variable specified", outputStorage);
     }
@@ -1336,6 +1337,29 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         double spacing = inputStorage.readDouble();
         model->setCACCConstantSpacing((const MSVehicle *)v, spacing);
         break;
+    }
+    case VAR_SET_GENERIC_INFORMATION: {
+
+        const MSCFModel_CC * model;
+        model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
+        assert(model);
+
+        //header of the message
+        struct MSCFModel_CC::CCDataHeader header;
+        //content of the message
+        void *content;
+
+        //copy the header
+        inputStorage.readBuffer((unsigned char *)&header, sizeof(struct MSCFModel_CC::CCDataHeader));
+        //now copy the actual content
+        content = malloc(header.size);
+        inputStorage.readBuffer((unsigned char *)content, header.size);
+        //pass data to model
+        model->setGenericInformation((const MSVehicle *)v, header, content);
+        free(content);
+
+        break;
+
     }
         default:
             try {
