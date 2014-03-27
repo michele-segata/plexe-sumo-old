@@ -263,9 +263,9 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
             case MSCFModel_CC::CACC:
 
                 if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
-                    predAcceleration = vars->vehicles[vars->position-1].acceleration;
-                    leaderAcceleration = vars->vehicles[0].acceleration;
-                    leaderSpeed = vars->vehicles[0].speed;
+                    predAcceleration = vars->frontAcceleration;
+                    leaderAcceleration = vars->leaderAcceleration;
+                    leaderSpeed = vars->leaderSpeed;
                 }
                 else {
                     /* if the method has not been invoked from followSpeed() then it has been
