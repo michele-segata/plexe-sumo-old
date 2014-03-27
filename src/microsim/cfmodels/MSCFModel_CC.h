@@ -120,7 +120,7 @@ public:
 		double length;			//vehicle length
     };
 
-#define MAX_N_CARS 8
+#define MAX_N_CARS 20
     /** @brief Constructor
      * @param[in] accel The maximum acceleration that controllers can output (def. 1.5 m/s^2)
      * @param[in] decel The maximum deceleration that ACC and CACC controllers can output (def. 6 m/s^2)
