@@ -57,19 +57,19 @@ MSCACCLaneChanger::MSCACCLaneChanger(std::vector<MSLane*>* lanes, bool allowSwap
 MSCACCLaneChanger::~MSCACCLaneChanger() {
 }
 
-enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCACCLaneChanger::getLaneChangeAction(MSVehicle* vehicle) {
+enum Plexe::PLATOONING_LANE_CHANGE_ACTION MSCACCLaneChanger::getLaneChangeAction(MSVehicle* vehicle) {
 
     const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&vehicle->getCarFollowModel());
 
     //if the car is not CACC enabled, then we just let the default lane change model to take control
     if (!model)
-        return MSCFModel_CC::DRIVER_CHOICE;
+        return Plexe::DRIVER_CHOICE;
     else
         return model->getLaneChangeAction(vehicle);
 
 }
 
-void MSCACCLaneChanger::setLaneChangeAction(MSVehicle* vehicle, enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION action) {
+void MSCACCLaneChanger::setLaneChangeAction(MSVehicle* vehicle, enum Plexe::PLATOONING_LANE_CHANGE_ACTION action) {
 
     const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&vehicle->getCarFollowModel());
 
@@ -105,26 +105,26 @@ bool MSCACCLaneChanger::change() {
     vehicle->getLaneChangeModel().prepareStep();
     std::pair<MSVehicle* const, SUMOReal> leader = getRealThisLeader(myCandi);
 
-    enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
+    enum Plexe::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
 
     MSCFModel_CC::VehicleVariables *vars = (MSCFModel_CC::VehicleVariables *)vehicle->getCarFollowVariables();
 
     //first of all: check for the requested action: if it has been fulfilled then change it
     switch (laneChangeAction) {
 
-    case MSCFModel_CC::MOVE_TO_FIXED_LANE: {
+    case Plexe::MOVE_TO_FIXED_LANE: {
 
         //see below for an explanation of this offset variable
         int offset = vehicle->getEdge()->getLanes().size() - ((const MSCFModel_CC&)vehicle->getCarFollowModel()).getMyLanesCount();
         if (vehicle->getLaneIndex() == vars->fixedLane + offset) {
-            setLaneChangeAction(vehicle, MSCFModel_CC::STAY_IN_CURRENT_LANE);
+            setLaneChangeAction(vehicle, Plexe::STAY_IN_CURRENT_LANE);
         }
 
         break;
 
     }
 
-    case MSCFModel_CC::STAY_IN_CURRENT_LANE: {
+    case Plexe::STAY_IN_CURRENT_LANE: {
 
         //if we are in the lane we want to stay in, then there is nothing the car wants to do
         vehicle->getLaneChangeModel().setOwnState(LCA_NONE);
@@ -138,7 +138,7 @@ bool MSCACCLaneChanger::change() {
 
     }
 
-    if (laneChangeAction == MSCFModel_CC::MOVE_TO_FIXED_LANE) {
+    if (laneChangeAction == Plexe::MOVE_TO_FIXED_LANE) {
 
         int destination;
         int state = 0;
@@ -340,7 +340,7 @@ bool MSCACCLaneChanger::change() {
 
     //if the action must not be chosen by the driver, and we arrive at this
     //point, then no lane change must be done
-    if (laneChangeAction != MSCFModel_CC::DRIVER_CHOICE) {
+    if (laneChangeAction != Plexe::DRIVER_CHOICE) {
         // Candidate didn't change lane.
         myCandi->lane->myTmpVehicles.push_front(veh(myCandi));
         vehicle->myLastLaneChangeOffset += DELTA_T;
@@ -379,11 +379,11 @@ MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, SUMOReal>& lead
         if (carFollowModel.getModelID() == SUMO_TAG_CF_CC) {
             //the car is controlled by MSCFModel_CC
             const MSCFModel_CC& ccCarFollowModel = static_cast<const MSCFModel_CC &>(carFollowModel);
-            MSCFModel_CC::ACTIVE_CONTROLLER controller = ccCarFollowModel.getActiveController(rFollow.first);
+            Plexe::ACTIVE_CONTROLLER controller = ccCarFollowModel.getActiveController(rFollow.first);
 
             if (rFollow.second < rFollow.first->getCarFollowModel().getSecureGap(rFollow.first->getSpeed(), veh(myCandi)->getSpeed(), veh(myCandi)->getCarFollowModel().getMaxDecel())) {
                 //if the gap is not enough to safely change lane
-                if (controller == MSCFModel_CC::DRIVER || controller == MSCFModel_CC::ACC) {
+                if (controller == Plexe::DRIVER || controller == Plexe::ACC) {
                     //if the active controller is either a human, or an ACC, then the movement must be blocked
                     blocked |= LCA_BLOCKED_BY_LEFT_FOLLOWER;
                 }
@@ -439,11 +439,11 @@ MSCACCLaneChanger::change2right(const std::pair<MSVehicle* const, SUMOReal>& lea
         if (carFollowModel.getModelID() == SUMO_TAG_CF_CC) {
             //the car is controlled by MSCFModel_CC
             const MSCFModel_CC& ccCarFollowModel = static_cast<const MSCFModel_CC &>(carFollowModel);
-            MSCFModel_CC::ACTIVE_CONTROLLER controller = ccCarFollowModel.getActiveController(rFollow.first);
+            Plexe::ACTIVE_CONTROLLER controller = ccCarFollowModel.getActiveController(rFollow.first);
 
             if (rFollow.second < rFollow.first->getCarFollowModel().getSecureGap(rFollow.first->getSpeed(), veh(myCandi)->getSpeed(), veh(myCandi)->getCarFollowModel().getMaxDecel())) {
                 //if the gap is not enough to safely change lane
-                if (controller == MSCFModel_CC::DRIVER || controller == MSCFModel_CC::ACC) {
+                if (controller == Plexe::DRIVER || controller == Plexe::ACC) {
                     //if the active controller is either a human, or an ACC, then the movement must be blocked
                     blocked |= LCA_BLOCKED_BY_RIGHT_FOLLOWER;
                 }

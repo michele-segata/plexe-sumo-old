@@ -29,6 +29,7 @@
 #include <config.h>
 #endif
 
+#include "CC_Const.h"
 #include <microsim/MSCFModel.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
@@ -58,32 +59,6 @@ class MSCFModel_CC : public MSCFModel {
 public:
 
     /**
-     * @brief action that might be requested by the platooning management
-     */
-    enum PLATOONING_LANE_CHANGE_ACTION {
-        DRIVER_CHOICE = 0, //the platooning management is not active, so just let the driver choose the lane
-        STAY_IN_CURRENT_LANE = 3,//the car is part of a platoon, so it has to stay on the dedicated platooning lane
-        MOVE_TO_FIXED_LANE = 4//move the car to a specific lane. this is going to substitute MOVE_TO_MANAGEMENT_LANE and MOVE_TO_PLATOONING_LANE
-    };
-
-    /** @enum ACTIVE_CONTROLLER
-     * @brief Determines the currently active controller, i.e., ACC, CACC, or the
-     * driver. In future we might need to switch off the automatic controller and
-     * leave the control to the mobility model which reproduces a human driver
-     */
-    enum ACTIVE_CONTROLLER
-    {DRIVER = 0, ACC = 1, CACC = 2, FAKED_CACC = 3};
-
-    /**
-     * @brief struct used as header for generic data passing to this model through
-     * traci
-     */
-    struct CCDataHeader {
-		int type;	//type of message. indicates what comes after the header
-		int size;	//size of message. indicates how many bytes comes after the header
-    };
-
-    /**
      * @struct FAKE_CONTROLLER_DATA
      * @brief represent the set of fake data which is sent to the controller in
      * order to automatically make the car move to a precise position before
@@ -107,20 +82,6 @@ public:
         double leaderAcceleration;
     };
 
-    /**
-     * Struct defining data passed about a vehicle
-     */
-    struct VEHICLE_DATA {
-		int index;				//position in the platoon (0 = first)
-		double speed;			//vehicle speed
-		double acceleration;	//vehicle acceleration
-		double positionX;		//position of the vehicle in the simulation
-		double positionY;		//position of the vehicle in the simulation
-		double time;			//time at which such information was read from vehicle's sensors
-		double length;			//vehicle length
-    };
-
-#define MAX_N_CARS 20
     /** @brief Constructor
      * @param[in] accel The maximum acceleration that controllers can output (def. 1.5 m/s^2)
      * @param[in] decel The maximum deceleration that ACC and CACC controllers can output (def. 6 m/s^2)
@@ -298,7 +259,7 @@ public:
      * @param[in] header header including information about the actual message
      * @param[in] content pointer to the actual content
      */
-    void setGenericInformation(const MSVehicle* veh, const struct CCDataHeader &header, const void *content) const;
+    void setGenericInformation(const MSVehicle* veh, const struct Plexe::CCDataHeader &header, const void *content) const;
 
     /**
      * @brief get the information about a vehicle. This can be used by TraCI in order to
@@ -351,7 +312,7 @@ public:
      * @param[in] activeController the controller to be set as active, which can be either the
      * driver, or the ACC or the CACC
      */
-    void setActiveController(const MSVehicle *veh, enum MSCFModel_CC::ACTIVE_CONTROLLER activeController)  const;
+    void setActiveController(const MSVehicle *veh, enum Plexe::ACTIVE_CONTROLLER activeController)  const;
 
     /**
      * @brief return the currently active controller
@@ -359,7 +320,7 @@ public:
      * @param[in] veh the vehicle for which the action is requested
      * @return the currently active controller
      */
-    enum MSCFModel_CC::ACTIVE_CONTROLLER getActiveController(const MSVehicle *veh) const;
+    enum Plexe::ACTIVE_CONTROLLER getActiveController(const MSVehicle *veh) const;
 
     /**
      * @brief gets the lane change action requested by the platooning management system.
@@ -368,12 +329,12 @@ public:
      *
      * @return the lane changing action to be performed
      */
-    enum PLATOONING_LANE_CHANGE_ACTION getLaneChangeAction(const MSVehicle *veh) const;
+    enum Plexe::PLATOONING_LANE_CHANGE_ACTION getLaneChangeAction(const MSVehicle *veh) const;
 
     /**
      * @brief sets the lane change action requested by the platooning management system.
      */
-    void setLaneChangeAction(const MSVehicle *veh, enum PLATOONING_LANE_CHANGE_ACTION action) const;
+    void setLaneChangeAction(const MSVehicle *veh, enum Plexe::PLATOONING_LANE_CHANGE_ACTION action) const;
 
     /**
      * @brief sets the lane a car should stay in. might be useful to form platoons in any
@@ -457,8 +418,8 @@ public:
         VehicleVariables() : egoDataLastUpdate(0), egoSpeed(0), egoAcceleration(0), egoPreviousSpeed(0),
             frontDataLastUpdate(0), frontSpeed(0), radarFrontDistance(1000), frontAcceleration(0),
             radarFrontSpeed(0), leaderDataLastUpdate(0), leaderSpeed(0), leaderAcceleration(0),
-            platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(DRIVER),
-            laneChangeAction(MSCFModel_CC::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
+            platoonId(""), isPlatoonLeader(false), ccDesiredSpeed(14), radarLastUpdate(0), activeController(Plexe::DRIVER),
+            laneChangeAction(Plexe::DRIVER_CHOICE), followSpeedSetTime(0), controllerFollowSpeed(0), controllerFreeSpeed(0),
             ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
             crashed(false), controllerAcceleration(0), followControllerAcceleration(0), freeControllerAcceleration(0),
             accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0), caccSpacing(5),
@@ -549,7 +510,7 @@ public:
         /// @brief CC desired speed
         SUMOReal ccDesiredSpeed;
         /// @brief currently active controller
-        enum ACTIVE_CONTROLLER activeController;
+        enum Plexe::ACTIVE_CONTROLLER activeController;
 
         /// @brief fake controller data. @see FAKE_CONTROLLER_DATA
         struct FAKE_CONTROLLER_DATA fakeData;
@@ -559,7 +520,7 @@ public:
         double accAcceleration, followAccAcceleration, freeAccAcceleration;
 
         /// @brief lane change action to be performed as given by the platoon management application
-        enum PLATOONING_LANE_CHANGE_ACTION laneChangeAction;
+        enum Plexe::PLATOONING_LANE_CHANGE_ACTION laneChangeAction;
 
         /// @brief fixed lane selected
         int fixedLane;
@@ -571,7 +532,7 @@ public:
         bool isPlatoonLeader;
 
         /// @brief data about vehicles in the platoon
-        struct VEHICLE_DATA vehicles[MAX_N_CARS];
+        struct Plexe::VEHICLE_DATA vehicles[MAX_N_CARS];
         /// @brief my position within the platoon (0 = first car)
         int position;
         /// @brief number of cars in the platoon

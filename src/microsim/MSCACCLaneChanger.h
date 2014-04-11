@@ -38,6 +38,7 @@
 #include <vector>
 #include <utils/iodevices/OutputDevice.h>
 
+#include <microsim/cfmodels/CC_Const.h>
 #include <microsim/cfmodels/MSCFModel_CC.h>
 
 // ===========================================================================
@@ -99,14 +100,14 @@ protected:
      * returns the lane change action to be performed, as given by the CC car following
      * model
      */
-    enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION getLaneChangeAction(MSVehicle* vehicle);
+    enum Plexe::PLATOONING_LANE_CHANGE_ACTION getLaneChangeAction(MSVehicle* vehicle);
 
     /**
      * set the lane change action. for example, when the user has requested to move
      * to the platooning lane and then, when the car is there, this method can be used
      * to set the action to "STAY_THERE" automatically
      */
-    void setLaneChangeAction(MSVehicle* vehicle, enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION action);
+    void setLaneChangeAction(MSVehicle* vehicle, enum Plexe::PLATOONING_LANE_CHANGE_ACTION action);
 };
 
 #endif /* MSCACCLANECHANGER_H_ */

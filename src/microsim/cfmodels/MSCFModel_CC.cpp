@@ -69,7 +69,7 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
     SUMOReal vNext;
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
 
-    if (vars->activeController != MSCFModel_CC::DRIVER) {
+    if (vars->activeController != Plexe::DRIVER) {
         //if during this simulation step the speed has been set by the followSpeed() method, then use such value
         if (vars->followSpeedSetTime == MSNet::getInstance()->getCurrentTimeStep()) {
             vNext = vars->controllerFollowSpeed;
@@ -130,7 +130,7 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
         vars->radarFrontDistance = gap2pred;
     }
 
-    if (vars->activeController != MSCFModel_CC::DRIVER) {
+    if (vars->activeController != Plexe::DRIVER) {
         return _v(veh, gap2pred, speed, predSpeed, desiredSpeed(veh), MSCFModel_CC::FOLLOW_SPEED);
     }
     else
@@ -176,7 +176,7 @@ MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
      */
 
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    if (vars->activeController != MSCFModel_CC::DRIVER)
+    if (vars->activeController != Plexe::DRIVER)
     {
         return 1e6;
     }
@@ -187,7 +187,7 @@ MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
 
 SUMOReal MSCFModel_CC::freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const {
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    if (vars->activeController != MSCFModel_CC::DRIVER)
+    if (vars->activeController != Plexe::DRIVER)
     {
         return _v(veh, seen, speed, maxSpeed, desiredSpeed(veh), MSCFModel_CC::FREE_SPEED);
     }
@@ -200,7 +200,7 @@ SUMOReal
 MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
-    if (vars->activeController != MSCFModel_CC::DRIVER)
+    if (vars->activeController != Plexe::DRIVER)
     {
         //maximum radar range is CC is enabled
         return 250;
@@ -238,14 +238,14 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
 
-    if (vars->activeController != MSCFModel_CC::DRIVER && vars->useFixedAcceleration) {
+    if (vars->activeController != Plexe::DRIVER && vars->useFixedAcceleration) {
         controllerAcceleration = vars->fixedAcceleration;
     }
     else {
 
         switch (vars->activeController) {
 
-            case MSCFModel_CC::ACC:
+            case Plexe::ACC:
 
                 ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
                 accAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
@@ -260,7 +260,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 break;
 
-            case MSCFModel_CC::CACC:
+            case Plexe::CACC:
 
                 if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
                     predAcceleration = vars->frontAcceleration;
@@ -284,7 +284,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 break;
 
-            case MSCFModel_CC::FAKED_CACC:
+            case Plexe::FAKED_CACC:
 
                 if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
                     //compute ACC acceleration that will be then used to check for vehicles in front
@@ -301,7 +301,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 break;
 
-            case MSCFModel_CC::DRIVER:
+            case Plexe::DRIVER:
 
                 std::cerr << "Switching to normal driver behavior still not implemented in MSCFModel_CC\n";
                 assert(false);
@@ -427,21 +427,21 @@ MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOR
     time = STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep());
 }
 
-void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct CCDataHeader &header, const void *content) const {
+void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plexe::CCDataHeader &header, const void *content) const {
 	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
 	switch (header.type) {
 	//TODO: extend
-	case 0: {
-		const struct VEHICLE_DATA* vehicle = (const struct VEHICLE_DATA*)content;
+	case CC_SET_VEHICLE_DATA: {
+		const struct Plexe::VEHICLE_DATA* vehicle = (const struct Plexe::VEHICLE_DATA*)content;
 		vars->vehicles[vehicle->index] = *vehicle;
 		break;
 	}
-	case 1: {
+	case CC_SET_VEHICLE_POSITION: {
 		int *myPosition = (int *)content;
 		vars->position = *myPosition;
 		break;
 	}
-	case 2: {
+	case CC_SET_PLATOON_SIZE: {
 		int *nCars = (int*)content;
 		vars->nCars = *nCars;
 		break;
@@ -455,7 +455,7 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct CCDa
 void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->ccDesiredSpeed = ccDesiredSpeed;
-    vars->activeController = MSCFModel_CC::ACC;
+    vars->activeController = Plexe::ACC;
 }
 
 void MSCFModel_CC::setACCHeadwayTime(const MSVehicle *veh, double headwayTime) const {
@@ -470,22 +470,22 @@ void MSCFModel_CC::setFixedAcceleration(const MSVehicle *veh, int activate, doub
     vars->fixedAcceleration = acceleration;
 }
 
-void MSCFModel_CC::setActiveController(const MSVehicle *veh, enum MSCFModel_CC::ACTIVE_CONTROLLER activeController) const {
+void MSCFModel_CC::setActiveController(const MSVehicle *veh, enum Plexe::ACTIVE_CONTROLLER activeController) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->activeController = activeController;
 }
 
-enum MSCFModel_CC::ACTIVE_CONTROLLER MSCFModel_CC::getActiveController(const MSVehicle *veh) const {
+enum Plexe::ACTIVE_CONTROLLER MSCFModel_CC::getActiveController(const MSVehicle *veh) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     return vars->activeController;
 }
 
-enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION MSCFModel_CC::getLaneChangeAction(const MSVehicle *veh) const {
+enum Plexe::PLATOONING_LANE_CHANGE_ACTION MSCFModel_CC::getLaneChangeAction(const MSVehicle *veh) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     return vars->laneChangeAction;
 }
 
-void MSCFModel_CC::setLaneChangeAction(const MSVehicle *veh, enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION action) const {
+void MSCFModel_CC::setLaneChangeAction(const MSVehicle *veh, enum Plexe::PLATOONING_LANE_CHANGE_ACTION action) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     vars->laneChangeAction = action;
 }
@@ -495,7 +495,7 @@ void MSCFModel_CC::setFixedLane(const MSVehicle *veh, int lane) const {
     //set the lane change only if the index is valid
     if (lane < veh->getEdge()->getLanes().size()) {
         vars->fixedLane = lane;
-        vars->laneChangeAction = MOVE_TO_FIXED_LANE;
+        vars->laneChangeAction = Plexe::MOVE_TO_FIXED_LANE;
     }
 }
 

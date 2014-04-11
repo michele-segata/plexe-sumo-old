@@ -54,6 +54,7 @@
 #include "TraCIServerAPI_Vehicle.h"
 #include "TraCIServerAPI_VehicleType.h"
 
+#include <microsim/cfmodels/CC_Const.h>
 #include <microsim/cfmodels/MSCFModel_CC.h>
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -1233,7 +1234,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
 
         int activeController = inputStorage.readInt();
 
-        model->setActiveController((const MSVehicle *)v, (enum MSCFModel_CC::ACTIVE_CONTROLLER)activeController);
+        model->setActiveController((const MSVehicle *)v, (enum Plexe::ACTIVE_CONTROLLER)activeController);
 
     }
     break;
@@ -1257,9 +1258,9 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         assert(model);
 
         int action = inputStorage.readInt();
-        assert(action >= MSCFModel_CC::DRIVER_CHOICE && action <= MSCFModel_CC::STAY_IN_CURRENT_LANE);
+        assert(action >= Plexe::DRIVER_CHOICE && action <= Plexe::STAY_IN_CURRENT_LANE);
 
-        model->setLaneChangeAction((MSVehicle *)v, (enum MSCFModel_CC::PLATOONING_LANE_CHANGE_ACTION) action);
+        model->setLaneChangeAction((MSVehicle *)v, (enum Plexe::PLATOONING_LANE_CHANGE_ACTION) action);
 
     }
     break;
@@ -1345,12 +1346,12 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
         assert(model);
 
         //header of the message
-        struct MSCFModel_CC::CCDataHeader header;
+        struct Plexe::CCDataHeader header;
         //content of the message
         void *content;
 
         //copy the header
-        inputStorage.readBuffer((unsigned char *)&header, sizeof(struct MSCFModel_CC::CCDataHeader));
+        inputStorage.readBuffer((unsigned char *)&header, sizeof(struct Plexe::CCDataHeader));
         //now copy the actual content
         content = malloc(header.size);
         inputStorage.readBuffer((unsigned char *)content, header.size);
