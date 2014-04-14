@@ -111,6 +111,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             && variable != VAR_GET_CRASHED
             && variable != VAR_GET_ACC_ACCELERATION
             && variable != VAR_GET_CACC_SPACING
+            && variable != VAR_GET_GENERIC_INFORMATION
        ) {
         return server.writeErrorStatusCmd(CMD_GET_VEHICLE_VARIABLE, "Get Vehicle Variable: unsupported variable specified", outputStorage);
     }
@@ -523,6 +524,48 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             tempMsg.writeDouble(model->getCACCConstantSpacing(v));
 
             break;
+        }
+        case VAR_GET_GENERIC_INFORMATION: {
+
+            const MSCFModel_CC * model;
+            model = dynamic_cast<const MSCFModel_CC*>(&v->getVehicleType().getCarFollowModel());
+            assert(model);
+
+            //request info
+            struct Plexe::CCDataHeader request;
+            //response info
+            struct Plexe::CCDataHeader response;
+            //request params
+            void *reqParams = 0;
+            //content to be returned, supposing 4KB is big enough :)
+            unsigned char content[4096];
+            //actual size of the content
+            int size;
+
+            //get requested information type
+            inputStorage.readBuffer((unsigned char *)&request, sizeof(struct Plexe::CCDataHeader));
+
+            //if there are parameters, get them
+            if (request.size != 0) {
+                reqParams = malloc(request.size);
+                inputStorage.readBuffer((unsigned char *)reqParams, request.size);
+            }
+
+            //request data to model
+            size = model->getGenericInformation((const MSVehicle *)v, request, reqParams, content);
+            //write response header
+            response.type = request.type;
+            response.size = size;
+            tempMsg.writeBuffer((unsigned char *)&response, sizeof(struct Plexe::CCDataHeader));
+            //write data into response message
+            tempMsg.writeBuffer(content, size);
+
+            if (reqParams) {
+                free(reqParams);
+            }
+
+            break;
+
         }
 
         TraCIServerAPI_VehicleType::getVariable(variable, v->getVehicleType(), tempMsg);

@@ -35,6 +35,7 @@
 #include <microsim/MSEdge.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOTime.h>
+#include <string.h>
 
 
 // ===========================================================================
@@ -450,6 +451,30 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
 		break;
 	}
 	}
+}
+
+int MSCFModel_CC::getGenericInformation(const MSVehicle *veh, struct Plexe::CCDataHeader request, const void *reqParams, void *content) const {
+
+	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+
+	int size;
+
+	switch(request.type) {
+	case CC_GET_VEHICLE_DATA: {
+		int index = *(int *)reqParams;
+		memcpy(content, &vars->vehicles[index], sizeof(struct Plexe::VEHICLE_DATA));
+		size = sizeof(struct Plexe::VEHICLE_DATA);
+		break;
+	}
+	default: {
+		std::cerr << "Invalid request type in MSCFModel_CC::getGenericInformation()\n";
+		assert(false);
+		break;
+	}
+	}
+
+	return size;
+
 }
 
 void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {

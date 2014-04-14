@@ -671,6 +671,9 @@
 // track vehicle
 #define VAR_TRACK_VEHICLE 0xa6
 
+// get generic information
+#define VAR_GET_GENERIC_INFORMATION 0xe9
+
 // set generic information
 #define VAR_SET_GENERIC_INFORMATION 0xea
 

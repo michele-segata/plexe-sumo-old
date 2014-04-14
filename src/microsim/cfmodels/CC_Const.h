@@ -71,6 +71,7 @@ struct VEHICLE_DATA {
 #define CC_SET_VEHICLE_DATA              0x00    //set data about a vehicle, like position, speed, acceleration, etc
 #define CC_SET_VEHICLE_POSITION          0x01    //set the position of the vehicle in the platoon (0 based)
 #define CC_SET_PLATOON_SIZE              0x02    //set the number of cars in the platoon
+#define CC_GET_VEHICLE_DATA              0x03    //get stored data about a vehicle
 
 }
 

@@ -262,6 +262,17 @@ public:
     void setGenericInformation(const MSVehicle* veh, const struct Plexe::CCDataHeader &header, const void *content) const;
 
     /**
+     * @brief generic data retrieval method from this class
+     *
+     * @param[in] veh the vehicle from which data is requested
+     * @param[in] request struct including request type, and request parameters length
+     * @param[in] reqParams parameters connected to the request, if any
+     * @param[out] content pointer where data will be copied to
+     * @return actual size of data copied into content
+     */
+    int getGenericInformation(const MSVehicle *veh, struct Plexe::CCDataHeader request, const void *reqParams, void *content) const;
+
+    /**
      * @brief get the information about a vehicle. This can be used by TraCI in order to
      * get speed and acceleration of the platoon leader before sending them to other
      * vehicles

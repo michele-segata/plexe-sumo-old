@@ -110,6 +110,7 @@ public:
     virtual void writePacket(const std::vector<unsigned char> &packet);
 
     virtual void readBuffer(unsigned char *buffer, int length);
+    virtual void writeBuffer(unsigned char *buffer, int length);
 
 	virtual void writeStorage(tcpip::Storage& store);
 

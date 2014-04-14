@@ -335,6 +335,9 @@ namespace tcpip
 	void Storage::readBuffer(unsigned char *buffer, int length) {
 		readByEndianess(buffer, length);
 	}
+	void Storage::writeBuffer(unsigned char *buffer, int length) {
+		writeByEndianess(buffer, length);
+	}
 
 
 	// ----------------------------------------------------------------------
