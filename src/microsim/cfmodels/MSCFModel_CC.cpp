@@ -248,8 +248,8 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
             case Plexe::ACC:
 
-                ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
-                accAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
+                ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
+                accAcceleration = _acc(veh, egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
 
                 if (gap2pred > 250 || ccAcceleration < accAcceleration) {
                     controllerAcceleration = ccAcceleration;
@@ -279,8 +279,8 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                 }
 
                 //TODO: again modify probably range/range-rate controller is needed
-                ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
-                caccAcceleration = _cacc(egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration, vars->caccSpacing);
+                ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
+                caccAcceleration = _cacc(veh, egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration, vars->caccSpacing);
                 controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
 
                 break;
@@ -289,15 +289,15 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
                     //compute ACC acceleration that will be then used to check for vehicles in front
-                    vars->followAccAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
+                    vars->followAccAcceleration = _acc(veh, egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
                 }
                 else {
                     //compute ACC acceleration that will be then used to check for vehicles in front
-                    vars->freeAccAcceleration = _acc(egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
+                    vars->freeAccAcceleration = _acc(veh, egoSpeed, predSpeed, gap2pred, vars->accHeadwayTime);
                 }
 
-                ccAcceleration = _cc(egoSpeed, vars->ccDesiredSpeed);
-                caccAcceleration = _cacc(egoSpeed, vars->fakeData.frontSpeed, vars->fakeData.frontAcceleration, vars->fakeData.frontDistance, vars->fakeData.leaderSpeed, vars->fakeData.leaderAcceleration, vars->caccSpacing);
+                ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
+                caccAcceleration = _cacc(veh, egoSpeed, vars->fakeData.frontSpeed, vars->fakeData.frontAcceleration, vars->fakeData.frontDistance, vars->fakeData.leaderSpeed, vars->fakeData.leaderAcceleration, vars->caccSpacing);
                 controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
 
                 break;
@@ -319,7 +319,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     }
 
     //compute the actual acceleration applied by the engine
-    engineAcceleration = _actuator(controllerAcceleration, vars->egoAcceleration);
+    engineAcceleration = _actuator(veh, controllerAcceleration, vars->egoAcceleration);
 
     //compute the speed from the actual acceleration
     speed = MAX2(SUMOReal(0), egoSpeed + ACCEL2SPEED(engineAcceleration));
@@ -345,7 +345,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 }
 
 SUMOReal
-MSCFModel_CC::_cc(SUMOReal egoSpeed, SUMOReal desSpeed) const {
+MSCFModel_CC::_cc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal desSpeed) const {
 
     //Eq. 5.5 of the Rajamani book, with Ki = 0 and bounds on max and min acceleration
     return fmin(myAccel, fmax(-myCcDecel, -myKp * (egoSpeed - desSpeed)));
@@ -353,7 +353,7 @@ MSCFModel_CC::_cc(SUMOReal egoSpeed, SUMOReal desSpeed) const {
 }
 
 SUMOReal
-MSCFModel_CC::_acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const {
+MSCFModel_CC::_acc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const {
 
     //Eq. 6.18 of the Rajamani book
     return fmin(myAccel, fmax(-myDecel, -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed))));
@@ -361,23 +361,25 @@ MSCFModel_CC::_acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUM
 }
 
 SUMOReal
-MSCFModel_CC::_cacc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const {
+MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const {
 
+	VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
     //compute epsilon, i.e., the desired distance error
     double epsilon = -gap2pred + spacing; //NOTICE: error (if any) should already be included in gap2pred
     //compute epsilon_dot, i.e., the desired speed error
     double epsilon_dot = egoSpeed - predSpeed;
     //Eq. 7.39 of the Rajamani book
-    return fmin(myAccel, fmax(-myDecel, myAlpha1 * predAcceleration + myAlpha2 * leaderAcceleration +
-                              myAlpha3 * epsilon_dot + myAlpha4 * (egoSpeed - leaderSpeed) + myAlpha5 * epsilon));
+    return fmin(myAccel, fmax(-myDecel, vars->caccAlpha1 * predAcceleration + vars->caccAlpha2 * leaderAcceleration +
+                              vars->caccAlpha3 * epsilon_dot + vars->caccAlpha4 * (egoSpeed - leaderSpeed) + vars->caccAlpha5 * epsilon));
 
 }
 
 SUMOReal
-MSCFModel_CC::_actuator(SUMOReal acceleration, SUMOReal currentAcceleration) const {
+MSCFModel_CC::_actuator(const MSVehicle *veh, SUMOReal acceleration, SUMOReal currentAcceleration) const {
 
+	VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
     //standard low-pass filter discrete implementation
-    return myAlpha * acceleration + myOneMinusAlpha * currentAcceleration;
+    return vars->engineAlpha * acceleration + vars->engineOneMinusAlpha * currentAcceleration;
 
 }
 
@@ -447,6 +449,26 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
 		vars->nCars = *nCars;
 		break;
 	}
+	case CC_SET_CACC_XI: {
+		vars->caccXi = *(double*)content;
+		recomputeParameters(veh);
+		break;
+	}
+	case CC_SET_CACC_OMEGA_N: {
+		vars->caccOmegaN = *(double*)content;
+		recomputeParameters(veh);
+		break;
+	}
+	case CC_SET_CACC_C1: {
+		vars->caccC1 = *(double*)content;
+		recomputeParameters(veh);
+		break;
+	}
+	case CC_SET_ENGINE_TAU: {
+		vars->engineTau = *(double*)content;
+		recomputeParameters(veh);
+		break;
+	}
 	default: {
 		break;
 	}
@@ -475,6 +497,17 @@ int MSCFModel_CC::getGenericInformation(const MSVehicle *veh, struct Plexe::CCDa
 
 	return size;
 
+}
+
+void MSCFModel_CC::recomputeParameters(const MSVehicle *veh) const {
+	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+	vars->caccAlpha1 = 1 - vars->caccC1;
+	vars->caccAlpha2 = vars->caccC1;
+	vars->caccAlpha3 = -(2 * vars->caccXi - vars->caccC1 * (vars->caccXi + sqrt(vars->caccXi * vars->caccXi - 1))) * vars->caccOmegaN;
+	vars->caccAlpha4 = -(vars->caccXi + sqrt(vars->caccXi* vars->caccXi - 1)) * vars->caccOmegaN * vars->caccC1;
+	vars->caccAlpha5 = -vars->caccOmegaN * vars->caccOmegaN;
+	vars->engineAlpha = TS / (vars->engineTau + TS);
+	vars->engineOneMinusAlpha = 1 - vars->engineAlpha;
 }
 
 void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {

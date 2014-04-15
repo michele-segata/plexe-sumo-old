@@ -73,6 +73,12 @@ struct VEHICLE_DATA {
 #define CC_SET_PLATOON_SIZE              0x02    //set the number of cars in the platoon
 #define CC_GET_VEHICLE_DATA              0x03    //get stored data about a vehicle
 
+//set of controller-related constants
+#define CC_SET_CACC_XI                   0x04    //xi
+#define CC_SET_CACC_OMEGA_N              0x05    //omega_n
+#define CC_SET_CACC_C1                   0x06    //C1
+#define CC_SET_ENGINE_TAU                0x07    //engine time constant
+
 }
 
 #endif /* CC_CONST_H */

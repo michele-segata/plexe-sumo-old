@@ -183,6 +183,18 @@ public:
     VehicleVariables* createVehicleVariables() const {
         MSCFModel_CC::VehicleVariables *vars = new MSCFModel_CC::VehicleVariables();
         vars->caccSpacing = myConstantSpacing;
+        vars->caccC1 = myC1;
+        vars->caccXi = myXi;
+        vars->caccOmegaN = myOmegaN;
+        vars->engineTau = myTau;
+        //we cannot invoke recomputeParameters() because we have no pointer to the MSVehicle class
+        vars->caccAlpha1 = 1 - vars->caccC1;
+        vars->caccAlpha2 = vars->caccC1;
+        vars->caccAlpha3 = -(2 * vars->caccXi - vars->caccC1 * (vars->caccXi + sqrt(vars->caccXi * vars->caccXi - 1))) * vars->caccOmegaN;
+        vars->caccAlpha4 = -(vars->caccXi + sqrt(vars->caccXi* vars->caccXi - 1)) * vars->caccOmegaN * vars->caccC1;
+        vars->caccAlpha5 = -vars->caccOmegaN * vars->caccOmegaN;
+        vars->engineAlpha = TS / (vars->engineTau + TS);
+        vars->engineOneMinusAlpha = 1 - vars->engineAlpha;
         return (VehicleVariables *)vars;
     }
 
@@ -422,6 +434,11 @@ private:
         FREE_SPEED
     };
 
+    /**
+     * @brief Recomputes controller related parameters after setting them
+     */
+    void recomputeParameters(const MSVehicle *veh) const;
+
 public:
 
     class VehicleVariables : public MSCFModel::VehicleVariables {
@@ -434,7 +451,9 @@ public:
             ignoreModifications(false), fixedLane(-1), accHeadwayTime(1.5), useFixedAcceleration(0), fixedAcceleration(0),
             crashed(false), controllerAcceleration(0), followControllerAcceleration(0), freeControllerAcceleration(0),
             accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0), caccSpacing(5),
-            leaderDataReadTime(0), frontDataReadTime(0), position(-1), nCars(8) {
+            leaderDataReadTime(0), frontDataReadTime(0), position(-1), nCars(8),
+            caccXi(-1), caccOmegaN(-1), caccC1(-1), engineTau(-1), caccAlpha1(-1), caccAlpha2(-1),
+            caccAlpha3(-1), caccAlpha4(-1), caccAlpha5(-1), engineAlpha(-1), engineOneMinusAlpha(-1) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -548,6 +567,13 @@ public:
         int position;
         /// @brief number of cars in the platoon
         int nCars;
+
+        /// @brief controller related parameters
+        double caccXi;
+        double caccOmegaN;
+        double caccC1;
+        double caccAlpha1, caccAlpha2, caccAlpha3, caccAlpha4, caccAlpha5;
+        double engineTau, engineAlpha, engineOneMinusAlpha;
     };
 
 
@@ -560,7 +586,7 @@ private:
      * @param[in] desSpeed vehicle desired speed
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _cc(SUMOReal egoSpeed, SUMOReal desSpeed) const;
+    SUMOReal _cc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal desSpeed) const;
 
     /** @brief controller for the ACC which computes the acceleration to be applied. the value needs to be passed to the actuator
      *
@@ -570,7 +596,7 @@ private:
      * @param[in] headwayTime the headway time ACC should maintain
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _acc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const;
+    SUMOReal _acc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const;
 
     /** @brief controller for the CACC which computes the acceleration to be applied. the value needs to be passed to the actuator
      *
@@ -583,7 +609,7 @@ private:
      * @param[in] spacing the spacing to be kept
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _cacc(SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const;
+    SUMOReal _cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const;
 
     /** @brief computes the actual acceleration the actuator is able to apply to the car, given engine time constant and previous
      * acceleration
@@ -592,7 +618,7 @@ private:
      * @param[in] currentAcceleration the current car acceleration
      * @return the actual acceleration applied by the engine
      */
-    SUMOReal _actuator(SUMOReal acceleration, SUMOReal currentAcceleration) const;
+    SUMOReal _actuator(const MSVehicle *veh, SUMOReal acceleration, SUMOReal currentAcceleration) const;
 
     SUMOReal desiredSpeed(const MSVehicle* const veh) const {
         return MIN2(myType->getMaxSpeed(), veh->getLane()->getSpeedLimit());
