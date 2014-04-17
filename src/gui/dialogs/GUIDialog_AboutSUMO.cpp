@@ -108,7 +108,7 @@ GUIDialog_AboutSUMO::GUIDialog_AboutSUMO(FXWindow* parent,  const char* name, in
     // "SUMO <VERSION>"
     FXVerticalFrame* f4 = new FXVerticalFrame(f2, FRAME_NONE, 0, 0, 0, 0,   20, 0, 0, 0);
     myHeadlineFont = new FXFont(getApp(), "Arial", 18, FXFont::Bold);
-    FXLabel* l = new FXLabel(f4, (FXString)"SUMO " + VERSION_STRING, 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    FXLabel* l = new FXLabel(f4, (FXString)"PLEXE SUMO " + VERSION_STRING, 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     l->setFont(myHeadlineFont);
     new FXLabel(f4, "Simulation of Urban MObility", 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     //
@@ -117,10 +117,14 @@ GUIDialog_AboutSUMO::GUIDialog_AboutSUMO(FXWindow* parent,  const char* name, in
     // copyright notice
     new FXLabel(f3, "A microscopic, multi-modal, open source", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     new FXLabel(f3, "road traffic simulation.", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    new FXLabel(f3, "Includes the Platooning Extension for Veins (PLEXE)", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     new FXLabel(f3, "Copyright (C) 2001-2013 DLR / Institute of Transportation Systems", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    new FXLabel(f3, "Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
 
     FXLinkLabel* link = new FXLinkLabel(f3, "http://sumo.sourceforge.net", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
     link->setTipText("http://sumo.sourceforge.net");
+    FXLinkLabel* plexeLink = new FXLinkLabel(f3, "http://plexe.car2x.org", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
+    plexeLink->setTipText("http://plexe.car2x.org");
     // ok-button
     new FXButton(f1, "OK\t\t", 0, this, ID_ACCEPT, LAYOUT_FIX_WIDTH | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | FRAME_THICK | FRAME_RAISED, 0, 0, 50, 30);
     setIcon(GUIIconSubSys::getIcon(ICON_APP));

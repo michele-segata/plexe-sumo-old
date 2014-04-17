@@ -225,7 +225,7 @@ GUIApplicationWindow::dependentBuild(bool game) {
     // set the status bar
     myStatusbar->getStatusLine()->setText("Ready.");
     // set the caption
-    setTitle(MFXUtils::getTitleText(("SUMO " + std::string(VERSION_STRING)).c_str()));
+    setTitle(MFXUtils::getTitleText(("PLEXE SUMO " + std::string(VERSION_STRING)).c_str()));
 
     // start the simulation-thread (it will loop until the application ends deciding by itself whether to perform a step or not)
     myRunThread->start();
@@ -801,7 +801,7 @@ GUIApplicationWindow::onCmdNewOSG(FXObject*, FXSelector, void*) {
 long
 GUIApplicationWindow::onCmdAbout(FXObject*, FXSelector, void*) {
     GUIDialog_AboutSUMO* about =
-        new GUIDialog_AboutSUMO(this, "About SUMO", 0, 0);
+        new GUIDialog_AboutSUMO(this, "About PLEXE SUMO", 0, 0);
     about->create();
     about->show(PLACEMENT_OWNER);
     return 1;
@@ -936,7 +936,7 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
             setTitle("SUMO Traffic Light Game");
         } else {
             // set simulation name on the caption
-            std::string caption = "SUMO " + std::string(VERSION_STRING);
+            std::string caption = "PLEXE SUMO " + std::string(VERSION_STRING);
             setTitle(MFXUtils::getTitleText(caption.c_str(), ec->myFile.c_str()));
         }
         // set simulation step begin information
@@ -1058,7 +1058,7 @@ GUIApplicationWindow::closeAllWindows() {
     // delete the simulation
     myRunThread->deleteSim();
     // reset the caption
-    setTitle(MFXUtils::getTitleText(("SUMO " + std::string(VERSION_STRING)).c_str()));
+    setTitle(MFXUtils::getTitleText(("PLEXE SUMO " + std::string(VERSION_STRING)).c_str()));
     // delete other children
     while (myTrackerWindows.size() != 0) {
         delete myTrackerWindows[0];
