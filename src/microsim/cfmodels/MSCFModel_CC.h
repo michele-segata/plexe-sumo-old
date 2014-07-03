@@ -296,7 +296,7 @@ public:
      * the controller will be written in this variable. This might be different from
      * acceleration because of actuation lag
      */
-    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration, Position &position, SUMOReal time) const;
+    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration, Position &position, SUMOReal &time) const;
 
     /**
      * @brief switch on the ACC, so disabling the human driver car control
