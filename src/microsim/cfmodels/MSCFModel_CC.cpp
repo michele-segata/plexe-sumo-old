@@ -363,7 +363,7 @@ MSCFModel_CC::_acc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, 
 SUMOReal
 MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const {
 
-	VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
+    VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
     //compute epsilon, i.e., the desired distance error
     double epsilon = -gap2pred + spacing; //NOTICE: error (if any) should already be included in gap2pred
     //compute epsilon_dot, i.e., the desired speed error
@@ -377,7 +377,7 @@ MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed,
 SUMOReal
 MSCFModel_CC::_actuator(const MSVehicle *veh, SUMOReal acceleration, SUMOReal currentAcceleration) const {
 
-	VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
+    VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
     //standard low-pass filter discrete implementation
     return vars->engineAlpha * acceleration + vars->engineOneMinusAlpha * currentAcceleration;
 
@@ -391,14 +391,14 @@ MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) c
 
 void
 MSCFModel_CC::setCACCConstantSpacing(const MSVehicle * veh, SUMOReal spacing) const {
-	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-	vars->caccSpacing = spacing;
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->caccSpacing = spacing;
 }
 
 SUMOReal
 MSCFModel_CC::getCACCConstantSpacing(const MSVehicle * veh) const {
-	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-	return vars->caccSpacing;
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    return vars->caccSpacing;
 }
 
 void
@@ -431,83 +431,83 @@ MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOR
 }
 
 void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plexe::CCDataHeader &header, const void *content) const {
-	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-	switch (header.type) {
-	//TODO: extend
-	case CC_SET_VEHICLE_DATA: {
-		const struct Plexe::VEHICLE_DATA* vehicle = (const struct Plexe::VEHICLE_DATA*)content;
-		vars->vehicles[vehicle->index] = *vehicle;
-		break;
-	}
-	case CC_SET_VEHICLE_POSITION: {
-		int *myPosition = (int *)content;
-		vars->position = *myPosition;
-		break;
-	}
-	case CC_SET_PLATOON_SIZE: {
-		int *nCars = (int*)content;
-		vars->nCars = *nCars;
-		break;
-	}
-	case CC_SET_CACC_XI: {
-		vars->caccXi = *(double*)content;
-		recomputeParameters(veh);
-		break;
-	}
-	case CC_SET_CACC_OMEGA_N: {
-		vars->caccOmegaN = *(double*)content;
-		recomputeParameters(veh);
-		break;
-	}
-	case CC_SET_CACC_C1: {
-		vars->caccC1 = *(double*)content;
-		recomputeParameters(veh);
-		break;
-	}
-	case CC_SET_ENGINE_TAU: {
-		vars->engineTau = *(double*)content;
-		recomputeParameters(veh);
-		break;
-	}
-	default: {
-		break;
-	}
-	}
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    switch (header.type) {
+    //TODO: extend
+    case CC_SET_VEHICLE_DATA: {
+        const struct Plexe::VEHICLE_DATA* vehicle = (const struct Plexe::VEHICLE_DATA*)content;
+        vars->vehicles[vehicle->index] = *vehicle;
+        break;
+    }
+    case CC_SET_VEHICLE_POSITION: {
+        int *myPosition = (int *)content;
+        vars->position = *myPosition;
+        break;
+    }
+    case CC_SET_PLATOON_SIZE: {
+        int *nCars = (int*)content;
+        vars->nCars = *nCars;
+        break;
+    }
+    case CC_SET_CACC_XI: {
+        vars->caccXi = *(double*)content;
+        recomputeParameters(veh);
+        break;
+    }
+    case CC_SET_CACC_OMEGA_N: {
+        vars->caccOmegaN = *(double*)content;
+        recomputeParameters(veh);
+        break;
+    }
+    case CC_SET_CACC_C1: {
+        vars->caccC1 = *(double*)content;
+        recomputeParameters(veh);
+        break;
+    }
+    case CC_SET_ENGINE_TAU: {
+        vars->engineTau = *(double*)content;
+        recomputeParameters(veh);
+        break;
+    }
+    default: {
+        break;
+    }
+    }
 }
 
 int MSCFModel_CC::getGenericInformation(const MSVehicle *veh, struct Plexe::CCDataHeader request, const void *reqParams, void *content) const {
 
-	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
 
-	int size;
+    int size;
 
-	switch(request.type) {
-	case CC_GET_VEHICLE_DATA: {
-		int index = *(int *)reqParams;
-		memcpy(content, &vars->vehicles[index], sizeof(struct Plexe::VEHICLE_DATA));
-		size = sizeof(struct Plexe::VEHICLE_DATA);
-		break;
-	}
-	default: {
-		std::cerr << "Invalid request type in MSCFModel_CC::getGenericInformation()\n";
-		assert(false);
-		break;
-	}
-	}
+    switch(request.type) {
+    case CC_GET_VEHICLE_DATA: {
+        int index = *(int *)reqParams;
+        memcpy(content, &vars->vehicles[index], sizeof(struct Plexe::VEHICLE_DATA));
+        size = sizeof(struct Plexe::VEHICLE_DATA);
+        break;
+    }
+    default: {
+        std::cerr << "Invalid request type in MSCFModel_CC::getGenericInformation()\n";
+        assert(false);
+        break;
+    }
+    }
 
-	return size;
+    return size;
 
 }
 
 void MSCFModel_CC::recomputeParameters(const MSVehicle *veh) const {
-	VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
-	vars->caccAlpha1 = 1 - vars->caccC1;
-	vars->caccAlpha2 = vars->caccC1;
-	vars->caccAlpha3 = -(2 * vars->caccXi - vars->caccC1 * (vars->caccXi + sqrt(vars->caccXi * vars->caccXi - 1))) * vars->caccOmegaN;
-	vars->caccAlpha4 = -(vars->caccXi + sqrt(vars->caccXi* vars->caccXi - 1)) * vars->caccOmegaN * vars->caccC1;
-	vars->caccAlpha5 = -vars->caccOmegaN * vars->caccOmegaN;
-	vars->engineAlpha = TS / (vars->engineTau + TS);
-	vars->engineOneMinusAlpha = 1 - vars->engineAlpha;
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    vars->caccAlpha1 = 1 - vars->caccC1;
+    vars->caccAlpha2 = vars->caccC1;
+    vars->caccAlpha3 = -(2 * vars->caccXi - vars->caccC1 * (vars->caccXi + sqrt(vars->caccXi * vars->caccXi - 1))) * vars->caccOmegaN;
+    vars->caccAlpha4 = -(vars->caccXi + sqrt(vars->caccXi* vars->caccXi - 1)) * vars->caccOmegaN * vars->caccC1;
+    vars->caccAlpha5 = -vars->caccOmegaN * vars->caccOmegaN;
+    vars->engineAlpha = TS / (vars->engineTau + TS);
+    vars->engineOneMinusAlpha = 1 - vars->engineAlpha;
 }
 
 void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {

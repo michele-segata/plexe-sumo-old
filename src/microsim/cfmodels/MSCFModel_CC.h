@@ -18,7 +18,7 @@
 //
 /****************************************************************************/
 #ifndef MSCFMODEL_CC_H
-#define	MSCFMODEL_CC_H
+#define MSCFMODEL_CC_H
 
 // ===========================================================================
 // included modules
@@ -675,4 +675,4 @@ private:
 
 };
 
-#endif	/* MSCFMODEL_CC_H */
+#endif /* MSCFMODEL_CC_H */
