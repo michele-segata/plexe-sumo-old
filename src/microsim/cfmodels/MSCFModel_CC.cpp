@@ -302,6 +302,13 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 break;
 
+            case Plexe::MYCC:
+
+                ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
+                caccAcceleration = _mycc(veh, egoSpeed, vars->frontSpeed, gap2pred);
+                controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+                break;
+
             case Plexe::DRIVER:
 
                 std::cerr << "Switching to normal driver behavior still not implemented in MSCFModel_CC\n";
@@ -373,6 +380,13 @@ MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed,
                               vars->caccAlpha3 * epsilon_dot + vars->caccAlpha4 * (egoSpeed - leaderSpeed) + vars->caccAlpha5 * epsilon));
 
 }
+
+SUMOReal
+MSCFModel_CC::_mycc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred) const {
+    VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
+    return fmin(myAccel, fmax(-myDecel, vars->myccKd * (gap2pred - 25) + vars->myccKs * (predSpeed - egoSpeed)));
+}
+
 
 SUMOReal
 MSCFModel_CC::_actuator(const MSVehicle *veh, SUMOReal acceleration, SUMOReal currentAcceleration) const {
@@ -467,6 +481,14 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
     case CC_SET_ENGINE_TAU: {
         vars->engineTau = *(double*)content;
         recomputeParameters(veh);
+        break;
+    }
+    case CC_SET_MYCC_KD: {
+        vars->myccKd = *(double*)content;
+        break;
+    }
+    case CC_SET_MYCC_KS: {
+        vars->myccKs = *(double*)content;
         break;
     }
     default: {
