@@ -421,7 +421,7 @@ MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed
 }
 
 void
-MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration, Position &position, SUMOReal time) const {
+MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration, Position &position, SUMOReal &time) const {
     VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
     speed = vars->egoSpeed;
     acceleration = vars->egoAcceleration;
