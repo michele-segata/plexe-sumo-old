@@ -276,7 +276,8 @@ MSVehicleType::build(SUMOVTypeParameter& from) {
                                      from.get(SUMO_ATTR_CF_CC_XI, 1),
                                      from.get(SUMO_ATTR_CF_CC_OMEGAN, 0.2),
                                      from.get(SUMO_ATTR_CF_CC_TAU, 0.5),
-                                     from.get(SUMO_ATTR_CF_CC_LANES_COUNT, -1));
+                                     from.get(SUMO_ATTR_CF_CC_LANES_COUNT, -1),
+                                     from.get(SUMO_ATTR_CF_CC_CCACCEL, 1.5));
 
             break;
         case SUMO_TAG_CF_KRAUSS:

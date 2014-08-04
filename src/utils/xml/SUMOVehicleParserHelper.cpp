@@ -524,6 +524,7 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         ccParams.insert(SUMO_ATTR_CF_CC_TAU);
         ccParams.insert(SUMO_ATTR_CF_CC_XI);
         ccParams.insert(SUMO_ATTR_CF_CC_LANES_COUNT);
+        ccParams.insert(SUMO_ATTR_CF_CC_CCACCEL);
         allowedCFModelAttrs[SUMO_TAG_CF_CC] = ccParams;
     }
     return allowedCFModelAttrs;
