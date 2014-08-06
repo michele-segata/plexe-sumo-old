@@ -286,7 +286,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                     controllerAcceleration = caccAcceleration;
                 }
                 else {
-                    controllerAcceleration = ccAcceleration;
+                    controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
                 }
 
                 break;
