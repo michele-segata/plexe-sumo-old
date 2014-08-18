@@ -95,11 +95,12 @@ public:
      * @param[in] omegaN design constant for CACC (def. 0.2)
      * @param[in] tau engine time constant used for actuation lag (def. 0.5 s)
      * @param[in] lanesCount number of lanes of the highway
+     * @param[in] ccAccel the maximum acceleration the CC can apply
      */
     MSCFModel_CC(const MSVehicleType* vtype, SUMOReal accel, SUMOReal decel,
                  SUMOReal ccDecel, SUMOReal headwayTime, SUMOReal constantSpacing,
                  SUMOReal kp, SUMOReal lambda, SUMOReal c1, SUMOReal xi,
-                 SUMOReal omegaN, SUMOReal tau, int lanesCount);
+                 SUMOReal omegaN, SUMOReal tau, int lanesCount, SUMOReal ccAccel);
 
     /// @brief Destructor
     ~MSCFModel_CC();
@@ -637,6 +638,9 @@ private:
 
     /// @brief The maximum deceleration that the CC can output
     const SUMOReal myCcDecel;
+
+    /// @brief The maximum acceleration that the CC can output
+    const SUMOReal myCcAccel;
 
     /// @brief the constant gap for CACC
     const SUMOReal myConstantSpacing;

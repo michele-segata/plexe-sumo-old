@@ -45,11 +45,11 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
                            SUMOReal accel, SUMOReal decel,
                            SUMOReal ccDecel, SUMOReal headwayTime, SUMOReal constantSpacing,
                            SUMOReal kp, SUMOReal lambda, SUMOReal c1, SUMOReal xi,
-                           SUMOReal omegaN, SUMOReal tau, int lanesCount)
+                           SUMOReal omegaN, SUMOReal tau, int lanesCount, SUMOReal ccAccel)
     : MSCFModel(vtype, accel, decel, headwayTime), myCcDecel(ccDecel), myConstantSpacing(constantSpacing)
     , myKp(kp), myLambda(lambda), myC1(c1), myXi(xi), myOmegaN(omegaN), myTau(tau), myAlpha1(1 - myC1), myAlpha2(myC1),
     myAlpha3(-(2 * myXi - myC1 *(myXi + sqrt(myXi* myXi - 1))) * myOmegaN), myAlpha4(-(myXi + sqrt(myXi* myXi - 1)) * myOmegaN* myC1),
-    myAlpha5(-myOmegaN* myOmegaN), myAlpha(TS / (myTau + TS)), myOneMinusAlpha(1 - myAlpha), myLanesCount(lanesCount) {
+    myAlpha5(-myOmegaN* myOmegaN), myAlpha(TS / (myTau + TS)), myOneMinusAlpha(1 - myAlpha), myLanesCount(lanesCount), myCcAccel(ccAccel) {
 
     //if the lanes count has not been specified in the attributes of the model, lane changing cannot properly work
     if (lanesCount == -1) {
@@ -281,7 +281,13 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                 //TODO: again modify probably range/range-rate controller is needed
                 ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
                 caccAcceleration = _cacc(veh, egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration, vars->caccSpacing);
-                controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+                //if CACC is enabled and we are closer than 20 meters, let it decide
+                if (gap2pred < 20) {
+                    controllerAcceleration = caccAcceleration;
+                }
+                else {
+                    controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+                }
 
                 break;
 
@@ -355,7 +361,7 @@ SUMOReal
 MSCFModel_CC::_cc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal desSpeed) const {
 
     //Eq. 5.5 of the Rajamani book, with Ki = 0 and bounds on max and min acceleration
-    return fmin(myAccel, fmax(-myCcDecel, -myKp * (egoSpeed - desSpeed)));
+    return fmin(myCcAccel, fmax(-myCcDecel, -myKp * (egoSpeed - desSpeed)));
 
 }
 
@@ -636,5 +642,5 @@ MSCFModel_CC::duplicate(const MSVehicleType* vtype) const {
                             myAccel, myDecel,
                             myCcDecel, myHeadwayTime, myConstantSpacing,
                             myKp, myLambda, myC1, myXi,
-                            myOmegaN, myTau, myLanesCount);
+                            myOmegaN, myTau, myLanesCount, myCcAccel);
 }
