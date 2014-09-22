@@ -9,7 +9,7 @@
 ///
 // A loader for detector flows
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -63,7 +63,7 @@ RODFDetFlowLoader::~RODFDetFlowLoader() {}
 
 
 void
-RODFDetFlowLoader::read(const std::string& file) throw(IOError, ProcessError) {
+RODFDetFlowLoader::read(const std::string& file) {
     LineReader lr(file);
     // parse first line
     myLineHandler.reinit(lr.readLine(), ";", ";", true, true);

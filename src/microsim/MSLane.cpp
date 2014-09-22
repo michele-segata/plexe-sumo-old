@@ -12,7 +12,7 @@
 ///
 // Representation of a lane in the micro simulation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -37,6 +37,7 @@
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/StdDefs.h>
 #include "MSVehicle.h"
+#include "MSAbstractLaneChangeModel.h"
 #include "MSNet.h"
 #include "MSVehicleType.h"
 #include "MSEdge.h"
@@ -49,6 +50,7 @@
 #include "MSGlobals.h"
 #include "MSVehicleControl.h"
 #include "MSInsertionControl.h"
+#include "MSVehicleControl.h"
 #include <cmath>
 #include <bitset>
 #include <iostream>
@@ -429,14 +431,14 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
             if (&currentLane->getEdge() == r.getLastEdge()) {
                 // reached the end of the route
                 if (aVehicle->getParameter().arrivalSpeedProcedure == ARRIVAL_SPEED_GIVEN) {
-                    SUMOReal nspeed = cfModel.followSpeed(aVehicle, speed, seen, aVehicle->getParameter().arrivalSpeed, 0);
+                    SUMOReal nspeed = cfModel.freeSpeed(aVehicle, speed, seen, aVehicle->getParameter().arrivalSpeed);
                     if (nspeed < speed) {
                         if (patchSpeed) {
                             speed = MIN2(nspeed, speed);
                             dist = cfModel.brakeGap(speed) + aVehicle->getVehicleType().getMinGap();
                         } else {
                             // we may not drive with the given velocity - we cannot match the specified arrival speed
-                            WRITE_ERROR("Vehicle '" + aVehicle->getID() + "' will not be able to depart using given velocity!");
+                            WRITE_ERROR("Vehicle '" + aVehicle->getID() + "' will not be able to depart using the given velocity due (arrival speed too low)!");
                             MSNet::getInstance()->getInsertionControl().descheduleDeparture(aVehicle);
                             return false;
                         }
@@ -444,14 +446,14 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                 }
             } else {
                 // lane does not continue
-                SUMOReal nspeed = cfModel.followSpeed(aVehicle, speed, seen, 0, 0);
+                SUMOReal nspeed = cfModel.stopSpeed(aVehicle, speed, seen);
                 if (nspeed < speed) {
                     if (patchSpeed) {
                         speed = MIN2(nspeed, speed);
                         dist = cfModel.brakeGap(speed) + aVehicle->getVehicleType().getMinGap();
                     } else {
                         // we may not drive with the given velocity - we cannot stop at the junction
-                        WRITE_ERROR("Vehicle '" + aVehicle->getID() + "' will not be able to depart using given velocity!");
+                        WRITE_ERROR("Vehicle '" + aVehicle->getID() + "' will not be able to depart using the given velocity (junction too close)!");
                         MSNet::getInstance()->getInsertionControl().descheduleDeparture(aVehicle);
                         return false;
                     }
@@ -459,15 +461,25 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
             }
             break;
         }
-        if (!(*link)->opened(arrivalTime, speed, speed, aVehicle->getVehicleType().getLength())) {
+        if (!(*link)->opened(arrivalTime, speed, speed, aVehicle->getVehicleType().getLength(), aVehicle->getImpatience(), cfModel.getMaxDecel(), 0)
+                || !(*link)->havePriority()) {
             // have to stop at junction
-            SUMOReal nspeed = cfModel.followSpeed(aVehicle, speed, seen, 0, 0);
+            SUMOReal nspeed = cfModel.stopSpeed(aVehicle, speed, seen);
             if (nspeed < speed) {
                 if (patchSpeed) {
                     speed = MIN2(nspeed, speed);
                     dist = cfModel.brakeGap(speed) + aVehicle->getVehicleType().getMinGap();
                 } else {
-                    // we may not drive with the given velocity - we cannot stop at the junction in time (try again later)
+                    // we may not drive with the given velocity - we cannot stop at the junction in time
+                    const LinkState state = (*link)->getState();
+                    if (state == LINKSTATE_MINOR
+                            || state == LINKSTATE_EQUAL
+                            || state == LINKSTATE_STOP
+                            || state == LINKSTATE_ALLWAY_STOP) {
+                        // no sense in trying later
+                        WRITE_ERROR("Vehicle '" + aVehicle->getID() + "' will not be able to depart using the given velocity (unpriorised junction too close)!");
+                        MSNet::getInstance()->getInsertionControl().descheduleDeparture(aVehicle);
+                    }
                     return false;
                 }
             }
@@ -513,7 +525,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
                     dist = cfModel.brakeGap(speed) + aVehicle->getVehicleType().getMinGap();
                 } else {
                     // we may not drive with the given velocity - we would be too fast on the next lane
-                    WRITE_ERROR("Vehicle '" + aVehicle->getID() + "' will not be able to depart using given velocity!");
+                    WRITE_ERROR("Vehicle '" + aVehicle->getID() + "' will not be able to depart using the given velocity (slow lane ahead)!");
                     MSNet::getInstance()->getInsertionControl().descheduleDeparture(aVehicle);
                     return false;
                 }
@@ -523,7 +535,7 @@ MSLane::isInsertionSuccess(MSVehicle* aVehicle,
             // may already be comitted to blocking the link and unable to stop
             const SUMOTime arrivalTime = MSNet::getInstance()->getCurrentTimeStep() + TIME2STEPS(seen / speed);
             const SUMOTime leaveTime = arrivalTime + TIME2STEPS((*link)->getLength() * speed);
-            if ((*link)->hasApproachingFoe(arrivalTime, leaveTime, speed)) {
+            if ((*link)->hasApproachingFoe(arrivalTime, leaveTime, speed, cfModel.getMaxDecel())) {
                 SUMOReal nspeed = cfModel.followSpeed(aVehicle, speed, seen, 0, 0);
                 if (nspeed < speed) {
                     if (patchSpeed) {
@@ -647,26 +659,18 @@ MSLane::getLastVehicleInformation() const {
 
 
 // ------  ------
-bool
+void
 MSLane::planMovements(SUMOTime t) {
-    myLeftVehLength = myVehicleLengthSum;
     assert(myVehicles.size() != 0);
-    std::vector<MSVehicle*> collisions;
-    VehCont::iterator lastBeforeEnd = myVehicles.end() - 1;
-    VehCont::iterator veh;
-    // Move all next vehicles beside the first
-    for (veh = myVehicles.begin(); veh != lastBeforeEnd; ++veh) {
-        myLeftVehLength -= (*veh)->getVehicleType().getLengthWithGap();
-        VehCont::const_iterator pred(veh + 1);
-        assert((*veh)->getLane() == this);
-        (*veh)->planMove(t, *pred, 0, myLeftVehLength);
+    SUMOReal cumulatedVehLength = 0.;
+    const MSVehicle* pred = getPartialOccupator();
+    for (VehCont::reverse_iterator veh = myVehicles.rbegin(); veh != myVehicles.rend(); ++veh) {
+        if ((*veh)->getLane() == this) {
+            (*veh)->planMove(t, pred, cumulatedVehLength);
+        }
+        pred = *veh;
+        cumulatedVehLength += pred->getVehicleType().getLengthWithGap();
     }
-    myLeftVehLength -= (*veh)->getVehicleType().getLengthWithGap();
-    assert((*veh)->getLane() == this);
-    (*veh)->planMove(t, 0, 0, myLeftVehLength);
-    assert((*veh)->getPositionOnLane() <= myLength);
-    assert((*veh)->getLane() == this);
-    return myVehicles.size() == 0;
 }
 
 
@@ -693,16 +697,28 @@ MSLane::detectCollisions(SUMOTime timestep, int stage) {
             const MSCFModel_CC *model = dynamic_cast<const MSCFModel_CC *>(&vehV->getCarFollowModel());
             assert(model);
             model->setCrashed(vehV, true);
-            WRITE_WARNING("Teleporting vehicle '" + vehV->getID() + "'; collision with '"
-                          + (*pred)->getID() + "', lane='" + getID() + "', gap=" + toString(gap)
-                          + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + " stage=" + toString(stage) + ".");
-            MSNet::getInstance()->getVehicleControl().registerCollision();
-            myVehicleLengthSum -= vehV->getVehicleType().getLengthWithGap();
-            MSVehicleTransfer::getInstance()->addVeh(timestep, vehV);
-            veh = myVehicles.erase(veh); // remove current vehicle
-            lastVeh = myVehicles.end() - 1;
-            if (veh == myVehicles.end()) {
-                break;
+            if (vehV->getLane() == this) {
+                WRITE_WARNING("Teleporting vehicle '" + vehV->getID() + "'; collision with '"
+                              + (*pred)->getID() + "', lane='" + getID() + "', gap=" + toString(gap)
+                              + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + " stage=" + toString(stage) + ".");
+                MSNet::getInstance()->getVehicleControl().registerCollision();
+                myVehicleLengthSum -= vehV->getVehicleType().getLengthWithGap();
+                MSVehicleTransfer::getInstance()->addVeh(timestep, vehV);
+                veh = myVehicles.erase(veh); // remove current vehicle
+                lastVeh = myVehicles.end() - 1;
+                if (veh == myVehicles.end()) {
+                    break;
+                }
+            } else {
+                WRITE_WARNING("Shadow of vehicle '" + vehV->getID() + "'; collision with '"
+                              + (*pred)->getID() + "', lane='" + getID() + "', gap=" + toString(gap)
+                              + ", time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + " stage=" + toString(stage) + ".");
+                veh = myVehicles.erase(veh); // remove current vehicle
+                lastVeh = myVehicles.end() - 1;
+                vehV->getLaneChangeModel().endLaneChangeManeuver();
+                if (veh == myVehicles.end()) {
+                    break;
+                }
             }
         } else {
             ++veh;
@@ -713,12 +729,17 @@ MSLane::detectCollisions(SUMOTime timestep, int stage) {
 
 bool
 MSLane::executeMovements(SUMOTime t, std::vector<MSLane*>& into) {
-    // move critical vehicles
     for (VehCont::iterator i = myVehicles.begin(); i != myVehicles.end();) {
         MSVehicle* veh = *i;
+        if (veh->getLane() != this || veh->getLaneChangeModel().alreadyMoved()) {
+            // this is the shadow during a continuous lane change
+            ++i;
+            continue;
+        }
+        // length is needed later when the vehicle may not exist anymore
+        const SUMOReal length = veh->getVehicleType().getLengthWithGap();
         bool moved = veh->executeMove();
         MSLane* target = veh->getLane();
-        SUMOReal length = veh->getVehicleType().getLengthWithGap();
 #ifndef NO_TRACI
         bool vtdControlled = veh->hasInfluencer() && veh->getInfluencer().isVTDControlled();
         if (veh->hasArrived() && !vtdControlled) {
@@ -734,12 +755,19 @@ MSLane::executeMovements(SUMOTime t, std::vector<MSLane*>& into) {
                 veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_VAPORIZED);
                 MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(veh);
             } else {
-                // vehicle has entered a new lane
+                // vehicle has entered a new lane (leaveLane was already called in MSVehicle::executeMove)
                 target->myVehBuffer.push_back(veh);
                 SUMOReal pspeed = veh->getSpeed();
                 SUMOReal oldPos = veh->getPositionOnLane() - SPEED2DIST(veh->getSpeed());
                 veh->workOnMoveReminders(oldPos, veh->getPositionOnLane(), pspeed);
                 into.push_back(target);
+                if (veh->getLaneChangeModel().isChangingLanes()) {
+                    MSLane* shadowLane = veh->getLaneChangeModel().getShadowLane();
+                    if (shadowLane != 0) {
+                        into.push_back(shadowLane);
+                        shadowLane->myVehBuffer.push_back(veh);
+                    }
+                }
             }
         } else if (veh->isParking()) {
             // vehicle started to park
@@ -747,7 +775,8 @@ MSLane::executeMovements(SUMOTime t, std::vector<MSLane*>& into) {
             MSVehicleTransfer::getInstance()->addVeh(t, veh);
         } else if (veh->getPositionOnLane() > getLength()) {
             // for any reasons the vehicle is beyond its lane... error
-            WRITE_WARNING("Teleporting vehicle '" + veh->getID() + "'; beyond lane (2), targetLane='" + getID() + "', time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
+            WRITE_WARNING("Teleporting vehicle '" + veh->getID() + "'; beyond lane (2), targetLane='" + getID() + "', time=" +
+                          time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
             MSNet::getInstance()->getVehicleControl().registerTeleport();
             MSVehicleTransfer::getInstance()->addVeh(t, veh);
         } else {
@@ -758,15 +787,20 @@ MSLane::executeMovements(SUMOTime t, std::vector<MSLane*>& into) {
         i = myVehicles.erase(i);
     }
     if (myVehicles.size() > 0) {
-        if (MSGlobals::gTimeToGridlock > 0
-                && !(*(myVehicles.end() - 1))->isStopped()
-                && (*(myVehicles.end() - 1))->getWaitingTime() > MSGlobals::gTimeToGridlock) {
-            MSVehicle* veh = *(myVehicles.end() - 1);
-            myVehicleLengthSum -= veh->getVehicleType().getLengthWithGap();
-            myVehicles.erase(myVehicles.end() - 1);
-            WRITE_WARNING("Teleporting vehicle '" + veh->getID() + "'; waited too long, lane='" + getID() + "', time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
-            MSNet::getInstance()->getVehicleControl().registerTeleport();
-            MSVehicleTransfer::getInstance()->addVeh(t, veh);
+        if (MSGlobals::gTimeToGridlock > 0 || MSGlobals::gTimeToGridlockHighways > 0) {
+            MSVehicle* last = myVehicles.back();
+            bool r1 = MSGlobals::gTimeToGridlock > 0 && !last->isStopped() && last->getWaitingTime() > MSGlobals::gTimeToGridlock;
+            bool r2 = MSGlobals::gTimeToGridlockHighways > 0 && !last->isStopped() && last->getWaitingTime() > MSGlobals::gTimeToGridlockHighways && last->getLane()->getSpeedLimit() > 69. / 3.6 && !last->getLane()->appropriate(last);
+            if (r1 || r2) {
+                MSVehicle* veh = *(myVehicles.end() - 1);
+                myVehicleLengthSum -= veh->getVehicleType().getLengthWithGap();
+                myVehicles.erase(myVehicles.end() - 1);
+                WRITE_WARNING("Teleporting vehicle '" + veh->getID() + "'; waited too long"
+                              + (r2 ? " on highway" : "")
+                              + ", lane='" + getID() + "', time=" + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
+                MSNet::getInstance()->getVehicleControl().registerTeleport();
+                MSVehicleTransfer::getInstance()->addVeh(t, veh);
+            }
         }
     }
     return myVehicles.size() == 0;
@@ -829,7 +863,7 @@ MSLane::integrateNewVehicle(SUMOTime) {
     sort(myVehBuffer.begin(), myVehBuffer.end(), vehicle_position_sorter());
     for (std::vector<MSVehicle*>::const_iterator i = myVehBuffer.begin(); i != myVehBuffer.end(); ++i) {
         MSVehicle* veh = *i;
-        myVehicles.push_front(veh);
+        myVehicles.insert(myVehicles.begin(), veh);
         myVehicleLengthSum += veh->getVehicleType().getLengthWithGap();
     }
     myVehBuffer.clear();
@@ -924,19 +958,11 @@ MSLane::swapAfterLaneChange(SUMOTime) {
 }
 
 
-
-
-GUILaneWrapper*
-MSLane::buildLaneWrapper(unsigned int) {
-    throw "Only within the gui-version";
-}
-
-
 MSVehicle*
-MSLane::removeVehicle(MSVehicle* remVehicle) {
+MSLane::removeVehicle(MSVehicle* remVehicle, MSMoveReminder::Notification notification) {
     for (MSLane::VehCont::iterator it = myVehicles.begin(); it < myVehicles.end(); it++) {
         if (remVehicle == *it) {
-            remVehicle->leaveLane(MSMoveReminder::NOTIFICATION_ARRIVED);
+            remVehicle->leaveLane(notification);
             myVehicles.erase(it);
             myVehicleLengthSum -= remVehicle->getVehicleType().getLengthWithGap();
             break;
@@ -947,14 +973,8 @@ MSLane::removeVehicle(MSVehicle* remVehicle) {
 
 
 MSLane*
-MSLane::getLeftLane() const {
-    return myEdge->leftLane(this);
-}
-
-
-MSLane*
-MSLane::getRightLane() const {
-    return myEdge->rightLane(this);
+MSLane::getParallelLane(int offset) const {
+    return myEdge->parallelLane(this, offset);
 }
 
 
@@ -1111,10 +1131,18 @@ MSLane::getLeaderOnConsecutive(SUMOReal dist, SUMOReal seen, SUMOReal speed, con
     do {
         // get the next link used
         MSLinkCont::const_iterator link = targetLane->succLinkSec(veh, view, *nextLane, bestLaneConts);
-        if (nextLane->isLinkEnd(link) || !(*link)->opened(arrivalTime, speed, speed, veh.getVehicleType().getLength()) || (*link)->getState() == LINKSTATE_TL_RED) {
+        if (nextLane->isLinkEnd(link) || !(*link)->opened(arrivalTime, speed, speed, veh.getVehicleType().getLength(),
+                veh.getImpatience(), veh.getCarFollowModel().getMaxDecel(), 0) || (*link)->getState() == LINKSTATE_TL_RED) {
             break;
         }
 #ifdef HAVE_INTERNAL_LANES
+        // check for link leaders
+        const MSLink::LinkLeaders linkLeaders = (*link)->getLeaderInfo(seen - veh.getVehicleType().getMinGap());
+        if (linkLeaders.size() > 0) {
+            // XXX if there is more than one link leader we should return the most important
+            // one (gap, decel) but this is hard to know at this point
+            return linkLeaders[0];
+        }
         bool nextInternal = (*link)->getViaLane() != 0;
 #endif
         nextLane = (*link)->getViaLaneOrLane();
@@ -1328,14 +1356,38 @@ MSLane::by_connections_to_sorter::operator()(const MSEdge* const e1, const MSEdg
     const std::vector<MSLane*>* ae2 = e2->allowedLanes(*myEdge);
     SUMOReal s1 = 0;
     if (ae1 != 0 && ae1->size() != 0) {
-        s1 = (SUMOReal) ae1->size() + GeomHelper::getMinAngleDiff((*ae1)[0]->getShape().getBegLine().atan2PositiveAngle(), myLaneDir) / PI / 2.;
+        s1 = (SUMOReal) ae1->size() + GeomHelper::getMinAngleDiff((*ae1)[0]->getShape().getBegLine().atan2PositiveAngle(), myLaneDir) / M_PI / 2.;
     }
     SUMOReal s2 = 0;
     if (ae2 != 0 && ae2->size() != 0) {
-        s2 = (SUMOReal) ae2->size() + GeomHelper::getMinAngleDiff((*ae2)[0]->getShape().getBegLine().atan2PositiveAngle(), myLaneDir) / PI / 2.;
+        s2 = (SUMOReal) ae2->size() + GeomHelper::getMinAngleDiff((*ae2)[0]->getShape().getBegLine().atan2PositiveAngle(), myLaneDir) / M_PI / 2.;
     }
     return s1 < s2;
 }
+
+
+void
+MSLane::saveState(OutputDevice& out) {
+    out.openTag(SUMO_TAG_LANE);
+    out.openTag(SUMO_TAG_VIEWSETTINGS_VEHICLES);
+    out.writeAttr(SUMO_ATTR_VALUE, myVehicles);
+    out.closeTag();
+    out.closeTag();
+}
+
+
+void
+MSLane::loadState(std::vector<std::string>& vehIds, MSVehicleControl& vc) {
+    for (std::vector<std::string>::const_iterator it = vehIds.begin(); it != vehIds.end(); ++it) {
+        MSVehicle* v = dynamic_cast<MSVehicle*>(vc.getVehicle(*it));
+        assert(v != 0);
+        v->getBestLanes(true, this);
+        incorporateVehicle(v, v->getPositionOnLane(), v->getSpeed(), myVehicles.end(),
+                           MSMoveReminder::NOTIFICATION_JUNCTION);
+    }
+}
+
+
 
 /****************************************************************************/
 

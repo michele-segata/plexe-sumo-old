@@ -14,7 +14,7 @@
 ///
 /// TraCI server used to control sumo by a remote TraCI client (e.g., ns2)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -500,7 +500,7 @@ bool
 TraCIServer::commandCloseConnection() {
     myDoCloseConnection = true;
     // write answer
-    writeStatusCmd(CMD_CLOSE, RTYPE_OK, "Goodbye");
+    writeStatusCmd(CMD_CLOSE, RTYPE_OK, "");
     return true;
 }
 
@@ -821,8 +821,8 @@ TraCIServer::collectObjectsInRange(int domain, const PositionVector& shape, SUMO
             for (std::set<std::string>::const_iterator i = tmp.begin(); i != tmp.end(); ++i) {
                 MSLane* l = MSLane::dictionary(*i);
                 if (l != 0) {
-                    const std::deque<MSVehicle*>& vehs = l->getVehiclesSecure();
-                    for (std::deque<MSVehicle*>::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
+                    const MSLane::VehCont& vehs = l->getVehiclesSecure();
+                    for (MSLane::VehCont::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
                         if (shape.distance((*j)->getPosition()) <= range) {
                             into.insert((*j)->getID());
                         }

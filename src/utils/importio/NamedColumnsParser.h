@@ -7,7 +7,7 @@
 ///
 // A parser to retrieve information from a table with known columns
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -127,7 +127,7 @@ public:
      * @exception UnknownElement when the element was not named during the initialisation
      * @exception OutOfBoundsException when the line was too short and did not contain the item */
     std::string get(const std::string& name,
-                    bool prune = false) const throw(UnknownElement, OutOfBoundsException);
+                    bool prune = false) const;
 
 
     /** @brief Returns the information whether the named column is known

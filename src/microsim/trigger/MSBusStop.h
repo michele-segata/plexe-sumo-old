@@ -6,7 +6,7 @@
 ///
 // A lane area vehicles can halt at
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -131,7 +131,7 @@ public:
      *
      * @return The last free position of this bus stop
      */
-    SUMOReal getLastFreePos(SUMOVehicle& forVehicle) const;
+    SUMOReal getLastFreePos(const SUMOVehicle& forVehicle) const;
 
 
     /** @brief Returns the number of persons waiting on this stop

@@ -10,7 +10,7 @@
 // City class that contains all other objects of the city: in particular
 // streets, households, bus lines, work positions and school
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
@@ -115,7 +115,7 @@ AGCity::generateWorkPositions() {
         }
     } catch (const std::bad_alloc& e) {
         std::cout << "Number of work positions at bad_alloc exception: " << workPositionCounter << std::endl;
-        throw(e);
+        throw e;
     }
     //std::cout << "Inner work positions done. " << workPositionCounter << " generated." << std::endl;
 

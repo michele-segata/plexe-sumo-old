@@ -14,7 +14,7 @@
 ///
 /// holds codes used for TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
@@ -33,7 +33,7 @@
 // ****************************************
 // VERSION
 // ****************************************
-#define TRACI_VERSION 5
+#define TRACI_VERSION 6
 
 
 // ****************************************
@@ -47,6 +47,9 @@
 
 // command: stop node
 #define CMD_STOP 0x12
+
+// command: Resume from parking
+#define CMD_RESUME 0x19
 
 // command: set lane
 #define CMD_CHANGELANE 0x13
@@ -260,11 +263,11 @@
 // POSITION REPRESENTATIONS
 // ****************************************
 // Position in geo-coordinates
-#define POSITION_LAT_LON 0x00
+#define POSITION_LON_LAT 0x00
 // 2D cartesian coordinates
 #define POSITION_2D 0x01
 // Position in geo-coordinates with altitude
-#define POSITION_LAT_LON_ALT 0x02
+#define POSITION_LON_LAT_ALT 0x02
 // 3D cartesian coordinates
 #define POSITION_3D 0x03
 // Position on road map
@@ -557,7 +560,9 @@
 // move vehicle, VTD version (set: vehicle)
 #define VAR_MOVE_TO_VTD 0xb4
 
-
+// is the vehicle stopped, and if so parked and/or triggered?
+// value = stopped + 2 * parking + 4 * triggered
+#define VAR_STOPSTATE 0xb5
 
 // current CO2 emission of a node (get: vehicle, lane, edge)
 #define VAR_CO2EMISSION 0x60

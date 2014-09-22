@@ -8,7 +8,7 @@
 ///
 // The thread that runs the simulation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -93,8 +93,9 @@ GUIRunThread::~GUIRunThread() {
 }
 
 
-void
+bool
 GUIRunThread::init(GUINet* net, SUMOTime start, SUMOTime end) {
+    assert(net != 0);
     // assign new values
     myNet = net;
     mySimStartTime = start;
@@ -103,6 +104,27 @@ GUIRunThread::init(GUINet* net, SUMOTime start, SUMOTime end) {
     MsgHandler::getErrorInstance()->addRetriever(myErrorRetriever);
     MsgHandler::getMessageInstance()->addRetriever(myMessageRetriever);
     MsgHandler::getWarningInstance()->addRetriever(myWarningRetriever);
+    // preload the routes especially for TraCI
+    mySimulationLock.lock();
+    try {
+        net->loadRoutes();
+    } catch (ProcessError& e2) {
+        if (string(e2.what()) != string("Process Error") && std::string(e2.what()) != string("")) {
+            WRITE_ERROR(e2.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        myHalting = true;
+        myOk = false;
+        mySimulationInProgress = false;
+#ifndef _DEBUG
+    } catch (...) {
+        myHalting = true;
+        myOk = false;
+        mySimulationInProgress = false;
+#endif
+    }
+    mySimulationLock.unlock();
+    return myOk;
 }
 
 

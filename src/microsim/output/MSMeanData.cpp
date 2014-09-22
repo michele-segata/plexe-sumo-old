@@ -9,7 +9,7 @@
 ///
 // Data collector for edges/lanes
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -62,7 +62,7 @@
 MSMeanData::MeanDataValues::MeanDataValues(
     MSLane* const lane, const SUMOReal length, const bool doAdd,
     const std::set<std::string>* const vTypes) :
-    MSMoveReminder(lane, doAdd),
+    MSMoveReminder("meandata_" + (lane == 0 ? "NULL" :  lane->getID()), lane, doAdd),
     myLaneLength(length),
     sampleSeconds(0),
     travelledDistance(0),

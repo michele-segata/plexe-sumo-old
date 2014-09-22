@@ -3,11 +3,11 @@
 @author  Daniel Krajzewicz
 @author  Michael Behrisch
 @date    2010-02-18
-@version $Id: poi.py 13348 2013-02-14 11:30:39Z mknocke $
+@version $Id$
 
 Library for reading and storing PoIs.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 Copyright (C) 2010-2012 DLR (http://www.dlr.de/) and contributors
 All rights reserved
 """

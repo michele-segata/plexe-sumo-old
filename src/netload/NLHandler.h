@@ -9,7 +9,7 @@
 ///
 // The XML-Handler for network loading
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -92,6 +92,9 @@ public:
     /// @brief Destructor
     virtual ~NLHandler();
 
+    bool haveSeenInternalEdge() const {
+        return myHaveSeenInternalEdge;
+    }
 
 protected:
     /// @name inherited from GenericSAXHandler
@@ -212,11 +215,6 @@ private:
 
     void parseLanes(const std::string& junctionID, const std::string& def, std::vector<MSLane*>& into, bool& ok);
 
-#ifdef _MESSAGES
-    /// adds a message emitter
-    void addMsgEmitter(const SUMOSAXAttributes& attrs);
-#endif
-
     /// adds a connection
     void addConnection(const SUMOSAXAttributes& attrs);
 
@@ -281,8 +279,6 @@ protected:
     /// @brief The junction builder to use
     NLJunctionControlBuilder& myJunctionControlBuilder;
 
-
-
     /// The id of the current district
     std::string myCurrentDistrictID;
 
@@ -303,6 +299,10 @@ protected:
     bool myHaveWarnedAboutDeprecatedLanes;
 
     Parameterised* myLastParameterised;
+
+    /// @brief whether the loaded network contains internal lanes
+    bool myHaveSeenInternalEdge;
+
 
 private:
     /** invalid copy constructor */

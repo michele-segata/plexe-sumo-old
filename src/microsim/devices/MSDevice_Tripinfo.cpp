@@ -8,7 +8,7 @@
 ///
 // A device which collects info on the vehicle trip
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -72,7 +72,7 @@ MSDevice_Tripinfo::~MSDevice_Tripinfo() {
 bool
 MSDevice_Tripinfo::notifyMove(SUMOVehicle& /*veh*/, SUMOReal /*oldPos*/,
                               SUMOReal /*newPos*/, SUMOReal newSpeed) {
-    if (newSpeed <= 0.1) {
+    if (newSpeed <= SUMO_const_haltingSpeed) {
         myWaitingSteps++;
     }
     return true;
@@ -145,7 +145,6 @@ MSDevice_Tripinfo::generateOutput() const {
        << "\" vaporized=\"" << (myHolder.getEdge() == *(myHolder.getRoute().end() - 1) ? "" : "0")
        << "\"";
 }
-
 
 
 /****************************************************************************/

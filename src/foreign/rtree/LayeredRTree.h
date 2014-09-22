@@ -2,7 +2,7 @@
 /// @file    LayeredRTree.h
 /// @author  Jakob Erdmann
 /// @date    16.10.2012
-/// @version $Id: LayeredRTree.h 12652 2012-09-03 11:11:04Z dkrajzew $
+/// @version $Id$
 ///
 // A wrapper around RT-trees for for efficient storing of SUMO's GL-objects and
 // accessing them ordered by their layer
@@ -12,7 +12,7 @@
 // The search order returns layer 2 first because it must be drawn before layer
 // 1 for alpha blending to work
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //

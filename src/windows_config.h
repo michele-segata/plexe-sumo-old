@@ -10,7 +10,7 @@
 ///
 // The general windows configuration file
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -68,7 +68,7 @@
 
 /* Version number of package */
 #ifndef HAVE_VERSION_H
-#define VERSION_STRING "0.17.1"
+#define VERSION_STRING "0.18.0"
 #endif
 
 /* Define if junction internal lanes should be used. */
@@ -83,5 +83,8 @@
 
 /* define to use nvwa for memory leak checking */
 //#define CHECK_MEMORY_LEAKS 1
+
+/* work around missing snprintf function (WARNING: return value semantics differ) */
+#define snprintf _snprintf
 
 #endif

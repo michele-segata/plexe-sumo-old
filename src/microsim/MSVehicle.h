@@ -14,7 +14,7 @@
 ///
 // Representation of a vehicle in the micro simulation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -41,17 +41,19 @@
 #include <list>
 #include <deque>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include "MSVehicleType.h"
 #include "MSBaseVehicle.h"
+#include "MSLink.h"
+#include "MSLane.h"
 
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
-class MSLane;
-class MSLink;
+class SUMOSAXAttributes;
 class MSMoveReminder;
 class MSLaneChanger;
 class MSCACCLaneChanger;
@@ -64,9 +66,6 @@ class MSEdgeWeightsStorage;
 class OutputDevice;
 class Position;
 class MSDevice_Person;
-#ifdef _MESSAGES
-class MSMessageEmitter;
-#endif
 
 
 // ===========================================================================
@@ -207,22 +206,6 @@ public:
     //@}
 
 
-    /** @brief Returns the gap between pred and this vehicle.
-     *
-     * Assumes both vehicles are on the same or on are on parallel lanes.
-     *
-     * @param[in] pred The leader
-     * @return The gap between this vehicle and the leader (may be <0)
-     */
-    SUMOReal gap2pred(const MSVehicle& pred) const {
-        SUMOReal gap = pred.getPositionOnLane() - pred.getVehicleType().getLength() - getPositionOnLane() - getVehicleType().getMinGap();
-        if (gap < 0 && gap > -1.0e-12) {
-            gap = 0;
-        }
-        return gap;
-    }
-
-
     /** @brief Uses the given values to compute the brutto-gap
      *
      * @param[in] predPos Position of the leader
@@ -270,15 +253,14 @@ public:
      * Afterwards it checks if any DriveProcessItem should be discared to avoid
      * blocking a junction (checkRewindLinkLanes).
      *
-     * Finally the ApproachingVehicleInformation is registed for all links that
+     * Finally the ApproachingVehicleInformation is registered for all links that
      * shall be passed
      *
      * @param[in] t The current timeStep
      * @param[in] pred The leader (may be 0)
-     * @param[in] neigh The neighbor vehicle (may be 0)
      * @param[in] lengthsInFront Sum of vehicle lengths in front of the vehicle
      */
-    void planMove(SUMOTime t, MSVehicle* pred, MSVehicle* neigh, SUMOReal lengthsInFront);
+    void planMove(const SUMOTime t, const MSVehicle* pred, const SUMOReal lengthsInFront);
 
 
     /** @brief Executes planned vehicle movements with regards to right-of-way
@@ -331,11 +313,11 @@ public:
     /** @brief Return current position (x/y, cartesian)
      *
      * If the vehicle's myLane is 0, Position::INVALID.
-     * @todo Recheck myLane usage in this context, think about a proper "invalid" return value
+     * @param[in] offset optional offset in longitudianl direction
      * @return The current position (in cartesian coordinates)
      * @see myLane
      */
-    Position getPosition() const;
+    Position getPosition(SUMOReal offset = 0) const;
 
 
     /** @brief Returns the lane the vehicle is on
@@ -445,9 +427,6 @@ public:
     void leaveLane(const MSMoveReminder::Notification reason);
 
 
-
-
-
     MSAbstractLaneChangeModel& getLaneChangeModel();
     const MSAbstractLaneChangeModel& getLaneChangeModel() const;
 
@@ -506,7 +485,14 @@ public:
      * @todo Describe better
      */
     const std::vector<MSLane*>& getBestLanesContinuation(const MSLane* const l) const;
+
+
+    /// @brief repair errors in bestLanes after changing between internal edges
+    bool fixContinuations();
     /// @}
+
+    /// @brief repair errors in vehicle position after changing between internal edges
+    bool fixPosition();
 
 
     /** @brief Replaces the current vehicle type by the one given
@@ -568,6 +554,8 @@ public:
         bool parking;
         /// @brief Information whether the stop has been reached
         bool reached;
+        /// @brief IDs of persons the vehicle has to wait for until departing
+        std::set<std::string> awaitedPersons;
     };
 
 
@@ -596,6 +584,12 @@ public:
      * @return whether the vehicle is parking
      */
     bool isParking() const;
+
+
+    /** @brief Returns whether the vehicle is on a triggered stop
+     * @return whether the vehicle is on a triggered stop
+     */
+    bool isStoppedTriggered() const;
     /// @}
 
     bool knowsEdgeTest(MSEdge& edge) const;
@@ -683,6 +677,8 @@ public:
      */
     unsigned int getPersonNumber() const;
 
+    /// @brief Returns this vehicles impatience
+    SUMOReal getImpatience() const;
 
     /// @name Access to bool signals
     /// @{
@@ -758,8 +754,6 @@ public:
     /// @}
 
 
-
-
 #ifndef NO_TRACI
     /** @brief Returns the uninfluenced velocity
      *
@@ -777,17 +771,22 @@ public:
      * @param pos		position on the given lane at wich to stop
      * @param radius	the vehicle will stop if it is within the range [pos-radius, pos+radius]
      * @param duration	after waiting for the time period duration, the vehicle will
-     *					continue until the stop is reached again
+     * @param parking   a flag indicating whether the traci stop is used for parking or not
+     * @param triggered a flag indicating whether the traci stop is triggered or not
      */
-    bool addTraciStop(MSLane* lane, SUMOReal pos, SUMOReal radius, SUMOTime duration);
+    bool addTraciStop(MSLane* lane, SUMOReal pos, SUMOReal radius, SUMOTime duration, bool parking, bool triggered);
 
+    /**
+    * returns the next imminent stop in the stop queue
+    * @return the upcoming stop
+    */
+    Stop& getNextStop();
 
-#ifdef HAVE_INTERNAL_LANES
-    /// @brief return whether this vehicle is currently following the given veh
-    bool hasLinkLeader(MSVehicle* veh) const {
-        return myLinkLeaders.count(veh->getID()) > 0;
-    }
-#endif
+    /**
+    * resumes a vehicle from stopping
+    * @return true on success, the resuming fails if the vehicle wasn't parking in the first place
+    */
+    bool resumeFromStopping();
 
 
     /** @class Influencer
@@ -923,10 +922,20 @@ public:
 
 #endif
 
+    /// @name state io
+    //@{
+
+    /// Saves the states of a vehicle
+    void saveState(OutputDevice& out);
+
+    /** @brief Loads the state of this vehicle from the given description
+     */
+    void loadState(const SUMOSAXAttributes& attrs, const SUMOTime offset);
+    //@}
+
 protected:
 
-    void checkRewindLinkLanes(SUMOReal lengthsInFront);
-    SUMOReal getSpaceTillLastStanding(MSLane* l, bool& foundStopped);
+    SUMOReal getSpaceTillLastStanding(const MSLane* l, bool& foundStopped) const;
 
     /// @name Interaction with move reminders
     ///@{
@@ -954,18 +963,8 @@ protected:
     void setBlinkerInformation();
 
 
-    /// @brief information how long ago the vehicle has performed a lane-change
-    SUMOTime myLastLaneChangeOffset;
-
     /// @brief The time the vehicle waits (is not faster than 0.1m/s) in seconds
     SUMOTime myWaitingTime;
-
-#ifdef _MESSAGES
-    /// The message emitters
-    MSMessageEmitter* myLCMsgEmitter;
-    MSMessageEmitter* myBMsgEmitter;
-    MSMessageEmitter* myHBMsgEmitter;
-#endif
 
     /// @brief This Vehicles driving state (pos and speed)
     State myState;
@@ -1011,21 +1010,41 @@ protected:
         bool mySetRequest;
         SUMOTime myArrivalTime;
         SUMOReal myArrivalSpeed;
+        SUMOTime myArrivalTimeBraking;
+        SUMOReal myArrivalSpeedBraking;
         SUMOReal myDistance;
         SUMOReal accelV;
+        bool hadVehicle;
+        SUMOReal availableSpace;
+
         DriveProcessItem(MSLink* link, SUMOReal vPass, SUMOReal vWait, bool setRequest,
-                         SUMOTime arrivalTime, SUMOReal arrivalSpeed, SUMOReal distance) :
+                         SUMOTime arrivalTime, SUMOReal arrivalSpeed,
+                         SUMOTime arrivalTimeBraking, SUMOReal arrivalSpeedBraking,
+                         SUMOReal distance,
+                         SUMOReal leaveSpeed = -1.) :
             myLink(link), myVLinkPass(vPass), myVLinkWait(vWait), mySetRequest(setRequest),
-            myArrivalTime(arrivalTime), myArrivalSpeed(arrivalSpeed), myDistance(distance),
-            accelV(-1) { };
-        void adaptLeaveSpeed(SUMOReal v) {
+            myArrivalTime(arrivalTime), myArrivalSpeed(arrivalSpeed),
+            myArrivalTimeBraking(arrivalTimeBraking), myArrivalSpeedBraking(arrivalSpeedBraking),
+            myDistance(distance),
+            accelV(leaveSpeed), hadVehicle(false), availableSpace(-1.) { };
+
+        /// @brief constructor if the link shall not be passed
+        DriveProcessItem(SUMOReal vWait, SUMOReal distance) :
+            myLink(0), myVLinkPass(vWait), myVLinkWait(vWait), mySetRequest(false),
+            myArrivalTime(0), myArrivalSpeed(0),
+            myArrivalTimeBraking(0), myArrivalSpeedBraking(0),
+            myDistance(distance),
+            accelV(-1), hadVehicle(false), availableSpace(-1.) { };
+
+
+        inline void adaptLeaveSpeed(const SUMOReal v) {
             if (accelV < 0) {
                 accelV = v;
             } else {
                 accelV = MIN2(accelV, v);
             }
         }
-        SUMOReal getLeaveSpeed() const {
+        inline SUMOReal getLeaveSpeed() const {
             return accelV < 0 ? myVLinkPass : accelV;
         }
     };
@@ -1035,14 +1054,29 @@ protected:
     /// Container for used Links/visited Lanes during lookForward.
     DriveItemVector myLFLinkLanes;
 
+    void planMoveInternal(const SUMOTime t, const MSVehicle* pred, DriveItemVector& lfLinks) const;
+    void checkRewindLinkLanes(const SUMOReal lengthsInFront, DriveItemVector& lfLinks) const;
+
     /// @brief estimate leaving speed when accelerating across a link
-    SUMOReal estimateLeaveSpeed(MSLink* link, SUMOReal vLinkPass);
+    inline SUMOReal estimateLeaveSpeed(const MSLink* const link, const SUMOReal vLinkPass) const {
+        // estimate leave speed for passing time computation
+        // l=linkLength, a=accel, t=continuousTime, v=vLeave
+        // l=v*t + 0.5*a*t^2, solve for t and multiply with a, then add v
+        return MIN2(link->getViaLaneOrLane()->getVehicleMaxSpeed(this),
+                    estimateSpeedAfterDistance(link->getLength(), vLinkPass, getVehicleType().getCarFollowModel().getMaxAccel()));
+    }
 
     /* @brief estimate speed while accelerating for the given distance
      * @param[in] dist The distance during which accelerating takes place
      * @param[in] v The initial speed
+     * @param[in] accel The acceleration
      */
-    SUMOReal estimateSpeedAfterDistance(SUMOReal dist, SUMOReal v);
+    inline SUMOReal estimateSpeedAfterDistance(const SUMOReal dist, const SUMOReal v, const SUMOReal accel) const {
+        // dist=v*t + 0.5*accel*t^2, solve for t and multiply with accel, then add v
+        return MIN2(getVehicleType().getMaxSpeed(),
+                    (SUMOReal)sqrt(2 * dist * accel + v * v));
+    }
+
 
     /* @brief estimate speed while accelerating for the given distance
      * @param[in] leaderInfo The leading vehicle and the (virtual) distance to it
@@ -1052,7 +1086,14 @@ protected:
      * @param[in,out] the safe velocity for driving
      * @param[in,out] the safe velocity for arriving at the next link
      */
-    void adaptToLeader(std::pair<MSVehicle*, SUMOReal> leaderInfo, SUMOReal seen, int lastLink, MSLane* lane, SUMOReal& v, SUMOReal& vLinkPass);
+    void adaptToLeader(const std::pair<const MSVehicle*, SUMOReal> leaderInfo,
+                       const SUMOReal seen, DriveProcessItem* const lastLink,
+                       const MSLane* const lane, SUMOReal& v, SUMOReal& vLinkPass) const;
+
+#ifdef HAVE_INTERNAL_LANES
+    /// @brief ids of vehicles being followed across a link (for resolving priority)
+    mutable std::set<std::string> myLinkLeaders;
+#endif
 
 private:
     /* @brief The vehicle's knowledge about edge efforts/travel times; @see MSEdgeWeightsStorage
@@ -1068,10 +1109,8 @@ private:
 #endif
 
 #ifdef HAVE_INTERNAL_LANES
-    /// @brief ids of vehicles being followed across a link (for resolving priority)
-    std::set<std::string> myLinkLeaders;
     /// @brief map from the links to link leader ids
-    std::map<const MSLink*, std::string> myLeaderForLink;
+    mutable std::map<const MSLink*, std::string> myLeaderForLink;
 #endif
 
 private:

@@ -9,7 +9,7 @@
 ///
 // A lane change model developed by D. Krajzewicz between 2004 and 2010
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -34,6 +34,7 @@
 #include <iostream>
 #include <utils/common/RandHelper.h>
 #include "MSEdge.h"
+#include "MSLane.h"
 #include "MSLCM_DK2004.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -121,7 +122,7 @@ MSLCM_DK2004::wantsChangeToRight(MSAbstractLaneChangeModel::MSLCMessager& msgPas
             (leader.first->getLaneChangeModel().getOwnState()&LCA_AMBLOCKINGFOLLOWER_DONTBRAKE) != 0) {
 
         myOwnState &= (0xffffffff - LCA_AMBLOCKINGFOLLOWER_DONTBRAKE);
-        if (myVehicle.getSpeed() > 0.1) {
+        if (myVehicle.getSpeed() > SUMO_const_haltingSpeed) {
             myOwnState |= LCA_AMBACKBLOCKER;
         } else {
             ret |= LCA_AMBACKBLOCKER;
@@ -135,7 +136,7 @@ MSLCM_DK2004::wantsChangeToRight(MSAbstractLaneChangeModel::MSLCMessager& msgPas
         SUMOReal gap = (*lastBlocked)->getPositionOnLane() - (*lastBlocked)->getVehicleType().getLength() - myVehicle.getPositionOnLane() - myVehicle.getVehicleType().getMinGap();
         if (gap > 0.1) {
             if (myVehicle.getSpeed() < ACCEL2SPEED(myVehicle.getCarFollowModel().getMaxDecel())) {
-                if ((*lastBlocked)->getSpeed() < 0.1) {
+                if ((*lastBlocked)->getSpeed() < SUMO_const_haltingSpeed) {
                     ret |= LCA_AMBACKBLOCKER_STANDING;
                 } else {
                     ret |= LCA_AMBACKBLOCKER;
@@ -163,6 +164,8 @@ MSLCM_DK2004::wantsChangeToRight(MSAbstractLaneChangeModel::MSLCMessager& msgPas
 
     SUMOReal tdist = currentDist - myVehicle.getPositionOnLane() - best.occupation * (SUMOReal) JAM_FACTOR2;
 
+    // assert(best.length > curr.length);
+    // XXX if (curr.length != best.length) && ... 
     if (fabs(best.length - curr.length) > MIN2((SUMOReal) .1, best.lane->getLength()) && bestLaneOffset < 0 && currentDistDisallows(tdist/*currentDist*/, bestLaneOffset, rv)) {
         informBlocker(msgPass, blocked, LCA_MRIGHT, neighLead, neighFollow);
         if (neighLead.second > 0 && neighLead.second > leader.second) {
@@ -338,7 +341,7 @@ MSLCM_DK2004::wantsChangeToLeft(MSAbstractLaneChangeModel::MSLCMessager& msgPass
             (leader.first->getLaneChangeModel().getOwnState()&LCA_AMBLOCKINGFOLLOWER_DONTBRAKE) != 0) {
 
         myOwnState &= (0xffffffff - LCA_AMBLOCKINGFOLLOWER_DONTBRAKE);
-        if (myVehicle.getSpeed() > 0.1) {
+        if (myVehicle.getSpeed() > SUMO_const_haltingSpeed) {
             myOwnState |= LCA_AMBACKBLOCKER;
         } else {
             ret |= LCA_AMBACKBLOCKER;
@@ -352,7 +355,7 @@ MSLCM_DK2004::wantsChangeToLeft(MSAbstractLaneChangeModel::MSLCMessager& msgPass
         SUMOReal gap = (*lastBlocked)->getPositionOnLane() - (*lastBlocked)->getVehicleType().getLength() - myVehicle.getPositionOnLane() - myVehicle.getVehicleType().getMinGap();
         if (gap > 0.1) {
             if (myVehicle.getSpeed() < ACCEL2SPEED(myVehicle.getCarFollowModel().getMaxDecel())) {
-                if ((*lastBlocked)->getSpeed() < 0.1) {
+                if ((*lastBlocked)->getSpeed() < SUMO_const_haltingSpeed) {
                     ret |= LCA_AMBACKBLOCKER_STANDING;
                 } else {
                     ret |= LCA_AMBACKBLOCKER;
@@ -520,7 +523,7 @@ MSLCM_DK2004::patchSpeed(const SUMOReal min, const SUMOReal wanted, const SUMORe
         SUMOReal space = myLeftSpace - myLeadingBlockerLength - MAGIC_offset - myVehicle.getVehicleType().getMinGap();
         if (space > 0) {
             // compute speed for decelerating towards a place which allows the blocking leader to merge in in front
-            SUMOReal safe = cfModel.stopSpeed(&myVehicle, space);
+            SUMOReal safe = cfModel.stopSpeed(&myVehicle, myVehicle.getSpeed(), space);
             // if we are approaching this place
             if (safe < wanted) {
                 // return this speed as the speed to use
@@ -609,8 +612,9 @@ MSLCM_DK2004::inform(void* info, MSVehicle* /*sender*/) {
 
 void
 MSLCM_DK2004::changed() {
-    myChangeProbability = 0;
     myOwnState = 0;
+    myLastLaneChangeOffset = 0;
+    myChangeProbability = 0;
     myLeadingBlockerLength = 0;
     myLeftSpace = 0;
     myVSafes.clear();

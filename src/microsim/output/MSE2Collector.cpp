@@ -10,7 +10,7 @@
 ///
 // An areal (along a single lane) detector
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -51,16 +51,17 @@ MSE2Collector::MSE2Collector(const std::string& id, DetectorUsage usage,
                              MSLane* const lane, SUMOReal startPos, SUMOReal detLength,
                              SUMOTime haltingTimeThreshold,
                              SUMOReal haltingSpeedThreshold,
-                             SUMOReal jamDistThreshold)
-    : MSMoveReminder(lane), MSDetectorFileOutput(id),
-      myJamHaltingSpeedThreshold(haltingSpeedThreshold),
-      myJamHaltingTimeThreshold(haltingTimeThreshold),
-      myJamDistanceThreshold(jamDistThreshold),
-      myStartPos(startPos), myEndPos(startPos + detLength),
-      myUsage(usage),
-      myCurrentOccupancy(0), myCurrentMeanSpeed(-1), myCurrentJamNo(0),
-      myCurrentMaxJamLengthInMeters(0), myCurrentMaxJamLengthInVehicles(0),
-      myCurrentJamLengthInMeters(0), myCurrentJamLengthInVehicles(0), myCurrentStartedHalts(0)
+                             SUMOReal jamDistThreshold) :
+    MSMoveReminder(id, lane),
+    MSDetectorFileOutput(id),
+    myJamHaltingSpeedThreshold(haltingSpeedThreshold),
+    myJamHaltingTimeThreshold(haltingTimeThreshold),
+    myJamDistanceThreshold(jamDistThreshold),
+    myStartPos(startPos), myEndPos(startPos + detLength),
+    myUsage(usage),
+    myCurrentOccupancy(0), myCurrentMeanSpeed(-1), myCurrentJamNo(0),
+    myCurrentMaxJamLengthInMeters(0), myCurrentMaxJamLengthInVehicles(0),
+    myCurrentJamLengthInMeters(0), myCurrentJamLengthInVehicles(0), myCurrentStartedHalts(0)
 
 {
     assert(myLane != 0);

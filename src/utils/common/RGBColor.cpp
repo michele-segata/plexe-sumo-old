@@ -9,7 +9,7 @@
 ///
 // A RGB-color definition
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -151,7 +151,7 @@ RGBColor::changedBrightness(const char change) {
 }
 
 RGBColor
-RGBColor::parseColor(std::string coldef) throw(EmptyData, NumberFormatException) {
+RGBColor::parseColor(std::string coldef) {
     std::transform(coldef.begin(), coldef.end(), coldef.begin(), tolower);
     if (coldef == "red") {
         return RED;

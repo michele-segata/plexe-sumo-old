@@ -11,7 +11,7 @@
 ///
 // The XML-Handler for network loading
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -47,7 +47,6 @@
 #include <utils/geom/GeomConvHelper.h>
 #include <microsim/MSGlobals.h>
 #include <microsim/MSLane.h>
-#include <microsim/MSInternalLane.h>
 #include <microsim/MSBitSetLogic.h>
 #include <microsim/MSJunctionLogic.h>
 #include <microsim/traffic_lights/MSTrafficLightLogic.h>
@@ -78,7 +77,9 @@ NLHandler::NLHandler(const std::string& file, MSNet& net,
       myDetectorBuilder(detBuilder), myTriggerBuilder(triggerBuilder),
       myEdgeControlBuilder(edgeBuilder), myJunctionControlBuilder(junctionBuilder),
       myAmInTLLogicMode(false), myCurrentIsBroken(false),
-      myHaveWarnedAboutDeprecatedLanes(false), myLastParameterised(0) {}
+      myHaveWarnedAboutDeprecatedLanes(false),
+      myLastParameterised(0),
+      myHaveSeenInternalEdge(false) {}
 
 
 NLHandler::~NLHandler() {}
@@ -126,11 +127,6 @@ NLHandler::myStartElement(int element,
             case SUMO_TAG_WAUT_JUNCTION:
                 addWAUTJunction(attrs);
                 break;
-#ifdef _MESSAGES
-            case SUMO_TAG_MSG_EMITTER:
-                addMsgEmitter(attrs);
-                break;
-#endif
             case SUMO_TAG_E1DETECTOR:
             case SUMO_TAG_INDUCTION_LOOP:
                 addE1Detector(attrs);
@@ -265,6 +261,7 @@ NLHandler::beginEdgeParsing(const SUMOSAXAttributes& attrs) {
     }
     // omit internal edges if not wished
     if (!MSGlobals::gUsingInternalLanes && id[0] == ':') {
+        myHaveSeenInternalEdge = true;
         myCurrentIsInternalToSkip = true;
         return;
     }
@@ -565,7 +562,7 @@ NLHandler::addPOI(const SUMOSAXAttributes& attrs) {
             if (lanePos < 0) {
                 lanePos = lane->getLength() + lanePos;
             }
-            pos = lane->getShape().positionAtOffset(lanePos);
+            pos = lane->geometryPositionAtOffset(lanePos);
         } else {
             // try computing x,y from lon,lat
             if (lat == INVALID_POSITION || lon == INVALID_POSITION) {
@@ -698,29 +695,6 @@ NLHandler::addPhase(const SUMOSAXAttributes& attrs) {
                                SUMO_ATTR_MAXDURATION, myJunctionControlBuilder.getActiveKey().c_str(), ok, duration);
     myJunctionControlBuilder.addPhase(duration, state, minDuration, maxDuration);
 }
-
-
-#ifdef _MESSAGES
-void
-NLHandler::addMsgEmitter(const SUMOSAXAttributes& attrs) {
-    bool ok = true;
-    std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
-    std::string file = attrs.getOpt<std::string>(SUMO_ATTR_FILE, 0, ok, "");
-    // if no file given, use stdout
-    if (file == "") {
-        file = "-";
-    }
-    SUMOTime step = attrs.getOptSUMOTimeReporting(SUMO_ATTR_STEP, id.c_str(), ok, 1);
-    bool reverse = attrs.getOpt<bool>(SUMO_ATTR_REVERSE, 0, ok, false);
-    bool table = attrs.getOpt<bool>(SUMO_ATTR_TABLE, 0, ok, false);
-    bool xycoord = attrs.getOpt<bool>(SUMO_ATTR_XY, 0, ok, false);
-    std::string whatemit = attrs.get<std::string>(SUMO_ATTR_EVENTS, 0, ok);
-    if (!ok) {
-        return;
-    }
-    myNet.createMsgEmitter(id, file, getFileName(), whatemit, reverse, table, xycoord, step);
-}
-#endif
 
 
 void

@@ -7,7 +7,7 @@
 ///
 // Calibrates the flow on an edge by removing an inserting vehicles
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -96,7 +96,7 @@ protected:
     class VehicleRemover : public MSMoveReminder {
     public:
         VehicleRemover(MSLane* lane, int laneIndex, MSCalibrator* parent) :
-            MSMoveReminder(lane, true), myLaneIndex(laneIndex), myParent(parent) {}
+            MSMoveReminder(parent->getID(), lane, true), myLaneIndex(laneIndex), myParent(parent) {}
 
         /// @name inherited from MSMoveReminder
         //@{
@@ -118,14 +118,20 @@ protected:
         }
 
     private:
-        MSCalibrator* myParent;
         int myLaneIndex;
+        MSCalibrator* myParent;
     };
     friend class VehicleRemover;
 
-private:
+    // @return whether the current state is active (GUI)
+    bool isActive() const {
+        return myAmActive;
+    }
+
+protected:
 
     struct AspiredState {
+        AspiredState() : begin(-1), end(-1), q(-1.), v(-1.), vehicleParameter(0) {}
         SUMOTime begin;
         SUMOTime end;
         SUMOReal q;
@@ -143,14 +149,30 @@ private:
 
     inline int passed() const {
         // calibrator measures at start of segment
-        return myEdgeMeanData.nVehEntered + myEdgeMeanData.nVehDeparted - myEdgeMeanData.nVehVaporized;
+        // vehicles drive to the end of an edge by default so they count as passed
+        // but vaporized vehicles do not count
+        // if the calibrator is located on a short edge, the vehicles are
+        // vaporized on the next edge so we cannot rely on myEdgeMeanData.nVehVaporized
+        return myEdgeMeanData.nVehEntered + myEdgeMeanData.nVehDeparted - myClearedInJam - myRemoved;
     }
+
+    /// @brief number of vehicles expected to pass this interval
+    int totalWished() const;
 
     /* @brief returns whether the lane is jammed although it should not be
      * @param[in] lane The lane to check or all for negative values
      */
     bool invalidJam(int laneIndex = -1) const;
 
+    inline int inserted() const {
+        return myInserted;
+    }
+    inline int removed() const {
+        return myRemoved;
+    }
+    inline int clearedInJam() const {
+        return myClearedInJam;
+    }
 
     /* @brief returns the number of vehicles (of the current type) that still
      * fit on the given lane
@@ -164,13 +186,17 @@ private:
     /// @brief aggregate lane values
     void updateMeanData();
 
-    void scheduleRemoval(MSVehicle* veh) {
-        myToRemove.push_back(veh);
+    /** @brief try to schedule the givne vehicle for removal. return true if it
+     * isn't already scheduled */
+    bool scheduleRemoval(MSVehicle* veh) {
+        return myToRemove.insert(veh).second;
     };
 
-private:
+protected:
     /// @brief the edge on which this calibrator lies
-    MSEdge* myEdge;
+    MSEdge* const myEdge;
+    /// @brief the position on the edge where this calibrator lies
+    const SUMOReal myPos;
     /// @brief data collector for the calibrator
     std::vector<MSMeanData_Net::MSLaneMeanDataValues*> myLaneMeanData;
     /// @brief accumlated data for the whole edge
@@ -182,7 +208,7 @@ private:
 
     std::vector<VehicleRemover*> myVehicleRemovers;
 
-    std::vector<MSVehicle*> myToRemove;
+    std::set<MSVehicle*> myToRemove;
 
     /// @brief The device for xml statistics
     OutputDevice* myOutput;
@@ -205,6 +231,9 @@ private:
     SUMOReal myDefaultSpeed;
     /// @brief The default (maximum) speed on the segment
     bool myHaveWarnedAboutClearingJam;
+
+    /// @brief whether the calibrator was active when last checking
+    bool myAmActive;
 
     /* @brief objects which need to live longer than the MSCalibrator
      * instance which created them */

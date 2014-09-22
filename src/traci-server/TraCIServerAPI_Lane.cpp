@@ -9,7 +9,7 @@
 ///
 // APIs for getting/setting lane values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -117,6 +117,7 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 const MSLinkCont& links = lane->getLinkCont();
                 tempContent.writeInt((int) links.size());
                 ++cnt;
+                const SUMOTime currTime = MSNet::getInstance()->getCurrentTimeStep();
                 for (MSLinkCont::const_iterator i = links.begin(); i != links.end(); ++i) {
                     MSLink* link = (*i);
                     // approached non-internal lane (if any)
@@ -137,19 +138,20 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                     ++cnt;
                     // opened
                     tempContent.writeUnsignedByte(TYPE_UBYTE);
-                    tempContent.writeUnsignedByte(link->opened(MSNet::getInstance()->getCurrentTimeStep(), 0, 0, 0.) ? 1 : 0);
+                    const SUMOReal speed = MIN2(lane->getSpeedLimit(), link->getLane()->getSpeedLimit());
+                    tempContent.writeUnsignedByte(link->opened(currTime, speed, speed, DEFAULT_VEH_LENGTH, 0.0, DEFAULT_VEH_DECEL, 0) ? 1 : 0);
                     ++cnt;
                     // approaching foe
                     tempContent.writeUnsignedByte(TYPE_UBYTE);
-                    tempContent.writeUnsignedByte(link->hasApproachingFoe(MSNet::getInstance()->getCurrentTimeStep(), MSNet::getInstance()->getCurrentTimeStep(), 0) ? 1 : 0);
+                    tempContent.writeUnsignedByte(link->hasApproachingFoe(currTime, currTime, 0) ? 1 : 0);
                     ++cnt;
                     // state (not implemented, yet)
                     tempContent.writeUnsignedByte(TYPE_STRING);
-                    tempContent.writeString("");
+                    tempContent.writeString(SUMOXMLDefinitions::LinkStates.getString(link->getState()));
                     ++cnt;
-                    // direction (not implemented, yet)
+                    // direction
                     tempContent.writeUnsignedByte(TYPE_STRING);
-                    tempContent.writeString("");
+                    tempContent.writeString(SUMOXMLDefinitions::LinkDirections.getString(link->getDirection()));
                     ++cnt;
                     // length
                     tempContent.writeUnsignedByte(TYPE_DOUBLE);
@@ -219,8 +221,8 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 break;
             case LAST_STEP_VEHICLE_ID_LIST: {
                 std::vector<std::string> vehIDs;
-                const std::deque<MSVehicle*>& vehs = lane->getVehiclesSecure();
-                for (std::deque<MSVehicle*>::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
+                const MSLane::VehCont& vehs = lane->getVehiclesSecure();
+                for (MSLane::VehCont::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
                     vehIDs.push_back((*j)->getID());
                 }
                 lane->releaseVehicles();
@@ -234,9 +236,9 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 break;
             case LAST_STEP_VEHICLE_HALTING_NUMBER: {
                 int halting = 0;
-                const std::deque<MSVehicle*>& vehs = lane->getVehiclesSecure();
-                for (std::deque<MSVehicle*>::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
-                    if ((*j)->getSpeed() < 0.1) {
+                const MSLane::VehCont& vehs = lane->getVehiclesSecure();
+                for (MSLane::VehCont::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
+                    if ((*j)->getSpeed() < SUMO_const_haltingSpeed) {
                         ++halting;
                     }
                 }
@@ -247,8 +249,8 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             break;
             case LAST_STEP_LENGTH: {
                 SUMOReal lengthSum = 0;
-                const std::deque<MSVehicle*>& vehs = lane->getVehiclesSecure();
-                for (std::deque<MSVehicle*>::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
+                const MSLane::VehCont& vehs = lane->getVehiclesSecure();
+                for (MSLane::VehCont::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
                     lengthSum += (*j)->getVehicleType().getLength();
                 }
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);

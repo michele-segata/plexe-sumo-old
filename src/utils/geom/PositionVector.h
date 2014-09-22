@@ -8,7 +8,7 @@
 ///
 // A list of positions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -228,7 +228,7 @@ public:
 
     void move2side(SUMOReal amount);
 
-    Line lineAt(size_t pos) const;
+    Line lineAt(int pos) const;
 
     Line getBegLine() const;
 

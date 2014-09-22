@@ -6,7 +6,7 @@
 ///
 // A lane area vehicles can halt at
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -81,7 +81,7 @@ MSBusStop::enter(SUMOVehicle* what, SUMOReal beg, SUMOReal end) {
 
 
 SUMOReal
-MSBusStop::getLastFreePos(SUMOVehicle& forVehicle) const {
+MSBusStop::getLastFreePos(const SUMOVehicle& forVehicle) const {
     if (myLastFreePos != myEndPos) {
         return myLastFreePos - forVehicle.getVehicleType().getMinGap();
     }

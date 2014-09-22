@@ -9,7 +9,7 @@
 ///
 // Main for GUISIM
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -74,11 +74,7 @@ main(int argc, char** argv) {
     oc.setApplicationDescription("GUI version of the simulation SUMO.");
     oc.setApplicationName("sumo-gui.exe", "SUMO gui Version " + (std::string)VERSION_STRING);
     int ret = 0;
-#ifndef _DEBUG
     try {
-#else
-    {
-#endif
         // initialise subsystems
         XMLSubSys::init();
         MSFrame::fillOptions();
@@ -99,7 +95,7 @@ main(int argc, char** argv) {
 
         // build the main window
         GUIApplicationWindow* window =
-        new GUIApplicationWindow(&application, "*.sumo.cfg,*.sumocfg");
+            new GUIApplicationWindow(&application, "*.sumo.cfg,*.sumocfg");
         window->dependentBuild(oc.getBool("game"));
         gSchemeStorage.init(&application);
         // Create app
@@ -111,6 +107,12 @@ main(int argc, char** argv) {
         }
         // Run
         ret = application.run();
+    } catch (const ProcessError& e) {
+        if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
+            WRITE_ERROR(e.what());
+        }
+        MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+        ret = 1;
 #ifndef _DEBUG
     } catch (const std::exception& e) {
         if (std::string(e.what()) != std::string("")) {
@@ -128,6 +130,4 @@ main(int argc, char** argv) {
 }
 
 
-
 /****************************************************************************/
-

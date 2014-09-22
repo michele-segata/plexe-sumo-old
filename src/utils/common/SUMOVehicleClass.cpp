@@ -10,7 +10,7 @@
 ///
 // Definitions of SUMO vehicle classes and helper functions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
@@ -72,11 +72,13 @@ StringBijection<SUMOVehicleClass>::Entry sumoVehicleClassStringInitializer[] = {
     {"rail_fast",         SVC_RAIL_FAST},
     {"motorcycle",        SVC_MOTORCYCLE},
     {"bicycle",           SVC_BICYCLE},
-    {"pedestrian",        SVC_PEDESTRIAN}
+    {"pedestrian",        SVC_PEDESTRIAN},
+    {"custom1",           SVC_CUSTOM1},
+    {"custom2",           SVC_CUSTOM2}
 };
 
 StringBijection<SUMOVehicleClass> SumoVehicleClassStrings(
-    sumoVehicleClassStringInitializer, SVC_PEDESTRIAN);
+    sumoVehicleClassStringInitializer, SVC_CUSTOM2);
 
 
 StringBijection<SUMOVehicleShape>::Entry sumoVehicleShapeStringInitializer[] = {

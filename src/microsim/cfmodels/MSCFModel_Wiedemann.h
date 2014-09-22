@@ -7,7 +7,7 @@
 ///
 // The psycho-physical model of Wiedemann
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -30,7 +30,7 @@
 #include <config.h>
 #endif
 
-#include <microsim/MSCFModel.h>
+#include "MSCFModel.h"
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
 #include <microsim/MSVehicleType.h>
@@ -95,7 +95,7 @@ public:
      * @see MSCFModel::ffeS
      * @todo generic Interface, models can call for the values they need
      */
-    SUMOReal stopSpeed(const MSVehicle* const veh, SUMOReal gap) const;
+    SUMOReal stopSpeed(const MSVehicle* const veh, const SUMOReal speed, SUMOReal gap) const;
 
 
     /** @brief Returns the maximum gap at which an interaction between both vehicles occurs

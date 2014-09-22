@@ -12,7 +12,7 @@
 ///
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
@@ -63,10 +63,6 @@ enum SumoXMLTag {
     SUMO_TAG_POLY,
     /** begin/end of the description of a junction */
     SUMO_TAG_JUNCTION,
-#ifdef _MESSAGES
-    /** tag for a message emitter */
-    SUMO_TAG_MSG_EMITTER,
-#endif
     /** an e1 detector */
     SUMO_TAG_E1DETECTOR,
     SUMO_TAG_INDUCTION_LOOP,
@@ -175,6 +171,7 @@ enum SumoXMLTag {
     SUMO_TAG_VIEWSETTINGS_BACKGROUND,
     SUMO_TAG_VIEWSETTINGS_EDGES,
     SUMO_TAG_VIEWSETTINGS_VEHICLES,
+    SUMO_TAG_VIEWSETTINGS_PERSONS,
     SUMO_TAG_VIEWSETTINGS_JUNCTIONS,
     SUMO_TAG_VIEWSETTINGS_ADDITIONALS,
     SUMO_TAG_VIEWSETTINGS_POIS,
@@ -377,22 +374,6 @@ enum SumoXMLAttr {
     SUMO_ATTR_VIA,
     /// a list of node ids, used for controlling joining
     SUMO_ATTR_NODES,
-#ifdef _MESSAGES
-    // Attributes for message emitter
-    /// what events to emit
-    SUMO_ATTR_EVENTS,
-    /// reversed order?
-    SUMO_ATTR_REVERSE,
-    /// table output?
-    SUMO_ATTR_TABLE,
-    /// xy coordinates?
-    SUMO_ATTR_XY,
-    /// Steps (for heartbeat)
-    SUMO_ATTR_STEP,
-    // Attribute for detectors
-    /// What message to emit?
-    SUMO_ATTR_MSG,
-#endif
     // Attributes for actuated traffic lights:
     /// minimum duration of a phase
     SUMO_ATTR_MINDURATION,
@@ -438,10 +419,12 @@ enum SumoXMLAttr {
     SUMO_ATTR_IMGFILE,
     SUMO_ATTR_ANGLE,
     SUMO_ATTR_EMISSIONCLASS,
+    SUMO_ATTR_IMPATIENCE,
     SUMO_ATTR_STARTPOS,
     SUMO_ATTR_ENDPOS,
     SUMO_ATTR_TRIGGERED,
     SUMO_ATTR_PARKING,
+    SUMO_ATTR_EXPECTED,
     SUMO_ATTR_INDEX,
 
     SUMO_ATTR_ENTERING,
@@ -570,8 +553,11 @@ enum SumoXMLAttr {
 enum SumoXMLNodeType {
     NODETYPE_UNKNOWN, // terminator
     NODETYPE_TRAFFIC_LIGHT,
-    NODETYPE_PRIORITY_JUNCTION,
+    NODETYPE_TRAFFIC_LIGHT_NOJUNCTION, // junction controlled only by traffic light but without other prohibitions
+    NODETYPE_PRIORITY,
+    NODETYPE_PRIORITY_STOP, // like priority but all minor links have stop signs
     NODETYPE_RIGHT_BEFORE_LEFT,
+    NODETYPE_ALLWAY_STOP,
     NODETYPE_DISTRICT,
     NODETYPE_NOJUNCTION,
     NODETYPE_INTERNAL,
@@ -641,6 +627,10 @@ enum LinkState {
     LINKSTATE_MINOR = 'm',
     /// @brief This is an uncontrolled, right-before-left link
     LINKSTATE_EQUAL = '=',
+    /// @brief This is an uncontrolled, minor link, has to stop
+    LINKSTATE_STOP = 's',
+    /// @brief This is an uncontrolled, all-way stop link.
+    LINKSTATE_ALLWAY_STOP = 'w',
     /// @brief This is a dead end link
     LINKSTATE_DEADEND = '-'
 };

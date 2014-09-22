@@ -10,7 +10,7 @@
 ///
 // Definitions of SUMO vehicle classes and helper functions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
@@ -181,9 +181,13 @@ enum SUMOVehicleClass {
     SVC_BICYCLE = 262144,
     /// @brief is a pedestrian
     SVC_PEDESTRIAN = 524288,
+    /// @brief is a user-defined type
+    SVC_CUSTOM1 = 1048576,
+    /// @brief is a user-defined type
+    SVC_CUSTOM2 = 2097152,
     /// @brief is an automated car (ACC/CACC capable)
     SVC_AUTOMATED = 1048576
-                     //@}
+                  //@}
 };
 
 extern const int SUMOVehicleClass_MAX;

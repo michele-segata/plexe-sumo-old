@@ -12,7 +12,7 @@
 ///
 // A road/street connecting two junctions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -163,21 +163,43 @@ MSEdge::rebuildAllowedLanes() {
 // ------------ Access to the edge's lanes
 MSLane*
 MSEdge::leftLane(const MSLane* const lane) const {
-    std::vector<MSLane*>::iterator laneIt = find(myLanes->begin(), myLanes->end(), lane);
-    if (laneIt == myLanes->end() || laneIt == myLanes->end() - 1) {
-        return 0;
-    }
-    return *(laneIt + 1);
+    return parallelLane(lane, 1);
 }
 
 
 MSLane*
 MSEdge::rightLane(const MSLane* const lane) const {
-    std::vector<MSLane*>::iterator laneIt = find(myLanes->begin(), myLanes->end(), lane);
-    if (laneIt == myLanes->end() || laneIt == myLanes->begin()) {
+    return parallelLane(lane, -1);
+}
+
+
+MSLane*
+MSEdge::parallelLane(const MSLane* const lane, int offset) const {
+    const int index = (int)(find(myLanes->begin(), myLanes->end(), lane) - myLanes->begin());
+    if (index == (int)myLanes->size()) {
         return 0;
     }
-    return *(laneIt - 1);
+    const int resultIndex = index + offset;
+    if (resultIndex >= (int)myLanes->size() || resultIndex < 0) {
+        // check for parallel running internal lanes
+        if (getPurpose() == MSEdge::EDGEFUNCTION_INTERNAL) {
+            const MSLane* pred = lane->getLogicalPredecessorLane();
+            const MSLane* next = lane->getLinkCont()[0]->getLane();
+            assert(pred != 0);
+            assert(next != 0);
+            const MSLane* predParallel = pred->getParallelLane(offset);
+            const MSLane* nextParallel = next->getParallelLane(offset);
+            if (predParallel != 0 && nextParallel != 0) {
+                const MSLink* connecting = MSLinkContHelper::getConnectingLink(*predParallel, *nextParallel);
+                if (connecting != 0) {
+                    return connecting->getViaLaneOrLane();
+                }
+            }
+        }
+        return 0;
+    } else {
+        return (*myLanes)[resultIndex];
+    }
 }
 
 
@@ -441,12 +463,10 @@ MSEdge::dictionary(const std::string& id, MSEdge* ptr) {
     if (it == myDict.end()) {
         // id not in myDict.
         myDict[id] = ptr;
-        if (ptr->getNumericalID() != -1) {
-            while ((int)myEdges.size() < ptr->getNumericalID() + 1) {
-                myEdges.push_back(0);
-            }
-            myEdges[ptr->getNumericalID()] = ptr;
+        while ((int)myEdges.size() < ptr->getNumericalID() + 1) {
+            myEdges.push_back(0);
         }
+        myEdges[ptr->getNumericalID()] = ptr;
         return true;
     }
     return false;

@@ -9,7 +9,7 @@
 ///
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -50,7 +50,6 @@
 // ===========================================================================
 class GUISUMOAbstractView;
 class GUIGLObjectPopupMenu;
-class GUILaneWrapper;
 class MSDevice_Vehroutes;
 #ifdef HAVE_OSG
 class GUIOSGView;
@@ -171,9 +170,7 @@ public:
      * @see MSVehicle::myLastLaneChangeOffset
      * @return The time since the last lane change in seconds
      */
-    SUMOReal getLastLaneChangeOffset() const {
-        return STEPS2TIME(myLastLaneChangeOffset);
-    }
+    SUMOReal getLastLaneChangeOffset() const;
 
 
     /** @brief Returns the description of best lanes to use in order to continue the route
@@ -227,6 +224,8 @@ public:
         long onCmdShowLFLinkItems(FXObject*, FXSelector, void*);
         /// @brief Called if all routes of the vehicle shall be hidden
         long onCmdHideLFLinkItems(FXObject*, FXSelector, void*);
+        /// @brief Called when show a vehicles foes
+        long onCmdShowFoes(FXObject*, FXSelector, void*);
 
     protected:
         /// @brief Information which additional visualisations are enabled (per view)
@@ -266,7 +265,7 @@ public:
     /** @brief Draws the route
      * @param[in] r The route to draw
      */
-    void draw(const MSRoute& r) const;
+    void drawRouteHelper(const MSRoute& r, SUMOReal exaggeration) const;
 
 
     /** @brief Chooses the route to draw and draws it, darkening it as given
@@ -281,6 +280,9 @@ public:
      */
     void drawBestLanes() const;
     /// @}
+
+    /// @brief adds the blocking foes to the current selection
+    void selectBlockingFoes() const;
 
 #ifdef HAVE_OSG
     void setGeometry(GUIOSGView* view, osg::ShapeDrawable* geom) {
@@ -300,9 +302,6 @@ private:
 
     /// @brief sets the color according to the current scheme index and some vehicle function
     bool setFunctionalColor(size_t activeScheme) const;
-
-    /// @brief retrieves the laneWrapper for this vehicles lane
-    GUILaneWrapper& getLaneWrapper() const;
 
     /// @name drawing helper methods
     /// @{
@@ -339,8 +338,10 @@ private:
     /// @brief add seats to mySeatPositions and update requiredSeats
     void computeSeats(const Position& front, const Position& back, int& requiredSeats) const;
 
-    static void drawLinkItem(const Position& pos, SUMOTime arrivalTime, SUMOTime leaveTime, SUMOReal exagerate);
+    /// @brief retrieve information about the current stop state
+    std::string getStopInfo() const;
 
+    static void drawLinkItem(const Position& pos, SUMOTime arrivalTime, SUMOTime leaveTime, SUMOReal exagerate);
 
 private:
     /// The mutex used to avoid concurrent updates of the vehicle buffer

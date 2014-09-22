@@ -11,7 +11,7 @@
 ///
 // Helper methods for parsing vehicle attributes
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
@@ -83,7 +83,12 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
     }
     SUMOVehicleParameter* ret = new SUMOVehicleParameter();
     ret->id = id;
-    parseCommonAttributes(attrs, ret, "flow");
+    try {
+        parseCommonAttributes(attrs, ret, "flow");
+    } catch (ProcessError&) {
+        delete ret;
+        throw;
+    }
 
     // parse repetition information
     if (attrs.hasAttribute(SUMO_ATTR_PERIOD)) {
@@ -128,12 +133,16 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
     if (attrs.hasAttribute(SUMO_ATTR_NUMBER)) {
         ret->repetitionNumber = attrs.get<int>(SUMO_ATTR_NUMBER, id.c_str(), ok);
         ret->setParameter |= VEHPARS_PERIODFREQ_SET;
-        if (ok && ret->repetitionNumber < 0) {
-            delete ret;
-            throw ProcessError("Negative repetition number in the definition of flow '" + id + "'.");
-        }
-        if (ok && ret->repetitionOffset < 0) {
-            ret->repetitionOffset = (end - ret->depart) / ret->repetitionNumber;
+        if(ret->repetitionNumber==0) {
+            WRITE_WARNING("Flow '" + id + "' has 0 vehicles; will skip it...");
+        } else {
+            if (ok && ret->repetitionNumber < 0) {
+                delete ret;
+                throw ProcessError("Negative repetition number in the definition of flow '" + id + "'.");
+            }
+            if (ok && ret->repetitionOffset < 0) {
+                ret->repetitionOffset = (end - ret->depart) / ret->repetitionNumber;
+            }
         }
     } else {
         if (ok && ret->repetitionOffset <= 0) {
@@ -343,6 +352,14 @@ SUMOVehicleParserHelper::beginVTypeParsing(const SUMOSAXAttributes& attrs, const
     if (attrs.hasAttribute(SUMO_ATTR_EMISSIONCLASS)) {
         vtype->emissionClass = parseEmissionClass(attrs, vtype->id);
         vtype->setParameter |= VTYPEPARS_EMISSIONCLASS_SET;
+    }
+    if (attrs.hasAttribute(SUMO_ATTR_IMPATIENCE)) {
+        if (attrs.get<std::string>(SUMO_ATTR_IMPATIENCE, vtype->id.c_str(), ok) == "off") {
+            vtype->impatience = -std::numeric_limits<SUMOReal>::max();
+        } else {
+            vtype->impatience = attrs.get<SUMOReal>(SUMO_ATTR_IMPATIENCE, vtype->id.c_str(), ok);
+        }
+        vtype->setParameter |= VTYPEPARS_IMPATIENCE_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_VCLASS)) {
         vtype->vehicleClass = parseVehicleClass(attrs, vtype->id);
@@ -590,6 +607,10 @@ SUMOVehicleParserHelper::parseStop(SUMOVehicleParameter::Stop& stop, const SUMOS
     if (attrs.hasAttribute(SUMO_ATTR_PARKING)) {
         stop.setParameter |= STOP_PARKING_SET;
     }
+    if (attrs.hasAttribute(SUMO_ATTR_EXPECTED)) {
+        stop.setParameter |= STOP_EXPECTED_SET;
+    }
+    // don't like this (dkrajzew)
 }
 
 /****************************************************************************/

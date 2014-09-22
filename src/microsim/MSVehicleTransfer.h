@@ -8,7 +8,7 @@
 // A mover of vehicles that got stucked due to grid locks
 // This class also serves as container for parking vehicles
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -95,6 +95,8 @@ public:
      */
     bool hasPending() const;
 
+    /// @brief return parking vehicles on the given lane
+    const std::set<const MSVehicle*>& getParkingVehicles(const MSLane* lane) const;
 
     /** @brief Returns the instance of this object
      * @return The singleton instance
@@ -139,8 +141,15 @@ protected:
     /// @brief The information about stored vehicles to move virtually
     VehicleInfVector myVehicles;
 
+    /// @brief The map from lanes to parking vehicles
+    typedef std::map<const MSLane*, std::set<const MSVehicle*> > ParkingVehicles;
+    ParkingVehicles myParkingVehicles;
+
     /// @brief The static singleton-instance
     static MSVehicleTransfer* myInstance;
+
+    /// @brief an empty vector for convenience
+    static const std::set<const MSVehicle*> myEmptyVehicleSet;
 
 };
 

@@ -8,7 +8,7 @@
 ///
 // Variables, methods, and tools for internal time representation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -95,7 +95,7 @@ extern SUMOTime DELTA_T;
 // ===========================================================================
 // method declarations
 // ===========================================================================
-SUMOTime string2time(const std::string& r) throw(EmptyData, NumberFormatException, ProcessError);
+SUMOTime string2time(const std::string& r);
 std::string time2string(SUMOTime t);
 
 

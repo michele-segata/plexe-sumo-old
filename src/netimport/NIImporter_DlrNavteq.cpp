@@ -8,7 +8,7 @@
 ///
 // Importer for networks stored in Elmar's format
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 // Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -180,7 +180,7 @@ NIImporter_DlrNavteq::NodesHandler::report(const std::string& result) {
             throw ProcessError("Non-numerical value for y-position in node " + id + ".");
         }
         Position pos(x, y);
-        if (!NILoader::transformCoordinates(pos, true)) {
+        if (!NBNetBuilder::transformCoordinates(pos, true)) {
             throw ProcessError("Unable to project coordinates for node " + id + ".");
         }
         geoms.push_back(pos);
@@ -206,9 +206,9 @@ NIImporter_DlrNavteq::EdgesHandler::EdgesHandler(NBNodeCont& nc, NBEdgeCont& ec,
         const std::string& file,
         std::map<std::string, PositionVector>& geoms,
         std::map<std::string, std::string>& streetNames):
-    myNodeCont(nc), 
-    myEdgeCont(ec), 
-    myGeoms(geoms), 
+    myNodeCont(nc),
+    myEdgeCont(ec),
+    myGeoms(geoms),
     myStreetNames(streetNames),
     myVersion(0),
     myFile(file)
@@ -241,7 +241,7 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
             const size_t NUM_COLUMNS = 25; // @note arrays must match this size!
             const int MC = MISSING_COLUMN;
             if (myVersion < 3) {
-                const int columns[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MC, 12, 13, 14, 15, 16, 17, 18, 19, 20, MC, MC, 21};
+                const int columns[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MC, 12, 13, 14, 15, 16, 17, 18, 19, 20, MC, MC, -21};
                 myColumns = std::vector<int>(columns, columns + NUM_COLUMNS);
             } else if (myVersion < 6) {
                 const int columns[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, MC, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, -23};
@@ -260,7 +260,7 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
     }
     // interpret link attributes
     StringTokenizer st(result, StringTokenizer::WHITECHARS);
-    const std::string id = getColumn(st, LINK_ID); 
+    const std::string id = getColumn(st, LINK_ID);
     // form of way (for priority and permissions)
     int form_of_way;
     try {
@@ -281,10 +281,10 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
     } catch (NumberFormatException&) {
         throw ProcessError("Non-numerical value for street_type of link '" + id + "').");
     }
-    // street name 
+    // street name
     std::string streetName = getStreetNameFromIDs(
-            getColumn(st, NAME_ID1_REGIONAL),
-            getColumn(st, NAME_ID2_LOCAL));
+                                 getColumn(st, NAME_ID1_REGIONAL),
+                                 getColumn(st, NAME_ID2_LOCAL));
     // try to get the nodes
     const std::string fromID = getColumn(st, NODE_ID_FROM);
     const std::string toID = getColumn(st, NODE_ID_TO);
@@ -297,7 +297,7 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
         throw ProcessError("The to-node '" + toID + "' of link '" + id + "' could not be found");
     }
     // speed
-    SUMOReal speed; 
+    SUMOReal speed;
     try {
         speed = TplConvert::_2int(getColumn(st, SPEED_RESTRICTION, "-1").c_str()) / 3.6;
     } catch (NumberFormatException) {
@@ -312,7 +312,7 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
     try {
         // EXTENDED_NUMBER_OF_LANES is prefered but may not be defined
         numLanes = TplConvert::_2int(getColumn(st, EXTENDED_NUMBER_OF_LANES, "-1").c_str());
-        if (numLanes = -1) {  
+        if (numLanes == -1) {
             numLanes = NINavTeqHelper::getLaneNumber(id, getColumn(st, NUMBER_OF_LANES), speed);
         }
     } catch (NumberFormatException&) {
@@ -354,7 +354,7 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
 }
 
 
-std::string 
+std::string
 NIImporter_DlrNavteq::EdgesHandler::getColumn(const StringTokenizer& st, ColumnName name, const std::string fallback) {
     assert(!myColumns.empty());
     if (myColumns[name] == MISSING_COLUMN) {
@@ -367,7 +367,7 @@ NIImporter_DlrNavteq::EdgesHandler::getColumn(const StringTokenizer& st, ColumnN
         return st.get((size_t)(myColumns[name]));
     } else {
         // negative column number implies an optional column
-        if (st.size() <= -myColumns[name]) {
+        if ((int) st.size() <= -myColumns[name]) {
             // the column is not present
             if (fallback == "") {
                 throw ProcessError("Missing optional column " + toString(name) + " without default value.");
