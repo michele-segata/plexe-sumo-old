@@ -60,13 +60,6 @@
 
 
 // ===========================================================================
-// used namespaces
-// ===========================================================================
-using namespace FXEX;
-using namespace std;
-
-
-// ===========================================================================
 // member method definitions
 // ===========================================================================
 GUIRunThread::GUIRunThread(FXApp* app, MFXInterThreadEventClient* parent,
@@ -109,7 +102,7 @@ GUIRunThread::init(GUINet* net, SUMOTime start, SUMOTime end) {
     try {
         net->loadRoutes();
     } catch (ProcessError& e2) {
-        if (string(e2.what()) != string("Process Error") && std::string(e2.what()) != string("")) {
+        if (std::string(e2.what()) != std::string("Process Error") && std::string(e2.what()) != std::string("")) {
             WRITE_ERROR(e2.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
@@ -192,7 +185,7 @@ GUIRunThread::makeStep() {
         MSNet::SimulationState state = myNet->simulationState(mySimEndTime);
 #ifndef NO_TRACI
         if (state != MSNet::SIMSTATE_RUNNING) {
-            if (OptionsCont::getOptions().getInt("remote-port") != 0 && !traci::TraCIServer::wasClosed()) {
+            if (OptionsCont::getOptions().getInt("remote-port") != 0 && !TraCIServer::wasClosed()) {
                 state = MSNet::SIMSTATE_RUNNING;
             }
         }
@@ -222,7 +215,7 @@ GUIRunThread::makeStep() {
         // simulation step is over
         mySimulationInProgress = false;
     } catch (ProcessError& e2) {
-        if (string(e2.what()) != string("Process Error") && std::string(e2.what()) != string("")) {
+        if (std::string(e2.what()) != std::string("Process Error") && std::string(e2.what()) != std::string("")) {
             WRITE_ERROR(e2.what());
         }
         MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);

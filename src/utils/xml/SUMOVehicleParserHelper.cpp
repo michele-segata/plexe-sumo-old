@@ -133,7 +133,7 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
     if (attrs.hasAttribute(SUMO_ATTR_NUMBER)) {
         ret->repetitionNumber = attrs.get<int>(SUMO_ATTR_NUMBER, id.c_str(), ok);
         ret->setParameter |= VEHPARS_PERIODFREQ_SET;
-        if(ret->repetitionNumber==0) {
+        if (ret->repetitionNumber == 0) {
             WRITE_WARNING("Flow '" + id + "' has 0 vehicles; will skip it...");
         } else {
             if (ok && ret->repetitionNumber < 0) {
@@ -398,6 +398,16 @@ SUMOVehicleParserHelper::beginVTypeParsing(const SUMOSAXAttributes& attrs, const
         vtype->defaultProbability = attrs.get<SUMOReal>(SUMO_ATTR_PROB, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_PROBABILITY_SET;
     }
+    if (attrs.hasAttribute(SUMO_ATTR_LANE_CHANGE_MODEL)) {
+        const std::string lcmS = attrs.get<std::string>(SUMO_ATTR_LANE_CHANGE_MODEL, vtype->id.c_str(), ok);
+        if (SUMOXMLDefinitions::LaneChangeModels.hasString(lcmS)) {
+            vtype->lcModel = SUMOXMLDefinitions::LaneChangeModels.get(lcmS);
+            vtype->setParameter |= VTYPEPARS_LCM_SET;
+        } else {
+            WRITE_ERROR("Unknown lane change model '" + lcmS + "' when parsing vtype '" + vtype->id + "'");
+            throw ProcessError();
+        }
+    }
     try {
         parseVTypeEmbedded(*vtype, SUMO_TAG_CF_KRAUSS, attrs, true);
     } catch (ProcessError&) {
@@ -589,28 +599,6 @@ SUMOVehicleParserHelper::parseGuiShape(const SUMOSAXAttributes& attrs, const std
         WRITE_ERROR("The shape '" + vclassS + "' for " + attrs.getObjectType() + " '" + id + "' is not known.");
         return SVS_UNKNOWN;
     }
-}
-
-
-void
-SUMOVehicleParserHelper::parseStop(SUMOVehicleParameter::Stop& stop, const SUMOSAXAttributes& attrs) {
-    stop.setParameter = 0;
-    if (attrs.hasAttribute(SUMO_ATTR_ENDPOS)) {
-        stop.setParameter |= STOP_END_SET;
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_STARTPOS)) {
-        stop.setParameter |= STOP_START_SET;
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_TRIGGERED)) {
-        stop.setParameter |= STOP_TRIGGER_SET;
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_PARKING)) {
-        stop.setParameter |= STOP_PARKING_SET;
-    }
-    if (attrs.hasAttribute(SUMO_ATTR_EXPECTED)) {
-        stop.setParameter |= STOP_EXPECTED_SET;
-    }
-    // don't like this (dkrajzew)
 }
 
 /****************************************************************************/

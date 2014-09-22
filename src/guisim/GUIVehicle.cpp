@@ -247,8 +247,8 @@ GUIVehicle::GUIVehiclePopupMenu::onCmdShowFoes(FXObject*, FXSelector, void*) {
  * ----------------------------------------------------------------------- */
 GUIVehicle::GUIVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
                        const MSVehicleType* type,
-                       SUMOReal speedFactor, int vehicleIndex) :
-    MSVehicle(pars, route, type, speedFactor, vehicleIndex),
+                       SUMOReal speedFactor) :
+    MSVehicle(pars, route, type, speedFactor),
     GUIGlObject(GLO_VEHICLE, pars->id) {
     // as it is possible to show all vehicle routes, we have to store them... (bug [ 2519761 ])
     myRoutes = MSDevice_Vehroutes::buildVehicleDevices(*this, myDevices, 5);
@@ -323,30 +323,31 @@ GUIParameterTableWindow*
 GUIVehicle::getParameterWindow(GUIMainWindow& app,
                                GUISUMOAbstractView&) {
     GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 21);
+        new GUIParameterTableWindow(app, *this, 33);
     // add items
-    ret->mkItem("type [NAME]", false, myType->getID());
+    ret->mkItem("lane [id]", false, myLane->getID());
+    ret->mkItem("position [m]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getPositionOnLane));
+    ret->mkItem("speed [m/s]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getSpeed));
+    ret->mkItem("angle [degree]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getAngle));
+    if (getChosenSpeedFactor() != 1) {
+        ret->mkItem("speed factor", false, getChosenSpeedFactor());
+    }
+    ret->mkItem("waiting time [s]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getWaitingSeconds));
+    ret->mkItem("impatience", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getImpatience));
+    ret->mkItem("last lane change [s]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getLastLaneChangeOffset));
+    ret->mkItem("desired depart [s]", false, time2string(getParameter().depart));
     if (getParameter().repetitionNumber > 0) {
         ret->mkItem("left same route [#]", false, (unsigned int) getParameter().repetitionNumber);
     }
     if (getParameter().repetitionOffset > 0) {
         ret->mkItem("insertion period [s]", false, time2string(getParameter().repetitionOffset));
     }
-    if (getChosenSpeedFactor() != 1) {
-        ret->mkItem("speed factor", false, getChosenSpeedFactor());
-    }
-    ret->mkItem("insertion period [s]", false, time2string(getParameter().repetitionOffset));
-    ret->mkItem("waiting time [s]", true,
-                new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getWaitingSeconds));
-    ret->mkItem("last lane change [s]", true,
-                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getLastLaneChangeOffset));
-    ret->mkItem("desired depart [s]", false, time2string(getParameter().depart));
-    ret->mkItem("position [m]", true,
-                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getPositionOnLane));
-    ret->mkItem("speed [m/s]", true,
-                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getSpeed));
-    ret->mkItem("angle", true,
-                new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getAngle));
     ret->mkItem("stop info", false, getStopInfo());
     ret->mkItem("CO2 (HBEFA) [mg/s]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getHBEFA_CO2Emissions));
@@ -362,6 +363,19 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getHBEFA_FuelConsumption));
     ret->mkItem("noise (Harmonoise) [dB]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getHarmonoise_NoiseEmissions));
+    ret->mkItem("parameters [key:val]", false, toString(getParameter().getMap()));
+    ret->mkItem("", false, "");
+    ret->mkItem("Type Information:", false, "");
+    ret->mkItem("type [id]", false, myType->getID());
+    ret->mkItem("length", false, myType->getLength());
+    ret->mkItem("minGap", false, myType->getMinGap());
+    ret->mkItem("vehicle class", false, SumoVehicleClassStrings.getString(myType->getVehicleClass()));
+    ret->mkItem("emission class", false, SumoEmissionClassStrings.getString(myType->getEmissionClass()));
+    ret->mkItem("maximum acceleration [m/s^2]", false, getCarFollowModel().getMaxAccel());
+    ret->mkItem("maximum deceleration [m/s^2]", false, getCarFollowModel().getMaxDecel());
+    ret->mkItem("imperfection (sigma)", false, getCarFollowModel().getImperfection());
+    ret->mkItem("reaction time (tau)", false, getCarFollowModel().getHeadwayTime());
+    ret->mkItem("type parameters [key:val]", false, toString(myType->getParameter().getMap()));
     // close building
     ret->closeBuilding();
     return ret;
@@ -1238,6 +1252,10 @@ GUIVehicle::getColorValue(size_t activeScheme) const {
             return getNumberReroutes();
         case 20:
             return gSelected.isSelected(GLO_VEHICLE, getGlID());
+        case 21:
+            return getBestLaneOffset();
+        case 22:
+            return getAcceleration();
     }
     return 0;
 }
@@ -1338,8 +1356,17 @@ GUIVehicle::drawBestLanes() const {
 void
 GUIVehicle::drawRouteHelper(const MSRoute& r, SUMOReal exaggeration) const {
     MSRouteIterator i = r.begin();
+    const std::vector<MSLane*>& bestLaneConts = getBestLanesContinuation();
+    // draw continuation lanes when drawing the current route where available
+    size_t bestLaneIndex = (&r == myRoute ? 0 : bestLaneConts.size());
     for (; i != r.end(); ++i) {
-        const GUILane* lane = static_cast<GUILane*>((*i)->getLanes()[0]);
+        const GUILane* lane;
+        if (bestLaneIndex < bestLaneConts.size() && bestLaneConts[bestLaneIndex] != 0 && (*i) == &(bestLaneConts[bestLaneIndex]->getEdge())) {
+            lane = static_cast<GUILane*>(bestLaneConts[bestLaneIndex]);
+            ++bestLaneIndex;
+        } else {
+            lane = static_cast<GUILane*>((*i)->getLanes()[0]);
+        }
         GLHelper::drawBoxLines(lane->getShape(), lane->getShapeRotations(), lane->getShapeLengths(), exaggeration);
     }
 }
@@ -1522,7 +1549,7 @@ GUIVehicle::selectBlockingFoes() const {
         gSelected.select(static_cast<const GUIVehicle*>(*it)->getGlID());
     }
 #ifdef HAVE_INTERNAL_LANES
-    const MSLink::LinkLeaders linkLeaders = (dpi.myLink)->getLeaderInfo(myLane->getLength() - getPositionOnLane() - getVehicleType().getMinGap());
+    const MSLink::LinkLeaders linkLeaders = (dpi.myLink)->getLeaderInfo(myLane->getLength() - getPositionOnLane(), getVehicleType().getMinGap());
     for (MSLink::LinkLeaders::const_iterator it = linkLeaders.begin(); it != linkLeaders.end(); ++it) {
         // the vehicle to enter the junction first has priority
         const MSVehicle* leader = it->first;

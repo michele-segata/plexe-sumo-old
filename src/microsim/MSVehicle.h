@@ -141,11 +141,10 @@ public:
      * @param[in] route The vehicle's route
      * @param[in] type The vehicle's type
      * @param[in] speedFactor The factor for driven lane's speed limits
-     * @param[in] vehicleIndex The vehicle's running index
      * @exception ProcessError If a value is wrong
      */
     MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
-              const MSVehicleType* type, SUMOReal speedFactor, int vehicleIndex);
+              const MSVehicleType* type, SUMOReal speedFactor);
 
     /// @brief Destructor.
     virtual ~MSVehicle();
@@ -297,7 +296,7 @@ public:
     }
 
 
-    /** @brief Returns the vehicle's acceleration
+    /** @brief Returns the vehicle's acceleration in m/s
      * @return The acceleration
      */
     SUMOReal getAcceleration() const {
@@ -313,11 +312,11 @@ public:
     /** @brief Return current position (x/y, cartesian)
      *
      * If the vehicle's myLane is 0, Position::INVALID.
-     * @param[in] offset optional offset in longitudianl direction
+     * @param[in] offset optional offset in longitudinal direction
      * @return The current position (in cartesian coordinates)
      * @see myLane
      */
-    Position getPosition(SUMOReal offset = 0) const;
+    Position getPosition(const SUMOReal offset = 0) const;
 
 
     /** @brief Returns the lane the vehicle is on
@@ -364,8 +363,6 @@ public:
     SUMOReal getAngle() const;
     //@}
 
-
-    class Influencer;
 
     /** Returns true if the two vehicles overlap. */
     static bool overlap(const MSVehicle* veh1, const MSVehicle* veh2) {
@@ -486,9 +483,9 @@ public:
      */
     const std::vector<MSLane*>& getBestLanesContinuation(const MSLane* const l) const;
 
+    /// @brief returns the current offset from the best lane
+    int getBestLaneOffset() const;
 
-    /// @brief repair errors in bestLanes after changing between internal edges
-    bool fixContinuations();
     /// @}
 
     /// @brief repair errors in vehicle position after changing between internal edges
@@ -720,6 +717,26 @@ public:
     };
 
 
+    /** @brief modes for resolving conflicts between external control (traci)
+     * and vehicle control over lane changing. Each level of the lane-changing
+     * hierarchy (strategic, cooperative, speedGain, keepRight) can be controlled
+     * separately */
+    enum LaneChangeMode {
+        LC_NEVER      = 0,  // lcModel shall never trigger changes at this level
+        LC_NOCONFLICT = 1,  // lcModel may trigger changes if not in conflict with TraCI request
+        LC_ALWAYS     = 2   // lcModel may always trigger changes of this level regardless of requests
+    };
+
+
+    /// @brief modes for prioritizing traci lane change requests
+    enum TraciLaneChangePriority {
+        LCP_ALWAYS        = 0,  // change regardless of blockers, adapt own speed and speed of blockers
+        LCP_NOOVERLAP     = 1,  // change unless overlapping with blockers, adapt own speed and speed of blockers
+        LCP_URGENT        = 2,  // change if not blocked, adapt own speed and speed of blockers
+        LCP_OPPORTUNISTIC = 3   // change if not blocked
+    };
+
+
     /** @brief Switches the given signal on
      * @param[in] signal The signal to mark as being switched on
      */
@@ -793,11 +810,13 @@ public:
      * @brief Changes the wished vehicle speed / lanes
      *
      * The class is used for passing velocities or velocity profiles obtained via TraCI to the vehicle.
-     *
-     * The adaptation is controlled by the stored time line of speeds/lanes.
+     * The speed adaptation is controlled by the stored speedTimeLine
      * Additionally, the variables myConsiderSafeVelocity, myConsiderMaxAcceleration, and myConsiderMaxDeceleration
-     *  control whether the safe velocity, the maximum acceleration, and the maximum deceleration
-     *  have to be regarded.
+     * control whether the safe velocity, the maximum acceleration, and the maximum deceleration
+     * have to be regarded.
+     *
+     * Furthermore this class is used to affect lane changing decisions according to
+     * LaneChangeMode and any given laneTimeLine
      */
     class Influencer {
     public:
@@ -834,9 +853,22 @@ public:
          */
         SUMOReal influenceSpeed(SUMOTime currentTime, SUMOReal speed, SUMOReal vSafe, SUMOReal vMin, SUMOReal vMax);
 
+        /** @brief Applies stored LaneChangeMode information and laneTimeLine
+         * @param[in] currentTime The current simulation time
+         * @param[in] currentEdge The current edge the vehicle is on
+         * @param[in] currentLaneIndex The index of the lane the vehicle is currently on
+         * @param[in] state The LaneChangeAction flags as computed by the laneChangeModel
+         * @return The new LaneChangeAction flags to use
+         */
+        int influenceChangeDecision(const SUMOTime currentTime, const MSEdge& currentEdge, const unsigned int currentLaneIndex, int state);
 
-        ChangeRequest checkForLaneChanges(SUMOTime currentTime, const MSEdge& currentEdge, unsigned int currentLaneIndex);
 
+        /** @brief Return the remaining number of seconds of the current
+         * laneTimeLine assuming one exists
+         * @param[in] currentTime The current simulation time
+         * @return The remaining seconds to change lanes
+         */
+        SUMOReal changeRequestRemainingSeconds(const SUMOTime currentTime) const;
 
         /** @brief Sets whether the safe velocity shall be regarded
          * @param[in] value Whether the safe velocity shall be regarded
@@ -856,7 +888,13 @@ public:
         void setConsiderMaxDeceleration(bool value);
 
 
-        /** @brief Returns the originally longitudianl speed to use
+        /** @brief Sets lane changing behavior
+         * @param[in] value a bitset controlling the different modes
+         */
+        void setLaneChangeMode(int value);
+
+
+        /** @brief Returns the originally longitudinal speed to use
          * @return The speed given before influence
          */
         SUMOReal getOriginalSpeed() const {
@@ -873,7 +911,7 @@ public:
 
         void postProcessVTD(MSVehicle* v);
 
-        bool isVTDControlled() const {
+        inline bool isVTDControlled() const {
             return myAmVTDControlled;
         }
 
@@ -905,6 +943,20 @@ public:
         int myVTDEdgeOffset;
         MSEdgeVector myVTDRoute;
 
+        /// @name Flags for managing conflicts between the laneChangeModel and TraCI laneTimeLine
+        //@{
+        /// @brief lane changing which is necessary to follow the current route
+        LaneChangeMode myStrategicLC;
+        /// @brief lane changing with the intent to help other vehicles
+        LaneChangeMode myCooperativeLC;
+        /// @brief lane changing to travel with higher speed
+        LaneChangeMode mySpeedGainLC;
+        /// @brief changing to the rightmost lane
+        LaneChangeMode myRightDriveLC;
+        //@}
+        ///* @brief flags for determining the priority of traci lane change requests
+        TraciLaneChangePriority myTraciLaneChangePriority;
+
     };
 
 
@@ -918,6 +970,9 @@ public:
     bool hasInfluencer() const {
         return myInfluencer != 0;
     }
+
+    /// @brief allow TraCI to influence a lane change decision
+    int influenceChangeDecision(int state);
 
 
 #endif
@@ -975,6 +1030,8 @@ protected:
     MSAbstractLaneChangeModel* myLaneChangeModel;
 
     mutable const MSEdge* myLastBestLanesEdge;
+    mutable const MSLane* myLastBestLanesInternalLane;
+
     mutable std::vector<std::vector<LaneQ> > myBestLanes;
     mutable std::vector<LaneQ>::iterator myCurrentLaneInBestLanes;
     static std::vector<MSLane*> myEmptyLaneVector;
@@ -985,7 +1042,7 @@ protected:
     /// @brief The passengers this vehicle may have
     MSDevice_Person* myPersonDevice;
 
-    /// @brief The current acceleration before dawdling
+    /// @brief The current acceleration after dawdling in m/s
     SUMOReal myAcceleration;
 
     /// @brief The information into which lanes the vehicle laps into
@@ -1001,6 +1058,8 @@ protected:
     bool myAmRegisteredAsWaitingForPerson;
 
     bool myHaveToWaitOnNextLink;
+
+    mutable Position myCachedPosition;
 
 protected:
     struct DriveProcessItem {
@@ -1026,7 +1085,10 @@ protected:
             myArrivalTime(arrivalTime), myArrivalSpeed(arrivalSpeed),
             myArrivalTimeBraking(arrivalTimeBraking), myArrivalSpeedBraking(arrivalSpeedBraking),
             myDistance(distance),
-            accelV(leaveSpeed), hadVehicle(false), availableSpace(-1.) { };
+            accelV(leaveSpeed), hadVehicle(false), availableSpace(-1.) {
+            assert(vWait >= 0);
+            assert(vPass >= 0);
+        };
 
         /// @brief constructor if the link shall not be passed
         DriveProcessItem(SUMOReal vWait, SUMOReal distance) :
@@ -1034,7 +1096,9 @@ protected:
             myArrivalTime(0), myArrivalSpeed(0),
             myArrivalTimeBraking(0), myArrivalSpeedBraking(0),
             myDistance(distance),
-            accelV(-1), hadVehicle(false), availableSpace(-1.) { };
+            accelV(-1), hadVehicle(false), availableSpace(-1.) {
+            assert(vWait >= 0);
+        };
 
 
         inline void adaptLeaveSpeed(const SUMOReal v) {
@@ -1106,11 +1170,6 @@ private:
 #ifndef NO_TRACI
     /// @brief An instance of a velicty/lane influencing instance; built in "getInfluencer"
     Influencer* myInfluencer;
-#endif
-
-#ifdef HAVE_INTERNAL_LANES
-    /// @brief map from the links to link leader ids
-    mutable std::map<const MSLink*, std::string> myLeaderForLink;
 #endif
 
 private:

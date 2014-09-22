@@ -67,10 +67,11 @@
 // method definitions
 // ===========================================================================
 NBEdgeCont::NBEdgeCont(NBTypeCont& tc) :
+    myTypeCont(tc),
     myEdgesSplit(0),
     myVehicleClasses2Keep(0),
     myVehicleClasses2Remove(0),
-    myTypeCont(tc)
+    myNeedGeoTransformedPrunningBoundary(false)
 {}
 
 
@@ -139,9 +140,7 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
                 myPrunningBoundary.push_back(Position(x, y));
             }
         }
-        if (oc.isSet("keep-edges.in-geo-boundary")) {
-            NBNetBuilder::transformCoordinates(myPrunningBoundary, false);
-        }
+        myNeedGeoTransformedPrunningBoundary = oc.isSet("keep-edges.in-geo-boundary");
     }
 }
 
@@ -225,6 +224,18 @@ NBEdgeCont::ignoreFilterMatch(NBEdge* edge) {
     }
     // check whether the edge is within the prunning boundary
     if (myPrunningBoundary.size() != 0) {
+        if (myNeedGeoTransformedPrunningBoundary) {
+            if (GeoConvHelper::getProcessing().usingGeoProjection()) {
+                NBNetBuilder::transformCoordinates(myPrunningBoundary, false);
+            } else if (GeoConvHelper::getLoaded().usingGeoProjection()) {
+                // XXX what if input file with different projections are loaded?
+                for (int i = 0; i < (int) myPrunningBoundary.size(); i++) {
+                    GeoConvHelper::getLoaded().x2cartesian_const(myPrunningBoundary[i]);
+                }
+            } else {
+                WRITE_ERROR("Cannot prune edges using a geo-boundary because no projection has been loaded");
+            }
+        }
         if (!(edge->getGeometry().getBoxBoundary().grow((SUMOReal) POSITION_EPS).overlapsWith(myPrunningBoundary))) {
             return true;
         }
@@ -250,6 +261,22 @@ NBEdgeCont::retrieve(const std::string& id, bool retrieveExtracted) const {
         }
     }
     return (*i).second;
+}
+
+
+NBEdge*
+NBEdgeCont::retrievePossiblySplit(const std::string& id, bool downstream) const {
+    NBEdge* edge = retrieve(id);
+    const EdgeVector* candidates = downstream ? &edge->getToNode()->getOutgoingEdges() : &edge->getFromNode()->getIncomingEdges();
+    while (candidates->size() == 1) {
+        const std::string& nextID = candidates->front()->getID();
+        if (nextID.find(id) != 0 || nextID.size() <= id.size() + 1 || (nextID[id.size()] != '.' && nextID[id.size()] != '-')) {
+            break;
+        }
+        edge = candidates->front();
+        candidates = downstream ? &edge->getToNode()->getOutgoingEdges() : &edge->getFromNode()->getIncomingEdges();
+    }
+    return edge;
 }
 
 
@@ -707,8 +734,8 @@ NBEdgeCont::addPostProcessConnection(const std::string& from, int fromLane, cons
 void
 NBEdgeCont::recheckPostProcessConnections() {
     for (std::vector<PostProcessConnection>::const_iterator i = myConnections.begin(); i != myConnections.end(); ++i) {
-        NBEdge* from = retrieve((*i).from);
-        NBEdge* to = retrieve((*i).to);
+        NBEdge* from = retrievePossiblySplit((*i).from, true);
+        NBEdge* to = retrievePossiblySplit((*i).to, true);
         if (from != 0 && to != 0) {
             if (!from->addLane2LaneConnection((*i).fromLane, to, (*i).toLane, NBEdge::L2L_USER, false, (*i).mayDefinitelyPass)) {
                 WRITE_WARNING("Could not insert connection between '" + (*i).from + "' and '" + (*i).to + "' after build.");
@@ -873,6 +900,7 @@ NBEdgeCont::guessRoundabouts(std::vector<EdgeVector>& marked) {
                 }
                 // let the connections to succeeding roundabout edge have a higher priority
                 (*j)->setJunctionPriority(node, 1000);
+                node->setRoundabout();
             }
             marked.push_back(loopEdges);
         }

@@ -53,6 +53,7 @@
 #include "TraCIServerAPI_Simulation.h"
 #include "TraCIServerAPI_Vehicle.h"
 #include "TraCIServerAPI_VehicleType.h"
+
 #include <microsim/cfmodels/MSCFModel_CC.h>
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -61,13 +62,10 @@
 
 
 // ===========================================================================
-// used namespaces
+// static member variables
 // ===========================================================================
-using namespace traci;
-
-
-
 std::map<std::string, std::vector<MSLane*> > TraCIServerAPI_Vehicle::gVTDMap;
+
 
 // ===========================================================================
 // method definitions
@@ -82,21 +80,25 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
     const MSCFModel_CC *model;
 
     // check variable
-    if (variable != ID_LIST && variable != VAR_SPEED && variable != VAR_SPEED_WITHOUT_TRACI && variable != VAR_POSITION && variable != VAR_ANGLE
+    if (variable != ID_LIST && variable != VAR_SPEED && variable != VAR_SPEED_WITHOUT_TRACI
+            && variable != VAR_POSITION && variable != VAR_ANGLE
             && variable != VAR_ROAD_ID && variable != VAR_LANE_ID && variable != VAR_LANE_INDEX
             && variable != VAR_TYPE && variable != VAR_ROUTE_ID && variable != VAR_COLOR
             && variable != VAR_LANEPOSITION
-            && variable != VAR_CO2EMISSION && variable != VAR_COEMISSION && variable != VAR_HCEMISSION && variable != VAR_PMXEMISSION
+            && variable != VAR_CO2EMISSION && variable != VAR_COEMISSION
+            && variable != VAR_HCEMISSION && variable != VAR_PMXEMISSION
             && variable != VAR_NOXEMISSION && variable != VAR_FUELCONSUMPTION && variable != VAR_NOISEEMISSION
             && variable != VAR_PERSON_NUMBER
             && variable != VAR_EDGE_TRAVELTIME && variable != VAR_EDGE_EFFORT
             && variable != VAR_ROUTE_VALID && variable != VAR_EDGES
-            && variable != VAR_SIGNALS
+            && variable != VAR_SIGNALS && variable != VAR_DISTANCE
             && variable != VAR_LENGTH && variable != VAR_MAXSPEED && variable != VAR_VEHICLECLASS
-            && variable != VAR_SPEED_FACTOR && variable != VAR_SPEED_DEVIATION && variable != VAR_EMISSIONCLASS
+            && variable != VAR_SPEED_FACTOR && variable != VAR_SPEED_DEVIATION
+            && variable != VAR_ALLOWED_SPEED && variable != VAR_EMISSIONCLASS
             && variable != VAR_WIDTH && variable != VAR_MINGAP && variable != VAR_SHAPECLASS
             && variable != VAR_ACCEL && variable != VAR_DECEL && variable != VAR_IMPERFECTION
             && variable != VAR_TAU && variable != VAR_BEST_LANES && variable != DISTANCE_REQUEST
+            && variable != ID_COUNT && variable != VAR_STOPSTATE && variable !=  VAR_WAITING_TIME
             && variable != ID_COUNT && variable != VAR_STOPSTATE
             && variable != VAR_GET_SPEED_AND_ACCELERATION
             && variable != VAR_GET_LANES_COUNT
@@ -201,35 +203,39 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
                 break;
             case VAR_CO2EMISSION:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(onRoad ? HelpersHBEFA::computeCO2(v->getVehicleType().getEmissionClass(), v->getSpeed(), v->getAcceleration()) : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getHBEFA_CO2Emissions() : INVALID_DOUBLE_VALUE);
                 break;
             case VAR_COEMISSION:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(onRoad ? HelpersHBEFA::computeCO(v->getVehicleType().getEmissionClass(), v->getSpeed(), v->getAcceleration()) : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getHBEFA_COEmissions() : INVALID_DOUBLE_VALUE);
                 break;
             case VAR_HCEMISSION:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(onRoad ? HelpersHBEFA::computeHC(v->getVehicleType().getEmissionClass(), v->getSpeed(), v->getAcceleration()) : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getHBEFA_HCEmissions() : INVALID_DOUBLE_VALUE);
                 break;
             case VAR_PMXEMISSION:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(onRoad ? HelpersHBEFA::computePMx(v->getVehicleType().getEmissionClass(), v->getSpeed(), v->getAcceleration()) : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getHBEFA_PMxEmissions() : INVALID_DOUBLE_VALUE);
                 break;
             case VAR_NOXEMISSION:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(onRoad ? HelpersHBEFA::computeNOx(v->getVehicleType().getEmissionClass(), v->getSpeed(), v->getAcceleration()) : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getHBEFA_NOxEmissions() : INVALID_DOUBLE_VALUE);
                 break;
             case VAR_FUELCONSUMPTION:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(onRoad ? HelpersHBEFA::computeFuel(v->getVehicleType().getEmissionClass(), v->getSpeed(), v->getAcceleration()) : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getHBEFA_FuelConsumption() : INVALID_DOUBLE_VALUE);
                 break;
             case VAR_NOISEEMISSION:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(onRoad ? HelpersHarmonoise::computeNoise(v->getVehicleType().getEmissionClass(), v->getSpeed(), v->getAcceleration()) : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getHarmonoise_NoiseEmissions() : INVALID_DOUBLE_VALUE);
                 break;
             case VAR_PERSON_NUMBER:
                 tempMsg.writeUnsignedByte(TYPE_INTEGER);
                 tempMsg.writeInt(v->getPersonNumber());
+                break;
+            case VAR_WAITING_TIME:
+                tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+                tempMsg.writeDouble(v->getWaitingSeconds());
                 break;
             case VAR_EDGE_TRAVELTIME: {
                 if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
@@ -360,10 +366,27 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
                 tempMsg.writeUnsignedByte(b);
             }
             break;
+            case VAR_DISTANCE: {
+                tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+                SUMOReal distance = onRoad ? v->getRoute().getDistanceBetween(0, v->getPositionOnLane(), v->getRoute().getEdges()[0],  &v->getLane()->getEdge()) : INVALID_DOUBLE_VALUE;
+                if (distance == std::numeric_limits<SUMOReal>::max()) {
+                    distance = INVALID_DOUBLE_VALUE;
+                }
+                tempMsg.writeDouble(distance);
+            }
+            break;
             case DISTANCE_REQUEST:
                 if (!commandDistanceRequest(server, inputStorage, tempMsg, v)) {
                     return false;
                 }
+                break;
+            case VAR_ALLOWED_SPEED:
+                tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+                tempMsg.writeDouble(onRoad ? v->getLane()->getVehicleMaxSpeed(v) : INVALID_DOUBLE_VALUE);
+                break;
+            case VAR_SPEED_FACTOR:
+                tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+                tempMsg.writeDouble(v->getChosenSpeedFactor());
                 break;
             default:
 
@@ -594,15 +617,15 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
     int variable = inputStorage.readUnsignedByte();
     if (variable != CMD_STOP && variable != CMD_CHANGELANE
             && variable != CMD_SLOWDOWN && variable != CMD_CHANGETARGET && variable != CMD_RESUME
-            && variable != VAR_ROUTE_ID && variable != VAR_ROUTE
+            && variable != VAR_TYPE && variable != VAR_ROUTE_ID && variable != VAR_ROUTE
             && variable != VAR_EDGE_TRAVELTIME && variable != VAR_EDGE_EFFORT
             && variable != CMD_REROUTE_TRAVELTIME && variable != CMD_REROUTE_EFFORT
             && variable != VAR_SIGNALS && variable != VAR_MOVE_TO
             && variable != VAR_LENGTH && variable != VAR_MAXSPEED && variable != VAR_VEHICLECLASS
-            && variable != VAR_SPEED_FACTOR && variable != VAR_SPEED_DEVIATION && variable != VAR_EMISSIONCLASS
+            && variable != VAR_SPEED_FACTOR && variable != VAR_EMISSIONCLASS
             && variable != VAR_WIDTH && variable != VAR_MINGAP && variable != VAR_SHAPECLASS
             && variable != VAR_ACCEL && variable != VAR_DECEL && variable != VAR_IMPERFECTION
-            && variable != VAR_TAU
+            && variable != VAR_TAU && variable != VAR_LANECHANGE_MODE
             && variable != VAR_SPEED && variable != VAR_SPEEDSETMODE && variable != VAR_COLOR
             && variable != ADD && variable != REMOVE
             && variable != VAR_MOVE_TO_VTD
@@ -737,9 +760,6 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), laneIndex));
             laneTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep() + stickyTime, laneIndex));
             v->getInfluencer().setLaneTimeLine(laneTimeLine);
-            MSVehicle::ChangeRequest req = v->getInfluencer().checkForLaneChanges(MSNet::getInstance()->getCurrentTimeStep(),
-                                           *v->getEdge(), v->getLaneIndex());
-            v->getLaneChangeModel().requestLaneChange(req);
         }
         break;
         case CMD_SLOWDOWN: {
@@ -787,6 +807,18 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             if (!v->replaceRouteEdges(newRoute, v->getLane() == 0)) {
                 return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Route replacement failed for " + v->getID(), outputStorage);
             }
+        }
+        break;
+        case VAR_TYPE: {
+            std::string vTypeID;
+            if (!server.readTypeCheckingString(inputStorage, vTypeID)) {
+                return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "The vehicle type id must be given as a string.", outputStorage);
+            }
+            MSVehicleType* vehicleType = MSNet::getInstance()->getVehicleControl().getVType(vTypeID);
+            if (vehicleType == 0) {
+                return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "The vehicle type '" + vTypeID + "' is not known.", outputStorage);
+            }
+            v->replaceVehicleType(vehicleType);
         }
         break;
         case VAR_ROUTE_ID: {
@@ -1044,6 +1076,14 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             v->getInfluencer().setConsiderSafeVelocity((speedMode & 1) != 0);
             v->getInfluencer().setConsiderMaxAcceleration((speedMode & 2) != 0);
             v->getInfluencer().setConsiderMaxDeceleration((speedMode & 4) != 0);
+        }
+        break;
+        case VAR_LANECHANGE_MODE: {
+            int laneChangeMode = 0;
+            if (!server.readTypeCheckingInt(inputStorage, laneChangeMode)) {
+                return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Setting lane change mode requires an integer.", outputStorage);
+            }
+            v->getInfluencer().setLaneChangeMode(laneChangeMode);
         }
         break;
         case VAR_COLOR: {
@@ -1468,6 +1508,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
 bool
 TraCIServerAPI_Vehicle::vtdMap_matchingEdgeLane(const Position& pos, const std::string& origID, MSVehicle& v, bool report,
         SUMOReal& bestDistance, MSLane** lane, SUMOReal& lanePos, int& routeOffset, MSEdgeVector& edges) {
+    UNUSED_PARAMETER(edges);
     const std::map<std::string, std::vector<MSLane*> >&  vtdMap = getOrBuildVTDMap();
     if (vtdMap.find(origID) == vtdMap.end()) {
         if (report) {
@@ -1518,7 +1559,8 @@ TraCIServerAPI_Vehicle::vtdMap_matchingEdgeLane(const Position& pos, const std::
 bool
 TraCIServerAPI_Vehicle::vtdMap_matchingRoutePosition(const Position& pos, const std::string& origID, MSVehicle& v, bool report,
         SUMOReal& bestDistance, MSLane** lane, SUMOReal& lanePos, int& routeOffset, MSEdgeVector& edges) {
-
+    UNUSED_PARAMETER(edges);
+    UNUSED_PARAMETER(origID);
     int lastBestRouteEdge = 0;
     int lastRouteEdge = 0;
     MSLane* bestRouteLane = 0;
@@ -1563,8 +1605,9 @@ TraCIServerAPI_Vehicle::vtdMap_matchingRoutePosition(const Position& pos, const 
 
 
 bool
-TraCIServerAPI_Vehicle::vtdMap_matchingNearest(const Position& pos, const std::string& origID, MSVehicle& v, traci::TraCIServer& server, bool report,
+TraCIServerAPI_Vehicle::vtdMap_matchingNearest(const Position& pos, const std::string& origID, MSVehicle& v, TraCIServer& server, bool report,
         SUMOReal& bestDistance, MSLane** lane, SUMOReal& lanePos, int& routeOffset, MSEdgeVector& edges) {
+    UNUSED_PARAMETER(bestDistance);
     unsigned int r = 0;
     SUMOReal minDist = 1 << (11);
     MSLane* minDistLane = 0;
@@ -1661,7 +1704,7 @@ TraCIServerAPI_Vehicle::vtdMap_matchingNearest(const Position& pos, const std::s
 
 
 bool
-TraCIServerAPI_Vehicle::commandDistanceRequest(traci::TraCIServer& server, tcpip::Storage& inputStorage,
+TraCIServerAPI_Vehicle::commandDistanceRequest(TraCIServer& server, tcpip::Storage& inputStorage,
         tcpip::Storage& outputStorage, const MSVehicle* v) {
     if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
         return server.writeErrorStatusCmd(CMD_GET_VEHICLE_VARIABLE, "Retrieval of distance requires a compound object.", outputStorage);
@@ -1693,7 +1736,7 @@ TraCIServerAPI_Vehicle::commandDistanceRequest(traci::TraCIServer& server, tcpip
             pos.set(p1x, p1y);
         }
         if (posType == POSITION_3D) {
-            inputStorage.readDouble();		// z value is ignored
+            inputStorage.readDouble();        // z value is ignored
         }
         roadPos = TraCIServerAPI_Simulation::convertCartesianToRoadMap(pos);
         break;

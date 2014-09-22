@@ -37,10 +37,17 @@
 #include <microsim/MSVehicle.h>
 #include "MSDevice_Tripinfo.h"
 #include "MSDevice_BTsender.h"
+#include "MSDevice_BTreceiver.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
+
+
+// ===========================================================================
+// static members
+// ===========================================================================
+std::map<std::string, MSDevice_BTsender::VehicleInformation*> MSDevice_BTsender::sVehicles;
 
 
 // ===========================================================================
@@ -51,15 +58,13 @@
 // ---------------------------------------------------------------------------
 void
 MSDevice_BTsender::insertOptions(OptionsCont& oc) {
-    oc.addOptionSubTopic("Communication");
     insertDefaultAssignmentOptions("btsender", "Communication", oc);
 }
 
 
 void
 MSDevice_BTsender::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& into) {
-    OptionsCont& oc = OptionsCont::getOptions();
-    if (equippedByDefaultAssignmentOptions(oc, "btsender", v)) {
+    if (equippedByDefaultAssignmentOptions(OptionsCont::getOptions(), "btsender", v)) {
         MSDevice_BTsender* device = new MSDevice_BTsender(v, "btsender_" + v.getID());
         into.push_back(device);
     }
@@ -70,7 +75,7 @@ MSDevice_BTsender::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& i
 // MSDevice_BTsender-methods
 // ---------------------------------------------------------------------------
 MSDevice_BTsender::MSDevice_BTsender(SUMOVehicle& holder, const std::string& id)
-    : MSDevice(holder, id), myReportRoute(false) {
+    : MSDevice(holder, id) {
 }
 
 
@@ -78,17 +83,51 @@ MSDevice_BTsender::~MSDevice_BTsender() {
 }
 
 
-void
-MSDevice_BTsender::generateOutput() const {
-    if (myReportRoute) {
-        OutputDevice& os = OutputDevice::getDeviceByOption("bt-output");
-        os.openTag("found");
-        os.writeAttr("id", myHolder.getID());
-        os.writeAttr("route", myHolder.getRoute().getEdges());
-        os.closeTag();
+bool
+MSDevice_BTsender::notifyEnter(SUMOVehicle& veh, Notification reason) {
+    if (reason == MSMoveReminder::NOTIFICATION_DEPARTED && sVehicles.find(veh.getID()) == sVehicles.end()) {
+        sVehicles[veh.getID()] = new VehicleInformation(veh.getID());
     }
+    sVehicles[veh.getID()]->updates.push_back(VehicleState(
+                MSNet::getInstance()->getCurrentTimeStep(), veh.getSpeed(), static_cast<MSVehicle&>(veh).getAngle(), static_cast<MSVehicle&>(veh).getPosition(), static_cast<MSVehicle&>(veh).getLane()->getID(), veh.getPositionOnLane()
+            ));
+    return true;
 }
 
+
+bool
+MSDevice_BTsender::notifyMove(SUMOVehicle& veh, SUMOReal /* oldPos */, SUMOReal newPos, SUMOReal newSpeed) {
+    if (sVehicles.find(veh.getID()) == sVehicles.end()) {
+        WRITE_WARNING("btsender: Can not update position of a vehicle that is not within the road network (" + veh.getID() + ").");
+        return true;
+    }
+    sVehicles[veh.getID()]->updates.push_back(VehicleState(
+                MSNet::getInstance()->getCurrentTimeStep(), newSpeed, static_cast<MSVehicle&>(veh).getAngle(), static_cast<MSVehicle&>(veh).getPosition(), static_cast<MSVehicle&>(veh).getLane()->getID(), newPos
+            ));
+    return true;
+}
+
+
+bool
+MSDevice_BTsender::notifyLeave(SUMOVehicle& veh, SUMOReal /* lastPos */, Notification reason) {
+    if (reason < MSMoveReminder::NOTIFICATION_TELEPORT) {
+        return true;
+    }
+    if (sVehicles.find(veh.getID()) == sVehicles.end()) {
+        WRITE_WARNING("btsender: Can not update position of a vehicle that is not within the road network (" + veh.getID() + ").");
+        return true;
+    }
+    sVehicles[veh.getID()]->updates.push_back(VehicleState(
+                MSNet::getInstance()->getCurrentTimeStep(), veh.getSpeed(), static_cast<MSVehicle&>(veh).getAngle(), static_cast<MSVehicle&>(veh).getPosition(), static_cast<MSVehicle&>(veh).getLane()->getID(), veh.getPositionOnLane()
+            ));
+    if (reason >= MSMoveReminder::NOTIFICATION_TELEPORT) {
+        sVehicles[veh.getID()]->amOnNet = false;
+    }
+    if (reason >= MSMoveReminder::NOTIFICATION_ARRIVED) {
+        sVehicles[veh.getID()]->haveArrived = true;
+    }
+    return true;
+}
 
 
 /****************************************************************************/

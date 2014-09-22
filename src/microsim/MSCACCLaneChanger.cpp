@@ -205,10 +205,6 @@ bool MSCACCLaneChanger::change() {
                 //vehicle->getLaneChangeModel().setOwnState(state2|state1);
                 // change if the vehicle wants to and is allowed to change
                 if (changingAllowed) {
-#ifndef NO_TRACI
-                    // inform lane change model about this change
-                    vehicle->getLaneChangeModel().fulfillChangeRequest(MSVehicle::REQUEST_LEFT);
-#endif
                     startChange(vehicle, myCandi, 1);
                     return true;
                 }
@@ -248,10 +244,6 @@ bool MSCACCLaneChanger::change() {
                 //vehicle->getLaneChangeModel().setOwnState(state2|state1);
                 // change if the vehicle wants to and is allowed to change
                 if (changingAllowed2) {
-#ifndef NO_TRACI
-                    // inform lane change model about this change
-                    vehicle->getLaneChangeModel().fulfillChangeRequest(MSVehicle::REQUEST_RIGHT);
-#endif
                     startChange(vehicle, myCandi, -1);
                     return true;
                 }
@@ -399,8 +391,7 @@ MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, SUMOReal>& lead
         }
     }
     MSAbstractLaneChangeModel::MSLCMessager msg(leader.first, rLead.first, rFollow.first);
-    return blocked | veh(myCandi)->getLaneChangeModel().wantsChangeToLeft(
-               msg, blocked, leader, rLead, rFollow, *(myCandi + 1)->lane, preb, &(myCandi->lastBlocked));
+    return blocked | veh(myCandi)->getLaneChangeModel().wantsChange(+1, msg, blocked, leader, rLead, rFollow, *(myCandi + 1)->lane, preb, &(myCandi->lastBlocked), &(myCandi->firstBlocked));
 }
 
 int
@@ -461,8 +452,7 @@ MSCACCLaneChanger::change2right(const std::pair<MSVehicle* const, SUMOReal>& lea
     }
 
     MSAbstractLaneChangeModel::MSLCMessager msg(leader.first, rLead.first, rFollow.first);
-    return blocked | veh(myCandi)->getLaneChangeModel().wantsChangeToRight(
-               msg, blocked, leader, rLead, rFollow, *(myCandi - 1)->lane, preb, &(myCandi->lastBlocked));
+    return blocked | veh(myCandi)->getLaneChangeModel().wantsChange(-1, msg, blocked, leader, rLead, rFollow, *(myCandi - 1)->lane, preb, &(myCandi->lastBlocked), &(myCandi->firstBlocked));
 }
 
 void

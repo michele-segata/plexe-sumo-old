@@ -261,7 +261,6 @@ public:
      */
     void writeStops(OutputDevice& dev) const;
 
-
     /** @brief Returns whether the defaults shall be used
      * @param[in] oc The options to get the options from
      * @param[in] optionName The name of the option to determine whether its value shall be used

@@ -32,6 +32,9 @@
 #endif
 
 #include "MSAbstractLaneChangeModel.h"
+#include "MSLCM_DK2008.h"
+#include "MSLCM_LC2013.h"
+#include "MSLCM_JE2013.h"
 #include "MSNet.h"
 #include "MSEdge.h"
 #include "MSLane.h"
@@ -40,6 +43,21 @@
 /* -------------------------------------------------------------------------
  * MSAbstractLaneChangeModel-methods
  * ----------------------------------------------------------------------- */
+
+MSAbstractLaneChangeModel*
+MSAbstractLaneChangeModel::build(LaneChangeModel lcm, MSVehicle& v) {
+    switch (lcm) {
+        case LCM_DK2008:
+            return new MSLCM_DK2008(v);
+        case LCM_LC2013:
+            return new MSLCM_LC2013(v);
+        case LCM_JE2013:
+            return new MSLCM_JE2013(v);
+        default:
+            throw ProcessError("Lane change model '" + toString(lcm) + "' not implemented");
+    }
+}
+
 
 MSAbstractLaneChangeModel::MSAbstractLaneChangeModel(MSVehicle& v) :
     myVehicle(v),
@@ -51,9 +69,6 @@ MSAbstractLaneChangeModel::MSAbstractLaneChangeModel(MSVehicle& v) :
     myAlreadyMoved(false),
     myShadowLane(0),
     myHaveShadow(false),
-#ifndef NO_TRACI
-    myChangeRequest(MSVehicle::REQUEST_NONE),
-#endif
     myCarFollowModel(v.getCarFollowModel()) {
 }
 
@@ -143,15 +158,6 @@ MSAbstractLaneChangeModel::continueLaneChangeManeuver(bool moved) {
         myVehicle.leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE);
         myVehicle.enterLaneAtLaneChange(myShadowLane);
         myShadowLane = tmp;
-        if (myVehicle.getLane()->getEdge().getPurpose() == MSEdge::EDGEFUNCTION_INTERNAL) {
-            // internal lanes do not appear in bestLanes so we need to update
-            // myCurrentLaneInBestLanes explicitly
-            myVehicle.getBestLanes(false, myVehicle.getLane()->getLogicalPredecessorLane());
-            if (myVehicle.fixContinuations()) {
-                WRITE_WARNING("vehicle '" + myVehicle.getID() + "' could not reconstruct bestLanes when changing lanes on lane '" + myVehicle.getLane()->getID() + " time="
-                              + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
-            }
-        }
         if (myVehicle.fixPosition()) {
             WRITE_WARNING("vehicle '" + myVehicle.getID() + "' set back by " + toString(myVehicle.getPositionOnLane() - myVehicle.getLane()->getLength()) +
                           "m when changing lanes on lane '" + myVehicle.getLane()->getID() + " time=" +

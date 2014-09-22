@@ -2,14 +2,19 @@
 """
 @file    checkSvnProps.py
 @author  Michael Behrisch
-@date    2010
+@date    2010-08-29
 @version $Id$
 
 Checks svn property settings for all files.
 
 SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
 Copyright (C) 2010-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 
 import os, subprocess, sys, xml.sax
@@ -94,15 +99,17 @@ class PropertyReader(xml.sax.handler.ContentHandler):
             self._hadKeywords = False
 
 
+sumoRoot = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+svnRoots = [sumoRoot]
 optParser = OptionParser()
 optParser.add_option("-v", "--verbose", action="store_true",
                      default=False, help="tell me what you are doing")
 optParser.add_option("-f", "--fix", action="store_true",
                       default=False, help="fix invalid svn properties")
+optParser.add_option("-r", "--recheck",
+                      default=sumoRoot, help="fully recheck all files in given dir")
 (options, args) = optParser.parse_args()
 seen = set()
-sumoRoot = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-svnRoots = [sumoRoot]
 if len(args) > 0:
     svnRoots = [os.path.abspath(a) for a in args]
 else:
@@ -117,8 +124,8 @@ for svnRoot in svnRoots:
     xml.sax.parseString(output, PropertyReader(options.fix))
 
 if options.verbose:
-    print "re-checking tree at", sumoRoot 
-for root, dirs, files in os.walk(sumoRoot):
+    print "re-checking tree at", options.recheck 
+for root, dirs, files in os.walk(options.recheck):
     for name in files:
         fullName = os.path.join(root, name)
         if fullName in seen or subprocess.call(["svn", "ls", fullName], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT):
@@ -138,6 +145,6 @@ for root, dirs, files in os.walk(sumoRoot):
                 print fullName, "svn:keywords"
                 if options.fix:
                     subprocess.call(["svn", "ps", "svn:keywords", _KEYWORDS, fullName])
-    for ignoreDir in ['.svn', 'foreign', 'contributed']:
+    for ignoreDir in ['.svn', 'foreign', 'contributed', 'texttesttmp']:
         if ignoreDir in dirs:
             dirs.remove(ignoreDir)

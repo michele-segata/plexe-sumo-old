@@ -14,6 +14,7 @@ for step in range(3):
 
 def check(vehID):
     print "vehicles", traci.vehicle.getIDList()
+    print "vehicle count", traci.vehicle.getIDCount()
     print "examining", vehID
     print "speed", traci.vehicle.getSpeed(vehID)
     print "speed w/o traci", traci.vehicle.getSpeedWithoutTraCI(vehID)
@@ -42,7 +43,7 @@ def check(vehID):
     print "length", traci.vehicle.getLength(vehID)
     print "maxSpeed", traci.vehicle.getMaxSpeed(vehID)
     print "speedFactor", traci.vehicle.getSpeedFactor(vehID)
-    print "speedDev", traci.vehicle.getSpeedDeviation(vehID)
+    print "allowedSpeed", traci.vehicle.getAllowedSpeed(vehID)
     print "accel", traci.vehicle.getAccel(vehID)
     print "decel", traci.vehicle.getDecel(vehID)
     print "imperfection", traci.vehicle.getImperfection(vehID)
@@ -52,6 +53,9 @@ def check(vehID):
     print "shape", traci.vehicle.getShapeClass(vehID)
     print "MinGap", traci.vehicle.getMinGap(vehID)
     print "width", traci.vehicle.getWidth(vehID)
+    print "waiting time", traci.vehicle.getWaitingTime(vehID)
+    print "driving dist", traci.vehicle.getDrivingDistance(vehID, "4fi", 2.)
+    print "driving dist 2D", traci.vehicle.getDrivingDistance2D(vehID, 100., 100.)
 
 vehID = "horiz"
 check(vehID)
@@ -64,7 +68,6 @@ for step in range(3,6):
 traci.vehicle.setLength(vehID, 1.0)
 traci.vehicle.setMaxSpeed(vehID, 1.0)
 traci.vehicle.setSpeedFactor(vehID, 1.1)
-traci.vehicle.setSpeedDeviation(vehID, 1.1)
 traci.vehicle.setAccel(vehID, 1.1)
 traci.vehicle.setDecel(vehID, 1.1)
 traci.vehicle.setImperfection(vehID, 0.1)
@@ -76,6 +79,10 @@ traci.vehicle.setMinGap(vehID, 1.1)
 traci.vehicle.setWidth(vehID, 1.1)
 traci.vehicle.setColor(vehID, (1, 0, 0, 1))
 check(vehID)
+try:
+    check("bla")
+except traci.TraCIException:
+    print "recovering from exception after asking for unknown vehicle"
 traci.vehicle.add("1", "horizontal")
 check("1")
 traci.vehicle.changeTarget("1", "4fi")

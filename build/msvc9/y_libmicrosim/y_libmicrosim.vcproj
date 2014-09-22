@@ -611,6 +611,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\microsim\MSLCM_DK2013.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSLCM_JE2013.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\microsim\MSLink.cpp"
 				>
 			</File>
@@ -795,6 +803,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\microsim\MSStateHandler.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\microsim\MSVehicle.h"
 				>
 			</File>
@@ -816,7 +828,11 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\..\src\microsim\MSStateHandler.h"
+			RelativePath="..\..\..\src\microsim\MSLCM_DK2013.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\src\microsim\MSLCM_JE2013.h"
 			>
 		</File>
 	</Files>

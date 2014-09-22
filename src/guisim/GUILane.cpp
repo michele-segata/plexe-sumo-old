@@ -294,11 +294,6 @@ GUILane::drawLinkRules(const GUINet& net) const {
                 break;
             case LINKSTATE_MAJOR:
                 glColor3d(1, 1, 1);
-                if (railway) {
-                    // the white bar should be the default for most railway
-                    // links and looks ugly so we do not draw it
-                    continue;
-                }
                 break;
             case LINKSTATE_MINOR:
                 glColor3d(.2, .2, .2);
@@ -316,12 +311,16 @@ GUILane::drawLinkRules(const GUINet& net) const {
                 glColor3d(0, 0, 0);
                 break;
         }
-        glBegin(GL_QUADS);
-        glVertex2d(x1 - myHalfLaneWidth, 0.0);
-        glVertex2d(x1 - myHalfLaneWidth, 0.5);
-        glVertex2d(x2 - myHalfLaneWidth, 0.5);
-        glVertex2d(x2 - myHalfLaneWidth, 0.0);
-        glEnd();
+        if (!railway || link->getState() != LINKSTATE_MAJOR) {
+            // THE WHITE BAR SHOULD BE THE DEFAULT FOR MOST RAILWAY
+            // LINKS AND LOOKS UGLY SO WE DO NOT DRAW IT
+            glBegin(GL_QUADS);
+            glVertex2d(x1 - myHalfLaneWidth, 0.0);
+            glVertex2d(x1 - myHalfLaneWidth, 0.5);
+            glVertex2d(x2 - myHalfLaneWidth, 0.5);
+            glVertex2d(x2 - myHalfLaneWidth, 0.0);
+            glEnd();
+        }
         glPopName();
         x1 = x2;
         x2 += w;
@@ -630,13 +629,14 @@ GUIParameterTableWindow*
 GUILane::getParameterWindow(GUIMainWindow& app,
                             GUISUMOAbstractView&) {
     GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 4);
+        new GUIParameterTableWindow(app, *this, 5);
     // add items
     ret->mkItem("maxspeed [m/s]", false, getSpeedLimit());
     ret->mkItem("length [m]", false, myLength);
-    ret->mkItem("permissions", false, getAllowedVehicleClassNames(myPermissions));
     ret->mkItem("street name", false, myEdge->getStreetName());
     ret->mkItem("stored traveltime [s]", true, new FunctionBinding<GUILane, SUMOReal>(this, &GUILane::getStoredEdgeTravelTime));
+    ret->mkItem("allowed vehicle class", false, getAllowedVehicleClassNames(myPermissions));
+    ret->mkItem("disallowed vehicle class", false, getAllowedVehicleClassNames(~myPermissions));
     // close building
     ret->closeBuilding();
     return ret;
@@ -759,29 +759,31 @@ GUILane::getColorValue(size_t activeScheme) const {
         case 3:
             return getSpeedLimit();
         case 4:
-            return getOccupancy();
+            return getBruttoOccupancy();
         case 5:
-            return firstWaitingTime();
+            return getNettoOccupancy();
         case 6:
-            return getEdgeLaneNumber();
+            return firstWaitingTime();
         case 7:
-            return getNormedHBEFA_CO2Emissions();
+            return getEdgeLaneNumber();
         case 8:
-            return getNormedHBEFA_COEmissions();
+            return getNormedHBEFA_CO2Emissions();
         case 9:
-            return getNormedHBEFA_PMxEmissions();
+            return getNormedHBEFA_COEmissions();
         case 10:
-            return getNormedHBEFA_NOxEmissions();
+            return getNormedHBEFA_PMxEmissions();
         case 11:
-            return getNormedHBEFA_HCEmissions();
+            return getNormedHBEFA_NOxEmissions();
         case 12:
-            return getNormedHBEFA_FuelConsumption();
+            return getNormedHBEFA_HCEmissions();
         case 13:
+            return getNormedHBEFA_FuelConsumption();
+        case 14:
             return getHarmonoise_NoiseEmissions();
-        case 14: {
+        case 15: {
             return getStoredEdgeTravelTime();
         }
-        case 15: {
+        case 16: {
             MSEdgeWeightsStorage& ews = MSNet::getInstance()->getWeightsStorage();
             if (!ews.knowsTravelTime(myEdge)) {
                 return -1;
@@ -791,7 +793,7 @@ GUILane::getColorValue(size_t activeScheme) const {
                 return 100 * myLength / value / getSpeedLimit();
             }
         }
-        case 16: {
+        case 17: {
             return 1 / myLengthGeometryFactor;
         }
     }

@@ -92,7 +92,13 @@ MSCFModel_Krauss::_vsafe(SUMOReal gap, SUMOReal predSpeed, SUMOReal predMaxDecel
         if (gap < 0.01) {
             return 0;
         }
-        return (SUMOReal)(-myTauDecel + sqrt(myTauDecel * myTauDecel + 2. * myDecel * gap));
+        // g = t * x + x^2 / (2 * b)
+        const SUMOReal result = (SUMOReal)(-myTauDecel + sqrt(myTauDecel * myTauDecel + 2. * myDecel * gap));
+        assert(result >= 0);
+        return result;
+    }
+    if (gap < 0) {
+        gap = 0;
     }
     // follow the leader
     // g=gap, t=myHeadwayTime, a=predMaxDecel, b=myDecel, v=predSpeed, x=vSafe
@@ -108,11 +114,12 @@ MSCFModel_Krauss::_vsafe(SUMOReal gap, SUMOReal predSpeed, SUMOReal predMaxDecel
                                            4.0 * egoDecel * (2.0 * gap + predSpeed * predSpeed / predMaxDecel - predSpeed - 1.0)
                                            + (egoDecel * (2.0 * myHeadwayTime - 1.0))
                                            * (egoDecel * (2.0 * myHeadwayTime - 1.0)))
-                                       + myDecel * (0.5 - myHeadwayTime));
+                                       + egoDecel * (0.5 - myHeadwayTime));
+    // XXX recheck use of both branches of the quadratic forumula
     if (ISNAN(result)) {
         return 0;
     } else {
-        return result;
+        return MAX2((SUMOReal)0, result);
     }
 }
 

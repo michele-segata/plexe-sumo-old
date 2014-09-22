@@ -7,7 +7,12 @@
 Common utility functions
 
 Copyright (C) 2007-2013 DLR/FS, Germany
-All rights reserved
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 
 This is a duplicate of tools/util/miscutils.py from the VABENE repository
 """
@@ -132,6 +137,10 @@ class Statistics:
 
     def median_abs(self):
         return self.mean_abs()
+
+    def quartiles(self):
+        s = sorted(self.values)
+        return s[len(self.values) / 4], s[len(self.values) / 2], s[3 * len(self.values) / 4]
 
     def rank(self, fraction):
         if len(self.values) > 0:

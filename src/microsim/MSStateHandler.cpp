@@ -37,6 +37,7 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSGlobals.h>
 #include <microsim/MSNet.h>
+#include <microsim/MSInsertionControl.h>
 #include <microsim/MSRoute.h>
 #include "MSStateHandler.h"
 
@@ -59,7 +60,8 @@ MSStateHandler::MSStateHandler(const std::string& file, const SUMOTime offset) :
 #ifdef HAVE_INTERNAL
     mySegment(0),
 #endif
-    myEdgeAndLane(0, -1) {
+    myEdgeAndLane(0, -1),
+    myCurrentVType(0) {
 }
 
 
@@ -115,7 +117,7 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             if (MSRoute::dictionary(id) == 0) {
                 MSEdgeVector edges;
                 MSEdge::parseEdgesList(attrs.getString(SUMO_ATTR_EDGES), edges, id);
-                MSRoute* r = new MSRoute(id, edges, attrs.getInt(SUMO_ATTR_STATE),
+                MSRoute* r = new MSRoute(id, edges, attrs.getBool(SUMO_ATTR_STATE),
                                          0, std::vector<SUMOVehicleParameter::Stop>());
                 MSRoute::dictionary(id, r);
             }
@@ -124,7 +126,7 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
         case SUMO_TAG_ROUTE_DISTRIBUTION: {
             const std::string id = attrs.getString(SUMO_ATTR_ID);
             if (MSRoute::dictionary(id) == 0) {
-                RandomDistributor<const MSRoute*>* dist = new RandomDistributor<const MSRoute*>(MSRoute::getMaxRouteDistSize(), &MSRoute::releaseRoute);
+                RandomDistributor<const MSRoute*>* dist = new RandomDistributor<const MSRoute*>();
                 std::vector<std::string> routeIDs;
                 std::istringstream iss(attrs.getString(SUMO_ATTR_PROBS));
                 SUMOSAXAttributes::parseStringVector(attrs.getString(SUMO_ATTR_ROUTES), routeIDs);
@@ -134,15 +136,15 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
                     const MSRoute* r = MSRoute::dictionary(*it);
                     assert(r != 0);
                     dist->add(prob, r, false);
+                    r->addReference();
                 }
-                MSRoute::dictionary(id, dist);
+                MSRoute::dictionary(id, dist, attrs.getBool(SUMO_ATTR_STATE));
             }
             break;
         }
         case SUMO_TAG_VTYPE: {
-            SUMOVTypeParameter* def = SUMOVehicleParserHelper::beginVTypeParsing(attrs, getFileName());
-            vc.addVType(MSVehicleType::build(*def));
-            delete def;
+            myCurrentVType = SUMOVehicleParserHelper::beginVTypeParsing(attrs, getFileName());
+            break;
         }
         case SUMO_TAG_VTYPE_DISTRIBUTION: {
             const std::string id = attrs.getString(SUMO_ATTR_ID);
@@ -178,6 +180,10 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             v->loadState(attrs, myOffset);
             if (!vc.addVehicle(p->id, v)) {
                 throw ProcessError("Error: Could not build vehicle " + p->id + "!");
+            }
+            if (!v->hasDeparted()) {
+                // !!! the save did not keep the order in which the vehicles are checked for insertion
+                MSNet::getInstance()->getInsertionControl().add(v);
             }
             break;
         }
@@ -216,6 +222,10 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             break;
         }
         default:
+            // parse embedded vtype information
+            if (myCurrentVType != 0) {
+                SUMOVehicleParserHelper::parseVTypeEmbedded(*myCurrentVType, element, attrs);
+            }
             break;
     }
 }
@@ -225,6 +235,9 @@ void
 MSStateHandler::myEndElement(int element) {
     switch (element) {
         case SUMO_TAG_VTYPE:
+            MSNet::getInstance()->getVehicleControl().addVType(MSVehicleType::build(*myCurrentVType));
+            delete myCurrentVType;
+            myCurrentVType = 0;
             break;
         default:
             break;
