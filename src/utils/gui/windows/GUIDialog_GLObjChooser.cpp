@@ -9,7 +9,7 @@
 // Class for the window that allows to choose a street, junction or vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -109,12 +109,18 @@ GUIDialog_GLObjChooser::GUIDialog_GLObjChooser(
                  0, 0, 0, 0, 4, 4, 4, 4);
 
     myParent->getParent()->addChild(this);
-    //myTextEntry->setFocus();
 }
 
 
 GUIDialog_GLObjChooser::~GUIDialog_GLObjChooser() {
     myParent->getParent()->removeChild(this);
+}
+
+
+void
+GUIDialog_GLObjChooser::show() {
+    FXMainWindow::show();
+    myTextEntry->setFocus();
 }
 
 
@@ -139,7 +145,9 @@ long
 GUIDialog_GLObjChooser::onChgText(FXObject*, FXSelector, void*) {
     int id = myList->findItem(myTextEntry->getText(), -1, SEARCH_PREFIX);
     if (id < 0) {
-        myList->deselectItem(myList->getCurrentItem());
+        if (myList->getNumItems() > 0) {
+            myList->deselectItem(myList->getCurrentItem());
+        }
         myCenterButton->disable();
         return 1;
     }

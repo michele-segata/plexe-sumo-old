@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(sumo, 0.19.0)
+AC_INIT(sumo, 0.20.0)
 AC_CONFIG_SRCDIR(src/sumo_main.cpp)
 AC_CANONICAL_SYSTEM
 
@@ -118,8 +118,8 @@ else
     ac_disabled="$ac_disabled TRACI"
 fi
 
-AM_CONDITIONAL([WITH_VERSION_H], test -f .svn/entries)
-if test -f .svn/entries; then
+AM_CONDITIONAL([WITH_VERSION_H], test -d .svn)
+if test -d .svn; then
    AC_DEFINE([HAVE_VERSION_H], [1], [Define if auto-generated version.h should be used.])
 else
    AC_DEFINE_UNQUOTED(VERSION_STRING, "$PACKAGE_VERSION", [Defined if auto-generated version.h is unavailable.])
@@ -207,16 +207,15 @@ fi
 
 dnl  ... for proj.4
 dnl   ... for libs
-PROJ_LDFLAGS="-lproj"
 AC_ARG_WITH([proj-libraries], [AS_HELP_STRING([--with-proj-libraries=DIR],[where the PROJ library is installed (overrides previous settings).])])
 if test x"$with_proj_libraries" = x; then
-   AC_CHECK_LIB([proj], [main], [with_proj_libraries=yes],
+   AC_CHECK_LIB([proj], [main], [PROJ_LDFLAGS="-lproj"],
                 [AC_MSG_WARN([proj-lib not found. Specify path with option --with-proj-libraries=DIR.])])
 else
    save_ldflags=$LDFLAGS
    LDFLAGS="-L$with_proj_libraries"
    export LDFLAGS
-   AC_CHECK_LIB([proj], [main], [PROJ_LDFLAGS="$LDFLAGS $PROJ_LDFLAGS"],
+   AC_CHECK_LIB([proj], [main], [PROJ_LDFLAGS="$LDFLAGS -lproj"],
                 [AC_MSG_ERROR([proj-lib not found in "$with_proj_libraries".])])
    LDFLAGS=$save_ldflags
 fi
@@ -236,7 +235,7 @@ else
    CPPFLAGS=$save_cppflags
 fi
 fi
-if test x"$with_proj_includes" != x && test x"$with_proj_libraries" != x; then
+if test x"$with_proj_includes" != x && test x"$PROJ_LDFLAGS" != x; then
    AC_DEFINE([HAVE_PROJ], [1], [defined if PROJ is available])
    ac_enabled="$ac_enabled PROJ"
 else
@@ -254,7 +253,7 @@ if test x"$with_proj_gdal" != xno && test x"$with_gdal_config" != xno; then
         AC_PATH_PROG([GDAL_CONFIG], [gdal-config])
         if test -z $GDAL_CONFIG; then
             AC_MSG_WARN([could not find gdal-config from libgdal within the current path. Specify path with option --with-gdal-config.])
-        fi    
+        fi
     else
         if test -f $GDAL_CONFIG; then
             AC_MSG_RESULT([Using user-specified gdal-config file: $GDAL_CONFIG])
@@ -447,11 +446,13 @@ src/router/Makefile
 src/dfrouter/Makefile
 src/duarouter/Makefile
 src/jtrrouter/Makefile
+src/tools/Makefile
 src/traci_testclient/Makefile
 src/traci-server/Makefile
 src/utils/Makefile
 src/utils/common/Makefile
 src/utils/distribution/Makefile
+src/utils/emissions/Makefile
 src/utils/foxtools/Makefile
 src/utils/geom/Makefile
 src/utils/gui/Makefile

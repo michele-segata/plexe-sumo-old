@@ -11,7 +11,7 @@
 // Methods for the representation of a single edge
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -238,6 +238,8 @@ NBEdge::NBEdge(const std::string& id, NBNode* from, NBNode* to, NBEdge* tpl) :
     for (unsigned int i = 0; i < getNumLanes(); i++) {
         setSpeed(i, tpl->getLaneSpeed(i));
         setPermissions(tpl->getPermissions(i), i);
+        setLaneWidth(i, tpl->getLaneWidth(i));
+        setOffset(i, tpl->getOffset(i));
     }
 }
 
@@ -290,6 +292,7 @@ NBEdge::reinitNodes(NBNode* from, NBNode* to) {
         myTo = to;
         myTo->addIncomingEdge(this);
     }
+    computeAngle();
 }
 
 
@@ -426,6 +429,7 @@ NBEdge::computeEdgeShape() {
         avgLength += myLanes[i].shape.length();
     }
     myLength = avgLength / (SUMOReal) myLanes.size();
+    computeAngle(); // update angles using the finalized node and lane shapes
 }
 
 
@@ -985,7 +989,6 @@ NBEdge::buildInnerEdges(const NBNode& n, unsigned int noInternalNoSplits, unsign
     NBEdge* toEdge = 0;
     unsigned int edgeIndex = linkIndex;
     unsigned int internalLaneIndex = 0;
-    // connection index -> list of foe internal lane indices
     for (std::vector<Connection>::iterator i = myConnections.begin(); i != myConnections.end(); ++i) {
         Connection& con = *i;
         con.haveVia = false; // reset first since this may be called multiple times
@@ -993,7 +996,8 @@ NBEdge::buildInnerEdges(const NBNode& n, unsigned int noInternalNoSplits, unsign
             continue;
         }
         if (con.toEdge != toEdge) {
-            // skip indices to keep some correspondence between edge ids and link indices
+            // skip indices to keep some correspondence between edge ids and link indices:
+            // internalEdgeIndex + internalLaneIndex = linkIndex
             edgeIndex = linkIndex;
             toEdge = (*i).toEdge;
             internalLaneIndex = 0;
@@ -1002,6 +1006,7 @@ NBEdge::buildInnerEdges(const NBNode& n, unsigned int noInternalNoSplits, unsign
         std::vector<unsigned int> foeInternalLinks;
 
         LinkDirection dir = n.getDirection(this, con.toEdge);
+        // crossingPosition, list of foe link indices
         std::pair<SUMOReal, std::vector<unsigned int> > crossingPositions(-1, std::vector<unsigned int>());
         std::set<std::string> tmpFoeIncomingLanes;
         switch (dir) {
@@ -1260,17 +1265,39 @@ NBEdge::computeAngle() {
     // taking the angle at the first might be unstable, thus we take the angle
     // at a certain distance. (To compare two edges, additional geometry
     // segments are considered to resolve ambiguities)
-    const Position referencePosStart = myGeom.positionAtOffset2D(ANGLE_LOOKAHEAD);
+    const bool hasFromShape = myFrom->getShape().size() > 0; 
+    const bool hasToShape = myTo->getShape().size() > 0; 
+    Position fromCenter = (hasFromShape ? myFrom->getShape().getCentroid() : myFrom->getPosition());
+    Position toCenter = (hasToShape ? myTo->getShape().getCentroid() : myTo->getPosition());
+    PositionVector shape = ((hasFromShape || hasToShape) && getNumLanes() > 0 ? 
+            (myLaneSpreadFunction == LANESPREAD_RIGHT ? 
+             myLanes[getNumLanes() - 1].shape 
+             : myLanes[getNumLanes() / 2].shape)
+            : myGeom);
+
+    // if the junction shape is suspicious we cannot trust the angle to the centroid
+    if ((hasFromShape && (myFrom->getShape().distance(shape[0]) > 2 * POSITION_EPS
+                || myFrom->getShape().around(shape[-1]))) 
+            || (hasToShape && (myTo->getShape().distance(shape[-1]) > 2 * POSITION_EPS
+                || myTo->getShape().around(shape[0])))) {
+        fromCenter = myFrom->getPosition();
+        toCenter = myTo->getPosition();
+        shape = myGeom;
+    }
+
+    const SUMOReal angleLookahead = MIN2(shape.length2D() / 2, ANGLE_LOOKAHEAD);
+    const Position referencePosStart = shape.positionAtOffset2D(angleLookahead);
     myStartAngle = NBHelpers::angle(
-                       myFrom->getPosition().x(), myFrom->getPosition().y(),
+                       fromCenter.x(), fromCenter.y(),
                        referencePosStart.x(), referencePosStart.y());
-    const Position referencePosEnd = myGeom.positionAtOffset2D(myGeom.length() - ANGLE_LOOKAHEAD);
+    const Position referencePosEnd = shape.positionAtOffset2D(shape.length() - angleLookahead);
     myEndAngle = NBHelpers::angle(
                      referencePosEnd.x(), referencePosEnd.y(),
-                     myTo->getPosition().x(), myTo->getPosition().y());
+                     toCenter.x(), toCenter.y());
     myTotalAngle = NBHelpers::angle(
                        myFrom->getPosition().x(), myFrom->getPosition().y(),
                        myTo->getPosition().x(), myTo->getPosition().y());
+
 }
 
 
@@ -1618,6 +1645,7 @@ NBEdge::moveOutgoingConnectionsFrom(NBEdge* e, unsigned int laneOff) {
             assert(el.tlID == "");
             bool ok = addLane2LaneConnection(i + laneOff, el.toEdge, el.toLane, L2L_COMPUTED);
             assert(ok);
+            UNUSED_PARAMETER(ok); // only used for assertion
         }
     }
 }
@@ -1842,10 +1870,8 @@ NBEdge::append(NBEdge* e) {
     myTurnDestination = e->myTurnDestination;
     // set the node
     myTo = e->myTo;
+    computeAngle(); // myEndAngle may be different now
 }
-
-
-
 
 
 bool
@@ -2092,5 +2118,16 @@ NBEdge::dismissVehicleClassInformation() {
     }
 }
 
+
+bool
+NBEdge::connections_sorter(const Connection& c1, const Connection& c2) {
+    if (c1.fromLane != c2.fromLane) {
+        return c1.fromLane < c2.fromLane;
+    }
+    if (c1.toEdge != c2.toEdge) {
+        return false; // do not change ordering among toEdges as this is determined by angle in an earlier step
+    }
+    return c1.toLane < c2.toLane;
+}
 
 /****************************************************************************/

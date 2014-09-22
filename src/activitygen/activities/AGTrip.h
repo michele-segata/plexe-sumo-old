@@ -9,7 +9,7 @@
 // Class containing all information of a given trip (car, bus)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
@@ -80,23 +80,23 @@ public:
         myType("default"),
         myDay(day) {};
     void print();
-    bool operator<(AGTrip& trip);
+    bool operator<(const AGTrip& trip) const;
 
     void addLayOver(AGPosition by);
     void addLayOver(AGTrip& trip);
     void addLayOverWithoutDestination(AGTrip& trip);
 
-    AGPosition getDep();
-    AGPosition getArr();
-    int getTime();
+    AGPosition getDep() const;
+    AGPosition getArr() const;
+    int getTime() const;
     void setDepTime(int time);
-    std::string getVehicleName();
+    const std::string& getVehicleName() const;
     void setVehicleName(std::string name);
     void setArr(AGPosition arrival);
     void setDep(AGPosition departure);
-    int getDay();
+    int getDay() const;
     void setDay(int day);
-    std::string getType();
+    const std::string& getType() const;
     void setType(std::string type);
     std::list<AGPosition>* getPassed();
 
@@ -125,7 +125,7 @@ public:
     /**
      * returns whether this is a daily trip or a one day trip
      */
-    bool isDaily();
+    bool isDaily() const;
 
 private:
     AGPosition myFrom;

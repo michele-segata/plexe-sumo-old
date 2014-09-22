@@ -8,7 +8,7 @@
 Python implementation of the TraCI interface.
 
 SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-Copyright (C) 2011-2013 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -72,9 +72,9 @@ def getAdaptedTraveltime(edgeID, time):
                               tc.VAR_EDGE_TRAVELTIME, edgeID).readDouble()
 
 def getWaitingTime(edgeID):
-    """getWaitingTime() -> double
-    
-    .
+    """getWaitingTime() -> double 
+    Returns the sum of the waiting time of all vehicles currently on
+    that edge (see traci.vehicle.getWaitingTime).
     """
     return _getUniversal(tc.VAR_WAITING_TIME, edgeID) 
 

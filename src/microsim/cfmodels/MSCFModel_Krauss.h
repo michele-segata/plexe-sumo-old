@@ -10,7 +10,7 @@
 // Krauss car-following model, with acceleration decrease and faster start
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -106,6 +106,10 @@ private:
      * @return the safe velocity
      */
     SUMOReal _vsafe(SUMOReal gap, SUMOReal predSpeed, SUMOReal predMaxDecel) const;
+
+    /** @brief Returns the "safe" velocity for stopping within gap
+     */
+    SUMOReal _vstop(SUMOReal gap) const;
 
 
     /** @brief Applies driver imperfection (dawdling / sigma)

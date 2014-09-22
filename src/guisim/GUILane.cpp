@@ -9,7 +9,7 @@
 // Representation of a lane in the micro simulation (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -37,6 +37,7 @@
 #include <utils/geom/Position.h>
 #include <microsim/logging/FunctionBinding.h>
 #include <utils/common/MsgHandler.h>
+#include <utils/common/StdDefs.h>
 #include <utils/geom/GeomHelper.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
@@ -155,7 +156,7 @@ GUILane::integrateNewVehicle(SUMOTime t) {
 
 
 void
-GUILane::detectCollisions(SUMOTime timestep, int stage) {
+GUILane::detectCollisions(SUMOTime timestep, const std::string& stage) {
     AbstractMutex::ScopedLocker locker(myLock);
     MSLane::detectCollisions(timestep, stage);
 }
@@ -181,7 +182,7 @@ GUILane::drawLinkNo() const {
     glRotated(rot, 0, 0, 1);
     for (int i = noLinks; --i >= 0;) {
         SUMOReal x2 = x1 - (SUMOReal)(w / 2.);
-        GLHelper::drawText(toString(myLinks[i]->getRespondIndex()),
+        GLHelper::drawText(toString(myLinks[i]->getIndex()),
                            Position(x2, 0), 0, .6, RGBColor(128, 128, 255, 255), 180);
         x1 -= w;
     }
@@ -230,8 +231,7 @@ GUILane::drawLinkRules(const GUINet& net) const {
     const SUMOReal rot = RAD2DEG(atan2((s.x() - f.x()), (f.y() - s.y())));
     if (noLinks == 0) {
         glPushName(getGlID());
-        // draw a grey bar if no links are on the street
-        glColor3d(0.5, 0.5, 0.5);
+        GLHelper::setColor(getLinkColor(LINKSTATE_DEADEND));
         glPushMatrix();
         glTranslated(end.x(), end.y(), 0);
         glRotated(rot, 0, 0, 1);
@@ -273,44 +273,7 @@ GUILane::drawLinkRules(const GUINet& net) const {
                 glPushName(getGlID());
                 break;
         }
-        // select color
-        switch (link->getState()) {
-            case LINKSTATE_TL_GREEN_MAJOR:
-            case LINKSTATE_TL_GREEN_MINOR:
-                glColor3d(0, 1, 0);
-                break;
-            case LINKSTATE_TL_RED:
-                glColor3d(1, 0, 0);
-                break;
-            case LINKSTATE_TL_YELLOW_MAJOR:
-            case LINKSTATE_TL_YELLOW_MINOR:
-                glColor3d(1, 1, 0);
-                break;
-            case LINKSTATE_TL_OFF_BLINKING:
-                glColor3d(.7, .7, 0);
-                break;
-            case LINKSTATE_TL_OFF_NOSIGNAL:
-                glColor3d(0, 1, 1);
-                break;
-            case LINKSTATE_MAJOR:
-                glColor3d(1, 1, 1);
-                break;
-            case LINKSTATE_MINOR:
-                glColor3d(.2, .2, .2);
-                break;
-            case LINKSTATE_STOP:
-                glColor3d(.4, .2, .2);
-                break;
-            case LINKSTATE_EQUAL:
-                glColor3d(.5, .5, .5);
-                break;
-            case LINKSTATE_ALLWAY_STOP:
-                glColor3d(.2, .2, .4);
-                break;
-            case LINKSTATE_DEADEND:
-                glColor3d(0, 0, 0);
-                break;
-        }
+        GLHelper::setColor(getLinkColor(link->getState()));
         if (!railway || link->getState() != LINKSTATE_MAJOR) {
             // THE WHITE BAR SHOULD BE THE DEFAULT FOR MOST RAILWAY
             // LINKS AND LOOKS UGLY SO WE DO NOT DRAW IT
@@ -474,12 +437,12 @@ GUILane::drawGL(const GUIVisualizationSettings& s) const {
     } else {
         if (isRailway(myPermissions)) {
             // draw as railway
-            const SUMOReal halfRailWidth = 0.725;
-            GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, halfRailWidth * s.laneWidthExaggeration);
+            const SUMOReal halfRailWidth = 0.725 * s.laneWidthExaggeration;
+            GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, halfRailWidth);
             glColor3d(1, 1, 1);
             glTranslated(0, 0, .1);
-            GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, (halfRailWidth - 0.2) * s.laneWidthExaggeration);
-            drawCrossties(s);
+            GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, halfRailWidth - 0.2);
+            drawCrossties(s, s.laneWidthExaggeration);
         } else {
             const SUMOReal laneWidth = isInternal ? myQuarterLaneWidth : myHalfLaneWidth;
             mustDrawMarkings = !isInternal;
@@ -515,7 +478,7 @@ GUILane::drawGL(const GUIVisualizationSettings& s) const {
         }
     }
     if (mustDrawMarkings && drawDetails) { // needs matrix reset
-        drawMarkings(s);
+        drawMarkings(s, s.laneWidthExaggeration);
     }
     // draw vehicles
     if (s.scale > s.minVehicleSize) {
@@ -538,7 +501,7 @@ GUILane::drawGL(const GUIVisualizationSettings& s) const {
 
 
 void
-GUILane::drawMarkings(const GUIVisualizationSettings& s) const {
+GUILane::drawMarkings(const GUIVisualizationSettings& s, SUMOReal scale) const {
     glPushMatrix();
     glPushName(0);
     glTranslated(0, 0, GLO_EDGE);
@@ -548,7 +511,7 @@ GUILane::drawMarkings(const GUIVisualizationSettings& s) const {
         setColor(s);
     // optionally draw inverse markings
     if (myIndex > 0) {
-        SUMOReal mw = myHalfLaneWidth + SUMO_const_laneOffset + .01;
+        SUMOReal mw = (myHalfLaneWidth + SUMO_const_laneOffset + .01) * scale;
         int e = (int) getShape().size() - 1;
         for (int i = 0; i < e; ++i) {
             glPushMatrix();
@@ -558,8 +521,8 @@ GUILane::drawMarkings(const GUIVisualizationSettings& s) const {
                 glBegin(GL_QUADS);
                 glVertex2d(-mw, -t);
                 glVertex2d(-mw, -t - 3.);
-                glVertex2d(myQuarterLaneWidth, -t - 3.);
-                glVertex2d(myQuarterLaneWidth, -t);
+                glVertex2d(myQuarterLaneWidth * scale, -t - 3.);
+                glVertex2d(myQuarterLaneWidth * scale, -t);
                 glEnd();
             }
             glPopMatrix();
@@ -571,14 +534,14 @@ GUILane::drawMarkings(const GUIVisualizationSettings& s) const {
         getShape(),
         getShapeRotations(),
         getShapeLengths(),
-        getHalfWidth() + SUMO_const_laneOffset);
+        (getHalfWidth() + SUMO_const_laneOffset) * scale);
     glPopMatrix();
     glPopName();
 }
 
 
 void
-GUILane::drawCrossties(const GUIVisualizationSettings& s) const {
+GUILane::drawCrossties(const GUIVisualizationSettings& s, SUMOReal scale) const {
     glPushMatrix();
     glPushName(0);
     if (!MSGlobals::gUseMesoSim) {
@@ -593,10 +556,10 @@ GUILane::drawCrossties(const GUIVisualizationSettings& s) const {
         glRotated(myShapeRotations[i], 0, 0, 1);
         for (SUMOReal t = 0; t < myShapeLengths[i]; t += 1) {
             glBegin(GL_QUADS);
-            glVertex2d(-1, -t);
-            glVertex2d(-1, -t - 0.3);
-            glVertex2d(1.0, -t - 0.3);
-            glVertex2d(1.0, -t);
+            glVertex2d(-1 * scale, -t);
+            glVertex2d(-1 * scale, -t - 0.3);
+            glVertex2d(1.0 * scale, -t - 0.3);
+            glVertex2d(1.0 * scale, -t);
             glEnd();
         }
         glPopMatrix();
@@ -688,43 +651,6 @@ GUILane::getEdgeLaneNumber() const {
 }
 
 
-// ------------ Current state retrieval
-SUMOReal
-GUILane::getNormedHBEFA_CO2Emissions() const {
-    return getHBEFA_CO2Emissions() / getLength();
-}
-
-
-SUMOReal
-GUILane::getNormedHBEFA_COEmissions() const {
-    return getHBEFA_COEmissions() / getLength();
-}
-
-
-SUMOReal
-GUILane::getNormedHBEFA_PMxEmissions() const {
-    return getHBEFA_PMxEmissions() / getLength();
-}
-
-
-SUMOReal
-GUILane::getNormedHBEFA_NOxEmissions() const {
-    return getHBEFA_NOxEmissions() / getLength();
-}
-
-
-SUMOReal
-GUILane::getNormedHBEFA_HCEmissions() const {
-    return getHBEFA_HCEmissions() / getLength();
-}
-
-
-SUMOReal
-GUILane::getNormedHBEFA_FuelConsumption() const {
-    return getHBEFA_FuelConsumption() / getLength();
-}
-
-
 void
 GUILane::setColor(const GUIVisualizationSettings& s) const {
     GLHelper::setColor(s.laneColorer.getScheme().getColor(getColorValue(s.laneColorer.getActive())));
@@ -749,13 +675,8 @@ GUILane::getColorValue(size_t activeScheme) const {
         case 1:
             return gSelected.isSelected(getType(), getGlID()) ||
                    gSelected.isSelected(GLO_EDGE, dynamic_cast<GUIEdge*>(myEdge)->getGlID());
-        case 2: {
-            if (allowsVehicleClass(SVC_PASSENGER)) {
-                return 0;
-            } else {
-                return 1;
-            }
-        }
+        case 2:
+            return (SUMOReal)myPermissions;
         case 3:
             return getSpeedLimit();
         case 4:
@@ -767,17 +688,17 @@ GUILane::getColorValue(size_t activeScheme) const {
         case 7:
             return getEdgeLaneNumber();
         case 8:
-            return getNormedHBEFA_CO2Emissions();
+            return getCO2Emissions() / myLength;
         case 9:
-            return getNormedHBEFA_COEmissions();
+            return getCOEmissions() / myLength;
         case 10:
-            return getNormedHBEFA_PMxEmissions();
+            return getPMxEmissions() / myLength;
         case 11:
-            return getNormedHBEFA_NOxEmissions();
+            return getNOxEmissions() / myLength;
         case 12:
-            return getNormedHBEFA_HCEmissions();
+            return getHCEmissions() / myLength;
         case 13:
-            return getNormedHBEFA_FuelConsumption();
+            return getFuelConsumption() / myLength;
         case 14:
             return getHarmonoise_NoiseEmissions();
         case 15: {

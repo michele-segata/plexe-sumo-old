@@ -13,7 +13,7 @@
 // The simulated network and simulation perfomer
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -110,6 +110,10 @@
 // ===========================================================================
 MSNet* MSNet::myInstance = 0;
 
+const std::string MSNet::STAGE_EVENTS("events");
+const std::string MSNet::STAGE_MOVEMENTS("move");
+const std::string MSNet::STAGE_LANECHANGE("laneChange");
+const std::string MSNet::STAGE_INSERTIONS("insertion");
 
 // ===========================================================================
 // member method definitions
@@ -311,6 +315,7 @@ MSNet::closeSimulation(SUMOTime start) {
     if (myLogExecutionTime) {
         long duration = SysUtils::getCurrentMillis() - mySimBeginMillis;
         std::ostringstream msg;
+        // print performance notice
         msg << "Performance: " << "\n" << " Duration: " << duration << " ms" << "\n";
         if (duration != 0) {
             msg << " Real time factor: " << (STEPS2TIME(myStep - start) * 1000. / (SUMOReal)duration) << "\n";
@@ -318,21 +323,31 @@ MSNet::closeSimulation(SUMOTime start) {
             msg.setf(std::ios::showpoint);    // print decimal point
             msg << " UPS: " << ((SUMOReal)myVehiclesMoved / ((SUMOReal)duration / 1000)) << "\n";
         }
-        // prepare optional statistics
+        // print vehicle statistics
         const std::string discardNotice = ((myVehicleControl->getLoadedVehicleNo() != myVehicleControl->getDepartedVehicleNo()) ?
                                            " (Loaded: " + toString(myVehicleControl->getLoadedVehicleNo()) + ")" : "");
-        const std::string collisionNotice = (
-                                                myVehicleControl->getCollisionCount() > 0 ?
-                                                " (Collisions: " + toString(myVehicleControl->getCollisionCount()) + ")" : "");
-        const std::string teleportNotice = (
-                                               myVehicleControl->getTeleportCount() > 0 ?
-                                               "Teleports: " + toString(myVehicleControl->getTeleportCount()) + collisionNotice + "\n" : "");
-        // print statistics
         msg << "Vehicles: " << "\n"
-            << " Emitted: " << myVehicleControl->getDepartedVehicleNo() << discardNotice << "\n"
+            << " Inserted: " << myVehicleControl->getDepartedVehicleNo() << discardNotice << "\n"
             << " Running: " << myVehicleControl->getRunningVehicleNo() << "\n"
-            << " Waiting: " << myInserter->getWaitingVehicleNo() << "\n"
-            << teleportNotice;
+            << " Waiting: " << myInserter->getWaitingVehicleNo() << "\n";
+
+        if (myVehicleControl->getTeleportCount() > 0) {
+            // print optional teleport statistics
+            std::vector<std::string> reasons;
+            if (myVehicleControl->getCollisionCount() > 0) {
+                reasons.push_back("Collisions: " + toString(myVehicleControl->getCollisionCount()));
+            }
+            if (myVehicleControl->getTeleportsJam() > 0) {
+                reasons.push_back("Jam: " + toString(myVehicleControl->getTeleportsJam()));
+            }
+            if (myVehicleControl->getTeleportsYield() > 0) {
+                reasons.push_back("Yield: " + toString(myVehicleControl->getTeleportsYield()));
+            }
+            if (myVehicleControl->getTeleportsWrongLane() > 0) {
+                reasons.push_back("Wrong Lane: " + toString(myVehicleControl->getTeleportsWrongLane()));
+            }
+            msg << "Teleports: " << myVehicleControl->getTeleportCount() << " (" << joinToString(reasons, ", ") << ")\n";
+        }
         WRITE_MESSAGE(msg.str());
     }
     myDetectorControl->close(myStep);
@@ -366,7 +381,7 @@ MSNet::simulationStep() {
     }
     myBeginOfTimestepEvents->execute(myStep);
     if (MSGlobals::gCheck4Accidents) {
-        myEdges->detectCollisions(myStep, 0);
+        myEdges->detectCollisions(myStep, STAGE_EVENTS);
     }
     // check whether the tls programs need to be switched
     myLogics->check2Switch(myStep);
@@ -389,14 +404,14 @@ MSNet::simulationStep() {
         // decide right-of-way and execute movements
         myEdges->executeMovements(myStep);
         if (MSGlobals::gCheck4Accidents) {
-            myEdges->detectCollisions(myStep, 1);
+            myEdges->detectCollisions(myStep, STAGE_MOVEMENTS);
         }
 
         // Vehicles change Lanes (maybe)
         myEdges->changeLanes(myStep);
 
         if (MSGlobals::gCheck4Accidents) {
-            myEdges->detectCollisions(myStep, 2);
+            myEdges->detectCollisions(myStep, STAGE_LANECHANGE);
         }
 #ifdef HAVE_INTERNAL
     }
@@ -407,11 +422,11 @@ MSNet::simulationStep() {
     if (myPersonControl != 0) {
         myPersonControl->checkWaitingPersons(this, myStep);
     }
-    // emit Vehicles
+    // insert Vehicles
     myInsertionEvents->execute(myStep);
     myInserter->emitVehicles(myStep);
     if (MSGlobals::gCheck4Accidents) {
-        myEdges->detectCollisions(myStep, 3);
+        myEdges->detectCollisions(myStep, STAGE_INSERTIONS);
     }
     MSVehicleTransfer::getInstance()->checkInsertions(myStep);
 
@@ -497,12 +512,6 @@ MSNet::clearAll() {
     MSDevice_Routing::cleanup();
     MSTrigger::cleanup();
     MSCalibrator::cleanup();
-}
-
-
-SUMOTime
-MSNet::getCurrentTimeStep() const {
-    return myStep;
 }
 
 

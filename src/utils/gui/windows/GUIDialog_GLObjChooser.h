@@ -9,7 +9,7 @@
 // Class for the window that allows to choose a street, junction or vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -109,6 +109,8 @@ public:
     long onCmdFilter(FXObject*, FXSelector, void*);
     /// @}
 
+    /// @brief sets the focus after the window is created to work-around bug in libfox
+    void show();
 
 private:
     /// @brief The list that holds the ids

@@ -10,7 +10,7 @@
 // Structure representing possible vehicle parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -272,6 +272,19 @@ public:
 
     /// @name Depart/arrival-attributes verification
     /// @{
+
+    /** @brief Validates a given depart value
+     * @param[in] val The depart value to parse
+     * @param[in] element The name of the type of the parsed element, for building the error message
+     * @param[in] id The id of the parsed element, for building the error message
+     * @param[out] depart The parsed depart time, if given
+     * @param[out] dd The parsed departProcedure definition
+     * @param[out] error Error message, if an error occures
+     * @return Whether the given value is a valid depart definition
+     */
+    static bool parseDepart(const std::string& val, const std::string& element, const std::string& id,
+                            SUMOTime& depart, DepartDefinition& dd, std::string& error);
+
 
     /** @brief Validates a given departLane value
      * @param[in] val The departLane value to parse

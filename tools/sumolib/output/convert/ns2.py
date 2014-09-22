@@ -8,7 +8,7 @@ This module includes functions for converting SUMO's fcd-output into
 data files read by ns2.
 
 SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-Copyright (C) 2013 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2013-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -45,7 +45,7 @@ def fcd2ns2mobility(inpFCD, outSTRM, ignored):
         vehInfo[v.id] = [ nid, timestep.time, 0 ]
       nid = vIDm.g(v.id)        
       if outSTRM:
-        print('$ns_ at %s "$node_(%s) setdest %s %s %s"' % (timestep.time, nid, v.x, v.y, 0), file=outSTRM)
+        print('$ns_ at %s "$node_(%s) setdest %s %s %s"' % (timestep.time, nid, v.x, v.y, v.speed), file=outSTRM)
       if not area[0]:
         area[0] = v.x
         area[1] = v.y

@@ -3,12 +3,12 @@
 @file    areal.py
 @author  Mario Krumnow
 @date    2011-03-16
-@version $Id: areal.py 15031 2013-11-05 19:52:41Z krumnow $
+@version $Id$
 
 Python implementation of the TraCI interface.
 
 SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-Copyright (C) 2011-2013 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -22,7 +22,9 @@ import traci.constants as tc
 _RETURN_VALUE_FUNC = {tc.ID_LIST:                          traci.Storage.readStringList,
                       tc.ID_COUNT:                         traci.Storage.readInt,
                       tc.JAM_LENGTH_METERS:                traci.Storage.readDouble,
-                      tc.JAM_LENGTH_VEHICLE:               traci.Storage.readInt}
+                      tc.JAM_LENGTH_VEHICLE:               traci.Storage.readInt,
+                      tc.LAST_STEP_MEAN_SPEED:             traci.Storage.readDouble,
+                      tc.LAST_STEP_OCCUPANCY:              traci.Storage.readDouble}
 subscriptionResults = traci.SubscriptionResults(_RETURN_VALUE_FUNC)
 
 def _getUniversal(varID, detID):
@@ -56,6 +58,20 @@ def getJamLengthMeters(detID):
     Returns the jam length in meters within the last simulation step. 
     """
     return _getUniversal(tc.JAM_LENGTH_METERS, detID)
+	
+def getLastStepMeanSpeed(detID):
+    """getLastStepMeanSpeed(string) -> double
+    
+    Returns the current mean speed in m/s of vehicles that were on the named e2.
+    """
+    return _getUniversal(tc.LAST_STEP_MEAN_SPEED, detID)
+	
+def getLastStepOccupancy(detID):
+    """getLastStepMeanSpeed(string) -> double
+    
+    Returns the current mean speed in m/s of vehicles that were on the named e2.
+    """
+    return _getUniversal(tc.LAST_STEP_OCCUPANCY, detID)
 
 
 def subscribe(detID, varIDs=(tc.LAST_STEP_VEHICLE_NUMBER,), begin=0, end=2**31-1):

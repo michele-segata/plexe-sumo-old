@@ -15,7 +15,7 @@
 // Representation of a vehicle in the micro simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -182,7 +182,7 @@ public:
      * @param[in] route The new route to pass
      * @return Whether the new route was accepted
      */
-    bool replaceRoute(const MSRoute* route, bool onInit = false);
+    bool replaceRoute(const MSRoute* route, bool onInit = false, int offset = 0);
 
 
     /** @brief Returns whether the vehicle wil pass the given edge
@@ -309,6 +309,12 @@ public:
     /// @name Other getter methods
     //@{
 
+    /** @brief Returns the slope of the road at vehicle's position
+     * @return The slope
+     */
+    SUMOReal getSlope() const;
+
+
     /** @brief Return current position (x/y, cartesian)
      *
      * If the vehicle's myLane is 0, Position::INVALID.
@@ -332,6 +338,21 @@ public:
      */
     inline bool isOnRoad() const {
         return myAmOnNet;
+    }
+
+
+    /** @brief Returns the starting point for reroutes (usually the current edge)
+     *
+     * This differs from *myCurrEdge only if the vehicle is on an internal edge
+     * @return The rerouting start point
+     */
+    const MSEdge* getRerouteOrigin() const {
+#ifdef HAVE_INTERNAL_LANES
+        if (myLane != 0) {
+            return myLane->getInternalFollower();
+        }
+#endif
+        return *myCurrEdge;
     }
 
 
@@ -612,6 +633,23 @@ public:
      */
     SUMOReal processNextStop(SUMOReal currentVelocity);
 
+    /** @brief Returns the leader of the vehicle looking for a fixed distance.
+     *
+     * If the distance is not given it is calculated from the brake gap.
+     * The gap returned does not include the minGap.
+     * @param dist		up to which distance to look for a leader
+     * @return The leading vehicle together with the gap; (0, -1) if no leader was found.
+     */
+    std::pair<const MSVehicle* const, SUMOReal> getLeader(SUMOReal dist = 0) const;
+
+    /** @brief Returns the time gap in seconds to the leader of the vehicle looking for a fixed distance.
+     *
+     * If the distance is too big -1 is returned.
+     * The gap returned takes the minGap into account.
+     * @return The time gap in seconds; -1 if no leader was found or speed is 0.
+     */
+    SUMOReal getTimeGap() const;
+
 
     /// @name Emission retrieval
     //@{
@@ -619,37 +657,37 @@ public:
     /** @brief Returns CO2 emission of the current state
      * @return The current CO2 emission
      */
-    SUMOReal getHBEFA_CO2Emissions() const;
+    SUMOReal getCO2Emissions() const;
 
 
     /** @brief Returns CO emission of the current state
      * @return The current CO emission
      */
-    SUMOReal getHBEFA_COEmissions() const;
+    SUMOReal getCOEmissions() const;
 
 
     /** @brief Returns HC emission of the current state
      * @return The current HC emission
      */
-    SUMOReal getHBEFA_HCEmissions() const;
+    SUMOReal getHCEmissions() const;
 
 
     /** @brief Returns NOx emission of the current state
      * @return The current NOx emission
      */
-    SUMOReal getHBEFA_NOxEmissions() const;
+    SUMOReal getNOxEmissions() const;
 
 
     /** @brief Returns PMx emission of the current state
      * @return The current PMx emission
      */
-    SUMOReal getHBEFA_PMxEmissions() const;
+    SUMOReal getPMxEmissions() const;
 
 
     /** @brief Returns fuel consumption of the current state
      * @return The current fuel consumption
      */
-    SUMOReal getHBEFA_FuelConsumption() const;
+    SUMOReal getFuelConsumption() const;
 
 
     /** @brief Returns noise emissions of the current state
@@ -673,9 +711,6 @@ public:
      * @return The number of passengers on-board
      */
     unsigned int getPersonNumber() const;
-
-    /// @brief Returns this vehicles impatience
-    SUMOReal getImpatience() const;
 
     /// @name Access to bool signals
     /// @{
@@ -888,6 +923,34 @@ public:
         void setConsiderMaxDeceleration(bool value);
 
 
+        /** @brief Sets whether junction priority rules shall be respected
+         * @param[in] value Whether junction priority rules be respected
+         */
+        void setRespectJunctionPriority(bool value);
+
+
+        /** @brief Returns whether junction priority rules shall be respected
+         * @return Whether junction priority rules be respected
+         */
+        inline bool getRespectJunctionPriority() const {
+            return myRespectJunctionPriority;
+        }
+
+
+        /** @brief Sets whether red lights shall be a reason to brake
+         * @param[in] value Whether red lights shall be a reason to brake
+         */
+        void setEmergencyBrakeRedLight(bool value);
+
+
+        /** @brief Returns whether red lights shall be a reason to brake
+         * @return Whether red lights shall be a reason to brake
+         */
+        inline bool getEmergencyBrakeRedLight() const {
+            return myEmergencyBrakeRedLight;
+        }
+
+
         /** @brief Sets lane changing behavior
          * @param[in] value a bitset controlling the different modes
          */
@@ -897,7 +960,7 @@ public:
         /** @brief Returns the originally longitudinal speed to use
          * @return The speed given before influence
          */
-        SUMOReal getOriginalSpeed() const {
+        inline SUMOReal getOriginalSpeed() const {
             return myOriginalSpeed;
         }
 
@@ -936,6 +999,12 @@ public:
 
         /// @brief Whether the maximum deceleration shall be regarded
         bool myConsiderMaxDeceleration;
+
+        /// @brief Whether the junction priority rules are respected
+        bool myRespectJunctionPriority;
+
+        /// @brief Whether red lights are a reason to brake
+        bool myEmergencyBrakeRedLight;
 
         bool myAmVTDControlled;
         MSLane* myVTDLane;
@@ -1149,10 +1218,12 @@ protected:
      * @param[in] lane The current Lane the vehicle is on
      * @param[in,out] the safe velocity for driving
      * @param[in,out] the safe velocity for arriving at the next link
+     * @param[in] distToCrossing The distance to the crossing point with the current leader where relevant or -1
      */
     void adaptToLeader(const std::pair<const MSVehicle*, SUMOReal> leaderInfo,
                        const SUMOReal seen, DriveProcessItem* const lastLink,
-                       const MSLane* const lane, SUMOReal& v, SUMOReal& vLinkPass) const;
+                       const MSLane* const lane, SUMOReal& v, SUMOReal& vLinkPass,
+                       SUMOReal distToCrossing = -1) const;
 
 #ifdef HAVE_INTERNAL_LANES
     /// @brief ids of vehicles being followed across a link (for resolving priority)
@@ -1168,7 +1239,7 @@ private:
     MSCFModel::VehicleVariables* myCFVariables;
 
 #ifndef NO_TRACI
-    /// @brief An instance of a velicty/lane influencing instance; built in "getInfluencer"
+    /// @brief An instance of a velocity/lane influencing instance; built in "getInfluencer"
     Influencer* myInfluencer;
 #endif
 

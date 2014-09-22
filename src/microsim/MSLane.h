@@ -13,7 +13,7 @@
 // Representation of a lane in the micro simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -326,6 +326,11 @@ public:
         return myShape;
     }
 
+    /// @brief return shape.length() / myLength
+    inline SUMOReal getLengthGeometryFactor() const {
+        return myLengthGeometryFactor;
+    }
+
     /* @brief fit the given lane position to a visibly suitable geometry position
      * (lane length might differ from geometry length) */
     inline SUMOReal interpolateLanePosToGeometryPos(SUMOReal lanePos) const {
@@ -416,7 +421,7 @@ public:
 
 
     /// Check if vehicles are too close.
-    virtual void detectCollisions(SUMOTime timestep, int stage);
+    virtual void detectCollisions(SUMOTime timestep, const std::string& stage);
 
 
     /** Returns the information whether this lane may be used to continue
@@ -450,6 +455,11 @@ public:
         return *myEdge;
     }
 
+
+    /** @brief Returns the lane's follower if it is an internal lane, the edge of the lane otherwise
+     * @return This lane's follower
+     */
+    const MSEdge* getInternalFollower() const;
 
 
     /// @brief Static (sic!) container methods
@@ -509,10 +519,10 @@ public:
         the succeeding link could not be found;
         Returns the myLinks.end() instead; Further, the number of edges to
         look forward may be given */
-    virtual MSLinkCont::const_iterator succLinkSec(const SUMOVehicle& veh,
+    static MSLinkCont::const_iterator succLinkSec(const SUMOVehicle& veh,
             unsigned int nRouteSuccs,
             const MSLane& succLinkSource,
-            const std::vector<MSLane*>& conts) const;
+            const std::vector<MSLane*>& conts);
 
 
     /** Returns the information whether the given link shows at the end
@@ -530,8 +540,10 @@ public:
 
 
 
-    /// @brief remove the vehicle from this lane
-    virtual MSVehicle* removeVehicle(MSVehicle* remVehicle, MSMoveReminder::Notification notification);
+    /* @brief remove the vehicle from this lane
+     * @param[notify] whether moveReminders of the vehicle shall be triggered
+     */
+    virtual MSVehicle* removeVehicle(MSVehicle* remVehicle, MSMoveReminder::Notification notification, bool notify = true);
 
     /// The shape of the lane
     PositionVector myShape;
@@ -577,7 +589,7 @@ public:
 
 
 
-    std::pair<MSVehicle* const, SUMOReal> getFollowerOnConsecutive(SUMOReal dist, SUMOReal seen,
+    std::pair<MSVehicle* const, SUMOReal> getFollowerOnConsecutive(SUMOReal dist,
             SUMOReal leaderSpeed, SUMOReal backOffset, SUMOReal predMaxDecel) const;
 
 
@@ -650,37 +662,37 @@ public:
     /** @brief Returns the sum of last step CO2 emissions
      * @return CO2 emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_CO2Emissions() const;
+    SUMOReal getCO2Emissions() const;
 
 
     /** @brief Returns the sum of last step CO emissions
      * @return CO emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_COEmissions() const;
+    SUMOReal getCOEmissions() const;
 
 
     /** @brief Returns the sum of last step PMx emissions
      * @return PMx emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_PMxEmissions() const;
+    SUMOReal getPMxEmissions() const;
 
 
     /** @brief Returns the sum of last step NOx emissions
      * @return NOx emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_NOxEmissions() const;
+    SUMOReal getNOxEmissions() const;
 
 
     /** @brief Returns the sum of last step HC emissions
      * @return HC emissions of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_HCEmissions() const;
+    SUMOReal getHCEmissions() const;
 
 
     /** @brief Returns the sum of last step fuel consumption
      * @return fuel consumption of vehicles on this lane during the last step
      */
-    SUMOReal getHBEFA_FuelConsumption() const;
+    SUMOReal getFuelConsumption() const;
 
 
     /** @brief Returns the sum of last step noise emissions

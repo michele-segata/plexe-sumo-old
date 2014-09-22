@@ -8,7 +8,7 @@
 // The application's "About" - dialog
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -118,9 +118,8 @@ GUIDialog_AboutSUMO::GUIDialog_AboutSUMO(FXWindow* parent,  const char* name, in
     new FXLabel(f3, "A microscopic, multi-modal, open source", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     new FXLabel(f3, "road traffic simulation.", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     new FXLabel(f3, "Includes the Platooning Extension for Veins (PLEXE)", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
-    new FXLabel(f3, "Copyright (C) 2001-2013 DLR / Institute of Transportation Systems", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    new FXLabel(f3, "Copyright (C) 2001-2014 DLR / Institute of Transportation Systems", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     new FXLabel(f3, "Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
-
     FXLinkLabel* link = new FXLinkLabel(f3, "http://sumo-sim.org", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
     link->setTipText("http://sumo-sim.org");
     FXLinkLabel* plexeLink = new FXLinkLabel(f3, "http://plexe.car2x.org", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);

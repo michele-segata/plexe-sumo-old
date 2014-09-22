@@ -15,7 +15,7 @@
 /// TraCI server used to control sumo by a remote TraCI client (e.g., ns2)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -55,8 +55,6 @@
 #include <utils/common/NamedObjectCont.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/MsgHandler.h>
-#include <utils/common/HelpersHBEFA.h>
-#include <utils/common/HelpersHarmonoise.h>
 #include <utils/common/SUMOVehicleParameter.h>
 #include <utils/shapes/PointOfInterest.h>
 #include <utils/shapes/ShapeContainer.h>
@@ -142,6 +140,8 @@ TraCIServer::TraCIServer(const SUMOTime begin, const int port)
     myExecutors[CMD_SET_EDGE_VARIABLE] = &TraCIServerAPI_Edge::processSet;
     myExecutors[CMD_GET_SIM_VARIABLE] = &TraCIServerAPI_Simulation::processGet;
     myExecutors[CMD_SET_SIM_VARIABLE] = &TraCIServerAPI_Simulation::processSet;
+
+    myParameterSizes[VAR_LEADER] = 9;
 
     myDoCloseConnection = false;
 
@@ -452,7 +452,7 @@ TraCIServer::dispatchCommand() {
             case CMD_SUBSCRIBE_EDGE_VARIABLE:
             case CMD_SUBSCRIBE_SIM_VARIABLE:
             case CMD_SUBSCRIBE_GUI_VARIABLE:
-                success = addObjectVariableSubscription(commandId);
+                success = addObjectVariableSubscription(commandId, false);
                 break;
             case CMD_SUBSCRIBE_INDUCTIONLOOP_CONTEXT:
             case CMD_SUBSCRIBE_MULTI_ENTRY_EXIT_DETECTOR_CONTEXT:
@@ -467,7 +467,7 @@ TraCIServer::dispatchCommand() {
             case CMD_SUBSCRIBE_EDGE_CONTEXT:
             case CMD_SUBSCRIBE_SIM_CONTEXT:
             case CMD_SUBSCRIBE_GUI_CONTEXT:
-                success = addObjectContextSubscription(commandId);
+                success = addObjectVariableSubscription(commandId, true);
                 break;
             default:
                 writeStatusCmd(commandId, RTYPE_NOTIMPLEMENTED, "Command not implemented in sumo");
@@ -567,9 +567,9 @@ TraCIServer::writeStatusCmd(int commandId, int status, const std::string& descri
 void
 TraCIServer::writeStatusCmd(int commandId, int status, const std::string& description, tcpip::Storage& outputStorage) {
     if (status == RTYPE_ERR) {
-        WRITE_ERROR("Answered with error to command " + toString(commandId) + ": " + description);
+        WRITE_ERROR("Answered with error to command " + toHex(commandId, 2) + ": " + description);
     } else if (status == RTYPE_NOTIMPLEMENTED) {
-        WRITE_ERROR("Requested command not implemented (" + toString(commandId) + "): " + description);
+        WRITE_ERROR("Requested command not implemented (" + toHex(commandId, 2) + "): " + description);
     }
     outputStorage.writeUnsignedByte(1 + 1 + 1 + 4 + static_cast<int>(description.length())); // command length
     outputStorage.writeUnsignedByte(commandId); // command type
@@ -698,7 +698,7 @@ TraCIServer::collectObjectsInRange(int domain, const PositionVector& shape, SUMO
                 myObjects[CMD_GET_EDGE_VARIABLE] = 0;
                 myObjects[CMD_GET_LANE_VARIABLE] = 0;
                 myObjects[CMD_GET_VEHICLE_VARIABLE] = 0;
-                myLaneTree = new RTree<MSLane*, MSLane, float, 2, TraCIServerAPI_Lane::StoringVisitor>(&MSLane::visit);
+                myLaneTree = new LANE_RTREE_QUAL(&MSLane::visit);
                 MSLane::fill(*myLaneTree);
                 break;
             case CMD_GET_POI_VARIABLE:
@@ -761,10 +761,12 @@ TraCIServer::processSingleSubscription(const Subscription& s, tcpip::Storage& wr
             outputStorage.writeString(*j);
         }
         if (numVars > 0) {
-            for (std::vector<int>::const_iterator i = s.variables.begin(); i != s.variables.end(); ++i) {
+            std::vector<std::vector<unsigned char> >::const_iterator k = s.parameters.begin();
+            for (std::vector<int>::const_iterator i = s.variables.begin(); i != s.variables.end(); ++i, ++k) {
                 tcpip::Storage message;
                 message.writeUnsignedByte(*i);
                 message.writeString(*j);
+                message.writePacket(*k);
                 tcpip::Storage tmpOutput;
                 if (myExecutors.find(getCommandId) != myExecutors.end()) {
                     ok &= myExecutors[getCommandId](*this, message, tmpOutput);
@@ -834,14 +836,22 @@ TraCIServer::processSingleSubscription(const Subscription& s, tcpip::Storage& wr
 
 
 bool
-TraCIServer::addObjectVariableSubscription(int commandId) {
-    SUMOTime beginTime = myInputStorage.readInt();
-    SUMOTime endTime = myInputStorage.readInt();
-    std::string id = myInputStorage.readString();
-    int no = myInputStorage.readUnsignedByte();
+TraCIServer::addObjectVariableSubscription(const int commandId, const bool hasContext) {
+    const SUMOTime beginTime = myInputStorage.readInt();
+    const SUMOTime endTime = myInputStorage.readInt();
+    const std::string id = myInputStorage.readString();
+    const int domain = hasContext ? myInputStorage.readUnsignedByte() : 0;
+    const SUMOReal range = hasContext ? myInputStorage.readDouble() : 0.;
+    const int num = myInputStorage.readUnsignedByte();
     std::vector<int> variables;
-    for (int i = 0; i < no; ++i) {
-        variables.push_back(myInputStorage.readUnsignedByte());
+    std::vector<std::vector<unsigned char> > parameters;
+    for (int i = 0; i < num; ++i) {
+        const int varID = myInputStorage.readUnsignedByte();
+        variables.push_back(varID);
+        parameters.push_back(std::vector<unsigned char>());
+        for (int j = 0; j < myParameterSizes[varID]; j++) {
+            parameters.back().push_back(myInputStorage.readChar());
+        }
     }
     // check subscribe/unsubscribe
     if (variables.size() == 0) {
@@ -849,30 +859,7 @@ TraCIServer::addObjectVariableSubscription(int commandId) {
         return true;
     }
     // process subscription
-    Subscription s(commandId, id, variables, beginTime, endTime, false, 0, 0);
-    initialiseSubscription(s);
-    return true;
-}
-
-
-bool
-TraCIServer::addObjectContextSubscription(int commandId) {
-    SUMOTime beginTime = myInputStorage.readInt();
-    SUMOTime endTime = myInputStorage.readInt();
-    std::string id = myInputStorage.readString();
-    int domain = myInputStorage.readUnsignedByte();
-    SUMOReal range = myInputStorage.readDouble();
-    int no = myInputStorage.readUnsignedByte();
-    std::vector<int> variables;
-    for (int i = 0; i < no; ++i) {
-        variables.push_back(myInputStorage.readUnsignedByte());
-    }
-    // check subscribe/unsubscribe
-    if (variables.size() == 0) {
-        removeSubscription(commandId, id, -1);
-        return true;
-    }
-    Subscription s(commandId, id, variables, beginTime, endTime, true, domain, range);
+    Subscription s(commandId, id, variables, parameters, beginTime, endTime, hasContext, domain, range);
     initialiseSubscription(s);
     return true;
 }

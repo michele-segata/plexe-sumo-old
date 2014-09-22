@@ -341,17 +341,13 @@ MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, SUMOReal>& lead
                                const std::pair<MSVehicle* const, SUMOReal>& rFollow,
                                const std::vector<MSVehicle::LaneQ>& preb) const {
     ChangerIt target = myCandi + 1;
-    int blocked = overlapWithHopped(target)
-                  ? target->hoppedVeh->getPositionOnLane() < veh(myCandi)->getPositionOnLane()
-                  ? LCA_BLOCKED_BY_LEFT_FOLLOWER
-                  : LCA_BLOCKED_BY_LEFT_LEADER
-                  : 0;
+    int blocked = 0;
     // overlap
     if (rFollow.first != 0 && rFollow.second < 0) {
-        blocked |= (LCA_BLOCKED_BY_LEFT_FOLLOWER);
+        blocked |= (LCA_BLOCKED_BY_LEFT_FOLLOWER | LCA_OVERLAPPING);
     }
     if (rLead.first != 0 && rLead.second < 0) {
-        blocked |= (LCA_BLOCKED_BY_LEFT_LEADER);
+        blocked |= (LCA_BLOCKED_BY_LEFT_LEADER | LCA_OVERLAPPING);
     }
     // safe back gap
     if (rFollow.first != 0) {
@@ -400,17 +396,13 @@ MSCACCLaneChanger::change2right(const std::pair<MSVehicle* const, SUMOReal>& lea
                                 const std::pair<MSVehicle* const, SUMOReal>& rFollow,
                                 const std::vector<MSVehicle::LaneQ>& preb) const {
     ChangerIt target = myCandi - 1;
-    int blocked = overlapWithHopped(target)
-                  ? target->hoppedVeh->getPositionOnLane() < veh(myCandi)->getPositionOnLane()
-                  ? LCA_BLOCKED_BY_RIGHT_FOLLOWER
-                  : LCA_BLOCKED_BY_RIGHT_LEADER
-                  : 0;
+    int blocked = 0;
     // overlap
     if (rFollow.first != 0 && rFollow.second < 0) {
-        blocked |= (LCA_BLOCKED_BY_RIGHT_FOLLOWER);
+        blocked |= (LCA_BLOCKED_BY_RIGHT_FOLLOWER | LCA_OVERLAPPING);
     }
     if (rLead.first != 0 && rLead.second < 0) {
-        blocked |= (LCA_BLOCKED_BY_RIGHT_LEADER);
+        blocked |= (LCA_BLOCKED_BY_RIGHT_LEADER | LCA_OVERLAPPING);
     }
     // safe back gap
     if (rFollow.first != 0) {

@@ -9,7 +9,7 @@
 // Some methods which help to draw certain geometrical objects in openGL
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -51,11 +51,22 @@
 class GLHelper {
 public:
     /** @brief Draws a filled polygon described by the list of points
+     * @note this only works well for convex polygons
      *
      * @param[in] v The polygon to draw
      * @param[in] close Whether the first point shall be appended
      */
     static void drawFilledPoly(const PositionVector& v, bool close);
+
+
+    /** @brief Draws a filled polygon described by the list of points
+     * @note this works for convex and concave polygons but is slower than
+     * drawFilledPoly
+     *
+     * @param[in] v The polygon to draw
+     * @param[in] close Whether the first point shall be appended
+     */
+    static void drawFilledPolyTesselated(const PositionVector& v, bool close);
 
 
     /** @brief Draws a thick line

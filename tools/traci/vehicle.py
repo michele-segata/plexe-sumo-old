@@ -9,7 +9,7 @@
 Python implementation of the TraCI interface.
 
 SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-Copyright (C) 2011-2013 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -22,6 +22,10 @@ import traci.constants as tc
 
 DEPART_TRIGGERED = -1
 DEPART_NOW = -2
+
+STOP_DEFAULT = 0
+STOP_PARKING = 1
+STOP_TRIGGERED = 2
 
 def _readBestLanes(result):
     result.read("!iB")
@@ -39,9 +43,18 @@ def _readBestLanes(result):
         lanes.append( [laneID, length, occupation, offset, allowsContinuation, nextLanes ] )
     return lanes
 
+def _readLeader(result):
+    result.read("!iB")
+    vehicleID = result.readString()
+    result.read("!B")
+    dist = result.readDouble()
+    if vehicleID:
+        return vehicleID, dist
+    return None
+
 
 _RETURN_VALUE_FUNC = {tc.ID_LIST:             traci.Storage.readStringList,
-                      tc.ID_COUNT:                  traci.Storage.readInt,
+                      tc.ID_COUNT:            traci.Storage.readInt,
                       tc.VAR_SPEED:           traci.Storage.readDouble,
                       tc.VAR_SPEED_WITHOUT_TRACI: traci.Storage.readDouble,
                       tc.VAR_POSITION:        lambda result: result.read("!dd"),
@@ -81,6 +94,7 @@ _RETURN_VALUE_FUNC = {tc.ID_LIST:             traci.Storage.readStringList,
                       tc.VAR_IMPERFECTION:    traci.Storage.readDouble,
                       tc.VAR_TAU:             traci.Storage.readDouble,
                       tc.VAR_BEST_LANES:      _readBestLanes,
+                      tc.VAR_LEADER:          _readLeader,
                       tc.DISTANCE_REQUEST:    traci.Storage.readDouble,
                       tc.VAR_DISTANCE:        traci.Storage.readDouble}
 
@@ -325,8 +339,9 @@ def getEmissionClass(vehID):
 
 def getWaitingTime(vehID):
     """getWaitingTime() -> double
-    
-    .
+    The waiting time of a vehicle is defined as the time (in seconds) spent with a
+    speed below 0.1m/s since the last time it was faster than 0.1m/s.
+    (basically, the waiting time of a vehicle is reset to 0 every time it moves). 
     """
     return _getUniversal(tc.VAR_WAITING_TIME, vehID)
 
@@ -385,6 +400,25 @@ def getBestLanes(vehID):
     Information about the wish to use subsequent edges' lanes.
     """
     return _getUniversal(tc.VAR_BEST_LANES, vehID)
+
+def getLeader(vehID, dist=0.):
+    """getLeader(string, double) -> (string, double)
+    
+    Return the leading vehicle id together with the distance.
+    The dist parameter defines the maximum lookahead, 0 calculates a lookahead from the brake gap.
+    """
+    traci._beginMessage(tc.CMD_GET_VEHICLE_VARIABLE, tc.VAR_LEADER, vehID, 1+8)
+    traci._message.string += struct.pack("!Bd", tc.TYPE_DOUBLE, dist)
+    return _readLeader(traci._checkResult(tc.CMD_GET_VEHICLE_VARIABLE, tc.VAR_LEADER, vehID))
+
+def subscribeLeader(vehID, dist=0., begin=0, end=2**31-1):
+    """subscribeLeader(string, double) -> None
+    
+    Subscribe for the leading vehicle id together with the distance.
+    The dist parameter defines the maximum lookahead, 0 calculates a lookahead from the brake gap.
+    """
+    traci._subscribe(tc.CMD_SUBSCRIBE_VEHICLE_VARIABLE, begin, end, vehID,
+                     (tc.VAR_LEADER,), {tc.VAR_LEADER: struct.pack("!Bd", tc.TYPE_DOUBLE, dist)})
 
 def getDrivingDistance(vehID, edgeID, pos, laneID=0):
     """getDrivingDistance(string, string, double, integer) -> double
@@ -447,11 +481,11 @@ def setMaxSpeed(vehID, speed):
     """
     traci._sendDoubleCmd(tc.CMD_SET_VEHICLE_VARIABLE, tc.VAR_MAXSPEED, vehID, speed)
 
-def setStop(vehID, edgeID, pos=1., laneIndex=0, duration=2**31-1):
-    traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.CMD_STOP, vehID, 1+4+1+4+len(edgeID)+1+8+1+1+1+4)
-    traci._message.string += struct.pack("!Bi", tc.TYPE_COMPOUND, 4)
+def setStop(vehID, edgeID, pos=1., laneIndex=0, duration=2**31-1, flags=STOP_DEFAULT):
+    traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.CMD_STOP, vehID, 1+4+1+4+len(edgeID)+1+8+1+1+1+4+1+1)
+    traci._message.string += struct.pack("!Bi", tc.TYPE_COMPOUND, 5)
     traci._message.string += struct.pack("!Bi", tc.TYPE_STRING, len(edgeID)) + edgeID
-    traci._message.string += struct.pack("!BdBBBi", tc.TYPE_DOUBLE, pos, tc.TYPE_BYTE, laneIndex, tc.TYPE_INTEGER, duration)
+    traci._message.string += struct.pack("!BdBBBiBB", tc.TYPE_DOUBLE, pos, tc.TYPE_BYTE, laneIndex, tc.TYPE_INTEGER, duration, tc.TYPE_BYTE, flags)
     traci._sendExact()
 
 def changeLane(vehID, laneIndex, duration):
@@ -483,6 +517,8 @@ def setRouteID(vehID, routeID):
 
 def setRoute(vehID, edgeList):
     """
+    setRoute(string, list) ->  None
+    
     changes the vehicle route to given edges list.
     The first edge in the list has to be the one that the vehicle is at at the moment.
     
@@ -491,6 +527,8 @@ def setRoute(vehID, edgeList):
     
     this changes route for vehicle id 1 to edges 1-2-4-6-7
     """
+    if isinstance(edgeList, str):
+        edgeList= [edgeList]
     traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.VAR_ROUTE, vehID,
                         1+4+sum(map(len, edgeList))+4*len(edgeList))
     traci._message.string += struct.pack("!Bi", tc.TYPE_STRINGLIST, len(edgeList))
@@ -520,7 +558,16 @@ def setEffort(vehID, begTime, endTime, edgeID, effort):
     traci._message.string += struct.pack("!Bd", tc.TYPE_DOUBLE, effort)
     traci._sendExact()
 
-def rerouteTraveltime(vehID):
+def rerouteTraveltime(vehID, currentTravelTimes = True):
+    """rerouteTraveltime(string, bool) -> None
+    
+    Reroutes a vehicle according to the loaded travel times. If loadTravelTimes is False  
+    then the travel times of a loaded weight file or the minimum travel time is used.
+    If loadTravelTimes is True (default) then the current traveltime of the edges is loaded and used for rerouting.
+    """
+    if currentTravelTimes:
+        for edge in traci.edge.getIDList():
+            traci.edge.adaptTraveltime(edge, traci.edge.getTraveltime(edge)) 
     traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.CMD_REROUTE_TRAVELTIME, vehID, 1+4)
     traci._message.string += struct.pack("!Bi", tc.TYPE_COMPOUND, 0)
     traci._sendExact()
@@ -663,6 +710,23 @@ def add(vehID, routeID, depart=DEPART_NOW, pos=0, speed=0, lane=0, typeID="DEFAU
     traci._message.string += struct.pack("!Bi", tc.TYPE_INTEGER, depart)
     traci._message.string += struct.pack("!BdBd", tc.TYPE_DOUBLE, pos, tc.TYPE_DOUBLE, speed)
     traci._message.string += struct.pack("!BB", tc.TYPE_BYTE, lane)
+    traci._sendExact()
+
+def addFull(vehID, routeID, typeID="DEFAULT_VEHTYPE", depart=None,
+            departLane="0", departPos="base", departSpeed="0",
+            arrivalLane="current", arrivalPos="max", arrivalSpeed="current",
+            fromTaz="", toTaz="", line="", personCapacity=0, personNumber=0):
+    messageString = struct.pack("!Bi", tc.TYPE_COMPOUND, 14)
+    if depart is None:
+        depart = str(traci.simulation.getCurrentTime() / 1000.)
+    for val in (routeID, typeID, depart, departLane, departPos, departSpeed,
+                arrivalLane, arrivalPos, arrivalSpeed, fromTaz, toTaz, line):
+        messageString += struct.pack("!Bi", tc.TYPE_STRING, len(val)) + val
+    messageString += struct.pack("!Bi", tc.TYPE_INTEGER, personCapacity)
+    messageString += struct.pack("!Bi", tc.TYPE_INTEGER, personNumber)
+
+    traci._beginMessage(tc.CMD_SET_VEHICLE_VARIABLE, tc.ADD_FULL, vehID, len(messageString))
+    traci._message.string += messageString
     traci._sendExact()
 
 def remove(vehID, reason=tc.REMOVE_VAPORIZED):

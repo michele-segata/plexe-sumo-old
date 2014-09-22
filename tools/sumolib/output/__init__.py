@@ -9,7 +9,7 @@
 Python interface to SUMO especially for parsing output files.
 
 SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-Copyright (C) 2011-2013 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -41,6 +41,18 @@ def compound_object(element_name, attrnames):
         def __init__(self, values, child_dict):
             self.nt_instance = nt(*values)
             self.child_dict = child_dict
+        def __coerce__(self, other):
+            return None
+        def __cmp__(self, other):
+            if (self.nt_instance == other.nt_instance and
+                    self.child_dict == other.child_dict):
+                return 0
+            elif (self.nt_instance < other.nt_instance or
+                    (self.nt_instance == other.nt_instance and
+                        self.child_dict < other.child_dict)):
+                return -1
+            else:
+                return 1
         def __getattr__(self, name):
             try:
                 return getattr(self.nt_instance, name)

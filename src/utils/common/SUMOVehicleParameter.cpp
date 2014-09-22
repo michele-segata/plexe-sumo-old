@@ -9,7 +9,7 @@
 // Structure representing possible vehicle parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -276,6 +276,30 @@ SUMOVehicleParameter::writeStops(OutputDevice& dev) const {
         }
         dev.closeTag();
     }
+}
+
+
+bool
+SUMOVehicleParameter::parseDepart(const std::string& val, const std::string& element, const std::string& id,
+                                  SUMOTime& depart, DepartDefinition& dd, std::string& error) {
+    if (val == "triggered") {
+        dd = DEPART_TRIGGERED;
+    } else if (val == "now") {
+        dd = DEPART_NOW;
+    } else {
+        try {
+            depart = string2time(val);
+            dd = DEPART_GIVEN;
+            if (depart < 0) {
+                error = "Negative departure time in the definition of '" + id + "'.";
+                return false;
+            }
+        } catch (...) {
+            error = "Invalid departure time for " + element + " '" + id + "';\n must be one of (\"triggered\", \"now\", or a float >= 0)";
+            return false;
+        }
+    }
+    return true;
 }
 
 

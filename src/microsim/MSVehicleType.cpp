@@ -12,7 +12,7 @@
 // The car-following model and parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -40,7 +40,6 @@
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOVTypeParameter.h>
 #include "MSNet.h"
-#include "cfmodels/MSCFModel_CC.h"
 #include "cfmodels/MSCFModel_IDM.h"
 #include "cfmodels/MSCFModel_Kerner.h"
 #include "cfmodels/MSCFModel_Krauss.h"
@@ -50,6 +49,7 @@
 #include "cfmodels/MSCFModel_Daniel1.h"
 #include "cfmodels/MSCFModel_PWag2009.h"
 #include "cfmodels/MSCFModel_Wiedemann.h"
+#include "cfmodels/MSCFModel_CC.h"
 #include "MSVehicleType.h"
 
 #ifdef CHECK_MEMORY_LEAKS

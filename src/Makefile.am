@@ -46,6 +46,7 @@ sumo_LDADD   = ./netload/libnetload.a \
 $(MESO_LIBS) \
 ./utils/geom/libgeom.a \
 ./utils/shapes/libshapes.a \
+./utils/emissions/libemissions.a \
 $(TRACI_LIBS) \
 $(COMMON_LIBS) \
 $(PYTHON_LIBS) \
@@ -95,7 +96,7 @@ endif
 
 SUBDIRS = foreign utils microsim router od2trips $(INTERNAL_DIRS) \
 netbuild netwrite netgen netimport netload \
-polyconvert dfrouter duarouter jtrrouter activitygen \
+polyconvert dfrouter duarouter jtrrouter activitygen tools \
 $(TRACI_DIRS) $(GUI_DIRS)
 
 EXTRA_DIST = config.h config.h.in \
@@ -104,6 +105,6 @@ windows_config.h
 
 if WITH_VERSION_H
 all: version.h
-version.h: ../.svn/entries
+version.h: ../.svn
 	../tools/build/version.py $(CURDIR)
 endif

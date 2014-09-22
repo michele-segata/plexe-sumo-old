@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Mon Nov 18 13:37:50 2013 by SUMO sumo Version dev-SVN-r15137
+<!-- generated on Fri Mar  7 10:52:19 2014 by SUMO sumo Version dev-SVN-r15863
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo-sim.org/xsd/sumoConfiguration.xsd">
@@ -15,6 +15,7 @@
     </output>
 
     <report>
+        <xml-validation value="never"/>
         <no-step-log value="true"/>
     </report>
 
@@ -70,260 +71,288 @@
     <timestep time="5.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="0.80" speed="0.80"/>
                 <vehicle id="veh0" pos="12.00" speed="4.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="0.80" speed="0.80"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="6.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="2.40" speed="1.60"/>
                 <vehicle id="veh0" pos="16.80" speed="4.80"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="2.40" speed="1.60"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="7.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="4.80" speed="2.40"/>
                 <vehicle id="veh0" pos="22.40" speed="5.60"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="4.80" speed="2.40"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="8.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="8.00" speed="3.20"/>
                 <vehicle id="veh0" pos="28.80" speed="6.40"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="8.00" speed="3.20"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="9.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="12.00" speed="4.00"/>
                 <vehicle id="veh0" pos="36.00" speed="7.20"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="12.00" speed="4.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="10.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="16.80" speed="4.80"/>
                 <vehicle id="veh0" pos="44.00" speed="8.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="16.80" speed="4.80"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="11.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="22.40" speed="5.60"/>
                 <vehicle id="veh0" pos="52.80" speed="8.80"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="22.40" speed="5.60"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="12.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="28.80" speed="6.40"/>
                 <vehicle id="veh0" pos="62.40" speed="9.60"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="28.80" speed="6.40"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="13.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="36.00" speed="7.20"/>
                 <vehicle id="veh0" pos="72.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="36.00" speed="7.20"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="14.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="44.00" speed="8.00"/>
                 <vehicle id="veh0" pos="82.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="44.00" speed="8.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="15.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="52.80" speed="8.80"/>
                 <vehicle id="veh0" pos="92.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="52.80" speed="8.80"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="16.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="62.40" speed="9.60"/>
                 <vehicle id="veh0" pos="102.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="62.40" speed="9.60"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="17.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="72.40" speed="10.00"/>
                 <vehicle id="veh0" pos="112.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="72.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="18.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="82.40" speed="10.00"/>
                 <vehicle id="veh0" pos="122.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="82.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="19.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="92.40" speed="10.00"/>
                 <vehicle id="veh0" pos="132.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="92.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="20.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="102.40" speed="10.00"/>
                 <vehicle id="veh0" pos="142.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="102.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="21.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="112.40" speed="10.00"/>
                 <vehicle id="veh0" pos="152.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="112.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="22.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="122.40" speed="10.00"/>
                 <vehicle id="veh0" pos="162.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="122.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="23.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="132.40" speed="10.00"/>
                 <vehicle id="veh0" pos="172.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="132.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="24.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="142.40" speed="10.00"/>
                 <vehicle id="veh0" pos="182.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="142.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="25.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="152.40" speed="10.00"/>
                 <vehicle id="veh0" pos="192.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="152.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="26.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="162.40" speed="10.00"/>
                 <vehicle id="veh0" pos="202.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="162.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="27.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="172.40" speed="10.00"/>
                 <vehicle id="veh0" pos="212.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="172.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="28.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="182.40" speed="10.00"/>
                 <vehicle id="veh0" pos="222.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="182.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="29.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="192.40" speed="10.00"/>
                 <vehicle id="veh0" pos="232.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="192.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="30.00">
         <edge id="1fi">
             <lane id="1fi_0">
-                <vehicle id="veh1" pos="202.40" speed="10.00"/>
                 <vehicle id="veh0" pos="242.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+            <lane id="1fi_1">
+                <vehicle id="veh1" pos="202.40" speed="10.00"/>
+            </lane>
         </edge>
     </timestep>
     <timestep time="31.00">
-        <edge id=":m1_0">
-            <lane id=":m1_0_0">
-                <vehicle id="veh0" pos="3.90" speed="10.00"/>
-            </lane>
-        </edge>
         <edge id="1fi">
-            <lane id="1fi_0">
+            <lane id="1fi_0"/>
+            <lane id="1fi_1">
                 <vehicle id="veh1" pos="212.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
+        </edge>
+        <edge id="1si">
+            <lane id="1si_0">
+                <vehicle id="veh0" pos="0.41" speed="10.00"/>
+            </lane>
+            <lane id="1si_1"/>
+            <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="32.00">
         <edge id="1fi">
-            <lane id="1fi_0">
+            <lane id="1fi_0"/>
+            <lane id="1fi_1">
                 <vehicle id="veh1" pos="222.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
         </edge>
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="9.44" speed="10.00"/>
+                <vehicle id="veh0" pos="10.41" speed="10.00"/>
             </lane>
             <lane id="1si_1"/>
             <lane id="1si_2"/>
@@ -331,14 +360,14 @@
     </timestep>
     <timestep time="33.00">
         <edge id="1fi">
-            <lane id="1fi_0">
+            <lane id="1fi_0"/>
+            <lane id="1fi_1">
                 <vehicle id="veh1" pos="232.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
         </edge>
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="19.44" speed="10.00"/>
+                <vehicle id="veh0" pos="20.41" speed="10.00"/>
             </lane>
             <lane id="1si_1"/>
             <lane id="1si_2"/>
@@ -346,14 +375,14 @@
     </timestep>
     <timestep time="34.00">
         <edge id="1fi">
-            <lane id="1fi_0">
+            <lane id="1fi_0"/>
+            <lane id="1fi_1">
                 <vehicle id="veh1" pos="242.40" speed="10.00"/>
             </lane>
-            <lane id="1fi_1"/>
         </edge>
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="29.44" speed="10.00"/>
+                <vehicle id="veh0" pos="30.41" speed="10.00"/>
             </lane>
             <lane id="1si_1"/>
             <lane id="1si_2"/>
@@ -362,10 +391,10 @@
     <timestep time="35.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="39.44" speed="10.00"/>
+                <vehicle id="veh0" pos="40.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="0.90" speed="10.00"/>
+                <vehicle id="veh1" pos="0.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -373,10 +402,10 @@
     <timestep time="36.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="49.44" speed="10.00"/>
+                <vehicle id="veh0" pos="50.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="10.90" speed="10.00"/>
+                <vehicle id="veh1" pos="10.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -384,10 +413,10 @@
     <timestep time="37.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="59.44" speed="10.00"/>
+                <vehicle id="veh0" pos="60.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="20.90" speed="10.00"/>
+                <vehicle id="veh1" pos="20.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -395,10 +424,10 @@
     <timestep time="38.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="69.44" speed="10.00"/>
+                <vehicle id="veh0" pos="70.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="30.90" speed="10.00"/>
+                <vehicle id="veh1" pos="30.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -406,10 +435,10 @@
     <timestep time="39.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="79.44" speed="10.00"/>
+                <vehicle id="veh0" pos="80.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="40.90" speed="10.00"/>
+                <vehicle id="veh1" pos="40.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -417,10 +446,10 @@
     <timestep time="40.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="89.44" speed="10.00"/>
+                <vehicle id="veh0" pos="90.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="50.90" speed="10.00"/>
+                <vehicle id="veh1" pos="50.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -428,10 +457,10 @@
     <timestep time="41.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="99.44" speed="10.00"/>
+                <vehicle id="veh0" pos="100.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="60.90" speed="10.00"/>
+                <vehicle id="veh1" pos="60.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -439,10 +468,10 @@
     <timestep time="42.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="109.44" speed="10.00"/>
+                <vehicle id="veh0" pos="110.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="70.90" speed="10.00"/>
+                <vehicle id="veh1" pos="70.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -450,10 +479,10 @@
     <timestep time="43.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="119.44" speed="10.00"/>
+                <vehicle id="veh0" pos="120.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="80.90" speed="10.00"/>
+                <vehicle id="veh1" pos="80.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -461,10 +490,10 @@
     <timestep time="44.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="129.44" speed="10.00"/>
+                <vehicle id="veh0" pos="130.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="90.90" speed="10.00"/>
+                <vehicle id="veh1" pos="90.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -472,10 +501,10 @@
     <timestep time="45.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="139.44" speed="10.00"/>
+                <vehicle id="veh0" pos="140.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="100.90" speed="10.00"/>
+                <vehicle id="veh1" pos="100.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -483,10 +512,10 @@
     <timestep time="46.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="149.44" speed="10.00"/>
+                <vehicle id="veh0" pos="150.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="110.90" speed="10.00"/>
+                <vehicle id="veh1" pos="110.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -494,10 +523,10 @@
     <timestep time="47.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="159.44" speed="10.00"/>
+                <vehicle id="veh0" pos="160.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="120.90" speed="10.00"/>
+                <vehicle id="veh1" pos="120.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -505,10 +534,10 @@
     <timestep time="48.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="169.44" speed="10.00"/>
+                <vehicle id="veh0" pos="170.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="130.90" speed="10.00"/>
+                <vehicle id="veh1" pos="130.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -516,10 +545,10 @@
     <timestep time="49.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="179.44" speed="10.00"/>
+                <vehicle id="veh0" pos="180.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="140.90" speed="10.00"/>
+                <vehicle id="veh1" pos="140.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -527,10 +556,10 @@
     <timestep time="50.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="189.27" speed="9.83"/>
+                <vehicle id="veh0" pos="190.41" speed="10.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="150.90" speed="10.00"/>
+                <vehicle id="veh1" pos="150.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -538,10 +567,10 @@
     <timestep time="51.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="195.58" speed="6.31"/>
+                <vehicle id="veh0" pos="197.45" speed="7.04"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="160.90" speed="10.00"/>
+                <vehicle id="veh1" pos="160.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -549,10 +578,10 @@
     <timestep time="52.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="198.83" speed="3.25"/>
+                <vehicle id="veh0" pos="200.00" speed="2.54"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="170.90" speed="10.00"/>
+                <vehicle id="veh1" pos="170.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -560,10 +589,10 @@
     <timestep time="53.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="1.05"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="180.90" speed="10.00"/>
+                <vehicle id="veh1" pos="180.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -571,10 +600,10 @@
     <timestep time="54.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="190.90" speed="10.00"/>
+                <vehicle id="veh1" pos="190.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -582,10 +611,10 @@
     <timestep time="55.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="200.90" speed="10.00"/>
+                <vehicle id="veh1" pos="200.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -593,10 +622,10 @@
     <timestep time="56.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="210.90" speed="10.00"/>
+                <vehicle id="veh1" pos="210.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -604,10 +633,10 @@
     <timestep time="57.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="220.90" speed="10.00"/>
+                <vehicle id="veh1" pos="220.41" speed="10.00"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -615,10 +644,10 @@
     <timestep time="58.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="228.59" speed="7.69"/>
+                <vehicle id="veh1" pos="230.16" speed="9.75"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -626,10 +655,10 @@
     <timestep time="59.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
             </lane>
             <lane id="1si_1">
-                <vehicle id="veh1" pos="232.99" speed="4.41"/>
+                <vehicle id="veh1" pos="235.40" speed="5.25"/>
             </lane>
             <lane id="1si_2"/>
         </edge>
@@ -637,209 +666,190 @@
     <timestep time="60.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.75"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="234.79" speed="1.80"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="61.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.14" speed="0.35"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="62.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.01"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="63.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="64.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="65.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="66.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="67.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="68.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="69.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="70.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="71.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="72.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="73.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="74.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="75.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="76.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="77.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>
     <timestep time="78.00">
         <edge id="1si">
             <lane id="1si_0">
-                <vehicle id="veh0" pos="199.88" speed="0.00"/>
+                <vehicle id="veh0" pos="200.00" speed="0.00"/>
+                <vehicle id="veh1" pos="236.15" speed="0.00"/>
             </lane>
-            <lane id="1si_1">
-                <vehicle id="veh1" pos="235.15" speed="0.00"/>
-            </lane>
+            <lane id="1si_1"/>
             <lane id="1si_2"/>
         </edge>
     </timestep>

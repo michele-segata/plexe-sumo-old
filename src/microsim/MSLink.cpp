@@ -10,7 +10,7 @@
 // A connnection between lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -60,14 +60,14 @@ MSLink::MSLink(MSLane* succLane,
                SUMOReal length)
     :
     myLane(succLane),
-    myRequestIdx(0), myRespondIdx(0),
+    myIndex(0),
     myState(state), myDirection(dir),  myLength(length) {}
 #else
 MSLink::MSLink(MSLane* succLane, MSLane* via,
                LinkDirection dir, LinkState state, SUMOReal length)
     :
     myLane(succLane),
-    myRequestIdx(0), myRespondIdx(0),
+    myIndex(0),
     myState(state), myDirection(dir), myLength(length),
     myJunctionInlane(via)
 {}
@@ -78,12 +78,11 @@ MSLink::~MSLink() {}
 
 
 void
-MSLink::setRequestInformation(unsigned int requestIdx, unsigned int respondIdx, bool isCrossing, bool isCont,
+MSLink::setRequestInformation(unsigned int index, bool isCrossing, bool isCont,
                               const std::vector<MSLink*>& foeLinks,
                               const std::vector<MSLane*>& foeLanes,
                               MSLane* internalLaneBefore) {
-    myRequestIdx = requestIdx;
-    myRespondIdx = respondIdx;
+    myIndex = index;
     myIsCrossing = isCrossing;
     myAmCont = isCont;
     myFoeLinks = foeLinks;
@@ -320,6 +319,29 @@ MSLink::getLane() const {
 }
 
 
+bool
+MSLink::lastWasContMajor() const {
+#ifdef HAVE_INTERNAL_LANES
+    if (myJunctionInlane == 0 || myAmCont) {
+        return false;
+    } else {
+        MSLane* pred = myJunctionInlane->getLogicalPredecessorLane();
+        if (pred->getEdge().getPurpose() != MSEdge::EDGEFUNCTION_INTERNAL) {
+            return false;
+        } else {
+            MSLane* pred2 = pred->getLogicalPredecessorLane();
+            assert(pred2 != 0);
+            MSLink* predLink = MSLinkContHelper::getConnectingLink(*pred2, *pred);
+            assert(predLink != 0);
+            return predLink->havePriority();
+        }
+    }
+#else
+    return false;
+#endif
+}
+
+
 void
 MSLink::writeApproaching(OutputDevice& od, const std::string fromLaneID) const {
     if (myApproachingVehicles.size() > 0) {
@@ -341,9 +363,12 @@ MSLink::writeApproaching(OutputDevice& od, const std::string fromLaneID) const {
             od.openTag("approaching");
             const ApproachingVehicleInformation& avi = myApproachingVehicles.find(it->second)->second;
             od.writeAttr(SUMO_ATTR_ID, it->second->getID());
+            od.writeAttr(SUMO_ATTR_IMPATIENCE, it->second->getImpatience());
             od.writeAttr("arrivalTime", time2string(avi.arrivalTime));
+            od.writeAttr("arrivalTimeBraking", time2string(avi.arrivalTimeBraking));
             od.writeAttr("leaveTime", time2string(avi.leavingTime));
             od.writeAttr("arrivalSpeed", toString(avi.arrivalSpeed));
+            od.writeAttr("arrivalSpeedBraking", toString(avi.arrivalSpeedBraking));
             od.writeAttr("leaveSpeed", toString(avi.leaveSpeed));
             od.writeAttr("willPass", toString(avi.willPass));
             od.closeTag();
@@ -406,7 +431,7 @@ MSLink::getLeaderInfo(SUMOReal dist, SUMOReal minGap) const {
                         }
                         gap = distToCrossing - leaderBackDist - (sameTarget ? minGap : 0);
                     }
-                    result.push_back(std::make_pair(leader, gap));
+                    result.push_back(std::make_pair(std::make_pair(leader, gap), sameTarget ? -1 : distToCrossing));
                 }
 
             }
@@ -428,7 +453,7 @@ MSLink::getLeaderInfo(SUMOReal dist, SUMOReal minGap) const {
                         }
                         gap = distToCrossing - leaderBackDist - (sameTarget ? minGap : 0);
                     }
-                    result.push_back(std::make_pair(leader, gap));
+                    result.push_back(std::make_pair(std::make_pair(leader, gap), sameTarget ? -1 : distToCrossing));
                 }
             }
         }
@@ -447,13 +472,6 @@ MSLink::getViaLaneOrLane() const {
 #endif
     return myLane;
 }
-
-
-unsigned int
-MSLink::getRespondIndex() const {
-    return myRespondIdx;
-}
-
 
 
 /****************************************************************************/

@@ -8,7 +8,7 @@
 Python interface to SUMO especially for parsing xml input and output files.
 
 SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-Copyright (C) 2011-2013 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -36,7 +36,7 @@ class ConfigurationReader(handler.ContentHandler):
             self._group = OptionGroup(self._opts, name)
         if self._group != self._opts and self._groups and self._group.title not in self._groups:
             return
-        if "type" in attrs and name != "help":
+        if attrs.has_key('type') and name != "help":
             if self._options and name not in self._options:
                 return
             help = attrs.get("help", "")
@@ -123,6 +123,9 @@ class _Running:
   """
   def __init__(self):
     """Contructor"""
+    # running index of assigned numerical IDs
+    self.index = 0 
+    # map from known IDs to assigned numerical IDs
     self._m = {}
     
   def g(self, id):
@@ -130,8 +133,8 @@ class _Running:
     If the given id is known, the numerical representation is returned,
     otherwise a new running number is assigned to the id and returned"""
     if id not in self._m:
-      self._m[id] = len(self._m)   
-      return len(self._m)-1
+      self._m[id] = self.index
+      self.index += 1
     return self._m[id]
 
   def k(self, id):

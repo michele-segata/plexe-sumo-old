@@ -9,7 +9,7 @@
 // Performs lane changing of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -153,18 +153,6 @@ protected:
 
     ///  @brief start the lane change maneuver (and finish it instantly if gLaneChangeDuration == 0)
     void startChange(MSVehicle* vehicle, ChangerIt& from, int direction);
-
-
-    /** Returns true if candidate overlaps with a vehicle, that
-        already changed the lane.*/
-    bool overlapWithHopped(ChangerIt target) const {
-        MSVehicle* v1 = target->hoppedVeh;
-        MSVehicle* v2 = veh(myCandi);
-        if (v1 != 0 && v2 != 0) {
-            return MSVehicle::overlap(v1, v2);
-        }
-        return false;
-    }
 
     std::pair<MSVehicle* const, SUMOReal> getRealThisLeader(const ChangerIt& target) const;
 

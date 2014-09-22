@@ -1,12 +1,12 @@
 """
 @file    miscutils.py
-@author  Jakob.Erdmann@dlr.de
+@author  Jakob Erdmann
 @date    2012-05-08
 @version $Id$
 
 Common utility functions
 
-Copyright (C) 2007-2013 DLR/FS, Germany
+Copyright (C) 2007-2014 DLR/FS, Germany
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -16,14 +16,12 @@ the Free Software Foundation; either version 3 of the License, or
 
 This is a duplicate of tools/util/miscutils.py from the VABENE repository
 """
-import StringIO
 import sys
-import subprocess
 import time
 import os
-import imp
-import csv
 import math
+import colorsys
+from random import random
 from collections import defaultdict
 
 # append import path stanca:
@@ -65,7 +63,7 @@ def benchmark(func):
 
 
 class Statistics:
-    def __init__(self, label=None, abs=False, histogram=False, printMin=True):
+    def __init__(self, label=None, abs=False, histogram=False, printMin=True, scale=1):
         self.label = label
         self.min = uMax
         self.min_label = None
@@ -74,8 +72,9 @@ class Statistics:
         self.values = []
         self.abs = abs
         self.printMin = printMin
+        self.scale = scale
         if histogram:
-            self.counts = defaultdict(lambda:0)
+            self.counts = defaultdict(int)
         else:
             self.counts = None
 
@@ -88,7 +87,7 @@ class Statistics:
             self.max = v
             self.max_label = label
         if self.counts is not None:
-            self.counts[round(v)] += 1
+            self.counts[int(round(v/self.scale))] += 1
 
     def count(self):
         return len(self.values)
@@ -150,14 +149,20 @@ class Statistics:
 
     def __str__(self):
         if len(self.values) > 0:
-            min = 'min %.2f (%s), ' % (self.min, self.min_label) if self.printMin else ''
-            result = '"%s": count %s, %smax %.2f (%s), mean %.2f, median %.2f' % (
+            min = ''
+            if self.printMin:
+                min = 'min %.2f%s, ' % (self.min, 
+                        ('' if self.min_label is None else ' (%s)' % (self.min_label,)))
+            result = '%s: count %s, %smax %.2f%s, mean %.2f' % (
                     self.label, len(self.values), min,
-                    self.max, self.max_label, self.avg(), self.mean())
+                    self.max, 
+                    ('' if self.max_label is None else ' (%s)' % (self.max_label,)), 
+                    self.avg())
+            result += ' Q1 %.2f, median %.2f, Q3 %.2f' % self.quartiles()
             if self.abs:
                 result += ', mean_abs %.2f, median_abs %.2f' % (self.avg_abs(), self.mean_abs())
             if self.counts is not None:
-                result += '\nhistogram: %s' % [(k,self.counts[k]) for k in sorted(self.counts.keys())]
+                result += '\n histogram: %s' % [(k * self.scale, self.counts[k]) for k in sorted(self.counts.keys())]
             return result
         else:
             return '"%s": no values' % self.label
@@ -182,4 +187,28 @@ class working_dir:
 
     def __exit__(self, type, value, traceback):
         os.chdir(self.origdir)
+
+
+class Colorgen:
+    def __init__(self, hsv):
+        self.hsv = hsv 
+
+    def get_value(self, opt):
+        if opt == 'random':
+            return random()
+        else:
+            return float(opt)
+
+    def floatTuple(self):
+        """return color as a tuple of floats each in [0,1]"""
+        return colorsys.hsv_to_rgb(*map(self.get_value, self.hsv))
+
+    def byteTuple(self):
+        """return color as a tuple of bytes each in [0,255]"""
+        return tuple([int(round(255 * x)) for x in self.floatTuple()])
+        
+    def __call__(self):
+        """return constant or randomized rgb-color string"""
+        return ','.join(map(str, self.byteTuple()))
+
 

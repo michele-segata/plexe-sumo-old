@@ -9,7 +9,7 @@
 // The thread that runs the simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -100,6 +100,7 @@ GUIRunThread::init(GUINet* net, SUMOTime start, SUMOTime end) {
     // preload the routes especially for TraCI
     mySimulationLock.lock();
     try {
+        net->setCurrentTimeStep(start);
         net->loadRoutes();
     } catch (ProcessError& e2) {
         if (std::string(e2.what()) != std::string("Process Error") && std::string(e2.what()) != std::string("")) {

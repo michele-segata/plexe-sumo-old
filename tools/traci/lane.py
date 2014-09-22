@@ -9,7 +9,7 @@
 Python implementation of the TraCI interface.
 
 SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-Copyright (C) 2011-2013 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -292,6 +292,8 @@ def setAllowed(laneID, allowedClasses):
     
     Sets a list of allowed vehicle classes. Setting an empty list means all vehicles are allowed.
     """
+    if isinstance(allowedClasses, str):
+        allowedClasses= [allowedClasses]
     traci._beginMessage(tc.CMD_SET_LANE_VARIABLE, tc.LANE_ALLOWED, laneID, 1+4+sum(map(len, allowedClasses))+4*len(allowedClasses))
     traci._message.string += struct.pack("!Bi", tc.TYPE_STRINGLIST, len(allowedClasses))
     for c in allowedClasses:
@@ -303,6 +305,8 @@ def setDisallowed(laneID, disallowedClasses):
     
     Sets a list of disallowed vehicle classes.
     """
+    if isinstance(disallowedClasses, str):
+        disallowedClasses= [disallowedClasses]
     traci._beginMessage(tc.CMD_SET_LANE_VARIABLE, tc.LANE_DISALLOWED, laneID, 1+4+sum(map(len, disallowedClasses))+4*len(disallowedClasses))
     traci._message.string += struct.pack("!Bi", tc.TYPE_STRINGLIST, len(disallowedClasses))
     for c in disallowedClasses:
