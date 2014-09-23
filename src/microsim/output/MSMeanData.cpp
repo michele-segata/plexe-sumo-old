@@ -31,6 +31,7 @@
 #include <config.h>
 #endif
 
+#include <limits>
 #include <microsim/MSEdgeControl.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
@@ -39,8 +40,8 @@
 #include <utils/common/SUMOTime.h>
 #include <utils/common/ToString.h>
 #include <utils/iodevices/OutputDevice.h>
+#include "MSMeanData_Amitran.h"
 #include "MSMeanData.h"
-#include <limits>
 
 #ifdef HAVE_INTERNAL
 #include <microsim/MSGlobals.h>
@@ -222,9 +223,9 @@ MSMeanData::MeanDataValueTracker::write(OutputDevice& dev,
 }
 
 
-size_t
+int
 MSMeanData::MeanDataValueTracker::getNumReady() const {
-    size_t result = 0;
+    int result = 0;
     for (std::list<TrackerEntry*>::const_iterator it = myCurrentData.begin(); it != myCurrentData.end(); ++it) {
         if ((*it)->myNumVehicleEntered == (*it)->myNumVehicleLeft) {
             result++;
@@ -256,10 +257,10 @@ MSMeanData::MSMeanData(const std::string& id,
     myMinSamples(minSamples),
     myMaxTravelTime(maxTravelTime),
     myVehicleTypes(vTypes),
+    myDumpEmpty(withEmpty),
     myAmEdgeBased(!useLanes),
     myDumpBegin(dumpBegin),
     myDumpEnd(dumpEnd),
-    myDumpEmpty(withEmpty),
     myPrintDefaults(printDefaults),
     myDumpInternal(withInternal),
     myTrackVehicles(trackVehicles) {
@@ -348,6 +349,12 @@ MSMeanData::resetOnly(SUMOTime stopTime) {
 }
 
 
+std::string
+MSMeanData::getEdgeID(const MSEdge* const edge) {
+    return edge->getID();
+}
+
+
 void
 MSMeanData::writeEdge(OutputDevice& dev,
                       const std::vector<MeanDataValues*>& edgeValues,
@@ -407,12 +414,19 @@ MSMeanData::writeEdge(OutputDevice& dev,
                 meanData.addTo(*sumData);
                 meanData.reset();
             }
-            if (writePrefix(dev, *sumData, SUMO_TAG_EDGE, edge->getID())) {
+            if (writePrefix(dev, *sumData, SUMO_TAG_EDGE, getEdgeID(edge))) {
                 sumData->write(dev, stopTime - startTime, (SUMOReal)edge->getLanes().size(), myPrintDefaults ? edge->getLength() / edge->getSpeedLimit() : -1.);
             }
             delete sumData;
         }
     }
+}
+
+
+void
+MSMeanData::openInterval(OutputDevice& dev, const SUMOTime startTime, const SUMOTime stopTime) {
+    dev.openTag(SUMO_TAG_INTERVAL).writeAttr(SUMO_ATTR_BEGIN, STEPS2TIME(startTime)).writeAttr(SUMO_ATTR_END, STEPS2TIME(stopTime));
+    dev.writeAttr(SUMO_ATTR_ID, myID);
 }
 
 
@@ -430,10 +444,10 @@ void
 MSMeanData::writeXMLOutput(OutputDevice& dev,
                            SUMOTime startTime, SUMOTime stopTime) {
     // check whether this dump shall be written for the current time
-    size_t numReady = myDumpBegin < stopTime && myDumpEnd - DELTA_T >= startTime;
+    int numReady = myDumpBegin < stopTime && myDumpEnd - DELTA_T >= startTime ? 1 : 0;
     if (myTrackVehicles && myDumpBegin < stopTime) {
         myPendingIntervals.push_back(std::make_pair(startTime, stopTime));
-        numReady = myPendingIntervals.size();
+        numReady = (int)myPendingIntervals.size();
         for (std::vector<std::vector<MeanDataValues*> >::const_iterator i = myMeasures.begin(); i != myMeasures.end(); ++i) {
             for (std::vector<MeanDataValues*>::const_iterator j = (*i).begin(); j != (*i).end(); ++j) {
                 numReady = MIN2(numReady, ((MeanDataValueTracker*)*j)->getNumReady());
@@ -455,8 +469,7 @@ MSMeanData::writeXMLOutput(OutputDevice& dev,
             stopTime = myPendingIntervals.front().second;
             myPendingIntervals.pop_front();
         }
-        dev.openTag(SUMO_TAG_INTERVAL).writeAttr(SUMO_ATTR_BEGIN, STEPS2TIME(startTime)).writeAttr(SUMO_ATTR_END, STEPS2TIME(stopTime));
-        dev.writeAttr(SUMO_ATTR_ID, myID);
+        openInterval(dev, startTime, stopTime);
         std::vector<MSEdge*>::iterator edge = myEdges.begin();
         for (std::vector<std::vector<MeanDataValues*> >::const_iterator i = myMeasures.begin(); i != myMeasures.end(); ++i, ++edge) {
             writeEdge(dev, (*i), *edge, startTime, stopTime);

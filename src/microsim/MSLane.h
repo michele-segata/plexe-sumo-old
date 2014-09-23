@@ -390,6 +390,8 @@ public:
     }
     /// @}
 
+    /// @brief return the index of the link to the next crossing if this is walkingArea, else -1
+    int getCrossingIndex() const;
 
 
     /// @name Vehicle movement (longitudinal)
@@ -626,6 +628,11 @@ public:
 
     MSLane* getLogicalPredecessorLane() const;
 
+    /// @brief get the state of the link from the logical predecessor to this lane
+    LinkState getIncomingLinkState() const;
+
+    /// @brief get the list of outgoing lanes
+    std::vector<const MSLane*> getOutgoingLanes() const;
 
     /// @name Current state retrieval
     //@{

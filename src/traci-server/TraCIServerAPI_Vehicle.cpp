@@ -5,13 +5,15 @@
 /// @author  Christoph Sommer
 /// @author  Michael Behrisch
 /// @author  Bjoern Hendriks
+/// @author  Mario Krumnow
+/// @author  Jakob Erdmann
 /// @date    07.05.2009
 /// @version $Id$
 ///
 // APIs for getting/setting vehicle values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2009-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -79,7 +81,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
 
     // check variable
     if (variable != ID_LIST && variable != VAR_SPEED && variable != VAR_SPEED_WITHOUT_TRACI
-            && variable != VAR_POSITION && variable != VAR_ANGLE
+            && variable != VAR_POSITION && variable != VAR_ANGLE && variable != VAR_POSITION3D
             && variable != VAR_ROAD_ID && variable != VAR_LANE_ID && variable != VAR_LANE_INDEX
             && variable != VAR_TYPE && variable != VAR_ROUTE_ID && variable != VAR_COLOR
             && variable != VAR_LANEPOSITION
@@ -158,6 +160,12 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
                 tempMsg.writeUnsignedByte(POSITION_2D);
                 tempMsg.writeDouble(onRoad ? v->getPosition().x() : INVALID_DOUBLE_VALUE);
                 tempMsg.writeDouble(onRoad ? v->getPosition().y() : INVALID_DOUBLE_VALUE);
+                break;
+            case VAR_POSITION3D:
+                tempMsg.writeUnsignedByte(POSITION_3D);
+                tempMsg.writeDouble(onRoad ? v->getPosition().x() : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getPosition().y() : INVALID_DOUBLE_VALUE);
+                tempMsg.writeDouble(onRoad ? v->getPosition().z() : INVALID_DOUBLE_VALUE);
                 break;
             case VAR_ANGLE:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
@@ -273,7 +281,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
                 // retrieve
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
                 SUMOReal value;
-                if (!v->getWeightsStorage().retrieveExistingTravelTime(edge, 0, time, value)) {
+                if (!v->getWeightsStorage().retrieveExistingTravelTime(edge, time, value)) {
                     tempMsg.writeDouble(INVALID_DOUBLE_VALUE);
                 } else {
                     tempMsg.writeDouble(value);
@@ -305,7 +313,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
                 // retrieve
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
                 SUMOReal value;
-                if (!v->getWeightsStorage().retrieveExistingEffort(edge, 0, time, value)) {
+                if (!v->getWeightsStorage().retrieveExistingEffort(edge, time, value)) {
                     tempMsg.writeDouble(INVALID_DOUBLE_VALUE);
                 } else {
                     tempMsg.writeDouble(value);
@@ -734,6 +742,10 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
                 server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Resuming should obtain an empty compound object.", outputStorage);
                 return false;
             }
+            if (!static_cast<MSVehicle*>(v)->hasStops()) {
+                server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Failed to resume vehicle '" + v->getID() + "', it has no stops.", outputStorage);
+                return false;
+            }
             if (!static_cast<MSVehicle*>(v)->resumeFromStopping()) {
                 MSVehicle::Stop& sto = (static_cast<MSVehicle*>(v))->getNextStop();
                 std::ostringstream strs;
@@ -742,7 +754,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
                 strs << ", edge:" << (*sto.edge)->getID();
                 strs << ", startPos: " << sto.startPos;
                 std::string posStr = strs.str();
-                server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Failed to resume a non parking vehicle: " + v->getID() + ", " + posStr, outputStorage);
+                server.writeStatusCmd(CMD_SET_VEHICLE_VARIABLE, RTYPE_ERR, "Failed to resume a non parking vehicle '" + v->getID() + "', " + posStr, outputStorage);
                 return false;
             }
         }
@@ -792,7 +804,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             if (!server.readTypeCheckingInt(inputStorage, duration)) {
                 return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "The second slow down parameter must be the duration given as an integer.", outputStorage);
             }
-            if (duration < 0) {
+            if (duration < 0 || STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep()) + STEPS2TIME(duration) > STEPS2TIME(SUMOTime_MAX - DELTA_T)) {
                 return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Invalid time interval", outputStorage);
             }
             std::vector<std::pair<SUMOTime, SUMOReal> > speedTimeLine;
@@ -1075,7 +1087,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             std::vector<std::pair<SUMOTime, SUMOReal> > speedTimeLine;
             if (speed >= 0) {
                 speedTimeLine.push_back(std::make_pair(MSNet::getInstance()->getCurrentTimeStep(), speed));
-                speedTimeLine.push_back(std::make_pair(SUMOTime_MAX, speed));
+                speedTimeLine.push_back(std::make_pair(SUMOTime_MAX - DELTA_T, speed));
             }
             v->getInfluencer().setSpeedTimeLine(speedTimeLine);
         }
@@ -1160,7 +1172,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             vehicleParams.departPos = pos;
             if (vehicleParams.departPos < 0) {
                 const int proc = static_cast<int>(-vehicleParams.departPos);
-                if (proc >= static_cast<int>(DEPART_POS_DEF_MAX)) {
+                if (fabs(proc + vehicleParams.departPos) > NUMERICAL_EPS || proc >= static_cast<int>(DEPART_POS_DEF_MAX) || proc == static_cast<int>(DEPART_POS_GIVEN)) {
                     return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Invalid departure position.", outputStorage);
                 }
                 vehicleParams.departPosProcedure = (DepartPosDefinition)proc;
@@ -1394,7 +1406,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             Position pos(x, y);
 
             Position vehPos = v->getPosition();
-            v->getBestLanes();
+            v->updateBestLanes();
             bool report = server.vtdDebug();
             if (report) {
                 std::cout << std::endl << "begin vehicle " << v->getID() << " vehPos:" << vehPos << " lane:" << v->getLane()->getID() << std::endl;

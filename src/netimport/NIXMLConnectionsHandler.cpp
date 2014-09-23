@@ -154,12 +154,15 @@ NIXMLConnectionsHandler::myStartElement(int element,
         }
         NBConnection prohibitorC = parseConnection("prohibitor", prohibitor);
         NBConnection prohibitedC = parseConnection("prohibited", prohibited);
-        if (prohibitorC.getFrom() == 0 || prohibitedC.getFrom() == 0) {
+        if (prohibitorC == NBConnection::InvalidConnection || prohibitedC == NBConnection::InvalidConnection) {
             // something failed
             return;
         }
         NBNode* n = prohibitorC.getFrom()->getToNode();
         n->addSortedLinkFoes(prohibitorC, prohibitedC);
+    }
+    if (element == SUMO_TAG_CROSSING) {
+        addCrossing(attrs);
     }
 }
 
@@ -170,7 +173,7 @@ NIXMLConnectionsHandler::parseConnection(const std::string& defRole, const std::
     size_t div = def.find("->");
     if (div == std::string::npos) {
         myErrorMsgHandler->inform("Missing connection divider in " + defRole + " '" + def + "'");
-        return NBConnection(0, 0);
+        return NBConnection::InvalidConnection;
     }
     std::string fromDef = def.substr(0, div);
     std::string toDef = def.substr(div + 2);
@@ -189,11 +192,11 @@ NIXMLConnectionsHandler::parseConnection(const std::string& defRole, const std::
     // check
     if (fromE == 0) {
         myErrorMsgHandler->inform("Could not find edge '" + fromDef + "' in " + defRole + " '" + def + "'");
-        return NBConnection(0, 0);
+        return NBConnection::InvalidConnection;
     }
     if (toE == 0) {
         myErrorMsgHandler->inform("Could not find edge '" + toDef + "' in " + defRole + " '" + def + "'");
-        return NBConnection(0, 0);
+        return NBConnection::InvalidConnection;
     }
     return NBConnection(fromE, toE);
 }
@@ -234,21 +237,16 @@ NIXMLConnectionsHandler::parseLaneBound(const SUMOSAXAttributes& attrs, NBEdge* 
         }
         if (!from->addLane2LaneConnection(fromLane, to, toLane, NBEdge::L2L_USER, true, mayDefinitelyPass)) {
             NBEdge* nFrom = from;
-            bool toNext = true;
             do {
                 if (nFrom->getToNode()->getOutgoingEdges().size() != 1) {
-                    toNext = false;
                     break;
                 }
                 NBEdge* t = nFrom->getToNode()->getOutgoingEdges()[0];
                 if (t->getID().substr(0, t->getID().find('/')) != nFrom->getID().substr(0, nFrom->getID().find('/'))) {
-                    toNext = false;
                     break;
                 }
-                if (toNext) {
-                    nFrom = t;
-                }
-            } while (toNext);
+                nFrom = t;
+            } while (true);
             if (nFrom == 0 || !nFrom->addLane2LaneConnection(fromLane, to, toLane, NBEdge::L2L_USER, false, mayDefinitelyPass)) {
                 if (OptionsCont::getOptions().getBool("show-errors.connections-first-try")) {
                     WRITE_WARNING("Could not set loaded connection from '" + from->getLaneID(fromLane) + "' to '" + to->getLaneID(toLane) + "'.");
@@ -316,6 +314,53 @@ NIXMLConnectionsHandler::parseLaneDefinition(const SUMOSAXAttributes& attributes
     *toLane = attributes.get<int>(SUMO_ATTR_TO_LANE, 0, ok);
     return ok;
 }
+
+
+void
+NIXMLConnectionsHandler::addCrossing(const SUMOSAXAttributes& attrs) {
+    bool ok = true;
+    NBNode* node = 0;
+    EdgeVector edges;
+    const std::string nodeID = attrs.get<std::string>(SUMO_ATTR_NODE, 0, ok);
+    const SUMOReal width = attrs.getOpt<SUMOReal>(SUMO_ATTR_WIDTH, nodeID.c_str(), ok, NBNode::DEFAULT_CROSSING_WIDTH, true);
+    std::vector<std::string> edgeIDs;
+    SUMOSAXAttributes::parseStringVector(attrs.get<std::string>(SUMO_ATTR_EDGES, 0, ok), edgeIDs);
+    if (!ok) {
+        return;
+    }
+    for (std::vector<std::string>::const_iterator it = edgeIDs.begin(); it != edgeIDs.end(); ++it) {
+        NBEdge* edge = myEdgeCont.retrieve(*it);
+        if (edge == 0) {
+            WRITE_ERROR("Edge '" + (*it) + "' for crossing at node '" + nodeID + "' is not known.");
+            return;
+        }
+        if (node == 0) {
+            if (edge->getToNode()->getID() == nodeID) {
+                node = edge->getToNode();
+            } else if (edge->getFromNode()->getID() == nodeID) {
+                node = edge->getFromNode();
+            } else {
+                WRITE_ERROR("Edge '" + (*it) + "' does not touch node '" + nodeID + "'.");
+                return;
+            }
+        } else {
+            if (edge->getToNode() != node && edge->getFromNode() != node) {
+                WRITE_ERROR("Edge '" + (*it) + "' does not touch node '" + nodeID + "'.");
+                return;
+            }
+        }
+        edges.push_back(edge);
+    }
+    bool priority = attrs.getOpt<bool>(SUMO_ATTR_PRIORITY, nodeID.c_str(), ok, node->isTLControlled(), true);
+    if (node->isTLControlled() && !priority) {
+        // traffic_light nodes should always have priority crossings
+        WRITE_WARNING("Crossing at controlled node '" + nodeID + "' must be prioritized");
+        priority = true;
+    }
+    node->addCrossing(edges, width, priority);
+}
+
+
 
 /****************************************************************************/
 
