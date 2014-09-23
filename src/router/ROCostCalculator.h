@@ -2,13 +2,14 @@
 /// @file    ROCostCalculator.h
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Calculators for route costs and probabilities
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,7 +59,7 @@ public:
     virtual void setCosts(RORoute* route, const SUMOReal costs, const bool isActive = false) const = 0;
 
     /** @brief calculate the probabilities in the logit model */
-    virtual void calculateProbabilities(const ROVehicle* const veh, std::vector<RORoute*> alternatives) = 0;
+    virtual void calculateProbabilities(std::vector<RORoute*> alternatives, const ROVehicle* const veh, const SUMOTime time) = 0;
 
     unsigned int getMaxRouteNumber() const {
         return myMaxRouteNumber;
@@ -109,7 +110,7 @@ public:
     void setCosts(RORoute* route, const SUMOReal costs, const bool isActive = false) const;
 
     /** @brief calculate the probabilities */
-    void calculateProbabilities(const ROVehicle* const veh, std::vector<RORoute*> alternatives);
+    void calculateProbabilities(std::vector<RORoute*> alternatives, const ROVehicle* const veh, const SUMOTime time);
 
 private:
     /** @brief Performs the gawron - f() function
@@ -150,7 +151,7 @@ public:
     void setCosts(RORoute* route, const SUMOReal costs, const bool isActive = false) const;
 
     /** @brief calculate the probabilities in the logit model */
-    void calculateProbabilities(const ROVehicle* const veh, std::vector<RORoute*> alternatives);
+    void calculateProbabilities(std::vector<RORoute*> alternatives, const ROVehicle* const veh, const SUMOTime time);
 
 private:
     /** @brief calculate the scaling factor in the logit model */

@@ -2,13 +2,14 @@
 /// @file    MSDevice_Routing.h
 /// @author  Michael Behrisch
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Tue, 04 Dec 2007
 /// @version $Id$
 ///
 // A device that performs vehicle rerouting based on current edge speeds
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2007-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -70,8 +71,9 @@ class MSLane;
 class MSDevice_Routing : public MSDevice {
 public:
     /** @brief Inserts MSDevice_Routing-options
+     * @param[filled] oc The options container to add the options to
      */
-    static void insertOptions();
+    static void insertOptions(OptionsCont& oc);
 
 
     /** @brief Build devices for the given vehicle, if needed
@@ -89,14 +91,22 @@ public:
      * The built device is stored in the given vector.
      *
      * @param[in] v The vehicle for which a device may be built
-     * @param[in, filled] into The vector to store the built device in
+     * @param[filled] into The vector to store the built device in
      */
     static void buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& into);
+
 
     /// @brief deletes the router instance
     static void cleanup();
 
+
+
 public:
+    /// @brief Destructor.
+    ~MSDevice_Routing();
+
+
+
     /// @name Methods called on vehicle movement / state change, overwriting MSDevice
     /// @{
 
@@ -122,10 +132,6 @@ public:
     /// @}
 
 
-    /// @brief Destructor.
-    ~MSDevice_Routing();
-
-
 private:
     /** @brief Constructor
      *
@@ -134,8 +140,7 @@ private:
      * @param[in] period The period with which a new route shall be searched
      * @param[in] preInsertionPeriod The route search period before insertion
      */
-    MSDevice_Routing(SUMOVehicle& holder, const std::string& id, SUMOTime period,
-                     SUMOTime preInsertionPeriod);
+    MSDevice_Routing(SUMOVehicle& holder, const std::string& id, SUMOTime period, SUMOTime preInsertionPeriod);
 
 
     /** @brief Performs rerouting at insertion into the network
@@ -186,6 +191,7 @@ private:
     static SUMOReal getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t);
 
 
+
     /// @name Network state adaptation
     /// @{
 
@@ -204,8 +210,11 @@ private:
     /// @}
 
 
+
     /// @brief get the router, initialize on first use
     static SUMOAbstractRouter<MSEdge, SUMOVehicle>& getRouter();
+
+
 
 private:
     /// @brief The period with which a vehicle shall be rerouted
@@ -221,7 +230,7 @@ private:
     static Command* myEdgeWeightSettingCommand;
 
     /// @brief The container of edge efforts
-    static std::map<const MSEdge*, SUMOReal> myEdgeEfforts;
+    static std::vector<SUMOReal> myEdgeEfforts;
 
     /// @brief Information which weight prior edge efforts have
     static SUMOReal myAdaptationWeight;
@@ -237,9 +246,6 @@ private:
 
     /// @brief The router to use
     static SUMOAbstractRouter<MSEdge, SUMOVehicle>* myRouter;
-
-    /// @brief the vehicles which explicitly carry a device
-    static std::set<std::string> myExplicitIDs;
 
 
 private:

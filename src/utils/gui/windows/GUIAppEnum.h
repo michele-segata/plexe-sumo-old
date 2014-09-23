@@ -9,8 +9,8 @@
 ///
 // Message and object IDs used by the FOX-version of the gui
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -177,6 +177,10 @@ enum {
     MID_MAKESNAPSHOT,
     /// toogle zooming style
     MID_ZOOM_STYLE,
+    /// toogle time display mode
+    MID_TIME_TOOGLE,
+    /// toogle delay between alternative value
+    MID_DELAY_TOOGLE,
     //@}
 
 
@@ -243,6 +247,8 @@ enum {
     MID_START_TRACK,
     /// Stop to track a vehicle
     MID_STOP_TRACK,
+    /// select foes of a vehicle
+    MID_SHOW_FOES,
     MID_SHOW_LFLINKITEMS,
     MID_HIDE_LFLINKITEMS,
     //@}
@@ -303,6 +309,8 @@ enum {
     MID_CHOOSEN_SAVE,
     /// Clear set
     MID_CHOOSEN_CLEAR,
+    /// Reset set
+    MID_CHOOSEN_RESET,
     /// Deselect selected items
     MID_CHOOSEN_DESELECT,
     /// Deselect selected items
@@ -405,6 +413,12 @@ enum {
     MID_GNE_OPEN_ATTRIBUTE_EDITOR,
     /** split an edge */
     MID_GNE_SPLIT_EDGE,
+    /** split an edge */
+    MID_GNE_SPLIT_EDGE_BIDI,
+    /** reverse an edge */
+    MID_GNE_REVERSE_EDGE,
+    /** edit junction shape */
+    MID_GNE_NODE_SHAPE,
     /** set non-default geometry endpoint */
     MID_GNE_SET_EDGE_ENDPOINT,
     /** restore geometry endpoint to node position */

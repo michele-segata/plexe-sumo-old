@@ -4,13 +4,14 @@
 /// @author  Tino Morenz
 /// @author  Eric Nicolay
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Thu, 17 Oct 2002
 /// @version $Id$
 ///
 // Builds trigger objects for microsim
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -49,6 +50,7 @@ class MSLane;
 class MSEdge;
 class MSBusStop;
 class MSCalibrator;
+class MSRouteProbe;
 
 #ifdef HAVE_INTERNAL
 class METriggeredCalibrator;
@@ -206,10 +208,10 @@ protected:
      * @param[in] file The file to read the flows from
      * @todo Is the position correct/needed
      */
-    MSCalibrator* buildCalibrator(MSNet& net,
-                                  const std::string& id, MSEdge* edge, SUMOReal pos,
-                                  const std::string& file, const std::string& outfile,
-                                  const SUMOTime freq);
+    virtual MSCalibrator* buildCalibrator(MSNet& net,
+                                          const std::string& id, MSEdge* edge, SUMOReal pos,
+                                          const std::string& file, const std::string& outfile,
+                                          const SUMOTime freq, MSRouteProbe* probe);
 #ifdef HAVE_INTERNAL
     /** @brief builds a mesoscopic calibrator
      *
@@ -222,10 +224,10 @@ protected:
      * @param[in] file The file to read the flows from
      * @todo Is the position correct/needed
      */
-    METriggeredCalibrator* buildMECalibrator(MSNet& net,
+    virtual METriggeredCalibrator* buildMECalibrator(MSNet& net,
             const std::string& id, const MSEdge* edge, SUMOReal pos,
             const std::string& file, const std::string& outfile,
-            const SUMOTime freq);
+            const SUMOTime freq, MSRouteProbe* probe);
 #endif
 
 

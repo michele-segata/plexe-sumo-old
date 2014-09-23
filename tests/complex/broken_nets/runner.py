@@ -8,9 +8,14 @@
 
 This script is a test runner for the broken networks.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 
 
@@ -202,10 +207,10 @@ elif sys.argv[1]=="duarouter":
             "-o", "dummy.xml", "-t", "input_additional.add.xml"]
 elif sys.argv[1]=="jtrrouter":
     call = [checkBinary('jtrrouter'), "--no-step-log",
-            "-o", "dummy.xml", "-t", "input_additional.add.xml"]
+            "-o", "dummy.xml", "-a", "input_additional.add.xml"]
 else:
     print >> sys.stderr, "Unsupported application defined"
-
+call += sys.argv[2:]
 
 netconvertBinary = checkBinary('netconvert')
 
@@ -213,17 +218,13 @@ netconvertBinary = checkBinary('netconvert')
 print ">>> Building the correct network"
 retcode = subprocess.call([netconvertBinary, "-c", "netconvert.netccfg"], stdout=sys.stdout, stderr=sys.stderr)
 print ">>> Trying the correct network"
-call.append("-n")
-call.append("correct.net.xml")
-retcode = subprocess.call(call, stdout=sys.stdout, stderr=sys.stderr)
-if retcode!=0:
+retcode = subprocess.call(call + ["-n", "correct.net.xml"], stdout=sys.stdout, stderr=sys.stderr)
+if retcode != 0:
     print "Error on processing the 'correct' network!"
     sys.exit()
 print ">>> ok...\n"
 
 # check broken network processing
-call = call[:-1]
-call.append("mod.net.xml")
 print "Running broken net"
 for c in changes:
     tree = dom.parse("correct.net.xml")
@@ -233,9 +234,8 @@ for c in changes:
     writer.close()
     print >> sys.stderr, "------------------ " + c[0] + ":" + c[1]
     sys.stderr.flush()
-    retcode = subprocess.call(call, stdout=sys.stdout, stderr=sys.stderr)
+    retcode = subprocess.call(call + ["-n", "mod.net.xml"], stdout=sys.stdout, stderr=sys.stderr)
     sys.stderr.flush()
     sys.stdout.flush()
     if retcode != 1:
         print >> sys.stderr, " Wrong error code returned (%s)!" % retcode
-

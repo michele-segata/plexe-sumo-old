@@ -7,8 +7,8 @@
 ///
 // Retrieves messages about the process and gives them further to output
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -162,9 +162,7 @@ MsgHandler::addRetriever(OutputDevice* retriever) {
     if (myLock != 0) {
         myLock->lock();
     }
-    RetrieverVector::iterator i =
-        find(myRetrievers.begin(), myRetrievers.end(), retriever);
-    if (i == myRetrievers.end()) {
+    if (!isRetriever(retriever)) {
         myRetrievers.push_back(retriever);
     }
     if (myLock != 0) {
@@ -189,15 +187,18 @@ MsgHandler::removeRetriever(OutputDevice* retriever) {
 }
 
 
+bool
+MsgHandler::isRetriever(OutputDevice* retriever) const {
+    return find(myRetrievers.begin(), myRetrievers.end(), retriever) != myRetrievers.end();
+}
+
+
 void
 MsgHandler::initOutputOptions() {
     // initialize console properly
     OutputDevice::getDevice("stdout");
     OutputDevice::getDevice("stderr");
     OptionsCont& oc = OptionsCont::getOptions();
-    if (!oc.getBool("verbose")) {
-        getMessageInstance()->removeRetriever(&OutputDevice::getDevice("stdout"));
-    }
     if (oc.getBool("no-warnings")) {
         getWarningInstance()->removeRetriever(&OutputDevice::getDevice("stderr"));
     }
@@ -230,6 +231,9 @@ MsgHandler::initOutputOptions() {
         } catch (IOError&) {
             throw ProcessError("Could not build logging file '" + oc.getString("error-log") + "'");
         }
+    }
+    if (!oc.getBool("verbose")) {
+        getMessageInstance()->removeRetriever(&OutputDevice::getDevice("stdout"));
     }
 }
 

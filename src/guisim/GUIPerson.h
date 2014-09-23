@@ -9,8 +9,8 @@
 ///
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -121,9 +121,27 @@ public:
         myPositionInVehicle = pos;
     }
 
+    /// @name inherited from MSPerson with added locking
+    //@{
 
-    /// @brief overrides the base method and returns myPositionInVehicle while in driving stage
-    Position getPosition(SUMOTime now) const;
+    /// @brief return the offset from the start of the current edge
+    SUMOReal getEdgePos() const;
+
+    /// @brief return the Network coordinate of the person
+    // @note overrides the base method and returns myPositionInVehicle while in driving stage
+    Position getPosition() const;
+
+    /// @brief return the current angle of the person
+    SUMOReal getAngle() const;
+
+    /// @brief the time this person spent waiting in seconds
+    SUMOReal getWaitingSeconds() const;
+
+    /// @brief the current speed of the person
+    SUMOReal getSpeed() const;
+
+    //@}
+
 
     /**
      * @class GUIPersonPopupMenu

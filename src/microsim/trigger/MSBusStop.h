@@ -1,13 +1,14 @@
 /****************************************************************************/
 /// @file    MSBusStop.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Mon, 13.12.2005
 /// @version $Id$
 ///
 // A lane area vehicles can halt at
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -131,7 +132,7 @@ public:
      *
      * @return The last free position of this bus stop
      */
-    SUMOReal getLastFreePos(SUMOVehicle& forVehicle) const;
+    SUMOReal getLastFreePos(const SUMOVehicle& forVehicle) const;
 
 
     /** @brief Returns the number of persons waiting on this stop

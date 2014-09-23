@@ -1,11 +1,16 @@
 /****************************************************************************/
 /// @file    MSFCDExport.cpp
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @author  Mario Krumnow
+/// @author  Michael Behrisch
+/// @date    2012-04-26
+/// @version $Id$
 ///
 // Realises dumping Floating Car Data (FCD) Data
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,6 +41,7 @@
 #include "MSFCDExport.h"
 #include <microsim/MSNet.h>
 #include <microsim/MSVehicle.h>
+#include <microsim/MSPerson.h>
 
 #ifdef HAVE_MESOSIM
 #include <mesosim/MELoop.h>
@@ -53,6 +59,7 @@
 void
 MSFCDExport::write(OutputDevice& of, SUMOTime timestep) {
     const bool useGeo = OptionsCont::getOptions().getBool("fcd-output.geo");
+    const bool signals = OptionsCont::getOptions().getBool("fcd-output.signals");
     MSVehicleControl& vc = MSNet::getInstance()->getVehicleControl();
     MSVehicleControl::constVehIt it = vc.loadedVehBegin();
     MSVehicleControl::constVehIt end = vc.loadedVehEnd();
@@ -61,24 +68,49 @@ MSFCDExport::write(OutputDevice& of, SUMOTime timestep) {
     for (; it != end; ++it) {
         const MSVehicle* veh = static_cast<const MSVehicle*>((*it).second);
         if (veh->isOnRoad()) {
+            Position pos = veh->getPosition();
             MSLane* lane = veh->getLane();
-            SUMOReal lp = veh->getPositionOnLane();
-            SUMOReal gp = lane->interpolateLanePosToGeometryPos(lp);
-            Position pos = lane->getShape().positionAtOffset(gp);
             if (useGeo) {
                 of.setPrecision(GEO_OUTPUT_ACCURACY);
                 GeoConvHelper::getFinal().cartesian2geo(pos);
             }
-            of.openTag("vehicle");
+            of.openTag(SUMO_TAG_VEHICLE);
             of.writeAttr(SUMO_ATTR_ID, veh->getID());
             of.writeAttr(SUMO_ATTR_X, pos.x());
             of.writeAttr(SUMO_ATTR_Y, pos.y());
             of.writeAttr(SUMO_ATTR_ANGLE, veh->getAngle());
             of.writeAttr(SUMO_ATTR_TYPE, veh->getVehicleType().getID());
             of.writeAttr(SUMO_ATTR_SPEED, veh->getSpeed());
-            of.writeAttr(SUMO_ATTR_POSITION, lp);
+            of.writeAttr(SUMO_ATTR_POSITION, veh->getPositionOnLane());
             of.writeAttr(SUMO_ATTR_LANE, lane->getID());
-            of.writeAttr(SUMO_ATTR_SLOPE, lane->getShape().slopeDegreeAtOffset(gp));
+            of.writeAttr(SUMO_ATTR_SLOPE, lane->getShape().slopeDegreeAtOffset(veh->getPositionOnLane()));
+            if (signals) {
+                of.writeAttr("signals", toString(veh->getSignals()));
+            }
+            of.closeTag();
+        }
+    }
+    // write persons
+    MSEdgeControl& ec = MSNet::getInstance()->getEdgeControl();
+    const std::vector<MSEdge*>& edges = ec.getEdges();
+    for (std::vector<MSEdge*>::const_iterator e = edges.begin(); e != edges.end(); ++e) {
+        const std::vector<MSPerson*>& persons = (*e)->getSortedPersons(timestep);
+        for (std::vector<MSPerson*>::const_iterator it_p = persons.begin(); it_p != persons.end(); ++it_p) {
+            MSPerson* p = *it_p;
+            Position pos = p->getPosition();
+            if (useGeo) {
+                of.setPrecision(GEO_OUTPUT_ACCURACY);
+                GeoConvHelper::getFinal().cartesian2geo(pos);
+            }
+            of.openTag(SUMO_TAG_PERSON);
+            of.writeAttr(SUMO_ATTR_ID, p->getID());
+            of.writeAttr(SUMO_ATTR_X, pos.x());
+            of.writeAttr(SUMO_ATTR_Y, pos.y());
+            of.writeAttr(SUMO_ATTR_ANGLE, p->getAngle());
+            of.writeAttr(SUMO_ATTR_SPEED, p->getSpeed());
+            of.writeAttr(SUMO_ATTR_POSITION, p->getEdgePos());
+            of.writeAttr(SUMO_ATTR_EDGE, (*e)->getID());
+            of.writeAttr(SUMO_ATTR_SLOPE, (*e)->getLanes()[0]->getShape().slopeDegreeAtOffset(p->getEdgePos()));
             of.closeTag();
         }
     }

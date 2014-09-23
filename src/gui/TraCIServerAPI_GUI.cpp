@@ -8,8 +8,8 @@
 ///
 // APIs for getting/setting GUI values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -49,17 +49,11 @@
 
 
 // ===========================================================================
-// used namespaces
-// ===========================================================================
-using namespace traci;
-
-
-// ===========================================================================
 // method definitions
 // ===========================================================================
 bool
 TraCIServerAPI_GUI::processGet(TraCIServer& server, tcpip::Storage& inputStorage,
-                               tcpip::Storage& outputStorage) throw(TraCIException, std::invalid_argument) {
+                               tcpip::Storage& outputStorage) {
     // variable & id
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
@@ -121,7 +115,7 @@ TraCIServerAPI_GUI::processGet(TraCIServer& server, tcpip::Storage& inputStorage
 
 bool
 TraCIServerAPI_GUI::processSet(TraCIServer& server, tcpip::Storage& inputStorage,
-                               tcpip::Storage& outputStorage) throw(TraCIException, std::invalid_argument) {
+                               tcpip::Storage& outputStorage) {
     std::string warning = ""; // additional description for response
     // variable
     int variable = inputStorage.readUnsignedByte();

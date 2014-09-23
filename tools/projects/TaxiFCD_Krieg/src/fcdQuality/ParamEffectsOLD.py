@@ -1,17 +1,24 @@
+#!/usr/bin/env python
 # -*- coding: Latin-1 -*-
 """
-@file    GenerateRawFCD.py
+@file    ParamEffectsOLD.py
 @author  Sascha Krieg
 @author  Daniel Krajzewicz
 @author  Michael Behrisch
 @date    2008-07-26
+@version $Id$
 
 Creates files with a comparison of speeds for each edge between the taxis and the average speed from the current edge.
 Dependent of the frequency and the taxi quota.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 
 import random
@@ -185,4 +192,4 @@ def createOutput(edgeDumpDict, vtypeDict,vehSum, taxiSum):
 
 #start the program
 #profile.run('main()')
-main()     
+main()

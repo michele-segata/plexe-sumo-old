@@ -4,13 +4,14 @@
 /// @author  Jakob Erdmann
 /// @author  Christoph Sommer
 /// @author  Michael Behrisch
+/// @author  Melanie Knocke
 /// @date    Mon, 05 Dec 2005
 /// @version $Id$
 ///
 // Main for POLYCONVERT
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -112,9 +113,9 @@ fillOptions() {
     oc.addSynonyme("osm-files", "osm");
     oc.addDescription("osm-files", "Input", "Reads pois from FILE+ assuming they're coded in OSM");
     oc.doRegister("osm.keep-full-type", new Option_Bool(false));
-    oc.addDescription("osm.keep-full-type", "Input", "The type will be made of the key-value - pair.");
+    oc.addDescription("osm.keep-full-type", "Input", "The type will be made of the key-value - pair");
     oc.doRegister("osm.use-name", new Option_Bool(false));
-    oc.addDescription("osm.use-name", "Input", "The id will be set from the given 'name' attribute.");
+    oc.addDescription("osm.use-name", "Input", "The id will be set from the given 'name' attribute");
 
     // arcview import
     oc.doRegister("shapefile-prefixes", new Option_FileName());
@@ -133,7 +134,10 @@ fillOptions() {
     oc.addDescription("shapefile.id-column", "Input", "Defines in which column the id can be found");
 
     oc.doRegister("shapefile.use-running-id", new Option_Bool());
-    oc.addDescription("shapefile.use-running-id", "Input", "A running number will be used as id.");
+    oc.addDescription("shapefile.use-running-id", "Input", "A running number will be used as id");
+
+    oc.doRegister("shapefile.add-param", new Option_Bool());
+    oc.addDescription("shapefile.add-param", "Input", "Extract all additonal columns as params");
 
     // typemap reading
     oc.doRegister("type-file", new Option_FileName());
@@ -217,7 +221,7 @@ main(int argc, char** argv) {
             SystemFrame::close();
             return 0;
         }
-        XMLSubSys::setValidation(oc.getBool("xml-validation"));
+        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
         MsgHandler::initOutputOptions();
         // build the projection
         int shift = 0;

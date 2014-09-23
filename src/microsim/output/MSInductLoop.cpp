@@ -11,8 +11,8 @@
 ///
 // An unextended detector measuring at a fixed position on a fixed lane.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,7 +58,8 @@
 // ===========================================================================
 MSInductLoop::MSInductLoop(const std::string& id, MSLane* const lane,
                            SUMOReal positionInMeters, bool splitByType) :
-    MSMoveReminder(lane), MSDetectorFileOutput(id),
+    MSMoveReminder(id, lane),
+    MSDetectorFileOutput(id),
     myPosition(positionInMeters), mySplitByType(splitByType),
     myLastLeaveTime(STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep())),
     myVehicleDataCont(),
@@ -97,10 +98,14 @@ MSInductLoop::notifyMove(SUMOVehicle& veh, SUMOReal oldPos,
         }
         enterDetectorByMove(veh, entryTime);
     }
-    if (newPos - veh.getVehicleType().getLength() > myPosition && oldPos - veh.getVehicleType().getLength() <= myPosition) {
-        // vehicle passed the detector
+    if (newPos - veh.getVehicleType().getLength() > myPosition) {
+        // vehicle passed the detector (it may have changed onto this lane
+        // somewhere past the detector)
+        assert(newSpeed > 0 || myVehiclesOnDet.find(&veh) == myVehiclesOnDet.end());
         SUMOReal leaveTime = STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep());
-        leaveTime += (myPosition - oldPos + veh.getVehicleType().getLength()) / newSpeed;
+        if (newSpeed > 0) {
+            leaveTime += (myPosition - oldPos + veh.getVehicleType().getLength()) / newSpeed;
+        }
         leaveDetectorByMove(veh, leaveTime);
         return false;
     }
@@ -110,18 +115,11 @@ MSInductLoop::notifyMove(SUMOVehicle& veh, SUMOReal oldPos,
 
 
 bool
-MSInductLoop::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/, MSMoveReminder::Notification reason) {
+MSInductLoop::notifyLeave(SUMOVehicle& veh, SUMOReal lastPos, MSMoveReminder::Notification reason) {
     if (reason != MSMoveReminder::NOTIFICATION_JUNCTION) {
-        // vehicle is on detector during lane change or arrival, or ...
-        leaveDetectorByLaneChange(veh);
+        leaveDetectorByLaneChange(veh, lastPos);
         return false;
     }
-    return true;
-}
-
-
-bool
-MSInductLoop::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification) {
     return true;
 }
 
@@ -191,7 +189,7 @@ MSInductLoop::getTimestepsSinceLastDetection() const {
 
 void
 MSInductLoop::writeXMLDetectorProlog(OutputDevice& dev) const {
-    dev.writeXMLHeader("detector", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/det_e1_file.xsd\"");
+    dev.writeXMLHeader("detector", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/det_e1_file.xsd\"");
 }
 
 
@@ -291,10 +289,13 @@ MSInductLoop::leaveDetectorByMove(SUMOVehicle& veh,
 
 
 void
-MSInductLoop::leaveDetectorByLaneChange(SUMOVehicle& veh) {
+MSInductLoop::leaveDetectorByLaneChange(SUMOVehicle& veh, SUMOReal lastPos) {
     // Discard entry data
     myVehiclesOnDet.erase(&veh);
-    myDismissedVehicleNumber++;
+    if (lastPos > myPosition) {
+        // vehicle is on detector during lane change or arrival, or ...
+        myDismissedVehicleNumber++;
+    }
 }
 
 

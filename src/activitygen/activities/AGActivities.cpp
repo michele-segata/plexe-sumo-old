@@ -3,14 +3,15 @@
 /// @author  Piotr Woznica
 /// @author  Daniel Krajzewicz
 /// @author  Walter Bamberger
+/// @author  Michael Behrisch
 /// @date    July 2010
 /// @version $Id$
 ///
 // Main class that manages activities taken in account and generates the
 // inhabitants' trip list.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2010-2014 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/

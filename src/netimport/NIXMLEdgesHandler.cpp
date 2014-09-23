@@ -10,8 +10,8 @@
 ///
 // Importer for network edges stored in XML
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -43,6 +43,7 @@
 #include <utils/xml/SUMOSAXHandler.h>
 #include <netbuild/NBNodeCont.h>
 #include <netbuild/NBTypeCont.h>
+#include <netbuild/NBNetBuilder.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/TplConvert.h>
@@ -51,7 +52,6 @@
 #include <utils/common/ToString.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/geom/GeoConvHelper.h>
-#include "NILoader.h"
 #include "NIXMLEdgesHandler.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -71,10 +71,15 @@ NIXMLEdgesHandler::NIXMLEdgesHandler(NBNodeCont& nc,
                                      NBEdgeCont& ec,
                                      NBTypeCont& tc,
                                      NBDistrictCont& dc,
+                                     NBTrafficLightLogicCont& tlc,
                                      OptionsCont& options)
     : SUMOSAXHandler("xml-edges - file"),
       myOptions(options),
-      myNodeCont(nc), myEdgeCont(ec), myTypeCont(tc), myDistrictCont(dc),
+      myNodeCont(nc),
+      myEdgeCont(ec),
+      myTypeCont(tc),
+      myDistrictCont(dc),
+      myTLLogicCont(tlc),
       myCurrentEdge(0), myHaveReportedAboutOverwriting(false),
       myHaveWarnedAboutDeprecatedLaneId(false),
       myKeepEdgeShape(!options.getBool("plain.extend-edge-shape"))
@@ -126,7 +131,7 @@ NIXMLEdgesHandler::addEdge(const SUMOSAXAttributes& attrs) {
     myCurrentLaneNo = myTypeCont.getNumLanes("");
     myPermissions = myTypeCont.getPermissions("");
     myCurrentWidth = myTypeCont.getWidth("");
-    myCurrentOffset = NBEdge::UNSPECIFIED_OFFSET;
+    myCurrentEndOffset = NBEdge::UNSPECIFIED_OFFSET;
     myCurrentType = "";
     myShape = PositionVector();
     myLanesSpread = LANESPREAD_RIGHT;
@@ -139,8 +144,8 @@ NIXMLEdgesHandler::addEdge(const SUMOSAXAttributes& attrs) {
         if (!ok) {
             return;
         }
-        if (!myTypeCont.knows(myCurrentType)) {
-            WRITE_ERROR("Type '" + myCurrentType + "' used by edge '" + myCurrentID + "' was not defined.");
+        if (!myTypeCont.knows(myCurrentType) && !myOptions.getBool("ignore-errors.edge-type")) {
+            WRITE_ERROR("Type '" + myCurrentType + "' used by edge '" + myCurrentID + "' was not defined (ignore with option --ignore-errors.edge-type).");
             return;
         }
         myCurrentSpeed = myTypeCont.getSpeed(myCurrentType);
@@ -171,7 +176,7 @@ NIXMLEdgesHandler::addEdge(const SUMOSAXAttributes& attrs) {
             myReinitKeepEdgeShape = true;
         }
         myCurrentWidth = myCurrentEdge->getLaneWidth();
-        myCurrentOffset = myCurrentEdge->getOffset();
+        myCurrentEndOffset = myCurrentEdge->getEndOffset();
         myLanesSpread = myCurrentEdge->getLaneSpreadFunction();
         if (myCurrentEdge->hasLoadedLength()) {
             myLength = myCurrentEdge->getLoadedLength();
@@ -200,10 +205,15 @@ NIXMLEdgesHandler::addEdge(const SUMOSAXAttributes& attrs) {
     }
     // try to get the width
     if (attrs.hasAttribute(SUMO_ATTR_ENDOFFSET)) {
-        myCurrentOffset = attrs.get<SUMOReal>(SUMO_ATTR_ENDOFFSET, myCurrentID.c_str(), ok);
+        myCurrentEndOffset = attrs.get<SUMOReal>(SUMO_ATTR_ENDOFFSET, myCurrentID.c_str(), ok);
     }
     // try to get the street name
-    myCurrentStreetName = attrs.getOpt<std::string>(SUMO_ATTR_NAME, myCurrentID.c_str(), ok, myCurrentStreetName);
+    if (attrs.hasAttribute(SUMO_ATTR_NAME)) {
+        myCurrentStreetName = attrs.get<std::string>(SUMO_ATTR_NAME, myCurrentID.c_str(), ok);
+        if (myCurrentStreetName != "" && myOptions.isDefault("output.street-names")) {
+            myOptions.set("output.street-names", "true");
+        }
+    }
 
     // try to get the allowed/disallowed classes
     if (attrs.hasAttribute(SUMO_ATTR_ALLOW) || attrs.hasAttribute(SUMO_ATTR_DISALLOW)) {
@@ -231,24 +241,28 @@ NIXMLEdgesHandler::addEdge(const SUMOSAXAttributes& attrs) {
     if (myCurrentEdge != 0) {
         myCurrentEdge->reinit(myFromNode, myToNode, myCurrentType, myCurrentSpeed,
                               myCurrentLaneNo, myCurrentPriority, myShape,
-                              myCurrentWidth, myCurrentOffset,
+                              myCurrentWidth, myCurrentEndOffset,
                               myCurrentStreetName, myLanesSpread,
                               myReinitKeepEdgeShape);
     } else {
         // the edge must be allocated in dependence to whether a shape is given
         if (myShape.size() == 0) {
             myCurrentEdge = new NBEdge(myCurrentID, myFromNode, myToNode, myCurrentType, myCurrentSpeed,
-                                       myCurrentLaneNo, myCurrentPriority, myCurrentWidth, myCurrentOffset,
+                                       myCurrentLaneNo, myCurrentPriority, myCurrentWidth, myCurrentEndOffset,
                                        myCurrentStreetName, myLanesSpread);
         } else {
             myCurrentEdge = new NBEdge(myCurrentID, myFromNode, myToNode, myCurrentType, myCurrentSpeed,
-                                       myCurrentLaneNo, myCurrentPriority, myCurrentWidth, myCurrentOffset,
+                                       myCurrentLaneNo, myCurrentPriority, myCurrentWidth, myCurrentEndOffset,
                                        myShape, myCurrentStreetName, myLanesSpread,
                                        myKeepEdgeShape);
         }
     }
     myCurrentEdge->setLoadedLength(myLength);
     myCurrentEdge->setPermissions(myPermissions);
+    if (myTypeCont.getSidewalkWidth(myCurrentType) != NBEdge::UNSPECIFIED_WIDTH) {
+        // lane specifications may override this
+        myCurrentEdge->addSidewalk(myTypeCont.getSidewalkWidth(myCurrentType));
+    }
 }
 
 
@@ -292,7 +306,7 @@ NIXMLEdgesHandler::addLane(const SUMOSAXAttributes& attrs) {
     }
     // try to get the end-offset (lane shortened due to pedestrian crossing etc..)
     if (attrs.hasAttribute(SUMO_ATTR_ENDOFFSET)) {
-        myCurrentEdge->setOffset(lane, attrs.get<SUMOReal>(SUMO_ATTR_ENDOFFSET, myCurrentID.c_str(), ok));
+        myCurrentEdge->setEndOffset(lane, attrs.get<SUMOReal>(SUMO_ATTR_ENDOFFSET, myCurrentID.c_str(), ok));
     }
     // try to get lane specific speed (should not occur for german networks)
     if (attrs.hasAttribute(SUMO_ATTR_SPEED)) {
@@ -404,7 +418,7 @@ NIXMLEdgesHandler::tryGetShape(const SUMOSAXAttributes& attrs) {
         return PositionVector();
     }
     PositionVector shape = attrs.getOpt<PositionVector>(SUMO_ATTR_SHAPE, 0, ok, PositionVector());
-    if (!NILoader::transformCoordinates(shape)) {
+    if (!NBNetBuilder::transformCoordinates(shape)) {
         WRITE_ERROR("Unable to project coordinates for edge '" + myCurrentID + "'.");
     }
     myReinitKeepEdgeShape = myKeepEdgeShape;
@@ -471,6 +485,11 @@ NIXMLEdgesHandler::myEndElement(int element) {
                 sort((*i).lanes.begin(), (*i).lanes.end());
                 noLanesMax = MAX2(noLanesMax, (unsigned int)(*i).lanes.size());
             }
+            // invalidate traffic light definitions loaded from a SUMO network
+            // XXX it would be preferable to reconstruct the phase definitions heuristically
+            e->getToNode()->invalidateTLS(myTLLogicCont);
+            e->invalidateConnections(true);
+
             // split the edge
             std::vector<int> currLanes;
             for (unsigned int l = 0; l < e->getNumLanes(); ++l) {
@@ -531,6 +550,9 @@ NIXMLEdgesHandler::myEndElement(int element) {
                         e->decLaneNo(e->getNumLanes() - (int) exp.lanes.size());
                     }
                     currLanes = exp.lanes;
+                    // invalidate traffic light definition loaded from a SUMO network
+                    // XXX it would be preferable to reconstruct the phase definitions heuristically
+                    e->getFromNode()->invalidateTLS(myTLLogicCont);
                 } else {
                     WRITE_WARNING("Split at '" + toString(exp.pos) + "' lies beyond the edge's length (edge '" + myCurrentID + "').");
                 }

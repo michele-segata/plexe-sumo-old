@@ -3,13 +3,14 @@
 /// @author  Christian Roessel
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Wed, 12 Dez 2001
 /// @version $Id$
 ///
 // junction.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,7 +34,6 @@
 #include "MSInternalJunction.h"
 #include "MSLane.h"
 #include "MSJunctionLogic.h"
-#include "MSBitSetLogic.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -92,10 +92,12 @@ MSInternalJunction::postloadInit() {
             myInternalLinkFoes.push_back(*j);
         }
     }
-    thisLink->setRequestInformation(requestPos, requestPos, true, false, myInternalLinkFoes, myInternalLaneFoes);
+    // thisLinks is itself an exitLink of the preceding internal lane
+    thisLink->setRequestInformation((int)requestPos, true, false, myInternalLinkFoes, myInternalLaneFoes, thisLink->getViaLane()->getLogicalPredecessorLane());
     assert(thisLink->getViaLane()->getLinkCont().size() == 1);
     MSLink* exitLink = thisLink->getViaLane()->getLinkCont()[0];
-    exitLink->setRequestInformation(requestPos, requestPos, false, false, std::vector<MSLink*>(), myInternalLaneFoes);
+    exitLink->setRequestInformation((int)requestPos, false, false, std::vector<MSLink*>(),
+                                    myInternalLaneFoes, thisLink->getViaLane());
     for (std::vector<MSLink*>::const_iterator k = myInternalLinkFoes.begin(); k != myInternalLinkFoes.end(); ++k) {
         thisLink->addBlockedLink(*k);
         (*k)->addBlockedLink(thisLink);

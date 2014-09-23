@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
+/// @author  Melanie Knocke
 /// @date    2005-09-15
 /// @version $Id$
 ///
 // A point-of-interest (2D)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -70,11 +71,15 @@ public:
         myHalfImgHeight(height / 2.0)
     {}
 
+
     /// @brief Destructor
     virtual ~PointOfInterest() { }
 
+
+
     /// @name Getter
     /// @{
+
     /// @brief Returns whether the image width of the POI
     inline SUMOReal getWidth() const {
         return myHalfImgWidth * 2.0;
@@ -87,8 +92,10 @@ public:
     /// @}
 
 
+
     /// @name Setter
     /// @{
+
     /// @brief set the image width of the POI
     inline void setWidth(SUMOReal width) {
         myHalfImgWidth = width / 2.0;
@@ -99,6 +106,7 @@ public:
         myHalfImgHeight = height / 2.0;
     }
     /// @}
+
 
 
 protected:

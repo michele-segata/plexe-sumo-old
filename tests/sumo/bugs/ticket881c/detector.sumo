@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 05/02/13 14:17:19 by SUMO sumo Version 0.17.0
+<!-- generated on Mon Mar  3 14:00:14 2014 by SUMO sumo Version dev-SVN-r15793
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/sumoConfiguration.xsd">
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo-sim.org/xsd/sumoConfiguration.xsd">
 
     <input>
         <net-file value="net.net.xml"/>
@@ -12,6 +12,7 @@
     </input>
 
     <report>
+        <xml-validation value="never"/>
         <no-duration-log value="true"/>
         <no-step-log value="true"/>
     </report>
@@ -20,6 +21,7 @@
 -->
 
 <instantE1>
-    <instantOut id="test" time="26.49" state="enter" vehID="veh0" speed="10.04" length="5.00" type="DEFAULT_VEHTYPE"/>
-    <instantOut id="test" time="26.99" state="leave" vehID="veh0" speed="11.48" length="5.00" type="DEFAULT_VEHTYPE" occupancy="0.50"/>
+    <instantOut id="test" time="24.62" state="enter" vehID="veh0" speed="11.11" length="5.00" type="DEFAULT_VEHTYPE"/>
+    <instantOut id="test" time="25.00" state="stay" vehID="veh0" speed="11.11" length="5.00" type="DEFAULT_VEHTYPE"/>
+    <instantOut id="test" time="25.06" state="leave" vehID="veh0" speed="13.71" length="5.00" type="DEFAULT_VEHTYPE" occupancy="0.44"/>
 </instantE1>

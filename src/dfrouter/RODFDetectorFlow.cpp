@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Eric Nicolay
 /// @author  Michael Behrisch
+/// @author  Melanie Knocke
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // Storage for flows within the DFROUTER
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2006-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -79,10 +80,8 @@ RODFDetectorFlows::addFlow(const std::string& id, SUMOTime t, const FlowDef& fd)
         ofd.vLKW = ofd.vLKW + fd.vLKW; //!!! mean value?
         ofd.vPKW = ofd.vPKW + fd.vPKW; //!!! mean value?
     }
-    if (ofd.qLKW != 0 && ofd.qPKW != 0) {
-        ofd.fLKW = ofd.qLKW / ofd.qPKW;
-    } else if (ofd.qPKW != 0) {
-        ofd.fLKW = 0;
+    if (ofd.qPKW != 0) {
+        ofd.fLKW = ofd.qLKW / (ofd.qLKW + ofd.qPKW);
     } else {
         ofd.fLKW = 1;
         ofd.isLKW = 1;

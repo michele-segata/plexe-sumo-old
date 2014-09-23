@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Laura Bieker
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Fri, 30.01.2009
 /// @version $Id$
 ///
 // A device which collects info on the vehicle trip
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2009-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -65,7 +66,7 @@ std::map<const SUMOTime, std::string> MSDevice_Vehroutes::myRouteInfos;
 void
 MSDevice_Vehroutes::init() {
     if (OptionsCont::getOptions().isSet("vehroute-output")) {
-        OutputDevice::createDeviceByOption("vehroute-output", "routes");
+        OutputDevice::createDeviceByOption("vehroute-output", "routes", "routes_file.xsd");
         mySaveExits = OptionsCont::getOptions().getBool("vehroute-output.exit-times");
         myLastRouteOnly = OptionsCont::getOptions().getBool("vehroute-output.last-route");
         mySorted = OptionsCont::getOptions().getBool("vehroute-output.sorted");
@@ -216,8 +217,9 @@ MSDevice_Vehroutes::generateOutput() const {
         od.writeAttr(SUMO_ATTR_TYPE, myHolder.getVehicleType().getID());
     }
     od.writeAttr(SUMO_ATTR_DEPART, time2string(myHolder.getDeparture()));
-    od.writeAttr("arrival", (myHolder.hasArrived() ?
-                             time2string(MSNet::getInstance()->getCurrentTimeStep()) : ""));
+    if (myHolder.hasArrived()) {
+        od.writeAttr("arrival", time2string(MSNet::getInstance()->getCurrentTimeStep()));
+    }
     if (myWithTaz) {
         od.writeAttr(SUMO_ATTR_FROM_TAZ, myHolder.getParameter().fromTaz).writeAttr(SUMO_ATTR_TO_TAZ, myHolder.getParameter().toTaz);
     }
@@ -277,13 +279,14 @@ MSDevice_Vehroutes::addRoute() {
 
 void
 MSDevice_Vehroutes::generateOutputForUnfinished() {
-    for (std::map<const SUMOVehicle*, MSDevice_Vehroutes*>::iterator it = myStateListener.myDevices.begin();
+    for (std::map<const SUMOVehicle*, MSDevice_Vehroutes*, Named::NamedLikeComparatorIdLess<SUMOVehicle> >::const_iterator it = myStateListener.myDevices.begin();
             it != myStateListener.myDevices.end(); ++it) {
         if (it->first->hasDeparted()) {
             it->second->generateOutput();
         }
     }
 }
+
 
 /****************************************************************************/
 

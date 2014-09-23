@@ -7,8 +7,8 @@
 ///
 // APIs for getting/setting edge values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -52,7 +52,7 @@ public:
      * @param[in] inputStorage The storage to read the command from
      * @param[out] outputStorage The storage to write the result to
      */
-    static bool processGet(traci::TraCIServer& server, tcpip::Storage& inputStorage,
+    static bool processGet(TraCIServer& server, tcpip::Storage& inputStorage,
                            tcpip::Storage& outputStorage);
 
 
@@ -62,7 +62,7 @@ public:
      * @param[in] inputStorage The storage to read the command from
      * @param[out] outputStorage The storage to write the result to
      */
-    static bool processSet(traci::TraCIServer& server, tcpip::Storage& inputStorage,
+    static bool processSet(TraCIServer& server, tcpip::Storage& inputStorage,
                            tcpip::Storage& outputStorage);
 
 
@@ -72,12 +72,6 @@ public:
      * @return Whether the edge is known
      */
     static bool getShape(const std::string& id, PositionVector& shape);
-
-
-    /** @brief Returns a tree filled with edge instances
-     * @return The rtree of edges
-     */
-    static TraCIRTree* getTree();
 
 
 private:

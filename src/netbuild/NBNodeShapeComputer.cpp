@@ -8,8 +8,8 @@
 ///
 // This class computes shapes of junctions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -114,7 +114,7 @@ void
 computeSameEnd(PositionVector& l1, PositionVector& l2) {
     Line sub(l1.lineAt(0).getPositionAtDistance(100), l1[1]);
     Line tmp(sub);
-    tmp.rotateAtP1(PI / 2);
+    tmp.rotateAtP1(M_PI / 2);
     tmp.extrapolateBy(100);
     if (l1.intersects(tmp.p1(), tmp.p2())) {
         SUMOReal offset1 = l1.intersectsAtLengths2D(tmp)[0];
@@ -149,7 +149,7 @@ NBNodeShapeComputer::replaceLastChecking(PositionVector& g, bool decenter,
         counterPos = t.positionAtOffset2D(p);
     }
     if (g[-1].distanceTo(counterPos) < SUMO_const_laneWidth * (SUMOReal) counterLanes) {
-        g.replaceAt(g.size() - 1, counterPos);
+        g.replaceAt((int)g.size() - 1, counterPos);
     } else {
         g.push_back_noDoublePos(counterPos);
     }
@@ -157,7 +157,7 @@ NBNodeShapeComputer::replaceLastChecking(PositionVector& g, bool decenter,
         Line l(g[-2], g[-1]);
         SUMOReal factor = laneDiff % 2 != 0 ? SUMO_const_halfLaneAndOffset : SUMO_const_laneWidthAndOffset;
         l.move2side(-factor);//SUMO_const_laneWidthAndOffset);
-        g.replaceAt(g.size() - 1, l.p2());
+        g.replaceAt((int)g.size() - 1, l.p2());
     }
 }
 
@@ -243,7 +243,7 @@ NBNodeShapeComputer::computeContinuationNodeShape(bool simpleContinuation) {
         SUMOReal angleCW = geomsCW[*cwi].lineAt(0).atan2PositiveAngle();
         SUMOReal ccad;
         SUMOReal cad;
-        SUMOReal twoPI = (SUMOReal)(2 * PI);
+        SUMOReal twoPI = (SUMOReal)(2 * M_PI);
         if (angleI > angleCCW) {
             ccad = angleI - angleCCW;
         } else {
@@ -268,10 +268,10 @@ NBNodeShapeComputer::computeContinuationNodeShape(bool simpleContinuation) {
             cad -= twoPI;
         }
 
-        if (simpleContinuation && ccad < (SUMOReal)(45. / 180.*PI)) {
+        if (simpleContinuation && ccad < DEG2RAD(45.)) {
             ccad += twoPI;
         }
-        if (simpleContinuation && cad < (SUMOReal)(45. / 180.*PI)) {
+        if (simpleContinuation && cad < DEG2RAD(45.)) {
             cad += twoPI;
         }
 
@@ -327,7 +327,7 @@ NBNodeShapeComputer::computeContinuationNodeShape(bool simpleContinuation) {
                         if (*cwi != *ccwi && geomsCW[*i].intersects(geomsCCW[*cwi])) {
                             SUMOReal a1 = distances[*i];
                             SUMOReal a2 = (SUMOReal) 1.5 + geomsCW[*i].intersectsAtLengths2D(geomsCCW[*cwi])[0];
-                            if (ccad > (SUMOReal)((90. + 45.) / 180.*PI) && cad > (SUMOReal)((90. + 45.) / 180.*PI)) {
+                            if (ccad > DEG2RAD(90. + 45.) && cad > DEG2RAD(90. + 45.)) {
                                 SUMOReal mmin = MIN2(distances[*cwi], distances[*ccwi]);
                                 if (mmin > 100) {
                                     distances[*i] = (SUMOReal) 5. + (SUMOReal) 100. - (SUMOReal)(mmin - 100); //100 + 1.5;
@@ -357,7 +357,7 @@ NBNodeShapeComputer::computeContinuationNodeShape(bool simpleContinuation) {
                         if (*cwi != *ccwi && geomsCCW[*i].intersects(geomsCW[*ccwi])) {
                             SUMOReal a1 = distances[*i];
                             SUMOReal a2 = (SUMOReal)(1.5 + geomsCCW[*i].intersectsAtLengths2D(geomsCW[*ccwi])[0]);
-                            if (ccad > (SUMOReal)((90. + 45.) / 180.*PI) && cad > (SUMOReal)((90. + 45.) / 180.*PI)) {
+                            if (ccad > DEG2RAD(90. + 45.) && cad > DEG2RAD(90. + 45.)) {
                                 SUMOReal mmin = MIN2(distances[*cwi], distances[*ccwi]);
                                 if (mmin > 100) {
                                     distances[*i] = (SUMOReal) 5. + (SUMOReal) 100. - (SUMOReal)(mmin - 100); //100 + 1.5;
@@ -415,7 +415,7 @@ NBNodeShapeComputer::computeContinuationNodeShape(bool simpleContinuation) {
         SUMOReal angleCW = geomsCW[*cwi].lineAt(0).atan2PositiveAngle();
         SUMOReal ccad;
         SUMOReal cad;
-        SUMOReal twoPI = (SUMOReal)(2 * PI);
+        SUMOReal twoPI = (SUMOReal)(2 * M_PI);
         if (angleI > angleCCW) {
             ccad = angleI - angleCCW;
         } else {
@@ -728,7 +728,7 @@ NBNodeShapeComputer::computeNodeShapeByCrosses() {
         Line edgebound1 = (*i)->getCCWBoundaryLine(myNode, SUMO_const_halfLaneWidth).lineAt(0);
         Line edgebound2 = (*i)->getCWBoundaryLine(myNode, SUMO_const_halfLaneWidth).lineAt(0);
         Line cross(edgebound1);
-        cross.rotateAtP1(PI / 2.);
+        cross.rotateAtP1(M_PI / 2.);
         cross.add(myNode.getPosition() - cross.p1());
         cross.extrapolateBy(500);
         edgebound1.extrapolateBy(500);

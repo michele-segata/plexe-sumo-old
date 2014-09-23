@@ -8,8 +8,8 @@
 ///
 // Interface for building edges
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -88,7 +88,7 @@ public:
      * @exception InvalidArgument If an edge with the same name was already built
      */
     void beginEdgeParsing(const std::string& id, const MSEdge::EdgeBasicFunction function,
-                          const std::string& streetName);
+                          const std::string& streetName, const std::string& edgeType);
 
 
     /** @brief Adds a lane to the current edge;
@@ -104,7 +104,6 @@ public:
      * @param[in] permissions Encoding of vehicle classes that may drive on this lane
      * @see SUMOVehicleClass
      * @see MSLane
-     * @see MSInternalLane
      * @todo Definitely not a good way
      */
     virtual MSLane* addLane(const std::string& id, SUMOReal maxSpeed,
@@ -129,7 +128,7 @@ public:
      * @param[in] id The id of the edge to build
      * @param[in] streetName The street name of the edge to build
      */
-    virtual MSEdge* buildEdge(const std::string& id, const MSEdge::EdgeBasicFunction function, const std::string& streetName = "");
+    virtual MSEdge* buildEdge(const std::string& id, const MSEdge::EdgeBasicFunction function, const std::string& streetName = "", const std::string& edgeType = "");
 
 
 protected:

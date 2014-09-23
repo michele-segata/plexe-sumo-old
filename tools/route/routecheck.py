@@ -3,7 +3,7 @@
 @file    routecheck.py
 @author  Michael Behrisch
 @author  Jakob Erdmann
-@author  Yun-Pang Wang
+@author  Yun-Pang Floetteroed
 @date    2007-03-09
 @version $Id$
 
@@ -21,9 +21,14 @@ If the route file uses the old format (<route>edge1 edge2</route>)
 this is changed without adding comments. The same is true for camelCase
 changes of attributes.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2007-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2007-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 import os, string, sys, StringIO
 from xml.sax import saxutils, make_parser, handler

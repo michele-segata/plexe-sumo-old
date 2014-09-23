@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Sascha Krieg
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
 // Some mathematical helper methods
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -50,7 +51,7 @@
 // ===========================================================================
 SUMOReal
 NBHelpers::angle(SUMOReal x1, SUMOReal y1, SUMOReal x2, SUMOReal y2) {
-    SUMOReal angle = (SUMOReal) atan2(x1 - x2, y1 - y2) * (SUMOReal) 180.0 / (SUMOReal) PI;
+    SUMOReal angle = RAD2DEG(atan2(x1 - x2, y1 - y2));
     if (angle < 0) {
         angle = 360 + angle;
     }
@@ -74,10 +75,11 @@ NBHelpers::relAngle(SUMOReal angle1, SUMOReal angle2) {
 SUMOReal
 NBHelpers::normRelAngle(SUMOReal angle1, SUMOReal angle2) {
     SUMOReal rel = relAngle(angle1, angle2);
-    if (rel < -170 || rel > 170) {
-        rel = -180;
+    if (rel + NUMERICAL_EPS >= 180) {
+        return -180;
+    } else {
+        return rel;
     }
-    return rel;
 }
 
 

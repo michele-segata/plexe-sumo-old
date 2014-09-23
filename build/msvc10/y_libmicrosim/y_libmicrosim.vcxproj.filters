@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Quellcodedateien">
@@ -10,36 +10,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\microsim\MSCFModel.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_IDM.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_Kerner.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_Krauss.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_KraussOrig1.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_KraussPS.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_PWag2009.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\devices\MSDevice_HBEFA.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\devices\MSDevice_Person.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\devices\MSDevice_Routing.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\microsim\MSEdge.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
@@ -61,9 +31,6 @@
     <ClCompile Include="..\..\..\src\microsim\MSInternalJunction.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\MSInternalLane.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\microsim\MSJunction.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
@@ -79,9 +46,6 @@
     <ClCompile Include="..\..\..\src\microsim\MSLaneChanger.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\MSLCM_DK2004.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\microsim\MSLink.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
@@ -89,9 +53,6 @@
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\microsim\MSLogicJunction.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\MSMessageEmitter.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\microsim\MSMoveReminder.cpp">
@@ -136,22 +97,31 @@
     <ClCompile Include="..\..\..\src\microsim\MSBaseVehicle.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\devices\MSDevice_Tripinfo.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\devices\MSDevice_Vehroutes.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\microsim\MSInsertionControl.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_Wiedemann.cpp">
+    <ClCompile Include="..\..\..\src\microsim\MSAbstractLaneChangeModel.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_Daniel1.cpp">
+    <ClCompile Include="..\..\..\src\microsim\MSStateHandler.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_SmartSK.cpp">
+    <ClCompile Include="..\..\..\src\microsim\MSLCM_JE2013.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\microsim\MSLCM_DK2008.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\microsim\MSLCM_LC2013.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\microsim\MSPModel.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\microsim\MSPModel_NonInteracting.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\microsim\MSPModel_Striping.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -160,39 +130,6 @@
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSBitSetLogic.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\MSCFModel.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_IDM.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_Kerner.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_Krauss.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_KraussOrig1.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_KraussPS.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_PWag2009.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\devices\MSDevice.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\devices\MSDevice_HBEFA.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\devices\MSDevice_Person.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\devices\MSDevice_Routing.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSEdge.h">
@@ -216,9 +153,6 @@
     <ClInclude Include="..\..\..\src\microsim\MSInternalJunction.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\MSInternalLane.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSJunction.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
@@ -232,9 +166,6 @@
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSLaneChanger.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\MSLCM_DK2004.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSLink.h">
@@ -288,22 +219,28 @@
     <ClInclude Include="..\..\..\src\microsim\MSBaseVehicle.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\devices\MSDevice_Tripinfo.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\devices\MSDevice_Vehroutes.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSInsertionControl.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_Wiedemann.h">
+    <ClInclude Include="..\..\..\src\microsim\MSStateHandler.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_Daniel1.h">
+    <ClInclude Include="..\..\..\src\microsim\MSLCM_JE2013.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_SmartSK.h">
+    <ClInclude Include="..\..\..\src\microsim\MSLCM_DK2008.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\microsim\MSLCM_LC2013.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\microsim\MSPModel.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\microsim\MSPModel_NonInteracting.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\microsim\MSPModel_Striping.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
   </ItemGroup>

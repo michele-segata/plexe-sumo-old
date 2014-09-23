@@ -2,13 +2,14 @@
 /// @file    NIImporter_DlrNavteq.h
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Mon, 14.04.2008
 /// @version $Id$
 ///
 // Importer for networks stored in Elmar's format
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -224,10 +225,10 @@ protected:
             SPECIAL_RESTRICTIONS,
             EXTENDED_NUMBER_OF_LANES,
             ISRAMP,
-            CONNECTION,
+            CONNECTION
         };
 
-    std::string getColumn(const StringTokenizer& st, ColumnName name, const std::string fallback="");
+        std::string getColumn(const StringTokenizer& st, ColumnName name, const std::string fallback = "");
 
     private:
         /// @brief build the street name for the given ids

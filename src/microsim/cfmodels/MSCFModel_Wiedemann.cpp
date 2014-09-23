@@ -1,5 +1,6 @@
 /****************************************************************************/
 /// @file    MSCFModel_Wiedemann.cpp
+/// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    June 2011
@@ -11,8 +12,8 @@
 // Werner - Integration von Fahrzeugfolge- und Fahrstreifenwechselmodellen in die Nachtfahrsimulation LucidDrive
 // Olstam, Tapani - Comparison of Car-following models
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -82,14 +83,14 @@ MSCFModel_Wiedemann::followSpeed(const MSVehicle* const veh, SUMOReal /* speed *
 
 
 SUMOReal
-MSCFModel_Wiedemann::stopSpeed(const MSVehicle* const veh, SUMOReal gap) const {
+MSCFModel_Wiedemann::stopSpeed(const MSVehicle* const veh, const SUMOReal speed, SUMOReal gap) const {
     /* Wiedemann does not handle approaching junctions or stops very well:
      * regime approaching() fails when dv = 0 (i.e. a vehicle inserted with speed 0 does not accelerate to reach a stop)
      * for dv ~ 0 the standard decision tree will switch to following() which
      * does a lousy job of closing in on a stop / junction
      * hence we borrow from Krauss here
      */
-    return MAX2(getSpeedAfterMaxDecel(veh->getSpeed()), MIN2(krauss_vsafe(gap, 0), maxNextSpeed(veh->getSpeed(), veh)));
+    return MAX2(getSpeedAfterMaxDecel(speed), MIN2(krauss_vsafe(gap, 0), maxNextSpeed(speed, veh)));
 }
 
 

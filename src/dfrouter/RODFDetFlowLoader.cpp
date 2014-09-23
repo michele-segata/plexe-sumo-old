@@ -9,8 +9,8 @@
 ///
 // A loader for detector flows
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -63,7 +63,7 @@ RODFDetFlowLoader::~RODFDetFlowLoader() {}
 
 
 void
-RODFDetFlowLoader::read(const std::string& file) throw(IOError, ProcessError) {
+RODFDetFlowLoader::read(const std::string& file) {
     LineReader lr(file);
     // parse first line
     myLineHandler.reinit(lr.readLine(), ";", ";", true, true);
@@ -79,14 +79,16 @@ RODFDetFlowLoader::read(const std::string& file) throw(IOError, ProcessError) {
             if (!myDetectorContainer.knows(detName)) {
                 continue;
             }
-            const SUMOTime time = TplConvert::_2int((myLineHandler.get("time").c_str())) * myTimeScale - myTimeOffset;
-            if (time < myStartTime || time > myEndTime) {
+            const SUMOReal parsedTime = TplConvert::_2SUMOReal((myLineHandler.get("time").c_str())) * myTimeScale - myTimeOffset;
+            // parsing as float to handle values which would cause int overflow
+            if (parsedTime < myStartTime || parsedTime >= myEndTime) {
                 if (!myHaveWarnedAboutOverridingBoundaries) {
                     myHaveWarnedAboutOverridingBoundaries = true;
                     WRITE_WARNING("At least one value lies beyond given time boundaries.");
                 }
                 continue;
             }
+            const SUMOTime time = (SUMOTime)(parsedTime + .5);
             FlowDef fd;
             fd.isLKW = 0;
             fd.qPKW = TplConvert::_2SUMOReal(myLineHandler.get("qpkw").c_str());

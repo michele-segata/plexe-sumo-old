@@ -8,8 +8,8 @@
 ///
 // Structure representing possible vehicle parameter
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -37,6 +37,7 @@
 #include "SUMOVehicleClass.h"
 #include "RGBColor.h"
 #include "SUMOTime.h"
+#include <utils/common/Parameterised.h>
 
 
 // ===========================================================================
@@ -63,6 +64,8 @@ const int VTYPEPARS_HEIGHT_SET = 2 << 10;
 const int VTYPEPARS_SHAPE_SET = 2 << 11;
 const int VTYPEPARS_OSGFILE_SET = 2 << 12;
 const int VTYPEPARS_IMGFILE_SET = 2 << 13;
+const int VTYPEPARS_IMPATIENCE_SET = 2 << 14;
+const int VTYPEPARS_LANE_CHANGE_MODEL_SET = 2 << 15;
 
 
 // ===========================================================================
@@ -72,13 +75,13 @@ const int VTYPEPARS_IMGFILE_SET = 2 << 13;
  * @class SUMOVTypeParameter
  * @brief Structure representing possible vehicle parameter
  */
-class SUMOVTypeParameter {
+class SUMOVTypeParameter : public Parameterised {
 public:
     /** @brief Constructor
      *
      * Initialises the structure with default values
      */
-    SUMOVTypeParameter();
+    SUMOVTypeParameter(const std::string& vtid, const SUMOVehicleClass vc = SVC_IGNORING);
 
 
     /** @brief Returns whether the given parameter was set
@@ -102,7 +105,7 @@ public:
     void validateCFParameter() const;
 
 
-    /** @brief Returns the named value from the map, or the default if it is ot contained there
+    /** @brief Returns the named value from the map, or the default if it is not contained there
      * @param[in] attr The corresponding xml attribute
      * @param[in] defaultValue The value to return if the given map does not contain the named variable
      * @return The named value from the map or the default if it does not exist there
@@ -131,6 +134,8 @@ public:
     RGBColor color;
     /// @brief The vehicle's class
     SUMOVehicleClass vehicleClass;
+    /// @brief The vehicle's impatience (willingness to obstruct others)
+    SUMOReal impatience;
 
 
     /// @name Values for drawing this class' vehicles
@@ -160,8 +165,8 @@ public:
     typedef std::map<SumoXMLAttr, SUMOReal> CFParams;
     CFParams cfParameter;
 
-    /// @brief The name of the lane-change model to use
-    std::string lcModel;
+    /// @brief The lane-change model to use
+    LaneChangeModel lcModel;
 
     /// @brief Information for the router which parameter were set
     int setParameter;
@@ -172,6 +177,30 @@ public:
 
     /// @brief Information whether this is a type-stub, being only referenced but not defined (needed by routers)
     mutable bool onlyReferenced;
+
+    /** @brief Returns the default acceleration for the given vehicle class
+     * This needs to be a function because the actual value is stored in the car following model
+     * @param[in] vc the vehicle class
+     * @return the acceleration in m/s^2
+     */
+    static SUMOReal getDefaultAccel(const SUMOVehicleClass vc = SVC_IGNORING);
+
+    /** @brief Returns the default deceleration for the given vehicle class
+     * This needs to be a function because the actual value is stored in the car following model
+     * @param[in] vc the vehicle class
+     * @return the deceleration in m/s^2
+     */
+    static SUMOReal getDefaultDecel(const SUMOVehicleClass vc = SVC_IGNORING);
+
+    /** @brief Returns the default driver's imperfection (sigma or epsilon in Krauss' model) for the given vehicle class
+     * This needs to be a function because the actual value is stored in the car following model
+     * @param[in] vc the vehicle class
+     * @return the imperfection as a value between 0 and 1
+     */
+    static SUMOReal getDefaultImperfection(const SUMOVehicleClass vc = SVC_IGNORING);
+
+    /// @brief return the default parameters, this is a function due to the http://www.parashift.com/c++-faq/static-init-order.html
+    static const SUMOVTypeParameter& getDefault();
 
 };
 

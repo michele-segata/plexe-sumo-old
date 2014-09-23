@@ -2,13 +2,15 @@
 /// @file    Polygon.h
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
+/// @author  Melanie Knocke
 /// @date    Jun 2004
 /// @version $Id$
 ///
 // A 2D- or 3D-polygon
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2004-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -63,18 +65,22 @@ public:
             SUMOReal angle = DEFAULT_ANGLE,
             const std::string& imgFile = DEFAULT_IMG_FILE);
 
+
     /// @brief Destructor
     virtual ~Polygon();
 
 
+
     /// @name Getter
     /// @{
+
     /** @brief Returns whether the shape of the polygon
      * @return The shape of the polygon
      */
     inline const PositionVector& getShape() const {
         return myShape;
     }
+
 
     /** @brief Returns whether the polygon is filled
      * @return Whether the polygon is filled
@@ -88,6 +94,7 @@ public:
 
     /// @name Setter
     /// @{
+
     /** @brief Sets whether the polygon shall be filled
      * @param[in] fill Whether the polygon shall be filled
      */

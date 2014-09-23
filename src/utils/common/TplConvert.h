@@ -8,8 +8,8 @@
 ///
 // Some conversion methods (from strings to other)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -224,7 +224,7 @@ public:
         if (data == 0 || data[0] == 0) {
             throw EmptyData();
         }
-        unsigned i = 0;
+        int i = 0;
         SUMOReal sgn = 1;
         if (data[0] == '+') {
             i++;
@@ -284,7 +284,7 @@ public:
             throw EmptyData();
         }
         std::string s = _2str(data);
-        std::transform(s.begin(), s.end(), s.begin(), tolower);
+        std::transform(s.begin(), s.end(), s.begin(), ::tolower);
         if (s == "1" || s == "yes" || s == "true" || s == "on" || s == "x" || s == "t") {
             return true;
         } else if (s == "0" || s == "no" || s == "false" || s == "off" || s == "-" || s == "f") {

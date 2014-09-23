@@ -2,13 +2,14 @@
 /// @file    FileHelpers.h
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Mon, 17 Dec 2001
 /// @version $Id$
 ///
 // Functions for an easier usage of files
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -50,12 +51,12 @@ public:
     /// @name file access functions
     //@{
 
-    /** @brief Checks whether the given file exists
+    /** @brief Checks whether the given file is readable
      *
      * @param[in] path The path to the file that shall be examined
-     * @return Whether the named file exists
+     * @return Whether the named file is readable
      */
-    static bool exists(std::string path);
+    static bool isReadable(std::string path);
     //@}
 
 

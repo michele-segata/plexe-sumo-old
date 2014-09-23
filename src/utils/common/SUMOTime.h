@@ -8,8 +8,8 @@
 ///
 // Variables, methods, and tools for internal time representation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -65,6 +65,7 @@ typedef int SUMOTime;
 #define STEPS2TIME(x) (static_cast<SUMOReal>(x))
 #define TIME2STEPS(x) (static_cast<SUMOTime>(x))
 #define STEPFLOOR(x) (x)
+#define STEPS2MS(x) ((x)*1000)
 
 #else
 
@@ -88,14 +89,16 @@ extern SUMOTime DELTA_T;
 #define STEPS2TIME(x) (static_cast<SUMOReal>((x)/1000.))
 #define TIME2STEPS(x) (static_cast<SUMOTime>((x)*1000))
 #define STEPFLOOR(x) (int(x/DELTA_T)*DELTA_T)
+#define STEPS2MS(x) (x)
 
 #endif
 
+#define SIMTIME STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep())
 
 // ===========================================================================
 // method declarations
 // ===========================================================================
-SUMOTime string2time(const std::string& r) throw(EmptyData, NumberFormatException, ProcessError);
+SUMOTime string2time(const std::string& r);
 std::string time2string(SUMOTime t);
 
 

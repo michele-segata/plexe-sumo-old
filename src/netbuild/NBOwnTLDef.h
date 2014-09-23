@@ -8,8 +8,8 @@
 ///
 // A traffic light logics which must be computed (only nodes/edges are given)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,12 +36,12 @@
 #include <set>
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include "NBTrafficLightDefinition.h"
+#include "NBNode.h"
 
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
-class NBNode;
 
 
 // ===========================================================================
@@ -113,6 +113,20 @@ public:
     void setTLControllingInformation(const NBEdgeCont& ec) const;
     /// @}
 
+
+    /** @brief Forces the definition not to compute an additional phase for left-movers
+     */
+    void setSinglePhase() {
+        myHaveSinglePhase = true;
+    }
+
+    /// @brief add 1 or 2 phases depending on the presence of pedestrian crossings
+    static std::string addPedestrianPhases(NBTrafficLightLogic* logic, SUMOTime greenTime,
+                                           std::string state, const std::vector<NBNode::Crossing>& crossings, const EdgeVector& fromEdges, const EdgeVector& toEdges);
+
+    /// @brief compute phase state in regard to pedestrian crossings
+    static std::string patchStateForCrossings(const std::string& state,
+            const std::vector<NBNode::Crossing>& crossings, const EdgeVector& fromEdges, const EdgeVector& toEdges);
 
 protected:
     /// @name Protected methods from NBTrafficLightDefinition-interface
@@ -210,6 +224,11 @@ protected:
             return e1->getID() > e2->getID();
         }
     };
+
+private:
+    /// @brief Whether left-mover should not have an additional phase
+    bool myHaveSinglePhase;
+
 
 };
 

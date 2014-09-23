@@ -3,13 +3,14 @@
 /// @author  Christian Roessel
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Wed, 12 Dez 2001
 /// @version $Id$
 ///
 // logic, e.g. for exits.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -94,13 +95,6 @@ private:
 
     /// @brief Invalidated assignment operator.
     MSNoLogicJunction& operator=(const MSNoLogicJunction&);
-
-    /** @brief a dump container
-        Request-setting vehicles may write into this container and responds
-        are read from it. As responds are always true, this container is
-        set to true for all links.
-        This dump is also used as the mask for incoming non-first vehicles */
-    static std::bitset<64> myDump;
 
 };
 

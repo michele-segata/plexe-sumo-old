@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Laura Bieker
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    07.05.2009
 /// @version $Id$
 ///
 // APIs for getting/setting traffic light values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2009-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -40,12 +41,6 @@
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
-
-
-// ===========================================================================
-// used namespaces
-// ===========================================================================
-using namespace traci;
 
 
 // ===========================================================================
@@ -145,7 +140,7 @@ TraCIServerAPI_TLS::processGet(TraCIServer& server, tcpip::Storage& inputStorage
             }
             break;
             case TL_CONTROLLED_LANES: {
-                const MSTrafficLightLogic::LaneVectorVector& lanes = vars.getActive()->getLanes();
+                const MSTrafficLightLogic::LaneVectorVector& lanes = vars.getActive()->getLaneVectors();
                 tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
                 std::vector<std::string> laneIDs;
                 for (MSTrafficLightLogic::LaneVectorVector::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
@@ -158,7 +153,7 @@ TraCIServerAPI_TLS::processGet(TraCIServer& server, tcpip::Storage& inputStorage
             }
             break;
             case TL_CONTROLLED_LINKS: {
-                const MSTrafficLightLogic::LaneVectorVector& lanes = vars.getActive()->getLanes();
+                const MSTrafficLightLogic::LaneVectorVector& lanes = vars.getActive()->getLaneVectors();
                 const MSTrafficLightLogic::LinkVectorVector& links = vars.getActive()->getLinks();
                 //
                 tempMsg.writeUnsignedByte(TYPE_COMPOUND);
@@ -282,20 +277,7 @@ TraCIServerAPI_TLS::processSet(TraCIServer& server, tcpip::Storage& inputStorage
             if (!server.readTypeCheckingString(inputStorage, state)) {
                 return server.writeErrorStatusCmd(CMD_SET_TL_VARIABLE, "The phase must be given as a string.", outputStorage);
             }
-            // build only once...
-            if (vars.getLogic("online") == 0) {
-                MSPhaseDefinition* phase = new MSPhaseDefinition(DELTA_T, state);
-                std::vector<MSPhaseDefinition*> phases;
-                phases.push_back(phase);
-                MSTrafficLightLogic* logic = new MSSimpleTrafficLightLogic(tlsControl, id, "online", phases, 0, cTime + DELTA_T);
-                vars.addLogic("online", logic, true, true);
-            } else {
-                MSPhaseDefinition nphase(DELTA_T, state);
-                *(static_cast<MSSimpleTrafficLightLogic*>(vars.getLogic("online"))->getPhases()[0]) = nphase;
-            }
-            // @note: this assumes logic "online" is still active
-            vars.getActive()->setTrafficLightSignals(MSNet::getInstance()->getCurrentTimeStep());
-            vars.executeOnSwitchActions();
+            vars.setStateInstantiatingOnline(tlsControl, state);
         }
         break;
         case TL_COMPLETE_PROGRAM_RYG: {
@@ -347,13 +329,11 @@ TraCIServerAPI_TLS::processSet(TraCIServer& server, tcpip::Storage& inputStorage
                 phases.push_back(phase);
             }
             if (vars.getLogic(subid) == 0) {
-                MSTrafficLightLogic* logic = new MSSimpleTrafficLightLogic(tlsControl, id, subid, phases, index, 0);
+                MSTrafficLightLogic* logic = new MSSimpleTrafficLightLogic(tlsControl, id, subid, phases, index, 0, std::map<std::string, std::string>());
                 vars.addLogic(subid, logic, true, true);
             } else {
                 static_cast<MSSimpleTrafficLightLogic*>(vars.getLogic(subid))->setPhases(phases, index);
             }
-            vars.getActive()->setTrafficLightSignals(MSNet::getInstance()->getCurrentTimeStep());
-            vars.executeOnSwitchActions();
         }
         break;
         default:

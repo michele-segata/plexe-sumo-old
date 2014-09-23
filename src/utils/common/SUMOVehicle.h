@@ -8,8 +8,8 @@
 ///
 // Abstract base class for vehicle representations
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -32,10 +32,13 @@
 #include <config.h>
 #endif
 
+#include <typeinfo>
 #include <vector>
+#include <typeinfo>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/SUMOAbstractRouter.h>
 #include <utils/common/SUMOVehicleParameter.h>
+#include <utils/iodevices/OutputDevice.h>
 
 
 // ===========================================================================
@@ -47,6 +50,7 @@ class MSEdge;
 class MSLane;
 class MSDevice;
 class MSPerson;
+class SUMOSAXAttributes;
 
 typedef std::vector<const MSEdge*> MSEdgeVector;
 
@@ -101,10 +105,10 @@ public:
     virtual const MSEdge* succEdge(unsigned int nSuccs) const = 0;
 
     /// Replaces the current route by the given edges
-    virtual bool replaceRouteEdges(const MSEdgeVector& edges, bool onInit = false) = 0;
+    virtual bool replaceRouteEdges(MSEdgeVector& edges, bool onInit = false) = 0;
 
     /// Replaces the current route by the given one
-    virtual bool replaceRoute(const MSRoute* route, bool onInit = false) = 0;
+    virtual bool replaceRoute(const MSRoute* route, bool onInit = false, int offset = 0) = 0;
 
     /** @brief Performs a rerouting using the given router
      *
@@ -121,6 +125,11 @@ public:
      * @return The acceleration
      */
     virtual SUMOReal getAcceleration() const = 0;
+
+    /** @brief Returns the slope of the road at vehicle's position
+     * @return The slope
+     */
+    virtual SUMOReal getSlope() const = 0;
 
     /** @brief Returns the edge the vehicle is currently at
      *
@@ -196,8 +205,27 @@ public:
      */
     virtual bool isStopped() const = 0;
 
+    /// @brief Returns a device of the given type if it exists or 0
+    virtual MSDevice* getDevice(const std::type_info& type) const = 0;
+
 
     virtual SUMOReal getChosenSpeedFactor() const = 0;
+
+    virtual SUMOTime getWaitingTime() const = 0;
+
+    /// @brief Returns this vehicles impatience
+    virtual SUMOReal getImpatience() const = 0;
+
+    /// @name state io
+    //@{
+
+    /// Saves the states of a vehicle
+    virtual void saveState(OutputDevice& out) = 0;
+
+    /** @brief Loads the state of this vehicle from the given description
+     */
+    virtual void loadState(const SUMOSAXAttributes& attrs, const SUMOTime offset) = 0;
+    //@}
 };
 
 

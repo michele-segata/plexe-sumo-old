@@ -9,8 +9,8 @@
 ///
 // Structure representing possible vehicle parameter
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -37,6 +37,7 @@
 #include "SUMOVehicleClass.h"
 #include "RGBColor.h"
 #include "SUMOTime.h"
+#include <utils/common/Parameterised.h>
 
 
 // ===========================================================================
@@ -73,6 +74,7 @@ const int STOP_END_SET = 1;
 const int STOP_START_SET = 2;
 const int STOP_TRIGGER_SET = 2 << 1;
 const int STOP_PARKING_SET = 2 << 2;
+const int STOP_EXPECTED_SET = 2 << 3;
 
 
 // ===========================================================================
@@ -225,7 +227,7 @@ enum ArrivalSpeedDefinition {
  * @see DepartPosDefinition
  * @see DepartSpeedDefinition
  */
-class SUMOVehicleParameter {
+class SUMOVehicleParameter : public Parameterised {
 public:
     /** @brief Constructor
      *
@@ -259,7 +261,6 @@ public:
      */
     void writeStops(OutputDevice& dev) const;
 
-
     /** @brief Returns whether the defaults shall be used
      * @param[in] oc The options to get the options from
      * @param[in] optionName The name of the option to determine whether its value shall be used
@@ -271,6 +272,19 @@ public:
 
     /// @name Depart/arrival-attributes verification
     /// @{
+
+    /** @brief Validates a given depart value
+     * @param[in] val The depart value to parse
+     * @param[in] element The name of the type of the parsed element, for building the error message
+     * @param[in] id The id of the parsed element, for building the error message
+     * @param[out] depart The parsed depart time, if given
+     * @param[out] dd The parsed departProcedure definition
+     * @param[out] error Error message, if an error occures
+     * @return Whether the given value is a valid depart definition
+     */
+    static bool parseDepart(const std::string& val, const std::string& element, const std::string& id,
+                            SUMOTime& depart, DepartDefinition& dd, std::string& error);
+
 
     /** @brief Validates a given departLane value
      * @param[in] val The departLane value to parse
@@ -424,6 +438,8 @@ public:
 #else
     SUMOReal repetitionOffset;
 #endif
+    /// @brief The probability for emitting a vehicle per second
+    SUMOReal repetitionProbability;
     /// @}
 
 
@@ -456,6 +472,8 @@ public:
         bool triggered;
         /// @brief whether the vehicle is removed from the net while stopping
         bool parking;
+        /// @brief IDs of persons the vehicle has to wait for until departing
+        std::set<std::string> awaitedPersons;
         /// @brief at which position in the stops list
         int index;
         /// @brief Information for the output which parameter were set

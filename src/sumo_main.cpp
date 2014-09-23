@@ -10,8 +10,8 @@
 ///
 // Main for SUMO
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -65,6 +65,11 @@
 #include <mesosim/MEVehicleControl.h>
 #endif
 
+#ifndef NO_TRACI
+#include <traci-server/TraCIServer.h>
+#endif
+
+
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif
@@ -93,6 +98,11 @@ load(OptionsCont& oc) {
 #endif
     MSNet* net = new MSNet(vc, new MSEventControl(),
                            new MSEventControl(), new MSEventControl());
+#ifndef NO_TRACI
+    // need to init TraCI-Server before loading routes to catch VEHICLE_STATE_BUILT
+    TraCIServer::openSocket(std::map<int, TraCIServer::CmdExecutor>());
+#endif
+
     NLEdgeControlBuilder eb;
     NLDetectorBuilder db(*net);
     NLJunctionControlBuilder jb(*net, db);
@@ -128,7 +138,7 @@ main(int argc, char** argv) {
             SystemFrame::close();
             return 0;
         }
-        XMLSubSys::setValidation(oc.getBool("xml-validation"));
+        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
         MsgHandler::initOutputOptions();
         if (!MSFrame::checkOptions()) {
             throw ProcessError();
@@ -164,6 +174,4 @@ main(int argc, char** argv) {
 }
 
 
-
 /****************************************************************************/
-

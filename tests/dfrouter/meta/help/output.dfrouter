@@ -1,5 +1,5 @@
-SUMO dfrouter Version 0.17.0
- Copyright (C) 2001-2013 DLR and contributors; http://sumo.sourceforge.net
+SUMO dfrouter Version dev-SVN-rUNKNOWN
+ Copyright (C) 2001-2014 DLR and contributors; http://sumo-sim.org
 Builds vehicle routes for SUMO using detector values.
 
 Usage: dfrouter [OPTION]*
@@ -25,6 +25,8 @@ Output Options:
   --detectors-poi-output FILE          Saves detector positions as pois to FILE
   --emitters-output FILE               Saves emitter definitions for source
                                          detectors to FILE
+  --vtype                              Add vehicle types to the emitters file
+                                         (PKW, LKW)
   --emitters-poi-output FILE           Saves emitter positions as pois to FILE
   --variable-speed-sign-output FILE    Saves variable seed sign definitions for
                                          sink detectors to FILE
@@ -34,13 +36,12 @@ Output Options:
   --validation-output.add-sources      
 
 Processing Options:
-  --guess-empty-flows                  
+  --guess-empty-flows                  Derive missing flow values from upstream
+                                         or downstream (not working!)
   -h, --highway-mode                   Switches to highway-mode
   --ignore-invalid-detectors           Only warn about unparseable detectors
   --revalidate-detectors               Recomputes detector types even if given
   --revalidate-routes                  Recomputes routes even if given
-  --all-end-follower                   Continues routes till the first street
-                                         after a sink
   --keep-unfinished-routes             Keeps routes even if they have exhausted
                                          max-search-depth
   --keep-longer-routes                 Keeps routes even if a shorter one
@@ -51,7 +52,7 @@ Processing Options:
   --disallowed-edges STR               Do not route on these edges
   --keep-turnarounds                   Allow turnarounds as route continuations
   --min-route-length FLOAT             Minimum distance in meters between start
-                                         and end node of every route.
+                                         and end node of every route
   --time-factor TIME                   Multiply flow times with TIME to get
                                          seconds
   --time-offset TIME                   Subtracts TIME seconds from (scaled)
@@ -63,7 +64,18 @@ Processing Options:
   --revalidate-flows                   
   --remove-empty-detectors             Removes empty detectors from the list
   --strict-sources                     
+  --respect-concurrent-inflows         Try to determine further inflows to an
+                                         inbetween detector when computing split
+                                         probabilities
   --scale FLOAT                        Scale factor for flows
+
+Defaults Options:
+  --departlane STR                     Assigns a default depart lane
+  --departpos STR                      Assigns a default depart position
+  --departspeed STR                    Assigns a default depart speed
+  --arrivallane STR                    Assigns a default arrival lane
+  --arrivalpos STR                     Assigns a default arrival position
+  --arrivalspeed STR                   Assigns a default arrival speed
 
 Time Options:
   -b, --begin TIME                     Defines the begin time;
@@ -74,10 +86,14 @@ Time Options:
 
 Report Options:
   -v, --verbose                        Switches to verbose output
-  -p, --print-options                  Prints option values before processing
+  --print-options                      Prints option values before processing
   -?, --help                           Prints this screen
   -V, --version                        Prints the current version
-  -X, --xml-validation                 Enable schema validation of XML inputs
+  -X, --xml-validation STR             Set schema validation scheme of XML
+                                         inputs ("never", "auto" or "always")
+  --xml-validation.net STR             Set schema validation scheme of SUMO
+                                         network inputs ("never", "auto" or
+                                         "always")
   -W, --no-warnings                    Disables output of warnings
   -l, --log FILE                       Writes all messages to FILE (implies
                                          verbose)
@@ -100,5 +116,5 @@ Examples:
   dfrouter -c <CONFIGURATION>
     run routing with options from file
 
-Report bugs at <http://sourceforge.net/apps/trac/sumo/>.
+Report bugs at <http://sumo-sim.org/trac/>.
 Get in contact via <sumo-user@lists.sourceforge.net>.

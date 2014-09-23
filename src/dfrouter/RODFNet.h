@@ -8,8 +8,8 @@
 ///
 // A DFROUTER-network
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -64,8 +64,7 @@ public:
 
     void computeTypes(RODFDetectorCon& dets,
                       bool sourcesStrict) const;
-    void buildRoutes(RODFDetectorCon& det, bool allEndFollower,
-                     bool keepUnfoundEnds, bool includeInBetween,
+    void buildRoutes(RODFDetectorCon& det, bool keepUnfoundEnds, bool includeInBetween,
                      bool keepShortestOnly, int maxFollowingLength) const;
     SUMOReal getAbsPos(const RODFDetector& det) const;
 

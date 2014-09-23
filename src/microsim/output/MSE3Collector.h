@@ -3,13 +3,14 @@
 /// @author  Christian Roessel
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Tue Dec 02 2003 22:17 CET
 /// @version $Id$
 ///
 // A detector of vehicles passing an area between entry/exit points
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2003-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -157,19 +158,19 @@ public:
          * @param[in] oldPos Position before the move-micro-timestep.
          * @param[in] newPos Position after the move-micro-timestep.
          * @param[in] newSpeed Unused here.
-         * @return False, if vehicle passed the detector entierly, else true.
+         * @return False, if vehicle passed the detector entirely, else true.
          * @see MSMoveReminder
          * @see MSMoveReminder::notifyMove
          * @see MSE3Collector::leave
          */
-        bool notifyMove(SUMOVehicle& veh, SUMOReal , SUMOReal newPos, SUMOReal);
+        bool notifyMove(SUMOVehicle& veh, SUMOReal oldPos, SUMOReal newPos, SUMOReal);
 
         /** @brief Processes state changes of a vehicle
         *
         * Checks whether the vehicle has changed lanes and this reminder needs to be removed
         *
-        * @param[in] veh The leaving vehicle.
-        * @param[in] lastPos Position on the lane when leaving.
+        * @param[in] veh The leaving vehicle (unused).
+        * @param[in] lastPos Position on the lane when leaving (unused).
         * @param[in] reason The reason for the state change
         * @see MSMoveReminder::notifyLeave
         */

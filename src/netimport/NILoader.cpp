@@ -9,8 +9,8 @@
 ///
 // Perfoms network import
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -86,10 +86,6 @@ NILoader::~NILoader() {}
 
 void
 NILoader::load(OptionsCont& oc) {
-    // build the projection
-    if (!GeoConvHelper::init(oc)) {
-        throw ProcessError("Could not build projection!");
-    }
     // load types first
     NIXMLTypesHandler* handler =
         new NIXMLTypesHandler(myNetBuilder.getTypeCont());
@@ -110,7 +106,8 @@ NILoader::load(OptionsCont& oc) {
     NIImporter_MATSim::loadNetwork(oc, myNetBuilder);
     NIImporter_ITSUMO::loadNetwork(oc, myNetBuilder);
     if (oc.getBool("tls.discard-loaded") || oc.getBool("tls.discard-simple")) {
-        myNetBuilder.getNodeCont().discardTrafficLights(myNetBuilder.getTLLogicCont(), oc.getBool("tls.discard-simple"));
+        myNetBuilder.getNodeCont().discardTrafficLights(myNetBuilder.getTLLogicCont(), oc.getBool("tls.discard-simple"),
+                oc.getBool("tls.guess-signals"));
         size_t removed = myNetBuilder.getTLLogicCont().getNumExtracted();
         if (removed > 0) {
             WRITE_MESSAGE(" Removed " + toString(removed) + " traffic lights before loading plain-XML");
@@ -156,10 +153,15 @@ NILoader::loadXML(OptionsCont& oc) {
     loadXMLType(new NIXMLEdgesHandler(myNetBuilder.getNodeCont(),
                                       myNetBuilder.getEdgeCont(),
                                       myNetBuilder.getTypeCont(),
-                                      myNetBuilder.getDistrictCont(), oc),
+                                      myNetBuilder.getDistrictCont(),
+                                      myNetBuilder.getTLLogicCont(),
+                                      oc),
                 oc.getStringVector("edge-files"), "edges");
+    if (!deprecatedVehicleClassesSeen.empty()) {
+        WRITE_WARNING("Deprecated vehicle class(es) '" + toString(deprecatedVehicleClassesSeen) + "' in input edge files.");
+    }
     // load the connections
-    loadXMLType(new NIXMLConnectionsHandler(myNetBuilder.getEdgeCont()),
+    loadXMLType(new NIXMLConnectionsHandler(myNetBuilder.getEdgeCont(), myNetBuilder.getTLLogicCont()),
                 oc.getStringVector("connection-files"), "connections");
     // load traffic lights (needs to come last, references loaded edges and connections)
     loadXMLType(new NIXMLTrafficLightsHandler(
@@ -176,7 +178,7 @@ NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string>& f
     // start the parsing
     try {
         for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
-            if (!FileHelpers::exists(*file)) {
+            if (!FileHelpers::isReadable(*file)) {
                 WRITE_ERROR("Could not open " + type + "-file '" + *file + "'.");
                 exceptMsg = "Process Error";
                 continue;
@@ -199,61 +201,4 @@ NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string>& f
     }
 }
 
-
-bool
-NILoader::transformCoordinates(Position& from, bool includeInBoundary, GeoConvHelper* from_srs) {
-    Position orig(from);
-    bool ok = GeoConvHelper::getProcessing().x2cartesian(from, includeInBoundary);
-#ifdef HAVE_INTERNAL
-    if (ok) {
-        const HeightMapper& hm = HeightMapper::get();
-        if (hm.ready()) {
-            if (from_srs != 0 && from_srs->usingGeoProjection()) {
-                from_srs->cartesian2geo(orig);
-            }
-            SUMOReal z = hm.getZ(orig);
-            from = Position(from.x(), from.y(), z);
-        }
-    }
-#else
-    UNUSED_PARAMETER(from_srs);
-#endif
-    return ok;
-}
-
-
-bool
-NILoader::transformCoordinates(PositionVector& from, bool includeInBoundary, GeoConvHelper* from_srs) {
-    const SUMOReal maxLength = OptionsCont::getOptions().getFloat("geometry.max-segment-length");
-    if (maxLength > 0 && from.size() > 1) {
-        // transformation to cartesian coordinates must happen before we can check segment length
-        PositionVector copy = from;
-        for (int i = 0; i < (int) from.size(); i++) {
-            transformCoordinates(copy[i], false);
-        }
-        // check lengths and insert new points where needed (in the original
-        // coordinate system)
-        int inserted = 0;
-        for (int i = 0; i < (int)copy.size() - 1; i++) {
-            Position start = from[i + inserted];
-            Position end = from[i + inserted + 1];
-            SUMOReal length = copy[i].distanceTo(copy[i + 1]);
-            const Position step = (end - start) * (maxLength / length);
-            int steps = 0;
-            while (length > maxLength) {
-                length -= maxLength;
-                steps++;
-                from.insertAt(i + inserted + 1, start + (step * steps));
-                inserted++;
-            }
-        }
-        // now perform the transformation again so that height mapping can be
-        // performed for the new points
-    }
-    bool ok = true;
-    for (int i = 0; i < (int) from.size(); i++) {
-        ok = ok && transformCoordinates(from[i], includeInBoundary, from_srs);
-    }
-    return ok;
-}
 /****************************************************************************/

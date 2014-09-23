@@ -8,6 +8,8 @@ Removing empty nodes... done.
 Joining similar edges... done.
 Computing turning directions... done.
 Sorting nodes' edges... done.
+Computing node shapes... done.
+Computing edge shapes... done.
 Computing node types... done.
 Computing priorities... done.
 Computing approached edges... done.
@@ -15,8 +17,6 @@ Computing approaching lanes... done.
 Dividing of lanes on approached lanes... done.
 Processing turnarounds... done.
 Rechecking of lane endings... done.
-Computing node shapes... done.
-Computing edge shapes... done.
 Assigning nodes to traffic lights... done.
 Computing traffic light control information... done.
 Computing node logics... done.
@@ -31,8 +31,8 @@ Summary:
   Priority junctions          : 4
   Right-before-left junctions : 0
  Network boundaries:
-  Original boundary  : -1.03,18.18,1048.06,921.85
+  Original boundary  : 0.00,18.96,1048.06,921.35
   Applied offset     : 0.00,0.00
-  Converted boundary : 0.00,18.96,1048.06,921.35
+  Converted boundary : 0.26,18.96,493.51,822.04
 -----------------------------------------------------
 Success.

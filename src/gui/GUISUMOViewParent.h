@@ -9,8 +9,8 @@
 ///
 // A single child window which contains a view of the simulation area
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -118,6 +118,9 @@ public:
 
     /// @brief true if the object is selected (may include extra logic besides calling gSelected)
     bool isSelected(GUIGlObject* o) const;
+
+    /// @notify about toggled gaming status
+    void toggleGaming();
 
 protected:
     /// @brief FOX needs this

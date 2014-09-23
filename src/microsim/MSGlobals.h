@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Christian Roessel
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    late summer 2003
 /// @version $Id$
 ///
 // Some static variables for faster access
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2003-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -63,8 +64,14 @@ public:
         a vehicle as a grid lock participant */
     static SUMOTime gTimeToGridlock;
 
+    /** The time to detect grid locks on highways */
+    static SUMOTime gTimeToGridlockHighways;
+
     /// Information whether the simulation regards internal lanes
     static bool gUsingInternalLanes;
+
+    /// Information whether the simulation regards internal lanes
+    static SUMOTime gIgnoreJunctionBlocker;
 
     /** information whether the network shall check for collisions */
     static bool gCheck4Accidents;
@@ -72,10 +79,13 @@ public:
     /** information whether the routes shall be checked for connectivity */
     static bool gCheckRoutes;
 
-#ifdef HAVE_INTERNAL
+    /** information Duration of a lane change maneuver */
+    static SUMOTime gLaneChangeDuration;
+
     /// Information whether a state has been loaded
     static bool gStateLoaded;
 
+#ifdef HAVE_INTERNAL
     /** Information whether mesosim shall be used */
     static bool gUseMesoSim;
 
@@ -88,12 +98,6 @@ public:
     /** Information whether mesosim shall be used = constant false */
     const static bool gUseMesoSim;
 
-#endif
-
-#ifdef _DEBUG
-    /// @brief global utility flags for debugging
-    static bool gDebugFlag1;
-    static bool gDebugFlag2;
 #endif
 
 };

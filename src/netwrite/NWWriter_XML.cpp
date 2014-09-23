@@ -8,8 +8,8 @@
 ///
 // Exporter writing networks using XML (native input) format
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -85,7 +85,7 @@ NWWriter_XML::writeNodes(const OptionsCont& oc, NBNodeCont& nc) {
     const bool geoAccuracy = useGeo || gch.usingInverseGeoProjection();
 
     OutputDevice& device = OutputDevice::getDevice(oc.getString("plain-output-prefix") + ".nod.xml");
-    device.writeXMLHeader("nodes", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/nodes_file.xsd\"");
+    device.writeXMLHeader("nodes", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/nodes_file.xsd\"");
 
     // write network offsets and projection to allow reconstruction of original coordinates
     if (!useGeo) {
@@ -116,12 +116,23 @@ NWWriter_XML::writeNodes(const OptionsCont& oc, NBNodeCont& nc) {
             // set may contain multiple programs for the same id.
             // make sure ids are unique and sorted
             std::set<std::string> tlsIDs;
+            std::set<std::string> controlledInnerEdges;
             for (std::set<NBTrafficLightDefinition*>::const_iterator it_tl = tlss.begin(); it_tl != tlss.end(); it_tl++) {
                 tlsIDs.insert((*it_tl)->getID());
+                std::vector<std::string> cie = (*it_tl)->getControlledInnerEdges();
+                controlledInnerEdges.insert(cie.begin(), cie.end());
             }
             std::vector<std::string> sortedIDs(tlsIDs.begin(), tlsIDs.end());
             sort(sortedIDs.begin(), sortedIDs.end());
             device.writeAttr(SUMO_ATTR_TLID, sortedIDs);
+            if (controlledInnerEdges.size() > 0) {
+                std::vector<std::string> sortedCIEs(controlledInnerEdges.begin(), controlledInnerEdges.end());
+                sort(sortedCIEs.begin(), sortedCIEs.end());
+                device.writeAttr(SUMO_ATTR_CONTROLLED_INNER, joinToString(sortedCIEs, " "));
+            }
+        }
+        if (n->hasCustomShape()) {
+            device.writeAttr(SUMO_ATTR_SHAPE, n->getShape());
         }
         device.closeTag();
     }
@@ -136,9 +147,9 @@ NWWriter_XML::writeEdgesAndConnections(const OptionsCont& oc, NBNodeCont& nc, NB
     const bool geoAccuracy = useGeo || gch.usingInverseGeoProjection();
 
     OutputDevice& edevice = OutputDevice::getDevice(oc.getString("plain-output-prefix") + ".edg.xml");
-    edevice.writeXMLHeader("edges", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/edges_file.xsd\"");
+    edevice.writeXMLHeader("edges", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/edges_file.xsd\"");
     OutputDevice& cdevice = OutputDevice::getDevice(oc.getString("plain-output-prefix") + ".con.xml");
-    cdevice.writeXMLHeader("connections", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/connections_file.xsd\"");
+    cdevice.writeXMLHeader("connections", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/connections_file.xsd\"");
     bool noNames = !oc.getBool("output.street-names");
     for (std::map<std::string, NBEdge*>::const_iterator i = ec.begin(); i != ec.end(); ++i) {
         // write the edge itself to the edges-files
@@ -187,8 +198,8 @@ NWWriter_XML::writeEdgesAndConnections(const OptionsCont& oc, NBNodeCont& nc, NB
         if (e->getLaneWidth() != NBEdge::UNSPECIFIED_WIDTH && !e->hasLaneSpecificWidth()) {
             edevice.writeAttr(SUMO_ATTR_WIDTH, e->getLaneWidth());
         }
-        if (e->getOffset() != NBEdge::UNSPECIFIED_OFFSET && !e->hasLaneSpecificOffset()) {
-            edevice.writeAttr(SUMO_ATTR_OFFSET, e->getOffset());
+        if (e->getEndOffset() != NBEdge::UNSPECIFIED_OFFSET && !e->hasLaneSpecificEndOffset()) {
+            edevice.writeAttr(SUMO_ATTR_ENDOFFSET, e->getEndOffset());
         }
         if (!e->needsLaneSpecificOutput()) {
             edevice.closeTag();
@@ -204,8 +215,8 @@ NWWriter_XML::writeEdgesAndConnections(const OptionsCont& oc, NBNodeCont& nc, NB
                 if (lane.width != NBEdge::UNSPECIFIED_WIDTH && e->hasLaneSpecificWidth()) {
                     edevice.writeAttr(SUMO_ATTR_WIDTH, lane.width);
                 }
-                if (lane.offset != NBEdge::UNSPECIFIED_OFFSET && e->hasLaneSpecificOffset()) {
-                    edevice.writeAttr(SUMO_ATTR_OFFSET, lane.offset);
+                if (lane.endOffset != NBEdge::UNSPECIFIED_OFFSET && e->hasLaneSpecificEndOffset()) {
+                    edevice.writeAttr(SUMO_ATTR_ENDOFFSET, lane.endOffset);
                 }
                 if (e->hasLaneSpecificSpeed()) {
                     edevice.writeAttr(SUMO_ATTR_SPEED, lane.speed);
@@ -229,6 +240,20 @@ NWWriter_XML::writeEdgesAndConnections(const OptionsCont& oc, NBNodeCont& nc, NB
     for (std::map<std::string, NBNode*>::const_iterator i = nc.begin(); i != nc.end(); ++i) {
         NWWriter_SUMO::writeProhibitions(cdevice, i->second->getProhibitions());
     }
+    // write pedestrian crossings to the connections-file
+    for (std::map<std::string, NBNode*>::const_iterator it_node = nc.begin(); it_node != nc.end(); ++it_node) {
+        const std::vector<NBNode::Crossing>& crossings = (*it_node).second->getCrossings();
+        for (std::vector<NBNode::Crossing>::const_iterator it = crossings.begin(); it != crossings.end(); it++) {
+            cdevice.openTag(SUMO_TAG_CROSSING);
+            cdevice.writeAttr(SUMO_ATTR_NODE, (*it_node).second->getID());
+            cdevice.writeAttr(SUMO_ATTR_EDGES, (*it).edges);
+            cdevice.writeAttr(SUMO_ATTR_PRIORITY, (*it).priority);
+            if ((*it).width != NBNode::DEFAULT_CROSSING_WIDTH) {
+                cdevice.writeAttr(SUMO_ATTR_WIDTH, (*it).width);
+            }
+            cdevice.closeTag();
+        }
+    }
     edevice.close();
     cdevice.close();
 }
@@ -237,7 +262,7 @@ NWWriter_XML::writeEdgesAndConnections(const OptionsCont& oc, NBNodeCont& nc, NB
 void
 NWWriter_XML::writeTrafficLights(const OptionsCont& oc, NBTrafficLightLogicCont& tc, NBEdgeCont& ec) {
     OutputDevice& device = OutputDevice::getDevice(oc.getString("plain-output-prefix") + ".tll.xml");
-    device.writeXMLHeader("tlLogics", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/tllogic_file.xsd\"");
+    device.writeXMLHeader("tlLogics", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/tllogic_file.xsd\"");
     NWWriter_SUMO::writeTrafficLights(device, tc);
     // we also need to remember the associations between tlLogics and connections
     // since the information in con.xml is insufficient
@@ -258,7 +283,7 @@ NWWriter_XML::writeTrafficLights(const OptionsCont& oc, NBTrafficLightLogicCont&
 void
 NWWriter_XML::writeJoinedJunctions(const OptionsCont& oc, NBNodeCont& nc) {
     OutputDevice& device = OutputDevice::getDevice(oc.getString("junctions.join-output"));
-    device.writeXMLHeader("nodes", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/nodes_file.xsd\"");
+    device.writeXMLHeader("nodes", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/nodes_file.xsd\"");
     const std::vector<std::set<std::string> >& clusters = nc.getJoinedClusters();
     for (std::vector<std::set<std::string> >::const_iterator it = clusters.begin(); it != clusters.end(); it++) {
         assert((*it).size() > 0);
@@ -280,7 +305,7 @@ NWWriter_XML::writeJoinedJunctions(const OptionsCont& oc, NBNodeCont& nc) {
 void
 NWWriter_XML::writeStreetSigns(const OptionsCont& oc, NBEdgeCont& ec) {
     OutputDevice& device = OutputDevice::getDevice(oc.getString("street-sign-output"));
-    device.writeXMLHeader("pois", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/poi_file.xsd\"");
+    device.writeXMLHeader("pois", NWFrame::MAJOR_VERSION + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/poi_file.xsd\"");
     for (std::map<std::string, NBEdge*>::const_iterator i = ec.begin(); i != ec.end(); ++i) {
         NBEdge* e = (*i).second;
         const std::vector<NBSign>& signs =  e->getSigns();

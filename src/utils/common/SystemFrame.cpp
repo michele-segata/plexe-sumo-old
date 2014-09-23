@@ -8,8 +8,8 @@
 ///
 // A set of actions common to all applications
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -77,7 +77,7 @@ SystemFrame::addReportOptions(OptionsCont& oc) {
     oc.doRegister("verbose", 'v', new Option_Bool(false));
     oc.addDescription("verbose", "Report", "Switches to verbose output");
 
-    oc.doRegister("print-options", 'p', new Option_Bool(false));
+    oc.doRegister("print-options", new Option_Bool(false));
     oc.addDescription("print-options", "Report", "Prints option values before processing");
 
     oc.doRegister("help", '?', new Option_Bool(false));
@@ -86,8 +86,11 @@ SystemFrame::addReportOptions(OptionsCont& oc) {
     oc.doRegister("version", 'V', new Option_Bool(false));
     oc.addDescription("version", "Report", "Prints the current version");
 
-    oc.doRegister("xml-validation", 'X', new Option_Bool(false));
-    oc.addDescription("xml-validation", "Report", "Enable schema validation of XML inputs");
+    oc.doRegister("xml-validation", 'X', new Option_String("auto"));
+    oc.addDescription("xml-validation", "Report", "Set schema validation scheme of XML inputs (\"never\", \"auto\" or \"always\")");
+
+    oc.doRegister("xml-validation.net", new Option_String("never"));
+    oc.addDescription("xml-validation.net", "Report", "Set schema validation scheme of SUMO network inputs (\"never\", \"auto\" or \"always\")");
 
     oc.doRegister("no-warnings", 'W', new Option_Bool(false));
     oc.addSynonyme("no-warnings", "suppress-warnings", true);

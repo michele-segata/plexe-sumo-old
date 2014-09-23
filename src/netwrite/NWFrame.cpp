@@ -8,8 +8,8 @@
 ///
 // Sets and checks options for netwrite
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -39,6 +39,7 @@
 #include <netbuild/NBNetBuilder.h>
 #include "NWFrame.h"
 #include "NWWriter_SUMO.h"
+#include "NWWriter_Amitran.h"
 #include "NWWriter_MATSim.h"
 #include "NWWriter_XML.h"
 #include "NWWriter_OpenDrive.h"
@@ -85,23 +86,26 @@ NWFrame::fillOptions(bool forNetgen) {
     oc.doRegister("map-output", 'M', new Option_FileName());
     oc.addDescription("map-output", "Output", "Writes joined edges information to FILE");
 
+    oc.doRegister("amitran-output", new Option_FileName());
+    oc.addDescription("amitran-output", "Output", "The generated net will be written to FILE using Amitran format");
+
     oc.doRegister("matsim-output", new Option_FileName());
-    oc.addDescription("matsim-output", "Output", "The generated net will be written to FILE using MATsim format.");
+    oc.addDescription("matsim-output", "Output", "The generated net will be written to FILE using MATsim format");
 
     oc.doRegister("opendrive-output", new Option_FileName());
-    oc.addDescription("opendrive-output", "Output", "The generated net will be written to FILE using openDRIVE format.");
+    oc.addDescription("opendrive-output", "Output", "The generated net will be written to FILE using OpenDRIVE format");
 
     oc.doRegister("dlr-navteq-output", new Option_FileName());
-    oc.addDescription("dlr-navteq-output", "Output", "The generated net will be written to dlr-navteq files with the given PREFIX.");
+    oc.addDescription("dlr-navteq-output", "Output", "The generated net will be written to dlr-navteq files with the given PREFIX");
 
     oc.doRegister("output.street-names", new Option_Bool(false));
-    oc.addDescription("output.street-names", "Output", "Street names will be included in the output (if available).");
+    oc.addDescription("output.street-names", "Output", "Street names will be included in the output (if available)");
 
     oc.doRegister("output.original-names", new Option_Bool(false));
-    oc.addDescription("output.original-names", "Output", "Writes original names, if given, as parameter.");
+    oc.addDescription("output.original-names", "Output", "Writes original names, if given, as parameter");
 
     oc.doRegister("street-sign-output", new Option_FileName());
-    oc.addDescription("street-sign-output", "Output", "Writes street signs as POIs to FILE.");
+    oc.addDescription("street-sign-output", "Output", "Writes street signs as POIs to FILE");
 }
 
 
@@ -112,6 +116,7 @@ NWFrame::checkOptions() {
     // check whether the output is valid and can be build
     if (!oc.isSet("output-file")
             && !oc.isSet("plain-output-prefix")
+            && !oc.isSet("amitran-output")
             && !oc.isSet("matsim-output")
             && !oc.isSet("opendrive-output")
             && !oc.isSet("dlr-navteq-output")) {
@@ -119,7 +124,7 @@ NWFrame::checkOptions() {
     }
     // some outputs need internal lanes
     if (oc.isSet("opendrive-output") && oc.getBool("no-internal-links")) {
-        WRITE_ERROR("openDRIVE export needs internal links computation.");
+        WRITE_ERROR("OpenDRIVE export needs internal links computation.");
         ok = false;
     }
     return ok;
@@ -129,6 +134,7 @@ NWFrame::checkOptions() {
 void
 NWFrame::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     NWWriter_SUMO::writeNetwork(oc, nb);
+    NWWriter_Amitran::writeNetwork(oc, nb);
     NWWriter_MATSim::writeNetwork(oc, nb);
     NWWriter_OpenDrive::writeNetwork(oc, nb);
     NWWriter_DlrNavteq::writeNetwork(oc, nb);

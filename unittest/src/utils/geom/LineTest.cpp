@@ -1,10 +1,29 @@
+/****************************************************************************/
+/// @file    LineTest.cpp
+/// @author  Matthias Heppner
+/// @author  Michael Behrisch
+/// @author  Jakob Erdmann
+/// @date    2009-11-11
+/// @version $Id$
+///
+// Tests the class Line
+/****************************************************************************/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+/****************************************************************************/
+//
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+/****************************************************************************/
+
 #include <gtest/gtest.h>
 #include <utils/geom/Line.h>
 #include <utils/geom/GeomHelper.h>
 
-/*
-Tests the class Line
-*/
 
 /* Test the method 'intersectsAt' with no intersection, expected thrown exception*/
 //TODO must return NULL
@@ -100,7 +119,7 @@ TEST(Line, test_method_intersectsAtLength_no_intersect) {
 /* Test the method 'rotateAtP1' */
 TEST(Line, test_method_rotateAtP1) {
 	Line line(Position(0,0),Position(2,2));
-	line.rotateAtP1(PI/2);
+	line.rotateAtP1(M_PI/2);
 	EXPECT_DOUBLE_EQ(-2,(line.p2()).x());
 	EXPECT_DOUBLE_EQ(2,(line.p2()).y());
 }
@@ -108,7 +127,7 @@ TEST(Line, test_method_rotateAtP1) {
 /* Test the method 'rotateAtP1' with negative rotation */
 TEST(Line, test_method_rotateAtP1_negative) {
 	Line line(Position(0,0),Position(2,2));
-	line.rotateAtP1(-3*PI/4);
+	line.rotateAtP1(-3*M_PI/4);
 	EXPECT_DOUBLE_EQ(1,SUMOReal((line.p2()).x())+1);
 	EXPECT_DOUBLE_EQ(-2*sqrt(SUMOReal(2)),(line.p2()).y());
 }

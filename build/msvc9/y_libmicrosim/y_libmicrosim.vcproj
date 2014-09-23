@@ -547,67 +547,11 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
+				RelativePath="..\..\..\src\microsim\MSAbstractLaneChangeModel.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\microsim\MSBaseVehicle.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\MSCFModel.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_Daniel1.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_IDM.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_Kerner.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_Krauss.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_KraussOrig1.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_KraussPS.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_PWag2009.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_SmartSK.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_Wiedemann.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_HBEFA.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_Person.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_Routing.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_Tripinfo.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_Vehroutes.cpp"
 				>
 			</File>
 			<File
@@ -643,10 +587,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\microsim\MSInternalLane.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\microsim\MSJunction.cpp"
 				>
 			</File>
@@ -667,7 +607,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\microsim\MSLCM_DK2004.cpp"
+				RelativePath="..\..\..\src\microsim\MSLCM_DK2008.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSLCM_JE2013.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSLCM_LC2013.cpp"
 				>
 			</File>
 			<File
@@ -680,10 +628,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\microsim\MSLogicJunction.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\MSMessageEmitter.cpp"
 				>
 			</File>
 			<File
@@ -707,6 +651,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\microsim\MSPModel.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSPModel_NonInteracting.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSPModel_Striping.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\microsim\MSRightOfWayJunction.cpp"
 				>
 			</File>
@@ -716,6 +672,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\microsim\MSRouteHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSStateHandler.cpp"
 				>
 			</File>
 			<File
@@ -755,70 +715,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\microsim\MSCFModel.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_Daniel1.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_IDM.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_Kerner.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_Krauss.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_KraussOrig1.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_KraussPS.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_PWag2009.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_SmartSK.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\cfmodels\MSCFModel_Wiedemann.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_HBEFA.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_Person.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_Routing.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_Tripinfo.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\microsim\devices\MSDevice_Vehroutes.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\microsim\MSEdge.h"
 				>
 			</File>
@@ -851,10 +747,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\microsim\MSInternalLane.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\microsim\MSJunction.h"
 				>
 			</File>
@@ -875,7 +767,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\microsim\MSLCM_DK2004.h"
+				RelativePath="..\..\..\src\microsim\MSLCM_DK2008.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSLCM_JE2013.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSLCM_LC2013.h"
 				>
 			</File>
 			<File
@@ -911,6 +811,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\microsim\MSPModel.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSPModel_NonInteracting.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSPModel_Striping.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\microsim\MSRightOfWayJunction.h"
 				>
 			</File>
@@ -920,6 +832,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\microsim\MSRouteHandler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\microsim\MSStateHandler.h"
 				>
 			</File>
 			<File

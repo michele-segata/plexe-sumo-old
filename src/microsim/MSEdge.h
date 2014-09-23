@@ -10,8 +10,8 @@
 ///
 // A road/street connecting two junctions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,6 +58,7 @@ class SUMOVehicleParameter;
 class MSVehicle;
 class MSLane;
 class MSPerson;
+class MSJunction;
 
 
 // ===========================================================================
@@ -89,7 +90,11 @@ public:
         /// @brief The edge is an internal edge
         EDGEFUNCTION_INTERNAL = 2,
         /// @brief The edge is a district edge
-        EDGEFUNCTION_DISTRICT = 3
+        EDGEFUNCTION_DISTRICT = 3,
+        /// @brief The edge is a pedestrian crossing (a special type of internal edge)
+        EDGEFUNCTION_CROSSING = 4,
+        /// @brief The edge is a pedestrian walking area (a special type of internal edge)
+        EDGEFUNCTION_WALKINGAREA = 5
     };
 
 
@@ -112,7 +117,7 @@ public:
      * @param[in] function A basic type of the edge
      * @param[in] streetName The street name for that edge
      */
-    MSEdge(const std::string& id, int numericalID, const EdgeBasicFunction function, const std::string& streetName = "");
+    MSEdge(const std::string& id, int numericalID, const EdgeBasicFunction function, const std::string& streetName = "", const std::string& edgeType = "");
 
 
     /// @brief Destructor.
@@ -152,6 +157,15 @@ public:
     MSLane* rightLane(const MSLane* const lane) const;
 
 
+    /** @brief Returns the lane with the given offset parallel to the given lane one or 0 if it does not exist
+     *
+     * @param[in] lane The base lane
+     * @param[in] offset The offset of the result lane
+     * @todo This method searches for the given in the container; probably, this could be done faster
+     */
+    MSLane* parallelLane(const MSLane* const lane, int offset) const;
+
+
     /** @brief Returns this edge's lanes
      *
      * @return This edge's lanes
@@ -160,6 +174,12 @@ public:
         return *myLanes;
     }
 
+
+    /** @brief Returns this edge's persons sorted by pos
+     *
+     * @return This edge's persons sorted by pos
+     */
+    std::vector<MSPerson*> getSortedPersons(SUMOTime timestep) const;
 
     /** @brief Get the allowed lanes to reach the destination-edge.
      *
@@ -170,7 +190,7 @@ public:
      * @return The lanes that may be used to reach the given edge, 0 if no such lanes exist
      */
     const std::vector<MSLane*>* allowedLanes(const MSEdge& destination,
-            SUMOVehicleClass vclass = SVC_UNKNOWN) const;
+            SUMOVehicleClass vclass = SVC_IGNORING) const;
 
 
     /** @brief Get the allowed lanes for the given vehicle class.
@@ -180,7 +200,7 @@ public:
      * @param[in] vclass The vehicle class for which this information shall be returned
      * @return The lanes that may be used by the given vclass
      */
-    const std::vector<MSLane*>* allowedLanes(SUMOVehicleClass vclass = SVC_UNKNOWN) const;
+    const std::vector<MSLane*>* allowedLanes(SUMOVehicleClass vclass = SVC_IGNORING) const;
     /// @}
 
 
@@ -196,6 +216,20 @@ public:
         return myFunction;
     }
 
+    /// @brief return whether this edge is an internal edge
+    inline bool isInternal() const {
+        return myFunction == EDGEFUNCTION_INTERNAL;
+    }
+
+    /// @brief return whether this edge is a pedestrian crossing
+    inline bool isCrossing() const {
+        return myFunction == EDGEFUNCTION_CROSSING;
+    }
+
+    /// @brief return whether this edge is walking area
+    inline bool isWalkingArea() const {
+        return myFunction == EDGEFUNCTION_WALKINGAREA;
+    }
 
     /** @brief Returns the numerical id of the edge
      * @return This edge's numerical id
@@ -209,6 +243,12 @@ public:
      */
     const std::string& getStreetName() const {
         return myStreetName;
+    }
+
+    /** @brief Returns the type of the edge
+     */
+    const std::string& getEdgeType() const {
+        return myEdgeType;
     }
     /// @}
 
@@ -240,12 +280,28 @@ public:
         return (unsigned int) mySuccessors.size();
     }
 
+
     /** @brief Returns the n-th of the following edges
      * @param[in] n The index within following edges of the edge to return
      * @return The n-th of the following edges
      */
     const MSEdge* getFollower(unsigned int n) const {
         return mySuccessors[n];
+    }
+
+
+    const MSJunction* getFromJunction() const {
+        return myFromJunction;
+    }
+
+    const MSJunction* getToJunction() const {
+        return myToJunction;
+    }
+
+
+    void setJunctions(MSJunction* from, MSJunction* to) {
+        myFromJunction = from;
+        myToJunction = to;
     }
     /// @}
 
@@ -290,7 +346,7 @@ public:
     /** @brief Computes and returns the current travel time for this edge
      *
      * The mean speed of all lanes is used to compute the travel time.
-     * To avoid inifinte travel times, the given minimum speed is used.
+     * To avoid infinite travel times, the given minimum speed is used.
      *
      * @param[in] minSpeed The minimumSpeed to assume if traffic on this edge is stopped
      * @return The current effort (travel time) to pass the edge
@@ -435,6 +491,16 @@ public:
         }
     }
 
+    inline bool isRoundabout() const {
+        return myAmRoundabout;
+    }
+
+    void markAsRoundabout() {
+        myAmRoundabout = true;
+    }
+
+    /// @brief whether lane changing may be performed on this edge
+    bool laneChangeAllowed() const;
 
     /** @brief Inserts edge into the static dictionary
         Returns true if the key id isn't already in the dictionary. Otherwise
@@ -503,6 +569,20 @@ protected:
 
     };
 
+    /** @class person_by_offset_sorter
+     * @brief Sorts edges by their ids
+     */
+    class person_by_offset_sorter {
+    public:
+        /// @brief constructor
+        explicit person_by_offset_sorter(SUMOTime timestep): myTime(timestep) { }
+
+        /// @brief comparing operator
+        int operator()(const MSPerson* const p1, const MSPerson* const p2) const;
+    private:
+        SUMOTime myTime;
+    };
+
 
     /** @brief Get the allowed lanes to reach the destination-edge.
      *
@@ -513,7 +593,7 @@ protected:
      * @return The lanes that may be used to reach the given edge, 0 if no such lanes exist
      */
     const std::vector<MSLane*>* allowedLanes(const MSEdge* destination,
-            SUMOVehicleClass vclass = SVC_UNKNOWN) const;
+            SUMOVehicleClass vclass = SVC_IGNORING) const;
 
 
     /// @brief lookup in map and return 0 if not found
@@ -544,6 +624,10 @@ protected:
     /// @brief The preceeding edges
     std::vector<MSEdge*> myPredeccesors;
 
+    /// @brief the junctions for this edge
+    MSJunction* myFromJunction;
+    MSJunction* myToJunction;
+
     /// @brief Persons on the edge (only for drawing)
     mutable std::set<MSPerson*> myPersons;
 
@@ -561,11 +645,16 @@ protected:
     SVCPermissions myMinimumPermissions;
     /// @brief The union of lane permissions for this edge
     SVCPermissions myCombinedPermissions;
-
-    std::string myStreetName;
     /// @}
 
+    /// @brief the real-world name of this edge (need not be unique)
+    std::string myStreetName;
 
+    /// @brief the type of the edge (optionally used during network creation)
+    std::string myEdgeType;
+
+    /// @brief whether this edge belongs to a roundabout
+    bool myAmRoundabout;
 
     /// @name Static edge container
     /// @{

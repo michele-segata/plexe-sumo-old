@@ -1,13 +1,14 @@
 /****************************************************************************/
 /// @file    NWWriter_OpenDrive.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @date    Tue, 04.05.2011
 /// @version $Id$
 ///
 // Exporter writing networks using the openDRIVE format
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -90,9 +91,8 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         const std::vector<NBEdge::Lane>& lanes = e->getLanes();
         unsigned int li = (unsigned int)lanes.size() - 1;
         PositionVector ls = e->getLaneShape(li);
-        SUMOReal width = lanes[li].width < 0 || !e->hasLaneSpecificWidth() ? SUMO_const_laneWidth : lanes[li].width;
         try {
-            ls.move2side(-width / 2.);
+            ls.move2side(-e->getLaneWidth(li) / 2.);
         } catch (InvalidArgument&) {
             // we do not write anything, as this should have been reported, already
         }
@@ -109,13 +109,13 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
             device << "                            <predecessor id=\"-1\"/>\n"; // internal roads have this
             device << "                            <successor id=\"-1\"/>\n"; // internal roads have this
             device << "                        </link>\n";
-            SUMOReal width = lanes[j].width < 0 || !e->hasLaneSpecificWidth() ? SUMO_const_laneWidth : lanes[j].width;
-            device << "                        <width sOffset=\"0\" a=\"" << width << "\" b=\"0\" c=\"0\" d=\"0\"/>\n";
+            device << "                        <width sOffset=\"0\" a=\"" << e->getLaneWidth(j) << "\" b=\"0\" c=\"0\" d=\"0\"/>\n";
             std::string markType = "broken";
             if (j == 0) {
                 markType = "solid";
             }
             device << "                        <roadMark sOffset=\"0\" type=\"" << markType << "\" weight=\"standard\" color=\"standard\" width=\"0.13\"/>\n";
+            device << "                        <speed sOffset=\"0\" max=\"" << lanes[j].speed << "\"/>\n";
             device << "                    </lane>\n";
         }
         device << "                 </right>\n";
@@ -149,7 +149,7 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
                 } catch (InvalidArgument&) {
                     // we do not write anything, maybe we should
                 }
-                device << "    <road name=\"" << c.id << "\" length=\"" << shape.length() << "\" id=\"" << getID(c.id, edgeMap, edgeID) << "\" junction=\"" << getID(n->getID(), nodeMap, nodeID) << "\">\n";
+                device << "    <road name=\"" << c.getInternalLaneID() << "\" length=\"" << shape.length() << "\" id=\"" << getID(c.getInternalLaneID(), edgeMap, edgeID) << "\" junction=\"" << getID(n->getID(), nodeMap, nodeID) << "\">\n";
                 device << "        <link>\n";
                 device << "            <predecessor elementType=\"road\" elementId=\"" << getID((*j)->getID(), edgeMap, edgeID) << "\"/>\n";
                 device << "            <successor elementType=\"road\" elementId=\"" << getID((*k).toEdge->getID(), edgeMap, edgeID) << "\"/>\n";
@@ -193,7 +193,7 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
                     continue;
                 }
                 device << "    <connection id=\"" << index << "\" incomingRoad=\"" << getID((*j)->getID(), edgeMap, edgeID)
-                       << "\" connectingRoad=\"" << getID((*k).id, edgeMap, edgeID) << "\" contactPoint=\"start\"/>\n";
+                       << "\" connectingRoad=\"" << getID((*k).getInternalLaneID(), edgeMap, edgeID) << "\" contactPoint=\"start\"/>\n";
                 ++index;
             }
         }

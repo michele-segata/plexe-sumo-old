@@ -8,8 +8,8 @@
 ///
 // Stores the information about how to visualize structures
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -126,7 +126,7 @@ public:
     /// @brief Information whether rails shall be drawn
     bool showRails;
     // Setting bundles for optional drawing names with size and color
-    GUIVisualizationTextSettings edgeName, internalEdgeName, streetName;
+    GUIVisualizationTextSettings edgeName, internalEdgeName, cwaEdgeName, streetName;
 
     bool hideConnectors;
     /// @brief The lane exaggeration (upscale thickness)
@@ -156,6 +156,22 @@ public:
     //@}
 
 
+    /// @name person visualization settings
+    //@{
+
+    /// @brief The person colorer
+    GUIColorer personColorer;
+    /// @brief The quality of person drawing
+    int personQuality;
+    /// @brief The minimum size of persons to let them be drawn
+    float minPersonSize;
+    /// @brief The person exaggeration (upscale)
+    float personExaggeration;
+    // Setting bundles for optional drawing person names
+    GUIVisualizationTextSettings personName;
+    //@}
+
+
     /// @name junction visualization settings
     //@{
 
@@ -167,11 +183,11 @@ public:
     bool drawLinkJunctionIndex;
     // Setting bundles for optional drawing junction names
     GUIVisualizationTextSettings junctionName, internalJunctionName;
-    //@}
-
-
     /// @brief Information whether lane-to-lane arrows shall be drawn
     bool showLane2Lane;
+    /// @brief whether the shape of the junction should be drawn
+    bool drawJunctionShape;
+    //@}
 
 
     /// @name Additional structures visualization settings

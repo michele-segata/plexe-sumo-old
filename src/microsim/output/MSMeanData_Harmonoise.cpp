@@ -7,8 +7,8 @@
 ///
 // Redirector for mean data output (net->edgecontrol)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,7 +36,7 @@
 #include <utils/common/ToString.h>
 #include <utils/iodevices/OutputDevice.h>
 #include "MSMeanData_Harmonoise.h"
-#include <utils/common/HelpersHarmonoise.h>
+#include <utils/emissions/HelpersHarmonoise.h>
 #include <limits>
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -104,18 +104,17 @@ MSMeanData_Harmonoise::MSLaneMeanDataValues::notifyEnter(SUMOVehicle& veh, MSMov
 void
 MSMeanData_Harmonoise::MSLaneMeanDataValues::write(OutputDevice& dev, const SUMOTime period,
         const SUMOReal /*numLanes*/, const SUMOReal defaultTravelTime, const int /*numVehicles*/) const {
-    dev << "\" noise=\"" << (meanNTemp != 0 ? (SUMOReal)(10. * log10(meanNTemp * TS / STEPS2TIME(period))) : (SUMOReal) 0.);
+    dev.writeAttr("noise", (meanNTemp != 0 ? (SUMOReal)(10. * log10(meanNTemp * TS / STEPS2TIME(period))) : (SUMOReal) 0.));
     if (sampleSeconds > myParent->myMinSamples) {
         SUMOReal traveltime = myParent->myMaxTravelTime;
         if (travelledDistance > 0.f) {
             traveltime = MIN2(traveltime, myLaneLength * sampleSeconds / travelledDistance);
         }
-        dev << "\" traveltime=\"" << traveltime;
+        dev.writeAttr("traveltime", traveltime);
     } else if (defaultTravelTime >= 0.) {
         // @todo default value for noise
-        dev << "\" traveltime=\"" << defaultTravelTime;
+        dev.writeAttr("traveltime", defaultTravelTime);
     }
-    dev << "\"";
     dev.closeTag();
 }
 

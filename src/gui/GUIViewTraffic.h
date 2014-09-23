@@ -9,8 +9,8 @@
 ///
 // A view on the simulation; this view is a microscopic one
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -49,7 +49,6 @@
 class GUINet;
 class GUISUMOViewParent;
 class GUIVehicle;
-class GUILaneWrapper;
 class MSRoute;
 
 

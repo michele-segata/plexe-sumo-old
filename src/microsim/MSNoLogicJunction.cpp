@@ -2,13 +2,14 @@
 /// @file    MSNoLogicJunction.cpp
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Thu, 06 Jun 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -31,7 +32,6 @@
 
 #include "MSNoLogicJunction.h"
 #include "MSLane.h"
-#include "MSInternalLane.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -44,9 +44,6 @@
 // ===========================================================================
 // static member definitions
 // ===========================================================================
-std::bitset<64> MSNoLogicJunction::myDump((unsigned long long) 0xffffffff);
-
-
 
 // ===========================================================================
 // method definitions
@@ -58,14 +55,13 @@ MSNoLogicJunction::MSNoLogicJunction(const std::string& id,
 #ifdef HAVE_INTERNAL_LANES
                                      , std::vector<MSLane*> internal
 #endif
-                                    )
-    : MSJunction(id, position, shape),
-      myIncomingLanes(incoming)
+                                    ):
+    MSJunction(id, position, shape),
+    myIncomingLanes(incoming)
 #ifdef HAVE_INTERNAL_LANES
-      , myInternalLanes(internal)
+    , myInternalLanes(internal)
 #endif
-{
-}
+{}
 
 
 MSNoLogicJunction::~MSNoLogicJunction() {}
@@ -78,16 +74,9 @@ MSNoLogicJunction::postloadInit() {
     for (i = myIncomingLanes.begin(); i != myIncomingLanes.end(); ++i) {
         const MSLinkCont& links = (*i)->getLinkCont();
         for (MSLinkCont::const_iterator j = links.begin(); j != links.end(); j++) {
-            (*j)->setRequestInformation(0, 0, false, false, std::vector<MSLink*>(), std::vector<MSLane*>());
+            (*j)->setRequestInformation(-1, false, false, std::vector<MSLink*>(), std::vector<MSLane*>());
         }
     }
-#ifdef HAVE_INTERNAL_LANES
-    // set information for the internal lanes
-    for (i = myInternalLanes.begin(); i != myInternalLanes.end(); ++i) {
-        // ... set information about participation
-        static_cast<MSInternalLane*>(*i)->setParentJunctionInformation(&myDump, 0);
-    }
-#endif
 }
 
 

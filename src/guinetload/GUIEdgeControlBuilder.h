@@ -9,8 +9,8 @@
 ///
 // Derivation of NLEdgeControlBuilder which builds gui-edges
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -79,7 +79,6 @@ public:
      * @param[in] permissions Encoding of vehicle classes that may drive on this lane
      * @see SUMOVehicleClass
      * @see MSLane
-     * @see MSInternalLane
      */
     virtual MSLane* addLane(const std::string& id,
                             SUMOReal maxSpeed, SUMOReal length,
@@ -87,7 +86,6 @@ public:
                             SVCPermissions permissions);
 
 
-    MSEdge* closeEdge();
 
 
     /** @brief Builds an edge instance (GUIEdge in this case)
@@ -98,7 +96,7 @@ public:
      *
      * @param[in] id The id of the edge to build
      */
-    MSEdge* buildEdge(const std::string& id, const MSEdge::EdgeBasicFunction function, const std::string& streetName);
+    MSEdge* buildEdge(const std::string& id, const MSEdge::EdgeBasicFunction function, const std::string& streetName, const std::string& edgeType);
 
 
 private:

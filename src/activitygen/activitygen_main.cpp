@@ -10,8 +10,8 @@
 ///
 // Main object of the ActivityGen application
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
@@ -54,6 +54,7 @@
 #include <utils/common/SystemFrame.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
+#include <utils/iodevices/OutputDevice.h>
 //ActivityGen
 #include "AGFrame.h"
 #include "AGActivityGen.h"
@@ -69,30 +70,34 @@
 // ===========================================================================
 
 /// Loads the network
-void loadNet(RONet& toFill, ROAbstractEdgeBuilder& eb) {
+void
+loadNet(RONet& toFill, ROAbstractEdgeBuilder& eb) {
     OptionsCont& oc = OptionsCont::getOptions();
     std::string file = oc.getString("net-file");
     if (file == "") {
         throw ProcessError("Missing definition of network to load!");
     }
-    if (!FileHelpers::exists(file)) {
-        throw ProcessError("The network file '" + file
-                           + "' could not be found.");
+    if (!FileHelpers::isReadable(file)) {
+        throw ProcessError("The network file '" + file + "' could not be accessed.");
     }
     PROGRESS_BEGIN_MESSAGE("Loading net");
     RONetHandler handler(toFill, eb);
     handler.setFileName(file);
-    if (!XMLSubSys::runParser(handler, file)) {
+    if (!XMLSubSys::runParser(handler, file, true)) {
         PROGRESS_FAILED_MESSAGE();
         throw ProcessError();
     } else {
         PROGRESS_DONE_MESSAGE();
     }
+    if (!deprecatedVehicleClassesSeen.empty()) {
+        WRITE_WARNING("Deprecated vehicle classes '" + toString(deprecatedVehicleClassesSeen) + "' in input network.");
+        deprecatedVehicleClassesSeen.clear();
+    }
 }
 
-/****************************************************************************/
 
-int main(int argc, char* argv[]) {
+int
+main(int argc, char* argv[]) {
     int ret = 0;
     OptionsCont& oc = OptionsCont::getOptions();
     RONet* net = 0;
@@ -105,7 +110,7 @@ int main(int argc, char* argv[]) {
             SystemFrame::close();
             return 0;
         }
-        XMLSubSys::setValidation(oc.getBool("xml-validation"));
+        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
         MsgHandler::initOutputOptions();
         RandHelper::initRandGlobal();
 
@@ -113,13 +118,13 @@ int main(int argc, char* argv[]) {
         net = new RONet();
         RODUAEdgeBuilder builder(oc.getBool("weights.expand"), oc.getBool("weights.interpolate"));
         loadNet(*net, builder);
-        WRITE_MESSAGE("Loaded " + toString(net->getEdgeNo()) + " edges.");
+        WRITE_MESSAGE("Loaded " + toString(net->getEdgeNoWithoutInternal()) + " edges.");
         if (oc.getBool("debug")) {
             WRITE_MESSAGE("\n\t ---- begin AcitivtyGen ----\n");
         }
 
         std::string statFile = oc.getString("stat-file");
-        std::string routeFile = oc.getString("output-file");
+        OutputDevice::createDeviceByOption("output-file", "routes", "routes_file.xsd");
         AGTime duration(1, 0, 0);
         AGTime begin(0);
         AGTime end(0);
@@ -132,7 +137,7 @@ int main(int argc, char* argv[]) {
         if (oc.isSet("end")) {
             end.addSeconds(oc.getInt("end") % 86400);
         }
-        AGActivityGen actiGen(statFile, routeFile, net);
+        AGActivityGen actiGen(statFile, OutputDevice::getDevice(oc.getString("output-file")), net);
         actiGen.importInfoCity();
         actiGen.makeActivityTrips(duration.getDay(), begin.getTime(), end.getTime());
 

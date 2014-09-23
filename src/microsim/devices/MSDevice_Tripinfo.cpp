@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Laura Bieker
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Fri, 30.01.2009
 /// @version $Id$
 ///
 // A device which collects info on the vehicle trip
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2009-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -72,7 +73,7 @@ MSDevice_Tripinfo::~MSDevice_Tripinfo() {
 bool
 MSDevice_Tripinfo::notifyMove(SUMOVehicle& /*veh*/, SUMOReal /*oldPos*/,
                               SUMOReal /*newPos*/, SUMOReal newSpeed) {
-    if (newSpeed <= 0.1) {
+    if (newSpeed <= SUMO_const_haltingSpeed) {
         myWaitingSteps++;
     }
     return true;
@@ -114,24 +115,19 @@ MSDevice_Tripinfo::generateOutput() const {
     SUMOReal routeLength = myHolder.getRoute().getLength();
     // write
     OutputDevice& os = OutputDevice::getDeviceByOption("tripinfo-output");
-    os.openTag("tripinfo") << " id=\"" << myHolder.getID() << "\" ";
+    os.openTag("tripinfo").writeAttr("id", myHolder.getID());
     routeLength -= myDepartPos;
-    os << "depart=\"" << time2string(myHolder.getDeparture()) << "\" "
-       << "departLane=\"" << myDepartLane << "\" "
-       << "departPos=\"" << myDepartPos << "\" "
-       << "departSpeed=\"" << myDepartSpeed << "\" "
-       << "departDelay=\"" << time2string(myHolder.getDeparture() - myHolder.getParameter().depart) << "\" ";
+    os.writeAttr("depart", time2string(myHolder.getDeparture())).writeAttr("departLane", myDepartLane)
+    .writeAttr("departPos", myDepartPos).writeAttr("departSpeed", myDepartSpeed)
+    .writeAttr("departDelay", time2string(myHolder.getDeparture() - myHolder.getParameter().depart));
     if (myArrivalLane != "") {
         routeLength -= MSLane::dictionary(myArrivalLane)->getLength() - myArrivalPos;
     }
-    os << "arrival=\"" << time2string(myArrivalTime) << "\" "
-       << "arrivalLane=\"" << myArrivalLane << "\" "
-       << "arrivalPos=\"" << myArrivalPos << "\" "
-       << "arrivalSpeed=\"" << myArrivalSpeed << "\" "
-       << "duration=\"" << time2string(myArrivalTime - myHolder.getDeparture()) << "\" "
-       << "routeLength=\"" << routeLength << "\" "
-       << "waitSteps=\"" << myWaitingSteps << "\" "
-       << "rerouteNo=\"" << myHolder.getNumberReroutes();
+    os.writeAttr("arrival", time2string(myArrivalTime)).writeAttr("arrivalLane", myArrivalLane)
+    .writeAttr("arrivalPos", myArrivalPos).writeAttr("arrivalSpeed", myArrivalSpeed)
+    .writeAttr("duration", time2string(myArrivalTime - myHolder.getDeparture()))
+    .writeAttr("routeLength", routeLength).writeAttr("waitSteps", myWaitingSteps)
+    .writeAttr("rerouteNo", myHolder.getNumberReroutes());
     const std::vector<MSDevice*>& devices = myHolder.getDevices();
     std::ostringstream str;
     for (std::vector<MSDevice*>::const_iterator i = devices.begin(); i != devices.end(); ++i) {
@@ -140,12 +136,9 @@ MSDevice_Tripinfo::generateOutput() const {
         }
         str << (*i)->getID();
     }
-    os << "\" devices=\"" << str.str()
-       << "\" vType=\"" << myHolder.getVehicleType().getID()
-       << "\" vaporized=\"" << (myHolder.getEdge() == *(myHolder.getRoute().end() - 1) ? "" : "0")
-       << "\"";
+    os.writeAttr("devices", str.str()).writeAttr("vType", myHolder.getVehicleType().getID())
+    .writeAttr("vaporized", (myHolder.getEdge() == *(myHolder.getRoute().end() - 1) ? "" : "0"));
 }
-
 
 
 /****************************************************************************/

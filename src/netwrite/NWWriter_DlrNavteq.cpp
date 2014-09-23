@@ -1,13 +1,14 @@
 /****************************************************************************/
 /// @file    NWWriter_DlrNavteq.h
 /// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    26.10.2012
 /// @version $Id$
 ///
 // Exporter writing networks using DlrNavteq (Elmar) format
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -65,6 +66,7 @@ NWWriter_DlrNavteq::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     }
     writeNodesUnsplitted(oc, nb.getNodeCont(), nb.getEdgeCont());
     writeLinksUnsplitted(oc, nb.getEdgeCont());
+    writeTrafficSignals(oc, nb.getNodeCont());
 }
 
 
@@ -117,11 +119,13 @@ NWWriter_DlrNavteq::writeNodesUnsplitted(const OptionsCont& oc, NBNodeCont& nc, 
         NBEdge* e = (*i).second;
         const PositionVector& geom = e->getGeometry();
         if (geom.size() > 2) {
-            if (e->getID() == UNDEFINED) {
-                WRITE_WARNING("Edge id '" + UNDEFINED +
-                              "' clashes with the magic value for NO_BETWEEN_NODE. Internal geometry for this edge will be lost.");
+            std::string internalNodeID = e->getID();
+            if (internalNodeID == UNDEFINED ||
+                    (nc.retrieve(internalNodeID) != 0)) {
+                // need to invent a new name to avoid clashing with the id of a 'real' node or a reserved name
+                internalNodeID += "_geometry";
             }
-            device << e->getID() << "\t1\t" << geom.size() - 2;
+            device << internalNodeID << "\t1\t" << geom.size() - 2;
             for (size_t ii = 1; ii < geom.size() - 1; ++ii) {
                 Position pos = geom[(int)ii];
                 gch.cartesian2geo(pos);
@@ -178,22 +182,22 @@ NWWriter_DlrNavteq::writeLinksUnsplitted(const OptionsCont& oc, NBEdgeCont& ec) 
 
 std::string
 NWWriter_DlrNavteq::getAllowedTypes(SVCPermissions permissions) {
-    if (permissions == SVCFreeForAll) {
+    if (permissions == SVCAll) {
         return "100000000000";
     }
     std::ostringstream oss;
     oss << "0";
-    oss << ((permissions & SVC_PASSENGER)                    > 0 ? 1 : 0); 
-    oss << ((permissions & SVC_PASSENGER)                    > 0 ? 1 : 0); // residential
-    oss << ((permissions & SVC_HOV)                          > 0 ? 1 : 0);
-    oss << ((permissions & SVC_PUBLIC_EMERGENCY)             > 0 ? 1 : 0);
-    oss << ((permissions & SVC_TAXI)                         > 0 ? 1 : 0);
-    oss << ((permissions & (SVC_PUBLIC_TRANSPORT | SVC_BUS)) > 0 ? 1 : 0);
-    oss << ((permissions & SVC_DELIVERY)                     > 0 ? 1 : 0);
-    oss << ((permissions & SVC_TRANSPORT)                    > 0 ? 1 : 0);
-    oss << ((permissions & SVC_MOTORCYCLE)                   > 0 ? 1 : 0);
-    oss << ((permissions & SVC_BICYCLE)                      > 0 ? 1 : 0);
-    oss << ((permissions & SVC_PEDESTRIAN)                   > 0 ? 1 : 0);
+    oss << ((permissions & SVC_PASSENGER)              > 0 ? 1 : 0);
+    oss << ((permissions & SVC_PASSENGER)              > 0 ? 1 : 0); // residential
+    oss << ((permissions & SVC_HOV)                    > 0 ? 1 : 0);
+    oss << ((permissions & SVC_EMERGENCY)              > 0 ? 1 : 0);
+    oss << ((permissions & SVC_TAXI)                   > 0 ? 1 : 0);
+    oss << ((permissions & (SVC_BUS | SVC_COACH))      > 0 ? 1 : 0);
+    oss << ((permissions & SVC_DELIVERY)               > 0 ? 1 : 0);
+    oss << ((permissions & (SVC_TRUCK | SVC_TRAILER))  > 0 ? 1 : 0);
+    oss << ((permissions & SVC_MOTORCYCLE)             > 0 ? 1 : 0);
+    oss << ((permissions & SVC_BICYCLE)                > 0 ? 1 : 0);
+    oss << ((permissions & SVC_PEDESTRIAN)             > 0 ? 1 : 0);
     return oss.str();
 }
 
@@ -292,5 +296,39 @@ NWWriter_DlrNavteq::getGraphLength(NBEdge* edge) {
     geom.push_front_noDoublePos(edge->getFromNode()->getPosition());
     return geom.length();
 }
+
+
+void
+NWWriter_DlrNavteq::writeTrafficSignals(const OptionsCont& oc, NBNodeCont& nc) {
+    OutputDevice& device = OutputDevice::getDevice(oc.getString("dlr-navteq-output") + "_traffic_signals.txt");
+    writeHeader(device, oc);
+    const GeoConvHelper& gch = GeoConvHelper::getFinal();
+    const bool haveGeo = gch.usingGeoProjection();
+    const SUMOReal geoScale = pow(10.0f, haveGeo ? 5 : 2); // see NIImporter_DlrNavteq::GEO_SCALE
+    device.setPrecision(0);
+    // write format specifier
+    device << "#Traffic signal related to LINK_ID and NODE_ID with location relative to driving direction.\n#column format like pointcollection.\n#DESCRIPTION->LOCATION: 1-rechts von LINK; 2-links von LINK; 3-oberhalb LINK -1-keineAngabe\n#RELATREC_ID\tPOICOL_TYPE\tDESCRIPTION\tLONGITUDE\tLATITUDE\tLINK_ID\n";
+    // write record for every edge incoming to a tls controlled node
+    for (std::map<std::string, NBNode*>::const_iterator i = nc.begin(); i != nc.end(); ++i) {
+        NBNode* n = (*i).second;
+        if (n->isTLControlled()) {
+            Position pos = n->getPosition();
+            gch.cartesian2geo(pos);
+            pos.mul(geoScale);
+            const EdgeVector& incoming = n->getIncomingEdges();
+            for (EdgeVector::const_iterator it = incoming.begin(); it != incoming.end(); ++it) {
+                NBEdge* e = *it;
+                device << e->getID() << "\t"
+                       << "12\t" // POICOL_TYPE
+                       << "LSA;NODEIDS#" << n->getID() << "#;LOCATION#-1#;\t"
+                       << pos.x() << "\t"
+                       << pos.y() << "\t"
+                       << e->getID() << "\n";
+            }
+        }
+    }
+}
+
+
 /****************************************************************************/
 

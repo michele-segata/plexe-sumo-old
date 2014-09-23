@@ -2,13 +2,14 @@
 /// @file    MSGlobals.cpp
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    late summer 2003
 /// @version $Id$
 ///
 // Some static variables for faster access
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2003-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -42,25 +43,24 @@
 bool MSGlobals::gOmitEmptyEdgesOnDump;
 
 bool MSGlobals::gUsingInternalLanes;
+SUMOTime MSGlobals::gIgnoreJunctionBlocker;
 
 SUMOTime MSGlobals::gTimeToGridlock;
+SUMOTime MSGlobals::gTimeToGridlockHighways;
 
 bool MSGlobals::gCheck4Accidents;
 
 bool MSGlobals::gCheckRoutes;
 
-#ifdef HAVE_INTERNAL
+SUMOTime MSGlobals::gLaneChangeDuration;
+
 bool MSGlobals::gStateLoaded;
+#ifdef HAVE_INTERNAL
 bool MSGlobals::gUseMesoSim;
 bool MSGlobals::gMesoLimitedJunctionControl;
 MELoop* MSGlobals::gMesoNet;
 #else
 const bool MSGlobals::gUseMesoSim = false;
-#endif
-
-#ifdef _DEBUG
-bool MSGlobals::gDebugFlag1 = false;
-bool MSGlobals::gDebugFlag2 = false;
 #endif
 
 /****************************************************************************/

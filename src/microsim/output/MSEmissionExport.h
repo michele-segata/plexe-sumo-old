@@ -1,11 +1,13 @@
 /****************************************************************************/
 /// @file    MSEmissionExport.h
 /// @author  Mario Krumnow
+/// @date    2012-04-26
+/// @version $Id$
 ///
 // Realises dumping Emission Data
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.

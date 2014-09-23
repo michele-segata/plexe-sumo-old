@@ -9,8 +9,8 @@
 ///
 // Storage for available visualization settings
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -141,6 +141,7 @@ GUICompleteSchemeStorage::init(FXApp* app) {
         vs.laneShowBorders = true;
         vs.hideConnectors = true;
         vs.minVehicleSize = 0;
+        vs.personQuality = 2;
         gSchemeStorage.add(vs);
     }
     myNumInitialSettings = (unsigned int) mySortedSchemeNames.size();

@@ -10,8 +10,8 @@
 ///
 // The parent class for traffic light logics
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,7 @@
 #include <string>
 #include <bitset>
 #include <utils/common/Command.h>
+#include <utils/common/Parameterised.h>
 #include <microsim/MSLogicJunction.h>
 #include <microsim/MSLink.h>
 #include "MSPhaseDefinition.h"
@@ -59,7 +60,7 @@ class NLDetectorBuilder;
  * @class MSTrafficLightLogic
  * @brief The parent class for traffic light logics
  */
-class MSTrafficLightLogic {
+class MSTrafficLightLogic : public Named, public Parameterised {
 public:
     /// @name Structure definitions
     /// @{
@@ -78,8 +79,6 @@ public:
 
     /// @brief Definition of a list that holds lists of links that do have the same attribute
     typedef std::vector<LaneVector> LaneVectorVector;
-
-    typedef std::map<std::string, std::string> ParameterMap;
     /// @}
 
 
@@ -94,7 +93,7 @@ public:
                         const std::string& id,
                         const std::string& programID,
                         SUMOTime delay,
-                        const ParameterMap& parameters);
+                        const std::map<std::string, std::string>& parameters);
 
 
     /** @brief Initialises the tls with information about incoming lanes
@@ -170,14 +169,6 @@ public:
     /// @{
 
     /** @brief Returns this tl-logic's id
-     * @return This tls' id
-     */
-    const std::string& getID() const {
-        return myID;
-    }
-
-
-    /** @brief Returns this tl-logic's id
      * @return This program's id
      */
     const std::string& getProgramID() const {
@@ -188,7 +179,7 @@ public:
     /** @brief Returns the list of lists of all lanes controlled by this tls
      * @return All lanes controlled by this tls, sorted by the signal index
      */
-    const LaneVectorVector& getLanes() const {
+    const LaneVectorVector& getLaneVectors() const {
         return myLanes;
     }
 
@@ -332,24 +323,6 @@ public:
     /// @}
 
 
-
-    /// @name Algorithm parameter handling
-    /// @{
-
-    /** @brief Inserts read parameter
-     * @param[in] params The parameter to use
-     */
-    void setParameter(const ParameterMap& params);
-
-
-    /** @brief Returns a named parameter
-     * @param[in] key The name of the parameter
-     * @return The value of the parameter, "" if the parameter is not known
-     */
-    std::string getParameterValue(const std::string& key) const;
-    /// @}
-
-
 protected:
     /**
      * @class SwitchCommand
@@ -413,11 +386,8 @@ protected:
     };
 
 protected:
-    /// @brief Given parameter
-    ParameterMap myParameter;
-
     /// @brief The id of the logic
-    std::string myID, myProgramID;
+    std::string myProgramID;
 
     /// @brief The list of links which do participate in this traffic light
     LinkVectorVector myLinks;

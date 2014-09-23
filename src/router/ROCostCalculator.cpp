@@ -2,13 +2,14 @@
 /// @file    ROCostCalculator.cpp
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Calculators for route costs and probabilities
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -68,9 +69,9 @@ ROCostCalculator&
 ROCostCalculator::getCalculator() {
     if (myInstance == 0) {
         OptionsCont& oc = OptionsCont::getOptions();
-        if (oc.getBool("logit")) {
+        if (oc.getString("route-choice-method") == "logit") {
             myInstance = new ROLogitCalculator(oc.getFloat("logit.beta"), oc.getFloat("logit.gamma"), oc.getFloat("logit.theta"));
-        } else {
+        } else if (oc.getString("route-choice-method") == "gawron") {
             myInstance = new ROGawronCalculator(oc.getFloat("gawron.beta"), oc.getFloat("gawron.a"));
         }
     }
@@ -103,7 +104,7 @@ ROGawronCalculator::setCosts(RORoute* route, const SUMOReal costs, const bool is
 
 
 void
-ROGawronCalculator::calculateProbabilities(const ROVehicle* const /* veh */, std::vector<RORoute*> alternatives) {
+ROGawronCalculator::calculateProbabilities(std::vector<RORoute*> alternatives, const ROVehicle* const /* veh */, const SUMOTime /* time */) {
     for (std::vector<RORoute*>::iterator i = alternatives.begin(); i != alternatives.end() - 1; i++) {
         RORoute* pR = *i;
         for (std::vector<RORoute*>::iterator j = i + 1; j != alternatives.end(); j++) {
@@ -166,7 +167,7 @@ ROLogitCalculator::setCosts(RORoute* route, const SUMOReal costs, const bool /* 
 
 
 void
-ROLogitCalculator::calculateProbabilities(const ROVehicle* const veh, std::vector<RORoute*> alternatives) {
+ROLogitCalculator::calculateProbabilities(std::vector<RORoute*> alternatives, const ROVehicle* const veh, const SUMOTime time) {
     const SUMOReal theta = myTheta >= 0 ? myTheta : getThetaForCLogit(alternatives);
     const SUMOReal beta = myBeta >= 0 ? myBeta : getBetaForCLogit(alternatives);
     if (beta > 0) {
@@ -177,7 +178,7 @@ ROLogitCalculator::calculateProbabilities(const ROVehicle* const veh, std::vecto
             const std::vector<const ROEdge*>& edgesR = pR->getEdgeVector();
             for (std::vector<const ROEdge*>::const_iterator edge = edgesR.begin(); edge != edgesR.end(); ++edge) {
                 //@todo we should use costs here
-                lengthR += (*edge)->getTravelTime(veh, STEPS2TIME(veh->getDepartureTime()));
+                lengthR += (*edge)->getTravelTime(veh, STEPS2TIME(time));
             }
             SUMOReal overlapSum = 0;
             for (std::vector<RORoute*>::const_iterator j = alternatives.begin(); j != alternatives.end(); j++) {
@@ -186,9 +187,9 @@ ROLogitCalculator::calculateProbabilities(const ROVehicle* const veh, std::vecto
                 SUMOReal lengthS = 0;
                 const std::vector<const ROEdge*>& edgesS = pS->getEdgeVector();
                 for (std::vector<const ROEdge*>::const_iterator edge = edgesS.begin(); edge != edgesS.end(); ++edge) {
-                    lengthS += (*edge)->getTravelTime(veh, STEPS2TIME(veh->getDepartureTime()));
+                    lengthS += (*edge)->getTravelTime(veh, STEPS2TIME(time));
                     if (std::find(edgesR.begin(), edgesR.end(), *edge) != edgesR.end()) {
-                        overlapLength += (*edge)->getTravelTime(veh, STEPS2TIME(veh->getDepartureTime()));
+                        overlapLength += (*edge)->getTravelTime(veh, STEPS2TIME(time));
                     }
                 }
                 overlapSum += pow(overlapLength / sqrt(lengthR * lengthS), myGamma);
@@ -241,7 +242,7 @@ ROLogitCalculator::getThetaForCLogit(const std::vector<RORoute*> alternatives) c
     const SUMOReal cvCost = sqrt(diff / SUMOReal(alternatives.size())) / meanCost;
     // @todo re-evaluate function
 //    if (cvCost > 0.04) { // Magic numbers from Lohse book
-    return PI / (sqrt(6.) * cvCost * (min + 1.1)) / 3600.;
+    return M_PI / (sqrt(6.) * cvCost * (min + 1.1)) / 3600.;
 //    }
 //    return 1./3600.;
 }

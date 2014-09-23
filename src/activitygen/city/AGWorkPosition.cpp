@@ -9,8 +9,8 @@
 ///
 // Location and schedules of a work position: linked with one adult
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
@@ -127,7 +127,7 @@ AGWorkPosition::let() {
 
 
 void
-AGWorkPosition::take(AGAdult* worker) throw(std::runtime_error) {
+AGWorkPosition::take(AGAdult* worker) {
     if (myAdult == 0) {
         myStatData->workPositions--;
         myAdult = worker;

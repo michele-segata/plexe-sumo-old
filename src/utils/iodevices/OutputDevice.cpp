@@ -8,8 +8,8 @@
 ///
 // Static storage of an output device and its base (abstract) implementation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2004-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -45,6 +45,7 @@
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/common/ToString.h>
+#include <utils/common/MsgHandler.h>
 #include <utils/options/OptionsCont.h>
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -96,14 +97,15 @@ OutputDevice::getDevice(const std::string& name) {
 
 bool
 OutputDevice::createDeviceByOption(const std::string& optionName,
-                                   const std::string& rootElement) {
+                                   const std::string& rootElement,
+                                   const std::string& schemaFile) {
     if (!OptionsCont::getOptions().isSet(optionName)) {
         return false;
     }
     OutputDevice& dev = OutputDevice::getDevice(OptionsCont::getOptions().getString(optionName));
     if (rootElement != "") {
-        if (rootElement == "routes" || rootElement == "netstate") {
-            dev.writeXMLHeader(rootElement, "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/" + rootElement + "_file.xsd\"");
+        if (schemaFile != "") {
+            dev.writeXMLHeader(rootElement, "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/" + schemaFile + "\"");
         } else {
             dev.writeXMLHeader(rootElement);
         }
@@ -113,7 +115,7 @@ OutputDevice::createDeviceByOption(const std::string& optionName,
 
 
 OutputDevice&
-OutputDevice::getDeviceByOption(const std::string& optionName) throw(IOError, InvalidArgument) {
+OutputDevice::getDeviceByOption(const std::string& optionName) {
     std::string devName = OptionsCont::getOptions().getString(optionName);
     if (myOutputDevices.find(devName) == myOutputDevices.end()) {
         throw InvalidArgument("Device '" + devName + "' has not been created.");
@@ -124,10 +126,31 @@ OutputDevice::getDeviceByOption(const std::string& optionName) throw(IOError, In
 
 void
 OutputDevice::closeAll() {
-    while (myOutputDevices.size() != 0) {
-        myOutputDevices.begin()->second->close();
+    std::vector<OutputDevice*> errorDevices;
+    std::vector<OutputDevice*> nonErrorDevices;
+    for (std::map<std::string, OutputDevice*>::iterator i = myOutputDevices.begin(); i != myOutputDevices.end(); ++i) {
+        if (MsgHandler::getErrorInstance()->isRetriever(i->second)) {
+            errorDevices.push_back(i->second);
+        } else {
+            nonErrorDevices.push_back(i->second);
+        }
     }
-    myOutputDevices.clear();
+    for (std::vector<OutputDevice*>::iterator i = nonErrorDevices.begin(); i != nonErrorDevices.end(); ++i) {
+        try {
+            (*i)->close();
+        } catch (const IOError& e) {
+            WRITE_ERROR("Error on closing output devices.");
+            WRITE_ERROR(e.what());
+        }
+    }
+    for (std::vector<OutputDevice*>::iterator i = errorDevices.begin(); i != errorDevices.end(); ++i) {
+        try {
+            (*i)->close();
+        } catch (const IOError& e) {
+            std::cerr << "Error on closing error output devices." << std::endl;
+            std::cerr << e.what() << std::endl;
+        }
+    }
 }
 
 
@@ -237,12 +260,6 @@ OutputDevice::inform(const std::string& msg, const char progress) {
     postWriteHook();
 }
 
-
-OutputDevice&
-OutputDevice::writeAttr(std::string attr, std::string val) {
-    myFormatter->writeAttr(getOStream(), attr, val);
-    return *this;
-}
 
 /****************************************************************************/
 

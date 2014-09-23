@@ -9,8 +9,8 @@
 ///
 // APIs for getting/setting vehicle type values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -34,6 +34,7 @@
 #ifndef NO_TRACI
 
 #include <limits>
+#include <utils/emissions/PollutantsInterface.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSVehicleType.h>
 #include "TraCIConstants.h"
@@ -42,12 +43,6 @@
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
-
-
-// ===========================================================================
-// used namespaces
-// ===========================================================================
-using namespace traci;
 
 
 // ===========================================================================
@@ -140,7 +135,7 @@ TraCIServerAPI_VehicleType::getVariable(const int variable, const MSVehicleType&
             break;
         case VAR_EMISSIONCLASS:
             tempMsg.writeUnsignedByte(TYPE_STRING);
-            tempMsg.writeString(getVehicleEmissionTypeName(v.getEmissionClass()));
+            tempMsg.writeString(PollutantsInterface::getName(v.getEmissionClass()));
             break;
         case VAR_SHAPECLASS:
             tempMsg.writeUnsignedByte(TYPE_STRING);
@@ -198,7 +193,7 @@ TraCIServerAPI_VehicleType::processSet(TraCIServer& server, tcpip::Storage& inpu
 
 bool
 TraCIServerAPI_VehicleType::setVariable(const int cmd, const int variable,
-                                        MSVehicleType& v, traci::TraCIServer& server,
+                                        MSVehicleType& v, TraCIServer& server,
                                         tcpip::Storage& inputStorage, tcpip::Storage& outputStorage) {
     switch (variable) {
         case VAR_LENGTH: {
@@ -252,7 +247,11 @@ TraCIServerAPI_VehicleType::setVariable(const int cmd, const int variable,
             if (!server.readTypeCheckingString(inputStorage, eclass)) {
                 return server.writeErrorStatusCmd(cmd, "Setting emission class requires a string.", outputStorage);
             }
-            v.setEmissionClass(getVehicleEmissionTypeID(eclass));
+            try {
+                v.setEmissionClass(PollutantsInterface::getClassByName(eclass));
+            } catch (InvalidArgument e) {
+                return server.writeErrorStatusCmd(cmd, "Unknown emission class '" + eclass + "'.", outputStorage);
+            }
         }
         break;
         case VAR_WIDTH: {

@@ -8,8 +8,8 @@
 ///
 // The router's network representation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -59,9 +59,9 @@ RONet::RONet()
     : myVehicleTypes(), myDefaultVTypeMayBeDeleted(true),
       myRoutesOutput(0), myRouteAlternativesOutput(0), myTypesOutput(0),
       myReadRouteNo(0), myDiscardedRouteNo(0), myWrittenRouteNo(0),
-      myHaveRestrictions(false) {
-    SUMOVTypeParameter* type = new SUMOVTypeParameter();
-    type->id = DEFAULT_VTYPE_ID;
+      myHaveRestrictions(false),
+      myNumInternalEdges(0) {
+    SUMOVTypeParameter* type = new SUMOVTypeParameter(DEFAULT_VTYPE_ID, SVC_IGNORING);
     type->onlyReferenced = true;
     myVehicleTypes.add(type->id, type);
 }
@@ -83,6 +83,9 @@ RONet::addEdge(ROEdge* edge) {
         delete edge;
         return false;
     }
+    if (edge->getType() == ROEdge::ET_INTERNAL) {
+        myNumInternalEdges += 1;
+    }
     return true;
 }
 
@@ -93,6 +96,17 @@ RONet::addNode(RONode* node) {
         WRITE_ERROR("The node '" + node->getID() + "' occurs at least twice.");
         delete node;
     }
+}
+
+
+void
+RONet::addBusStop(const std::string& id, SUMOVehicleParameter::Stop* stop) {
+    std::map<std::string, SUMOVehicleParameter::Stop*>::const_iterator it = myBusStops.find(id);
+    if (it != myBusStops.end()) {
+        WRITE_ERROR("The bus stop '" + id + "' occurs at least twice.");
+        delete stop;
+    }
+    myBusStops[id] = stop;
 }
 
 
@@ -107,16 +121,16 @@ RONet::openOutput(const std::string& filename, const std::string altFilename, co
     if (filename != "") {
         myRoutesOutput = &OutputDevice::getDevice(filename);
         myRoutesOutput->writeHeader<ROEdge>(SUMO_TAG_ROUTES);
-        myRoutesOutput->writeAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance").writeAttr("xsi:noNamespaceSchemaLocation", "http://sumo.sf.net/xsd/routes_file.xsd");
+        myRoutesOutput->writeAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance").writeAttr("xsi:noNamespaceSchemaLocation", "http://sumo-sim.org/xsd/routes_file.xsd");
     }
     if (altFilename != "") {
         myRouteAlternativesOutput = &OutputDevice::getDevice(altFilename);
         myRouteAlternativesOutput->writeHeader<ROEdge>(SUMO_TAG_ROUTES);
-        myRouteAlternativesOutput->writeAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance").writeAttr("xsi:noNamespaceSchemaLocation", "http://sumo.sf.net/xsd/routes_file.xsd");
+        myRouteAlternativesOutput->writeAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance").writeAttr("xsi:noNamespaceSchemaLocation", "http://sumo-sim.org/xsd/routes_file.xsd");
     }
     if (typeFilename != "") {
         myTypesOutput = &OutputDevice::getDevice(typeFilename);
-        myTypesOutput->writeXMLHeader("routes", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/routes_file.xsd\"");
+        myTypesOutput->writeXMLHeader("routes", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/routes_file.xsd\"");
     }
 }
 
@@ -161,8 +175,7 @@ RONet::getVehicleTypeSecure(const std::string& id) {
     }
     // Assume, the user will define the type somewhere else
     //  return a type which contains the id only
-    type = new SUMOVTypeParameter();
-    type->id = id;
+    type = new SUMOVTypeParameter(id, SVC_IGNORING);
     type->onlyReferenced = true;
     addVehicleType(type);
     return type;
@@ -245,11 +258,9 @@ RONet::addPerson(const SUMOTime depart, const std::string desc) {
 bool
 RONet::computeRoute(OptionsCont& options, SUMOAbstractRouter<ROEdge, ROVehicle>& router,
                     const ROVehicle* const veh) {
-    MsgHandler* mh = MsgHandler::getErrorInstance();
+    MsgHandler* mh = (OptionsCont::getOptions().getBool("ignore-errors") ?
+                      MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance());
     std::string noRouteMsg = "The vehicle '" + veh->getID() + "' has no valid route.";
-    if (options.getBool("ignore-errors")) {
-        mh = MsgHandler::getWarningInstance();
-    }
     RORouteDef* const routeDef = veh->getRouteDefinition();
     // check if the route definition is valid
     if (routeDef == 0) {
@@ -306,8 +317,9 @@ RONet::checkFlows(SUMOTime time) {
             // try to build the vehicle
             SUMOVTypeParameter* type = getVehicleTypeSecure(pars->vtypeid);
             RORouteDef* route = getRouteDef(pars->routeid)->copy("!" + newPars->id);
-            ROVehicle* veh = new ROVehicle(*newPars, route, type);
+            ROVehicle* veh = new ROVehicle(*newPars, route, type, this);
             addVehicle(newPars->id, veh);
+            delete newPars;
         }
         if (pars->repetitionsDone == pars->repetitionNumber) {
             toRemove.push_back(i->first);
@@ -362,9 +374,9 @@ RONet::saveAndRemoveRoutesUntil(OptionsCont& options, SUMOAbstractRouter<ROEdge,
             }
             myVehicles.erase(veh->getID());
         } else {
-            (*myRoutesOutput) << person->second;
+            myRoutesOutput->writePreformattedTag(person->second);
             if (myRouteAlternativesOutput != 0) {
-                (*myRouteAlternativesOutput) << person->second;
+                myRouteAlternativesOutput->writePreformattedTag(person->second);
             }
             myPersons.erase(person);
         }
@@ -375,13 +387,19 @@ RONet::saveAndRemoveRoutesUntil(OptionsCont& options, SUMOAbstractRouter<ROEdge,
 
 bool
 RONet::furtherStored() {
-    return myVehicles.size() > 0 || myFlows.size() > 0;
+    return myVehicles.size() > 0 || myFlows.size() > 0 || myPersons.size() > 0;
 }
 
 
 unsigned int
 RONet::getEdgeNo() const {
     return (unsigned int) myEdges.size();
+}
+
+
+unsigned int
+RONet::getEdgeNoWithoutInternal() const {
+    return (unsigned int)(myEdges.size() - myNumInternalEdges);
 }
 
 

@@ -4,28 +4,37 @@
 @author  Laura Bieker
 @author  Karol Stosiek
 @author  Michael Behrisch
+@author  Jakob Erdmann
 @date    2008-03-27
 @version $Id$
 
 This file contains a content handler for parsing sumo network xml files.
 It uses other classes from this module to represent the road network.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 
+from __future__ import print_function
 import os, sys
 import math
 from xml.sax import saxutils, parse, handler
 from copy import copy
 from itertools import *
-import lane, edge, node, connection, roundabout
-from lane import Lane
-from edge import Edge
-from node import Node
-from connection import Connection
-from roundabout import Roundabout
+
+import sumolib
+from . import lane, edge, node, connection, roundabout
+from .lane import Lane
+from .edge import Edge
+from .node import Node
+from .connection import Connection
+from .roundabout import Roundabout
 
 
 class TLS:
@@ -64,6 +73,12 @@ class TLS:
     def addProgram(self, program):
         self._programs[program._id] = program
 
+    def toXML(self):
+        ret = ""
+        for p in self._programs:
+            ret = ret + self._programs[p].toXML(self._id)
+        return ret 
+
 
 class TLSProgram:
     def __init__(self, id, offset, type):
@@ -75,6 +90,13 @@ class TLSProgram:
     def addPhase(self, state, duration):
         self._phases.append( (state, duration) )
 
+    def toXML(self, tlsID):
+        ret = '  <tlLogic id="%s" type="%s" programID="%s" offset="%s">\n' % (tlsID, self._type, self._id, self._offset)
+        for p in self._phases:
+            ret = ret + '    <phase duration="%s" state="%s"/>\n' % (p[1], p[0])
+        ret = ret + '  </tlLogic>\n'
+        return ret
+
 
 class Net:
     """The whole sumo network."""
@@ -82,12 +104,14 @@ class Net:
         self._location = {}
         self._id2node = {}
         self._id2edge = {}
+        self._crossings_and_walkingAreas = set()
         self._id2tls = {}
         self._nodes = []
         self._edges = []
         self._tlss = []
         self._ranges = [ [10000, -10000], [10000, -10000] ]
         self._roundabouts = []
+        self._rtree = None
 
     def setLocation(self, netOffset, convBoundary, origBoundary, projParameter):
         self._location["netOffset"] = netOffset
@@ -124,8 +148,8 @@ class Net:
             self._id2edge[id] = e
         return self._id2edge[id]
 
-    def addLane(self, edge, speed, length):
-        return lane.Lane(edge, speed, length)
+    def addLane(self, edge, speed, length, allow=None, disallow=None):
+        return lane.Lane(edge, speed, length, allow, disallow)
 
     def addRoundabout(self, nodes):
         r = roundabout.Roundabout(nodes)
@@ -146,9 +170,32 @@ class Net:
 
     def hasEdge(self, id):
         return id in self._id2edge
-        
+
     def getEdge(self, id):
         return self._id2edge[id]
+
+    def _initRTree(self, includeJunctions=True):
+        import rtree
+        self._rtree = rtree.index.Index()
+        self._rtree.interleaved = True
+        for ri, edge in enumerate(self._edges):
+            self._rtree.add(ri, edge.getBoundingBox(includeJunctions))
+
+    def getNeighboringEdges(self, x, y, r=0.1, includeJunctions=True):
+        edges = []
+        try:
+            if self._rtree == None:
+                self._initRTree(includeJunctions)
+            for e in self._rtree.intersection((x - r, y - r, x + r, y + r)):
+                d = sumolib.geomhelper.distancePointToPolygon((x,y), self._edges[e].getShape(includeJunctions))
+                if d < r:
+                    edges.append((self._edges[e], d))
+        except ImportError:
+            for edge in self._edges:
+                d = sumolib.geomhelper.distancePointToPolygon((x,y), edge.getShape(includeJunctions))
+                if d < r:
+                    edges.append((edge,d))
+        return edges
 
     def hasNode(self, id):
         return id in self._id2node
@@ -223,7 +270,6 @@ class Net:
                 (self._ranges[0][0] - self._ranges[0][1]) ** 2 +
                 (self._ranges[1][0] - self._ranges[1][1]) ** 2)
 
-
     def getGeoProj(self):
         import pyproj
         p1 = self._location["projParameter"].split()
@@ -238,15 +284,32 @@ class Net:
 
     def getLocationOffset(self):
         """ offset to be added after converting from geo-coordinates to UTM"""
-        return map(float,self._location["netOffset"].split(","))
+        return list(map(float,self._location["netOffset"].split(",")))
 
-
-    def convertLatLon2XY(self, lat, lon):
+    def convertLonLat2XY(self, lat, lon, rawUTM=False):
         x,y = self.getGeoProj()(lon,lat)
-        x_off, y_off = self.getLocationOffset()
-        return x + x_off, y + y_off
+        if rawUTM:
+            return x, y
+        else:
+            x_off, y_off = self.getLocationOffset()
+            return x + x_off, y + y_off
 
-    
+    def convertXY2LonLat(self, x, y, rawUTM=False):
+        if not rawUTM:
+            x_off, y_off = self.getLocationOffset()
+            x -= x_off
+            y -= y_off
+        return self.getGeoProj()(x, y, inverse=True)
+
+    def move(self, dx, dy):
+        for n in self._nodes:
+            n._coord = (n._coord[0] + dx, n._coord[1] + dy)
+        for e in self._edges:
+            for l in e._lanes:
+                l._shape = [(p[0] + dx, p[1] + dy) for p in l._shape]
+            e.rebuildShape()
+
+
 class NetReader(handler.ContentHandler):
     """Reads a network, storing the edge geometries, lane numbers and max. speeds"""
 
@@ -264,13 +327,11 @@ class NetReader(handler.ContentHandler):
         if name == 'location':
             self._net.setLocation(attrs["netOffset"], attrs["convBoundary"], attrs["origBoundary"], attrs["projParameter"])
         if name == 'edge':
-            if not attrs.has_key('function') or attrs['function'] != 'internal':
+            function = attrs.get('function', '') 
+            if function == '':
                 prio = -1
                 if attrs.has_key('priority'):
                     prio = int(attrs['priority'])
-                function = ""
-                if attrs.has_key('function'):
-                    function = attrs['function']
                 name = ""
                 if attrs.has_key('name'):
                     name = attrs['name']
@@ -279,16 +340,23 @@ class NetReader(handler.ContentHandler):
                 if attrs.has_key('shape'):
                     self.processShape(self._currentEdge, attrs['shape'])
             else:
+                if function in ['crossing', 'walkingarea']:
+                    self._net._crossings_and_walkingAreas.add(attrs['id'])
                 self._currentEdge = None
         if name == 'lane' and self._currentEdge!=None:
-            self._currentLane = self._net.addLane(self._currentEdge, float(attrs['speed']), float(attrs['length']))
+            self._currentLane = self._net.addLane(
+                    self._currentEdge, 
+                    float(attrs['speed']),
+                    float(attrs['length']),
+                    attrs.get('allow'),
+                    attrs.get('disallow'))
             if attrs.has_key('shape'):
                 self._currentShape = attrs['shape'] # deprecated: at some time, this is mandatory
             else:
                 self._currentShape = ""
         if name == 'junction':
             if attrs['id'][0]!=':':
-                self._currentNode = self._net.addNode(attrs['id'], attrs['type'], [ float(attrs['x']), float(attrs['y']) ], attrs['incLanes'].split(" ") )
+                self._currentNode = self._net.addNode(attrs['id'], attrs['type'], (float(attrs['x']), float(attrs['y'])), attrs['incLanes'].split(" ") )
         if name == 'succ' and self._withConnections: # deprecated
             if attrs['edge'][0]!=':':
                 self._currentEdge = self._net.getEdge(attrs['edge'])
@@ -316,19 +384,23 @@ class NetReader(handler.ContentHandler):
                 tolane = toEdge._lanes[tolane]
                 self._net.addConnection(self._currentEdge, connected, self._currentEdge._lanes[self._currentLane], tolane, attrs['dir'], tl, tllink)
         if name == 'connection' and self._withConnections and attrs['from'][0] != ":":
-            fromEdge = self._net.getEdge(attrs['from'])
-            toEdge = self._net.getEdge(attrs['to'])
-            fromLane = fromEdge.getLane(int(attrs['fromLane']))
-            toLane = toEdge.getLane(int(attrs['toLane']))
-            if attrs.has_key('tl') and attrs['tl']!="":
-                tl = attrs['tl']
-                tllink = int(attrs['linkIndex'])
-                tls = self._net.addTLS(tl, fromLane, toLane, tllink)
-                fromEdge.setTLS(tls)
-            else:
-                tl = ""
-                tllink = -1
-            self._net.addConnection(fromEdge, toEdge, fromLane, toLane, attrs['dir'], tl, tllink)
+            fromEdgeID = attrs['from']
+            toEdgeID = attrs['to']
+            if not (fromEdgeID in self._net._crossings_and_walkingAreas or toEdgeID in
+                    self._net._crossings_and_walkingAreas):
+                fromEdge = self._net.getEdge(fromEdgeID)
+                toEdge = self._net.getEdge(toEdgeID)
+                fromLane = fromEdge.getLane(int(attrs['fromLane']))
+                toLane = toEdge.getLane(int(attrs['toLane']))
+                if attrs.has_key('tl') and attrs['tl']!="":
+                    tl = attrs['tl']
+                    tllink = int(attrs['linkIndex'])
+                    tls = self._net.addTLS(tl, fromLane, toLane, tllink)
+                    fromEdge.setTLS(tls)
+                else:
+                    tl = ""
+                    tllink = -1
+                self._net.addConnection(fromEdge, toEdge, fromLane, toLane, attrs['dir'], tl, tllink)
         if self._withFoes and name=='ROWLogic': # 'row-logic' is deprecated!!!
             self._currentNode = attrs['id']
         if name == 'logicitem' and self._withFoes: # deprecated
@@ -382,10 +454,10 @@ def readNet(filename, **others):
     netreader = NetReader(**others)
     try:
         if not os.path.isfile(filename):
-            print >> sys.stderr, "Network file '%s' not found" % filename
+            print("Network file '%s' not found" % filename, file=sys.stderr)
             sys.exit(1)
         parse(filename, netreader)
-    except KeyError:
-        print >> sys.stderr, "Please mind that the network format has changed in 0.13.0, you may need to update your network!"
+    except None:
+        print("Please mind that the network format has changed in 0.13.0, you may need to update your network!", file=sys.stderr)
         sys.exit(1)
     return netreader.getNet()

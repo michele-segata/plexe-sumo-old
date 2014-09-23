@@ -1,13 +1,14 @@
 /****************************************************************************/
 /// @file    Shape.h
 /// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Oct 2012
 /// @version $Id$
 ///
 // A 2D- or 3D-Shape
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -145,6 +146,7 @@ public:
     }
     /// @}
 
+    static const std::string DEFAULT_TYPE;
     static const SUMOReal DEFAULT_LAYER;
     static const SUMOReal DEFAULT_ANGLE;
     static const std::string DEFAULT_IMG_FILE;

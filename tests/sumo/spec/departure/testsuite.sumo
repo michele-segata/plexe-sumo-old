@@ -22,6 +22,9 @@ lane_given1
 # checks using a random lane
 lane_random
 
+# one vehicle approaching a lane with a lower max speed
+approach_slow_lane
+
 # checks using the default position (0)
 pos_default
 
@@ -76,6 +79,9 @@ speed_given0
 # checks using the given speed (10)
 speed_given10
 
+# checks using the given speed when speedDev is present
+speed_given_deviation
+
 # checks using the maximum speed (bounded by lane's vmax)
 speed_max__lanelimit
 
@@ -99,6 +105,9 @@ speed_random__lanelimit
 
 # checks using the random speed (bounded by veh's vmax)
 speed_random__vehlimit
+
+# test option --random-depart-offset
+depart_random
 
 # Errors on emission
 errors

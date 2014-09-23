@@ -1,13 +1,16 @@
 /****************************************************************************/
 /// @file    TraCIAPI.h
 /// @author  Daniel Krajzewicz
+/// @author  Mario Krumnow
+/// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    30.05.2012
 /// @version $Id$
 ///
 // C++ TraCI client API implementation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -859,6 +862,16 @@ TraCIAPI::LaneScope::setLength(const std::string& laneID, SUMOReal length) const
 }
 
 
+// ---------------------------------------------------------------------------
+// TraCIAPI::AreaDetector-methods
+// ---------------------------------------------------------------------------
+std::vector<std::string>
+TraCIAPI::AreaScope::getIDList() const {
+    return myParent.getStringVector(CMD_GET_AREAL_DETECTOR_VARIABLE, ID_LIST, "");
+}
+
+
+
 
 // ---------------------------------------------------------------------------
 // TraCIAPI::MeMeScope-methods
@@ -1205,7 +1218,7 @@ TraCIAPI::TrafficLightScope::getCompleteRedYellowGreenDefinition(const std::stri
             int duration2 = inMsg.readInt();
             inMsg.readUnsignedByte();
             std::string phase = inMsg.readString();
-            phases.push_back(TraCIAPI::TraCIPhase(duration, phase, duration1, duration2));
+            phases.push_back(TraCIAPI::TraCIPhase(duration, duration1, duration2, phase));
         }
         ret.push_back(TraCIAPI::TraCILogic(subID, type, std::map<std::string, SUMOReal>(), phaseIndex, phases));
     }

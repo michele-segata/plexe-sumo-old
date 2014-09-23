@@ -9,8 +9,8 @@
 ///
 // A road/street connecting two junctions (gui-version)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,7 +38,7 @@
 #include <microsim/MSEdge.h>
 #include <utils/gui/globjects/GUIGlObject.h>
 #include <utils/foxtools/MFXMutex.h>
-#include "GUILaneWrapper.h"
+
 
 // ===========================================================================
 // class declarations
@@ -47,6 +47,7 @@
 class MESegment;
 #endif
 class MSBaseVehicle;
+
 
 // ===========================================================================
 // class definitions
@@ -65,16 +66,11 @@ public:
      * @see MSEdge
      */
     GUIEdge(const std::string& id, int numericalID,
-            const EdgeBasicFunction function, const std::string& streetName);
+            const EdgeBasicFunction function, const std::string& streetName, const std::string& edgeType);
 
 
     /// @brief Destructor.
     ~GUIEdge();
-
-
-    /** @brief Builds lane wrappers for this edge's lanes
-     */
-    void initGeometry();
 
 
     /* @brief Returns the gl-ids of all known edges
@@ -89,11 +85,6 @@ public:
     MSLane& getLane(size_t laneNo);
 
 
-
-    /// returns the enumerated lane's geometry (!!! why not private with a friend?)
-    GUILaneWrapper& getLaneGeometry(size_t laneNo) const;
-
-    GUILaneWrapper& getLaneGeometry(const MSLane* lane) const;
 
     /** returns the position on the line given by the coordinates where "prev"
         is the length of the line and "wanted" the distance from the begin
@@ -146,12 +137,12 @@ public:
     //@}
 
 
-    void addPerson(MSPerson* p) {
+    void addPerson(MSPerson* p) const {
         AbstractMutex::ScopedLocker locker(myLock);
         MSEdge::addPerson(p);
     }
 
-    void removePerson(MSPerson* p) {
+    void removePerson(MSPerson* p) const {
         AbstractMutex::ScopedLocker locker(myLock);
         MSEdge::removePerson(p);
     }
@@ -160,7 +151,7 @@ public:
 #ifdef HAVE_INTERNAL
     unsigned int getVehicleNo() const;
     std::string getVehicleIDs() const;
-    SUMOReal getOccupancy() const;
+    SUMOReal getBruttoOccupancy() const;
     SUMOReal getMeanSpeed() const;
     SUMOReal getAllowedSpeed() const;
     /// @brief return flow based on meanSpead @note: may produced incorrect results when jammed
@@ -182,34 +173,6 @@ public:
 
 #endif
 
-private:
-    /// Definition of the lane's positions vector
-    typedef std::vector<GUILaneWrapper*> LaneWrapperVector;
-
-    /// List of the edge's lanes geometrical information
-    LaneWrapperVector myLaneGeoms;
-
-    /**
-     * @class lane_wrapper_finder
-     * @brief A class to find the matching lane wrapper
-     */
-    class lane_wrapper_finder {
-    public:
-        /** @brief constructor */
-        explicit lane_wrapper_finder(const MSLane& lane) : myLane(lane) { }
-
-        /** @brief the comparing function */
-        bool operator()(const GUILaneWrapper* const wrapper) {
-            return wrapper->forLane(myLane);
-        }
-
-    private:
-        lane_wrapper_finder& operator=(const lane_wrapper_finder&); // just to avoid a compiler warning
-    private:
-        /// @brief The lane to search for
-        const MSLane& myLane;
-
-    };
 
 private:
     /// @brief invalidated copy constructor
@@ -217,6 +180,7 @@ private:
 
     /// @brief invalidated assignment operator
     GUIEdge& operator=(const GUIEdge& s);
+
 
 private:
     /// The mutex used to avoid concurrent updates of myPersons

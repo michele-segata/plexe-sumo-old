@@ -9,8 +9,8 @@
 ///
 // Stores edges and lanes, performs moving of vehicle
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -99,10 +99,11 @@ MSEdgeControl::patchActiveLanes() {
 void
 MSEdgeControl::planMovements(SUMOTime t) {
     for (std::list<MSLane*>::iterator i = myActiveLanes.begin(); i != myActiveLanes.end();) {
-        if ((*i)->getVehicleNumber() == 0 || (*i)->planMovements(t)) {
+        if ((*i)->getVehicleNumber() == 0) {
             myLanes[(*i)->getNumericalID()].amActive = false;
             i = myActiveLanes.erase(i);
         } else {
+            (*i)->planMovements(t);
             ++i;
         }
     }
@@ -167,7 +168,7 @@ MSEdgeControl::changeLanes(SUMOTime t) {
 
 
 void
-MSEdgeControl::detectCollisions(SUMOTime timestep, int stage) {
+MSEdgeControl::detectCollisions(SUMOTime timestep, const std::string& stage) {
     // Detections is made by the edge's lanes, therefore hand over.
     for (std::list<MSLane*>::iterator i = myActiveLanes.begin(); i != myActiveLanes.end(); ++i) {
         (*i)->detectCollisions(timestep, stage);

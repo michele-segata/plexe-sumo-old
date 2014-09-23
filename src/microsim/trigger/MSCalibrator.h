@@ -2,18 +2,20 @@
 /// @file    MSCalibrator.h
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Tue, May 2005
 /// @version $Id$
 ///
 // Calibrates the flow on an edge by removing an inserting vehicles
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
-//   This program is free software; you can redistribute it and/or modify
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
-//   the Free Software Foundation; either version 2 of the License, or
+//   the Free Software Foundation, either version 3 of the License, or
 //   (at your option) any later version.
 //
 /****************************************************************************/
@@ -32,11 +34,17 @@
 
 #include <string>
 #include <vector>
-#include <utils/iodevices/OutputDevice.h>
 #include <utils/common/Command.h>
 #include <microsim/MSRouteHandler.h>
 #include <microsim/output/MSMeanData_Net.h>
 #include <microsim/trigger/MSTrigger.h>
+
+
+// ===========================================================================
+// class declarations
+// ===========================================================================
+class OutputDevice;
+class MSRouteProbe;
 
 
 // ===========================================================================
@@ -50,10 +58,11 @@ class MSCalibrator : public MSTrigger, public MSRouteHandler, public Command {
 public:
     /** constructor */
     MSCalibrator(const std::string& id,
-                 MSEdge* edge, SUMOReal pos,
+                 const MSEdge* const edge, const SUMOReal pos,
                  const std::string& aXMLFilename,
                  const std::string& outputFilename,
-                 const SUMOTime freq);
+                 const SUMOTime freq, const SUMOReal length,
+                 const MSRouteProbe* probe, const bool addLaneMeanData = true);
 
     /** destructor */
     virtual ~MSCalibrator();
@@ -61,7 +70,7 @@ public:
 
     /** the implementation of the MSTrigger / Command interface.
         Calibrating takes place here. */
-    SUMOTime execute(SUMOTime currentTime);
+    virtual SUMOTime execute(SUMOTime currentTime);
 
     /// @brief cleanup remaining data structures
     static void cleanup();
@@ -96,7 +105,7 @@ protected:
     class VehicleRemover : public MSMoveReminder {
     public:
         VehicleRemover(MSLane* lane, int laneIndex, MSCalibrator* parent) :
-            MSMoveReminder(lane, true), myLaneIndex(laneIndex), myParent(parent) {}
+            MSMoveReminder(parent->getID(), lane, true), myLaneIndex(laneIndex), myParent(parent) {}
 
         /// @name inherited from MSMoveReminder
         //@{
@@ -118,14 +127,20 @@ protected:
         }
 
     private:
-        MSCalibrator* myParent;
         int myLaneIndex;
+        MSCalibrator* myParent;
     };
     friend class VehicleRemover;
 
-private:
+    // @return whether the current state is active (GUI)
+    bool isActive() const {
+        return myAmActive;
+    }
+
+protected:
 
     struct AspiredState {
+        AspiredState() : begin(-1), end(-1), q(-1.), v(-1.), vehicleParameter(0) {}
         SUMOTime begin;
         SUMOTime end;
         SUMOReal q;
@@ -141,36 +156,63 @@ private:
 
     void init();
 
-    inline int passed() const {
+    inline virtual int passed() const {
         // calibrator measures at start of segment
-        return myEdgeMeanData.nVehEntered + myEdgeMeanData.nVehDeparted - myEdgeMeanData.nVehVaporized;
+        // vehicles drive to the end of an edge by default so they count as passed
+        // but vaporized vehicles do not count
+        // if the calibrator is located on a short edge, the vehicles are
+        // vaporized on the next edge so we cannot rely on myEdgeMeanData.nVehVaporized
+        return myEdgeMeanData.nVehEntered + myEdgeMeanData.nVehDeparted - myClearedInJam - myRemoved;
     }
+
+    /// @brief number of vehicles expected to pass this interval
+    int totalWished() const;
 
     /* @brief returns whether the lane is jammed although it should not be
      * @param[in] lane The lane to check or all for negative values
      */
-    bool invalidJam(int laneIndex = -1) const;
+    bool invalidJam(int laneIndex) const;
 
+    inline int inserted() const {
+        return myInserted;
+    }
+    inline int removed() const {
+        return myRemoved;
+    }
+    inline int clearedInJam() const {
+        return myClearedInJam;
+    }
 
     /* @brief returns the number of vehicles (of the current type) that still
      * fit on the given lane
      * @param[in] lane The lane to check (return the maximum of all lanes for negative values)
      */
-    int remainingVehicleCapacity(int laneIndex = -1) const;
+    int remainingVehicleCapacity(int laneIndex) const;
 
     /// @brief reset collected vehicle data
-    void reset();
+    virtual void reset();
 
     /// @brief aggregate lane values
-    void updateMeanData();
+    virtual void updateMeanData();
 
-    void scheduleRemoval(MSVehicle* veh) {
-        myToRemove.push_back(veh);
+    /** @brief try to schedule the givne vehicle for removal. return true if it
+     * isn't already scheduled */
+    bool scheduleRemoval(MSVehicle* veh) {
+        return myToRemove.insert(veh->getID()).second;
     };
 
-private:
+
+    /** @brief remove any vehicles which are scheduled for removal.
+     * return true if removals took place */
+    bool removePending();
+
+protected:
     /// @brief the edge on which this calibrator lies
-    MSEdge* myEdge;
+    const MSEdge* const myEdge;
+    /// @brief the position on the edge where this calibrator lies
+    const SUMOReal myPos;
+    /// @brief the route probe to retrieve routes from
+    const MSRouteProbe* const myProbe;
     /// @brief data collector for the calibrator
     std::vector<MSMeanData_Net::MSLaneMeanDataValues*> myLaneMeanData;
     /// @brief accumlated data for the whole edge
@@ -182,7 +224,11 @@ private:
 
     std::vector<VehicleRemover*> myVehicleRemovers;
 
-    std::vector<MSVehicle*> myToRemove;
+    /** @brief set of vehicle ids to remove
+     * @note: we avoid keeping vehicle points because someone else might
+     * invalidate it before look at it again (i.e. another calibrator)
+     */
+    std::set<std::string> myToRemove;
 
     /// @brief The device for xml statistics
     OutputDevice* myOutput;
@@ -205,6 +251,9 @@ private:
     SUMOReal myDefaultSpeed;
     /// @brief The default (maximum) speed on the segment
     bool myHaveWarnedAboutClearingJam;
+
+    /// @brief whether the calibrator was active when last checking
+    bool myAmActive;
 
     /* @brief objects which need to live longer than the MSCalibrator
      * instance which created them */

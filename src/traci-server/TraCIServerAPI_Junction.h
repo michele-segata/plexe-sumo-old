@@ -7,8 +7,8 @@
 ///
 // APIs for getting/setting junction values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -53,7 +53,7 @@ public:
      * @param[in] inputStorage The storage to read the command from
      * @param[out] outputStorage The storage to write the result to
      */
-    static bool processGet(traci::TraCIServer& server, tcpip::Storage& inputStorage,
+    static bool processGet(TraCIServer& server, tcpip::Storage& inputStorage,
                            tcpip::Storage& outputStorage);
 
 
@@ -65,10 +65,10 @@ public:
     static bool getPosition(const std::string& id, Position& p);
 
 
-    /** @brief Returns a tree filled with inductive loop instances
-     * @return The rtree of inductive loop
+    /** @brief Returns a tree filled with junction instances
+     * @return The rtree of junctions
      */
-    static TraCIRTree* getTree();
+    static NamedRTree* getTree();
 
 
 private:

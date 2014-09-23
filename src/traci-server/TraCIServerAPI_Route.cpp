@@ -8,8 +8,8 @@
 ///
 // APIs for getting/setting route values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -41,12 +41,6 @@
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
-
-
-// ===========================================================================
-// used namespaces
-// ===========================================================================
-using namespace traci;
 
 
 // ===========================================================================
@@ -130,7 +124,7 @@ TraCIServerAPI_Route::processSet(TraCIServer& server, tcpip::Storage& inputStora
                 edges.push_back(edge);
             }
             const std::vector<SUMOVehicleParameter::Stop> stops;
-            if (!MSRoute::dictionary(id, new MSRoute(id, edges, 1, 0, stops))) {
+            if (!MSRoute::dictionary(id, new MSRoute(id, edges, true, 0, stops))) {
                 return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "Could not add route.", outputStorage);
             }
         }

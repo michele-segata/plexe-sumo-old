@@ -10,8 +10,8 @@
 ///
 // A fixed traffic light logic
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -53,7 +53,7 @@
 MSSimpleTrafficLightLogic::MSSimpleTrafficLightLogic(MSTLLogicControl& tlcontrol,
         const std::string& id, const std::string& subid, const Phases& phases,
         unsigned int step, SUMOTime delay,
-        const ParameterMap& parameters) :
+        const std::map<std::string, std::string>& parameters) :
     MSTrafficLightLogic(tlcontrol, id, subid, delay, parameters),
     myPhases(phases),
     myStep(step) {
@@ -170,7 +170,7 @@ MSSimpleTrafficLightLogic::getOffsetFromIndex(unsigned int index) const {
 
 unsigned int
 MSSimpleTrafficLightLogic::getIndexFromOffset(SUMOTime offset) const {
-    assert(offset <= myDefaultCycleTime);
+    offset = offset % myDefaultCycleTime;
     if (offset == myDefaultCycleTime) {
         return 0;
     }

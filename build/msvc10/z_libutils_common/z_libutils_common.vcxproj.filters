@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Quellcodedateien">
@@ -12,12 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\utils\common\FileHelpers.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\utils\common\HelpersHarmonoise.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\utils\common\HelpersHBEFA.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\utils\common\IDSupplier.cpp">
@@ -59,6 +53,9 @@
     <ClCompile Include="..\..\..\src\utils\common\SysUtils.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\utils\common\StdDefs.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\utils\common\AbstractMutex.h">
@@ -74,12 +71,6 @@
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\utils\common\FileHelpers.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\utils\common\HelpersHarmonoise.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\utils\common\HelpersHBEFA.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\utils\common\IDSupplier.h">
@@ -176,6 +167,12 @@
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\utils\common\AStarRouter.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\utils\common\NamedRTree.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\utils\common\PedestrianRouter.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
   </ItemGroup>

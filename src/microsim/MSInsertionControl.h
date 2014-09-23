@@ -3,13 +3,14 @@
 /// @author  Christian Roessel
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Mon, 12 Mar 2001
 /// @version $Id$
 ///
 // Inserts vehicles into the network when their departure time is reached
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -134,6 +135,10 @@ public:
     void descheduleDeparture(SUMOVehicle* veh);
 
 
+    /// @brief clears out all pending vehicles from a route, "" for all routes
+    void clearPendingVehicles(std::string& route);
+
+
 private:
     /** @brief Tries to emit the vehicle
      *
@@ -201,6 +206,8 @@ private:
         bool isVolatile;
         /// @brief The last created vehicle
         SUMOVehicle* vehicle;
+        /// @brief the running index
+        unsigned int index;
     };
 
     /// @brief Container for periodical vehicle parameters

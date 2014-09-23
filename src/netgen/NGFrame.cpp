@@ -2,13 +2,14 @@
 /// @file    NGFrame.cpp
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    06.05.2011
 /// @version $Id$
 ///
 // Sets and checks options for netgen
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -140,7 +141,7 @@ NGFrame::fillOptions() {
     oc.addSynonyme("rand.min-distance", "min-dist");
     oc.addDescription("rand.min-distance", "Random Network", "");
 
-    oc.doRegister("rand.min-angle", new Option_Float((SUMOReal)(45.0 / 180.0 * PI)));
+    oc.doRegister("rand.min-angle", new Option_Float(DEG2RAD(45.0)));
     oc.addSynonyme("rand.min-angle", "rand-min-anglee", true);
     oc.addSynonyme("rand.min-angle", "min-angle");
     oc.addDescription("rand.min-angle", "Random Network", "");
@@ -214,11 +215,17 @@ NGFrame::checkOptions() {
     if (oc.isSet("default-junction-type")) {
         std::string type = oc.getString("default-junction-type");
         if (type != toString(NODETYPE_TRAFFIC_LIGHT) &&
-                type != toString(NODETYPE_PRIORITY_JUNCTION) &&
+                type != toString(NODETYPE_TRAFFIC_LIGHT_NOJUNCTION) &&
+                type != toString(NODETYPE_PRIORITY) &&
+                type != toString(NODETYPE_PRIORITY_STOP) &&
+                type != toString(NODETYPE_ALLWAY_STOP) &&
                 type != toString(NODETYPE_RIGHT_BEFORE_LEFT)) {
             WRITE_ERROR("Only the following junction types are known: " +
                         toString(NODETYPE_TRAFFIC_LIGHT) + ", " +
-                        toString(NODETYPE_PRIORITY_JUNCTION) + ", " +
+                        toString(NODETYPE_TRAFFIC_LIGHT_NOJUNCTION) + ", " +
+                        toString(NODETYPE_PRIORITY) + ", " +
+                        toString(NODETYPE_PRIORITY_STOP) + ", " +
+                        toString(NODETYPE_ALLWAY_STOP) + ", " +
                         toString(NODETYPE_RIGHT_BEFORE_LEFT));
             ok = false;
         }

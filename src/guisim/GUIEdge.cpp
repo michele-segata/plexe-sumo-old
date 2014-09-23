@@ -9,8 +9,8 @@
 ///
 // A road/street connecting two junctions (gui-version)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -73,32 +73,15 @@
 // included modules
 // ===========================================================================
 GUIEdge::GUIEdge(const std::string& id, int numericalID,
-                 const EdgeBasicFunction function, const std::string& streetName)
-    : MSEdge(id, numericalID, function, streetName),
+                 const EdgeBasicFunction function, const std::string& streetName, const std::string& edgeType)
+    : MSEdge(id, numericalID, function, streetName, edgeType),
       GUIGlObject(GLO_EDGE, id) {}
 
 
 GUIEdge::~GUIEdge() {
-    for (LaneWrapperVector::iterator i = myLaneGeoms.begin(); i != myLaneGeoms.end(); ++i) {
-        delete(*i);
-    }
     // just to quit cleanly on a failure
     if (myLock.locked()) {
         myLock.unlock();
-    }
-}
-
-
-void
-GUIEdge::initGeometry() {
-    // don't do this twice
-    if (myLaneGeoms.size() > 0) {
-        return;
-    }
-    // build the lane wrapper
-    myLaneGeoms.reserve(myLanes->size());
-    for (unsigned int i = 0; i < myLanes->size(); ++i) {
-        myLaneGeoms.push_back(myLanes->at(i)->buildLaneWrapper(i));
     }
 }
 
@@ -107,22 +90,6 @@ MSLane&
 GUIEdge::getLane(size_t laneNo) {
     assert(laneNo < myLanes->size());
     return *((*myLanes)[laneNo]);
-}
-
-
-GUILaneWrapper&
-GUIEdge::getLaneGeometry(size_t laneNo) const {
-    assert(laneNo < myLanes->size());
-    return *(myLaneGeoms[laneNo]);
-}
-
-
-GUILaneWrapper&
-GUIEdge::getLaneGeometry(const MSLane* lane) const {
-    LaneWrapperVector::const_iterator i =
-        find_if(myLaneGeoms.begin(), myLaneGeoms.end(), lane_wrapper_finder(*lane));
-    assert(i != myLaneGeoms.end());
-    return *(*i);
 }
 
 
@@ -144,11 +111,8 @@ GUIEdge::getIDs(bool includeInternal) {
 Boundary
 GUIEdge::getBoundary() const {
     Boundary ret;
-    for (LaneWrapperVector::const_iterator i = myLaneGeoms.begin(); i != myLaneGeoms.end(); ++i) {
-        const PositionVector& g = (*i)->getShape();
-        for (unsigned int j = 0; j < g.size(); ++j) {
-            ret.add(g[j]);
-        }
+    for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
+        ret.add((*i)->getShape().getBoxBoundary());
     }
     ret.grow(10);
     return ret;
@@ -194,14 +158,10 @@ GUIEdge::getParameterWindow(GUIMainWindow& app,
     // add edge items
     ret->mkItem("length [m]", false, (*myLanes)[0]->getLength());
     ret->mkItem("allowed speed [m/s]", false, getAllowedSpeed());
-    ret->mkItem("occupancy [%]", true,
-                new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getOccupancy));
-    ret->mkItem("mean vehicle speed [m/s]", true,
-                new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getMeanSpeed));
-    ret->mkItem("flow [veh/h/lane]", true,
-                new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getFlow));
-    ret->mkItem("#vehicles", true,
-                new CastingFunctionBinding<GUIEdge, SUMOReal, unsigned int>(this, &GUIEdge::getVehicleNo));
+    ret->mkItem("occupancy [%]", true, new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getBruttoOccupancy));
+    ret->mkItem("mean vehicle speed [m/s]", true, new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getMeanSpeed));
+    ret->mkItem("flow [veh/h/lane]", true, new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getFlow));
+    ret->mkItem("#vehicles", true, new CastingFunctionBinding<GUIEdge, SUMOReal, unsigned int>(this, &GUIEdge::getVehicleNo));
     ret->mkItem("vehicle ids", false, getVehicleIDs());
     // add segment items
     MESegment* segment = getSegmentAtPosition(parent.getPositionInformation());
@@ -242,13 +202,16 @@ GUIEdge::drawGL(const GUIVisualizationSettings& s) const {
         glPushName(getGlID());
     }
     // draw the lanes
-    for (LaneWrapperVector::const_iterator i = myLaneGeoms.begin(); i != myLaneGeoms.end(); ++i) {
+    for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
 #ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             setColor(s);
         }
 #endif
-        (*i)->drawGL(s);
+        GUILane* l = dynamic_cast<GUILane*>(*i);
+        if (l != 0) {
+            l->drawGL(s);
+        }
     }
 #ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
@@ -259,10 +222,11 @@ GUIEdge::drawGL(const GUIVisualizationSettings& s) const {
             vehicleControl->secureVehicles();
             size_t laneIndex = 0;
             MESegment::Queue queue;
-            for (LaneWrapperVector::const_iterator l = myLaneGeoms.begin(); l != myLaneGeoms.end(); ++l, ++laneIndex) {
-                const PositionVector& shape = (*l)->getShape();
-                const std::vector<SUMOReal>& shapeRotations = (*l)->getShapeRotations();
-                const std::vector<SUMOReal>& shapeLengths = (*l)->getShapeLengths();
+            for (std::vector<MSLane*>::const_iterator msl = myLanes->begin(); msl != myLanes->end(); ++msl, ++laneIndex) {
+                GUILane* l = static_cast<GUILane*>(*msl);
+                const PositionVector& shape = l->getShape();
+                const std::vector<SUMOReal>& shapeRotations = l->getShapeRotations();
+                const std::vector<SUMOReal>& shapeLengths = l->getShapeLengths();
                 const Position& laneBeg = shape[0];
                 glPushMatrix();
                 glTranslated(laneBeg.x(), laneBeg.y(), 0);
@@ -277,7 +241,7 @@ GUIEdge::drawGL(const GUIVisualizationSettings& s) const {
                     if (laneIndex < segment->numQueues()) {
                         // make a copy so we don't have to worry about synchronization
                         queue = segment->getQueue(laneIndex);
-                        const SUMOReal avgCarSize = segment->getOccupancy() / segment->getCarNumber();
+                        const SUMOReal avgCarSize = segment->getBruttoOccupancy() / segment->getCarNumber();
                         const size_t queueSize = queue.size();
                         for (size_t i = 0; i < queueSize; ++i) {
                             MSBaseVehicle* veh = queue[queueSize - i - 1];
@@ -328,36 +292,43 @@ GUIEdge::drawGL(const GUIVisualizationSettings& s) const {
 #endif
     // (optionally) draw the name and/or the street name
     const bool drawEdgeName = s.edgeName.show && myFunction == EDGEFUNCTION_NORMAL;
-    const bool drawInternalEdgeName = s.internalEdgeName.show && myFunction != EDGEFUNCTION_NORMAL;
+    const bool drawInternalEdgeName = s.internalEdgeName.show && myFunction == EDGEFUNCTION_INTERNAL;
+    const bool drawCwaEdgeName = s.cwaEdgeName.show && (myFunction == EDGEFUNCTION_CROSSING || myFunction == EDGEFUNCTION_WALKINGAREA);
     const bool drawStreetName = s.streetName.show && myStreetName != "";
-    if (drawEdgeName || drawInternalEdgeName || drawStreetName) {
-        GUILaneWrapper* lane1 = myLaneGeoms[0];
-        GUILaneWrapper* lane2 = myLaneGeoms[myLaneGeoms.size() - 1];
-        Position p = lane1->getShape().positionAtOffset(lane1->getShape().length() / (SUMOReal) 2.);
-        p.add(lane2->getShape().positionAtOffset(lane2->getShape().length() / (SUMOReal) 2.));
-        p.mul(.5);
-        SUMOReal angle = lane1->getShape().rotationDegreeAtOffset(lane1->getShape().length() / (SUMOReal) 2.);
-        angle += 90;
-        if (angle > 90 && angle < 270) {
-            angle -= 180;
-        }
-        if (drawEdgeName) {
-            drawName(p, s.scale, s.edgeName, angle);
-        } else if (drawInternalEdgeName) {
-            drawName(p, s.scale, s.internalEdgeName, angle);
-        }
-        if (drawStreetName) {
-            GLHelper::drawText(getStreetName(), p, GLO_MAX,
-                               s.streetName.size / s.scale, s.streetName.color, angle);
+    if (drawEdgeName || drawInternalEdgeName || drawCwaEdgeName || drawStreetName) {
+        GUILane* lane1 = dynamic_cast<GUILane*>((*myLanes)[0]);
+        GUILane* lane2 = dynamic_cast<GUILane*>((*myLanes).back());
+        if (lane1 != 0 && lane2 != 0) {
+            Position p = lane1->getShape().positionAtOffset(lane1->getShape().length() / (SUMOReal) 2.);
+            p.add(lane2->getShape().positionAtOffset(lane2->getShape().length() / (SUMOReal) 2.));
+            p.mul(.5);
+            SUMOReal angle = lane1->getShape().rotationDegreeAtOffset(lane1->getShape().length() / (SUMOReal) 2.);
+            angle += 90;
+            if (angle > 90 && angle < 270) {
+                angle -= 180;
+            }
+            if (drawEdgeName) {
+                drawName(p, s.scale, s.edgeName, angle);
+            } else if (drawInternalEdgeName) {
+                drawName(p, s.scale, s.internalEdgeName, angle);
+            } else if (drawCwaEdgeName) {
+                drawName(p, s.scale, s.cwaEdgeName, angle);
+            }
+            if (drawStreetName) {
+                GLHelper::drawText(getStreetName(), p, GLO_MAX,
+                                   s.streetName.size / s.scale, s.streetName.color, angle);
+            }
         }
     }
-    myLock.lock();
-    for (std::set<MSPerson*>::const_iterator i = myPersons.begin(); i != myPersons.end(); ++i) {
-        GUIPerson* person = dynamic_cast<GUIPerson*>(*i);
-        assert(person != 0);
-        person->drawGL(s);
+    if (s.scale > s.minPersonSize) {
+        myLock.lock();
+        for (std::set<MSPerson*>::const_iterator i = myPersons.begin(); i != myPersons.end(); ++i) {
+            GUIPerson* person = dynamic_cast<GUIPerson*>(*i);
+            assert(person != 0);
+            person->drawGL(s);
+        }
+        myLock.unlock();
     }
-    myLock.unlock();
 }
 
 #ifdef HAVE_INTERNAL
@@ -397,10 +368,10 @@ GUIEdge::getFlow() const {
 
 
 SUMOReal
-GUIEdge::getOccupancy() const {
+GUIEdge::getBruttoOccupancy() const {
     SUMOReal occ = 0;
     for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this); segment != 0; segment = segment->getNextSegment()) {
-        occ += segment->getOccupancy();
+        occ += segment->getBruttoOccupancy();
     }
     return occ / (*myLanes)[0]->getLength() / (SUMOReal)(myLanes->size());
 }
@@ -450,7 +421,7 @@ GUIEdge::getColorValue(size_t activeScheme) const {
         case 3:
             return getAllowedSpeed();
         case 4:
-            return getOccupancy();
+            return getBruttoOccupancy();
         case 5:
             return getMeanSpeed();
         case 6:
@@ -474,13 +445,24 @@ void
 GUIEdge::setVehicleColor(const GUIVisualizationSettings& s, MSBaseVehicle* veh) const {
     const GUIColorer& c = s.vehicleColorer;
     switch (c.getActive()) {
-        case 1:
-            GLHelper::setColor(veh->getParameter().color);
+        case 0:
+            if (veh->getParameter().wasSet(VEHPARS_COLOR_SET)) {
+                GLHelper::setColor(veh->getParameter().color);
+            }
+            if (veh->getVehicleType().wasSet(VTYPEPARS_COLOR_SET)) {
+                GLHelper::setColor(veh->getVehicleType().getColor());
+            }
+            if (veh->getRoute().getColor() != RGBColor::DEFAULT_COLOR) {
+                GLHelper::setColor(veh->getRoute().getColor());
+            }
             break;
         case 2:
+            GLHelper::setColor(veh->getParameter().color);
+            break;
+        case 4:
             GLHelper::setColor(veh->getVehicleType().getColor());
             break;
-        case 3:
+        case 5:
             GLHelper::setColor(veh->getRoute().getColor());
             break;
         default:

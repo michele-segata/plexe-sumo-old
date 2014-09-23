@@ -4,14 +4,20 @@
 @author  Lena Kalleske
 @author  Daniel Krajzewicz
 @author  Michael Behrisch
+@author  Jakob Erdmann
 @date    2009-03-26
 @version $Id$
 
 Tutorial for traffic light control via the TraCI interface.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2009-2012 DLR/TS, Germany
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2009-2014 DLR/TS, Germany
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 
 import os, sys
@@ -20,25 +26,16 @@ import subprocess
 import random
 
 # we need to import python modules from the $SUMO_HOME/tools directory
-if 'SUMO_HOME' in os.environ:
-    tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
-    sys.path.append(tools)
-else:
-    # Maybe we can locate the tools directory relative to the runner file
-    tools_relative_to_tests_tutorial = os.path.dirname(__file__), '..', '..', '..', '..', 'tools'
-    tools_relative_to_docs_tutorial = os.path.dirname(__file__), '..', '..', '..', 'tools'
-    if os.path.isdir(tools_relative_to_tests_tutorial):
-        sys.path.append(tools_relative_to_tests_tutorial)
-    elif os.path.isdir(tools_relative_to_docs_tutorial):
-        sys.path.append(tools_relative_to_docs_tutorial)
-    else:
-        sys.exit("please declare environment variable 'SUMO_HOME' as the root directory of your sumo installation (it should contain folders 'bin', 'tools' and 'docs')")
+try:
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', "tools")) # tutorial in tests
+    sys.path.append(os.path.join(os.environ.get("SUMO_HOME", os.path.join(os.path.dirname(__file__), "..", "..", "..")), "tools")) # tutorial in docs
+    from sumolib import checkBinary
+except ImportError:
+    sys.exit("please declare environment variable 'SUMO_HOME' as the root directory of your sumo installation (it should contain folders 'bin', 'tools' and 'docs')")
 
-from sumolib import checkBinary
 import traci
-
 # the port used for communicating with your sumo instance
-PORT = 8813
+PORT = 8873
 
 NSGREEN = "GrGr" 
 NSYELLOW = "yryr"
@@ -48,6 +45,7 @@ WEYELLOW = "ryry"
 PROGRAM = [WEYELLOW,WEYELLOW,WEYELLOW,NSGREEN,NSGREEN,NSGREEN,NSGREEN,NSGREEN,NSGREEN,NSGREEN,NSGREEN,NSYELLOW,NSYELLOW,WEGREEN]
 
 def generate_routefile():
+    random.seed(42) # make tests reproducible
     N = 3600 # number of time steps
     # demand per second from different directions
     pWE = 1./10 
@@ -65,40 +63,47 @@ def generate_routefile():
         vehNr = 0
         for i in range(N):
             if random.uniform(0,1) < pWE:
-                print >> routes, '    <vehicle id="%i" type="typeWE" route="right" depart="%i" />' % (vehNr, i)
+                print >> routes, '    <vehicle id="right_%i" type="typeWE" route="right" depart="%i" />' % (vehNr, i)
                 vehNr += 1
                 lastVeh = i
             if random.uniform(0,1) < pEW:
-                print >> routes, '    <vehicle id="%i" type="typeWE" route="left" depart="%i" />' % (vehNr, i)
+                print >> routes, '    <vehicle id="left_%i" type="typeWE" route="left" depart="%i" />' % (vehNr, i)
                 vehNr += 1
                 lastVeh = i
             if random.uniform(0,1) < pNS:
-                print >> routes, '    <vehicle id="%i" type="typeNS" route="down" depart="%i" color="1,0,0"/>' % (vehNr, i)
+                print >> routes, '    <vehicle id="down_%i" type="typeNS" route="down" depart="%i" color="1,0,0"/>' % (vehNr, i)
                 vehNr += 1
                 lastVeh = i
         print >> routes, "</routes>"
 
 def run():
     """execute the TraCI control loop"""
+    traci.init(PORT)
     programPointer = len(PROGRAM)-1
     step = 0
-    while step == 0 or traci.simulation.getMinExpectedNumber() > 0:
+    while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
         programPointer = min(programPointer+1, len(PROGRAM)-1)
-        no = traci.inductionloop.getLastStepVehicleNumber("0")
-        if no > 0:
-            programPointer = (0 if programPointer == len(PROGRAM)-1 else 3)
+        numPriorityVehicles = traci.inductionloop.getLastStepVehicleNumber("0")
+        if numPriorityVehicles > 0:
+            if programPointer == len(PROGRAM)-1:
+                # we are in the WEGREEN phase. start the priority phase sequence
+                programPointer = 0
+            elif PROGRAM[programPointer] != WEYELLOW:
+                # horizontal traffic is already stopped. restart priority phase
+                # sequence at green
+                programPointer = 3
+            else:
+                # we are in the WEYELLOW phase. continue sequence
+                pass
         traci.trafficlights.setRedYellowGreenState("0", PROGRAM[programPointer])
         step += 1
-
     traci.close()
     sys.stdout.flush()
 
 def get_options():
     optParser = optparse.OptionParser()
     optParser.add_option("--nogui", action="store_true", default=False, help="run the commandline version of sumo")
-    optParser.add_option("--embedded", action="store_true", default=False, 
-            help="use the sumo-internal python interpreter (sometimes faster). To use this option the featere 'python' must be enabled when compling sumo from source")
     options, args = optParser.parse_args()
     return options
 
@@ -107,34 +112,18 @@ def get_options():
 if __name__ == "__main__":
     options = get_options()
 
-    if traci.isEmbedded():
-        # this script has been called from the sumo-interal python interpreter
-        # only execute the main control procedure
-        run()
+    # this script has been called from the command line. It will start sumo as a
+    # server, then connect and run
+    if options.nogui:
+        sumoBinary = checkBinary('sumo')
     else:
-        # this script has been called from the command line. It will start sumo as a
-        # server, then connect and run
-        if options.nogui:
-            sumoBinary = checkBinary('sumo')
-        else:
-            sumoBinary = checkBinary('sumo-gui')
+        sumoBinary = checkBinary('sumo-gui')
 
-        # first, generate the route file for this simulation
-        generate_routefile()
+    # first, generate the route file for this simulation
+    generate_routefile()
 
-        # now execute sumo
-        sumoConfig = "data/cross.sumocfg"
-
-        if options.embedded:
-            # call sumo with the request to run this very same script again in the internal interpreter
-            # when this happens, the method traci.isEmbedded() in line 114 will evaluate to true
-            # and then the run method will be called
-            retCode = subprocess.call("%s -c %s --python-script %s" % (sumoBinary, sumoConfig, __file__), shell=True, stdout=sys.stdout)
-            sys.exit(retCode)
-        else:
-            # this is the normal way of using traci. sumo is started as a
-            # subprocess and then the python script connects and runs
-            sumoProcess = subprocess.Popen("%s -c %s" % (sumoBinary, sumoConfig), shell=True, stdout=sys.stdout)
-            traci.init(PORT)
-            run()
-
+    # this is the normal way of using traci. sumo is started as a
+    # subprocess and then the python script connects and runs
+    sumoProcess = subprocess.Popen([sumoBinary, "-c", "data/cross.sumocfg", "--tripinfo-output", "tripinfo.xml", "--remote-port", str(PORT)], stdout=sys.stdout, stderr=sys.stderr)
+    run()
+    sumoProcess.wait()

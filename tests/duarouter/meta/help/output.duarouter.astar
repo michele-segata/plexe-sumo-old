@@ -1,5 +1,5 @@
-SUMO duarouter Version 0.17.0
- Copyright (C) 2001-2013 DLR and contributors; http://sumo.sourceforge.net
+SUMO duarouter Version dev-SVN-r16170
+ Copyright (C) 2001-2014 DLR and contributors; http://sumo-sim.org
 Shortest path router and DUE computer for the microscopic road traffic
   simulation SUMO.
 
@@ -15,13 +15,16 @@ Configuration Options:
 
 Input Options:
   -n, --net-file FILE              Use FILE as SUMO-network to route on
-  -d, --taz-files FILE             Read (additional) districts from FILE
+  -d, --additional-files FILE      Read additional network data (districts, bus
+                                     stops) from FILE
   -a, --alternative-files FILE     Read alternatives from FILE
   -f, --flow-files FILE            Read flow-definitions from FILE(s)
   -w, --weight-files FILE          Read network weights from FILE(s)
   --lane-weight-files FILE         Read lane-based network weights from FILE(s)
   -x, --weight-attribute STR       Name of the xml attribute which gives the
                                      edge weight
+  --phemlight-path FILE            Determines where to load PHEMlight
+                                     definitions from.
   -t, --trip-files FILE            Read trip-definitions from FILE(s)
   -r, --route-files FILE           Read sumo-routes from FILE(s)
 
@@ -48,14 +51,18 @@ Processing Options:
                                      'astar', 'bulkstar', 'CH', 'CHWrapper']
   --weight-period TIME             Aggregation period for the given weight
                                      files;
-                                     triggers rebuilding of Contraction Hirarchy
+                                     triggers rebuilding of Contraction
+                                     Hierarchy
   --weights.expand                 Expand weights behind the simulation's end
   --gawron.beta FLOAT              Use FLOAT as Gawron's beta
   --gawron.a FLOAT                 Use FLOAT as Gawron's a
   --keep-all-routes                Save routes with near zero probability
   --skip-new-routes                Only reuse routes from input, do not
                                      calculate new ones
-  --logit                          Use c-logit model
+  --logit                          Use c-logit model (deprecated in favor of
+                                     --route-choice-method logit)
+  --route-choice-method STR        Choose a route choice method: gawron, logit,
+                                     or lohse
   --logit.beta FLOAT               Use FLOAT as logit's beta
   --logit.gamma FLOAT              Use FLOAT as logit's gamma
   --logit.theta FLOAT              Use FLOAT as logit's theta (negative values
@@ -80,10 +87,13 @@ Time Options:
 
 Report Options:
   -v, --verbose                    Switches to verbose output
-  -p, --print-options              Prints option values before processing
+  --print-options                  Prints option values before processing
   -?, --help                       Prints this screen
   -V, --version                    Prints the current version
-  -X, --xml-validation             Enable schema validation of XML inputs
+  -X, --xml-validation STR         Set schema validation scheme of XML inputs
+                                     ("never", "auto" or "always")
+  --xml-validation.net STR         Set schema validation scheme of SUMO network
+                                     inputs ("never", "auto" or "always")
   -W, --no-warnings                Disables output of warnings
   -l, --log FILE                   Writes all messages to FILE (implies
                                      verbose)
@@ -105,5 +115,5 @@ Examples:
   duarouter -c <CONFIGURATION>
     run routing with options from file
 
-Report bugs at <http://sourceforge.net/apps/trac/sumo/>.
+Report bugs at <http://sumo-sim.org/trac/>.
 Get in contact via <sumo-user@lists.sourceforge.net>.

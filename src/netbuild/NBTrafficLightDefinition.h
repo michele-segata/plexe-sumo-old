@@ -2,13 +2,14 @@
 /// @file    NBTrafficLightDefinition.h
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // The base class for traffic light logic definitions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,10 +37,12 @@
 #include <bitset>
 #include <utility>
 #include <set>
+#include <utils/common/StdDefs.h>
 #include <utils/common/Named.h>
 #include <utils/common/VectorHelper.h>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/UtilExceptions.h>
+#include <utils/common/Parameterised.h>
 #include "NBCont.h"
 #include "NBConnection.h"
 #include "NBConnectionDefs.h"
@@ -69,7 +72,7 @@ class NBTrafficLightLogic;
  * @see NBLoadedTLDef
  * @see NBOwnTLDef
  */
-class NBTrafficLightDefinition : public Named {
+class NBTrafficLightDefinition : public Named, public Parameterised {
 public:
 
     static const std::string DefaultProgramID;
@@ -246,11 +249,14 @@ public:
     virtual void setParticipantsInformation();
 
 
-    /** @brief Adds the given ids into the list of edges not controlled by the tls
-     * @param[in] edges The list of edge ids to add the inner edges to
+    /** @brief Adds the given ids into the list of inner edges controlled by the tls
+     * @param[in] edges The list of edge ids which shall be controlled despite lying with the jointly controlled node cluster
      */
     void addControlledInnerEdges(const std::vector<std::string>& edges);
 
+    /** @brief Retrieve the ids of edges explicitly controlled by the tls
+     */
+    std::vector<std::string> getControlledInnerEdges() const;
 
     /** @brief Replaces occurences of the removed edge in incoming/outgoing edges of all definitions
      * @param[in] removed The removed edge
@@ -270,6 +276,11 @@ public:
     virtual void replaceRemoved(NBEdge* removed, int removedLane,
                                 NBEdge* by, int byLane) = 0;
 
+    /// @brief patches (loaded) signal plans by modifying lane indices
+    virtual void shiftTLConnectionLaneIndex(NBEdge* edge, int offset) {
+        UNUSED_PARAMETER(edge);
+        UNUSED_PARAMETER(offset);
+    }
 
     /** @brief returns the information whether the given link is a left-mover
      * @param[in] from The connection's start edge
@@ -288,12 +299,6 @@ public:
     /// @brief returns the controlled links (depends on previous call to collectLinks)
     const NBConnectionVector& getControlledLinks() const {
         return myControlledLinks;
-    }
-
-
-    // @breif returns the controlled nodes
-    const std::vector<NBNode*>& getControlledNodes() const {
-        return myControlledNodes;
     }
 
 
@@ -386,6 +391,8 @@ protected:
 
     /// @brief The algorithm type for the traffic light
     TrafficLightType myType;
+
+
 };
 
 

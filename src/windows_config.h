@@ -5,13 +5,14 @@
 /// @author  Axel Wegener
 /// @author  Michael Behrisch
 /// @author  Felix Brack
+/// @author  Jakob Erdmann
 /// @date    Mon, 17 Dec 2001
 /// @version $Id$
 ///
 // The general windows configuration file
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -52,10 +53,10 @@
 #define SUMOLong long long
 
 /* defines the epsilon to use on position comparison */
-#define POSITION_EPS 0.1
+#define POSITION_EPS (SUMOReal)0.1
 
 /* defines the epsilon to use on general floating point comparison */
-#define NUMERICAL_EPS 0.001
+#define NUMERICAL_EPS (SUMOReal)0.001
 
 /* defines the number of digits after the comma in output */
 #define OUTPUT_ACCURACY 2
@@ -68,7 +69,7 @@
 
 /* Version number of package */
 #ifndef HAVE_VERSION_H
-#define VERSION_STRING "0.17.1"
+#define VERSION_STRING "0.21.0"
 #endif
 
 /* Define if junction internal lanes should be used. */
@@ -83,5 +84,8 @@
 
 /* define to use nvwa for memory leak checking */
 //#define CHECK_MEMORY_LEAKS 1
+
+/* work around missing snprintf function (WARNING: return value semantics differ) */
+#define snprintf _snprintf
 
 #endif

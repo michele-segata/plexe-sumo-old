@@ -8,8 +8,8 @@
 ///
 // The main interface for loading a microsim
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -61,10 +61,8 @@
 #include <microsim/output/MSDetectorControl.h>
 #include <microsim/MSFrame.h>
 #include <microsim/MSEdgeWeightsStorage.h>
+#include <microsim/MSStateHandler.h>
 #include <utils/iodevices/BinaryInputDevice.h>
-#ifdef HAVE_INTERNAL
-#include <mesosim/StateHandler.h>
-#endif
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
@@ -123,17 +121,22 @@ NLBuilder::~NLBuilder() {}
 bool
 NLBuilder::build() {
     // try to build the net
-    if (!load("net-file")) {
+    if (!load("net-file", true)) {
         return false;
     }
+    // check whether the loaded net agrees with the simulation options
+#ifdef HAVE_INTERNAL_LANES
+    if (myOptions.getBool("no-internal-links") && myXMLHandler.haveSeenInternalEdge()) {
+        WRITE_WARNING("Network contains internal links but option --no-internal-links is set. Vehicles will 'jump' across junctions and thus underestimate route lenghts and travel times");
+    }
+#endif
     buildNet();
-#ifdef HAVE_INTERNAL
     // load the previous state if wished
     if (myOptions.isSet("load-state")) {
         long before = SysUtils::getCurrentMillis();
         const std::string& f = myOptions.getString("load-state");
         PROGRESS_BEGIN_MESSAGE("Loading state from '" + f + "'");
-        StateHandler h(f, string2time(OptionsCont::getOptions().getString("load-state.offset")));
+        MSStateHandler h(f, string2time(OptionsCont::getOptions().getString("load-state.offset")));
         XMLSubSys::runParser(h, f);
         if (myOptions.isDefault("begin")) {
             myOptions.set("begin", time2string(h.getTime()));
@@ -146,7 +149,6 @@ NLBuilder::build() {
         }
         MsgHandler::getMessageInstance()->endProcessMsg("done (" + toString(SysUtils::getCurrentMillis() - before) + "ms).");
     }
-#endif
     // load weights if wished
     if (myOptions.isSet("weight-files")) {
         if (!myOptions.isUsableFileList("weight-files")) {
@@ -210,13 +212,12 @@ NLBuilder::buildNet() {
         MSFrame::buildStreams();
         std::vector<SUMOTime> stateDumpTimes;
         std::vector<std::string> stateDumpFiles;
-#ifdef HAVE_INTERNAL
         const std::vector<int> times = myOptions.getIntVector("save-state.times");
         for (std::vector<int>::const_iterator i = times.begin(); i != times.end(); ++i) {
             stateDumpTimes.push_back(TIME2STEPS(*i));
         }
         if (myOptions.isSet("save-state.files")) {
-            stateDumpFiles = StringTokenizer(myOptions.getString("save-state.files")).getVector();
+            stateDumpFiles = myOptions.getStringVector("save-state.files");
             if (stateDumpFiles.size() != stateDumpTimes.size()) {
                 WRITE_ERROR("Wrong number of state file names!");
             }
@@ -226,7 +227,6 @@ NLBuilder::buildNet() {
                 stateDumpFiles.push_back(prefix + "_" + time2string(*i) + ".sbx");
             }
         }
-#endif
         myNet.closeBuilding(edges, junctions, routeLoaders, tlc, stateDumpTimes, stateDumpFiles);
     } catch (IOError& e) {
         delete edges;
@@ -245,7 +245,7 @@ NLBuilder::buildNet() {
 
 
 bool
-NLBuilder::load(const std::string& mmlWhat) {
+NLBuilder::load(const std::string& mmlWhat, const bool isNet) {
     if (!OptionsCont::getOptions().isUsableFileList(mmlWhat)) {
         return false;
     }
@@ -253,7 +253,7 @@ NLBuilder::load(const std::string& mmlWhat) {
     for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
         PROGRESS_BEGIN_MESSAGE("Loading " + mmlWhat + " from '" + *fileIt + "'");
         long before = SysUtils::getCurrentMillis();
-        if (!XMLSubSys::runParser(myXMLHandler, *fileIt)) {
+        if (!XMLSubSys::runParser(myXMLHandler, *fileIt, isNet)) {
             WRITE_MESSAGE("Loading of " + mmlWhat + " failed.");
             return false;
         }
@@ -271,8 +271,8 @@ NLBuilder::buildRouteLoaderControl(const OptionsCont& oc) {
     if (oc.isSet("route-files") && string2time(oc.getString("route-steps")) > 0) {
         std::vector<std::string> files = oc.getStringVector("route-files");
         for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
-            if (!FileHelpers::exists(*fileIt)) {
-                throw ProcessError("The route file '" + *fileIt + "' does not exist.");
+            if (!FileHelpers::isReadable(*fileIt)) {
+                throw ProcessError("The route file '" + *fileIt + "' is not accessible.");
             }
         }
         // open files for reading

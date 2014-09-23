@@ -9,8 +9,8 @@
 ///
 // Storage for edges, including some functionality operating on multiple edges
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -40,6 +40,7 @@
 #include <iomanip>
 #include <utils/geom/Boundary.h>
 #include <utils/geom/GeomHelper.h>
+#include <utils/geom/GeoConvHelper.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/ToString.h>
 #include <utils/common/TplConvert.h>
@@ -66,10 +67,11 @@
 // method definitions
 // ===========================================================================
 NBEdgeCont::NBEdgeCont(NBTypeCont& tc) :
+    myTypeCont(tc),
     myEdgesSplit(0),
     myVehicleClasses2Keep(0),
     myVehicleClasses2Remove(0),
-    myTypeCont(tc)
+    myNeedGeoTransformedPrunningBoundary(false)
 {}
 
 
@@ -93,16 +95,10 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
         myEdges2Remove.insert(edges.begin(), edges.end());
     }
     if (oc.exists("keep-edges.by-vclass") && oc.isSet("keep-edges.by-vclass")) {
-        const std::vector<std::string> classes = oc.getStringVector("keep-edges.by-vclass");
-        for (std::vector<std::string>::const_iterator i = classes.begin(); i != classes.end(); ++i) {
-            myVehicleClasses2Keep |= getVehicleClassID(*i);
-        }
+        myVehicleClasses2Keep = parseVehicleClasses(oc.getStringVector("keep-edges.by-vclass"));
     }
     if (oc.exists("remove-edges.by-vclass") && oc.isSet("remove-edges.by-vclass")) {
-        const std::vector<std::string> classes = oc.getStringVector("remove-edges.by-vclass");
-        for (std::vector<std::string>::const_iterator i = classes.begin(); i != classes.end(); ++i) {
-            myVehicleClasses2Remove |= getVehicleClassID(*i);
-        }
+        myVehicleClasses2Remove = parseVehicleClasses(oc.getStringVector("remove-edges.by-vclass"));
     }
     if (oc.exists("keep-edges.by-type") && oc.isSet("keep-edges.by-type")) {
         const std::vector<std::string> types = oc.getStringVector("keep-edges.by-type");
@@ -113,8 +109,9 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
         myTypes2Remove.insert(types.begin(), types.end());
     }
 
-    if (oc.isSet("keep-edges.in-boundary")) {
-        std::vector<std::string> polyS = oc.getStringVector("keep-edges.in-boundary");
+    if (oc.isSet("keep-edges.in-boundary") || oc.isSet("keep-edges.in-geo-boundary")) {
+        std::vector<std::string> polyS = oc.getStringVector(oc.isSet("keep-edges.in-boundary") ?
+                                         "keep-edges.in-boundary" : "keep-edges.in-geo-boundary");
         // !!! throw something if length<4 || length%2!=0?
         std::vector<SUMOReal> poly;
         for (std::vector<std::string>::iterator i = polyS.begin(); i != polyS.end(); ++i) {
@@ -137,6 +134,7 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
                 myPrunningBoundary.push_back(Position(x, y));
             }
         }
+        myNeedGeoTransformedPrunningBoundary = oc.isSet("keep-edges.in-geo-boundary");
     }
 }
 
@@ -220,6 +218,18 @@ NBEdgeCont::ignoreFilterMatch(NBEdge* edge) {
     }
     // check whether the edge is within the prunning boundary
     if (myPrunningBoundary.size() != 0) {
+        if (myNeedGeoTransformedPrunningBoundary) {
+            if (GeoConvHelper::getProcessing().usingGeoProjection()) {
+                NBNetBuilder::transformCoordinates(myPrunningBoundary, false);
+            } else if (GeoConvHelper::getLoaded().usingGeoProjection()) {
+                // XXX what if input file with different projections are loaded?
+                for (int i = 0; i < (int) myPrunningBoundary.size(); i++) {
+                    GeoConvHelper::getLoaded().x2cartesian_const(myPrunningBoundary[i]);
+                }
+            } else {
+                WRITE_ERROR("Cannot prune edges using a geo-boundary because no projection has been loaded");
+            }
+        }
         if (!(edge->getGeometry().getBoxBoundary().grow((SUMOReal) POSITION_EPS).overlapsWith(myPrunningBoundary))) {
             return true;
         }
@@ -245,6 +255,25 @@ NBEdgeCont::retrieve(const std::string& id, bool retrieveExtracted) const {
         }
     }
     return (*i).second;
+}
+
+
+NBEdge*
+NBEdgeCont::retrievePossiblySplit(const std::string& id, bool downstream) const {
+    NBEdge* edge = retrieve(id);
+    if (edge == 0) {
+        return 0;
+    }
+    const EdgeVector* candidates = downstream ? &edge->getToNode()->getOutgoingEdges() : &edge->getFromNode()->getIncomingEdges();
+    while (candidates->size() == 1) {
+        const std::string& nextID = candidates->front()->getID();
+        if (nextID.find(id) != 0 || nextID.size() <= id.size() + 1 || (nextID[id.size()] != '.' && nextID[id.size()] != '-')) {
+            break;
+        }
+        edge = candidates->front();
+        candidates = downstream ? &edge->getToNode()->getOutgoingEdges() : &edge->getFromNode()->getIncomingEdges();
+    }
+    return edge;
 }
 
 
@@ -404,20 +433,8 @@ NBEdgeCont::splitAt(NBDistrictCont& dc,
         geoms.second.push_front(node->getPosition());
     }
     // build and insert the edges
-    NBEdge* one = new NBEdge(firstEdgeName,
-                             edge->myFrom, node, edge->myType, edge->mySpeed, noLanesFirstEdge,
-                             edge->getPriority(), edge->myLaneWidth, 0, geoms.first,
-                             edge->getStreetName(), edge->myLaneSpreadFunction, true);
-    for (unsigned int i = 0; i < noLanesFirstEdge && i < edge->getNumLanes(); i++) {
-        one->setSpeed(i, edge->getLaneSpeed(i));
-    }
-    NBEdge* two = new NBEdge(secondEdgeName,
-                             node, edge->myTo, edge->myType, edge->mySpeed, noLanesSecondEdge,
-                             edge->getPriority(), edge->myLaneWidth, edge->myOffset, geoms.second,
-                             edge->getStreetName(), edge->myLaneSpreadFunction, true);
-    for (unsigned int i = 0; i < noLanesSecondEdge && i < edge->getNumLanes(); i++) {
-        two->setSpeed(i, edge->getLaneSpeed(i));
-    }
+    NBEdge* one = new NBEdge(firstEdgeName, edge->myFrom, node, edge, geoms.first, noLanesFirstEdge);
+    NBEdge* two = new NBEdge(secondEdgeName, node, edge->myTo, edge, geoms.second, noLanesSecondEdge);
     two->copyConnectionsFrom(edge);
     // replace information about this edge within the nodes
     edge->myFrom->replaceOutgoing(edge, one, 0);
@@ -511,6 +528,16 @@ NBEdgeCont::reduceGeometries(const SUMOReal minDist) {
 }
 
 
+void
+NBEdgeCont::checkGeometries(const SUMOReal maxAngle, const SUMOReal minRadius, bool fix) {
+    if (maxAngle > 0 || minRadius > 0) {
+        for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
+            (*i).second->checkGeometry(maxAngle, minRadius, fix);
+        }
+    }
+}
+
+
 // ----- processing methods
 void
 NBEdgeCont::clearControllingTLInformation() const {
@@ -537,17 +564,17 @@ NBEdgeCont::computeEdge2Edges(bool noLeftMovers) {
 
 
 void
-NBEdgeCont::computeLanes2Edges() {
+NBEdgeCont::computeLanes2Edges(const bool buildCrossingsAndWalkingAreas) {
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
-        (*i).second->computeLanes2Edges();
+        (*i).second->computeLanes2Edges(buildCrossingsAndWalkingAreas);
     }
 }
 
 
 void
-NBEdgeCont::recheckLanes() {
+NBEdgeCont::recheckLanes(const bool buildCrossingsAndWalkingAreas) {
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
-        (*i).second->recheckLanes();
+        (*i).second->recheckLanes(buildCrossingsAndWalkingAreas);
     }
 }
 
@@ -692,8 +719,8 @@ NBEdgeCont::addPostProcessConnection(const std::string& from, int fromLane, cons
 void
 NBEdgeCont::recheckPostProcessConnections() {
     for (std::vector<PostProcessConnection>::const_iterator i = myConnections.begin(); i != myConnections.end(); ++i) {
-        NBEdge* from = retrieve((*i).from);
-        NBEdge* to = retrieve((*i).to);
+        NBEdge* from = retrievePossiblySplit((*i).from, true);
+        NBEdge* to = retrievePossiblySplit((*i).to, false);
         if (from != 0 && to != 0) {
             if (!from->addLane2LaneConnection((*i).fromLane, to, (*i).toLane, NBEdge::L2L_USER, false, (*i).mayDefinitelyPass)) {
                 WRITE_WARNING("Could not insert connection between '" + (*i).from + "' and '" + (*i).to + "' after build.");
@@ -858,6 +885,7 @@ NBEdgeCont::guessRoundabouts(std::vector<EdgeVector>& marked) {
                 }
                 // let the connections to succeeding roundabout edge have a higher priority
                 (*j)->setJunctionPriority(node, 1000);
+                node->setRoundabout();
             }
             marked.push_back(loopEdges);
         }
@@ -874,13 +902,24 @@ NBEdgeCont::generateStreetSigns() {
         //continue
         const SUMOReal offset = e->getLength() - 3;
         switch (e->getToNode()->getType()) {
-            case NODETYPE_PRIORITY_JUNCTION:
+            case NODETYPE_PRIORITY:
                 // yield or major?
                 if (e->getJunctionPriority(e->getToNode()) > 0) {
                     e->addSign(NBSign(NBSign::SIGN_TYPE_PRIORITY, offset));
                 } else {
                     e->addSign(NBSign(NBSign::SIGN_TYPE_YIELD, offset));
                 }
+                break;
+            case NODETYPE_PRIORITY_STOP:
+                // yield or major?
+                if (e->getJunctionPriority(e->getToNode()) > 0) {
+                    e->addSign(NBSign(NBSign::SIGN_TYPE_PRIORITY, offset));
+                } else {
+                    e->addSign(NBSign(NBSign::SIGN_TYPE_STOP, offset));
+                }
+                break;
+            case NODETYPE_ALLWAY_STOP:
+                e->addSign(NBSign(NBSign::SIGN_TYPE_ALLWAY_STOP, offset));
                 break;
             case NODETYPE_RIGHT_BEFORE_LEFT:
                 e->addSign(NBSign(NBSign::SIGN_TYPE_RIGHT_BEFORE_LEFT, offset));
@@ -890,5 +929,20 @@ NBEdgeCont::generateStreetSigns() {
         }
     }
 }
+
+
+int
+NBEdgeCont::guessSidewalks(SUMOReal width, SUMOReal minSpeed, SUMOReal maxSpeed) {
+    int sidewalksCreated = 0;
+    for (EdgeCont::iterator it = myEdges.begin(); it != myEdges.end(); it++) {
+        NBEdge* edge = it->second;
+        if (edge->getSpeed() > minSpeed && edge->getSpeed() <= maxSpeed && edge->getPermissions(0) != SVC_PEDESTRIAN) {
+            edge->addSidewalk(width);
+            sidewalksCreated += 1;
+        }
+    }
+    return sidewalksCreated;
+}
+
 
 /****************************************************************************/

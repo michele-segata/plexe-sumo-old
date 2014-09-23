@@ -10,8 +10,8 @@
 ///
 // Loader for networks and route imports
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -115,8 +115,8 @@ ROLoader::EdgeFloatTimeLineRetriever_EdgeWeight::addEdgeWeight(const std::string
 ROLoader::ROLoader(OptionsCont& oc, const bool emptyDestinationsAllowed, const bool logSteps) :
     myOptions(oc),
     myEmptyDestinationsAllowed(emptyDestinationsAllowed),
-    myLoaders(oc.exists("unsorted-input") && oc.getBool("unsorted-input") ? 0 : DELTA_T),
-    myLogSteps(logSteps)
+    myLogSteps(logSteps),
+    myLoaders(oc.exists("unsorted-input") && oc.getBool("unsorted-input") ? 0 : DELTA_T)
 {}
 
 
@@ -130,30 +130,36 @@ ROLoader::loadNet(RONet& toFill, ROAbstractEdgeBuilder& eb) {
     if (file == "") {
         throw ProcessError("Missing definition of network to load!");
     }
-    if (!FileHelpers::exists(file)) {
-        throw ProcessError("The network file '" + file + "' could not be found.");
+    if (!FileHelpers::isReadable(file)) {
+        throw ProcessError("The network file '" + file + "' is not accessible.");
     }
     PROGRESS_BEGIN_MESSAGE("Loading net");
     RONetHandler handler(toFill, eb);
     handler.setFileName(file);
-    if (!XMLSubSys::runParser(handler, file)) {
+    if (!XMLSubSys::runParser(handler, file, true)) {
         PROGRESS_FAILED_MESSAGE();
         throw ProcessError();
     } else {
         PROGRESS_DONE_MESSAGE();
     }
-    if (myOptions.isSet("taz-files", false)) { // dfrouter does not register this option
-        file = myOptions.getString("taz-files");
-        if (!FileHelpers::exists(file)) {
-            throw ProcessError("The districts file '" + file + "' could not be found.");
-        }
-        PROGRESS_BEGIN_MESSAGE("Loading districts");
-        handler.setFileName(file);
-        if (!XMLSubSys::runParser(handler, file)) {
-            PROGRESS_FAILED_MESSAGE();
-            throw ProcessError();
-        } else {
-            PROGRESS_DONE_MESSAGE();
+    if (!deprecatedVehicleClassesSeen.empty()) {
+        WRITE_WARNING("Deprecated vehicle classes '" + toString(deprecatedVehicleClassesSeen) + "' in input network.");
+        deprecatedVehicleClassesSeen.clear();
+    }
+    if (myOptions.isSet("additional-files", false)) { // dfrouter does not register this option
+        std::vector<std::string> files = myOptions.getStringVector("additional-files");
+        for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
+            if (!FileHelpers::isReadable(*fileIt)) {
+                throw ProcessError("The additional file '" + *fileIt + "' is not accessible.");
+            }
+            PROGRESS_BEGIN_MESSAGE("Loading additional file '" + *fileIt + "' ");
+            handler.setFileName(*fileIt);
+            if (!XMLSubSys::runParser(handler, *fileIt)) {
+                PROGRESS_FAILED_MESSAGE();
+                throw ProcessError();
+            } else {
+                PROGRESS_DONE_MESSAGE();
+            }
         }
     }
 }
@@ -162,8 +168,10 @@ ROLoader::loadNet(RONet& toFill, ROAbstractEdgeBuilder& eb) {
 void
 ROLoader::openRoutes(RONet& net) {
     // build loader
+    // load relevant elements from additinal file
+    bool ok = openTypedRoutes("additional-files", net);
     // load sumo-routes when wished
-    bool ok = openTypedRoutes("route-files", net);
+    ok &= openTypedRoutes("route-files", net);
     // load the XML-trip definitions when wished
     ok &= openTypedRoutes("trip-files", net);
     // load the sumo-alternative file when wished
@@ -174,7 +182,7 @@ ROLoader::openRoutes(RONet& net) {
     if (ok) {
         myLoaders.loadNext(string2time(myOptions.getString("begin")));
         if (!MsgHandler::getErrorInstance()->wasInformed() && !net.furtherStored()) {
-            throw ProcessError("No route input specified.");
+            throw ProcessError("No route input specified or all routes were invalid.");
         }
         // skip routes prior to the begin time
         if (!myOptions.getBool("unsorted-input")) {
@@ -210,7 +218,7 @@ ROLoader::processRoutes(SUMOTime start, SUMOTime end,
 
 #ifdef HAVE_INTERNAL // catchall for internal stuff
 void
-ROLoader::processAllRoutesWithBulkRouter(SUMOTime start, SUMOTime end,
+ROLoader::processAllRoutesWithBulkRouter(SUMOTime /* start */, SUMOTime end,
         RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router) {
     myLoaders.loadNext(SUMOTime_MAX);
     RouteAggregator::processAllRoutes(net, router);

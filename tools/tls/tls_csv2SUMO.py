@@ -21,9 +21,14 @@ time;<PHASE_LENGTH>[;<PHASE_LENGTH>]+
 
 
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2009-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2009-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 
 import sys, os
@@ -162,7 +167,10 @@ for keyIndex, key in enumerate(allKeys):
         indices[n] = {}
         index = 0
         for i in n._incLanes:
-            (e, l) = i.split("_")
+            e = '_'.join(i.split("_")[:-1])
+            l = i.split("_")[-1]
+            if e in net1._crossings_and_walkingAreas: 
+                continue
             e = net1._id2edge[e]
             li = e._lanes[int(l)]
             for c in li._outgoing:
@@ -189,8 +197,10 @@ for keyIndex, key in enumerate(allKeys):
                 state = state + "y"
             elif d[i]=='g':
                 state = state + "g"
+            elif d[i]=='o' or d[i]=='x':
+                state = state + "o"
             else:
-                print "missing value; setting to g"
+                sys.stderr.write("missing value at %s (%s); setting to g\n" % (index, linkMap[l]))
                 state = state + "g"
         for l1 in range(0, len(state)):
             if state[l1]=='g':

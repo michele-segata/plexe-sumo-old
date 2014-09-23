@@ -8,8 +8,8 @@
 ///
 // Builder of microsim-junctions and tls
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -261,6 +261,9 @@ public:
 
     /// @brief initialize junctions after all connections have been loaded
     void postLoadInitialization();
+
+    /// @brief try to retrieve junction by id
+    MSJunction* retrieve(const std::string id);
 
 
 protected:

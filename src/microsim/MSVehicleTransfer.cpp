@@ -8,8 +8,8 @@
 ///
 // A mover of vehicles that got stucked due to grid locks
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,6 +36,7 @@
 #include "MSLane.h"
 #include "MSEdge.h"
 #include "MSVehicle.h"
+#include "MSAbstractLaneChangeModel.h"
 #include "MSVehicleControl.h"
 #include "MSVehicleTransfer.h"
 
@@ -49,26 +50,43 @@
 // ===========================================================================
 MSVehicleTransfer* MSVehicleTransfer::myInstance = 0;
 const SUMOReal MSVehicleTransfer::TeleportMinSpeed = 1;
-
+const std::set<const MSVehicle*> MSVehicleTransfer::myEmptyVehicleSet;
 
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 void
-MSVehicleTransfer::addVeh(const SUMOTime t, MSVehicle* veh) {
+MSVehicleTransfer::add(const SUMOTime t, MSVehicle* veh) {
+    veh->getLaneChangeModel().endLaneChangeManeuver();
     if (veh->isParking()) {
+        MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_STARTING_PARKING);
+        myParkingVehicles[veh->getLane()].insert(veh); // initialized to empty set on first use
         veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_PARKING);
     } else {
-        veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_TELEPORT);
         MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_STARTING_TELEPORT);
-        if ((veh->succEdge(1) == 0) || veh->enterLaneAtMove(veh->succEdge(1)->getLanes()[0], true)) {
+        if (veh->succEdge(1) == 0) {
+            WRITE_WARNING("Vehicle '" + veh->getID() + "' teleports beyond end of route ('" + veh->getEdge()->getID() + "'), time " + time2string(t) + ".");
+            veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_TELEPORT_ARRIVED);
             MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(veh);
             return;
         }
+        veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_TELEPORT);
+        veh->enterLaneAtMove(veh->succEdge(1)->getLanes()[0], true);
     }
     myVehicles.push_back(VehicleInformation(veh,
                                             t + TIME2STEPS(veh->getEdge()->getCurrentTravelTime(TeleportMinSpeed)),
                                             veh->isParking()));
+}
+
+
+void
+MSVehicleTransfer::remove(MSVehicle* veh) {
+    for (VehicleInfVector::iterator i = myVehicles.begin(); i != myVehicles.end(); ++i) {
+        if (i->myVeh == veh) {
+            myVehicles.erase(i);
+            break;
+        }
+    }
 }
 
 
@@ -95,11 +113,14 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) {
         // first select all the lanes which allow continuation onto nextEdge
         //   then pick the one which is least occupied
         // @todo maybe parking vehicles should always continue on the rightmost lane?
-        MSLane* l = e->getFreeLane(e->allowedLanes(*nextEdge, vclass), vclass);
+        MSLane* l = (nextEdge != 0 ? e->getFreeLane(e->allowedLanes(*nextEdge, vclass), vclass) :
+                     e->getFreeLane(0, vclass));
 
         if (desc.myParking) {
             // handle parking vehicles
             if (l->isInsertionSuccess(desc.myVeh, 0, desc.myVeh->getPositionOnLane(), false, MSMoveReminder::NOTIFICATION_PARKING)) {
+                MSNet::getInstance()->informVehicleStateListener(desc.myVeh, MSNet::VEHICLE_STATE_ENDING_PARKING);
+                myParkingVehicles[desc.myVeh->getLane()].erase(desc.myVeh);
                 i = myVehicles.erase(i);
             } else {
                 i++;
@@ -107,23 +128,23 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) {
         } else {
             // handle teleporting vehicles
             if (l->freeInsertion(*(desc.myVeh), MIN2(l->getSpeedLimit(), desc.myVeh->getMaxSpeed()), MSMoveReminder::NOTIFICATION_TELEPORT)) {
-                WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' ends teleporting on edge '" + e->getID() + "', simulation time " + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
+                WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' ends teleporting on edge '" + e->getID() + "', time " + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
                 MSNet::getInstance()->informVehicleStateListener(desc.myVeh, MSNet::VEHICLE_STATE_ENDING_TELEPORT);
                 i = myVehicles.erase(i);
             } else {
                 // could not insert. maybe we should proceed in virtual space
                 if (desc.myProceedTime < time) {
-                    // active move reminders
-                    desc.myVeh->leaveLane(MSMoveReminder::NOTIFICATION_TELEPORT);
-                    // let the vehicle move to the next edge
-                    const bool hasArrived = (desc.myVeh->succEdge(1) == 0 ||
-                                             desc.myVeh->enterLaneAtMove(desc.myVeh->succEdge(1)->getLanes()[0], true));
-                    if (hasArrived) {
-                        WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' ends teleporting on end edge '" + e->getID() + "'.");
+                    if (desc.myVeh->succEdge(1) == 0) {
+                        WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' teleports beyond end of route ('" + e->getID() + "'), time " + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
+                        desc.myVeh->leaveLane(MSMoveReminder::NOTIFICATION_TELEPORT_ARRIVED);
                         MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(desc.myVeh);
                         i = myVehicles.erase(i);
                         continue;
                     }
+                    // let the vehicle move to the next edge
+                    desc.myVeh->leaveLane(MSMoveReminder::NOTIFICATION_TELEPORT);
+                    // active move reminders (i.e. rerouters)
+                    desc.myVeh->enterLaneAtMove(desc.myVeh->succEdge(1)->getLanes()[0], true);
                     // use current travel time to determine when to move the vehicle forward
                     desc.myProceedTime = time + TIME2STEPS(e->getCurrentTravelTime(TeleportMinSpeed));
                 }
@@ -156,6 +177,16 @@ MSVehicleTransfer::~MSVehicleTransfer() {
     myInstance = 0;
 }
 
+
+const std::set<const MSVehicle*>&
+MSVehicleTransfer::getParkingVehicles(const MSLane* lane) const {
+    ParkingVehicles::const_iterator it = myParkingVehicles.find(lane);
+    if (it != myParkingVehicles.end()) {
+        return it->second;
+    } else {
+        return myEmptyVehicleSet;
+    }
+}
 
 
 /****************************************************************************/

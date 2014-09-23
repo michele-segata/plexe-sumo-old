@@ -12,8 +12,8 @@
 ///
 // Sets and checks options for microsim; inits global outputs and settings
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,7 @@
 #include <iomanip>
 #include <fstream>
 #include <ctime>
+#include <stdlib.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/options/Option.h>
 #include <utils/common/MsgHandler.h>
@@ -45,13 +46,14 @@
 #include <utils/common/ToString.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/iodevices/OutputDevice.h>
+#include <microsim/MSBaseVehicle.h>
 #include <microsim/MSJunction.h>
 #include <microsim/MSRoute.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSGlobals.h>
+#include <microsim/MSAbstractLaneChangeModel.h>
+#include <microsim/devices/MSDevice.h>
 #include <microsim/devices/MSDevice_Vehroutes.h>
-#include <microsim/devices/MSDevice_Routing.h>
-#include <microsim/devices/MSDevice_HBEFA.h>
 #include <utils/common/RandHelper.h>
 #include "MSFrame.h"
 #include <utils/common/SystemFrame.h>
@@ -101,12 +103,10 @@ MSFrame::fillOptions() {
     oc.addSynonyme("weight-attribute", "measure", true);
     oc.addDescription("weight-attribute", "Input", "Name of the xml attribute which gives the edge weight");
 
-#ifdef HAVE_INTERNAL
     oc.doRegister("load-state", new Option_FileName());//!!! check, describe
     oc.addDescription("load-state", "Input", "Loads a network state from FILE");
     oc.doRegister("load-state.offset", new Option_String("0", "TIME"));//!!! check, describe
-    oc.addDescription("load-state.offset", "Input", "Sets the time offset for vehicle segment exit times.");
-#endif
+    oc.addDescription("load-state.offset", "Input", "Sets the time offset for vehicle segment exit times");
 
     //  register output options
     oc.doRegister("netstate-dump", new Option_FileName());
@@ -125,12 +125,16 @@ MSFrame::fillOptions() {
     oc.addDescription("fcd-output", "Output", "Save the Floating Car Data");
     oc.doRegister("fcd-output.geo", new Option_Bool(false));
     oc.addDescription("fcd-output.geo", "Output", "Save the Floating Car Data using geo-coordinates (lon/lat)");
+    oc.doRegister("fcd-output.signals", new Option_Bool(false));
+    oc.addDescription("fcd-output.signals", "Output", "Add the vehicle signal state to the FCD output (brake lights etc.)");
     oc.doRegister("full-output", new Option_FileName());
     oc.addDescription("full-output", "Output", "Save a lot of information for each timestep (very redundant)");
     oc.doRegister("queue-output", new Option_FileName());
     oc.addDescription("queue-output", "Output", "Save the vehicle queues at the junctions (experimental)");
     oc.doRegister("vtk-output", new Option_FileName());
-    oc.addDescription("vtk-output", "Output", "Save complete vehicle positions in VTK Format (usage: /file/out will produce /file/out_$NR$.vtp files)");
+    oc.addDescription("vtk-output", "Output", "Save complete vehicle positions inclusive speed values in the VTK Format (usage: /path/out will produce /path/out_$TIMESTEP$.vtp files)");
+    oc.doRegister("amitran-output", new Option_FileName());
+    oc.addDescription("amitran-output", "Output", "Save the vehicle trajectories in the Amitran format");
 
 
     oc.doRegister("summary-output", new Option_FileName());
@@ -162,16 +166,26 @@ MSFrame::fillOptions() {
     oc.doRegister("vehroute-output.write-unfinished", new Option_Bool(false));
     oc.addDescription("vehroute-output.write-unfinished", "Output", "Write vehroute output for vehicles which have not arrived at simulation end");
 
+    oc.doRegister("link-output", new Option_FileName());
+    oc.addDescription("link-output", "Output", "Save links states into FILE");
+
+    oc.doRegister("bt-output", new Option_FileName());
+    oc.addDescription("bt-output", "Output", "Save bt visibilities into FILE");
 
 
-#ifdef HAVE_INTERNAL
+#ifdef _DEBUG
+    oc.doRegister("movereminder-output", new Option_FileName());
+    oc.addDescription("movereminder-output", "Output", "Save movereminder states of selected vehicles into FILE");
+    oc.doRegister("movereminder-output.vehicles", new Option_String());
+    oc.addDescription("movereminder-output.vehicles", "Output", "List of vehicle ids which shall save their movereminder states");
+#endif
+
     oc.doRegister("save-state.times", new Option_IntVector(IntVector()));//!!! check, describe
     oc.addDescription("save-state.times", "Output", "Use INT[] as times at which a network state written");
     oc.doRegister("save-state.prefix", new Option_FileName("state"));//!!! check, describe
     oc.addDescription("save-state.prefix", "Output", "Prefix for network states");
     oc.doRegister("save-state.files", new Option_FileName());//!!! check, describe
     oc.addDescription("save-state.files", "Output", "Files for network states");
-#endif
 
     // register the simulation settings
     oc.doRegister("begin", 'b', new Option_String("0", "TIME"));
@@ -193,6 +207,9 @@ MSFrame::fillOptions() {
 #ifdef HAVE_INTERNAL_LANES
     oc.doRegister("no-internal-links", new Option_Bool(false));
     oc.addDescription("no-internal-links", "Processing", "Disable (junction) internal links");
+
+    oc.doRegister("ignore-junction-blocker", new Option_String("-1", "TIME"));
+    oc.addDescription("ignore-junction-blocker", "Processing", "Ignore vehicles which block the junction after they have been standing for SECONDS (-1 means never ignore)");
 #endif
 
     oc.doRegister("ignore-accidents", new Option_Bool(false));
@@ -205,37 +222,56 @@ MSFrame::fillOptions() {
     oc.addSynonyme("max-num-vehicles", "too-many-vehicles", true);
     oc.addDescription("max-num-vehicles", "Processing", "Quit simulation if this number of vehicles is exceeded");
 
-    oc.doRegister("incremental-dua-step", new Option_Integer());//!!! deprecated
-    oc.addDescription("incremental-dua-step", "Processing", "Perform the simulation as a step in incremental DUA");
-    oc.doRegister("incremental-dua-base", new Option_Integer(10));//!!! deprecated
-    oc.addDescription("incremental-dua-base", "Processing", "Base value for incremental DUA");
     oc.doRegister("scale", new Option_Float());
     oc.addDescription("scale", "Processing", "Scale demand by the given factor (0..1)");
 
     oc.doRegister("time-to-teleport", new Option_String("300", "TIME"));
     oc.addDescription("time-to-teleport", "Processing", "Specify how long a vehicle may wait until being teleported, defaults to 300, non-positive values disable teleporting");
+    oc.doRegister("time-to-teleport.highways", new Option_String("0", "TIME"));
+    oc.addDescription("time-to-teleport.highways", "Processing", "The teleport time on highways");
 
     oc.doRegister("max-depart-delay", new Option_String("-1", "TIME"));
     oc.addDescription("max-depart-delay", "Processing", "How long vehicles wait for departure before being skipped, defaults to -1 which means vehicles are never skipped");
 
     oc.doRegister("sloppy-insert", new Option_Bool(false));
-    oc.addDescription("sloppy-insert", "Processing", "Whether insertion on an edge shall not be repeated in same step once failed.");
+    oc.addDescription("sloppy-insert", "Processing", "Whether insertion on an edge shall not be repeated in same step once failed");
+
+    oc.doRegister("eager-insert", new Option_Bool(false));
+    oc.addDescription("eager-insert", "Processing", "Whether each vehicle is checked separately for insertion on an edge");
+
+    oc.doRegister("random-depart-offset", new Option_String("0", "TIME"));
+    oc.addDescription("random-depart-offset", "Processing", "Each vehicle receives a random offset to its depart value drawn uniformly from [0, TIME]");
 
     oc.doRegister("lanechange.allow-swap", new Option_Bool(false));
-    oc.addDescription("lanechange.allow-swap", "Processing", "Whether blocking vehicles trying to change lanes may be swapped.");
+    oc.addDescription("lanechange.allow-swap", "Processing", "Whether blocking vehicles trying to change lanes may be swapped");
+
+    oc.doRegister("lanechange.duration", new Option_String("0", "TIME"));
+    oc.addDescription("lanechange.duration", "Processing", "Duration of a lane change maneuver (default 0)");
+
+    oc.doRegister("lanechange.overtake-right", new Option_Bool(false));
+    oc.addDescription("lanechange.overtake-right", "Processing", "Whether overtaking on the right on motorways is permitted");
 
     oc.doRegister("routing-algorithm", new Option_String("dijkstra"));
     oc.addDescription("routing-algorithm", "Processing",
                       "Select among routing algorithms ['dijkstra', 'astar']");
+    // pedestrian model
+    oc.doRegister("pedestrian.model", new Option_String("striping"));
+    oc.addDescription("pedestrian.model", "Processing", "Select among pedestrian models ['nonInteracting', 'striping']");
 
-    oc.doRegister("routeDist.maxsize", new Option_Integer());
-    oc.addDescription("routeDist.maxsize", "Processing",
-                      "Restrict the maximum size of route distributions");
+    oc.doRegister("pedestrian.striping.stripe-width", new Option_Float(0.65));
+    oc.addDescription("pedestrian.striping.stripe-width", "Processing", "Width of parallel stripes for segmenting a sidewalk (meters) for use with model 'striping'");
+
+    oc.doRegister("pedestrian.striping.dawdling", new Option_Float(0.2));
+    oc.addDescription("pedestrian.striping.dawdling", "Processing", "factor for random slow-downs [0,1] for use with model 'striping'");
 
     // devices
-    MSDevice_Routing::insertOptions();
-    MSDevice_HBEFA::insertOptions();
+    oc.addOptionSubTopic("Emissions");
+    std::string plp = getenv("PHEMLIGHT_PATH") == 0 ? "./PHEMlight/" : std::string(getenv("PHEMLIGHT_PATH"));
+    oc.doRegister("phemlight-path", new Option_FileName(plp));
+    oc.addDescription("phemlight-path", "Emissions", "Determines where to load PHEMlight definitions from.");
 
+    oc.addOptionSubTopic("Communication");
+    MSDevice::insertOptions(oc);
 
     // register report options
     oc.doRegister("no-duration-log", new Option_Bool(false));
@@ -314,16 +350,24 @@ MSFrame::fillOptions() {
 void
 MSFrame::buildStreams() {
     // standard outputs
-    OutputDevice::createDeviceByOption("netstate-dump", "netstate");
-    OutputDevice::createDeviceByOption("summary-output", "summary");
-    OutputDevice::createDeviceByOption("tripinfo-output", "tripinfos");
+    OutputDevice::createDeviceByOption("netstate-dump", "netstate", "netstate_file.xsd");
+    OutputDevice::createDeviceByOption("summary-output", "summary", "summary_file.xsd");
+    OutputDevice::createDeviceByOption("tripinfo-output", "tripinfos", "tripinfo_file.xsd");
 
     //extended
-    OutputDevice::createDeviceByOption("fcd-output", "fcd-export");
-    OutputDevice::createDeviceByOption("emission-output", "emission-export");
-    OutputDevice::createDeviceByOption("full-output", "full-export");
-    OutputDevice::createDeviceByOption("queue-output", "queue-export");
-    OutputDevice::createDeviceByOption("vtk-output", "vtk-export");
+    OutputDevice::createDeviceByOption("fcd-output", "fcd-export", "fcd_file.xsd");
+    OutputDevice::createDeviceByOption("emission-output", "emission-export", "emission_file.xsd");
+    OutputDevice::createDeviceByOption("full-output", "full-export", "full_file.xsd");
+    OutputDevice::createDeviceByOption("queue-output", "queue-export", "queue_file.xsd");
+    OutputDevice::createDeviceByOption("amitran-output", "trajectories", "amitran/trajectories.xsd\" timeStepSize=\"" + toString(STEPS2MS(DELTA_T)));
+
+    //OutputDevice::createDeviceByOption("vtk-output", "vtk-export");
+    OutputDevice::createDeviceByOption("link-output", "link-output");
+    OutputDevice::createDeviceByOption("bt-output", "bt-output");
+
+#ifdef _DEBUG
+    OutputDevice::createDeviceByOption("movereminder-output", "movereminder-output");
+#endif
 
     MSDevice_Vehroutes::init();
 }
@@ -337,15 +381,8 @@ MSFrame::checkOptions() {
         WRITE_ERROR("No network file (-n) specified.");
         ok = false;
     }
-    if (oc.isSet("incremental-dua-step") && oc.isSet("incremental-dua-base")) {
-        WRITE_WARNING("The options 'incremental-dua-step' and 'incremental-dua-base' are deprecated, use 'scale' instead.");
-        if (oc.getInt("incremental-dua-step") > oc.getInt("incremental-dua-base")) {
-            WRITE_ERROR("Invalid dua step.");
-            ok = false;
-        }
-    }
     if (!oc.isDefault("scale")) {
-        if (oc.getFloat("scale") < 0. || oc.getFloat("scale") > 1.) {
+        if (oc.getFloat("scale") < 0.) {
             WRITE_ERROR("Invalid scaling factor.");
             ok = false;
         }
@@ -359,15 +396,38 @@ MSFrame::checkOptions() {
             !oc.isUsableFileList("gui-settings-file")) {
         ok = false;
     }
-    if (oc.isSet("routeDist.maxsize") && oc.getInt("routeDist.maxsize") <= 0) {
-        WRITE_ERROR("routeDist.maxsize must be positive");
-        ok = false;
-    }
 #ifdef HAVE_INTERNAL
     if (oc.getBool("meso-junction-control.limited") && !oc.getBool("meso-junction-control")) {
         oc.set("meso-junction-control", "true");
     }
 #endif
+    const SUMOTime begin = string2time(oc.getString("begin"));
+    const SUMOTime end = string2time(oc.getString("end"));
+    if (begin < 0) {
+        WRITE_ERROR("The begin time should not be negative.");
+        ok = false;
+    }
+    if (end != string2time("-1")) {
+        if (end < begin) {
+            WRITE_ERROR("The end time should be after the begin time.");
+            ok = false;
+        }
+    }
+#ifdef HAVE_SUBSECOND_TIMESTEPS
+    if (string2time(oc.getString("step-length")) <= 0) {
+        WRITE_ERROR("the minimum step-length is 0.001");
+        ok = false;
+    }
+#endif
+#ifdef _DEBUG
+    if (oc.isSet("movereminder-output.vehicles") && !oc.isSet("movereminder-output")) {
+        WRITE_ERROR("option movereminder-output.vehicles requires option movereminder-output to be set");
+        ok = false;
+    }
+#endif
+    if (oc.getBool("sloppy-insert")) {
+        WRITE_WARNING("The option 'sloppy-insert' is deprecated, because it is now activated by default, see the new option 'eager-insert'.");
+    }
     return ok;
 }
 
@@ -380,28 +440,36 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
 #ifdef HAVE_INTERNAL_LANES
     // set whether internal lanes shall be used
     MSGlobals::gUsingInternalLanes = !oc.getBool("no-internal-links");
+    MSGlobals::gIgnoreJunctionBlocker = string2time(oc.getString("ignore-junction-blocker")) < 0 ?
+                                        std::numeric_limits<SUMOTime>::max() : string2time(oc.getString("ignore-junction-blocker"));
 #else
     MSGlobals::gUsingInternalLanes = false;
+    MSGlobals::gIgnoreJunctionBlocker = 0;
 #endif
     // set the grid lock time
     MSGlobals::gTimeToGridlock = string2time(oc.getString("time-to-teleport")) < 0 ? 0 : string2time(oc.getString("time-to-teleport"));
+    MSGlobals::gTimeToGridlockHighways = string2time(oc.getString("time-to-teleport.highways")) < 0 ? 0 : string2time(oc.getString("time-to-teleport.highways"));
     MSGlobals::gCheck4Accidents = !oc.getBool("ignore-accidents");
     MSGlobals::gCheckRoutes = !oc.getBool("ignore-route-errors");
-#ifdef HAVE_INTERNAL
+    MSGlobals::gLaneChangeDuration = string2time(oc.getString("lanechange.duration"));
     MSGlobals::gStateLoaded = oc.isSet("load-state");
+#ifdef HAVE_INTERNAL
     MSGlobals::gUseMesoSim = oc.getBool("mesosim");
     MSGlobals::gMesoLimitedJunctionControl = oc.getBool("meso-junction-control.limited");
     if (MSGlobals::gUseMesoSim) {
         MSGlobals::gUsingInternalLanes = false;
     }
 #endif
+    MSAbstractLaneChangeModel::initGlobalOptions(oc);
 
 #ifdef HAVE_SUBSECOND_TIMESTEPS
     DELTA_T = string2time(oc.getString("step-length"));
 #endif
-    if (oc.isSet("routeDist.maxsize")) {
-        MSRoute::setMaxRouteDistSize(oc.getInt("routeDist.maxsize"));
+#ifdef _DEBUG
+    if (oc.isSet("movereminder-output")) {
+        MSBaseVehicle::initMoveReminderOutput(oc);
     }
+#endif
 }
 
 

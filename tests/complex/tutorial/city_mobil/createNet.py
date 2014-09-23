@@ -10,9 +10,14 @@
 Create the XML input files for the generation of the SUMO network
 of the CityMobil parking lot.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2012 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 import os, random
 from constants import *
@@ -180,7 +185,7 @@ for row in range(DOUBLE_ROWS):
 for edge in ["cyberin", "cyberout"]:
     print >> stops, '    <busStop id="%sstop" lane="%s_0"' % (edge, edge),
     print >> stops, 'startPos="%s" endPos="%s"/>' % (90-2*CYBER_LENGTH-1, 90)
-print >> stops, '    <edgeData id="dump" freq="3600" file="aggregated.xml" excludeEmpty="true" type="hbefa"/>' 
+print >> stops, '    <edgeData id="dump" freq="3600" file="aggregated.xml" excludeEmpty="true" type="emissions"/>' 
 print >> stops, "</additional>"
 stops.close()
 

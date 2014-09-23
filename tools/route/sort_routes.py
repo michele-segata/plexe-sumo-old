@@ -3,13 +3,19 @@
 @file    sort_routes.py
 @author  Jakob Erdmann
 @author  Michael Behrisch
+@author  Pieter Loof
 @date    2011-07-14
 @version $Id$
 
 This script sorts the vehicles in the given route file by their depart time
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2007-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2007-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 import sys
 import os
@@ -127,12 +133,17 @@ def main(args=None):
         copy_elements(options.routefile, options.outfile, element_lines, line_offsets)
     else:
         outfile = open(options.outfile, 'w')
+        close_line = ''
         for line in open(options.routefile):
-            outfile.write(line)
             if '<routes' in line:
+                close_line = '</routes>'
+            if '<additional' in line:
+                close_line = '</additional>'
+            if '<vehicle ' in line or '<flow ' in line:
                 break
+            outfile.write(line)
         sort_departs(options.routefile, outfile)
-        outfile.write('</routes>')
+        outfile.write(close_line)
         outfile.close()
 
 

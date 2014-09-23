@@ -1,13 +1,14 @@
 /****************************************************************************/
 /// @file    OutputFormatter.h
+/// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
 /// @date    2012
 /// @version $Id$
 ///
 // Abstract base class for output formatters
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -109,14 +110,7 @@ public:
      */
     virtual bool closeTag(std::ostream& into) = 0;
 
-
-    /** @brief writes an arbitrary attribute
-     *
-     * @param[in] into The output stream to use
-     * @param[in] attr The attribute (name)
-     * @param[in] val The attribute value
-     */
-    virtual void writeAttr(std::ostream& into, const std::string& attr, const std::string& val) = 0;
+    virtual void writePreformattedTag(std::ostream& into, const std::string& val) = 0;
 
 };
 

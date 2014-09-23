@@ -1,5 +1,6 @@
 /****************************************************************************/
 /// @file    MSBaseVehicle.h
+/// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
 /// @author  Jakob Erdmann
 /// @date    Mon, 8 Nov 2010
@@ -7,8 +8,8 @@
 ///
 // A base class for vehicle implementations
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2010-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,6 +34,7 @@
 
 #include <iostream>
 #include <vector>
+#include <set>
 #include <utils/common/SUMOVehicle.h>
 #include <utils/common/StdDefs.h>
 #include "MSRoute.h"
@@ -62,7 +64,7 @@ public:
      * @param[in] speedFactor The factor for driven lane's speed limits
      * @exception ProcessError If a value is wrong
      */
-    MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route, const MSVehicleType* type, SUMOReal speedFactor);
+    MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route, const MSVehicleType* type, const SUMOReal speedFactor);
 
 
     /// @brief Destructor
@@ -82,13 +84,17 @@ public:
     /** @brief Returns the current route
      * @return The route the vehicle uses
      */
-    const MSRoute& getRoute() const;
+    inline const MSRoute& getRoute() const {
+        return *myRoute;
+    }
 
 
     /** @brief Returns the vehicle's type definition
      * @return The vehicle's type definition
      */
-    const MSVehicleType& getVehicleType() const;
+    inline const MSVehicleType& getVehicleType() const  {
+        return *myType;
+    }
 
 
     /** @brief Returns the maximum speed
@@ -121,6 +127,16 @@ public:
     }
 
 
+    /** @brief Returns the starting point for reroutes (usually the current edge)
+     *
+     * This differs from *myCurrEdge only if the vehicle is on an internal edge
+     * @return The rerouting start point
+     */
+    virtual const MSEdge* getRerouteOrigin() const {
+        return *myCurrEdge;
+    }
+
+
     /** @brief Performs a rerouting using the given router
      *
      * Tries to find a new route between the current edge and the destination edge, first.
@@ -143,7 +159,7 @@ public:
      * @param[in] simTime The time at which the route was replaced
      * @return Whether the new route was accepted
      */
-    bool replaceRouteEdges(const MSEdgeVector& edges, bool onInit = false);
+    bool replaceRouteEdges(MSEdgeVector& edges, bool onInit = false);
 
 
     /** @brief Returns the vehicle's acceleration
@@ -152,6 +168,13 @@ public:
      * @return The acceleration
      */
     virtual SUMOReal getAcceleration() const;
+
+    /** @brief Returns the slope of the road at vehicle's position
+     *
+     * This default implementation returns always 0.
+     * @return The acceleration
+     */
+    virtual SUMOReal getSlope() const;
 
     /** @brief Called when the vehicle is inserted into the network
      *
@@ -190,6 +213,10 @@ public:
     inline unsigned int getNumberReroutes() const {
         return myNumberReroutes;
     }
+
+    /// @brief Returns this vehicles impatience
+    SUMOReal getImpatience() const;
+
 
     /** @brief Returns this vehicle's devices
      * @return This vehicle's devices
@@ -241,9 +268,28 @@ public:
     /** @brief Returns the precomputed factor by which the driver wants to be faster than the speed limit
      * @return Speed limit factor
      */
-    SUMOReal getChosenSpeedFactor() const {
+    inline SUMOReal getChosenSpeedFactor() const {
         return myChosenSpeedFactor;
     }
+
+    /** @brief Returns the precomputed factor by which the driver wants to be faster than the speed limit
+     * @return Speed limit factor
+     */
+    inline void setChosenSpeedFactor(SUMOReal factor) {
+        myChosenSpeedFactor = factor;
+    }
+
+    /// @brief Returns a device of the given type if it exists or 0
+    MSDevice* getDevice(const std::type_info& type) const;
+
+
+    /// @name state io
+    //@{
+
+    /// Saves the (common) state of a vehicle
+    virtual void saveState(OutputDevice& out);
+
+    //@}
 
 protected:
     /** @brief (Re-)Calculates the arrival position from the vehicle parameters
@@ -294,6 +340,26 @@ private:
      * @note: in previous versions this was -1
      */
     static const SUMOTime NOT_YET_DEPARTED;
+
+    /// invalidated assignment operator
+    MSBaseVehicle& operator=(const MSBaseVehicle& s);
+
+
+#ifdef _DEBUG
+public:
+    static void initMoveReminderOutput(const OptionsCont& oc);
+
+protected:
+    /// @brief optionally generate movereminder-output for this vehicle
+    void traceMoveReminder(const std::string& type, MSMoveReminder* rem, SUMOReal pos, bool keep) const;
+
+    /// @brief whether this vehicle shall trace its moveReminders
+    const bool myTraceMoveReminders;
+private:
+    /// @brief vehicles which shall trace their move reminders
+    static std::set<std::string> myShallTraceMoveReminders;
+#endif
+
 
 };
 

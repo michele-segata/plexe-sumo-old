@@ -8,8 +8,8 @@
 ///
 // Interface for building edges
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,7 +36,6 @@
 #include <algorithm>
 #include <iterator>
 #include <microsim/MSLane.h>
-#include <microsim/MSInternalLane.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSEdgeControl.h>
 #include <utils/common/StringTokenizer.h>
@@ -73,8 +72,9 @@ NLEdgeControlBuilder::~NLEdgeControlBuilder() {
 void
 NLEdgeControlBuilder::beginEdgeParsing(
     const std::string& id, const MSEdge::EdgeBasicFunction function,
-    const std::string& streetName) {
-    myActiveEdge = buildEdge(id, function, streetName);
+    const std::string& streetName,
+    const std::string& edgeType) {
+    myActiveEdge = buildEdge(id, function, streetName, edgeType);
     if (MSEdge::dictionary(id) != 0) {
         throw InvalidArgument("Another edge with the id '" + id + "' exists.");
     }
@@ -87,20 +87,7 @@ NLEdgeControlBuilder::addLane(const std::string& id,
                               SUMOReal maxSpeed, SUMOReal length,
                               const PositionVector& shape, SUMOReal width,
                               SVCPermissions permissions) {
-    MSLane* lane = 0;
-    switch (myActiveEdge->getPurpose()) {
-        case MSEdge::EDGEFUNCTION_INTERNAL:
-            lane = new MSInternalLane(id, maxSpeed, length, myActiveEdge,
-                                      myCurrentNumericalLaneID++, shape, width, permissions);
-            break;
-        case MSEdge::EDGEFUNCTION_NORMAL:
-        case MSEdge::EDGEFUNCTION_CONNECTOR:
-            lane = new MSLane(id, maxSpeed, length, myActiveEdge,
-                              myCurrentNumericalLaneID++, shape, width, permissions);
-            break;
-        default:
-            throw InvalidArgument("Unrecognised edge type.");
-    }
+    MSLane* lane = new MSLane(id, maxSpeed, length, myActiveEdge, myCurrentNumericalLaneID++, shape, width, permissions);
     myLaneStorage->push_back(lane);
     return lane;
 }
@@ -127,16 +114,30 @@ NLEdgeControlBuilder::build() {
         }
 #endif
     }
+    // mark internal edges belonging to a roundabout (after all edges are build)
+    if (MSGlobals::gUsingInternalLanes) {
+        for (EdgeCont::iterator i1 = myEdges.begin(); i1 != myEdges.end(); i1++) {
+            MSEdge* edge = *i1;
+            if (edge->isInternal()) {
+                assert(edge->getNoFollowing() == 1);
+                assert(edge->getIncomingEdges().size() == 1);
+                if (edge->getFollower(0)->isRoundabout() || edge->getIncomingEdges()[0]->isRoundabout()) {
+                    edge->markAsRoundabout();
+                }
+            }
+        }
+    }
+    if (!deprecatedVehicleClassesSeen.empty()) {
+        WRITE_WARNING("Deprecated vehicle classes '" + toString(deprecatedVehicleClassesSeen) + "' in input network.");
+        deprecatedVehicleClassesSeen.clear();
+    }
     return new MSEdgeControl(myEdges);
 }
 
 
 MSEdge*
-NLEdgeControlBuilder::buildEdge(const std::string& id, const MSEdge::EdgeBasicFunction function, const std::string& streetName) {
-    if (function == MSEdge::EDGEFUNCTION_INTERNAL) {
-        return new MSEdge(id, -1, function, streetName);
-    }
-    return new MSEdge(id, myCurrentNumericalEdgeID++, function, streetName);
+NLEdgeControlBuilder::buildEdge(const std::string& id, const MSEdge::EdgeBasicFunction function, const std::string& streetName, const std::string& edgeType) {
+    return new MSEdge(id, myCurrentNumericalEdgeID++, function, streetName, edgeType);
 }
 
 

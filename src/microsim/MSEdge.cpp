@@ -12,8 +12,8 @@
 ///
 // A road/street connecting two junctions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -44,6 +44,7 @@
 #include "MSCACCLaneChanger.h"
 #include "MSGlobals.h"
 #include "MSVehicle.h"
+#include "MSPerson.h"
 #include "MSEdgeWeightsStorage.h"
 
 #ifdef HAVE_INTERNAL
@@ -69,10 +70,15 @@ std::vector<MSEdge*> MSEdge::myEdges;
 // ===========================================================================
 MSEdge::MSEdge(const std::string& id, int numericalID,
                const EdgeBasicFunction function,
-               const std::string& streetName) :
+               const std::string& streetName,
+               const std::string& edgeType) :
     Named(id), myNumericalID(numericalID), myLanes(0),
     myLaneChanger(0), myFunction(function), myVaporizationRequests(0),
-    myLastFailedInsertionTime(-1), myStreetName(streetName) {}
+    myLastFailedInsertionTime(-1),
+    myFromJunction(0), myToJunction(0),
+    myStreetName(streetName),
+    myEdgeType(edgeType),
+    myAmRoundabout(false) {}
 
 
 MSEdge::~MSEdge() {
@@ -94,12 +100,33 @@ void
 MSEdge::initialize(std::vector<MSLane*>* lanes) {
     assert(myFunction == EDGEFUNCTION_DISTRICT || lanes != 0);
     myLanes = lanes;
-    if (myLanes && myLanes->size() > 1 && myFunction != EDGEFUNCTION_INTERNAL) {
+    if (myLanes && myLanes->size() > 1) {
         myLaneChanger = new MSCACCLaneChanger(myLanes, OptionsCont::getOptions().getBool("lanechange.allow-swap"));
     }
     if (myFunction == EDGEFUNCTION_DISTRICT) {
-        myCombinedPermissions = SVCFreeForAll;
+        myCombinedPermissions = SVCAll;
     }
+}
+
+
+bool
+MSEdge::laneChangeAllowed() const {
+    if (myLanes == 0 || myLanes->size() < 2) {
+        return false;
+    }
+    if (myFunction != EDGEFUNCTION_INTERNAL) {
+        return true;
+    }
+    // allow changing only if all links leading to this internal lane have priority
+    for (std::vector<MSLane*>::iterator it = myLanes->begin(); it != myLanes->end(); ++it) {
+        MSLane* pred = (*it)->getLogicalPredecessorLane();
+        MSLink* link = MSLinkContHelper::getConnectingLink(*pred, **it);
+        assert(link != 0);
+        if (!link->havePriority()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 
@@ -130,7 +157,9 @@ MSEdge::closeBuilding() {
             toL = (*j)->getViaLane();
             if (toL != 0) {
                 MSEdge& to = toL->getEdge();
-                to.myPredeccesors.push_back(this);
+                if (std::find(to.myPredeccesors.begin(), to.myPredeccesors.end(), this) == to.myPredeccesors.end()) {
+                    to.myPredeccesors.push_back(this);
+                }
             }
 #endif
         }
@@ -151,7 +180,7 @@ MSEdge::rebuildAllowedLanes() {
     }
     myClassedAllowed.clear();
     // rebuild myMinimumPermissions and myCombinedPermissions
-    myMinimumPermissions = SVCFreeForAll;
+    myMinimumPermissions = SVCAll;
     myCombinedPermissions = 0;
     for (std::vector<MSLane*>::iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
         myMinimumPermissions &= (*i)->getPermissions();
@@ -163,21 +192,28 @@ MSEdge::rebuildAllowedLanes() {
 // ------------ Access to the edge's lanes
 MSLane*
 MSEdge::leftLane(const MSLane* const lane) const {
-    std::vector<MSLane*>::iterator laneIt = find(myLanes->begin(), myLanes->end(), lane);
-    if (laneIt == myLanes->end() || laneIt == myLanes->end() - 1) {
-        return 0;
-    }
-    return *(laneIt + 1);
+    return parallelLane(lane, 1);
 }
 
 
 MSLane*
 MSEdge::rightLane(const MSLane* const lane) const {
-    std::vector<MSLane*>::iterator laneIt = find(myLanes->begin(), myLanes->end(), lane);
-    if (laneIt == myLanes->end() || laneIt == myLanes->begin()) {
+    return parallelLane(lane, -1);
+}
+
+
+MSLane*
+MSEdge::parallelLane(const MSLane* const lane, int offset) const {
+    const int index = (int)(find(myLanes->begin(), myLanes->end(), lane) - myLanes->begin());
+    if (index == (int)myLanes->size()) {
         return 0;
     }
-    return *(laneIt - 1);
+    const int resultIndex = index + offset;
+    if (resultIndex >= (int)myLanes->size() || resultIndex < 0) {
+        return 0;
+    } else {
+        return (*myLanes)[resultIndex];
+    }
 }
 
 
@@ -294,7 +330,7 @@ MSEdge::getDepartLane(const MSVehicle& veh) const {
                 return getFreeLane(allowedLanes(**(veh.getRoute().begin() + 1)), veh.getVehicleType().getVehicleClass());
             }
         case DEPART_LANE_BEST_FREE: {
-            const std::vector<MSVehicle::LaneQ>& bl = veh.getBestLanes(false, (*myLanes)[0]);
+            const std::vector<MSVehicle::LaneQ>& bl = veh.getBestLanes();
             SUMOReal bestLength = -1;
             for (std::vector<MSVehicle::LaneQ>::const_iterator i = bl.begin(); i != bl.end(); ++i) {
                 if ((*i).length > bestLength) {
@@ -375,11 +411,9 @@ MSEdge::insertVehicle(SUMOVehicle& v, SUMOTime time) const {
 
 void
 MSEdge::changeLanes(SUMOTime t) {
-    if (myFunction == EDGEFUNCTION_INTERNAL) {
-        return;
+    if (laneChangeAllowed()) {
+        myLaneChanger->laneChange(t);
     }
-    assert(myLaneChanger != 0);
-    myLaneChanger->laneChange(t);
 }
 
 
@@ -441,12 +475,10 @@ MSEdge::dictionary(const std::string& id, MSEdge* ptr) {
     if (it == myDict.end()) {
         // id not in myDict.
         myDict[id] = ptr;
-        if (ptr->getNumericalID() != -1) {
-            while ((int)myEdges.size() < ptr->getNumericalID() + 1) {
-                myEdges.push_back(0);
-            }
-            myEdges[ptr->getNumericalID()] = ptr;
+        while ((int)myEdges.size() < ptr->getNumericalID() + 1) {
+            myEdges.push_back(0);
         }
+        myEdges[ptr->getNumericalID()] = ptr;
         return true;
     }
     return false;
@@ -557,6 +589,25 @@ SUMOReal
 MSEdge::getVehicleMaxSpeed(const SUMOVehicle* const veh) const {
     // @note lanes might have different maximum speeds in theory
     return getLanes()[0]->getVehicleMaxSpeed(veh);
+}
+
+
+std::vector<MSPerson*>
+MSEdge::getSortedPersons(SUMOTime timestep) const {
+    std::vector<MSPerson*> result(myPersons.begin(), myPersons.end());
+    sort(result.begin(), result.end(), person_by_offset_sorter(timestep));
+    return result;
+}
+
+
+int
+MSEdge::person_by_offset_sorter::operator()(const MSPerson* const p1, const MSPerson* const p2) const {
+    const SUMOReal pos1 = p1->getCurrentStage()->getEdgePos(myTime);
+    const SUMOReal pos2 = p2->getCurrentStage()->getEdgePos(myTime);
+    if (pos1 != pos2) {
+        return pos1 < pos2;
+    }
+    return p1->getID() < p2->getID();
 }
 
 /****************************************************************************/

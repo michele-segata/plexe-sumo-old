@@ -1,13 +1,15 @@
 /****************************************************************************/
 /// @file    MSCFModel_SmartSK.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
+/// @author  Peter Wagner
 /// @date    Tue, 05 Jun 2012
 /// @version $Id$
 ///
 // A smarter SK
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -29,7 +31,7 @@
 #include <config.h>
 #endif
 
-#include <microsim/MSCFModel.h>
+#include "MSCFModel.h"
 #include <utils/xml/SUMOXMLDefinitions.h>
 
 
@@ -85,7 +87,7 @@ public:
      * @see MSCFModel::ffeS
      * @todo generic Interface, models can call for the values they need
      */
-    virtual SUMOReal stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const;
+    virtual SUMOReal stopSpeed(const MSVehicle* const veh, const SUMOReal speed, SUMOReal gap2pred) const;
 
 
     /** @brief Returns the model's name

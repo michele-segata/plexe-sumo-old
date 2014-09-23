@@ -7,13 +7,15 @@
 /// @author  Eric Nicolay
 /// @author  Mario Krumnow
 /// @author  Michael Behrisch
+/// @author  Mario Krumnow
+/// @author  Christoph Sommer
 /// @date    Tue, 06 Mar 2001
 /// @version $Id$
 ///
 // The simulated network and simulation perfomer
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -45,6 +47,7 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <ctime>
 #include <utils/common/UtilExceptions.h>
 #include "MSNet.h"
 #include "MSPersonControl.h"
@@ -80,24 +83,21 @@
 #include "output/MSQueueExport.h"
 #include "output/MSVTKExport.h"
 #include "output/MSXMLRawOut.h"
+#include "output/MSAmitranTrajectories.h"
 #include <utils/iodevices/OutputDevice.h>
 #include <utils/common/SysUtils.h>
 #include <utils/common/WrappingCommand.h>
 #include <utils/options/OptionsCont.h>
+#include <utils/common/PedestrianRouter.h>
 #include "MSGlobals.h"
+#include "MSPModel.h"
 #include <utils/geom/GeoConvHelper.h>
-#include <ctime>
 #include "MSPerson.h"
 #include "MSEdgeWeightsStorage.h"
-
-
-#ifdef _MESSAGES
-#include "MSMessageEmitter.h"
-#endif
+#include "MSStateHandler.h"
 
 #ifdef HAVE_INTERNAL
 #include <mesosim/MELoop.h>
-#include <mesosim/StateHandler.h>
 #include <utils/iodevices/BinaryInputDevice.h>
 #endif
 
@@ -115,6 +115,10 @@
 // ===========================================================================
 MSNet* MSNet::myInstance = 0;
 
+const std::string MSNet::STAGE_EVENTS("events");
+const std::string MSNet::STAGE_MOVEMENTS("move");
+const std::string MSNet::STAGE_LANECHANGE("laneChange");
+const std::string MSNet::STAGE_INSERTIONS("insertion");
 
 // ===========================================================================
 // member method definitions
@@ -123,10 +127,10 @@ SUMOReal
 MSNet::getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t) {
     SUMOReal value;
     const MSVehicle* const veh = dynamic_cast<const MSVehicle* const>(v);
-    if (veh != 0 && veh->getWeightsStorage().retrieveExistingEffort(e, v, t, value)) {
+    if (veh != 0 && veh->getWeightsStorage().retrieveExistingEffort(e, t, value)) {
         return value;
     }
-    if (getInstance()->getWeightsStorage().retrieveExistingEffort(e, v, t, value)) {
+    if (getInstance()->getWeightsStorage().retrieveExistingEffort(e, t, value)) {
         return value;
     }
     return 0;
@@ -137,10 +141,10 @@ SUMOReal
 MSNet::getTravelTime(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t) {
     SUMOReal value;
     const MSVehicle* const veh = dynamic_cast<const MSVehicle* const>(v);
-    if (veh != 0 && veh->getWeightsStorage().retrieveExistingTravelTime(e, v, t, value)) {
+    if (veh != 0 && veh->getWeightsStorage().retrieveExistingTravelTime(e, t, value)) {
         return value;
     }
-    if (getInstance()->getWeightsStorage().retrieveExistingTravelTime(e, v, t, value)) {
+    if (getInstance()->getWeightsStorage().retrieveExistingTravelTime(e, t, value)) {
         return value;
     }
     return e->getMinimumTravelTime(v);
@@ -167,7 +171,8 @@ MSNet::MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
     myRouterTTInitialized(false),
     myRouterTTDijkstra(0),
     myRouterTTAStar(0),
-    myRouterEffort(0) {
+    myRouterEffort(0),
+    myPedestrianRouter(0) {
     if (myInstance != 0) {
         throw ProcessError("A network was already constructed.");
     }
@@ -176,7 +181,7 @@ MSNet::MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
     myLogExecutionTime = !oc.getBool("no-duration-log");
     myLogStepNumber = !oc.getBool("no-step-log");
     myTooManyVehicles = oc.getInt("max-num-vehicles");
-    myInserter = new MSInsertionControl(*vc, string2time(oc.getString("max-depart-delay")), oc.getBool("sloppy-insert"));
+    myInserter = new MSInsertionControl(*vc, string2time(oc.getString("max-depart-delay")), !oc.getBool("eager-insert"));
     myVehicleControl = vc;
     myDetectorControl = new MSDetectorControl();
     myEdges = 0;
@@ -190,6 +195,7 @@ MSNet::MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
     myBeginOfTimestepEvents = beginOfTimestepEvents;
     myEndOfTimestepEvents = endOfTimestepEvents;
     myInsertionEvents = insertionEvents;
+    myLanesRTree.first = false;
 
 #ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
@@ -244,20 +250,17 @@ MSNet::~MSNet() {
         delete myPersonControl;
     }
     delete myShapeContainer;
-#ifdef _MESSAGES
-    myMsgEmitter.clear();
-    msgEmitVec.clear();
-#endif
     delete myEdgeWeights;
     delete myRouterTTDijkstra;
     delete myRouterTTAStar;
     delete myRouterEffort;
+    myLanesRTree.second.RemoveAll();
+    clearAll();
 #ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         delete MSGlobals::gMesoNet;
     }
 #endif
-    clearAll();
     myInstance = 0;
 }
 
@@ -269,10 +272,12 @@ MSNet::simulate(SUMOTime start, SUMOTime stop) {
     // the simulation loop
     MSNet::SimulationState state = SIMSTATE_RUNNING;
     myStep = start;
+    // preload the routes especially for TraCI
+    loadRoutes();
 #ifndef NO_TRACI
 #ifdef HAVE_PYTHON
     if (OptionsCont::getOptions().isSet("python-script")) {
-        traci::TraCIServer::runEmbedded(OptionsCont::getOptions().getString("python-script"));
+        TraCIServer::runEmbedded(OptionsCont::getOptions().getString("python-script"));
         closeSimulation(start);
         WRITE_MESSAGE("Simulation ended at time: " + time2string(getCurrentTimeStep()));
         WRITE_MESSAGE("Reason: Script ended");
@@ -291,7 +296,7 @@ MSNet::simulate(SUMOTime start, SUMOTime stop) {
         state = simulationState(stop);
 #ifndef NO_TRACI
         if (state != SIMSTATE_RUNNING) {
-            if (OptionsCont::getOptions().getInt("remote-port") != 0 && !traci::TraCIServer::wasClosed()) {
+            if (OptionsCont::getOptions().getInt("remote-port") != 0 && !TraCIServer::wasClosed()) {
                 state = SIMSTATE_RUNNING;
             }
         }
@@ -305,12 +310,18 @@ MSNet::simulate(SUMOTime start, SUMOTime stop) {
     return 0;
 }
 
+void
+MSNet::loadRoutes() {
+    myRouteLoaders->loadNext(myStep);
+}
+
 
 void
 MSNet::closeSimulation(SUMOTime start) {
     if (myLogExecutionTime) {
         long duration = SysUtils::getCurrentMillis() - mySimBeginMillis;
         std::ostringstream msg;
+        // print performance notice
         msg << "Performance: " << "\n" << " Duration: " << duration << " ms" << "\n";
         if (duration != 0) {
             msg << " Real time factor: " << (STEPS2TIME(myStep - start) * 1000. / (SUMOReal)duration) << "\n";
@@ -318,21 +329,34 @@ MSNet::closeSimulation(SUMOTime start) {
             msg.setf(std::ios::showpoint);    // print decimal point
             msg << " UPS: " << ((SUMOReal)myVehiclesMoved / ((SUMOReal)duration / 1000)) << "\n";
         }
-        // prepare optional statistics
+        // print vehicle statistics
         const std::string discardNotice = ((myVehicleControl->getLoadedVehicleNo() != myVehicleControl->getDepartedVehicleNo()) ?
                                            " (Loaded: " + toString(myVehicleControl->getLoadedVehicleNo()) + ")" : "");
-        const std::string collisionNotice = (
-                                                myVehicleControl->getCollisionCount() > 0 ?
-                                                " (Collisions: " + toString(myVehicleControl->getCollisionCount()) + ")" : "");
-        const std::string teleportNotice = (
-                                               myVehicleControl->getTeleportCount() > 0 ?
-                                               "Teleports: " + toString(myVehicleControl->getTeleportCount()) + collisionNotice + "\n" : "");
-        // print statistics
         msg << "Vehicles: " << "\n"
-            << " Emitted: " << myVehicleControl->getDepartedVehicleNo() << discardNotice << "\n"
+            << " Inserted: " << myVehicleControl->getDepartedVehicleNo() << discardNotice << "\n"
             << " Running: " << myVehicleControl->getRunningVehicleNo() << "\n"
-            << " Waiting: " << myInserter->getWaitingVehicleNo() << "\n"
-            << teleportNotice;
+            << " Waiting: " << myInserter->getWaitingVehicleNo() << "\n";
+
+        if (myVehicleControl->getTeleportCount() > 0) {
+            // print optional teleport statistics
+            std::vector<std::string> reasons;
+            if (myVehicleControl->getCollisionCount() > 0) {
+                reasons.push_back("Collisions: " + toString(myVehicleControl->getCollisionCount()));
+            }
+            if (myVehicleControl->getTeleportsJam() > 0) {
+                reasons.push_back("Jam: " + toString(myVehicleControl->getTeleportsJam()));
+            }
+            if (myVehicleControl->getTeleportsYield() > 0) {
+                reasons.push_back("Yield: " + toString(myVehicleControl->getTeleportsYield()));
+            }
+            if (myVehicleControl->getTeleportsWrongLane() > 0) {
+                reasons.push_back("Wrong Lane: " + toString(myVehicleControl->getTeleportsWrongLane()));
+            }
+            msg << "Teleports: " << myVehicleControl->getTeleportCount() << " (" << joinToString(reasons, ", ") << ")\n";
+        }
+        if (myVehicleControl->getEmergencyStops() > 0) {
+            msg << "Emergency Stops: " << myVehicleControl->getEmergencyStops() << "\n";
+        }
         WRITE_MESSAGE(msg.str());
     }
     myDetectorControl->close(myStep);
@@ -340,7 +364,7 @@ MSNet::closeSimulation(SUMOTime start) {
         MSDevice_Vehroutes::generateOutputForUnfinished();
     }
 #ifndef NO_TRACI
-    traci::TraCIServer::close();
+    TraCIServer::close();
 #endif
 }
 
@@ -348,8 +372,8 @@ MSNet::closeSimulation(SUMOTime start) {
 void
 MSNet::simulationStep() {
 #ifndef NO_TRACI
-    traci::TraCIServer::processCommandsUntilSimStep(myStep);
-    traci::TraCIServer* t = traci::TraCIServer::getInstance();
+    TraCIServer::processCommandsUntilSimStep(myStep);
+    TraCIServer* t = TraCIServer::getInstance();
     if (t != 0 && t->getTargetTime() != 0 && t->getTargetTime() < myStep) {
         return;
     }
@@ -358,17 +382,15 @@ MSNet::simulationStep() {
     if (myLogExecutionTime) {
         mySimStepBegin = SysUtils::getCurrentMillis();
     }
-#ifdef HAVE_INTERNAL
-    // netstate output
+    // simulation state output
     std::vector<SUMOTime>::iterator timeIt = find(myStateDumpTimes.begin(), myStateDumpTimes.end(), myStep);
     if (timeIt != myStateDumpTimes.end()) {
-        const int dist = distance(myStateDumpTimes.begin(), timeIt);
-        StateHandler::saveState(myStateDumpFiles[dist], myStep);
+        const int dist = (int)distance(myStateDumpTimes.begin(), timeIt);
+        MSStateHandler::saveState(myStateDumpFiles[dist], myStep);
     }
-#endif
     myBeginOfTimestepEvents->execute(myStep);
     if (MSGlobals::gCheck4Accidents) {
-        myEdges->detectCollisions(myStep, 0);
+        myEdges->detectCollisions(myStep, STAGE_EVENTS);
     }
     // check whether the tls programs need to be switched
     myLogics->check2Switch(myStep);
@@ -389,30 +411,29 @@ MSNet::simulationStep() {
         // decide right-of-way and execute movements
         myEdges->executeMovements(myStep);
         if (MSGlobals::gCheck4Accidents) {
-            myEdges->detectCollisions(myStep, 1);
+            myEdges->detectCollisions(myStep, STAGE_MOVEMENTS);
         }
 
         // Vehicles change Lanes (maybe)
         myEdges->changeLanes(myStep);
 
         if (MSGlobals::gCheck4Accidents) {
-            myEdges->detectCollisions(myStep, 2);
+            myEdges->detectCollisions(myStep, STAGE_LANECHANGE);
         }
 #ifdef HAVE_INTERNAL
     }
 #endif
-    // load routes
-    myRouteLoaders->loadNext(myStep);
+    loadRoutes();
 
     // persons
     if (myPersonControl != 0) {
         myPersonControl->checkWaitingPersons(this, myStep);
     }
-    // emit Vehicles
+    // insert Vehicles
     myInsertionEvents->execute(myStep);
     myInserter->emitVehicles(myStep);
     if (MSGlobals::gCheck4Accidents) {
-        myEdges->detectCollisions(myStep, 3);
+        myEdges->detectCollisions(myStep, STAGE_INSERTIONS);
     }
     MSVehicleTransfer::getInstance()->checkInsertions(myStep);
 
@@ -420,8 +441,8 @@ MSNet::simulationStep() {
     myEndOfTimestepEvents->execute(myStep);
 
 #ifndef NO_TRACI
-    if (traci::TraCIServer::getInstance() != 0) {
-        traci::TraCIServer::getInstance()->postProcessVTD();
+    if (TraCIServer::getInstance() != 0) {
+        TraCIServer::getInstance()->postProcessVTD();
     }
 #endif
     // update and write (if needed) detector values
@@ -442,7 +463,7 @@ MSNet::simulationState(SUMOTime stopTime) const {
         return SIMSTATE_TOO_MANY_VEHICLES;
     }
 #ifndef NO_TRACI
-    if (traci::TraCIServer::wasClosed()) {
+    if (TraCIServer::wasClosed()) {
         return SIMSTATE_CONNECTION_CLOSED;
     }
     if (stopTime < 0 && OptionsCont::getOptions().getInt("remote-port") == 0) {
@@ -498,12 +519,8 @@ MSNet::clearAll() {
     MSDevice_Routing::cleanup();
     MSTrigger::cleanup();
     MSCalibrator::cleanup();
-}
-
-
-SUMOTime
-MSNet::getCurrentTimeStep() const {
-    return myStep;
+    MSPModel::cleanup();
+    PedestrianEdge<MSEdge, MSLane, MSJunction>::cleanup();
 }
 
 
@@ -537,6 +554,11 @@ MSNet::writeOutput() {
         MSQueueExport::write(OutputDevice::getDeviceByOption("queue-output"), myStep);
     }
 
+    // check amitran dumps
+    if (OptionsCont::getOptions().isSet("amitran-output")) {
+        MSAmitranTrajectories::write(OutputDevice::getDeviceByOption("amitran-output"), myStep);
+    }
+
     // check vtk dumps
     if (OptionsCont::getOptions().isSet("vtk-output")) {
 
@@ -555,27 +577,43 @@ MSNet::writeOutput() {
 
     }
 
-    // emission output
+    // summary output
     if (OptionsCont::getOptions().isSet("summary-output")) {
         OutputDevice& od = OutputDevice::getDeviceByOption("summary-output");
-        od << "    <step time=\"" << time2string(myStep) << "\" "
-           << "loaded=\"" << myVehicleControl->getLoadedVehicleNo() << "\" "
-           << "emitted=\"" << myVehicleControl->getDepartedVehicleNo() << "\" "
-           << "running=\"" << myVehicleControl->getRunningVehicleNo() << "\" "
-           << "waiting=\"" << myInserter->getWaitingVehicleNo() << "\" "
-           << "ended=\"" << myVehicleControl->getEndedVehicleNo() << "\" "
-           << "meanWaitingTime=\"";
-        myVehicleControl->printMeanWaitingTime(od);
-        od << "\" meanTravelTime=\"";
-        myVehicleControl->printMeanTravelTime(od);
-        od << "\" ";
+        unsigned int departedVehiclesNumber = myVehicleControl->getDepartedVehicleNo();
+        const SUMOReal meanWaitingTime = departedVehiclesNumber != 0 ? myVehicleControl->getTotalDepartureDelay() / (SUMOReal) departedVehiclesNumber : -1.;
+        unsigned int endedVehicleNumber = myVehicleControl->getEndedVehicleNo();
+        const SUMOReal meanTravelTime = endedVehicleNumber != 0 ? myVehicleControl->getTotalTravelTime() / (SUMOReal) endedVehicleNumber : -1.;
+        od.openTag("step").writeAttr("time", time2string(myStep)).writeAttr("loaded", myVehicleControl->getLoadedVehicleNo())
+        .writeAttr("inserted", myVehicleControl->getDepartedVehicleNo()).writeAttr("running", myVehicleControl->getRunningVehicleNo())
+        .writeAttr("waiting", myInserter->getWaitingVehicleNo()).writeAttr("ended", myVehicleControl->getEndedVehicleNo())
+        .writeAttr("meanWaitingTime", meanWaitingTime).writeAttr("meanTravelTime", meanTravelTime);
         if (myLogExecutionTime) {
-            od << "duration=\"" << mySimStepDuration << "\" ";
+            od.writeAttr("duration", mySimStepDuration);
         }
-        od << "/>\n";
+        od.closeTag();
     }
+
     // write detector values
     myDetectorControl->writeOutput(myStep + DELTA_T, false);
+
+    // write link states
+    if (OptionsCont::getOptions().isSet("link-output")) {
+        OutputDevice& od = OutputDevice::getDeviceByOption("link-output");
+        od.openTag("timestep");
+        od.writeAttr(SUMO_ATTR_ID, STEPS2TIME(myStep));
+        const std::vector<MSEdge*>& edges = myEdges->getEdges();
+        for (std::vector<MSEdge*>::const_iterator i = edges.begin(); i != edges.end(); ++i) {
+            const std::vector<MSLane*>& lanes = (*i)->getLanes();
+            for (std::vector<MSLane*>::const_iterator j = lanes.begin(); j != lanes.end(); ++j) {
+                const std::vector<MSLink*>& links = (*j)->getLinkCont();
+                for (std::vector<MSLink*>::const_iterator k = links.begin(); k != links.end(); ++k) {
+                    (*k)->writeApproaching(od, (*j)->getID());
+                }
+            }
+        }
+        od.closeTag();
+    }
 }
 
 
@@ -724,35 +762,24 @@ MSNet::getRouterEffort(const std::vector<MSEdge*>& prohibited) const {
 }
 
 
-
-#ifdef _MESSAGES
-MSMessageEmitter*
-MSNet::getMsgEmitter(const std::string& whatemit) {
-    msgEmitVec.clear();
-    msgEmitVec = myMsgEmitter.buildAndGetStaticVector();
-    for (std::vector<MSMessageEmitter*>::iterator it = msgEmitVec.begin(); it != msgEmitVec.end(); ++it) {
-        if ((*it)->getEventsEnabled(whatemit)) {
-            return *it;
-        }
+MSNet::MSPedestrianRouterDijkstra&
+MSNet::getPedestrianRouter(const std::vector<MSEdge*>& prohibited) const {
+    if (myPedestrianRouter == 0) {
+        myPedestrianRouter = new MSPedestrianRouterDijkstra();
     }
-    return 0;
+    myPedestrianRouter->prohibit(prohibited);
+    return *myPedestrianRouter;
 }
 
 
-void
-MSNet::createMsgEmitter(std::string& id,
-                        std::string& file,
-                        const std::string& base,
-                        std::string& whatemit,
-                        bool reverse,
-                        bool table,
-                        bool xy,
-                        SUMOReal step) {
-    MSMessageEmitter* msgEmitter = new MSMessageEmitter(file, base, whatemit, reverse, table, xy, step);
-    myMsgEmitter.add(id, msgEmitter);
+const NamedRTree&
+MSNet::getLanesRTree() const {
+    if (!myLanesRTree.first) {
+        MSLane::fill(myLanesRTree.second);
+        myLanesRTree.first = true;
+    }
+    return myLanesRTree.second;
 }
-#endif
 
 
 /****************************************************************************/
-

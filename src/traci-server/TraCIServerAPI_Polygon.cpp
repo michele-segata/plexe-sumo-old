@@ -3,13 +3,15 @@
 /// @author  Daniel Krajzewicz
 /// @author  Laura Bieker
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
+/// @author  Christoph Sommer
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // APIs for getting/setting polygon values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -42,12 +44,6 @@
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
-
-
-// ===========================================================================
-// used namespaces
-// ===========================================================================
-using namespace traci;
 
 
 // ===========================================================================
@@ -245,14 +241,16 @@ TraCIServerAPI_Polygon::getPolygon(const std::string& id) {
 }
 
 
-TraCIRTree*
+NamedRTree*
 TraCIServerAPI_Polygon::getTree() {
-    TraCIRTree* t = new TraCIRTree();
+    NamedRTree* t = new NamedRTree();
     ShapeContainer& shapeCont = MSNet::getInstance()->getShapeContainer();
     const std::map<std::string, Polygon*>& polygons = shapeCont.getPolygons().getMyMap();
     for (std::map<std::string, Polygon*>::const_iterator i = polygons.begin(); i != polygons.end(); ++i) {
         Boundary b = (*i).second->getShape().getBoxBoundary();
-        t->addObject((*i).second, b);
+        const float cmin[2] = {(float) b.xmin(), (float) b.ymin()};
+        const float cmax[2] = {(float) b.xmax(), (float) b.ymax()};
+        t->Insert(cmin, cmax, (*i).second);
     }
     return t;
 }

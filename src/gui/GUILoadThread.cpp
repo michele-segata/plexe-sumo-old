@@ -8,8 +8,8 @@
 ///
 // Class describing the thread that performs the loading of a simulation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -31,37 +31,43 @@
 #endif
 
 #include <iostream>
+#include <ctime>
+#include <utils/common/RandHelper.h>
+#include <utils/common/UtilExceptions.h>
+#include <utils/common/MsgHandler.h>
+#include <utils/common/MsgRetrievingFunction.h>
+#include <utils/options/OptionsCont.h>
+#include <utils/options/Option.h>
+#include <utils/options/OptionsIO.h>
+#include <utils/foxtools/MFXEventQue.h>
+#include <utils/gui/events/GUIEvent_Message.h>
+#include <utils/gui/windows/GUIAppEnum.h>
+#include <utils/gui/globjects/GUIGlObjectStorage.h>
+#include <utils/gui/images/GUITexturesHelper.h>
+#include <utils/xml/XMLSubSys.h>
 #include <guisim/GUINet.h>
 #include <guisim/GUIEventControl.h>
+#include <guisim/GUIVehicleControl.h>
 #include <netload/NLBuilder.h>
 #include <netload/NLHandler.h>
 #include <netload/NLJunctionControlBuilder.h>
 #include <guinetload/GUIEdgeControlBuilder.h>
 #include <guinetload/GUIDetectorBuilder.h>
 #include <guinetload/GUITriggerBuilder.h>
-#include <guisim/GUIVehicleControl.h>
 #include <microsim/output/MSDetectorControl.h>
-#include <utils/common/UtilExceptions.h>
-#include <utils/options/OptionsCont.h>
-#include <utils/options/Option.h>
-#include <utils/options/OptionsIO.h>
-#include <utils/common/MsgHandler.h>
-#include <utils/foxtools/MFXEventQue.h>
 #include <microsim/MSFrame.h>
-#include <utils/common/MsgRetrievingFunction.h>
 #include "GUIApplicationWindow.h"
 #include "GUILoadThread.h"
 #include "GUIGlobals.h"
 #include "GUIEvent_SimulationLoaded.h"
-#include <utils/gui/events/GUIEvent_Message.h>
-#include <utils/gui/windows/GUIAppEnum.h>
-#include <utils/gui/globjects/GUIGlObjectStorage.h>
-#include <utils/gui/images/GUITexturesHelper.h>
-#include <utils/common/RandHelper.h>
-#include <ctime>
 
 #ifdef HAVE_INTERNAL
 #include <mesogui/GUIMEVehicleControl.h>
+#endif
+
+#ifndef NO_TRACI
+#include <traci-server/TraCIServer.h>
+#include "TraCIServerAPI_GUI.h"
 #endif
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -99,14 +105,12 @@ GUILoadThread::run() {
     bool osgView = false;
     OptionsCont& oc = OptionsCont::getOptions();
 
-    // within gui-based applications, nothing is reported to the console
-    MsgHandler::getMessageInstance()->removeRetriever(&OutputDevice::getDevice("stdout"));
-    MsgHandler::getWarningInstance()->removeRetriever(&OutputDevice::getDevice("stderr"));
-    MsgHandler::getErrorInstance()->removeRetriever(&OutputDevice::getDevice("stderr"));
     // register message callbacks
     MsgHandler::getMessageInstance()->addRetriever(myMessageRetriever);
     MsgHandler::getErrorInstance()->addRetriever(myErrorRetriever);
-    MsgHandler::getWarningInstance()->addRetriever(myWarningRetriever);
+    if (!OptionsCont::getOptions().getBool("no-warnings")) {
+        MsgHandler::getWarningInstance()->addRetriever(myWarningRetriever);
+    }
 
     // try to load the given configuration
     if (!initOptions()) {
@@ -115,8 +119,13 @@ GUILoadThread::run() {
         submitEndAndCleanup(net, simStartTime, simEndTime);
         return 0;
     }
+    // within gui-based applications, nothing is reported to the console
+    MsgHandler::getMessageInstance()->removeRetriever(&OutputDevice::getDevice("stdout"));
+    MsgHandler::getWarningInstance()->removeRetriever(&OutputDevice::getDevice("stderr"));
+    MsgHandler::getErrorInstance()->removeRetriever(&OutputDevice::getDevice("stderr"));
     // do this once again to get parsed options
     MsgHandler::initOutputOptions();
+    XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
     GUIGlobals::gRunAfterLoad = oc.getBool("start");
     GUIGlobals::gQuitOnEnd = oc.getBool("quit-on-end");
 
@@ -130,7 +139,7 @@ GUILoadThread::run() {
     RandHelper::initRandGlobal();
     RandHelper::initRandGlobal(&MSVehicleControl::myVehicleParamsRNG);
     MSFrame::setMSGlobals(oc);
-    gAllowTextures = !oc.getBool("disable-textures");
+    GUITexturesHelper::allowTextures(!oc.getBool("disable-textures"));
     MSVehicleControl* vehControl = 0;
 #ifdef HAVE_INTERNAL
     GUIVisualizationSettings::UseMesoSim = MSGlobals::gUseMesoSim;
@@ -140,19 +149,28 @@ GUILoadThread::run() {
 #endif
         vehControl = new GUIVehicleControl();
 
-    net = new GUINet(
-        vehControl,
-        new GUIEventControl(),
-        new GUIEventControl(),
-        new GUIEventControl());
-    GUIEdgeControlBuilder* eb = new GUIEdgeControlBuilder();
-    GUIDetectorBuilder db(*net);
-    NLJunctionControlBuilder jb(*net, db);
-    GUITriggerBuilder tb;
-    NLHandler handler("", *net, db, tb, *eb, jb);
-    tb.setHandler(&handler);
-    NLBuilder builder(oc, *net, *eb, jb, db, handler);
+    GUIEdgeControlBuilder* eb = 0;
     try {
+        net = new GUINet(
+            vehControl,
+            new GUIEventControl(),
+            new GUIEventControl(),
+            new GUIEventControl());
+#ifndef NO_TRACI
+        // need to init TraCI-Server before loading routes to catch VEHICLE_STATE_BUILT
+        std::map<int, TraCIServer::CmdExecutor> execs;
+        execs[CMD_GET_GUI_VARIABLE] = &TraCIServerAPI_GUI::processGet;
+        execs[CMD_SET_GUI_VARIABLE] = &TraCIServerAPI_GUI::processSet;
+        TraCIServer::openSocket(execs);
+#endif
+
+        eb = new GUIEdgeControlBuilder();
+        GUIDetectorBuilder db(*net);
+        NLJunctionControlBuilder jb(*net, db);
+        GUITriggerBuilder tb;
+        NLHandler handler("", *net, db, tb, *eb, jb);
+        tb.setHandler(&handler);
+        NLBuilder builder(oc, *net, *eb, jb, db, handler);
         MsgHandler::getErrorInstance()->clear();
         MsgHandler::getWarningInstance()->clear();
         MsgHandler::getMessageInstance()->clear();

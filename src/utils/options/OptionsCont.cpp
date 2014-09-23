@@ -9,8 +9,8 @@
 ///
 // A storage for options (typed value containers)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -71,7 +71,7 @@ OptionsCont::getOptions() {
 
 OptionsCont::OptionsCont()
     : myAddresses(), myValues(), myDeprecatedSynonymes(), myHaveInformedAboutDeprecatedDivider(false) {
-    myCopyrightNotices.push_back("Copyright (C) 2001-2013 DLR and contributors; http://sumo.sourceforge.net");
+    myCopyrightNotices.push_back("Copyright (C) 2001-2014 DLR and contributors; http://sumo-sim.org");
 }
 
 
@@ -340,9 +340,9 @@ OptionsCont::isUsableFileList(const std::string& name) const {
         ok = false;
     }
     for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
-        if (!FileHelpers::exists(*fileIt)) {
+        if (!FileHelpers::isReadable(*fileIt)) {
             if (*fileIt != "") {
-                WRITE_ERROR("File '" + *fileIt + "' does not exist.");
+                WRITE_ERROR("File '" + *fileIt + "' is not accessible.");
                 ok = false;
             } else {
                 WRITE_WARNING("Empty file name given; ignoring.");
@@ -713,7 +713,7 @@ OptionsCont::printHelp(std::ostream& os) {
         }
     }
     os << std::endl;
-    os << "Report bugs at <http://sourceforge.net/apps/trac/sumo/>." << std::endl;
+    os << "Report bugs at <http://sumo-sim.org/trac/>." << std::endl;
     os << "Get in contact via <sumo-user@lists.sourceforge.net>." << std::endl;
 }
 
@@ -722,7 +722,7 @@ void
 OptionsCont::writeConfiguration(std::ostream& os, bool filled,
                                 bool complete, bool addComments) const {
     os << "<?xml version=\"1.0\"" << SUMOSAXAttributes::ENCODING << "?>\n\n";
-    os << "<configuration xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.sf.net/xsd/" << myAppName << "Configuration.xsd\">" << std::endl << std::endl;
+    os << "<configuration xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/" << myAppName << "Configuration.xsd\">" << std::endl << std::endl;
     for (std::vector<std::string>::const_iterator i = mySubTopics.begin(); i != mySubTopics.end(); ++i) {
         std::string subtopic = *i;
         if (subtopic == "Configuration" && !complete) {

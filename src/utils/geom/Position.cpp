@@ -5,12 +5,12 @@
 /// @author  Axel Wegener
 /// @author  Michael Behrisch
 /// @date    Sept 2002
-/// @version $Id: Position.h 13811 2013-05-01 20:31:43Z behrisch $
+/// @version $Id$
 ///
 // A position in the 2D- or 3D-world
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.

@@ -9,8 +9,8 @@
 ///
 // A MSNet extended by some values for usage within the gui
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -45,11 +45,13 @@
 #include <microsim/MSJunction.h>
 #include <microsim/output/MSDetectorControl.h>
 #include <microsim/MSEdge.h>
+#include <microsim/MSPModel.h>
 #include <microsim/MSInsertionControl.h>
 #include <microsim/traffic_lights/MSTrafficLightLogic.h>
 #include <microsim/traffic_lights/MSTLLogicControl.h>
 #include <microsim/MSJunctionControl.h>
 #include <guisim/GUIEdge.h>
+#include <guisim/GUILane.h>
 #include <guisim/GUIPersonControl.h>
 #include <guisim/GUILaneSpeedTrigger.h>
 #include <guisim/GUIDetectorWrapper.h>
@@ -254,8 +256,9 @@ GUINet::getTLSIDs() const {
 void
 GUINet::initGUIStructures() {
     // initialise detector storage for gui
-    for (std::map<SumoXMLTag, NamedObjectCont<MSDetectorFileOutput*> >::const_iterator i = myDetectorControl->myDetectors.begin(); i != myDetectorControl->myDetectors.end(); ++i) {
-        const std::map<std::string, MSDetectorFileOutput*>& dets = myDetectorControl->getTypedDetectors((*i).first).getMyMap();
+    const std::vector<SumoXMLTag> types = myDetectorControl->getAvailableTypes();
+    for (std::vector<SumoXMLTag>::const_iterator i = types.begin(); i != types.end(); ++i) {
+        const std::map<std::string, MSDetectorFileOutput*>& dets = myDetectorControl->getTypedDetectors(*i).getMyMap();
         for (std::map<std::string, MSDetectorFileOutput*>::const_iterator j = dets.begin(); j != dets.end(); ++j) {
             GUIDetectorWrapper* wrapper = (*j).second->buildDetectorGUIRepresentation();
             if (wrapper != 0) {
@@ -286,7 +289,7 @@ GUINet::initGUIStructures() {
             b.add((*j)->getShape().getBoxBoundary());
         }
         // make sure persons are always drawn and selectable since they depend on their edge being drawn
-        b.grow(MSPerson::SIDEWALK_OFFSET + 1);
+        b.grow(MSPModel::SIDEWALK_OFFSET + 1);
         cmin[0] = b.xmin();
         cmin[1] = b.ymin();
         cmax[0] = b.xmax();
@@ -507,9 +510,9 @@ void
 GUINet::updateColor(const GUIVisualizationSettings& s) {
     for (std::vector<GUIEdge*>::const_iterator i = myEdgeWrapper.begin(); i != myEdgeWrapper.end(); ++i) {
         if ((*i)->getPurpose() != MSEdge::EDGEFUNCTION_INTERNAL) {
-            const size_t numLanes = (*i)->getLanes().size();
-            for (size_t j = 0; j < numLanes; ++j) {
-                (*i)->getLaneGeometry(j).updateColor(s);
+            const std::vector<MSLane*>& lanes = (*i)->getLanes();
+            for (std::vector<MSLane*>::const_iterator j = lanes.begin(); j != lanes.end(); ++j) {
+                static_cast<GUILane*>(*j)->updateColor(s);
             }
         }
     }

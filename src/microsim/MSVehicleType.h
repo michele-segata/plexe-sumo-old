@@ -9,8 +9,8 @@
 ///
 // The car-following model and parameter
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,7 +36,7 @@
 #include <cassert>
 #include <map>
 #include <string>
-#include "MSCFModel.h"
+#include <microsim/cfmodels/MSCFModel.h>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/StdDefs.h>
 #include <utils/common/SUMOVehicleClass.h>
@@ -104,6 +104,14 @@ public:
     }
 
 
+    /** @brief Returns the running index of the vehicle type
+     * @return This type's numerical id
+     */
+    int getNumericalID() const {
+        return myIndex;
+    }
+
+
     /** @brief Get vehicle's length [m]
      * @return The length vehicles of this type have in m
      */
@@ -144,6 +152,11 @@ public:
     }
 
 
+    inline LaneChangeModel getLaneChangeModel() const {
+        return myParameter.lcModel;
+    }
+
+
     /** @brief Get vehicle's maximum speed [m/s].
      * @return The maximum speed (in m/s) of vehicles of this class
      */
@@ -155,7 +168,7 @@ public:
     /** @brief Computes and returns the speed deviation
      * @return A new, random speed deviation
      */
-    SUMOReal computeChosenSpeedDeviation(MTRand& rng) const;
+    SUMOReal computeChosenSpeedDeviation(MTRand& rng, const SUMOReal minDevFactor = 0.2) const;
 
 
     /** @brief Get the default probability of this vehicle type
@@ -205,6 +218,14 @@ public:
      */
     SUMOReal getSpeedDeviation() const {
         return myParameter.speedDev;
+    }
+
+
+    /** @brief Returns this type's impatience
+     * @return The impatience of this type
+     */
+    SUMOReal getImpatience() const {
+        return myParameter.impatience;
     }
     /// @}
 
@@ -271,7 +292,7 @@ public:
      * If the given value<0 then the one from the original type will
      *  be used.
      *
-     * @param[in] offset The new minimum gap of this type
+     * @param[in] minGap The new minimum gap of this type
      */
     void setMinGap(const SUMOReal& minGap);
 
@@ -348,6 +369,12 @@ public:
      * @param[in] shape The new shape of this type
      */
     void setShape(SUMOVehicleShape shape);
+
+
+    /** @brief Set a new value for this type's impatience
+     * @param[in] impatience The new impatience of this type
+     */
+    void setImpatience(const SUMOReal impatience);
     /// @}
 
 
@@ -380,15 +407,26 @@ public:
     }
 
 
+    const SUMOVTypeParameter& getParameter() const {
+        return myParameter;
+    }
+
+
 private:
     /// @brief the parameter container
     SUMOVTypeParameter myParameter;
+
+    /// @brief the running index
+    const int myIndex;
 
     /// @brief ID of the car following model.
     MSCFModel* myCarFollowModel;
 
     /// @brief The original type
     const MSVehicleType* myOriginalType;
+
+    /// @brief next value for the running index
+    static int myNextIndex;
 
 
 private:

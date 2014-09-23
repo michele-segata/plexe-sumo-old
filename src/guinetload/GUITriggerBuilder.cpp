@@ -8,8 +8,8 @@
 ///
 // Builds trigger objects for guisim
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,6 +36,7 @@
 #include <guisim/GUINet.h>
 #include <guisim/GUITriggeredRerouter.h>
 #include <guisim/GUIBusStop.h>
+#include <guisim/GUICalibrator.h>
 #include "GUITriggerBuilder.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -76,13 +77,26 @@ void
 GUITriggerBuilder::buildBusStop(MSNet& net, const std::string& id,
                                 const std::vector<std::string>& lines,
                                 MSLane* lane,
-                                SUMOReal frompos, SUMOReal topos) throw(InvalidArgument) {
+                                SUMOReal frompos, SUMOReal topos) {
     GUIBusStop* stop = new GUIBusStop(id, lines, *lane, frompos, topos);
     if (!net.addBusStop(stop)) {
         delete stop;
         throw InvalidArgument("Could not build bus stop '" + id + "'; probably declared twice.");
     }
     static_cast<GUINet&>(net).getVisualisationSpeedUp().addAdditionalGLObject(stop);
+}
+
+
+MSCalibrator*
+GUITriggerBuilder::buildCalibrator(MSNet& net, const std::string& id,
+                                   MSEdge* edge, SUMOReal pos,
+                                   const std::string& file,
+                                   const std::string& outfile,
+                                   const SUMOTime freq,
+                                   const MSRouteProbe* probe) {
+    GUICalibrator* cali = new GUICalibrator(id, edge, pos, file, outfile, freq, probe);
+    static_cast<GUINet&>(net).getVisualisationSpeedUp().addAdditionalGLObject(cali);
+    return cali;
 }
 
 

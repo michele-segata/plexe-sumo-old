@@ -3,13 +3,14 @@
 /// @author  Christian Roessel
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Wed, 12 Dez 2001
 /// @version $Id$
 ///
 // with one ore more logics.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -32,7 +33,6 @@
 #include "MSLinkCont.h"
 #include "MSLogicJunction.h"
 #include "MSLane.h"
-#include "MSInternalLane.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -52,13 +52,13 @@ MSLogicJunction::MSLogicJunction(const std::string& id,
 #ifdef HAVE_INTERNAL_LANES
                                  , std::vector<MSLane*> internal
 #endif
-                                )
-    : MSJunction(id, position, shape),
-      myIncomingLanes(incoming),
+                                ):
+    MSJunction(id, position, shape),
+    myIncomingLanes(incoming)
 #ifdef HAVE_INTERNAL_LANES
-      myInternalLanes(internal),
+    , myInternalLanes(internal)
 #endif
-      myInnerState(false) {}
+{}
 
 
 MSLogicJunction::~MSLogicJunction() {}

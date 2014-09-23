@@ -6,14 +6,13 @@
 /// @author  Piotr Woznica
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
-/// @author  Michele Segata
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -35,6 +34,7 @@
 #include <config.h>
 #endif
 
+#include <cassert>
 #include "SUMOXMLDefinitions.h"
 #include <utils/common/StringBijection.h>
 
@@ -63,9 +63,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "edgeData",         SUMO_TAG_MEANDATA_EDGE },
     { "laneData",         SUMO_TAG_MEANDATA_LANE },
 
-#ifdef _MESSAGES
-    { "msgemitter",		  SUMO_TAG_MSG_EMITTER },
-#endif
     { "detEntry",         SUMO_TAG_DET_ENTRY },
     { "detExit",          SUMO_TAG_DET_EXIT },
     { "edgeFollowDetector", SUMO_TAG_EDGEFOLLOWDETECTOR },
@@ -118,6 +115,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "roundabout",       SUMO_TAG_ROUNDABOUT },
     { "join",             SUMO_TAG_JOIN },
     { "joinExclude",      SUMO_TAG_JOINEXCLUDE },
+    { "crossing",         SUMO_TAG_CROSSING },
 
     { "way",              SUMO_TAG_WAY },
     { "nd",               SUMO_TAG_ND },
@@ -127,18 +125,21 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
 
     { "viewsettings",     SUMO_TAG_VIEWSETTINGS },
     { "decal",            SUMO_TAG_VIEWSETTINGS_DECAL },
+    { "light",            SUMO_TAG_VIEWSETTINGS_LIGHT },
     { "scheme",           SUMO_TAG_VIEWSETTINGS_SCHEME },
     { "opengl",           SUMO_TAG_VIEWSETTINGS_OPENGL },
     { "background",       SUMO_TAG_VIEWSETTINGS_BACKGROUND },
     { "edges",            SUMO_TAG_VIEWSETTINGS_EDGES },
     { "vehicles",         SUMO_TAG_VIEWSETTINGS_VEHICLES },
+    { "persons",          SUMO_TAG_VIEWSETTINGS_PERSONS },
     { "junctions",        SUMO_TAG_VIEWSETTINGS_JUNCTIONS },
     { "additionals",      SUMO_TAG_VIEWSETTINGS_ADDITIONALS },
     { "pois",             SUMO_TAG_VIEWSETTINGS_POIS },
     { "polys",            SUMO_TAG_VIEWSETTINGS_POLYS },
     { "legend",           SUMO_TAG_VIEWSETTINGS_LEGEND },
+    { "event",            SUMO_TAG_VIEWSETTINGS_EVENT },
+    { "jamTime",          SUMO_TAG_VIEWSETTINGS_EVENT_JAM_TIME },
     { "include",          SUMO_TAG_INCLUDE },
-    { "xi:include",       SUMO_TAG_INCLUDE },
     { "delay",            SUMO_TAG_DELAY },
     { "viewport",         SUMO_TAG_VIEWPORT },
     { "snapshot",         SUMO_TAG_SNAPSHOT },
@@ -162,6 +163,12 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "person",           SUMO_TAG_PERSON },
     { "ride",             SUMO_TAG_RIDE },
     { "walk",             SUMO_TAG_WALK },
+
+    { "timestep",         SUMO_TAG_TIMESTEP },
+    { "timeSlice",        SUMO_TAG_TIMESLICE },
+    { "actorConfig",      SUMO_TAG_ACTORCONFIG },
+    { "motionState",      SUMO_TAG_MOTIONSTATE },
+    { "odPair",           SUMO_TAG_OD_PAIR },
 
     // ActivityGen statistics file
     { "general",          AGEN_TAG_GENERAL },
@@ -197,6 +204,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "speed",          SUMO_ATTR_SPEED },
     { "oneway",         SUMO_ATTR_ONEWAY },
     { "width",          SUMO_ATTR_WIDTH },
+    { "sidewalkWidth",  SUMO_ATTR_SIDEWALKWIDTH },
     { "remove",         SUMO_ATTR_REMOVE },
 
     { "length",         SUMO_ATTR_LENGTH },
@@ -219,6 +227,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "intLanes",       SUMO_ATTR_INTLANES },
 
     { "weight",         SUMO_ATTR_WEIGHT },
+    { "node",           SUMO_ATTR_NODE },
     { "edge",           SUMO_ATTR_EDGE },
     { "edges",          SUMO_ATTR_EDGES },
 
@@ -300,14 +309,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "via",            SUMO_ATTR_VIA },
     { "nodes",          SUMO_ATTR_NODES },
 
-#ifdef _MESSAGES
-    { "msg",			SUMO_ATTR_MSG },
-    { "emit_msg",		SUMO_ATTR_EVENTS },
-    { "reverse",		SUMO_ATTR_REVERSE },
-    { "table",			SUMO_ATTR_TABLE },
-    { "xy",				SUMO_ATTR_XY },
-    { "step",			SUMO_ATTR_STEP },
-#endif
     { "minDur",         SUMO_ATTR_MINDURATION },
     { "maxDur",         SUMO_ATTR_MAXDURATION },
     { "foes",           SUMO_ATTR_FOES },
@@ -317,12 +318,12 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "speedThreshold", SUMO_ATTR_HALTING_SPEED_THRESHOLD },
     { "jamThreshold",   SUMO_ATTR_JAM_DIST_THRESHOLD },
 
-    { "wautID",		    SUMO_ATTR_WAUT_ID },
+    { "wautID",         SUMO_ATTR_WAUT_ID },
     { "junctionID",     SUMO_ATTR_JUNCTION_ID },
-    { "procedure",	    SUMO_ATTR_PROCEDURE },
-    { "synchron",	    SUMO_ATTR_SYNCHRON },
-    { "refTime",	    SUMO_ATTR_REF_TIME },
-    { "startProg",	    SUMO_ATTR_START_PROG },
+    { "procedure",      SUMO_ATTR_PROCEDURE },
+    { "synchron",       SUMO_ATTR_SYNCHRON },
+    { "refTime",        SUMO_ATTR_REF_TIME },
+    { "startProg",      SUMO_ATTR_START_PROG },
     { "off",            SUMO_ATTR_OFF },
     { "friendlyPos",    SUMO_ATTR_FRIENDLY_POS },
     { "splitByType",    SUMO_ATTR_SPLIT_VTYPE },
@@ -346,10 +347,12 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "imgFile",        SUMO_ATTR_IMGFILE },
     { "angle",          SUMO_ATTR_ANGLE },
     { "emissionClass",  SUMO_ATTR_EMISSIONCLASS },
+    { "impatience",     SUMO_ATTR_IMPATIENCE },
     { "startPos",       SUMO_ATTR_STARTPOS },
     { "endPos",         SUMO_ATTR_ENDPOS },
     { "triggered",      SUMO_ATTR_TRIGGERED },
     { "parking",        SUMO_ATTR_PARKING },
+    { "expected",       SUMO_ATTR_EXPECTED },
     { "index",          SUMO_ATTR_INDEX },
 
     { "entering",       SUMO_ATTR_ENTERING },
@@ -392,7 +395,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "c1",             SUMO_ATTR_CF_CC_C1 },
     { "xi",             SUMO_ATTR_CF_CC_XI },
     { "omegaN",         SUMO_ATTR_CF_CC_OMEGAN },
-    { "tau",            SUMO_ATTR_CF_CC_TAU },
+    { "tauEngine",      SUMO_ATTR_CF_CC_TAU },
     { "lanesCount",     SUMO_ATTR_CF_CC_LANES_COUNT },
     { "ccAccel",        SUMO_ATTR_CF_CC_CCACCEL },
 
@@ -400,6 +403,22 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "actType",        SUMO_ATTR_ACTTYPE },
     { "slope",          SUMO_ATTR_SLOPE },
     { "version",        SUMO_ATTR_VERSION },
+
+    { "actorConfig",    SUMO_ATTR_ACTORCONFIG },
+    { "vehicle",        SUMO_ATTR_VEHICLE },
+    { "startTime",      SUMO_ATTR_STARTTIME },
+    { "vehicleClass",   SUMO_ATTR_VEHICLECLASS },
+    { "fuel",           SUMO_ATTR_FUEL },
+    { "acceleration",   SUMO_ATTR_ACCELERATION },
+    { "amount",         SUMO_ATTR_AMOUNT },
+    { "origin",         SUMO_ATTR_ORIGIN },
+    { "destination",    SUMO_ATTR_DESTINATION },
+
+#ifndef WIN32
+    { "commandPosix",   SUMO_ATTR_COMMAND },
+#else
+    { "commandWindows", SUMO_ATTR_COMMAND },
+#endif
 
     // ActivityGen statistics file
     { "inhabitants",    AGEN_ATTR_INHABITANTS },
@@ -441,8 +460,11 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
 StringBijection<SumoXMLNodeType>::Entry SUMOXMLDefinitions::sumoNodeTypeValues[] = {
     {"traffic_light",       NODETYPE_TRAFFIC_LIGHT},
-    {"priority",            NODETYPE_PRIORITY_JUNCTION},
+    {"traffic_light_unregulated", NODETYPE_TRAFFIC_LIGHT_NOJUNCTION},
+    {"priority",            NODETYPE_PRIORITY},
+    {"priority_stop",       NODETYPE_PRIORITY_STOP},
     {"right_before_left",   NODETYPE_RIGHT_BEFORE_LEFT},
+    {"allway_stop",         NODETYPE_ALLWAY_STOP},
     {"district",            NODETYPE_DISTRICT},
     {"unregulated",         NODETYPE_NOJUNCTION},
     {"internal",            NODETYPE_INTERNAL},
@@ -458,6 +480,8 @@ StringBijection<SumoXMLEdgeFunc>::Entry SUMOXMLDefinitions::sumoEdgeFuncValues[]
     {"connector",    EDGEFUNC_CONNECTOR},
     {"sink",         EDGEFUNC_SINK},
     {"source",       EDGEFUNC_SOURCE},
+    {"crossing",     EDGEFUNC_CROSSING},
+    {"walkingarea",  EDGEFUNC_WALKINGAREA},
 
     {"internal",     EDGEFUNC_INTERNAL}
 };
@@ -480,6 +504,8 @@ StringBijection<LinkState>::Entry SUMOXMLDefinitions::linkStateValues[] = {
     { "M", LINKSTATE_MAJOR },
     { "m", LINKSTATE_MINOR },
     { "=", LINKSTATE_EQUAL },
+    { "s", LINKSTATE_STOP },
+    { "w", LINKSTATE_ALLWAY_STOP },
     { "-", LINKSTATE_DEADEND }
 };
 
@@ -499,6 +525,13 @@ StringBijection<TrafficLightType>::Entry SUMOXMLDefinitions::trafficLightTypesVa
     { "static", TLTYPE_STATIC },
     { "actuated", TLTYPE_ACTUATED },
     { "agentbased", TLTYPE_AGENT }
+};
+
+
+StringBijection<LaneChangeModel>::Entry SUMOXMLDefinitions::laneChangeModelValues[] = {
+    { "DK2008", LCM_DK2008 },
+    { "LC2013", LCM_LC2013 },
+    { "JE2013", LCM_JE2013 },
 };
 
 StringBijection<int> SUMOXMLDefinitions::Tags(
@@ -524,6 +557,21 @@ StringBijection<LinkDirection> SUMOXMLDefinitions::LinkDirections(
 
 StringBijection<TrafficLightType> SUMOXMLDefinitions::TrafficLightTypes(
     SUMOXMLDefinitions::trafficLightTypesVales, TLTYPE_AGENT);
+
+StringBijection<LaneChangeModel> SUMOXMLDefinitions::LaneChangeModels(
+    SUMOXMLDefinitions::laneChangeModelValues, LCM_JE2013);
+
+
+std::string
+SUMOXMLDefinitions::getJunctionIDFromInternalEdge(const std::string internalEdge) {
+    assert(internalEdge[0] == ':');
+    return internalEdge.substr(1, internalEdge.rfind('_') - 1);
+}
+
+std::string
+SUMOXMLDefinitions::getEdgeIDFromLane(const std::string laneID) {
+    return laneID.substr(0, laneID.rfind('_') - 1);
+}
 
 /****************************************************************************/
 

@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
+/// @author  Mario Krumnow
 /// @date    2004
 /// @version $Id$
 ///
 // Static storage of an output device and its base (abstract) implementation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2004-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -97,13 +98,15 @@ public:
      *  within XML-declarations of structures which paths already is aware of the
      *  cwd.
      *
-     * @param[in] optionName The name of the option to use for retrieving the output definition
+     * @param[in] optionName  The name of the option to use for retrieving the output definition
      * @param[in] rootElement The root element to use (XML-output)
+     * @param[in] schemaFile  The basename of the schema file to use (XML-output)
      * @return Whether a device was built (the option was set)
      * @exception IOError If the output could not be built for any reason (error message is supplied)
      */
     static bool createDeviceByOption(const std::string& optionName,
-                                     const std::string& rootElement = "");
+                                     const std::string& rootElement = "",
+                                     const std::string& schemaFile = "");
 
 
     /** @brief Returns the device described by the option
@@ -118,7 +121,7 @@ public:
      * @exception IOError If the output could not be built for any reason (error message is supplied)
      * @exception InvalidArgument If the option with the given name does not exist
      */
-    static OutputDevice& getDeviceByOption(const std::string& name) throw(IOError, InvalidArgument);
+    static OutputDevice& getDeviceByOption(const std::string& name);
 
 
     /**  Closes all registered devices
@@ -225,13 +228,6 @@ public:
      */
     bool closeTag();
 
-    /** @brief writes an arbitrary attribute
-     *
-     * @param[in] attr The attribute (name)
-     * @param[in] val The attribute value
-     * @return The OutputDevice for further processing
-     */
-    OutputDevice& writeAttr(std::string attr, std::string val);
 
 
     /** @brief writes a line feed if applicable
@@ -264,6 +260,48 @@ public:
         } else {
             PlainXMLFormatter::writeAttr(getOStream(), attr, val);
         }
+        return *this;
+    }
+
+
+    /** @brief writes an arbitrary attribute
+     *
+     * @param[in] attr The attribute (name)
+     * @param[in] val The attribute value
+     * @return The OutputDevice for further processing
+     */
+    template <typename T>
+    OutputDevice& writeAttr(const std::string& attr, const T& val) {
+        if (myAmBinary) {
+            BinaryFormatter::writeAttr(getOStream(), attr, val);
+        } else {
+            PlainXMLFormatter::writeAttr(getOStream(), attr, val);
+        }
+        return *this;
+    }
+
+
+    /** @brief writes a string attribute only if it is not the empty string and not the string "default"
+     *
+     * @param[in] attr The attribute (name)
+     * @param[in] val The attribute value
+     * @return The OutputDevice for further processing
+     */
+    OutputDevice& writeNonEmptyAttr(const SumoXMLAttr attr, const std::string& val) {
+        if (val != "" && val != "default") {
+            writeAttr(attr, val);
+        }
+        return *this;
+    }
+
+
+    /** @brief writes a preformatted tag to the device but ensures that any
+     * pending tags are closed
+     * @param[in] val The preformatted data
+     * @return The OutputDevice for further processing
+     */
+    OutputDevice& writePreformattedTag(const std::string& val) {
+        myFormatter->writePreformattedTag(getOStream(), val);
         return *this;
     }
 

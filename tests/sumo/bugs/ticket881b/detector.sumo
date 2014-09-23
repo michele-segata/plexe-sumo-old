@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 05/02/13 14:17:18 by SUMO sumo Version 0.17.0
+<!-- generated on Mon Mar  3 14:00:14 2014 by SUMO sumo Version dev-SVN-r15793
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/sumoConfiguration.xsd">
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo-sim.org/xsd/sumoConfiguration.xsd">
 
     <input>
         <net-file value="net.net.xml"/>
@@ -12,6 +12,7 @@
     </input>
 
     <report>
+        <xml-validation value="never"/>
         <no-duration-log value="true"/>
         <no-step-log value="true"/>
     </report>
@@ -19,6 +20,6 @@
 </configuration>
 -->
 
-<detector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/det_e1_file.xsd">
-   <interval begin="0.00" end="45.00" id="test" nVehContrib="1" flow="80.00" occupancy="1.11" speed="10.04" length="5.00" nVehEntered="1"/>
+<detector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo-sim.org/xsd/det_e1_file.xsd">
+   <interval begin="0.00" end="43.00" id="test" nVehContrib="1" flow="83.72" occupancy="1.01" speed="11.46" length="5.00" nVehEntered="1"/>
 </detector>

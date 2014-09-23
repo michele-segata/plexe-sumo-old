@@ -4,13 +4,14 @@
 /// @author  Friedemann Wesner
 /// @author  Sascha Krieg
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
 // Interface for lane-change models
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -23,7 +24,6 @@
 #ifndef MSAbstractLaneChangeModel_h
 #define MSAbstractLaneChangeModel_h
 
-
 // ===========================================================================
 // included modules
 // ===========================================================================
@@ -33,9 +33,8 @@
 #include <config.h>
 #endif
 
-#include "MSLane.h"
 #include "MSVehicle.h"
-
+class MSLane;
 
 // ===========================================================================
 // used enumeration
@@ -47,33 +46,48 @@ enum LaneChangeAction {
     /// @name currently wanted lane-change action
     /// @{
 
-    /// @brief No action
+    /// @brief No action desired
     LCA_NONE = 0,
-    /// @brief The action is due to the wish to follow the route (navigational lc)
-    LCA_URGENT = 1,
-    /// @brief The action is due to the wish to be faster (tactical lc)
-    LCA_SPEEDGAIN = 2,
+    /// @brief Needs to stay on the current lane
+    LCA_STAY = 1 << 0,
     /// @brief Wants go to the left
-    LCA_LEFT = 4,
+    LCA_LEFT = 1 << 1,
     /// @brief Wants go to the right
-    LCA_RIGHT = 8,
+    LCA_RIGHT = 1 << 2,
 
-    LCA_WANTS_LANECHANGE = LCA_URGENT | LCA_SPEEDGAIN | LCA_LEFT | LCA_RIGHT,
+    /// @brief The action is needed to follow the route (navigational lc)
+    LCA_STRATEGIC = 1 << 3,
+    /// @brief The action is done to help someone else
+    LCA_COOPERATIVE = 1 << 4,
+    /// @brief The action is due to the wish to be faster (tactical lc)
+    LCA_SPEEDGAIN = 1 << 5,
+    /// @brief The action is due to the default of keeping right "Rechtsfahrgebot"
+    LCA_KEEPRIGHT = 1 << 6,
+    /// @brief The action is due to a TraCI request
+    LCA_TRACI = 1 << 7,
+
+    /// @brief The action is urgent (to be defined by lc-model)
+    LCA_URGENT = 1 << 8,
+
+    LCA_WANTS_LANECHANGE = LCA_LEFT | LCA_RIGHT,
+    LCA_WANTS_LANECHANGE_OR_STAY = LCA_WANTS_LANECHANGE | LCA_STAY,
     /// @}
-
 
     /// @name External state
     /// @{
 
     /// @brief The vehicle is blocked by left leader
-    LCA_BLOCKED_BY_LEFT_LEADER = 16,
+    LCA_BLOCKED_BY_LEFT_LEADER = 1 << 9,
     /// @brief The vehicle is blocked by left follower
-    LCA_BLOCKED_BY_LEFT_FOLLOWER = 32,
+    LCA_BLOCKED_BY_LEFT_FOLLOWER = 1 << 10,
 
     /// @brief The vehicle is blocked by right leader
-    LCA_BLOCKED_BY_RIGHT_LEADER = 64,
+    LCA_BLOCKED_BY_RIGHT_LEADER = 1 << 11,
     /// @brief The vehicle is blocked by right follower
-    LCA_BLOCKED_BY_RIGHT_FOLLOWER = 128,
+    LCA_BLOCKED_BY_RIGHT_FOLLOWER = 1 << 12,
+
+    // The vehicle is blocked being overlapping
+    LCA_OVERLAPPING =  1 << 13,
 
     LCA_BLOCKED_LEFT = LCA_BLOCKED_BY_LEFT_LEADER | LCA_BLOCKED_BY_LEFT_FOLLOWER,
     LCA_BLOCKED_RIGHT = LCA_BLOCKED_BY_RIGHT_LEADER | LCA_BLOCKED_BY_RIGHT_FOLLOWER,
@@ -81,10 +95,6 @@ enum LaneChangeAction {
     LCA_BLOCKED_BY_FOLLOWER = LCA_BLOCKED_BY_LEFT_FOLLOWER | LCA_BLOCKED_BY_RIGHT_FOLLOWER,
     LCA_BLOCKED = LCA_BLOCKED_LEFT | LCA_BLOCKED_RIGHT
 
-                  // The vehicle is blocked being overlapping
-                  // This is currently not used, but I'll keep it while working on this, as
-                  //  overlapping may be interested, but surely divided by leader/follower
-                  // LCA_OVERLAPPING = 64
                   /// @}
 
 };
@@ -102,6 +112,7 @@ enum LaneChangeAction {
  */
 class MSAbstractLaneChangeModel {
 public:
+
     /** @class MSLCMessager
      * @brief A class responsible for exchanging messages between cars involved in lane-change interaction
      */
@@ -164,58 +175,47 @@ public:
 
     };
 
+    /// @brief init global model parameters
+    void static initGlobalOptions(const OptionsCont& oc);
 
+    /** @brief Factory method for instantiating new lane changing models
+     * @param[in] lcm The type of model to build
+     * @param[in] vehicle The vehicle for which this model shall be built
+     */
+    static MSAbstractLaneChangeModel* build(LaneChangeModel lcm, MSVehicle& vehicle);
 
     /** @brief Constructor
      * @param[in] v The vehicle this lane-changer belongs to
      */
-    MSAbstractLaneChangeModel(MSVehicle& v)
-        : myVehicle(v), myOwnState(0),
-#ifndef NO_TRACI
-          myChangeRequest(MSVehicle::REQUEST_NONE),
-#endif
-          myCarFollowModel(v.getCarFollowModel()) {
-    }
-
+    MSAbstractLaneChangeModel(MSVehicle& v);
 
     /// @brief Destructor
-    virtual ~MSAbstractLaneChangeModel() { }
+    virtual ~MSAbstractLaneChangeModel();
 
-
-
-    int getOwnState() const {
+    inline int getOwnState() const {
         return myOwnState;
     }
 
-    void setOwnState(int state) {
+    inline void setOwnState(int state) {
         myOwnState = state;
     }
 
     virtual void prepareStep() { }
 
-    /** @brief Called to examine whether the vehicle wants to change to right
-        This method gets the information about the surrounding vehicles
-        and whether another lane may be more preferable */
-    virtual int wantsChangeToRight(
-        MSLCMessager& msgPass, int blocked,
+    /** @brief Called to examine whether the vehicle wants to change
+     * using the given laneOffset.
+     * This method gets the information about the surrounding vehicles
+     * and whether another lane may be more preferable */
+    virtual int wantsChange(
+        int laneOffset,
+        MSAbstractLaneChangeModel::MSLCMessager& msgPass, int blocked,
         const std::pair<MSVehicle*, SUMOReal>& leader,
         const std::pair<MSVehicle*, SUMOReal>& neighLead,
         const std::pair<MSVehicle*, SUMOReal>& neighFollow,
         const MSLane& neighLane,
         const std::vector<MSVehicle::LaneQ>& preb,
-        MSVehicle** lastBlocked) = 0;
-
-    /** @brief Called to examine whether the vehicle wants to change to left
-        This method gets the information about the surrounding vehicles
-        and whether another lane may be more preferable */
-    virtual int wantsChangeToLeft(
-        MSLCMessager& msgPass, int blocked,
-        const std::pair<MSVehicle*, SUMOReal>& leader,
-        const std::pair<MSVehicle*, SUMOReal>& neighLead,
-        const std::pair<MSVehicle*, SUMOReal>& neighFollow,
-        const MSLane& neighLane,
-        const std::vector<MSVehicle::LaneQ>& preb,
-        MSVehicle** lastBlocked) = 0;
+        MSVehicle** lastBlocked,
+        MSVehicle** firstBlocked) = 0;
 
     virtual void* inform(void* info, MSVehicle* sender) = 0;
 
@@ -235,60 +235,86 @@ public:
 
     virtual void changed() = 0;
 
-#ifndef NO_TRACI
-    /**
-     * The vehicle is requested to change the lane as soon as possible
-     * without violating any directives defined by this lane change model
-     *
-     * @param request	indicates the requested change
+    void unchanged() {
+        myLastLaneChangeOffset += DELTA_T;
+    }
+
+    /** @brief Returns the lane the vehicles shadow is on during continuouss lane change
+     * @return The vehicle's shadow lane
      */
-    virtual void requestLaneChange(MSVehicle::ChangeRequest request) {
-        myChangeRequest = request;
+    MSLane* getShadowLane() const {
+        return myShadowLane;
+    }
+
+
+    inline SUMOTime getLastLaneChangeOffset() const {
+        return myLastLaneChangeOffset;
+    }
+
+
+    /// @brief return whether the vehicle passed the midpoint of a continuous lane change maneuver
+    inline bool isLaneChangeMidpointPassed() const {
+        return myLaneChangeMidpointPassed;
+    }
+
+    /// @brief return whether the vehicle passed the midpoint of a continuous lane change maneuver
+    inline SUMOReal getLaneChangeCompletion() const {
+        return myLaneChangeCompletion;
+    }
+
+    /// @brief return true if the vehicle currently performs a lane change maneuver
+    inline bool isChangingLanes() const {
+        return myLaneChangeCompletion < (1 - NUMERICAL_EPS);
+    }
+
+    /// @brief return the direction of the current lane change maneuver
+    inline int getLaneChangeDirection() const {
+        return myLaneChangeDirection;
+    }
+
+    /// @brief reset the flag whether a vehicle already moved to false
+    inline bool alreadyMoved() const {
+        return myAlreadyMoved;
+    }
+
+    /// @brief reset the flag whether a vehicle already moved to false
+    void resetMoved() {
+        myAlreadyMoved = false;
+    }
+
+
+    /// @brief start the lane change maneuver and return whether it continues
+    bool startLaneChangeManeuver(MSLane* source, MSLane* target, int direction);
+
+
+    /* @brief continue the lane change maneuver
+     * @param[in] moved Whether the vehicle has moved to a new lane
+     */
+    void continueLaneChangeManeuver(bool moved);
+
+    /* @brief finish the lane change maneuver
+     */
+    inline void endLaneChangeManeuver() {
+        removeLaneChangeShadow();
+        myLaneChangeCompletion = 1;
+        myShadowLane = 0;
+    }
+
+    /// @brief remove the shadow copy of a lane change maneuver
+    void removeLaneChangeShadow();
+
+    /// @brief reserve space at the end of the lane to avoid dead locks
+    virtual void saveBlockerLength(SUMOReal length) {
+        UNUSED_PARAMETER(length);
     };
 
-    /**
-     * Inform the model that a certain lane change request has been fulfilled
-     * by the lane changer, so the request won't be taken into account the next time.
-     *
-     * @param request	indicates the request that was fulfilled
-     */
-    virtual void fulfillChangeRequest(MSVehicle::ChangeRequest request) {
-        if (request == myChangeRequest) {
-            myChangeRequest = MSVehicle::REQUEST_NONE;
-        }
-    }
-#endif
-
 protected:
-    virtual bool congested(const MSVehicle* const neighLeader) {
-        if (neighLeader == 0) {
-            return false;
-        }
-        // Congested situation are relevant only on highways (maxSpeed > 70km/h)
-        // and congested on German Highways means that the vehicles have speeds
-        // below 60km/h. Overtaking on the right is allowed then.
-        if ((myVehicle.getLane()->getSpeedLimit() <= 70.0 / 3.6) || (neighLeader->getLane()->getSpeedLimit() <= 70.0 / 3.6)) {
+    virtual bool congested(const MSVehicle* const neighLeader);
 
-            return false;
-        }
-        if (myVehicle.congested() && neighLeader->congested()) {
-            return true;
-        }
-        return false;
-    }
+    virtual bool predInteraction(const MSVehicle* const leader);
 
-    virtual bool predInteraction(const MSVehicle* const leader) {
-        if (leader == 0) {
-            return false;
-        }
-        // let's check it on highways only
-        if (leader->getSpeed() < (80.0 / 3.6)) {
-            return false;
-        }
-        SUMOReal gap = leader->getPositionOnLane() - leader->getVehicleType().getLength() - myVehicle.getVehicleType().getMinGap() - myVehicle.getPositionOnLane();
-        return gap < myCarFollowModel.interactionGap(&myVehicle, leader->getSpeed());
-    }
-
+    /// @brief whether the influencer cancels the given request
+    bool cancelRequest(int state);
 
 
 protected:
@@ -298,13 +324,32 @@ protected:
     /// @brief The current state of the vehicle
     int myOwnState;
 
+    /// @brief information how long ago the vehicle has performed a lane-change
+    SUMOTime myLastLaneChangeOffset;
 
-#ifndef NO_TRACI
-    MSVehicle::ChangeRequest myChangeRequest;
-#endif
+    /// @brief progress of the lane change maneuver 0:started, 1:complete
+    SUMOReal myLaneChangeCompletion;
+
+    /// @brief direction of the lane change maneuver -1 means right, 1 means left
+    int myLaneChangeDirection;
+
+    /// @brief whether myLane has already been set to the target of the lane-change maneuver
+    bool myLaneChangeMidpointPassed;
+
+    /// @brief whether the vehicle has already moved this step
+    bool myAlreadyMoved;
+
+    /// @brief The lane the vehicle shadow is on during a continuous lane change
+    MSLane* myShadowLane;
+
+    /// Wether a vehicle shadow exists
+    bool myHaveShadow;
 
     /// @brief The vehicle's car following model
     const MSCFModel& myCarFollowModel;
+
+    /// @brief whether overtaking on the right is permitted
+    static bool myAllowOvertakingRight;
 
 private:
     /// @brief Invalidated assignment operator

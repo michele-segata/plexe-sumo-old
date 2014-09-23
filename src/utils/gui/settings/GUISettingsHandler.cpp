@@ -9,8 +9,8 @@
 ///
 // The dialog to change the view (gui) settings.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -54,7 +54,7 @@
 // ===========================================================================
 GUISettingsHandler::GUISettingsHandler(const std::string& content, bool isFile)
     : SUMOSAXHandler(content), myDelay(-1), myLookFrom(-1, -1, -1), myLookAt(-1, -1, -1),
-      myCurrentColorer(SUMO_TAG_NOTHING), myCurrentScheme(0) {
+      myCurrentColorer(SUMO_TAG_NOTHING), myCurrentScheme(0), myJamSoundTime(-1) {
     if (isFile) {
         XMLSubSys::runParser(*this, content);
     } else {
@@ -134,6 +134,7 @@ GUISettingsHandler::myStartElement(int element,
             mySettings.showRails = TplConvert::_2bool(attrs.getStringSecure("showRails", toString(mySettings.showRails)).c_str());
             mySettings.edgeName = parseTextSettings("edgeName", attrs, mySettings.edgeName);
             mySettings.internalEdgeName = parseTextSettings("internalEdgeName", attrs, mySettings.internalEdgeName);
+            mySettings.cwaEdgeName = parseTextSettings("cwaEdgeName", attrs, mySettings.cwaEdgeName);
             mySettings.streetName = parseTextSettings("streetName", attrs, mySettings.streetName);
             mySettings.hideConnectors = TplConvert::_2bool(attrs.getStringSecure("hideConnectors", toString(mySettings.hideConnectors)).c_str());
             myCurrentColorer = element;
@@ -172,8 +173,7 @@ GUISettingsHandler::myStartElement(int element,
                 if (myCurrentScheme->isFixed()) {
                     myCurrentScheme->setColor(attrs.getStringSecure(SUMO_ATTR_NAME, ""), color);
                 } else {
-                    myCurrentScheme->addColor(color,
-                                              attrs.get<SUMOReal>(SUMO_ATTR_THRESHOLD, 0, ok));
+                    myCurrentScheme->addColor(color, attrs.getOpt<SUMOReal>(SUMO_ATTR_THRESHOLD, 0, ok, 0));
                 }
             }
             break;
@@ -186,6 +186,14 @@ GUISettingsHandler::myStartElement(int element,
             mySettings.vehicleName = parseTextSettings("vehicleName", attrs, mySettings.vehicleName);
             myCurrentColorer = element;
             break;
+        case SUMO_TAG_VIEWSETTINGS_PERSONS:
+            mySettings.personColorer.setActive(TplConvert::_2int(attrs.getStringSecure("personMode", "0").c_str()));
+            mySettings.personQuality = TplConvert::_2int(attrs.getStringSecure("personQuality", toString(mySettings.personQuality)).c_str());
+            mySettings.minPersonSize = TplConvert::_2SUMOReal(attrs.getStringSecure("minPersonSize", toString(mySettings.minPersonSize)).c_str());
+            mySettings.personExaggeration = TplConvert::_2SUMOReal(attrs.getStringSecure("personExaggeration", toString(mySettings.personExaggeration)).c_str());
+            mySettings.personName = parseTextSettings("personName", attrs, mySettings.personName);
+            myCurrentColorer = element;
+            break;
         case SUMO_TAG_VIEWSETTINGS_JUNCTIONS:
             mySettings.junctionColorer.setActive(TplConvert::_2int(attrs.getStringSecure("junctionMode", "0").c_str()));
             mySettings.drawLinkTLIndex = TplConvert::_2bool(attrs.getStringSecure("drawLinkTLIndex", toString(mySettings.drawLinkTLIndex)).c_str());
@@ -193,6 +201,7 @@ GUISettingsHandler::myStartElement(int element,
             mySettings.junctionName = parseTextSettings("junctionName", attrs, mySettings.junctionName);
             mySettings.internalJunctionName = parseTextSettings("internalJunctionName", attrs, mySettings.internalJunctionName);
             mySettings.showLane2Lane = TplConvert::_2bool(attrs.getStringSecure("showLane2Lane", toString(mySettings.showLane2Lane)).c_str());
+            mySettings.drawJunctionShape = TplConvert::_2bool(attrs.getStringSecure("drawShape", toString(mySettings.drawJunctionShape)).c_str());
             myCurrentColorer = element;
             break;
         case SUMO_TAG_VIEWSETTINGS_ADDITIONALS:
@@ -234,6 +243,33 @@ GUISettingsHandler::myStartElement(int element,
             myDecals.push_back(d);
         }
         break;
+        case SUMO_TAG_VIEWSETTINGS_LIGHT: {
+            GUISUMOAbstractView::Decal d;
+            d.filename = "light" + attrs.getOpt<std::string>(SUMO_ATTR_INDEX, 0, ok, "0");
+            d.centerX = attrs.getOpt<SUMOReal>(SUMO_ATTR_CENTER_X, 0, ok, d.centerX);
+            d.centerY = attrs.getOpt<SUMOReal>(SUMO_ATTR_CENTER_Y, 0, ok, d.centerY);
+            d.centerZ = attrs.getOpt<SUMOReal>(SUMO_ATTR_CENTER_Z, 0, ok, d.centerZ);
+            d.width = attrs.getOpt<SUMOReal>(SUMO_ATTR_WIDTH, 0, ok, d.width);
+            d.height = attrs.getOpt<SUMOReal>(SUMO_ATTR_HEIGHT, 0, ok, d.height);
+            d.altitude = TplConvert::_2SUMOReal(attrs.getStringSecure("altitude", toString(d.height)).c_str());
+            d.rot = TplConvert::_2SUMOReal(attrs.getStringSecure("rotation", toString(d.rot)).c_str());
+            d.tilt = TplConvert::_2SUMOReal(attrs.getStringSecure("tilt", toString(d.tilt)).c_str());
+            d.roll = TplConvert::_2SUMOReal(attrs.getStringSecure("roll", toString(d.roll)).c_str());
+            d.layer = attrs.getOpt<SUMOReal>(SUMO_ATTR_LAYER, 0, ok, d.layer);
+            d.initialised = false;
+            myDecals.push_back(d);
+        }
+        break;
+        case SUMO_TAG_VIEWSETTINGS_EVENT: {
+            const std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
+            const std::string cmd = attrs.get<std::string>(SUMO_ATTR_COMMAND, 0, ok);
+            const SUMOReal prob = attrs.get<SUMOReal>(SUMO_ATTR_PROB, id.c_str(), ok);
+            myEventDistributions[id].add(prob, cmd);
+        }
+        break;
+        case SUMO_TAG_VIEWSETTINGS_EVENT_JAM_TIME:
+            myJamSoundTime = attrs.get<SUMOReal>(SUMO_ATTR_VALUE, 0, ok);
+            break;
         default:
             break;
     }
@@ -328,6 +364,18 @@ GUISettingsHandler::loadBreakpoints(const std::string& file) {
     }
     return result;
 }
+
+
+RandomDistributor<std::string>
+GUISettingsHandler::getEventDistribution(const std::string& id) {
+    RandomDistributor<std::string> result = myEventDistributions[id];
+    if (result.getOverallProb() > 0 && result.getOverallProb() < 1) {
+        // unscaled probabilities are assumed, fill up with dummy event
+        result.add(1 - result.getOverallProb(), "");
+    }
+    return result;
+}
+
 
 /****************************************************************************/
 

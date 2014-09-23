@@ -1,3 +1,25 @@
+/****************************************************************************/
+/// @file    PositionVectorTest.cpp
+/// @author  Matthias Heppner
+/// @author  Michael Behrisch
+/// @author  Jakob Erdmann
+/// @date    2009-10-24
+/// @version $Id$
+///
+// Tests the class PositionVector
+/****************************************************************************/
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+/****************************************************************************/
+//
+//   This file is part of SUMO.
+//   SUMO is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+//
+/****************************************************************************/
+
 #include <gtest/gtest.h>
 #include <utils/geom/PositionVector.h>
 #include <utils/geom/Boundary.h>
@@ -5,9 +27,7 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/iodevices/OutputDevice.h>
 
-/*
-Tests the class PositionVector
-*/
+
 class PositionVectorTest : public testing::Test {
 	protected :
 		PositionVector *vectorPolygon;
@@ -42,6 +62,18 @@ TEST_F(PositionVectorTest, test_method_around) {
 
 	EXPECT_FALSE(vectorLine->around(Position(1,1)));
 	EXPECT_FALSE(vectorLine->around(Position(0,2)));
+
+    // with positive offset
+	EXPECT_TRUE(vectorPolygon->around(Position(4,2), 1));
+	EXPECT_FALSE(vectorPolygon->around(Position(5,2), 1));
+    // what was true remains true
+	EXPECT_TRUE(vectorPolygon->around(Position(1,1), POSITION_EPS));
+	EXPECT_TRUE(vectorPolygon->around(Position(1,2), POSITION_EPS));
+
+    // with negative offset
+	EXPECT_FALSE(vectorPolygon->around(Position(4,2), -POSITION_EPS));
+	EXPECT_TRUE(vectorPolygon->around(Position(1,1), -1));
+	EXPECT_FALSE(vectorPolygon->around(Position(0.5,0.5), -1));
 }
 
 /* Test the method 'area'*/
@@ -56,8 +88,8 @@ TEST_F(PositionVectorTest, test_method_area) {
     EXPECT_DOUBLE_EQ(square.area(), 1); 
 }
 
-/* Test the method 'scaleSize'.*/
-TEST_F(PositionVectorTest, test_method_scaleSize) {
+/* Test the method 'scaleRelative'.*/
+TEST_F(PositionVectorTest, test_method_scaleRelative) {
     PositionVector square;
     square.push_back(Position(0,0));
     square.push_back(Position(1,0));
@@ -65,7 +97,7 @@ TEST_F(PositionVectorTest, test_method_scaleSize) {
     square.push_back(Position(0,1));
     square.push_back(Position(0,0));
     EXPECT_DOUBLE_EQ(square.area(), 1);
-    square.scaleSize(3);
+    square.scaleRelative(3);
     EXPECT_DOUBLE_EQ(square.area(), 9);
 
     PositionVector expected;
@@ -94,7 +126,6 @@ TEST_F(PositionVectorTest, test_method_getCentroid) {
 	Position pos2 = vectorLine->getCentroid();
 	EXPECT_DOUBLE_EQ(1, pos2.x());
 	EXPECT_DOUBLE_EQ(1, pos2.y());
-	
 }
 
 /* Test the method 'getPolygonCenter'.*/
@@ -212,4 +243,16 @@ TEST_F(PositionVectorTest, test_method_intersectsAtLenghts2D) {
     vec2.push_back(Position(0,0,0));
     vec2.push_back(Position(3,1,0));
 	EXPECT_DOUBLE_EQ(0, vec1.intersectsAtLengths2D(vec2)[0]);
+}
+
+
+/* Test the method 'nearest_offset_to_point2D'*/
+TEST_F(PositionVectorTest, test_method_nearest_offset_to_point2D) {	
+    PositionVector vec1;
+    vec1.push_back(Position(0,1,0));
+    vec1.push_back(Position(0,0,0));
+    vec1.push_back(Position(1,0,0));
+
+	EXPECT_DOUBLE_EQ(1, vec1.nearest_offset_to_point2D(Position(-1,-1), false));
+	EXPECT_DOUBLE_EQ(1, vec1.nearest_offset_to_point2D(Position(-1,-1), true));
 }

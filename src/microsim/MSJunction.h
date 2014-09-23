@@ -9,8 +9,8 @@
 ///
 // The base class for an intersection
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -46,6 +46,7 @@
 class MSVehicle;
 class MSLink;
 class MSLane;
+class MSEdge;
 
 // ===========================================================================
 // class definitions
@@ -93,6 +94,22 @@ public:
         return myEmptyLanes;
     }
 
+    inline const std::vector<const MSEdge*>& getIncoming() const {
+        return myIncoming;
+    }
+
+    inline const std::vector<const MSEdge*>& getOutgoing() const {
+        return myOutgoing;
+    }
+
+    void addIncoming(MSEdge* edge) {
+        myIncoming.push_back(edge);
+    }
+
+    void addOutgoing(MSEdge* edge) {
+        myOutgoing.push_back(edge);
+    }
+
 protected:
     /// @brief The position of the junction
     Position myPosition;
@@ -104,7 +121,13 @@ protected:
     std::vector<MSLane*> myEmptyLanes;
 
 
+    /// @brief incoming edges
+    std::vector<const MSEdge*> myIncoming;
+    /// @brief outgoing edges
+    std::vector<const MSEdge*> myOutgoing;
 
+    /// @brief definition of the static dictionary type
+    typedef std::map<std::string, MSJunction* > DictType;
 
 private:
     /// @brief Invalidated copy constructor.

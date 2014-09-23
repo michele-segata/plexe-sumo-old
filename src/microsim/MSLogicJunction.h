@@ -3,13 +3,14 @@
 /// @author  Christian Roessel
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Wed, 12 Dez 2001
 /// @version $Id$
 ///
 // with one ore more logics.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -99,10 +100,6 @@ protected:
     /// list of incoming lanes
     std::vector<MSLane*> myInternalLanes;
 #endif
-
-    /** Current inner state */
-    InnerState  myInnerState;
-
 
 private:
     /// @brief Invalidated copy constructor.

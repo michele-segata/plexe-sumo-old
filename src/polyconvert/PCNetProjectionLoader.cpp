@@ -8,8 +8,8 @@
 ///
 // A reader for a SUMO network's projection description
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -63,7 +63,7 @@
 // ---------------------------------------------------------------------------
 void
 PCNetProjectionLoader::load(const std::string& file, int shift) {
-    if (!FileHelpers::exists(file)) {
+    if (!FileHelpers::isReadable(file)) {
         throw ProcessError("Could not open net-file '" + file + "'.");
     }
     // build handler and parser

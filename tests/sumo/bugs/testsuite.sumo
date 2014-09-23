@@ -65,6 +65,12 @@ ticket604
 ticket609
 ticket611
 ticket651
+
+# testing route length in tripinfos and vehroute output with rerouting
+ticket676
+
+# test junction deadlock
+ticket699
 ticket720
 ticket747
 
@@ -117,3 +123,33 @@ ticket881b
 # test error with instantInductionLoop detectors at the beginning of the lane
 ticket881c
 ticket882
+ticket889
+ticket925
+ticket929
+ticket941
+ticket963
+ticket967
+
+# vehicles stop to help other vehicles to change langes even though they are 500 meters apart
+ticket1044
+
+# ticket1047 (automatically commented due to no test directory being found)
+
+ticket1050
+ticket1054
+ticket1065
+ticket1082
+ticket1084
+ticket1088
+ticket1091
+ticket1096
+
+# this time with green minor link
+ticket1096b
+ticket1096c
+ticket1097
+ticket1114
+
+ticket1217
+ticket1223
+ticket1273

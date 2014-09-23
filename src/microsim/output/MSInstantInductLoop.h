@@ -1,13 +1,14 @@
 /****************************************************************************/
 /// @file    MSInstantInductLoop.h
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    2011-09.08
 /// @version $Id$
 ///
 // An instantaneous induction loop
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -113,22 +114,6 @@ public:
      * @see MSMoveReminder::notifyLeave
      */
     bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos, MSMoveReminder::Notification reason);
-
-
-    /** @brief Returns whether the detector may has to be concerned during the vehicle's further movement
-     *
-     * If the detector is in front of the vehicle, true is returned. If
-     *  the vehicle's front has passed the detector, false, because
-     *  the vehicle is no longer relevant for the detector.
-     *
-     * @param[in] veh The entering vehicle.
-     * @param[in] reason how the vehicle enters the lane
-     * @return True if vehicle is on or in front of the detector.
-     * @see MSMoveReminder
-     * @see MSMoveReminder::notifyEnter
-     * @see MSMoveReminder::Notification
-     */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason);
     //@}
 
 

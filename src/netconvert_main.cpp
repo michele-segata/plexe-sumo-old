@@ -8,8 +8,8 @@
 ///
 // Main for NETCONVERT
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -114,12 +114,16 @@ main(int argc, char** argv) {
             SystemFrame::close();
             return 0;
         }
-        XMLSubSys::setValidation(oc.getBool("xml-validation"));
+        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
         MsgHandler::initOutputOptions();
         if (!checkOptions()) {
             throw ProcessError();
         }
         RandHelper::initRandGlobal();
+        // build the projection
+        if (!GeoConvHelper::init(oc)) {
+            throw ProcessError("Could not build projection!");
+        }
         NBNetBuilder nb;
         nb.applyOptions(oc);
         // load data

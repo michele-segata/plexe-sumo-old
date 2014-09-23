@@ -10,8 +10,8 @@
 ///
 // A view on the simulation; this view is a microscopic one
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,7 +58,6 @@
 #include <foreign/polyfonts/polyfonts.h>
 #include <utils/gui/windows/GUIDialog_ViewSettings.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
-#include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/foxtools/MFXImageHelper.h>
 #include <utils/gui/globjects/GUIGlObjectStorage.h>
 #include <foreign/rtree/SUMORTree.h>
@@ -130,13 +129,13 @@ GUIViewTraffic::buildViewToolBars(GUIGlChildWindow& v) {
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     // for pois
     new FXButton(v.getLocatorPopup(),
-                 "\tLocate POI\tLocate a POI within the network.",
-                 GUIIconSubSys::getIcon(ICON_LOCATESHAPE), &v, MID_LOCATEPOI,
+                 "\tLocate PoI\tLocate a PoI within the network.",
+                 GUIIconSubSys::getIcon(ICON_LOCATEPOI), &v, MID_LOCATEPOI,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
     // for polygons
     new FXButton(v.getLocatorPopup(),
                  "\tLocate Polygon\tLocate a Polygon within the network.",
-                 GUIIconSubSys::getIcon(ICON_LOCATESHAPE), &v, MID_LOCATEPOLY,
+                 GUIIconSubSys::getIcon(ICON_LOCATEPOLY), &v, MID_LOCATEPOLY,
                  ICON_ABOVE_TEXT | FRAME_THICK | FRAME_RAISED);
 }
 
@@ -206,7 +205,7 @@ GUIViewTraffic::doPaintGL(int mode, const Boundary& bound) {
     glLoadIdentity();
     glTranslated(1.-.2, 1.-.5, 0.);
     glScaled(.2, .5, 1.);
-    GUIColoringSchemesMap<GUILaneWrapper> &sm = GUIViewTraffic::getLaneSchemesMap(); //!!!
+    GUIColoringSchemesMap<GUILane> &sm = GUIViewTraffic::getLaneSchemesMap(); //!!!
     sm.getColorer(myVisualizationSettings->laneEdgeMode)->drawLegend();
     */
     return hits2;

@@ -4,13 +4,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Sascha Krieg
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    2004-11-23
 /// @version $Id$
 ///
 // An unextended detector measuring at a fixed position on a fixed lane.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2004-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -140,20 +141,6 @@ public:
     bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos, MSMoveReminder::Notification reason);
 
 
-    /** @brief Returns whether the detector may has to be concerned during the vehicle's further movement
-     *
-     * If the detector is in front of the vehicle, true is returned. If
-     *  the vehicle's front has passed the detector, false, because
-     *  the vehicle is no longer relevant for the detector.
-     *
-     * @param[in] veh The entering vehicle.
-     * @param[in] reason how the vehicle enters the lane
-     * @return True if vehicle is on or in front of the detector.
-     * @see MSMoveReminder
-     * @see MSMoveReminder::notifyEnter
-     * @see MSMoveReminder::Notification
-     */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason);
     //@}
 
 
@@ -265,7 +252,7 @@ public:
         VehicleData(const std::string& id, SUMOReal vehLength, SUMOReal entryTimestep, SUMOReal leaveTimestep,
                     const std::string& typeID)
             : idM(id), lengthM(vehLength), entryTimeM(entryTimestep), leaveTimeM(leaveTimestep),
-              speedM(lengthM / ((leaveTimeM - entryTimeM))), typeIDM(typeID) {}
+              speedM(vehLength / MAX2(leaveTimestep - entryTimestep, NUMERICAL_EPS)), typeIDM(typeID) {}
 
         /// @brief The id of the vehicle
         std::string idM;
@@ -314,8 +301,9 @@ protected:
 
     /** @brief Removes a vehicle from the detector's map myVehiclesOnDet.
      * @param veh The leaving vehicle.
+     * @param lastPos The last position of the leaving vehicle.
      */
-    virtual void leaveDetectorByLaneChange(SUMOVehicle& veh);
+    virtual void leaveDetectorByLaneChange(SUMOVehicle& veh, SUMOReal lastPos);
     /// @}
 
 

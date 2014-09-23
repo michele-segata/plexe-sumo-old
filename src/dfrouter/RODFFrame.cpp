@@ -4,13 +4,14 @@
 /// @author  Eric Nicolay
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
+/// @author  Melanie Knocke
 /// @date    Thu, 16.03.2006
 /// @version $Id$
 ///
 // Sets and checks options for df-routing
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2006-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -41,7 +42,6 @@
 #include <utils/common/ToString.h>
 #include <utils/common/SystemFrame.h>
 #include "RODFFrame.h"
-#include <router/ROFrame.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOTime.h>
 
@@ -64,6 +64,7 @@ RODFFrame::fillOptions() {
     oc.addOptionSubTopic("Input");
     oc.addOptionSubTopic("Output");
     oc.addOptionSubTopic("Processing");
+    oc.addOptionSubTopic("Defaults");
     oc.addOptionSubTopic("Time");
     SystemFrame::addReportOptions(oc); // fill this subtopic, too
 
@@ -106,6 +107,9 @@ RODFFrame::fillOptions() {
     oc.doRegister("emitters-output", new Option_FileName());
     oc.addDescription("emitters-output", "Output", "Saves emitter definitions for source detectors to FILE");
 
+    oc.doRegister("vtype", new Option_Bool(false));
+    oc.addDescription("vtype", "Output", "Add vehicle types to the emitters file (PKW, LKW)");
+
     oc.doRegister("emitters-poi-output", new Option_FileName()); // !!! describe
     oc.addDescription("emitters-poi-output", "Output", "Saves emitter positions as pois to FILE");
 
@@ -125,8 +129,8 @@ RODFFrame::fillOptions() {
 
     // register processing options
     // to guess empty flows
-    oc.doRegister("guess-empty-flows", new Option_Bool(false)); // !!! describe
-    oc.addDescription("guess-empty-flows", "Processing", "");
+    oc.doRegister("guess-empty-flows", new Option_Bool(false));
+    oc.addDescription("guess-empty-flows", "Processing", "Derive missing flow values from upstream or downstream (not working!)");
 
     // for guessing source/sink detectors
     oc.doRegister("highway-mode", 'h', new Option_Bool(false)); // !!! describe
@@ -143,9 +147,6 @@ RODFFrame::fillOptions() {
     // for route computation
     oc.doRegister("revalidate-routes", new Option_Bool(false));
     oc.addDescription("revalidate-routes", "Processing", "Recomputes routes even if given");
-
-    oc.doRegister("all-end-follower", new Option_Bool(false));
-    oc.addDescription("all-end-follower", "Processing", "Continues routes till the first street after a sink");
 
     oc.doRegister("keep-unfinished-routes", new Option_Bool(false));
     oc.addSynonyme("keep-unfinished-routes", "keep-unfound-ends", true);
@@ -170,7 +171,7 @@ RODFFrame::fillOptions() {
     oc.doRegister("min-route-length", new Option_Float(-1));
     oc.addSynonyme("min-route-length", "min-dist", true);
     oc.addSynonyme("min-route-length", "min-distance", true);
-    oc.addDescription("min-route-length", "Processing", "Minimum distance in meters between start and end node of every route.");
+    oc.addDescription("min-route-length", "Processing", "Minimum distance in meters between start and end node of every route");
 
     // flow reading
     oc.doRegister("time-factor", new Option_String("60", "TIME"));
@@ -200,6 +201,9 @@ RODFFrame::fillOptions() {
     oc.doRegister("strict-sources", new Option_Bool(false)); // !!!undescribed
     oc.addDescription("strict-sources", "Processing", "");
 
+    oc.doRegister("respect-concurrent-inflows", new Option_Bool(false));
+    oc.addDescription("respect-concurrent-inflows", "Processing", "Try to determine further inflows to an inbetween detector when computing split probabilities");
+
     /* disabled, see ticket #521
     oc.doRegister("join-lanes", new Option_Bool(false));
     oc.addSynonyme("join-lanes", "mesosim", true);
@@ -209,6 +213,26 @@ RODFFrame::fillOptions() {
     //
     oc.doRegister("scale", new Option_Float(1.));
     oc.addDescription("scale", "Processing", "Scale factor for flows");
+
+    // register defaults options
+    oc.doRegister("departlane", new Option_String());
+    oc.addDescription("departlane", "Defaults", "Assigns a default depart lane");
+
+    oc.doRegister("departpos", new Option_String());
+    oc.addDescription("departpos", "Defaults", "Assigns a default depart position");
+
+    oc.doRegister("departspeed", new Option_String());
+    oc.addDescription("departspeed", "Defaults", "Assigns a default depart speed");
+
+    oc.doRegister("arrivallane", new Option_String());
+    oc.addDescription("arrivallane", "Defaults", "Assigns a default arrival lane");
+
+    oc.doRegister("arrivalpos", new Option_String());
+    oc.addDescription("arrivalpos", "Defaults", "Assigns a default arrival position");
+
+    oc.doRegister("arrivalspeed", new Option_String());
+    oc.addDescription("arrivalspeed", "Defaults", "Assigns a default arrival speed");
+
 
     // register the simulation settings
     oc.doRegister("begin", 'b', new Option_String("0", "TIME"));

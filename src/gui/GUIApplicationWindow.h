@@ -9,8 +9,8 @@
 ///
 // The main window of the SUMO-gui.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -45,6 +45,7 @@
 #include <utils/gui/windows/GUIMainWindow.h>
 #include <utils/common/ValueRetriever.h>
 #include <utils/common/ValueSource.h>
+#include <utils/common/RandomDistributor.h>
 #include "GUISUMOViewParent.h"
 
 
@@ -174,6 +175,12 @@ public:
     /// @brief Called on "step"
     long onCmdStep(FXObject*, FXSelector, void*);
 
+    /// @brief Called on "time toggle"
+    long onCmdTimeToggle(FXObject*, FXSelector, void*);
+
+    /// @brief Called on "delay toggle"
+    long onCmdDelayToggle(FXObject*, FXSelector, void*);
+
     /// @brief Called if a new view shall be opened (2D view)
     long onCmdNewView(FXObject*, FXSelector, void*);
 
@@ -195,7 +202,7 @@ public:
     long onUpdAddView(FXObject*, FXSelector, void*);
 
     /// @brief Determines whether "play" is enabled
-    virtual long onUpdStart(FXObject*, FXSelector, void*);
+    long onUpdStart(FXObject* sender, FXSelector, void* ptr);
 
     /// @brief Determines whether "stop" is enabled
     long onUpdStop(FXObject*, FXSelector, void*);
@@ -203,14 +210,14 @@ public:
     /// @brief Determines whether "step" is enabled
     long onUpdStep(FXObject*, FXSelector, void*);
 
-    /// @brief Determines whether editing chosen is enabled
-    long onUpdEditChosen(FXObject* sender, FXSelector, void* ptr);
-
-    /// @brief Determines whether editing breakpoints is enabled
-    virtual long onUpdEditBreakpoints(FXObject*, FXSelector, void*);
+    /// @brief Determines whether some buttons which require an active simulation may be shown
+    long onUpdNeedsSimulation(FXObject*, FXSelector, void*);
 
     /// @brief Called if the message window shall be cleared
     long onCmdClearMsgWindow(FXObject*, FXSelector, void*);
+
+    /// @brief Called on menu commands from the Locator menu
+    long onCmdLocate(FXObject*, FXSelector, void*);
 
     /// @brief Called on an event from the loading thread
     long onLoadThreadEvent(FXObject*, FXSelector, void*);
@@ -232,9 +239,14 @@ private:
     /** this method closes all windows and deletes the current simulation */
     void closeAllWindows();
 
+    /// @brief updates the simulation time display
+    void updateTimeLCD(SUMOTime time);
 
     /** opens a new simulation display */
     GUISUMOAbstractView* openNewView(GUISUMOViewParent::ViewType vt = GUISUMOViewParent::VIEW_2D_OPENGL);
+
+    /// @brief handles additional game-related events
+    void checkGamingEvents();
 
 protected:
     /// FOX needs this for static members
@@ -267,7 +279,8 @@ protected:
     bool myAmLoading;
 
     /// the submenus
-    FXMenuPane* myFileMenu, *myEditMenu, *mySettingsMenu,
+    FXMenuPane* myFileMenu, *myEditMenu, *mySelectByPermissions, *mySettingsMenu,
+                *myLocatorMenu, *myControlMenu,
                 *myWindowsMenu, *myHelpMenu;
 
     /// A window to display messages, warnings and error in
@@ -278,14 +291,13 @@ protected:
 
     /// for some menu detaching fun
     FXToolBarShell* myToolBarDrag1, *myToolBarDrag2, *myToolBarDrag3,
-                    *myToolBarDrag4, *myToolBarDrag5,
-                    *myMenuBarDrag;
+                    *myToolBarDrag4, *myToolBarDrag5, *myMenuBarDrag;
 
     ///
     FXRealSpinDial* mySimDelayTarget;
 
-    /// The simulation delay
-    FXdouble mySimDelay;
+    /// The alternate simulation delay for toggling
+    SUMOTime myAlternateSimDelay;
 
     /// List of got requests
     MFXEventQue myEvents;
@@ -319,6 +331,26 @@ protected:
 
     bool hadDependentBuild;
 
+    /// @brief whether to show time as hour:minute:second
+    bool myShowTimeAsHMS;
+
+
+    /// @name game related things
+    /// {
+    RandomDistributor<std::string> myJamSounds;
+    /// @brief waiting time after which vehicles trigger jam sounds
+    SUMOReal myJamSoundTime;
+    /// @brief A random number generator used to choose a gaming sound
+    static MTRand myGamingRNG;
+
+    /// performance indicators
+    FXEX::FXLCDLabel* myWaitingTimeLabel;
+    FXEX::FXLCDLabel* myTimeLossLabel;
+    SUMOTime myWaitingTime;
+    SUMOTime myTimeLoss;
+    FXToolBar* myToolBar6, *myToolBar7;
+    FXToolBarShell* myToolBarDrag6, *myToolBarDrag7;
+    ////}
 
 };
 

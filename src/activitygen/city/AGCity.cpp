@@ -4,14 +4,15 @@
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
+/// @author  Jakob Erdmann
 /// @date    July 2010
 /// @version $Id$
 ///
 // City class that contains all other objects of the city: in particular
 // streets, households, bus lines, work positions and school
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2010-2014 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
@@ -94,7 +95,7 @@ AGCity::completeStreets() {
             }
         }
         //if this edge isn't represented by a street
-        if (itS == streets.end()) {
+        if (itS == streets.end() && itE->second->getType() != ROEdge::ET_INTERNAL) {
             streets.push_back(AGStreet(itE->second));
         }
     }
@@ -115,7 +116,7 @@ AGCity::generateWorkPositions() {
         }
     } catch (const std::bad_alloc& e) {
         std::cout << "Number of work positions at bad_alloc exception: " << workPositionCounter << std::endl;
-        throw(e);
+        throw e;
     }
     //std::cout << "Inner work positions done. " << workPositionCounter << " generated." << std::endl;
 
@@ -360,7 +361,12 @@ AGCity::carAllocation() {
     }
     // new rate: the rate on the people that have'nt any car yet:
     // nR = (R * Drivers - AlreadyCars) / (Drivers - AlreadyCars)
-    SUMOReal newRate = (statData.carRate * statData.getPeopleOlderThan(statData.limitAgeChildren) - statData.hhFarFromPT) / (statData.getPeopleOlderThan(statData.limitAgeChildren) - statData.hhFarFromPT);
+    SUMOReal newRate = statData.carRate * statData.getPeopleOlderThan(statData.limitAgeChildren) - statData.hhFarFromPT;
+    if (statData.getPeopleOlderThan(statData.limitAgeChildren) == statData.hhFarFromPT) {
+        newRate = 0.;
+    } else {
+        newRate /= statData.getPeopleOlderThan(statData.limitAgeChildren) - statData.hhFarFromPT;
+    }
     //std::cout << " - " << newRate << std::endl;
     if (newRate < 0 || newRate >= 1) {
         newRate = 0;

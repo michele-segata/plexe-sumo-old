@@ -2,13 +2,14 @@
 /// @file    MS_E2_ZS_CollectorOverLanes.cpp
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Oct 2003
 /// @version $Id$
 ///
 // A detector which joins E2Collectors over consecutive lanes (backward)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2003-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -53,7 +54,7 @@ MS_E2_ZS_CollectorOverLanes::MS_E2_ZS_CollectorOverLanes(const std::string& id,
     : MSDetectorFileOutput(id),
       startPosM(startPos), haltingTimeThresholdM(haltingTimeThreshold),
       haltingSpeedThresholdM(haltingSpeedThreshold), jamDistThresholdM(jamDistThreshold),
-      myID(id), myStartLaneID(lane->getID()), myUsage(usage) {}
+      myStartLaneID(lane->getID()), myUsage(usage) {}
 
 
 void
@@ -177,7 +178,7 @@ MS_E2_ZS_CollectorOverLanes::getLanePredeccessorLanes(MSLane* l) {
         MSEdge* e = *i;
         assert(e != 0);
         typedef std::vector<MSLane*> LaneVector;
-        const LaneVector* cl = e->allowedLanes(l->getEdge(), SVC_UNKNOWN);
+        const LaneVector* cl = e->allowedLanes(l->getEdge(), SVC_IGNORING);
         bool fastAbort = false;
         if (cl != 0) {
             for (LaneVector::const_iterator j = cl->begin(); !fastAbort && j != cl->end(); j++) {
@@ -253,12 +254,6 @@ MS_E2_ZS_CollectorOverLanes::makeID(const std::string& baseID ,
     }
     std::string ret =  baseID + add + toString<size_t>(bla++);
     return ret;
-}
-
-
-const std::string&
-MS_E2_ZS_CollectorOverLanes::getID() const {
-    return myID;
 }
 
 

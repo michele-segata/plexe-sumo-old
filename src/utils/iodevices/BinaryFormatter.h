@@ -1,13 +1,15 @@
 /****************************************************************************/
 /// @file    BinaryFormatter.h
+/// @author  Daniel Krajzewicz
+/// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @date    2012
 /// @version $Id$
 ///
 // Output formatter for plain XML output
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -182,7 +184,8 @@ public:
      * @param[in] attr The attribute (name)
      * @param[in] val The attribute value
      */
-    void writeAttr(std::ostream& into, const std::string& attr, const std::string& val);
+    template <typename dummy, typename T>
+    static void writeAttr(dummy& into, const SumoXMLAttr attr, const T& val);
 
 
     /** @brief writes a named attribute
@@ -192,7 +195,20 @@ public:
      * @param[in] val The attribute value
      */
     template <typename dummy, typename T>
-    static void writeAttr(dummy& into, const SumoXMLAttr attr, const T& val);
+    static void writeAttr(dummy& into, const std::string& attr, const T& val);
+
+
+    /** @brief writes a preformatted tag to the device but ensures that any
+     * pending tags are closed
+     * @param[in] into The output stream to use
+     * @param[in] val The preformatted data
+     */
+    void writePreformattedTag(std::ostream& into, const std::string& val) {
+        FileHelpers::writeString(into, val);
+    }
+
+
+
     /* we need to use dummy templating here to compile those functions where they get
         called to avoid an explicit dependency of utils/iodevices on the edge implementations */
     template <typename dummy>
@@ -282,6 +298,13 @@ void BinaryFormatter::writeAttr(dummy& into, const SumoXMLAttr attr, const T& va
     FileHelpers::writeString(into, toString(val, into.precision()));
 }
 
+
+template <typename dummy, typename T>
+void BinaryFormatter::writeAttr(dummy& into, const std::string& attr, const T& val) {
+    if (SUMOXMLDefinitions::Attrs.hasString(attr)) {
+        writeAttr(into, (const SumoXMLAttr)(SUMOXMLDefinitions::Attrs.get(attr)), val);
+    }
+}
 
 template<> void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const bool& val);
 template<> void BinaryFormatter::writeAttr(std::ostream& into, const SumoXMLAttr attr, const SUMOReal& val);

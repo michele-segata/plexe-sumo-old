@@ -8,8 +8,8 @@
 ///
 // Importer for networks stored in robocup rescue league format
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -74,7 +74,7 @@ NIImporter_RobocupRescue::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     for (std::vector<std::string>::const_iterator file = files.begin(); file != files.end(); ++file) {
         // nodes
         std::string nodesName = (*file) + "/node.bin";
-        if (!FileHelpers::exists(nodesName)) {
+        if (!FileHelpers::isReadable(nodesName)) {
             WRITE_ERROR("Could not open robocup-node-file '" + nodesName + "'.");
             return;
         }
@@ -83,7 +83,7 @@ NIImporter_RobocupRescue::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         PROGRESS_DONE_MESSAGE();
         // edges
         std::string edgesName = (*file) + "/road.bin";
-        if (!FileHelpers::exists(edgesName)) {
+        if (!FileHelpers::isReadable(edgesName)) {
             WRITE_ERROR("Could not open robocup-road-file '" + edgesName + "'.");
             return;
         }
@@ -166,7 +166,7 @@ NIImporter_RobocupRescue::loadNodes(const std::string& file) {
         }
 
         Position pos((SUMOReal)(posX / 1000.), -(SUMOReal)(posY / 1000.));
-        NILoader::transformCoordinates(pos);
+        NBNetBuilder::transformCoordinates(pos);
         NBNode* node = new NBNode(toString(id), pos);
         myNodeCont.insert(node);
         --noNodes;

@@ -9,17 +9,25 @@
 
 Retrieves an area from OpenStreetMap.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2009-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2009-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 
 import os,sys,optparse,subprocess
 from os import path
+sys.path.append(os.path.join(os.environ.get("SUMO_HOME", os.path.join(os.path.dirname(__file__), '..', '..')), 'tools'))
+
+import sumolib
 
 
-vclassRemove = {"passenger" : " --remove-edges.by-vclass hov,taxi,bus,delivery,transport,lightrail,cityrail,rail_slow,rail_fast,motorcycle,bicycle,pedestrian",
-                "road" : " --remove-edges.by-vclass rail_slow,rail_fast,lightrail,cityrail,bicycle,pedestrian",
+vclassRemove = {"passenger" : " --keep-edges.by-vclass passenger",
+                "road" : " --remove-edges.by-vclass tram,rail_urban,rail_electric,bicycle,pedestrian",
                 "all" : "" }
 possibleVClassOptions = '|'.join(vclassRemove.keys())
 
@@ -37,11 +45,8 @@ optParser.add_option("-y", "--polyconvert-options", default="-v,--osm.keep-full-
 
 def build(args=None, bindir=os.environ.get('SUMO_BINDIR','')):
     (options, args) = optParser.parse_args(args=args)
-    netconvert = path.join(bindir, 'netconvert')
-    polyconvert = path.join(bindir, 'polyconvert')
-
-    if not os.path.isfile(netconvert):
-        optParser.error("netconvert executable '%s' not found" % netconvert)
+    netconvert = sumolib.checkBinary('netconvert')
+    polyconvert = sumolib.checkBinary('polyconvert')
 
     if ((options.oldapi_prefix and options.osm_file) or
             not (options.oldapi_prefix or options.osm_file)):
@@ -85,7 +90,7 @@ def build(args=None, bindir=os.environ.get('SUMO_BINDIR','')):
 
 def call(cmd):
     # ensure unix compatibility
-    print(cmd)
+    #print(cmd)
     if isinstance(cmd, str):
         cmd = filter(lambda a: a!='', cmd.split(' '))
     subprocess.call(cmd)

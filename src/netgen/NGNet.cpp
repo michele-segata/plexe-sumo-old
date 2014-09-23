@@ -3,13 +3,14 @@
 /// @author  Markus Hartinger
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Mar, 2003
 /// @version $Id$
 ///
 // The class storing the generated network
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2003-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -160,7 +161,7 @@ NGNet::createSpiderWeb(int numRadDiv, int numCircles, SUMOReal spaceRad, bool ha
     }
 
     int ir, ic;
-    SUMOReal angle = (SUMOReal)(2 * PI / numRadDiv); // angle between radial divisions
+    SUMOReal angle = (SUMOReal)(2 * M_PI / numRadDiv); // angle between radial divisions
     NGNode* Node;
     for (ir = 1; ir < numRadDiv + 1; ir++) {
         for (ic = 1; ic < numCircles + 1; ic++) {

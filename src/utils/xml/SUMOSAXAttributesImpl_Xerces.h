@@ -8,8 +8,8 @@
 ///
 // Encapsulated Xerces-SAX-attributes
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2007-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -269,13 +269,6 @@ public:
      * @return The read value if given and not empty; empty vector if an error occured
      */
     std::vector<std::string> getStringVector(int attr) const;
-
-    /** @brief Tries to read given attribute assuming it is a vector of floats
-     *
-     * @param[in] attr The id of the attribute to read
-     * @return The read value if given and not empty; empty vector if an error occured
-     */
-    std::vector<SUMOReal> getFloatVector(int attr) const;
 
     /** @brief Converts the given attribute id into a man readable string
      *

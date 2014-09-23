@@ -4,15 +4,23 @@
 @author  Laura Bieker
 @author  Karol Stosiek
 @author  Michael Behrisch
+@author  Jakob Erdmann
 @date    2011-11-28
 @version $Id$
 
 This file contains a Python-representation of a single edge.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
+from connection import Connection
+
 class Edge:
     """ Edges from a sumo network """
 
@@ -24,11 +32,12 @@ class Edge:
         fromN.addOutgoing(self)
         toN.addIncoming(self)
         self._lanes = []
-        self._speed = None                                                          
+        self._speed = None
         self._length = None
         self._incoming = {}
         self._outgoing = {}
         self._shape = None
+        self._cachedShapeWithJunctions = None
         self._function = function
         self._tls = None
         self._name = name
@@ -56,6 +65,7 @@ class Edge:
 
     def setShape(self, shape):
         self._shape = shape
+        self._cachedShapeWithJunctions = None
 
     def getID(self):
         return self._id
@@ -66,13 +76,35 @@ class Edge:
     def getOutgoing(self):
         return self._outgoing
 
-    def getShape(self):
+    def getShape(self, includeJunctions=False):
         if not self._shape:
-            shape = []
-            shape.append(self._from._coord)
-            shape.append(self._to._coord)
-            return shape
+            if self._cachedShapeWithJunctions == None:
+                self._cachedShapeWithJunctions = [self._from._coord, self._to._coord]
+            return self._cachedShapeWithJunctions
+        if includeJunctions:
+            if self._cachedShapeWithJunctions == None:
+                if self._from._coord != self._shape[0]:
+                    self._cachedShapeWithJunctions = [self._from._coord] + self._shape
+                else:
+                    self._cachedShapeWithJunctions = list(self._shape)
+                if self._to._coord != self._shape[-1]:
+                    self._cachedShapeWithJunctions += [self._to._coord]
+            return self._cachedShapeWithJunctions
         return self._shape
+
+    def getBoundingBox(self, includeJunctions=True):
+        s = self.getShape(includeJunctions)
+        xmin = s[0][0]
+        xmax = s[0][0]
+        ymin = s[0][1]
+        ymax = s[0][1]
+        for p in s[1:]:
+            xmin = min(xmin, p[0])
+            xmax = max(xmax, p[0])
+            ymin = min(ymin, p[1])
+            ymax = max(ymax, p[1])
+        assert(xmin != xmax or ymin != ymax)
+        return (xmin, ymin, xmax, ymax)
 
     def getSpeed(self):
         return self._speed
@@ -115,6 +147,22 @@ class Edge:
 
     def getToNode(self):
         return self._to
-         
-    def is_fringe(self):
-        return len(self.getIncoming()) == 0 or len(self.getOutgoing()) == 0
+
+    def is_fringe(self, connections=None):
+        """true if this edge has no incoming or no outgoing connections (except turnarounds)
+           If connections is given, only those connections are considered"""
+        if connections is None:
+            return self.is_fringe(self._incoming) or self.is_fringe(self._outgoing)
+        else:
+            cons = sum([c for c in connections.values()], [])
+            return len([c for c in cons if c._direction != Connection.LINKDIR_TURN]) == 0
+
+    def allows(self, vClass):
+        """true if this edge has a lane which allows the given vehicle class"""
+        for lane in self._lanes:
+            if vClass in lane._allowed:
+                return True
+        return False
+
+    def __repr__(self):
+        return '<edge id="%s" from="%s" to="%s"/>' % (self._id, self._from.getID(), self._to.getID())

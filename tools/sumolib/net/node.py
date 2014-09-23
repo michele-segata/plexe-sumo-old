@@ -4,14 +4,20 @@
 @author  Laura Bieker
 @author  Karol Stosiek
 @author  Michael Behrisch
+@author  Jakob Erdmann
 @date    2011-11-28
 @version $Id$
 
 This file contains a Python-representation of a single node.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 class Node:
     """ Nodes from a sumo network """
@@ -72,3 +78,7 @@ class Node:
 
     def getCoord(self):
         return self._coord
+
+    def getType(self):
+        return self._type
+

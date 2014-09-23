@@ -8,8 +8,8 @@
 ///
 // The handler that parses a SUMO-network for its usage in a router
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -82,8 +82,15 @@ protected:
      * @exception ProcessError If something fails
      * @see GenericSAXHandler::myStartElement
      */
-    virtual void myStartElement(int element,
-                                const SUMOSAXAttributes& attrs);
+    virtual void myStartElement(int element, const SUMOSAXAttributes& attrs);
+
+    /** @brief Called when a closing tag occurs
+     *
+     * @param[in] element ID of the currently opened element
+     * @exception ProcessError If something fails
+     * @see GenericSAXHandler::myEndElement
+     */
+    virtual void myEndElement(int element);
     //@}
 
 protected:
@@ -133,6 +140,13 @@ protected:
     void parseConnection(const SUMOSAXAttributes& attrs);
 
 
+    /** @begin Parses a bus stop
+     * Called on the occurence of a "busStop" element
+     * @param[in] attrs The attributes (of the "busStop"-element) to parse
+     */
+    void parseBusStop(const SUMOSAXAttributes& attrs);
+
+
     /** @begin Parses a district and creates a pseudo edge for it
      *
      * Called on the occurence of a "district" element, this method
@@ -177,7 +191,9 @@ protected:
     /// @brief The object used to build of edges of the desired type
     ROAbstractEdgeBuilder& myEdgeBuilder;
 
-
+    /// @brief temporary data for building the junction graph after network parsing is finished
+    typedef std::map<std::string, std::pair<std::string, std::string> > JunctionGraph;
+    JunctionGraph myJunctionGraph;
 
 
 private:

@@ -8,8 +8,8 @@
 ///
 // Dijkstra shortest path algorithm using travel time
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,6 +36,7 @@
 #include <string>
 #include <functional>
 #include <vector>
+#include <deque>
 #include <set>
 #include <limits>
 #include <algorithm>
@@ -169,7 +170,7 @@ public:
             myFrontierList.pop_back();
             myFound.push_back(minimumInfo);
 #ifdef DijkstraRouterTT_DEBUG_QUERY
-            std::cout << "DEBUG: hit '" << minEdge->getID() << "' Q: ";
+            std::cout << "DEBUG: hit '" << minEdge->getID() << "' TT: " << minimumInfo->traveltime << " Q: ";
             for (typename std::vector<EdgeInfo*>::iterator it = myFrontierList.begin(); it != myFrontierList.end(); it++) {
                 std::cout << (*it)->traveltime << "," << (*it)->edge->getID() << " ";
             }

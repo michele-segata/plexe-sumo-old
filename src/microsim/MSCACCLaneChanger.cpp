@@ -96,6 +96,16 @@ bool MSCACCLaneChanger::change() {
         int bla = 0;
     }
 #endif
+    if (vehicle->getLane() != (*myCandi).lane || vehicle->getLaneChangeModel().isChangingLanes()) {
+        // vehicles shadows and changing vehicles are not eligible
+        registerUnchanged(vehicle);
+        return false;
+    }
+#ifndef NO_TRACI
+    if (vehicle->hasInfluencer() && vehicle->getInfluencer().isVTDControlled()) {
+        return false; // !!! temporary; just because it broke, here
+    }
+#endif
     const std::vector<MSVehicle::LaneQ> &preb = vehicle->getBestLanes();
     assert(preb.size() == myChanger.size());
     for (int i = 0; i < (int) myChanger.size(); ++i) {
@@ -195,19 +205,7 @@ bool MSCACCLaneChanger::change() {
                 //vehicle->getLaneChangeModel().setOwnState(state2|state1);
                 // change if the vehicle wants to and is allowed to change
                 if (changingAllowed) {
-#ifndef NO_TRACI
-                    // inform lane change model about this change
-                    vehicle->getLaneChangeModel().fulfillChangeRequest(MSVehicle::REQUEST_LEFT);
-#endif
-                    (myCandi + 1)->hoppedVeh = veh(myCandi);
-                    (myCandi + 1)->lane->myTmpVehicles.push_front(veh(myCandi));
-                    vehicle->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE);
-                    myCandi->lane->leftByLaneChange(vehicle);
-                    vehicle->enterLaneAtLaneChange((myCandi + 1)->lane);
-                    (myCandi + 1)->lane->enteredByLaneChange(vehicle);
-                    vehicle->myLastLaneChangeOffset = 0;
-                    vehicle->getLaneChangeModel().changed();
-                    (myCandi + 1)->dens += (myCandi + 1)->hoppedVeh->getVehicleType().getLengthWithGap();
+                    startChange(vehicle, myCandi, 1);
                     return true;
                 }
                 if ((state & LCA_LEFT) != 0 && (state & LCA_URGENT) != 0) {
@@ -246,19 +244,7 @@ bool MSCACCLaneChanger::change() {
                 //vehicle->getLaneChangeModel().setOwnState(state2|state1);
                 // change if the vehicle wants to and is allowed to change
                 if (changingAllowed2) {
-#ifndef NO_TRACI
-                    // inform lane change model about this change
-                    vehicle->getLaneChangeModel().fulfillChangeRequest(MSVehicle::REQUEST_RIGHT);
-#endif
-                    (myCandi - 1)->hoppedVeh = veh(myCandi);
-                    (myCandi - 1)->lane->myTmpVehicles.push_front(veh(myCandi));
-                    vehicle->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE);
-                    myCandi->lane->leftByLaneChange(vehicle);
-                    vehicle->enterLaneAtLaneChange((myCandi - 1)->lane);
-                    (myCandi - 1)->lane->enteredByLaneChange(vehicle);
-                    vehicle->myLastLaneChangeOffset = 0;
-                    vehicle->getLaneChangeModel().changed();
-                    (myCandi - 1)->dens += (myCandi - 1)->hoppedVeh->getVehicleType().getLengthWithGap();
+                    startChange(vehicle, myCandi, -1);
                     return true;
                 }
                 if ((state & LCA_RIGHT) != 0 && (state & LCA_URGENT) != 0) {
@@ -306,9 +292,9 @@ bool MSCACCLaneChanger::change() {
                         target->lane->myTmpVehicles.erase(i);
                         // set this vehicle
                         target->hoppedVeh = vehicle;
-                        target->lane->myTmpVehicles.push_front(vehicle);
+                        target->lane->myTmpVehicles.insert(target->lane->myTmpVehicles.begin(), vehicle);
                         myCandi->hoppedVeh = prohibitor;
-                        myCandi->lane->myTmpVehicles.push_front(prohibitor);
+                        myCandi->lane->myTmpVehicles.insert(target->lane->myTmpVehicles.begin(), prohibitor);
 
                         // leave lane and detectors
                         vehicle->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE);
@@ -325,9 +311,7 @@ bool MSCACCLaneChanger::change() {
                         prohibitor->enterLaneAtLaneChange(myCandi->lane);
                         // mark lane change
                         vehicle->getLaneChangeModel().changed();
-                        vehicle->myLastLaneChangeOffset = 0;
                         prohibitor->getLaneChangeModel().changed();
-                        prohibitor->myLastLaneChangeOffset = 0;
                         (myCandi)->dens += prohibitor->getVehicleType().getLengthWithGap();
                         (target)->dens += vehicle->getVehicleType().getLengthWithGap();
                         return true;
@@ -341,10 +325,7 @@ bool MSCACCLaneChanger::change() {
     //if the action must not be chosen by the driver, and we arrive at this
     //point, then no lane change must be done
     if (laneChangeAction != Plexe::DRIVER_CHOICE) {
-        // Candidate didn't change lane.
-        myCandi->lane->myTmpVehicles.push_front(veh(myCandi));
-        vehicle->myLastLaneChangeOffset += DELTA_T;
-        (myCandi)->dens += vehicle->getVehicleType().getLengthWithGap();
+        registerUnchanged(vehicle);
         return false;
     }
     else {
@@ -360,17 +341,13 @@ MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, SUMOReal>& lead
                                const std::pair<MSVehicle* const, SUMOReal>& rFollow,
                                const std::vector<MSVehicle::LaneQ>& preb) const {
     ChangerIt target = myCandi + 1;
-    int blocked = overlapWithHopped(target)
-                  ? target->hoppedVeh->getPositionOnLane() < veh(myCandi)->getPositionOnLane()
-                  ? LCA_BLOCKED_BY_LEFT_FOLLOWER
-                  : LCA_BLOCKED_BY_LEFT_LEADER
-                  : 0;
+    int blocked = 0;
     // overlap
     if (rFollow.first != 0 && rFollow.second < 0) {
-        blocked |= (LCA_BLOCKED_BY_LEFT_FOLLOWER);
+        blocked |= (LCA_BLOCKED_BY_LEFT_FOLLOWER | LCA_OVERLAPPING);
     }
     if (rLead.first != 0 && rLead.second < 0) {
-        blocked |= (LCA_BLOCKED_BY_LEFT_LEADER);
+        blocked |= (LCA_BLOCKED_BY_LEFT_LEADER | LCA_OVERLAPPING);
     }
     // safe back gap
     if (rFollow.first != 0) {
@@ -410,8 +387,7 @@ MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, SUMOReal>& lead
         }
     }
     MSAbstractLaneChangeModel::MSLCMessager msg(leader.first, rLead.first, rFollow.first);
-    return blocked | veh(myCandi)->getLaneChangeModel().wantsChangeToLeft(
-               msg, blocked, leader, rLead, rFollow, *(myCandi + 1)->lane, preb, &(myCandi->lastBlocked));
+    return blocked | veh(myCandi)->getLaneChangeModel().wantsChange(+1, msg, blocked, leader, rLead, rFollow, *(myCandi + 1)->lane, preb, &(myCandi->lastBlocked), &(myCandi->firstBlocked));
 }
 
 int
@@ -420,17 +396,13 @@ MSCACCLaneChanger::change2right(const std::pair<MSVehicle* const, SUMOReal>& lea
                                 const std::pair<MSVehicle* const, SUMOReal>& rFollow,
                                 const std::vector<MSVehicle::LaneQ>& preb) const {
     ChangerIt target = myCandi - 1;
-    int blocked = overlapWithHopped(target)
-                  ? target->hoppedVeh->getPositionOnLane() < veh(myCandi)->getPositionOnLane()
-                  ? LCA_BLOCKED_BY_RIGHT_FOLLOWER
-                  : LCA_BLOCKED_BY_RIGHT_LEADER
-                  : 0;
+    int blocked = 0;
     // overlap
     if (rFollow.first != 0 && rFollow.second < 0) {
-        blocked |= (LCA_BLOCKED_BY_RIGHT_FOLLOWER);
+        blocked |= (LCA_BLOCKED_BY_RIGHT_FOLLOWER | LCA_OVERLAPPING);
     }
     if (rLead.first != 0 && rLead.second < 0) {
-        blocked |= (LCA_BLOCKED_BY_RIGHT_LEADER);
+        blocked |= (LCA_BLOCKED_BY_RIGHT_LEADER | LCA_OVERLAPPING);
     }
     // safe back gap
     if (rFollow.first != 0) {
@@ -472,8 +444,7 @@ MSCACCLaneChanger::change2right(const std::pair<MSVehicle* const, SUMOReal>& lea
     }
 
     MSAbstractLaneChangeModel::MSLCMessager msg(leader.first, rLead.first, rFollow.first);
-    return blocked | veh(myCandi)->getLaneChangeModel().wantsChangeToRight(
-               msg, blocked, leader, rLead, rFollow, *(myCandi - 1)->lane, preb, &(myCandi->lastBlocked));
+    return blocked | veh(myCandi)->getLaneChangeModel().wantsChange(-1, msg, blocked, leader, rLead, rFollow, *(myCandi - 1)->lane, preb, &(myCandi->lastBlocked), &(myCandi->firstBlocked));
 }
 
 void

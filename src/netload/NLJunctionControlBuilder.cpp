@@ -9,8 +9,8 @@
 ///
 // Builder of microsim-junctions and tls
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -118,11 +118,14 @@ NLJunctionControlBuilder::closeJunction() {
         case NODETYPE_DEAD_END:
         case NODETYPE_DEAD_END_DEPRECATED:
         case NODETYPE_DISTRICT:
+        case NODETYPE_TRAFFIC_LIGHT_NOJUNCTION:
             junction = buildNoLogicJunction();
             break;
         case NODETYPE_TRAFFIC_LIGHT:
         case NODETYPE_RIGHT_BEFORE_LEFT:
-        case NODETYPE_PRIORITY_JUNCTION:
+        case NODETYPE_PRIORITY:
+        case NODETYPE_PRIORITY_STOP:
+        case NODETYPE_ALLWAY_STOP:
             junction = buildLogicJunction();
             break;
         case NODETYPE_INTERNAL:
@@ -425,6 +428,16 @@ NLJunctionControlBuilder::postLoadInitialization() {
         (*it)->init(myDetectorBuilder);
     }
     myNetIsLoaded = true;
+}
+
+
+MSJunction*
+NLJunctionControlBuilder::retrieve(const std::string id) {
+    if (myJunctions != 0) {
+        return myJunctions->get(id);
+    } else {
+        return 0;
+    }
 }
 
 /****************************************************************************/

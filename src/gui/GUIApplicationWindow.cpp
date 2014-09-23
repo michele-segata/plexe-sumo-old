@@ -9,8 +9,8 @@
 ///
 // The main window of the SUMO-gui.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -40,6 +40,9 @@
 #include <algorithm>
 
 #include <guisim/GUINet.h>
+#include <guisim/GUILane.h>
+#include <microsim/MSEdge.h>
+#include <microsim/MSVehicle.h>
 
 #include "GUISUMOViewParent.h"
 #include "GUILoadThread.h"
@@ -49,6 +52,7 @@
 #include "GUIEvent_SimulationEnded.h"
 
 #include <utils/common/ToString.h>
+#include <utils/common/RandHelper.h>
 #include <utils/foxtools/MFXUtils.h>
 #include <utils/foxtools/FXLCDLabel.h>
 #include <utils/foxtools/FXRealSpinDial.h>
@@ -73,11 +77,6 @@
 #include "dialogs/GUIDialog_AboutSUMO.h"
 #include "dialogs/GUIDialog_AppSettings.h"
 #include "dialogs/GUIDialog_Breakpoints.h"
-
-#ifndef NO_TRACI
-#include <traci-server/TraCIServer.h>
-#include "TraCIServerAPI_GUI.h"
-#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -111,6 +110,8 @@ FXDEFMAP(GUIApplicationWindow) GUIApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_START,              GUIApplicationWindow::onCmdStart),
     FXMAPFUNC(SEL_COMMAND,  MID_STOP,               GUIApplicationWindow::onCmdStop),
     FXMAPFUNC(SEL_COMMAND,  MID_STEP,               GUIApplicationWindow::onCmdStep),
+    FXMAPFUNC(SEL_COMMAND,  MID_TIME_TOOGLE,        GUIApplicationWindow::onCmdTimeToggle),
+    FXMAPFUNC(SEL_COMMAND,  MID_DELAY_TOOGLE,       GUIApplicationWindow::onCmdDelayToggle),
     FXMAPFUNC(SEL_COMMAND,  MID_CLEARMESSAGEWINDOW, GUIApplicationWindow::onCmdClearMsgWindow),
 
     FXMAPFUNC(SEL_UPDATE,   MID_OPEN_CONFIG,       GUIApplicationWindow::onUpdOpen),
@@ -124,8 +125,24 @@ FXDEFMAP(GUIApplicationWindow) GUIApplicationWindowMap[] = {
     FXMAPFUNC(SEL_UPDATE,   MID_START,             GUIApplicationWindow::onUpdStart),
     FXMAPFUNC(SEL_UPDATE,   MID_STOP,              GUIApplicationWindow::onUpdStop),
     FXMAPFUNC(SEL_UPDATE,   MID_STEP,              GUIApplicationWindow::onUpdStep),
-    FXMAPFUNC(SEL_UPDATE,   MID_EDITCHOSEN,        GUIApplicationWindow::onUpdEditChosen),
-    FXMAPFUNC(SEL_UPDATE,   MID_EDIT_BREAKPOINTS,  GUIApplicationWindow::onUpdEditBreakpoints),
+    FXMAPFUNC(SEL_UPDATE,   MID_EDITCHOSEN,        GUIApplicationWindow::onUpdNeedsSimulation),
+    FXMAPFUNC(SEL_UPDATE,   MID_EDIT_BREAKPOINTS,  GUIApplicationWindow::onUpdNeedsSimulation),
+
+    // forward requests to the active view
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATEJUNCTION, GUIApplicationWindow::onCmdLocate),
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATEEDGE,     GUIApplicationWindow::onCmdLocate),
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATEVEHICLE,  GUIApplicationWindow::onCmdLocate),
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATETLS,      GUIApplicationWindow::onCmdLocate),
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATEADD,      GUIApplicationWindow::onCmdLocate),
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATEPOI,      GUIApplicationWindow::onCmdLocate),
+    FXMAPFUNC(SEL_COMMAND,  MID_LOCATEPOLY,     GUIApplicationWindow::onCmdLocate),
+    FXMAPFUNC(SEL_UPDATE,   MID_LOCATEJUNCTION, GUIApplicationWindow::onUpdNeedsSimulation),
+    FXMAPFUNC(SEL_UPDATE,   MID_LOCATEEDGE,     GUIApplicationWindow::onUpdNeedsSimulation),
+    FXMAPFUNC(SEL_UPDATE,   MID_LOCATEVEHICLE,  GUIApplicationWindow::onUpdNeedsSimulation),
+    FXMAPFUNC(SEL_UPDATE,   MID_LOCATETLS,      GUIApplicationWindow::onUpdNeedsSimulation),
+    FXMAPFUNC(SEL_UPDATE,   MID_LOCATEADD,      GUIApplicationWindow::onUpdNeedsSimulation),
+    FXMAPFUNC(SEL_UPDATE,   MID_LOCATEPOI,      GUIApplicationWindow::onUpdNeedsSimulation),
+    FXMAPFUNC(SEL_UPDATE,   MID_LOCATEPOLY,     GUIApplicationWindow::onUpdNeedsSimulation),
 
     FXMAPFUNC(SEL_CLIPBOARD_REQUEST, 0, GUIApplicationWindow::onClipboardRequest),
 
@@ -139,6 +156,11 @@ FXDEFMAP(GUIApplicationWindow) GUIApplicationWindowMap[] = {
 FXIMPLEMENT(GUIApplicationWindow, FXMainWindow, GUIApplicationWindowMap, ARRAYNUMBER(GUIApplicationWindowMap))
 
 // ===========================================================================
+// static members
+// ===========================================================================
+MTRand GUIApplicationWindow::myGamingRNG;
+
+// ===========================================================================
 // member method definitions
 // ===========================================================================
 GUIApplicationWindow::GUIApplicationWindow(FXApp* a,
@@ -146,9 +168,14 @@ GUIApplicationWindow::GUIApplicationWindow(FXApp* a,
     : GUIMainWindow(a),
       myLoadThread(0), myRunThread(0),
       myAmLoading(false),
-      mySimDelay(50),
+      myAlternateSimDelay(0),
       myRecentNets(a, "nets"), myConfigPattern(configPattern),
-      hadDependentBuild(false) {
+      hadDependentBuild(false),
+      myShowTimeAsHMS(false),
+      // game specific
+      myJamSoundTime(60),
+      myWaitingTime(0),
+      myTimeLoss(0) {
     GUIIconSubSys::init(a);
 }
 
@@ -211,12 +238,9 @@ GUIApplicationWindow::dependentBuild(bool game) {
     fillMenuBar();
     if (game) {
         onCmdGaming(0, 0, 0);
-        myMenuBar->hide();
-        myToolBar1->hide();
-        myToolBar2->hide();
-        myToolBar4->hide();
-        myToolBar5->hide();
-        myMessageWindow->hide();
+    } else {
+        myToolBar6->hide();
+        myToolBar7->hide();
     }
     // build additional threads
     myLoadThread = new GUILoadThread(getApp(), this, myEvents, myLoadThreadEvent);
@@ -246,9 +270,17 @@ GUIApplicationWindow::create() {
     myMenuBarDrag->create();
     myToolBarDrag1->create();
     myToolBarDrag2->create();
+    myToolBarDrag3->create();
+    myToolBarDrag4->create();
+    myToolBarDrag5->create();
+    myToolBarDrag6->create();
+    myToolBarDrag7->create();
     myFileMenu->create();
+    mySelectByPermissions->create();
     myEditMenu->create();
     mySettingsMenu->create();
+    myLocatorMenu->create();
+    myControlMenu->create();
     myWindowsMenu->create();
     myHelpMenu->create();
 
@@ -260,6 +292,8 @@ GUIApplicationWindow::create() {
     if (getApp()->reg().readIntEntry("SETTINGS", "maximized", 0) == 1) {
         maximize();
     }
+    myShowTimeAsHMS = (getApp()->reg().readIntEntry("gui", "timeasHMS", 0) == 1);
+    myAlternateSimDelay = getApp()->reg().readIntEntry("gui", "alternateSimDelay", 100);
 }
 
 
@@ -276,7 +310,10 @@ GUIApplicationWindow::~GUIApplicationWindow() {
     delete myRunThread;
     delete myFileMenu;
     delete myEditMenu;
+    delete mySelectByPermissions;
     delete mySettingsMenu;
+    delete myLocatorMenu;
+    delete myControlMenu;
     delete myWindowsMenu;
     delete myHelpMenu;
 
@@ -356,14 +393,24 @@ GUIApplicationWindow::fillMenuBar() {
                       0, this, MID_QUIT, 0);
 
     // build edit menu
+    mySelectByPermissions = new FXMenuPane(this);
+    std::vector<std::string> vehicleClasses = SumoVehicleClassStrings.getStrings();
+    for (std::vector<std::string>::iterator it = vehicleClasses.begin(); it != vehicleClasses.end(); ++it) {
+        new FXMenuCommand(mySelectByPermissions,
+                          (*it).c_str(), NULL, this, MID_EDITCHOSEN);
+    }
+
     myEditMenu = new FXMenuPane(this);
     new FXMenuTitle(myMenuBar, "&Edit", NULL, myEditMenu);
     new FXMenuCommand(myEditMenu,
-                      "Edit Chosen...\t\tOpens a Dialog for editing the List of chosen Items.",
+                      "Edit Selected...\tCtl-E\tOpens a Dialog for editing the List of Selected Items.",
                       GUIIconSubSys::getIcon(ICON_FLAG), this, MID_EDITCHOSEN);
+    new FXMenuCascade(myEditMenu,
+                      "Select lanes which allow...\t\tOpens a menu for selecting a vehicle class by which to selected lanes.",
+                      GUIIconSubSys::getIcon(ICON_FLAG), mySelectByPermissions);
     new FXMenuSeparator(myEditMenu);
     new FXMenuCommand(myEditMenu,
-                      "Edit Breakpoints...\t\tOpens a Dialog for editing breakpoints.",
+                      "Edit Breakpoints...\tCtl-B\tOpens a Dialog for editing breakpoints.",
                       0, this, MID_EDIT_BREAKPOINTS);
 
     // build settings menu
@@ -373,17 +420,56 @@ GUIApplicationWindow::fillMenuBar() {
                       "Application Settings...\t\tOpen a Dialog for Application Settings editing.",
                       NULL, this, MID_APPSETTINGS);
     new FXMenuCheck(mySettingsMenu,
-                    "Gaming Mode\t\tToggle gaming mode on/off.",
+                    "Gaming Mode\tCtl-G\tToggle gaming mode on/off.",
                     this, MID_GAMING);
-    new FXMenuCheck(mySettingsMenu,
-                    "Locate Internal Structures\t\tList internal junctions and streets in the object locator.",
+    // build Locate menu
+    myLocatorMenu = new FXMenuPane(this);
+    new FXMenuTitle(myMenuBar, "&Locate", NULL, myLocatorMenu);
+    new FXMenuCommand(myLocatorMenu,
+                      "Locate &Junctions\t\tOpen a Dialog for Locating a Junction.",
+                      GUIIconSubSys::getIcon(ICON_LOCATEJUNCTION), this, MID_LOCATEJUNCTION);
+    new FXMenuCommand(myLocatorMenu,
+                      "Locate &Edges\t\tOpen a Dialog for Locating an Edge.",
+                      GUIIconSubSys::getIcon(ICON_LOCATEEDGE), this, MID_LOCATEEDGE);
+    if (!MSGlobals::gUseMesoSim) { // there are no gui-vehicles in mesosim
+        new FXMenuCommand(myLocatorMenu,
+                          "Locate &Vehicles\t\tOpen a Dialog for Locating a Vehicle.",
+                          GUIIconSubSys::getIcon(ICON_LOCATEVEHICLE), this, MID_LOCATEVEHICLE);
+    }
+    new FXMenuCommand(myLocatorMenu,
+                      "Locate &TLS\t\tOpen a Dialog for Locating a Traffic Light.",
+                      GUIIconSubSys::getIcon(ICON_LOCATETLS), this, MID_LOCATETLS);
+    new FXMenuCommand(myLocatorMenu,
+                      "Locate &Additional\t\tOpen a Dialog for Locating an Additional Structure.",
+                      GUIIconSubSys::getIcon(ICON_LOCATEADD), this, MID_LOCATEADD);
+    new FXMenuCommand(myLocatorMenu,
+                      "Locate &PoI\t\tOpen a Dialog for Locating a Point of Intereset.",
+                      GUIIconSubSys::getIcon(ICON_LOCATEPOI), this, MID_LOCATEPOI);
+    new FXMenuCommand(myLocatorMenu,
+                      "Locate P&olygon\t\tOpen a Dialog for Locating a Polygon.",
+                      GUIIconSubSys::getIcon(ICON_LOCATEPOLY), this, MID_LOCATEPOLY);
+    new FXMenuSeparator(myLocatorMenu);
+    new FXMenuCheck(myLocatorMenu,
+                    "Show Internal Structures\t\tShow internal junctions and streets in locator Dialog.",
                     this, MID_LISTINTERNAL);
+    // build control menu
+    myControlMenu = new FXMenuPane(this);
+    new FXMenuTitle(myMenuBar, "Simulation", NULL, myControlMenu);
+    new FXMenuCommand(myControlMenu,
+                      "Run\tCtl-A\tStart running the simulation.",
+                      NULL, this, MID_START);
+    new FXMenuCommand(myControlMenu,
+                      "Stop\tCtl-S\tStop running the simulation.",
+                      NULL, this, MID_STOP);
+    new FXMenuCommand(myControlMenu,
+                      "Step\tCtl-D\tPerform one simulation step.",
+                      NULL, this, MID_STEP);
 
     // build windows menu
     myWindowsMenu = new FXMenuPane(this);
     new FXMenuTitle(myMenuBar, "&Windows", NULL, myWindowsMenu);
     new FXMenuCheck(myWindowsMenu,
-                    "Show Status Line\t\tToggle this Status Bar on/off.",
+                    "Show Status Line\t\tToggle the Status Bar on/off.",
                     myStatusbar, FXWindow::ID_TOGGLESHOWN);
     new FXMenuCheck(myWindowsMenu,
                     "Show Message Window\t\tToggle the Message Window on/off.",
@@ -402,7 +488,7 @@ GUIApplicationWindow::fillMenuBar() {
     new FXMenuCommand(myWindowsMenu, "Tile &Vertically",
                       GUIIconSubSys::getIcon(ICON_WINDOWS_TILE_VERT),
                       myMDIClient, FXMDIClient::ID_MDI_TILEVERTICAL);
-    new FXMenuCommand(myWindowsMenu, "C&ascade",
+    new FXMenuCommand(myWindowsMenu, "Cascade",
                       GUIIconSubSys::getIcon(ICON_WINDOWS_CASCADE),
                       myMDIClient, FXMDIClient::ID_MDI_CASCADE);
     new FXMenuCommand(myWindowsMenu, "&Close", NULL,
@@ -473,14 +559,14 @@ GUIApplicationWindow::buildToolBars() {
                                    LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | FRAME_RAISED);
         new FXToolBarGrip(myToolBar3, myToolBar3, FXToolBar::ID_TOOLBARGRIP,
                           TOOLBARGRIP_DOUBLE);
-        new FXLabel(myToolBar3, "Time:", 0, LAYOUT_CENTER_Y);
-        myLCDLabel = new FXEX::FXLCDLabel(myToolBar3, 9, 0, 0,
-                                          FXEX::LCDLABEL_LEADING_ZEROS);
+        new FXButton(myToolBar3, "Time:\t\tToggle between seconds and hour:minute:seconds display", 0, this, MID_TIME_TOOGLE,
+                     BUTTON_TOOLBAR | FRAME_RAISED | LAYOUT_TOP | LAYOUT_LEFT);
+        myLCDLabel = new FXEX::FXLCDLabel(myToolBar3, 13, 0, 0, JUSTIFY_RIGHT);
         myLCDLabel->setHorizontal(2);
         myLCDLabel->setVertical(6);
         myLCDLabel->setThickness(2);
         myLCDLabel->setGroove(2);
-        myLCDLabel->setText("-----------");
+        myLCDLabel->setText("-------------");
     }
     {
         // Simulation Delay
@@ -489,7 +575,8 @@ GUIApplicationWindow::buildToolBars() {
                                    LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | FRAME_RAISED | LAYOUT_FILL_Y);
         new FXToolBarGrip(myToolBar4, myToolBar4, FXToolBar::ID_TOOLBARGRIP,
                           TOOLBARGRIP_DOUBLE);
-        new FXLabel(myToolBar4, "Delay (ms):", 0, LAYOUT_CENTER_Y);
+        new FXButton(myToolBar4, "Delay (ms):\t\tToggle between alternative delay values", 0, this, MID_DELAY_TOOGLE,
+                     BUTTON_TOOLBAR | FRAME_RAISED | LAYOUT_TOP | LAYOUT_LEFT);
         mySimDelayTarget =
             new FXRealSpinDial(myToolBar4, 7, 0, MID_SIMDELAY,
                                LAYOUT_TOP | FRAME_SUNKEN | FRAME_THICK | LAYOUT_FILL_Y);
@@ -515,6 +602,32 @@ GUIApplicationWindow::buildToolBars() {
                      ICON_ABOVE_TEXT | BUTTON_TOOLBAR | FRAME_RAISED | LAYOUT_TOP | LAYOUT_LEFT);
 #endif
     }
+    {
+        /// game specific stuff
+        // total waitingTime
+        myToolBarDrag6 = new FXToolBarShell(this, FRAME_NORMAL);
+        myToolBar6 = new FXToolBar(myTopDock, myToolBarDrag6, LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | FRAME_RAISED);
+        new FXToolBarGrip(myToolBar6, myToolBar6, FXToolBar::ID_TOOLBARGRIP, TOOLBARGRIP_DOUBLE);
+        new FXLabel(myToolBar6, "Waiting Time:\t\tTime spent waiting accumulated for all vehicles", 0, LAYOUT_TOP | LAYOUT_LEFT);
+        myWaitingTimeLabel = new FXEX::FXLCDLabel(myToolBar6, 13, 0, 0, JUSTIFY_RIGHT);
+        myWaitingTimeLabel->setHorizontal(2);
+        myWaitingTimeLabel->setVertical(6);
+        myWaitingTimeLabel->setThickness(2);
+        myWaitingTimeLabel->setGroove(2);
+        myWaitingTimeLabel->setText("-------------");
+
+        // idealistic time loss
+        myToolBarDrag7 = new FXToolBarShell(this, FRAME_NORMAL);
+        myToolBar7 = new FXToolBar(myTopDock, myToolBarDrag7, LAYOUT_DOCK_SAME | LAYOUT_SIDE_TOP | FRAME_RAISED);
+        new FXToolBarGrip(myToolBar7, myToolBar7, FXToolBar::ID_TOOLBARGRIP, TOOLBARGRIP_DOUBLE);
+        new FXLabel(myToolBar7, "Time Loss:\t\tTime lost due to being unable to drive with maximum speed for all vehicles", 0, LAYOUT_TOP | LAYOUT_LEFT);
+        myTimeLossLabel = new FXEX::FXLCDLabel(myToolBar7, 13, 0, 0, JUSTIFY_RIGHT);
+        myTimeLossLabel->setHorizontal(2);
+        myTimeLossLabel->setVertical(6);
+        myTimeLossLabel->setThickness(2);
+        myTimeLossLabel->setGroove(2);
+        myTimeLossLabel->setText("-------------");
+    }
 }
 
 
@@ -525,29 +638,52 @@ GUIApplicationWindow::onCmdQuit(FXObject*, FXSelector, void*) {
     getApp()->reg().writeIntEntry("SETTINGS", "width", getWidth());
     getApp()->reg().writeIntEntry("SETTINGS", "height", getHeight());
     getApp()->reg().writeStringEntry("SETTINGS", "basedir", gCurrentFolder.text());
-    if (isMaximized()) {
-        getApp()->reg().writeIntEntry("SETTINGS", "maximized", 1);
-    } else {
-        getApp()->reg().writeIntEntry("SETTINGS", "maximized", 0);
-    }
+    getApp()->reg().writeIntEntry("SETTINGS", "maximized", isMaximized() ? 1 : 0);
+    getApp()->reg().writeIntEntry("gui", "timeasHMS", myShowTimeAsHMS ? 1 : 0);
+    getApp()->reg().writeIntEntry("gui", "alternateSimDelay", myAlternateSimDelay);
     getApp()->exit(0);
     return 1;
 }
 
 
 long
-GUIApplicationWindow::onCmdEditChosen(FXObject*, FXSelector, void*) {
-    GUIDialog_GLChosenEditor* chooser =
-        new GUIDialog_GLChosenEditor(this, &gSelected);
-    chooser->create();
-    chooser->show();
+GUIApplicationWindow::onCmdEditChosen(FXObject* menu, FXSelector, void*) {
+    FXMenuCommand* mc = dynamic_cast<FXMenuCommand*>(menu);
+    if (mc->getText() == "Edit Selected...") {
+        GUIDialog_GLChosenEditor* chooser =
+            new GUIDialog_GLChosenEditor(this, &gSelected);
+        chooser->create();
+        chooser->show();
+    } else {
+        if (!myAmLoading && myRunThread->simulationAvailable()) {
+            const SUMOVehicleClass svc = SumoVehicleClassStrings.get(mc->getText().text());
+            for (size_t i = 0; i < MSEdge::dictSize(); ++i) {
+                const std::vector<MSLane*>& lanes = MSEdge::dictionary(i)->getLanes();
+                for (std::vector<MSLane*>::const_iterator it = lanes.begin(); it != lanes.end(); ++it) {
+                    GUILane* lane = dynamic_cast<GUILane*>(*it);
+                    assert(lane != 0);
+                    if ((lane->getPermissions() & svc) != 0) {
+                        gSelected.select(lane->getGlID());
+                    }
+                }
+            }
+            if (myMDIClient->numChildren() > 0) {
+                GUISUMOViewParent* w = dynamic_cast<GUISUMOViewParent*>(myMDIClient->getActiveChild());
+                if (w != 0) {
+                    // color by selection
+                    w->getView()->getVisualisationSettings()->laneColorer.setActive(1);
+                }
+            }
+        }
+        updateChildren();
+    }
     return 1;
 }
 
 
 long
 GUIApplicationWindow::onCmdEditBreakpoints(FXObject*, FXSelector, void*) {
-    GUIDialog_Breakpoints* chooser = new GUIDialog_Breakpoints(this);
+    GUIDialog_Breakpoints* chooser = new GUIDialog_Breakpoints(this, myRunThread->getBreakpoints(), myRunThread->getBreakpointLock());
     chooser->create();
     chooser->show();
     return 1;
@@ -700,6 +836,25 @@ GUIApplicationWindow::onCmdStep(FXObject*, FXSelector, void*) {
 
 
 long
+GUIApplicationWindow::onCmdTimeToggle(FXObject*, FXSelector, void*) {
+    myShowTimeAsHMS = !myShowTimeAsHMS;
+    if (myRunThread->simulationAvailable()) {
+        updateTimeLCD(myRunThread->getNet().getCurrentTimeStep());
+    }
+    return 1;
+}
+
+
+long
+GUIApplicationWindow::onCmdDelayToggle(FXObject*, FXSelector, void*) {
+    const SUMOTime tmp = myAlternateSimDelay;
+    myAlternateSimDelay = mySimDelayTarget->getValue();
+    mySimDelayTarget->setValue(tmp);
+    return 1;
+}
+
+
+long
 GUIApplicationWindow::onCmdClearMsgWindow(FXObject*, FXSelector, void*) {
     myMessageWindow->clear();
     return 1;
@@ -737,7 +892,7 @@ GUIApplicationWindow::onUpdStep(FXObject* sender, FXSelector, void* ptr) {
 
 
 long
-GUIApplicationWindow::onUpdEditChosen(FXObject* sender, FXSelector, void* ptr) {
+GUIApplicationWindow::onUpdNeedsSimulation(FXObject* sender, FXSelector, void* ptr) {
     sender->handle(this,
                    !myRunThread->simulationAvailable() || myAmLoading
                    ? FXSEL(SEL_COMMAND, ID_DISABLE) : FXSEL(SEL_COMMAND, ID_ENABLE),
@@ -747,14 +902,15 @@ GUIApplicationWindow::onUpdEditChosen(FXObject* sender, FXSelector, void* ptr) {
 
 
 long
-GUIApplicationWindow::onUpdEditBreakpoints(FXObject* sender, FXSelector, void* ptr) {
-    sender->handle(this,
-                   !myRunThread->simulationAvailable() || myAmLoading
-                   ? FXSEL(SEL_COMMAND, ID_DISABLE) : FXSEL(SEL_COMMAND, ID_ENABLE),
-                   ptr);
+GUIApplicationWindow::onCmdLocate(FXObject*, FXSelector sel, void*) {
+    if (myMDIClient->numChildren() > 0) {
+        GUISUMOViewParent* w = dynamic_cast<GUISUMOViewParent*>(myMDIClient->getActiveChild());
+        if (w != 0) {
+            w->onCmdLocate(0, sel, 0);
+        }
+    }
     return 1;
 }
-
 
 long
 GUIApplicationWindow::onCmdAppSettings(FXObject*, FXSelector, void*) {
@@ -769,8 +925,33 @@ long
 GUIApplicationWindow::onCmdGaming(FXObject*, FXSelector, void*) {
     myAmGaming = !myAmGaming;
     if (myAmGaming) {
-        mySimDelayTarget->setValue(1000);
+        myMenuBar->hide();
+        myStatusbar->hide();
+        myToolBar1->hide();
+        myToolBar2->hide();
+        myToolBar4->hide();
+        myToolBar5->hide();
+        myToolBar6->show();
+        myToolBar7->show();
+        myMessageWindow->hide();
+        myLCDLabel->setFgColor(MFXUtils::getFXColor(RGBColor::RED));
+        myWaitingTimeLabel->setFgColor(MFXUtils::getFXColor(RGBColor::RED));
+        myTimeLossLabel->setFgColor(MFXUtils::getFXColor(RGBColor::RED));
+        gSchemeStorage.getDefault().gaming = true;
+    } else {
+        myMenuBar->show();
+        myStatusbar->show();
+        myToolBar1->show();
+        myToolBar2->show();
+        myToolBar4->show();
+        myToolBar5->show();
+        myToolBar6->hide();
+        myToolBar7->hide();
+        myMessageWindow->show();
+        myLCDLabel->setFgColor(MFXUtils::getFXColor(RGBColor::GREEN));
+        gSchemeStorage.getDefault().gaming = false;
     }
+    update();
     return 1;
 }
 
@@ -868,22 +1049,6 @@ void
 GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
     myAmLoading = false;
     GUIEvent_SimulationLoaded* ec = static_cast<GUIEvent_SimulationLoaded*>(e);
-    if (ec->myNet != 0) {
-#ifndef NO_TRACI
-        std::map<int, traci::TraCIServer::CmdExecutor> execs;
-        execs[CMD_GET_GUI_VARIABLE] = &TraCIServerAPI_GUI::processGet;
-        execs[CMD_SET_GUI_VARIABLE] = &TraCIServerAPI_GUI::processSet;
-        try {
-            traci::TraCIServer::openSocket(execs);
-        } catch (ProcessError& e) {
-            myMessageWindow->appendText(EVENT_ERROR_OCCURED, e.what());
-            WRITE_ERROR(e.what());
-            delete ec->myNet;
-            ec->myNet = 0;
-        }
-#endif
-    }
-
     // check whether the loading was successfull
     if (ec->myNet == 0) {
         // report failure
@@ -893,58 +1058,64 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
             getApp()->exit(1);
         }
     } else {
-        // report success
-        setStatusBarText("'" + ec->myFile + "' loaded.");
         // initialise simulation thread
-        myRunThread->init(ec->myNet, ec->myBegin, ec->myEnd);
-        myWasStarted = false;
-        // initialise views
-        myViewNumber = 0;
-        const GUISUMOViewParent::ViewType defaultType = ec->myOsgView ? GUISUMOViewParent::VIEW_3D_OSG : GUISUMOViewParent::VIEW_2D_OPENGL;
-        if (ec->mySettingsFiles.size() > 0) {
-            // open a view for each file and apply settings
-            for (std::vector<std::string>::const_iterator it = ec->mySettingsFiles.begin();
-                    it != ec->mySettingsFiles.end(); ++it) {
-                GUISettingsHandler settings(*it);
-                GUISUMOViewParent::ViewType vt = defaultType;
-                if (settings.getViewType() == "osg" || settings.getViewType() == "3d") {
-                    vt = GUISUMOViewParent::VIEW_3D_OSG;
-                }
-                if (settings.getViewType() == "opengl" || settings.getViewType() == "2d") {
-                    vt = GUISUMOViewParent::VIEW_2D_OPENGL;
-                }
-                GUISUMOAbstractView* view = openNewView(vt);
-                if (view == 0) {
-                    break;
-                }
-                std::string settingsName = settings.addSettings(view);
-                view->addDecals(settings.getDecals());
-                settings.setViewport(view);
-                settings.setSnapshots(view);
-                if (settings.getDelay() > 0) {
-                    mySimDelayTarget->setValue(settings.getDelay());
-                }
-                if (settings.getBreakpoints().size() > 0) {
-                    GUIGlobals::gBreakpoints = settings.getBreakpoints();
-                }
+        if (!myRunThread->init(ec->myNet, ec->myBegin, ec->myEnd)) {
+            if (GUIGlobals::gQuitOnEnd) {
+                closeAllWindows();
+                getApp()->exit(1);
             }
         } else {
-            openNewView(defaultType);
-        }
+            // report success
+            setStatusBarText("'" + ec->myFile + "' loaded.");
+            myWasStarted = false;
+            // initialise views
+            myViewNumber = 0;
+            const GUISUMOViewParent::ViewType defaultType = ec->myOsgView ? GUISUMOViewParent::VIEW_3D_OSG : GUISUMOViewParent::VIEW_2D_OPENGL;
+            if (ec->mySettingsFiles.size() > 0) {
+                // open a view for each file and apply settings
+                for (std::vector<std::string>::const_iterator it = ec->mySettingsFiles.begin(); it != ec->mySettingsFiles.end(); ++it) {
+                    GUISettingsHandler settings(*it);
+                    GUISUMOViewParent::ViewType vt = defaultType;
+                    if (settings.getViewType() == "osg" || settings.getViewType() == "3d") {
+                        vt = GUISUMOViewParent::VIEW_3D_OSG;
+                    }
+                    if (settings.getViewType() == "opengl" || settings.getViewType() == "2d") {
+                        vt = GUISUMOViewParent::VIEW_2D_OPENGL;
+                    }
+                    GUISUMOAbstractView* view = openNewView(vt);
+                    if (view == 0) {
+                        break;
+                    }
+                    std::string settingsName = settings.addSettings(view);
+                    view->addDecals(settings.getDecals());
+                    settings.setViewport(view);
+                    settings.setSnapshots(view);
+                    if (settings.getDelay() > 0) {
+                        mySimDelayTarget->setValue(settings.getDelay());
+                    }
+                    if (settings.getBreakpoints().size() > 0) {
+                        myRunThread->getBreakpointLock().lock();
+                        myRunThread->getBreakpoints().assign(settings.getBreakpoints().begin(), settings.getBreakpoints().end());
+                        myRunThread->getBreakpointLock().unlock();
+                    }
+                    myJamSounds = settings.getEventDistribution("jam");
+                    if (settings.getJamSoundTime() > 0) {
+                        myJamSoundTime = settings.getJamSoundTime();
+                    }
+                }
+            } else {
+                openNewView(defaultType);
+            }
 
-        if (isGaming()) {
-            setTitle("SUMO Traffic Light Game");
-        } else {
-            // set simulation name on the caption
-            std::string caption = "PLEXE SUMO " + std::string(VERSION_STRING);
-            setTitle(MFXUtils::getTitleText(caption.c_str(), ec->myFile.c_str()));
-        }
-        // set simulation step begin information
-        std::string t = time2string(ec->myNet->getCurrentTimeStep());
-        if (myAmGaming || fmod(TS, 1.) == 0.) {
-            myLCDLabel->setText(t.substr(0, t.length() - 3).c_str());
-        } else {
-            myLCDLabel->setText(t.c_str());
+            if (isGaming()) {
+                setTitle("SUMO Traffic Light Game");
+            } else {
+                // set simulation name on the caption
+                std::string caption = "PLEXE SUMO " + std::string(VERSION_STRING);
+                setTitle(MFXUtils::getTitleText(caption.c_str(), ec->myFile.c_str()));
+            }
+            // set simulation step begin information
+            myLCDLabel->setText("-------------");
         }
     }
     getApp()->endWaitCursor();
@@ -959,11 +1130,9 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
 void
 GUIApplicationWindow::handleEvent_SimulationStep(GUIEvent*) {
     updateChildren();
-    std::string t = time2string(myRunThread->getNet().getCurrentTimeStep());
-    if (myAmGaming || fmod(TS, 1.) == 0.) {
-        myLCDLabel->setText(t.substr(0, t.length() - 3).c_str());
-    } else {
-        myLCDLabel->setText(t.c_str());
+    updateTimeLCD(myRunThread->getNet().getCurrentTimeStep());
+    if (myAmGaming) {
+        checkGamingEvents();
     }
     update();
 }
@@ -991,6 +1160,42 @@ GUIApplicationWindow::handleEvent_SimulationEnded(GUIEvent* e) {
     }
 }
 
+
+void
+GUIApplicationWindow::checkGamingEvents() {
+    MSVehicleControl& vc = MSNet::getInstance()->getVehicleControl();
+    MSVehicleControl::constVehIt it = vc.loadedVehBegin();
+    MSVehicleControl::constVehIt end = vc.loadedVehEnd();
+    if (myJamSounds.getOverallProb() > 0) {
+        // play honking sound if some vehicle is waiting too long
+        for (; it != end; ++it) {
+            // XXX use impatience instead of waiting time ?
+            if (it->second->getWaitingTime() > TIME2STEPS(myJamSoundTime)) {
+                const std::string cmd = myJamSounds.get(&myGamingRNG);
+                if (cmd != "") {
+                    // yay! fun with dangerous commands... Never use this over the internet
+                    SysUtils::runHiddenCommand(cmd);
+                    // one sound per simulation step is enough
+                    break;
+                }
+            }
+        }
+    }
+    // updated peformance indicators
+
+    for (it = vc.loadedVehBegin(); it != end; ++it) {
+        const MSVehicle* veh = dynamic_cast<MSVehicle*>(it->second);
+        assert(veh != 0);
+        const SUMOReal vmax = MIN2(veh->getVehicleType().getMaxSpeed(), veh->getEdge()->getSpeedLimit());
+        if (veh->isOnRoad() && veh->getSpeed() < SUMO_const_haltingSpeed) {
+            myWaitingTime += DELTA_T;
+        }
+        myTimeLoss += TS * TIME2STEPS(vmax - veh->getSpeed()) / vmax; // may be negative with speedFactor > 1
+        myWaitingTimeLabel->setText(time2string(myWaitingTime).c_str());
+        myTimeLossLabel->setText(time2string(myTimeLoss).c_str());
+    }
+
+}
 
 
 void
@@ -1046,7 +1251,7 @@ GUIApplicationWindow::getBuildGLCanvas() const {
 void
 GUIApplicationWindow::closeAllWindows() {
     myTrackerLock.lock();
-    myLCDLabel->setText("-----------");
+    myLCDLabel->setText("-------------");
     // remove trackers and other external windows
     size_t i;
     for (i = 0; i < mySubWindows.size(); ++i) {
@@ -1105,6 +1310,32 @@ GUIApplicationWindow::setStatusBarText(const std::string& text) {
     myStatusbar->getStatusLine()->setNormalText(text.c_str());
 }
 
+
+void
+GUIApplicationWindow::updateTimeLCD(SUMOTime time) {
+    time -= DELTA_T; // synchronize displayed time with netstate output
+    if (myAmGaming) {
+        // show time counting backwards
+        time = myRunThread->getSimEndTime() - time;
+    }
+    SUMOReal fracSeconds = STEPS2TIME(time);
+    const bool hideFraction = myAmGaming || fmod(TS, 1.) == 0.;
+    const int BuffSize = 100;
+    char buffer[BuffSize];
+    if (myShowTimeAsHMS) {
+        const int hours = (int)fracSeconds / 3600;
+        const int minutes = ((int)fracSeconds % 3600) / 60;
+        fracSeconds = fracSeconds - 3600 * hours - 60 * minutes;
+        const std::string format = (hideFraction ?
+                                    "%02d-%02d-%02.0f" : "%02d-%02d-%06.3f");
+        snprintf(buffer, BuffSize, format.c_str(), hours, minutes, fracSeconds);
+    } else {
+        const std::string format = (hideFraction ?
+                                    "%13.0f" : "%13.3f");
+        snprintf(buffer, BuffSize, format.c_str(), fracSeconds);
+    }
+    myLCDLabel->setText(buffer);
+}
 
 /****************************************************************************/
 

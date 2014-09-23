@@ -9,8 +9,8 @@
 ///
 // The base class for a view
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -138,6 +138,12 @@ public:
     virtual long onPaint(FXObject*, FXSelector, void*);
     virtual long onLeftBtnPress(FXObject*, FXSelector, void*);
     virtual long onLeftBtnRelease(FXObject*, FXSelector, void*);
+    virtual long onMiddleBtnPress(FXObject*, FXSelector, void*) {
+        return 1;
+    }
+    virtual long onMiddleBtnRelease(FXObject*, FXSelector, void*) {
+        return 1;
+    }
     virtual long onRightBtnPress(FXObject*, FXSelector, void*);
     virtual long onRightBtnRelease(FXObject*, FXSelector, void*);
     virtual long onMouseWheel(FXObject*, FXSelector, void*);
@@ -296,7 +302,7 @@ public:
     }
 
 
-    const GUIVisualizationSettings* getVisualisationSettings() {
+    GUIVisualizationSettings* getVisualisationSettings() {
         return myVisualizationSettings;
     }
 
@@ -330,6 +336,9 @@ protected:
     /// returns the id of the object at position using GL_SELECT
     GUIGlID getObjectAtPosition(Position pos);
 
+    /// returns the ids of the object at position within the given (rectangular) radius using GL_SELECT
+    std::vector<GUIGlID> getObjectsAtPosition(Position pos, SUMOReal radius);
+
     /// returns the ids of all objects in the given boundary
     std::vector<GUIGlID> getObjectsInBoundary(const Boundary& bound);
 
@@ -338,6 +347,10 @@ protected:
 
 
 protected:
+    /** @brief check whether we can read image data or position with gdal
+     */
+    FXImage* checkGDALImage(Decal& d);
+
     /** @brief Draws the stored decals
      */
     void drawDecals();

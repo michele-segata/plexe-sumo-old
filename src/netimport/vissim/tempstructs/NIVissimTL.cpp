@@ -8,8 +8,8 @@
 ///
 // -------------------
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -51,15 +51,17 @@
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
+
+
 // ===========================================================================
-// used namespaces
+// static member variables
 // ===========================================================================
-
-using namespace std;
-
-
 NIVissimTL::SignalDictType NIVissimTL::NIVissimTLSignal::myDict;
 
+
+// ===========================================================================
+// method definitions
+// ===========================================================================
 NIVissimTL::NIVissimTLSignal::NIVissimTLSignal(int lsaid, int id,
         const std::string& name,
         const std::vector<int>& groupids,

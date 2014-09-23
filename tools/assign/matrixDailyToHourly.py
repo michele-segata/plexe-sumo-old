@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 @file    getHourlyMatrix.py
-@author  Yun-Pang Wang
+@author  Yun-Pang Floetteroed
 @author  Daniel Krajzewicz
 @author  Michael Behrisch
 @date    2008-08-20
@@ -10,9 +10,14 @@
 This script is to generate hourly matrices from a VISUM daily matrix. 
 The taffic demand of the traffic zones, which have the same connection links, will be integrated.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2008-2013 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 
 import os, random, string, sys, datetime, math, operator

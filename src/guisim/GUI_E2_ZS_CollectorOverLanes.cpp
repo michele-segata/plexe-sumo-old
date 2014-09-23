@@ -8,8 +8,8 @@
 ///
 // The gui-version of a MS_E2_ZS_CollectorOverLanes.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,7 +38,6 @@
 #include <utils/geom/GeomHelper.h>
 #include <utils/gui/div/GUIParameterTableWindow.h>
 #include <guisim/GUIEdge.h>
-#include "GUILaneWrapper.h"
 #include "GUI_E2_ZS_CollectorOverLanes.h"
 
 #ifdef CHECK_MEMORY_LEAKS

@@ -11,8 +11,8 @@
 ///
 // The XML-Handler for network loading
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,8 +47,7 @@
 #include <utils/geom/GeomConvHelper.h>
 #include <microsim/MSGlobals.h>
 #include <microsim/MSLane.h>
-#include <microsim/MSInternalLane.h>
-#include <microsim/MSBitSetLogic.h>
+#include <microsim/MSJunction.h>
 #include <microsim/MSJunctionLogic.h>
 #include <microsim/traffic_lights/MSTrafficLightLogic.h>
 #include <microsim/traffic_lights/MSAgentbasedTrafficLightLogic.h>
@@ -78,7 +77,9 @@ NLHandler::NLHandler(const std::string& file, MSNet& net,
       myDetectorBuilder(detBuilder), myTriggerBuilder(triggerBuilder),
       myEdgeControlBuilder(edgeBuilder), myJunctionControlBuilder(junctionBuilder),
       myAmInTLLogicMode(false), myCurrentIsBroken(false),
-      myHaveWarnedAboutDeprecatedLanes(false), myLastParameterised(0) {}
+      myHaveWarnedAboutDeprecatedLanes(false),
+      myLastParameterised(0),
+      myHaveSeenInternalEdge(false) {}
 
 
 NLHandler::~NLHandler() {}
@@ -126,11 +127,6 @@ NLHandler::myStartElement(int element,
             case SUMO_TAG_WAUT_JUNCTION:
                 addWAUTJunction(attrs);
                 break;
-#ifdef _MESSAGES
-            case SUMO_TAG_MSG_EMITTER:
-                addMsgEmitter(attrs);
-                break;
-#endif
             case SUMO_TAG_E1DETECTOR:
             case SUMO_TAG_INDUCTION_LOOP:
                 addE1Detector(attrs);
@@ -194,6 +190,9 @@ NLHandler::myStartElement(int element,
             case SUMO_TAG_TAZSINK:
                 addDistrictEdge(attrs, false);
                 break;
+            case SUMO_TAG_ROUNDABOUT:
+                addRoundabout(attrs);
+                break;
             default:
                 break;
         }
@@ -240,6 +239,17 @@ NLHandler::myEndElement(int element) {
             break;
         case SUMO_TAG_NET:
             myJunctionControlBuilder.postLoadInitialization();
+            // build junction graph
+            for (JunctionGraph::iterator it = myJunctionGraph.begin(); it != myJunctionGraph.end(); ++it) {
+                MSEdge* edge = MSEdge::dictionary(it->first);
+                MSJunction* from = myJunctionControlBuilder.retrieve(it->second.first);
+                MSJunction* to = myJunctionControlBuilder.retrieve(it->second.second);
+                if (edge != 0 && from != 0 && to != 0) {
+                    edge->setJunctions(from, to);
+                    from->addOutgoing(edge);
+                    to->addIncoming(edge);
+                }
+            }
             break;
         default:
             break;
@@ -265,8 +275,18 @@ NLHandler::beginEdgeParsing(const SUMOSAXAttributes& attrs) {
     }
     // omit internal edges if not wished
     if (!MSGlobals::gUsingInternalLanes && id[0] == ':') {
+        myHaveSeenInternalEdge = true;
         myCurrentIsInternalToSkip = true;
         return;
+    }
+    if (attrs.hasAttribute(SUMO_ATTR_FROM)) {
+        myJunctionGraph[id] = std::make_pair(
+                                  attrs.get<std::string>(SUMO_ATTR_FROM, 0, ok),
+                                  attrs.get<std::string>(SUMO_ATTR_TO, 0, ok));
+    } else {
+        // must be an internal edge
+        std::string junctionID = SUMOXMLDefinitions::getJunctionIDFromInternalEdge(id);
+        myJunctionGraph[id] = std::make_pair(junctionID, junctionID);
     }
     myCurrentIsInternalToSkip = false;
     // parse the function
@@ -290,16 +310,24 @@ NLHandler::beginEdgeParsing(const SUMOSAXAttributes& attrs) {
         case EDGEFUNC_INTERNAL:
             funcEnum = MSEdge::EDGEFUNCTION_INTERNAL;
             break;
+        case EDGEFUNC_CROSSING:
+            funcEnum = MSEdge::EDGEFUNCTION_CROSSING;
+            break;
+        case EDGEFUNC_WALKINGAREA:
+            funcEnum = MSEdge::EDGEFUNCTION_WALKINGAREA;
+            break;
     }
     // get the street name
     std::string streetName = attrs.getOpt<std::string>(SUMO_ATTR_NAME, id.c_str(), ok, "");
+    // get the edge type
+    std::string edgeType = attrs.getOpt<std::string>(SUMO_ATTR_TYPE, id.c_str(), ok, "");
     if (!ok) {
         myCurrentIsBroken = true;
         return;
     }
     //
     try {
-        myEdgeControlBuilder.beginEdgeParsing(id, funcEnum, streetName);
+        myEdgeControlBuilder.beginEdgeParsing(id, funcEnum, streetName, edgeType);
     } catch (InvalidArgument& e) {
         WRITE_ERROR(e.what());
         myCurrentIsBroken = true;
@@ -387,6 +415,9 @@ NLHandler::openJunction(const SUMOSAXAttributes& attrs) {
     if (attrs.hasAttribute(SUMO_ATTR_SHAPE)) {
         // inner junctions have no shape
         shape = attrs.getOpt<PositionVector>(SUMO_ATTR_SHAPE, id.c_str(), ok, PositionVector());
+        if (shape.size() > 2) {
+            shape.closePolygon();
+        }
     }
     SUMOReal x = attrs.get<SUMOReal>(SUMO_ATTR_X, id.c_str(), ok);
     SUMOReal y = attrs.get<SUMOReal>(SUMO_ATTR_Y, id.c_str(), ok);
@@ -559,13 +590,13 @@ NLHandler::addPOI(const SUMOSAXAttributes& attrs) {
         if (laneID != "") {
             MSLane* lane = MSLane::dictionary(laneID);
             if (lane == 0) {
-                WRITE_ERROR("Lane '" + laneID + "' to place a poi '" + id + "'on is not known.");
+                WRITE_ERROR("Lane '" + laneID + "' to place poi '" + id + "' on is not known.");
                 return;
             }
             if (lanePos < 0) {
                 lanePos = lane->getLength() + lanePos;
             }
-            pos = lane->getShape().positionAtOffset(lanePos);
+            pos = lane->geometryPositionAtOffset(lanePos);
         } else {
             // try computing x,y from lon,lat
             if (lat == INVALID_POSITION || lon == INVALID_POSITION) {
@@ -593,9 +624,9 @@ NLHandler::addPoly(const SUMOSAXAttributes& attrs) {
     if (!ok) {
         return;
     }
-    SUMOReal layer = attrs.getOpt<SUMOReal>(SUMO_ATTR_LAYER, id.c_str(), ok, (SUMOReal)GLO_POLYGON);
+    SUMOReal layer = attrs.getOpt<SUMOReal>(SUMO_ATTR_LAYER, id.c_str(), ok, Shape::DEFAULT_LAYER);
     bool fill = attrs.getOpt<bool>(SUMO_ATTR_FILL, id.c_str(), ok, false);
-    std::string type = attrs.getOpt<std::string>(SUMO_ATTR_TYPE, id.c_str(), ok, "");
+    std::string type = attrs.getOpt<std::string>(SUMO_ATTR_TYPE, id.c_str(), ok, Shape::DEFAULT_TYPE);
     std::string colorStr = attrs.get<std::string>(SUMO_ATTR_COLOR, id.c_str(), ok);
     RGBColor color = attrs.get<RGBColor>(SUMO_ATTR_COLOR, id.c_str(), ok);
     PositionVector shape = attrs.get<PositionVector>(SUMO_ATTR_SHAPE, id.c_str(), ok);
@@ -606,7 +637,7 @@ NLHandler::addPoly(const SUMOSAXAttributes& attrs) {
     }
     if (shape.size() != 0) {
         if (!myNet.getShapeContainer().addPolygon(id, type, color, layer, angle, imgFile, shape, fill)) {
-            WRITE_ERROR("Polygon '" + id + "' already exists.");
+            WRITE_WARNING("Skipping redefinition of polygon '" + id + "'.");
         }
     }
 }
@@ -698,29 +729,6 @@ NLHandler::addPhase(const SUMOSAXAttributes& attrs) {
                                SUMO_ATTR_MAXDURATION, myJunctionControlBuilder.getActiveKey().c_str(), ok, duration);
     myJunctionControlBuilder.addPhase(duration, state, minDuration, maxDuration);
 }
-
-
-#ifdef _MESSAGES
-void
-NLHandler::addMsgEmitter(const SUMOSAXAttributes& attrs) {
-    bool ok = true;
-    std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
-    std::string file = attrs.getOpt<std::string>(SUMO_ATTR_FILE, 0, ok, "");
-    // if no file given, use stdout
-    if (file == "") {
-        file = "-";
-    }
-    SUMOTime step = attrs.getOptSUMOTimeReporting(SUMO_ATTR_STEP, id.c_str(), ok, 1);
-    bool reverse = attrs.getOpt<bool>(SUMO_ATTR_REVERSE, 0, ok, false);
-    bool table = attrs.getOpt<bool>(SUMO_ATTR_TABLE, 0, ok, false);
-    bool xycoord = attrs.getOpt<bool>(SUMO_ATTR_XY, 0, ok, false);
-    std::string whatemit = attrs.get<std::string>(SUMO_ATTR_EVENTS, 0, ok);
-    if (!ok) {
-        return;
-    }
-    myNet.createMsgEmitter(id, file, getFileName(), whatemit, reverse, table, xycoord, step);
-}
-#endif
 
 
 void
@@ -1130,6 +1138,14 @@ NLHandler::addDistrict(const SUMOSAXAttributes& attrs) {
                 edge->addFollower(sink);
             }
         }
+        if (attrs.hasAttribute(SUMO_ATTR_SHAPE)) {
+            PositionVector shape = attrs.get<PositionVector>(SUMO_ATTR_SHAPE, myCurrentDistrictID.c_str(), ok);
+            if (shape.size() != 0) {
+                if (!myNet.getShapeContainer().addPolygon(myCurrentDistrictID, "taz", RGBColor::parseColor("1.0,.33,.33"), 0, 0, "", shape, false)) {
+                    WRITE_WARNING("Skipping visualization of taz '" + myCurrentDistrictID + "', polygon already exists.");
+                }
+            }
+        }
     } catch (InvalidArgument& e) {
         WRITE_ERROR(e.what());
         myCurrentIsBroken = true;
@@ -1155,6 +1171,24 @@ NLHandler::addDistrictEdge(const SUMOSAXAttributes& attrs, bool isSource) {
         }
     } else {
         WRITE_ERROR("At district '" + myCurrentDistrictID + "': succeeding edge '" + id + "' does not exist.");
+    }
+}
+
+
+void
+NLHandler::addRoundabout(const SUMOSAXAttributes& attrs) {
+    if (attrs.hasAttribute(SUMO_ATTR_EDGES)) {
+        std::vector<std::string> edgeIDs = attrs.getStringVector(SUMO_ATTR_EDGES);
+        for (std::vector<std::string>::iterator it = edgeIDs.begin(); it != edgeIDs.end(); ++it) {
+            MSEdge* edge = MSEdge::dictionary(*it);
+            if (edge == 0) {
+                WRITE_ERROR("Unknown edge '" + (*it) + "' in roundabout");
+            } else {
+                edge->markAsRoundabout();
+            }
+        }
+    } else {
+        WRITE_ERROR("Empty edges in roundabout.");
     }
 }
 

@@ -8,8 +8,8 @@
 ///
 // A window displaying the phase diagram of a tl-logic
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,12 +33,12 @@
 #include <vector>
 #include <iostream>
 #include <utils/gui/windows/GUIMainWindow.h>
+#include <utils/gui/div/GLHelper.h>
 #include "GUITLLogicPhasesTrackerWindow.h"
 #include <microsim/traffic_lights/MSTrafficLightLogic.h>
 #include <microsim/MSLink.h>
 #include <utils/common/ToString.h>
 #include <guisim/GUITrafficLightLogicWrapper.h>
-#include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/images/GUIIconSubSys.h>
 #include <foreign/polyfonts/polyfonts.h>
@@ -363,35 +363,23 @@ GUITLLogicPhasesTrackerWindow::drawValues(GUITLLogicPhasesTrackerPanel& caller) 
             // determine the current link's color
             LinkState state = (*pi).getSignalState(j);
             // draw the bar (red is drawn as a line)
+            GLHelper::setColor(getLinkColor(state));
             switch (state) {
-                case LINKSTATE_TL_GREEN_MAJOR:
-                case LINKSTATE_TL_GREEN_MINOR:
-                    glColor3d(0, 1.0, 0);
-                    glBegin(GL_QUADS);
-                    glVertex2d(x, h - h16);
-                    glVertex2d(x, h - h4);
-                    glVertex2d(x2, h - h4);
-                    glVertex2d(x2, h - h16);
-                    glEnd();
-                    break;
-                case LINKSTATE_TL_YELLOW_MAJOR:
-                case LINKSTATE_TL_YELLOW_MINOR:
-                    glColor3d(1.0, 1.0, 0);
-                    glBegin(GL_QUADS);
-                    glVertex2d(x, h - h16);
-                    glVertex2d(x, h - h4);
-                    glVertex2d(x2, h - h4);
-                    glVertex2d(x2, h - h16);
-                    glEnd();
-                    break;
                 case LINKSTATE_TL_RED:
-                    glColor3d(1.0, 0, 0);
+                    // draw a thin line
                     glBegin(GL_LINES);
                     glVertex2d(x, h - h10);
                     glVertex2d(x2, h - h10);
                     glEnd();
                     break;
                 default:
+                    // draw a thick block
+                    glBegin(GL_QUADS);
+                    glVertex2d(x, h - h16);
+                    glVertex2d(x, h - h4);
+                    glVertex2d(x2, h - h4);
+                    glVertex2d(x2, h - h16);
+                    glEnd();
                     break;
             }
             // proceed to next link
@@ -418,7 +406,7 @@ GUITLLogicPhasesTrackerWindow::drawValues(GUITLLogicPhasesTrackerPanel& caller) 
             t -= (SUMOReal)((width - 31.) / 4.);
         }
         // draw time information
-        h = (SUMOReal)(myTLLogic->getLinks().size() * 20 + 12);
+        //h = (SUMOReal)(myTLLogic->getLinks().size() * 20 + 12);
         SUMOReal glh = (SUMOReal)(1.0 - myTLLogic->getLinks().size() * h20 - h10);
         // current begin time
         pfSetScaleXY((SUMOReal)(.05 * 300. / width), (SUMOReal)(.05 * 300. / height));

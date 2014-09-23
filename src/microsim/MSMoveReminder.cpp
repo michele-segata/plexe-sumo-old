@@ -2,13 +2,14 @@
 /// @file    MSMoveReminder.cpp
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    2008-10-27
 /// @version $Id$
 ///
 // Something on a lane to be noticed about vehicle movement
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,8 +37,9 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-MSMoveReminder::MSMoveReminder(MSLane* const lane, const bool doAdd)
-    : myLane(lane) {
+MSMoveReminder::MSMoveReminder(const std::string& description, MSLane* const lane, const bool doAdd) :
+    myLane(lane),
+    myDescription(description) {
     if (myLane != 0 && doAdd) {
         // add reminder to lane
         myLane->addMoveReminder(this);

@@ -3,14 +3,21 @@
 @file    lane.py
 @author  Michael Behrisch
 @author  Daniel Krajzewicz
+@author  Laura Bieker
+@author  Jakob Erdmann
 @date    2011-03-17
 @version $Id$
 
 Python implementation of the TraCI interface.
 
-SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-Copyright (C) 2011 DLR (http://www.dlr.de/) and contributors
-All rights reserved
+SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
 """
 import struct, traci
 import traci.constants as tc
@@ -31,9 +38,9 @@ def _readLinks(result):
         result.read("!B")                           # Type Byte
         hasFoe = bool(result.read("!B"))
         result.read("!B")                           # Type String
-        state = result.readString() #not implemented
+        state = result.readString() 
         result.read("!B")                           # Type String
-        direction = result.readString() #not implemented
+        direction = result.readString() 
         result.read("!B")                           # Type Float
         length = result.readDouble()
         links.append((approachedLane, hasPrio, isOpen, hasFoe))
@@ -41,6 +48,7 @@ def _readLinks(result):
 
 
 _RETURN_VALUE_FUNC = {tc.ID_LIST:                   traci.Storage.readStringList,
+                      tc.ID_COUNT:                  traci.Storage.readInt,
                       tc.VAR_LENGTH:                traci.Storage.readDouble,
                       tc.VAR_MAXSPEED:              traci.Storage.readDouble,
                       tc.VAR_WIDTH:                 traci.Storage.readDouble,
@@ -60,6 +68,7 @@ _RETURN_VALUE_FUNC = {tc.ID_LIST:                   traci.Storage.readStringList
                       tc.LAST_STEP_MEAN_SPEED:      traci.Storage.readDouble,
                       tc.LAST_STEP_OCCUPANCY:       traci.Storage.readDouble,
                       tc.LAST_STEP_LENGTH:          traci.Storage.readDouble,
+                      tc.VAR_WAITING_TIME:          traci.Storage.readDouble,
                       tc.VAR_CURRENT_TRAVELTIME:    traci.Storage.readDouble,
                       tc.LAST_STEP_VEHICLE_NUMBER:  traci.Storage.readInt,
                       tc.LAST_STEP_VEHICLE_HALTING_NUMBER: traci.Storage.readInt,
@@ -77,6 +86,13 @@ def getIDList():
     """
     return _getUniversal(tc.ID_LIST, "")
 
+def getIDCount():
+    """getIDCount() -> integer
+    
+    Returns the number of lanes in the network.
+    """
+    return _getUniversal(tc.ID_COUNT, "")
+    
 def getLength(laneID):
     """getLength(string) -> double
     
@@ -206,10 +222,17 @@ def getLastStepOccupancy(laneID):
 def getLastStepLength(laneID):
     """getLastStepLength(string) -> double
     
-    Returns the total vehicle length in m for the last time step on the given lane.
+    Returns the mean vehicle length in m for the last time step on the given lane.
     """
     return _getUniversal(tc.LAST_STEP_LENGTH, laneID)
 
+def getWaitingTime(laneID):
+    """getWaitingTime() -> double
+    
+    .
+    """
+    return _getUniversal(tc.VAR_WAITING_TIME, laneID)     
+    
 def getTraveltime(laneID):
     """getTraveltime(string) -> double
     
@@ -244,9 +267,7 @@ def subscribe(laneID, varIDs=(tc.LAST_STEP_VEHICLE_NUMBER,), begin=0, end=2**31-
     """subscribe(string, list(integer), double, double) -> None
     
     Subscribe to one or more lane values for the given interval.
-    A call to this method clears all previous subscription results.
     """
-    subscriptionResults.reset()
     traci._subscribe(tc.CMD_SUBSCRIBE_LANE_VARIABLE, begin, end, laneID, varIDs)
 
 def getSubscriptionResults(laneID=None):
@@ -262,7 +283,6 @@ def getSubscriptionResults(laneID=None):
     return subscriptionResults.get(laneID)
 
 def subscribeContext(laneID, domain, dist, varIDs=(tc.LAST_STEP_VEHICLE_NUMBER,), begin=0, end=2**31-1):
-    subscriptionResults.reset()
     traci._subscribeContext(tc.CMD_SUBSCRIBE_LANE_CONTEXT, begin, end, laneID, domain, dist, varIDs)
 
 def getContextSubscriptionResults(laneID=None):
@@ -270,6 +290,12 @@ def getContextSubscriptionResults(laneID=None):
 
 
 def setAllowed(laneID, allowedClasses):
+    """setAllowed(string, list) -> None
+    
+    Sets a list of allowed vehicle classes. Setting an empty list means all vehicles are allowed.
+    """
+    if isinstance(allowedClasses, str):
+        allowedClasses= [allowedClasses]
     traci._beginMessage(tc.CMD_SET_LANE_VARIABLE, tc.LANE_ALLOWED, laneID, 1+4+sum(map(len, allowedClasses))+4*len(allowedClasses))
     traci._message.string += struct.pack("!Bi", tc.TYPE_STRINGLIST, len(allowedClasses))
     for c in allowedClasses:
@@ -277,6 +303,12 @@ def setAllowed(laneID, allowedClasses):
     traci._sendExact()
 
 def setDisallowed(laneID, disallowedClasses):
+    """setDisallowed(string, list) -> None
+    
+    Sets a list of disallowed vehicle classes.
+    """
+    if isinstance(disallowedClasses, str):
+        disallowedClasses= [disallowedClasses]
     traci._beginMessage(tc.CMD_SET_LANE_VARIABLE, tc.LANE_DISALLOWED, laneID, 1+4+sum(map(len, disallowedClasses))+4*len(disallowedClasses))
     traci._message.string += struct.pack("!Bi", tc.TYPE_STRINGLIST, len(disallowedClasses))
     for c in disallowedClasses:
@@ -284,7 +316,15 @@ def setDisallowed(laneID, disallowedClasses):
     traci._sendExact()
 
 def setMaxSpeed(laneID, speed):
+    """setMaxSpeed(string, double) -> None
+    
+    Sets a new maximum allowed speed on the lane in m/s.
+    """
     traci._sendDoubleCmd(tc.CMD_SET_LANE_VARIABLE, tc.VAR_MAXSPEED, laneID, speed)
 
 def setLength(laneID, length):
+    """setLength(string, double) -> None
+    
+    Sets the length of the lane in m.
+    """
     traci._sendDoubleCmd(tc.CMD_SET_LANE_VARIABLE, tc.VAR_LENGTH, laneID, length)

@@ -8,8 +8,8 @@
 ///
 // The base class for traffic light logic definitions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -121,7 +121,9 @@ NBTrafficLightDefinition::compute(const NBEdgeCont& ec, OptionsCont& oc) {
     if (oc.isSet("tls.yellow.time")) {
         brakingTime = oc.getInt("tls.yellow.time");
     }
-    return myCompute(ec, brakingTime);
+    NBTrafficLightLogic* ret = myCompute(ec, brakingTime);
+    ret->addParameter(getMap());
+    return ret;
 }
 
 
@@ -352,6 +354,12 @@ NBTrafficLightDefinition::removeNode(NBNode* node) {
 void
 NBTrafficLightDefinition::addControlledInnerEdges(const std::vector<std::string>& edges) {
     myControlledInnerEdges.insert(edges.begin(), edges.end());
+}
+
+
+std::vector<std::string>
+NBTrafficLightDefinition::getControlledInnerEdges() const {
+    return std::vector<std::string>(myControlledInnerEdges.begin(), myControlledInnerEdges.end());
 }
 
 

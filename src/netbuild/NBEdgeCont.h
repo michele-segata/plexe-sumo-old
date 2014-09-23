@@ -8,8 +8,8 @@
 ///
 // Storage for edges, including some functionality operating on multiple edges
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -120,6 +120,19 @@ public:
      * @return The edge with the given id, 0 if no such edge exists
      */
     NBEdge* retrieve(const std::string& id, bool retrieveExtracted = false) const;
+
+
+    /** @brief Tries to retrieve an edge, even if it is splitted
+     *
+     * The edge given with the id should exist and is followed downstream or upstream,
+     *  depending on the parameter to the last edge still starting with the id.
+     *
+     * @param[in] id The id of the edge to retrieve
+     * @param[in] downstream search direction
+     * @return The searched edge
+     * @todo Recheck usage
+     */
+    NBEdge* retrievePossiblySplit(const std::string& id, bool downstream) const;
 
 
     /** @brief Tries to retrieve an edge, even if it is splitted
@@ -306,6 +319,15 @@ public:
      * @see NBEdge::reduceGeometry
      */
     void reduceGeometries(const SUMOReal minDist);
+
+
+    /** @brief
+     * @param[in] maxAngle The maximum geometry angle allowed
+     * @param[in] minRadius The minimum turning radius allowed at the start and end
+     * @param[in] fix Whether to prune geometry points to avoid sharp turns at start and end
+     * @see NBEdge::checkGeometry
+     */
+    void checkGeometries(const SUMOReal maxAngle, const SUMOReal minRadius, bool fix);
     /// @}
 
 
@@ -341,7 +363,7 @@ public:
      * @todo Recheck whether a visitor-pattern should be used herefor
      * @see NBEdge::computeLanes2Edges
      */
-    void computeLanes2Edges();
+    void computeLanes2Edges(const bool buildCrossingsAndWalkingAreas);
 
 
     /** @brief Rechecks whether all lanes have a successor for each of the stored edges
@@ -351,7 +373,7 @@ public:
      * @todo Recheck whether a visitor-pattern should be used herefor
      * @see NBEdge::recheckLanes
      */
-    void recheckLanes();
+    void recheckLanes(const bool buildCrossingsAndWalkingAreas);
 
 
     /** @brief Appends turnarounds to all edges stored in the container
@@ -476,6 +498,10 @@ public:
     /// @brief assigns street signs to edges based on toNode types
     void generateStreetSigns();
 
+    /// @brief add sidwalks to edges within the given limits and return the number of edges affected
+    int guessSidewalks(SUMOReal width, SUMOReal minSpeed, SUMOReal maxSpeed);
+
+
 private:
     /** @brief Returns the edges which have been built by splitting the edge of the given id
      *
@@ -491,6 +517,9 @@ private:
 
 
 private:
+    /// @brief The network builder; used to obtain type information
+    NBTypeCont& myTypeCont;
+
     /** @struct PostProcessConnection
      * @brief A structure representing a connection between two lanes
      */
@@ -570,11 +599,10 @@ private:
 
     /// @brief Boundary within which an edge must be located in order to be kept
     PositionVector myPrunningBoundary;
+
+    /// @brief whether a geo transform has been applied to the pruning boundary
+    bool myNeedGeoTransformedPrunningBoundary;
     /// @}
-
-
-    /// @brief The network builder; used to obtain type information
-    NBTypeCont& myTypeCont;
 
 
 private:

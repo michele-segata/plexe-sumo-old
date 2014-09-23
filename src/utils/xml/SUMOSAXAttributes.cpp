@@ -8,8 +8,8 @@
 ///
 // Encapsulated SAX-Attributes
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2007-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -71,7 +71,7 @@ SUMOSAXAttributes::getSUMOTimeReporting(int attr, const char* objectid,
         return -1;
     }
     try {
-        return (SUMOTime)(getFloat(attr) * 1000.);
+        return TIME2STEPS(getFloat(attr));
     } catch (NumberFormatException&) {
         if (report) {
             emitFormatError(getName(attr), "a time value", objectid);
@@ -122,12 +122,10 @@ void
 SUMOSAXAttributes::emitUngivenError(const std::string& attrname, const char* objectid) const {
     std::ostringstream oss;
     oss << "Attribute '" << attrname << "' is missing in definition of ";
-    if (objectid == 0) {
-        oss << "a ";
-    }
-    oss << myObjectType;
-    if (objectid != 0) {
-        oss << " '" << objectid << "'";
+    if (objectid == 0 || objectid[0] == 0) {
+        oss << "a " << myObjectType;
+    } else {
+        oss << myObjectType << " '" << objectid << "'";
     }
     oss << ".";
     WRITE_ERROR(oss.str());
@@ -138,12 +136,10 @@ void
 SUMOSAXAttributes::emitEmptyError(const std::string& attrname, const char* objectid) const {
     std::ostringstream oss;
     oss << "Attribute '" << attrname << "' in definition of ";
-    if (objectid == 0) {
-        oss << "a ";
-    }
-    oss << myObjectType;
-    if (objectid != 0) {
-        oss << " '" << objectid << "'";
+    if (objectid == 0 || objectid[0] == 0) {
+        oss << "a " << myObjectType;
+    } else {
+        oss << myObjectType << " '" << objectid << "'";
     }
     oss << " is empty.";
     WRITE_ERROR(oss.str());
@@ -154,12 +150,10 @@ void
 SUMOSAXAttributes::emitFormatError(const std::string& attrname, const std::string& type, const char* objectid) const {
     std::ostringstream oss;
     oss << "Attribute '" << attrname << "' in definition of ";
-    if (objectid == 0) {
-        oss << "a ";
-    }
-    oss << myObjectType;
-    if (objectid != 0) {
-        oss << " '" << objectid << "'";
+    if (objectid == 0 || objectid[0] == 0) {
+        oss << "a " << myObjectType;
+    } else {
+        oss << myObjectType << " '" << objectid << "'";
     }
     oss << " is not " << type << ".";
     WRITE_ERROR(oss.str());
@@ -177,6 +171,21 @@ SUMOSAXAttributes::parseStringVector(const std::string& def, std::vector<std::st
     StringTokenizer st(def, ";, ", true);
     while (st.hasNext()) {
         into.push_back(st.next());
+    }
+}
+
+
+void
+SUMOSAXAttributes::parseStringSet(const std::string& def, std::set<std::string>& into) {
+    if (def.find(';') != std::string::npos || def.find(',') != std::string::npos) {
+        if (!myHaveInformedAboutDeprecatedDivider) {
+            WRITE_WARNING("Please note that using ';' and ',' as XML list separators is deprecated.\n From 1.0 onwards, only ' ' will be accepted.");
+            myHaveInformedAboutDeprecatedDivider = true;
+        }
+    }
+    StringTokenizer st(def, ";, ", true);
+    while (st.hasNext()) {
+        into.insert(st.next());
     }
 }
 
@@ -228,7 +237,7 @@ std::string SUMOSAXAttributes::getInternal(const int attr) const {
 template<> const RGBColor invalid_return<RGBColor>::value = RGBColor();
 template<> const std::string invalid_return<RGBColor>::type = "color";
 template<>
-RGBColor SUMOSAXAttributes::getInternal(const int attr) const {
+RGBColor SUMOSAXAttributes::getInternal(const int /* attr */) const {
     return getColor();
 }
 

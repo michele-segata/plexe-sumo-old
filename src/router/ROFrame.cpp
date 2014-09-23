@@ -8,8 +8,8 @@
 ///
 // Sets and checks options for routing
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -32,6 +32,7 @@
 
 #include <iostream>
 #include <ctime>
+#include <stdlib.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/options/Option.h>
 #include <utils/common/MsgHandler.h>
@@ -65,9 +66,11 @@ ROFrame::fillOptions(OptionsCont& oc, bool forDuarouter) {
     oc.addSynonyme("net-file", "net");
     oc.addDescription("net-file", "Input", "Use FILE as SUMO-network to route on");
 
-    oc.doRegister("taz-files", 'd', new Option_FileName());
-    oc.addSynonyme("taz-files", "districts", true);
-    oc.addDescription("taz-files", "Input", "Read (additional) districts from FILE");
+    oc.doRegister("additional-files", 'd', new Option_FileName());
+    oc.addSynonyme("additional-files", "additional");
+    oc.addSynonyme("additional-files", "taz-files");
+    oc.addSynonyme("additional-files", "districts", true);
+    oc.addDescription("additional-files", "Input", "Read additional network data (districts, bus stops) from FILE");
 
     oc.doRegister("alternative-files", 'a', new Option_FileName());
     oc.addSynonyme("alternative-files", "alternatives-files");
@@ -90,6 +93,10 @@ ROFrame::fillOptions(OptionsCont& oc, bool forDuarouter) {
         oc.doRegister("weight-attribute", 'x', new Option_String("traveltime"));
         oc.addSynonyme("weight-attribute", "measure", true);
         oc.addDescription("weight-attribute", "Input", "Name of the xml attribute which gives the edge weight");
+
+        std::string plp = getenv("PHEMLIGHT_PATH") == 0 ? "./PHEMlight/" : std::string(getenv("PHEMLIGHT_PATH"));
+        oc.doRegister("phemlight-path", new Option_FileName(plp));
+        oc.addDescription("phemlight-path", "Input", "Determines where to load PHEMlight definitions from.");
     }
 
     // register the time settings
@@ -139,7 +146,7 @@ ROFrame::fillOptions(OptionsCont& oc, bool forDuarouter) {
 
 #ifdef HAVE_INTERNAL // catchall for internal stuff
         oc.doRegister("weight-period", new Option_String("3600", "TIME"));
-        oc.addDescription("weight-period", "Processing", "Aggregation period for the given weight files; triggers rebuilding of Contraction Hirarchy");
+        oc.addDescription("weight-period", "Processing", "Aggregation period for the given weight files; triggers rebuilding of Contraction Hierarchy");
 #endif
     }
 

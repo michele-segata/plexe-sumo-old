@@ -7,8 +7,8 @@
 ///
 // APIs for getting/setting GUI values via TraCI
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -60,8 +60,8 @@ public:
      * @param[in] inputStorage The storage to read the command from
      * @param[out] outputStorage The storage to write the result to
      */
-    static bool processGet(traci::TraCIServer& server, tcpip::Storage& inputStorage,
-                           tcpip::Storage& outputStorage) throw(traci::TraCIException, std::invalid_argument);
+    static bool processGet(TraCIServer& server, tcpip::Storage& inputStorage,
+                           tcpip::Storage& outputStorage);
 
 
     /** @brief Processes a set value command (Command 0xcc: Change GUI State)
@@ -70,8 +70,8 @@ public:
      * @param[in] inputStorage The storage to read the command from
      * @param[out] outputStorage The storage to write the result to
      */
-    static bool processSet(traci::TraCIServer& server, tcpip::Storage& inputStorage,
-                           tcpip::Storage& outputStorage) throw(traci::TraCIException, std::invalid_argument);
+    static bool processSet(TraCIServer& server, tcpip::Storage& inputStorage,
+                           tcpip::Storage& outputStorage);
 
 
 protected:

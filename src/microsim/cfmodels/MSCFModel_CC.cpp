@@ -140,7 +140,7 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
 
 
 SUMOReal
-MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
+MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred) const {
 
     /**
      * This SUMO method is meant for asking the car what speed the driver would
@@ -182,7 +182,7 @@ MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const {
         return 1e6;
     }
     else {
-        return myHumanDriver->stopSpeed(veh, gap2pred);
+        return myHumanDriver->stopSpeed(veh, speed, gap2pred);
     }
 }
 

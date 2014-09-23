@@ -25,6 +25,9 @@ exit_times_short
 # vehicle is teleporting with exit times
 exit_times_teleport
 
+# teleporting over mutliple edges
+teleport_multihop
+
 # vehicles are moving in circles
 circle_reroute
 
@@ -36,6 +39,9 @@ write_unfinished
 
 # only write edges with exit times
 write_unfinished_exit_times
+
+# output of person route
+with_person
 
 # Testing error cases
 errors

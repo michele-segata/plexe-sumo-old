@@ -2,13 +2,15 @@
 /// @file    RORoute.h
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
+/// @author  Yun-Pang Floetteroed
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // A complete router's route
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -35,6 +37,7 @@
 #include <utils/common/Named.h>
 #include <utils/common/RGBColor.h>
 #include <utils/common/SUMOAbstractRouter.h>
+#include <utils/common/SUMOVehicleParameter.h>
 
 
 // ===========================================================================
@@ -68,7 +71,8 @@ public:
      * @todo Are costs/prob really mandatory?
      */
     RORoute(const std::string& id, SUMOReal costs, SUMOReal prob,
-            const std::vector<const ROEdge*>& route, const RGBColor* const color);
+            const std::vector<const ROEdge*>& route, const RGBColor* const color,
+            const std::vector<SUMOVehicleParameter::Stop>& stops);
 
 
     /** @brief Copy constructor
@@ -80,14 +84,6 @@ public:
 
     /// @brief Destructor
     ~RORoute();
-
-
-    /** @brief Adds an edge to the end of the route
-     *
-     * @param[in] edge The edge to add
-     * @todo What for? Isn't the route already complete?
-     */
-    void add(ROEdge* edge);
 
 
     /** @brief Returns the first edge in the route
@@ -180,6 +176,14 @@ public:
      */
     void addProbability(SUMOReal prob);
 
+    /** @brief Returns the list of stops this route contains
+     *
+     * @return list of stops
+     */
+    const std::vector<SUMOVehicleParameter::Stop>& getStops() const {
+        return myStops;
+    }
+
 private:
     /// @brief The costs of the route
     SUMOReal myCosts;
@@ -192,6 +196,9 @@ private:
 
     /// @brief The color of the route
     const RGBColor* myColor;
+
+    /// @brief List of the stops on the parsed route
+    std::vector<SUMOVehicleParameter::Stop> myStops;
 
 
 private:

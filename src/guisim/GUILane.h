@@ -8,8 +8,8 @@
 ///
 // Representation of a lane in the micro simulation (gui-version)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -37,18 +37,24 @@
 #include <utility>
 #include <microsim/MSLane.h>
 #include <microsim/MSEdge.h>
+#include <utils/foxtools/MFXMutex.h>
 #include <utils/geom/Position.h>
 #include <utils/geom/PositionVector.h>
-#include "GUILaneWrapper.h"
+#include <utils/gui/globjects/GUIGlObject.h>
+#include <utils/gui/settings/GUIColorer.h>
 
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
+class GUINet;
 class MSVehicle;
 class MSNet;
-class MFXMutex;
-
+#ifdef HAVE_OSG
+namespace osg {
+class Geometry;
+}
+#endif
 
 // ===========================================================================
 // class definitions
@@ -61,7 +67,7 @@ class MFXMutex;
  * visualisation and simulation what may cause problems when vehicles
  * disappear is implemented using a mutex.
  */
-class GUILane : public MSLane {
+class GUILane : public MSLane, public GUIGlObject {
 public:
     /** @brief Constructor
      *
@@ -79,7 +85,7 @@ public:
     GUILane(const std::string& id, SUMOReal maxSpeed,
             SUMOReal length, MSEdge* const edge, unsigned int numericalID,
             const PositionVector& shape, SUMOReal width,
-            SVCPermissions permissions);
+            SVCPermissions permissions, unsigned int index);
 
 
     /// @brief Destructor
@@ -117,7 +123,7 @@ public:
 
     /** the same as in MSLane, but locks the access for the visualisation
         first; the access will be granted at the end of this method */
-    bool planMovements(SUMOTime t);
+    void planMovements(const SUMOTime t);
 
     /** the same as in MSLane, but locks the access for the visualisation
         first; the access will be granted at the end of this method */
@@ -129,13 +135,89 @@ public:
     ///@}
 
 
+    /** the same as in MSLane, but locks the access for the visualisation
+        first; the access will be granted at the end of this method */
+    void detectCollisions(SUMOTime timestep, const std::string& stage);
 
-    void detectCollisions(SUMOTime timestep, int stage);
+
+    /** the same as in MSLane, but locks the access for the visualisation
+        first; the access will be granted at the end of this method */
+    MSVehicle* removeVehicle(MSVehicle* remVehicle, MSMoveReminder::Notification notification);
 
 
-    GUILaneWrapper* buildLaneWrapper(unsigned int index);
-    MSVehicle* removeVehicle(MSVehicle* remVehicle);
 
+    /// @name inherited from GUIGlObject
+    //@{
+
+    /** @brief Returns an own popup-menu
+     *
+     * @param[in] app The application needed to build the popup-menu
+     * @param[in] parent The parent window needed to build the popup-menu
+     * @return The built popup-menu
+     * @see GUIGlObject::getPopUpMenu
+     */
+    GUIGLObjectPopupMenu* getPopUpMenu(GUIMainWindow& app,
+                                       GUISUMOAbstractView& parent);
+
+
+    /** @brief Returns an own parameter window
+     *
+     * @param[in] app The application needed to build the parameter window
+     * @param[in] parent The parent window needed to build the parameter window
+     * @return The built parameter window
+     * @see GUIGlObject::getParameterWindow
+     */
+    GUIParameterTableWindow* getParameterWindow(GUIMainWindow& app,
+            GUISUMOAbstractView& parent);
+
+
+    /** @brief Returns the boundary to which the view shall be centered in order to show the object
+     *
+     * @return The boundary the object is within
+     * @see GUIGlObject::getCenteringBoundary
+     */
+    Boundary getCenteringBoundary() const;
+
+
+    /** @brief Draws the object
+     * @param[in] s The settings for the current view (may influence drawing)
+     * @see GUIGlObject::drawGL
+     */
+    void drawGL(const GUIVisualizationSettings& s) const;
+    //@}
+
+
+
+    const PositionVector& getShape() const;
+    const std::vector<SUMOReal>& getShapeRotations() const;
+    const std::vector<SUMOReal>& getShapeLengths() const;
+
+    SUMOReal firstWaitingTime() const;
+
+    /// @brief draw lane borders and white markings
+    void drawMarkings(const GUIVisualizationSettings& s, SUMOReal scale) const;
+
+    /// @brief draw crossties for railroads or pedestrian crossings
+    void drawCrossties(SUMOReal length, SUMOReal spacing, SUMOReal halfWidth) const;
+
+    SUMOReal getHalfWidth() const {
+        return myHalfLaneWidth;
+    }
+
+
+    SUMOReal getEdgeLaneNumber() const;
+
+    /** @brief Returns the stored traveltime for the edge of this lane
+     */
+    SUMOReal getStoredEdgeTravelTime() const;
+
+#ifdef HAVE_OSG
+    void setGeometry(osg::Geometry* geom) {
+        myGeom = geom;
+    }
+
+    void updateColor(const GUIVisualizationSettings& s);
+#endif
 protected:
     /// moves myTmpVehicles int myVehicles after a lane change procedure
     void swapAfterLaneChange(SUMOTime t);
@@ -154,6 +236,47 @@ protected:
     virtual void incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed,
                                     const MSLane::VehCont::iterator& at,
                                     MSMoveReminder::Notification notification = MSMoveReminder::NOTIFICATION_DEPARTED);
+
+private:
+    /// @brief helper methods
+    void drawLinkNo() const;
+    void drawTLSLinkNo(const GUINet& net) const;
+    void drawTextAtEnd(const std::string& text, const PositionVector& shape, SUMOReal x) const;
+    void drawLinkRules(const GUINet& net) const;
+    void drawLinkRule(const GUINet& net, MSLink* link, const PositionVector& shape, SUMOReal x1, SUMOReal x2) const;
+    void drawArrows() const;
+    void drawLane2LaneConnections() const;
+
+
+
+private:
+    /// @brief gets the color value according to the current scheme index
+    SUMOReal getColorValue(size_t activeScheme) const;
+
+    /// @brief sets the color according to the current scheme index and some lane function
+    bool setFunctionalColor(size_t activeScheme) const;
+
+    /// @brief sets the color according to the currente settings
+    void setColor(const GUIVisualizationSettings& s) const;
+
+    /// The rotations of the shape parts
+    std::vector<SUMOReal> myShapeRotations;
+
+    /// The lengths of the shape parts
+    std::vector<SUMOReal> myShapeLengths;
+
+    /// @brief Half of lane width, for speed-up
+    SUMOReal myHalfLaneWidth;
+
+    /// @brief Quarter of lane width, for speed-up
+    SUMOReal myQuarterLaneWidth;
+
+    /// The lane index
+    unsigned int myIndex;
+
+#ifdef HAVE_OSG
+    osg::Geometry* myGeom;
+#endif
 
 
 private:

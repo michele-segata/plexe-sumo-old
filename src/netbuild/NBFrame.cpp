@@ -8,8 +8,8 @@
 ///
 // Sets and checks options for netbuild
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -73,6 +73,8 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addSynonyme("default.priority", "priority", true);
     oc.addDescription("default.priority", "Building Defaults", "The default priority of an edge");
 
+    oc.doRegister("default.sidewalk-width", new Option_Float((SUMOReal) 2.0));
+    oc.addDescription("default.sidewalk-width", "Building Defaults", "The default width of added sidewalks");
 
     // register the data processing options
     oc.doRegister("no-internal-links", new Option_Bool(false)); // !!! not described
@@ -80,7 +82,7 @@ NBFrame::fillOptions(bool forNetgen) {
 
     if (!forNetgen) {
         oc.doRegister("dismiss-vclasses", new Option_Bool(false));
-        oc.addDescription("dismiss-vclasses", "Processing", "Removes vehicle class restrictions from imported edges.");
+        oc.addDescription("dismiss-vclasses", "Processing", "Removes vehicle class restrictions from imported edges");
     }
 
     oc.doRegister("no-turnarounds", new Option_Bool(false));
@@ -107,6 +109,18 @@ NBFrame::fillOptions(bool forNetgen) {
 
         oc.doRegister("geometry.min-dist", new Option_Float());
         oc.addDescription("geometry.min-dist", "Processing", "reduces too similar geometry points");
+
+        oc.doRegister("geometry.max-angle", new Option_Float(99));
+        oc.addDescription("geometry.max-angle", "Processing", "Warn about edge geometries with an angle above DEGREES in successive segments");
+
+        oc.doRegister("geometry.min-radius", new Option_Float(9));
+        oc.addDescription("geometry.min-radius", "Processing", "Warn about edge geometries with a turning radius less than METERS at the start or end");
+
+        oc.doRegister("geometry.min-radius.fix", new Option_Bool(false));
+        oc.addDescription("geometry.min-radius.fix", "Processing", "Straighten edge geometries to avoid turning radii less than geometry.min-radius");
+
+        oc.doRegister("geometry.junction-mismatch-threshold", new Option_Float(20));
+        oc.addDescription("geometry.junction-mismatch-threshold", "Processing", "Warn if the junction shape is to far away from the original node position");
     }
 
     oc.doRegister("offset.disable-normalization", new Option_Bool(false));
@@ -151,6 +165,31 @@ NBFrame::fillOptions(bool forNetgen) {
         oc.addDescription("speed.factor", "Processing", "Modifies all edge speeds by multiplying FLOAT");
     }
 
+
+    oc.doRegister("check-lane-foes.roundabout", new Option_Bool(true));
+    oc.addDescription("check-lane-foes.roundabout", "Processing",
+                      "Allow driving onto a multi-lane road if there are foes on other lanes (at roundabouts)");
+
+    oc.doRegister("check-lane-foes.all", new Option_Bool(false));
+    oc.addDescription("check-lane-foes.all", "Processing",
+                      "Allow driving onto a multi-lane road if there are foes on other lanes (everywhere)");
+
+    oc.doRegister("sidewalks.guess", new Option_Bool(false));
+    oc.addDescription("sidewalks.guess", "Processing",
+                      "Guess pedestrian sidewalks based on edge speed");
+
+    oc.doRegister("sidewalks.guess.max-speed", new Option_Float((SUMOReal) 13.89));
+    oc.addDescription("sidewalks.guess.max-speed", "Processing",
+                      "Add sidewalks for edges with a speed equal or below the given limit");
+
+    oc.doRegister("sidewalks.guess.min-speed", new Option_Float((SUMOReal) 5.8));
+    oc.addDescription("sidewalks.guess.min-speed", "Processing",
+                      "Add sidewalks for edges with a speed above the given limit");
+
+    oc.doRegister("crossings.guess", new Option_Bool(false));
+    oc.addDescription("crossings.guess", "Processing",
+                      "Guess pedestrian crossings based on the presence of sidewalks");
+
     // tls setting options
     // explicit tls
     oc.doRegister("tls.set", new Option_String());
@@ -183,6 +222,15 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addDescription("tls.join-dist", "Processing",
                       "Determines the maximal distance for joining traffic lights (defaults to 20)");
 
+    if (!forNetgen) {
+        oc.doRegister("tls.guess-signals", new Option_Bool(false));
+        oc.addDescription("tls.guess-signals", "Processing", "Interprets tls nodes surrounding an intersection as signal positions for a larger TLS. This is typical pattern for OSM-derived networks");
+
+        oc.doRegister("tls.guess-signals.dist", new Option_Float(25));
+        oc.addDescription("tls.guess-signals.dist", "Processing", "Distance for interpreting nodes as signal locations");
+    }
+
+
     // computational
     oc.doRegister("tls.green.time", new Option_Integer(31));
     oc.addSynonyme("tls.green.time", "traffic-light-green", true);
@@ -211,7 +259,7 @@ NBFrame::fillOptions(bool forNetgen) {
 
     // tls type
     oc.doRegister("tls.default-type", new Option_String("static"));
-    oc.addDescription("tls.default-type", "TLS Building", "TLSs with unspecified type will use STR as their algorithm.");
+    oc.addDescription("tls.default-type", "TLS Building", "TLSs with unspecified type will use STR as their algorithm");
 
 
     // edge pruning
@@ -237,6 +285,9 @@ NBFrame::fillOptions(bool forNetgen) {
 
     oc.doRegister("keep-edges.in-boundary", new Option_String());
     oc.addDescription("keep-edges.in-boundary", "Edge Removal", "Only keep edges which are located within the given boundary (given either as CARTESIAN corner coordinates <xmin,ymin,xmax,ymax> or as polygon <x0,y0,x1,y1,...>)");
+
+    oc.doRegister("keep-edges.in-geo-boundary", new Option_String());
+    oc.addDescription("keep-edges.in-geo-boundary", "Edge Removal", "Only keep edges which are located within the given boundary (given either as GEODETIC corner coordinates <lon-min,lat-min,lon-max,lat-max> or as polygon <lon0,lat0,lon1,lat1,...>)");
 
     if (!forNetgen) {
         oc.doRegister("keep-edges.by-vclass", new Option_String());
@@ -314,6 +365,10 @@ NBFrame::checkOptions() {
     }
     if (!SUMOXMLDefinitions::TrafficLightTypes.hasString(oc.getString("tls.default-type"))) {
         WRITE_ERROR("unsupported value '" + oc.getString("tls.default-type") + "' for option '--tls.default-type'");
+        ok = false;
+    }
+    if (oc.isSet("keep-edges.in-boundary") && oc.isSet("keep-edges.in-geo-boundary")) {
+        WRITE_ERROR("only one of the options 'keep-edges.in-boundary' or 'keep-edges.in-geo-boundary' may be given");
         ok = false;
     }
     return ok;

@@ -8,8 +8,8 @@
 ///
 // The thread that runs the simulation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -69,7 +69,7 @@ public:
     virtual ~GUIRunThread();
 
     /// initialises the thread with the new simulation
-    virtual void init(GUINet* net, SUMOTime start, SUMOTime end);
+    virtual bool init(GUINet* net, SUMOTime start, SUMOTime end);
 
     /// starts the execution
     virtual FXint run();
@@ -106,6 +106,18 @@ public:
 
     /// Retrieves messages from the loading module
     void retrieveMessage(const MsgHandler::MsgType type, const std::string& msg);
+
+    SUMOTime getSimEndTime() const {
+        return mySimEndTime;
+    }
+
+    std::vector<SUMOTime>& getBreakpoints() {
+        return myBreakpoints;
+    }
+
+    MFXMutex& getBreakpointLock() {
+        return myBreakpointLock;
+    }
 
 protected:
     void makeStep();
@@ -145,6 +157,12 @@ protected:
     FXEX::FXThreadEvent& myEventThrow;
 
     MFXMutex mySimulationLock;
+
+    /// @brief List of breakpoints
+    std::vector<SUMOTime> myBreakpoints;
+
+    /// @brief Lock for modifying the list of breakpoints
+    MFXMutex myBreakpointLock;
 
 };
 

@@ -8,8 +8,8 @@
 ///
 // Class representing a detector within the DFROUTER
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -35,8 +35,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/RandomDistributor.h>
+#include <utils/common/Named.h>
 #include "RODFRouteCont.h"
 
 
@@ -83,7 +85,7 @@ enum RODFDetectorType {
  * @class RODFDetector
  * @brief Class representing a detector within the DFROUTER
  */
-class RODFDetector {
+class RODFDetector : public Named {
 public:
     /** @brief Constructor
      *
@@ -116,14 +118,6 @@ public:
 
     /// @name Atomar getter methods
     /// @{
-
-    /** @brief Returns the ID of this detector
-     * @return The id of this detector
-     */
-    const std::string& getID() const {
-        return myID;
-    };
-
 
     /** @brief Returns the id of the lane this detector is placed on
      * @return The id of the lane this detector is placed on
@@ -164,10 +158,10 @@ public:
     void addRoutes(RODFRouteCont* routes);
     bool hasRoutes() const;
     const std::vector<RODFRouteDesc>& getRouteVector() const;
-    void addPriorDetector(RODFDetector* det);
-    void addFollowingDetector(RODFDetector* det);
-    const std::vector<RODFDetector*>& getPriorDetectors() const;
-    const std::vector<RODFDetector*>& getFollowerDetectors() const;
+    void addPriorDetector(const RODFDetector* det);
+    void addFollowingDetector(const RODFDetector* det);
+    const std::set<const RODFDetector*>& getPriorDetectors() const;
+    const std::set<const RODFDetector*>& getFollowerDetectors() const;
 
 
     /// @name Writing methods
@@ -207,12 +201,11 @@ protected:
 
 
 protected:
-    std::string myID;
     std::string myLaneID;
     SUMOReal myPosition;
     RODFDetectorType myType;
     RODFRouteCont* myRoutes;
-    std::vector<RODFDetector*> myPriorDetectors, myFollowingDetectors;
+    std::set<const RODFDetector*> myPriorDetectors, myFollowingDetectors;
     std::vector<std::map<RODFEdge*, SUMOReal> > mySplitProbabilities;
     std::map<std::string, RODFEdge*> myRoute2Edge;
 
@@ -245,6 +238,7 @@ public:
     void saveRoutes(const std::string& file) const;
 
     const RODFDetector& getDetector(const std::string& id) const;
+    RODFDetector& getModifiableDetector(const std::string& id) const;
     const RODFDetector& getAnyDetectorForEdge(const RODFEdge* const edge) const;
 
     bool knows(const std::string& id) const;

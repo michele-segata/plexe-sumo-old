@@ -1,13 +1,14 @@
 /****************************************************************************/
 /// @file    NWWriter_DlrNavteq.h
 /// @author  Jakob Erdmann
+/// @author  Michael Behrisch
 /// @date    26.10.2012
 /// @version $Id$
 ///
 // Exporter writing networks using DlrNavteq (Elmar) format
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -66,6 +67,9 @@ public:
      */
     static void writeNetwork(const OptionsCont& oc, NBNetBuilder& nb);
 
+    /// @brief get the navteq road class
+    static int getRoadClass(NBEdge* edge);
+
 private:
     /** @brief Writes the nodes_unsplitted file
      * @param[in] oc The options to use
@@ -74,12 +78,18 @@ private:
      */
     static void writeNodesUnsplitted(const OptionsCont& oc, NBNodeCont& nc, NBEdgeCont& ec);
 
-    /** @brief Writes the links_unsplitted files
+    /** @brief Writes the links_unsplitted file
      * @param[in] oc The options to use
      * @param[in] nc The node-container from which to read data
      * @param[in] ec The edge-container from which to read data
      */
     static void writeLinksUnsplitted(const OptionsCont& oc, NBEdgeCont& ec);
+
+    /** @brief Writes the traffic_signals file
+     * @param[in] oc The options to use
+     * @param[in] nc The node-container from which to read data
+     */
+    static void writeTrafficSignals(const OptionsCont& oc, NBNodeCont& nc);
 
 
     /// @brief write header comments (input paramters, date, etc...)
@@ -87,9 +97,6 @@ private:
 
     /// @brief build the ascii-bit-vector for column vehicle_type
     static std::string getAllowedTypes(SVCPermissions permissions);
-
-    /// @brief get the navteq road class
-    static int getRoadClass(NBEdge* edge);
 
     /// @brief get the navteq speed class based on the speed in km/h
     static int getSpeedCategory(int kph);

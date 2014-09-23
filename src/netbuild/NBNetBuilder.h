@@ -9,8 +9,8 @@
 ///
 // Instance responsible for building networks
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -136,12 +136,12 @@ public:
      *
      * @param[in] oc Container that contains options for building
      * @param[in] explicitTurnarounds List of edge ids for which turn-arounds should be added (used by NETEDIT)
-     * @param[in] removeUnwishedNodes Whether to remove orphan nodes (and optionally convert some nodes to geometry)
+     * @param[in] removeElements whether processing steps which cause nodes and edges to be removed shall be triggered
      * @exception ProcessError (recheck)
      */
     void compute(OptionsCont& oc,
                  const std::set<std::string>& explicitTurnarounds = std::set<std::string>(),
-                 bool removeUnwishedNodes = true);
+                 bool removeElements = true);
 
 
 
@@ -209,6 +209,17 @@ public:
     void haveSeenRoundabouts() {
         myHaveSeenRoundabouts = true;
     }
+
+    /**
+     * @brief transforms loaded coordinates
+     * handles projections, offsets (using GeoConvHelper) and import of height data (using Heightmapper if available)
+     * @param[in,out] from The coordinate to be transformed
+     * @param[in] includeInBoundary Whether to patch the convex boundary of the GeoConvHelper default instance
+     * @param[in] from_srs The spatial reference system of the input coordinate
+     * @notde These methods are located outside of GeoConvHelper to avoid linker-dependecies on INTERNAL_LIBS and GDAL for libgeom
+     */
+    static bool transformCoordinates(Position& from, bool includeInBoundary = true, GeoConvHelper* from_srs = 0);
+    static bool transformCoordinates(PositionVector& from, bool includeInBoundary = true, GeoConvHelper* from_srs = 0);
 
 
 protected:

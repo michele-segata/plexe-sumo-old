@@ -8,8 +8,8 @@
 ///
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -62,21 +62,22 @@ MSVehicleControl::MSVehicleControl() :
     myEndedVehNo(0),
     myDiscarded(0),
     myCollisions(0),
-    myTeleports(0),
+    myTeleportsJam(0),
+    myTeleportsYield(0),
+    myTeleportsWrongLane(0),
+    myEmergencyStops(0),
     myTotalDepartureDelay(0),
     myTotalTravelTime(0),
     myDefaultVTypeMayBeDeleted(true),
     myWaitingForPerson(0),
     myScale(-1) {
-    SUMOVTypeParameter defType;
+    SUMOVTypeParameter defType(DEFAULT_VTYPE_ID, SVC_IGNORING);
     myVTypeDict[DEFAULT_VTYPE_ID] = MSVehicleType::build(defType);
     OptionsCont& oc = OptionsCont::getOptions();
-    if (oc.isSet("incremental-dua-step")) {
-        myScale = oc.getInt("incremental-dua-step") / static_cast<SUMOReal>(oc.getInt("incremental-dua-base"));
-    }
     if (oc.isSet("scale")) {
         myScale = oc.getFloat("scale");
     }
+    myMaxRandomDepartOffset = string2time(oc.getString("random-depart-offset"));
 }
 
 
@@ -104,7 +105,11 @@ MSVehicleControl::buildVehicle(SUMOVehicleParameter* defs,
                                const MSRoute* route,
                                const MSVehicleType* type) {
     myLoadedVehNo++;
-    MSVehicle* built = new MSVehicle(defs, route, type, type->computeChosenSpeedDeviation(myVehicleParamsRNG), myLoadedVehNo - 1);
+    if (myMaxRandomDepartOffset > 0) {
+        // round to the closest usable simulation step
+        defs->depart += DELTA_T * int((myVehicleParamsRNG.rand((int)myMaxRandomDepartOffset) + 0.5 * DELTA_T) / DELTA_T);
+    }
+    MSVehicle* built = new MSVehicle(defs, route, type, type->computeChosenSpeedDeviation(myVehicleParamsRNG));
     MSNet::getInstance()->informVehicleStateListener(built, MSNet::VEHICLE_STATE_BUILT);
     return built;
 }
@@ -113,36 +118,16 @@ MSVehicleControl::buildVehicle(SUMOVehicleParameter* defs,
 void
 MSVehicleControl::scheduleVehicleRemoval(SUMOVehicle* veh) {
     assert(myRunningVehNo > 0);
+    myTotalTravelTime += STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep() - veh->getDeparture());
+    myRunningVehNo--;
+    MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_ARRIVED);
     for (std::vector<MSDevice*>::const_iterator i = veh->getDevices().begin(); i != veh->getDevices().end(); ++i) {
         (*i)->generateOutput();
     }
     if (OptionsCont::getOptions().isSet("tripinfo-output")) {
         OutputDevice::getDeviceByOption("tripinfo-output").closeTag();
     }
-    myTotalTravelTime += STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep() - veh->getDeparture());
-    myRunningVehNo--;
-    MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_ARRIVED);
     deleteVehicle(veh);
-}
-
-
-void
-MSVehicleControl::printMeanWaitingTime(OutputDevice& od) const {
-    if (getDepartedVehicleNo() == 0) {
-        od << -1.;
-    } else {
-        od << (myTotalDepartureDelay / (SUMOReal) getDepartedVehicleNo());
-    }
-}
-
-
-void
-MSVehicleControl::printMeanTravelTime(OutputDevice& od) const {
-    if (myEndedVehNo == 0) {
-        od << -1.;
-    } else {
-        od << (myTotalTravelTime / (SUMOReal) myEndedVehNo);
-    }
 }
 
 
@@ -164,7 +149,22 @@ MSVehicleControl::setState(int runningVehNo, int endedVehNo, SUMOReal totalDepar
 
 
 void
-MSVehicleControl::saveState(OutputDevice& /*out*/) {
+MSVehicleControl::saveState(OutputDevice& out) {
+    out.openTag(SUMO_TAG_DELAY).writeAttr(SUMO_ATTR_NUMBER, myRunningVehNo).writeAttr(SUMO_ATTR_END, myEndedVehNo);
+    out.writeAttr(SUMO_ATTR_DEPART, myTotalDepartureDelay).writeAttr(SUMO_ATTR_TIME, myTotalTravelTime).closeTag();
+    // save vehicle types
+    for (VTypeDictType::iterator it = myVTypeDict.begin(); it != myVTypeDict.end(); ++it) {
+        it->second->getParameter().write(out);
+    }
+    for (VTypeDistDictType::iterator it = myVTypeDistDict.begin(); it != myVTypeDistDict.end(); ++it) {
+        out.openTag(SUMO_TAG_VTYPE_DISTRIBUTION).writeAttr(SUMO_ATTR_ID, it->first);
+        out.writeAttr(SUMO_ATTR_VTYPES, (*it).second->getVals());
+        out.writeAttr(SUMO_ATTR_PROBS, (*it).second->getProbs());
+        out.closeTag();
+    }
+    for (VehicleDictType::iterator it = myVehicleDict.begin(); it != myVehicleDict.end(); ++it) {
+        (*it).second->saveState(out);
+    }
 }
 
 
@@ -328,17 +328,22 @@ MSVehicleControl::abortWaiting() {
 }
 
 
-bool
-MSVehicleControl::isInQuota(SUMOReal frac) const {
+unsigned int
+MSVehicleControl::getQuota(SUMOReal frac) const {
     frac = frac < 0 ? myScale : frac;
-    if (frac < 0) {
-        return true;
+    if (frac < 0 || frac == 1.) {
+        return 1;
     }
-    const unsigned int resolution = 1000;
-    const unsigned int intFrac = (unsigned int)floor(frac * resolution + 0.5);
     // the vehicle in question has already been loaded, hence  the '-1'
+    const unsigned int loaded = frac > 1. ? (unsigned int)(myLoadedVehNo / frac) : myLoadedVehNo - 1;
+    const unsigned int base = (unsigned int)frac;
+    const unsigned int resolution = 1000;
+    const unsigned int intFrac = (unsigned int)floor((frac - base) * resolution + 0.5);
     // apply % twice to avoid integer overflow
-    return (((myLoadedVehNo - 1) % resolution) * intFrac) % resolution < intFrac;
+    if (((loaded % resolution) * intFrac) % resolution < intFrac) {
+        return base + 1;
+    }
+    return base;
 }
 
 /****************************************************************************/

@@ -2,13 +2,14 @@
 /// @file    MSActuatedTrafficLightLogic.h
 /// @author  Daniel Krajzewicz
 /// @author  Michael Behrisch
+/// @author  Jakob Erdmann
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // An actuated (adaptive) traffic light logic
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -73,7 +74,7 @@ public:
                                 const std::string& id, const std::string& programID,
                                 const MSSimpleTrafficLightLogic::Phases& phases,
                                 unsigned int step, SUMOTime delay,
-                                const ParameterMap& parameter);
+                                const std::map<std::string, std::string>& parameter);
 
 
     /** @brief Initialises the tls with information about incoming lanes

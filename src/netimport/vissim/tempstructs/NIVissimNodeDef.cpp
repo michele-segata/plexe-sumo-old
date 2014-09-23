@@ -1,13 +1,14 @@
 /****************************************************************************/
 /// @file    NIVissimNodeDef.cpp
 /// @author  Daniel Krajzewicz
+/// @author  Michael Behrisch
 /// @date    Sept 2002
 /// @version $Id$
 ///
 // -------------------
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -39,15 +40,18 @@
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
-// ===========================================================================
-// used namespaces
-// ===========================================================================
 
-using namespace std;
 
+// ===========================================================================
+// static member variables
+// ===========================================================================
 NIVissimNodeDef::DictType NIVissimNodeDef::myDict;
 int NIVissimNodeDef::myMaxID = 0;
 
+
+// ===========================================================================
+// method definitions
+// ===========================================================================
 NIVissimNodeDef::NIVissimNodeDef(int id, const std::string& name)
     : myID(id), myName(name) {}
 

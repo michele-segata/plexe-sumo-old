@@ -8,8 +8,8 @@
 ///
 // An output device for TCP/IP Network connections
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// Copyright (C) 2006-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -71,7 +71,11 @@ OutputDevice_Network::postWriteHook() {
     std::string toSend = myMessage.str();
     std::vector<unsigned char> msg;
     msg.insert(msg.end(), toSend.begin(), toSend.end());
-    mySocket->send(msg);
+    try {
+        mySocket->send(msg);
+    } catch (tcpip::SocketException& e) {
+        throw IOError(toString(e.what()));
+    }
     myMessage.str("");
 }
 

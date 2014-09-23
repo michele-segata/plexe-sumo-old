@@ -30,7 +30,7 @@
 #endif
 
 #include "CC_Const.h"
-#include <microsim/MSCFModel.h>
+#include <microsim/cfmodels/MSCFModel.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSVehicle.h>
 #include <microsim/MSVehicleType.h>
@@ -135,7 +135,7 @@ public:
      * @see MSCFModel::ffeS
      * @todo generic Interface, models can call for the values they need
      */
-    SUMOReal stopSpeed(const MSVehicle* const veh, SUMOReal gap2pred) const;
+    SUMOReal stopSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred) const;
 
     /** @brief Computes the vehicle's safe speed (no dawdling)
      *
