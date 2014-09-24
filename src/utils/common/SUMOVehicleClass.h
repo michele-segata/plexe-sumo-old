@@ -180,12 +180,12 @@ enum SUMOVehicleClass {
     SVC_PEDESTRIAN = 1 << 20,
     /// @brief is an electric vehicle
     SVC_E_VEHICLE = 1 << 21,
-    /// @brief is a user-defined type
-    SVC_CUSTOM1 = 1 << 22,
-    /// @brief is a user-defined type
-    SVC_CUSTOM2 = 1 << 23,
     /// @brief is an automated car (ACC/CACC capable)
-    SVC_AUTOMATED = 1 << 24
+    SVC_AUTOMATED = 1 << 22,
+    /// @brief is a user-defined type
+    SVC_CUSTOM1 = 1 << 23,
+    /// @brief is a user-defined type
+    SVC_CUSTOM2 = 1 << 24
     //@}
 };
 
