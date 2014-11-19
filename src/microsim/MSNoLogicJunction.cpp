@@ -8,7 +8,7 @@
 ///
 // -------------------
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -49,6 +49,7 @@
 // method definitions
 // ===========================================================================
 MSNoLogicJunction::MSNoLogicJunction(const std::string& id,
+                                     SumoXMLNodeType type,
                                      const Position& position,
                                      const PositionVector& shape,
                                      std::vector<MSLane*> incoming
@@ -56,7 +57,7 @@ MSNoLogicJunction::MSNoLogicJunction(const std::string& id,
                                      , std::vector<MSLane*> internal
 #endif
                                     ):
-    MSJunction(id, position, shape),
+    MSJunction(id, type, position, shape),
     myIncomingLanes(incoming)
 #ifdef HAVE_INTERNAL_LANES
     , myInternalLanes(internal)

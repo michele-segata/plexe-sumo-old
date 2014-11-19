@@ -8,7 +8,7 @@
 ///
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -34,10 +34,11 @@
 #include "MSVehicle.h"
 #include "MSLane.h"
 #include "MSNet.h"
+#include "MSRouteHandler.h"
 #include <microsim/devices/MSDevice.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/common/RGBColor.h>
-#include <utils/common/SUMOVTypeParameter.h>
+#include <utils/vehicle/SUMOVTypeParameter.h>
 #include <utils/iodevices/BinaryInputDevice.h>
 #include <utils/iodevices/OutputDevice.h>
 #include <utils/options/OptionsCont.h>
@@ -45,12 +46,6 @@
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
-
-
-// ===========================================================================
-// static members
-// ===========================================================================
-MTRand MSVehicleControl::myVehicleParamsRNG;
 
 
 // ===========================================================================
@@ -99,17 +94,27 @@ MSVehicleControl::~MSVehicleControl() {
     myVTypeDict.clear();
 }
 
+SUMOTime
+MSVehicleControl::computeRandomDepartOffset() const {
+    if (myMaxRandomDepartOffset > 0) {
+        // round to the closest usable simulation step
+        return DELTA_T * int((MSRouteHandler::getParsingRNG()->rand((int)myMaxRandomDepartOffset) + 0.5 * DELTA_T) / DELTA_T);
+    } else {
+        return 0;
+    }
+}
 
 SUMOVehicle*
 MSVehicleControl::buildVehicle(SUMOVehicleParameter* defs,
                                const MSRoute* route,
-                               const MSVehicleType* type) {
+                               const MSVehicleType* type,
+                               const bool ignoreStopErrors, const bool fromRouteFile) {
     myLoadedVehNo++;
-    if (myMaxRandomDepartOffset > 0) {
-        // round to the closest usable simulation step
-        defs->depart += DELTA_T * int((myVehicleParamsRNG.rand((int)myMaxRandomDepartOffset) + 0.5 * DELTA_T) / DELTA_T);
+    if (fromRouteFile) {
+        defs->depart += computeRandomDepartOffset();
     }
-    MSVehicle* built = new MSVehicle(defs, route, type, type->computeChosenSpeedDeviation(myVehicleParamsRNG));
+    MSVehicle* built = new MSVehicle(defs, route, type, type->computeChosenSpeedDeviation(fromRouteFile ? MSRouteHandler::getParsingRNG() : 0));
+    built->addStops(ignoreStopErrors);
     MSNet::getInstance()->informVehicleStateListener(built, MSNet::VEHICLE_STATE_BUILT);
     return built;
 }
@@ -125,6 +130,7 @@ MSVehicleControl::scheduleVehicleRemoval(SUMOVehicle* veh) {
         (*i)->generateOutput();
     }
     if (OptionsCont::getOptions().isSet("tripinfo-output")) {
+        // close tag after tripinfo (possibly including emissions from another device) have been written
         OutputDevice::getDeviceByOption("tripinfo-output").closeTag();
     }
     deleteVehicle(veh);
@@ -258,14 +264,14 @@ MSVehicleControl::hasVTypeDistribution(const std::string& id) const {
 
 
 MSVehicleType*
-MSVehicleControl::getVType(const std::string& id) {
+MSVehicleControl::getVType(const std::string& id, MTRand* rng) {
     VTypeDictType::iterator it = myVTypeDict.find(id);
     if (it == myVTypeDict.end()) {
         VTypeDistDictType::iterator it2 = myVTypeDistDict.find(id);
         if (it2 == myVTypeDistDict.end()) {
             return 0;
         }
-        return it2->second->get(&myVehicleParamsRNG);
+        return it2->second->get(rng);
     }
     if (id == DEFAULT_VTYPE_ID) {
         myDefaultVTypeMayBeDeleted = false;

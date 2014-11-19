@@ -8,7 +8,7 @@
 ///
 // Writes information about the green durations of a tls
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -49,7 +49,7 @@
 Command_SaveTLSSwitches::Command_SaveTLSSwitches(const MSTLLogicControl::TLSLogicVariants& logics,
         OutputDevice& od)
     : myOutputDevice(od), myLogics(logics) {
-    MSNet::getInstance()->getEndOfTimestepEvents().addEvent(this, 0, MSEventControl::ADAPT_AFTER_EXECUTION);
+    MSNet::getInstance()->getEndOfTimestepEvents()->addEvent(this, 0, MSEventControl::ADAPT_AFTER_EXECUTION);
     myOutputDevice.writeXMLHeader("tls-switches");
 }
 

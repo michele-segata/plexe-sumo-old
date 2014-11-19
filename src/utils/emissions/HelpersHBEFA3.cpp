@@ -8,7 +8,7 @@
 ///
 // Helper methods for HBEFA3-based emission computation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -477,7 +477,7 @@ HelpersHBEFA3::HelpersHBEFA3() : PollutantsInterface::Helper("HBEFA3") {
         myEmissionClassStrings.addAlias(heavy[i], index);
         index++;
     }
-    myEmissionClassStrings.addAlias("unknown", myEmissionClassStrings.get("PC"));
+    myEmissionClassStrings.addAlias("unknown", myEmissionClassStrings.get("PC_G_EU4"));
 }
 
 

@@ -9,7 +9,7 @@
 ///
 // The representation of a single node
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -642,6 +642,9 @@ private:
     void remapRemoved(NBTrafficLightLogicCont& tc,
                       NBEdge* removed, const EdgeVector& incoming, const EdgeVector& outgoing);
 
+
+    /// @brief return whether there is a non-sidewalk lane after the given index;
+    bool forbidsPedestriansAfter(std::vector<std::pair<NBEdge*, bool> > normalizedLanes, int startIndex);
 
 private:
     /// @brief The position the node lies at

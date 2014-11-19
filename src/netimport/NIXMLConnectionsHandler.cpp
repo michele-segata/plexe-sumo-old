@@ -9,7 +9,7 @@
 ///
 // Importer for edge connections stored in XML
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -237,16 +237,13 @@ NIXMLConnectionsHandler::parseLaneBound(const SUMOSAXAttributes& attrs, NBEdge* 
         }
         if (!from->addLane2LaneConnection(fromLane, to, toLane, NBEdge::L2L_USER, true, mayDefinitelyPass)) {
             NBEdge* nFrom = from;
-            do {
-                if (nFrom->getToNode()->getOutgoingEdges().size() != 1) {
-                    break;
-                }
+            while (nFrom->getToNode()->getOutgoingEdges().size() == 1) {
                 NBEdge* t = nFrom->getToNode()->getOutgoingEdges()[0];
                 if (t->getID().substr(0, t->getID().find('/')) != nFrom->getID().substr(0, nFrom->getID().find('/'))) {
                     break;
                 }
                 nFrom = t;
-            } while (true);
+            }
             if (nFrom == 0 || !nFrom->addLane2LaneConnection(fromLane, to, toLane, NBEdge::L2L_USER, false, mayDefinitelyPass)) {
                 if (OptionsCont::getOptions().getBool("show-errors.connections-first-try")) {
                     WRITE_WARNING("Could not set loaded connection from '" + from->getLaneID(fromLane) + "' to '" + to->getLaneID(toLane) + "'.");

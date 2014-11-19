@@ -9,7 +9,7 @@
 ///
 // Message and object IDs used by the FOX-version of the gui
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -417,6 +417,8 @@ enum {
     MID_GNE_SPLIT_EDGE_BIDI,
     /** reverse an edge */
     MID_GNE_REVERSE_EDGE,
+    /** add reverse edge */
+    MID_GNE_ADD_REVERSE_EDGE,
     /** edit junction shape */
     MID_GNE_NODE_SHAPE,
     /** set non-default geometry endpoint */

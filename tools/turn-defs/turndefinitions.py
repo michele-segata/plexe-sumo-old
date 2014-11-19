@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 @file    turndefinitions.py
@@ -9,7 +8,7 @@
 
 Operations and classes necessary to work on SUMO turn definitions.
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -22,6 +21,8 @@ the Free Software Foundation; either version 3 of the License, or
 import connections
 import logging
 import xml.dom.minidom
+import collectinghandler
+import unittest
 
 LOGGER = logging.getLogger(__name__)
 
@@ -148,8 +149,6 @@ def to_xml(turn_definitions):
     return turn_definitions_xml.toprettyxml()
 
 
-import collectinghandler
-import unittest
 
 
 class TurnDefinitionsTestCase(unittest.TestCase):

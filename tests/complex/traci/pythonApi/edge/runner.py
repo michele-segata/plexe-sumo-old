@@ -8,7 +8,7 @@
 @version $Id$
 
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -18,13 +18,13 @@ the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
 
-import os, subprocess, sys, random
+import os, subprocess, sys
 sys.path.append(os.path.join(os.path.dirname(sys.argv[0]), "..", "..", "..", "..", "..", "tools"))
 import traci, sumolib
 
 sumoBinary = sumolib.checkBinary('sumo')
 
-PORT = random.randint(8000, 50000)
+PORT = sumolib.miscutils.getFreeSocketPort()
 sumoProcess = subprocess.Popen("%s -c sumo.sumocfg --remote-port %s" % (sumoBinary, PORT), shell=True, stdout=sys.stdout)
 traci.init(PORT)
 for step in range(3):

@@ -9,7 +9,7 @@
 ///
 //
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -57,6 +57,8 @@ const SUMOReal SUMO_const_haltingSpeed = (SUMOReal) 0.1;
  */
 const RGBColor& getLinkColor(const LinkState& ls);
 
+/// @brief attach some build flags to the version string
+const std::string getBuildName(const std::string& version);
 
 /* -------------------------------------------------------------------------
  * templates for mathematical functions missing in some c++-implementations

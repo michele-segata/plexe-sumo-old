@@ -8,7 +8,7 @@
 ///
 // Static storage of an output device and its base (abstract) implementation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -55,6 +55,19 @@ BinaryFormatter::BinaryFormatter() {
 
 
 void
+BinaryFormatter::writeStaticHeader(std::ostream& into) {
+    FileHelpers::writeByte(into, BF_BYTE);
+    FileHelpers::writeByte(into, 1);
+    FileHelpers::writeByte(into, BF_STRING);
+    FileHelpers::writeString(into, VERSION_STRING);
+    writeStringList(into, SUMOXMLDefinitions::Tags.getStrings());
+    writeStringList(into, SUMOXMLDefinitions::Attrs.getStrings());
+    writeStringList(into, SUMOXMLDefinitions::NodeTypes.getStrings());
+    writeStringList(into, SUMOXMLDefinitions::EdgeFunctions.getStrings());
+}
+
+
+void
 BinaryFormatter::writeStringList(std::ostream& into, const std::vector<std::string>& list) {
     FileHelpers::writeByte(into, BF_LIST);
     FileHelpers::writeInt(into, (int)list.size());
@@ -63,6 +76,7 @@ BinaryFormatter::writeStringList(std::ostream& into, const std::vector<std::stri
         FileHelpers::writeString(into, *it);
     }
 }
+
 
 bool
 BinaryFormatter::writeXMLHeader(std::ostream& into,

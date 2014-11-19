@@ -9,7 +9,7 @@
 ///
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -72,11 +72,10 @@ public:
      * @param[in] route The vehicle's route
      * @param[in] type The vehicle's type
      * @param[in] speedFactor The factor for driven lane's speed limits
-     * @param[in] vehicleIndex The vehicle's running index
      * @exception ProcessError If a value is wrong
      */
     GUIVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
-               const MSVehicleType* type, SUMOReal speedFactor);
+               const MSVehicleType* type, const SUMOReal speedFactor);
 
 
     /// @brief destructor
@@ -271,13 +270,13 @@ public:
     /// @brief gets the color value according to the current scheme index
     SUMOReal getColorValue(size_t activeScheme) const;
 
+    /// @brief sets the color according to the current scheme index and some vehicle function
+    static bool setFunctionalColor(size_t activeScheme, const MSBaseVehicle* veh);
 
 private:
     /// @brief sets the color according to the currente settings
     void setColor(const GUIVisualizationSettings& s) const;
 
-    /// @brief sets the color according to the current scheme index and some vehicle function
-    bool setFunctionalColor(size_t activeScheme) const;
 
     /// @name drawing helper methods
     /// @{

@@ -7,7 +7,7 @@
 ///
 // Algorithms for network computation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -233,9 +233,10 @@ private:
     /** @brief Sets the priorites in case of a priority junction
      * @param[in] n The node to set edges' priorities
      * @param[in] s The vector of edges to get and mark the first from
+     * @param[in] prio The priority to assign
      * @return The vector's first edge
      */
-    static NBEdge* extractAndMarkFirst(NBNode& n, std::vector<NBEdge*>& s);
+    static NBEdge* extractAndMarkFirst(NBNode& n, std::vector<NBEdge*>& s, int prio = 1);
 
     /** @brief Returns whether both edges have the same priority
      * @param[in] e1 The first edge

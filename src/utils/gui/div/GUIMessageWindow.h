@@ -7,7 +7,7 @@
 ///
 // A logging window for the gui
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2003-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -77,7 +77,7 @@ public:
      * @param[in] msg The message
      * @see GUIEventType
      */
-    void appendText(GUIEventType eType, const std::string& msg);
+    void appendMsg(GUIEventType eType, const std::string& msg);
 
 
     /// @brief Clears the window
@@ -102,7 +102,7 @@ private:
             return myStream;
         }
         void postWriteHook() {
-            myMsgWindow->appendText(myType, myStream.str());
+            myMsgWindow->appendMsg(myType, myStream.str());
             myStream.str("");
         }
 

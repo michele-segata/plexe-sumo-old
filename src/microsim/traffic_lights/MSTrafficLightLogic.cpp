@@ -8,7 +8,7 @@
 ///
 // The parent class for traffic light logics
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -107,7 +107,7 @@ MSTrafficLightLogic::MSTrafficLightLogic(MSTLLogicControl& tlcontrol, const std:
     myCurrentDurationIncrement(-1),
     myDefaultCycleTime(0) {
     mySwitchCommand = new SwitchCommand(tlcontrol, this, delay);
-    MSNet::getInstance()->getBeginOfTimestepEvents().addEvent(
+    MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(
         mySwitchCommand, delay, MSEventControl::NO_CHANGE);
 }
 

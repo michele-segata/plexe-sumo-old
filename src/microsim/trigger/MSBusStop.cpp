@@ -7,7 +7,7 @@
 ///
 // A lane area vehicles can halt at
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -32,7 +32,7 @@
 #include <cassert>
 #include "MSTrigger.h"
 #include "MSBusStop.h"
-#include <utils/common/SUMOVehicle.h>
+#include <utils/vehicle/SUMOVehicle.h>
 #include <microsim/MSVehicleType.h>
 
 #ifdef CHECK_MEMORY_LEAKS

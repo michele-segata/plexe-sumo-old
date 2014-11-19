@@ -10,7 +10,7 @@
 ///
 // A fixed traffic light logic
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -200,7 +200,7 @@ MSSimpleTrafficLightLogic::changeStepAndDuration(MSTLLogicControl& tlcontrol,
         setTrafficLightSignals(simStep);
         tlcontrol.get(getID()).executeOnSwitchActions();
     }
-    MSNet::getInstance()->getBeginOfTimestepEvents().addEvent(
+    MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(
         mySwitchCommand, stepDuration + simStep,
         MSEventControl::ADAPT_AFTER_EXECUTION);
 }

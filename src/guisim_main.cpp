@@ -9,7 +9,7 @@
 ///
 // Main for GUISIM
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -51,6 +51,7 @@
 #include <gui/GUIApplicationWindow.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
+#include <X11/Xlib.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -65,6 +66,7 @@
  * ----------------------------------------------------------------------- */
 int
 main(int argc, char** argv) {
+    XInitThreads();
     // make the output aware of threading
     MFXMutex lock;
     MsgHandler::assignLock(&lock);
@@ -72,7 +74,7 @@ main(int argc, char** argv) {
     OptionsCont& oc = OptionsCont::getOptions();
     // give some application descriptions
     oc.setApplicationDescription("GUI version of the simulation SUMO.");
-    oc.setApplicationName("sumo-gui.exe", "SUMO gui Version " + (std::string)VERSION_STRING);
+    oc.setApplicationName("sumo-gui.exe", "SUMO gui Version " + getBuildName(VERSION_STRING));
     int ret = 0;
     try {
         // initialise subsystems

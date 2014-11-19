@@ -9,7 +9,7 @@
 ///
 // junction.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -50,6 +50,7 @@
 // method definitions
 // ===========================================================================
 MSRightOfWayJunction::MSRightOfWayJunction(const std::string& id,
+        SumoXMLNodeType type,
         const Position& position,
         const PositionVector& shape,
         std::vector<MSLane*> incoming,
@@ -57,7 +58,7 @@ MSRightOfWayJunction::MSRightOfWayJunction(const std::string& id,
         std::vector<MSLane*> internal,
 #endif
         MSJunctionLogic* logic)
-    : MSLogicJunction(id, position, shape, incoming
+    : MSLogicJunction(id, type, position, shape, incoming
 #ifdef HAVE_INTERNAL_LANES
                       , internal),
 #else

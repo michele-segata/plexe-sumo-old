@@ -8,7 +8,7 @@
 ///
 // A device which stands as an implementation example and which outputs movereminder calls
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2013-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -32,7 +32,7 @@
 #include <utils/common/TplConvert.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
-#include <utils/common/SUMOVehicle.h>
+#include <utils/vehicle/SUMOVehicle.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSLane.h>
 #include <microsim/MSEdge.h>

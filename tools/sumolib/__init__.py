@@ -9,7 +9,7 @@
 
 Python interface to SUMO especially for parsing xml input and output files.
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -18,7 +18,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
-import os, subprocess
+import os, sys, subprocess
 from xml.sax import parseString, handler
 from optparse import OptionParser, OptionGroup, Option
 
@@ -90,7 +90,10 @@ def exeExists(binary):
     return os.path.exists(binary)
 
 def checkBinary(name, bindir=None):
-    """Checks for the given binary in the places, defined by the environment variables SUMO_HOME and SUMO_BINDIR."""
+    """
+    Checks for the given binary in the places, defined by the environment
+    variables SUMO_HOME and <NAME>_BINARY.
+    """
     if name == "sumo-gui":
         envName = "GUISIM_BINARY"
     else:
@@ -101,10 +104,6 @@ def checkBinary(name, bindir=None):
         return env.get(envName)
     if bindir is not None:
         binary = join(bindir, name)
-        if exeExists(binary):
-            return binary
-    if "SUMO_BINDIR" in env:
-        binary = join(env.get("SUMO_BINDIR"), name)
         if exeExists(binary):
             return binary
     if "SUMO_HOME" in env:
@@ -149,6 +148,21 @@ class _Running:
     Removed the element."""
     del self._m[id]
 
+
+class TeeFile:
+    """A helper class which allows simultaneous writes to several files"""
+    def __init__(self, *files):
+        self.files = files
+    def write(self, txt):
+        """Writes the text to all files"""
+        for fp in self.files:
+            fp.write(txt)
+    def flush(self):
+        """flushes all file contents to disc"""
+        for fp in self.files:
+            fp.flush()
+            if type(fp) is int or hasattr(fp, "fileno"):
+                os.fsync(fp)
 
 
 def _intTime(tStr):

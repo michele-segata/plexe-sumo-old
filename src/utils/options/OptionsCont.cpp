@@ -9,7 +9,7 @@
 ///
 // A storage for options (typed value containers)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -71,7 +71,8 @@ OptionsCont::getOptions() {
 
 OptionsCont::OptionsCont()
     : myAddresses(), myValues(), myDeprecatedSynonymes(), myHaveInformedAboutDeprecatedDivider(false) {
-    myCopyrightNotices.push_back("Copyright (C) 2001-2014 DLR and contributors; http://sumo-sim.org");
+    myCopyrightNotices.push_back("Copyright (C) 2001-2014 DLR and contributors; http://sumo.dlr.de");
+    myCopyrightNotices.push_back("Copyright (C) 2012-2014 Michele Segata <segata@ccs-labs.org>");
 }
 
 
@@ -556,8 +557,8 @@ OptionsCont::processMetaOptions(bool missingOptions) {
                     myCopyrightNotices.begin(); it != myCopyrightNotices.end(); ++it) {
             std::cout << " " << *it << std::endl;
         }
-        std::cout << "\n" << myFullName << " is part of SUMO.\n";
-        std::cout << "SUMO is free software: you can redistribute it and/or modify\n";
+        std::cout << "\n" << myFullName << " is part of PLEXE SUMO.\n";
+        std::cout << "PLEXE SUMO is free software: you can redistribute it and/or modify\n";
         std::cout << "it under the terms of the GNU General Public License as published by\n";
         std::cout << "the Free Software Foundation, either version 3 of the License, or\n";
         std::cout << "(at your option) any later version.\n\n";
@@ -713,8 +714,8 @@ OptionsCont::printHelp(std::ostream& os) {
         }
     }
     os << std::endl;
-    os << "Report bugs at <http://sumo-sim.org/trac/>." << std::endl;
-    os << "Get in contact via <sumo-user@lists.sourceforge.net>." << std::endl;
+    os << "Report bugs at <http://sumo.dlr.de/trac/>." << std::endl;
+    os << "Get in contact via <sumo@dlr.de>." << std::endl;
 }
 
 
@@ -722,7 +723,7 @@ void
 OptionsCont::writeConfiguration(std::ostream& os, bool filled,
                                 bool complete, bool addComments) const {
     os << "<?xml version=\"1.0\"" << SUMOSAXAttributes::ENCODING << "?>\n\n";
-    os << "<configuration xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/" << myAppName << "Configuration.xsd\">" << std::endl << std::endl;
+    os << "<configuration xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.dlr.de/xsd/" << myAppName << "Configuration.xsd\">" << std::endl << std::endl;
     for (std::vector<std::string>::const_iterator i = mySubTopics.begin(); i != mySubTopics.end(); ++i) {
         std::string subtopic = *i;
         if (subtopic == "Configuration" && !complete) {

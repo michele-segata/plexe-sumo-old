@@ -10,7 +10,7 @@
 ///
 // Container for nodes during the netbuilding process
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -83,13 +83,6 @@ public:
      */
     bool insert(const std::string& id, const Position& position,
                 NBDistrict* district = 0);
-
-
-    /** @brief Inserts a node into the map
-     * @param[in] id The node's id
-     * @return Whether the node could be added (no other with the same id is stored)
-     */
-    Position insert(const std::string& id);
 
 
     /** @brief Inserts a node into the map

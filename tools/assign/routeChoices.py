@@ -11,7 +11,7 @@ This script is to calculate the route choice probabilities based on different me
 - step-size (TBD)
 - ......
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2007-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -22,7 +22,6 @@ the Free Software Foundation; either version 3 of the License, or
 """
 
 import string, glob, os, sys, optparse, random,shutil
-from optparse import OptionParser
 from xml.sax import saxutils, make_parser, handler
 from xml.sax import parse
 from numpy import *

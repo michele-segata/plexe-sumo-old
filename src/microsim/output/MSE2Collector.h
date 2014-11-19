@@ -11,7 +11,7 @@
 ///
 // An areal (along a single lane) detector
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -41,7 +41,7 @@
 #include <microsim/MSMoveReminder.h>
 #include <microsim/output/MSDetectorFileOutput.h>
 #include <utils/common/UtilExceptions.h>
-#include <utils/common/SUMOVehicle.h>
+#include <utils/vehicle/SUMOVehicle.h>
 
 
 // ===========================================================================
@@ -266,7 +266,7 @@ public:
     *
     * @return The mean number of haltings within the area
     */
-    SUMOReal getCurrentHaltingNumber() const;
+    int getCurrentHaltingNumber() const;
 
     /** @brief Returns the IDs of the vehicles within the area
      *
@@ -426,7 +426,7 @@ private:
     /// @brief The number of started halts in the last step
     unsigned myCurrentStartedHalts;
     /// @brief The number of halted vehicles [#]
-    SUMOReal myCurrentHaltingsNumber;
+    int myCurrentHaltingsNumber;
     /// @}
 
 

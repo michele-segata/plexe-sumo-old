@@ -11,7 +11,7 @@
 ///
 // An unextended detector measuring at a fixed position on a fixed lane.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -52,6 +52,7 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+#define HAS_NOT_LEFT_DETECTOR -1
 
 // ===========================================================================
 // method definitions
@@ -150,8 +151,10 @@ MSInductLoop::getCurrentOccupancy() const {
         return -1;
     }
     SUMOReal occupancy = 0;
+    SUMOReal csecond = STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep());
     for (std::vector< VehicleData >::const_iterator i = d.begin(); i != d.end(); ++i) {
-        SUMOReal timeOnDetDuringInterval = (*i).leaveTimeM - MAX2(STEPS2TIME(tbeg), (*i).entryTimeM);
+        const SUMOReal leaveTime = (*i).leaveTimeM == HAS_NOT_LEFT_DETECTOR ? csecond : (*i).leaveTimeM;
+        SUMOReal timeOnDetDuringInterval = leaveTime - MAX2(STEPS2TIME(tbeg), (*i).entryTimeM);
         timeOnDetDuringInterval = MIN2(timeOnDetDuringInterval, TS);
         occupancy += timeOnDetDuringInterval;
     }
@@ -189,7 +192,7 @@ MSInductLoop::getTimestepsSinceLastDetection() const {
 
 void
 MSInductLoop::writeXMLDetectorProlog(OutputDevice& dev) const {
-    dev.writeXMLHeader("detector", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo-sim.org/xsd/det_e1_file.xsd\"");
+    dev.writeXMLHeader("detector", "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"http://sumo.dlr.de/xsd/det_e1_file.xsd\"");
 }
 
 
@@ -313,10 +316,9 @@ MSInductLoop::collectVehiclesOnDet(SUMOTime tMS) const {
             ret.push_back(*i);
         }
     }
-    SUMOTime ct = MSNet::getInstance()->getCurrentTimeStep();
     for (VehicleMap::const_iterator i = myVehiclesOnDet.begin(); i != myVehiclesOnDet.end(); ++i) {
         SUMOVehicle* v = (*i).first;
-        VehicleData d(v->getID(), v->getVehicleType().getLength(), (*i).second, STEPS2TIME(ct), v->getVehicleType().getID());
+        VehicleData d(v->getID(), v->getVehicleType().getLength(), (*i).second, HAS_NOT_LEFT_DETECTOR, v->getVehicleType().getID());
         d.speedM = v->getSpeed();
         ret.push_back(d);
     }

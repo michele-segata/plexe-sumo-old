@@ -15,7 +15,7 @@
 ///
 /// TraCI server used to control sumo by a remote TraCI client (e.g., ns2)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2007-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -52,11 +52,11 @@
 #include <foreign/tcpip/socket.h>
 #include <foreign/tcpip/storage.h>
 #include <utils/common/SUMOTime.h>
-#include <utils/common/DijkstraRouterTT.h>
+#include <utils/vehicle/DijkstraRouterTT.h>
 #include <utils/common/NamedObjectCont.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/MsgHandler.h>
-#include <utils/common/SUMOVehicleParameter.h>
+#include <utils/vehicle/SUMOVehicleParameter.h>
 #include <utils/shapes/PointOfInterest.h>
 #include <utils/shapes/ShapeContainer.h>
 #include <utils/shapes/Polygon.h>

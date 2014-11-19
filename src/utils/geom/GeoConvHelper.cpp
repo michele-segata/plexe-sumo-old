@@ -8,7 +8,7 @@
 ///
 // static methods for processing the coordinates conversion for the current net
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -172,7 +172,7 @@ GeoConvHelper::init(OptionsCont& oc) {
         proj = "DHDN";
     } else if (oc.getBool("proj.dhdnutm")) {
         proj = "DHDN_UTM";
-    } else {
+    } else if (!oc.isDefault("proj")) {
         proj = oc.getString("proj");
     }
 #endif

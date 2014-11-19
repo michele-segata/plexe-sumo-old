@@ -9,7 +9,7 @@
 // A lane change model developed by J. Erdmann
 // based on the model of D. Krajzewicz developed between 2004 and 2011 (MSLCM_DK2004)
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2013-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -98,7 +98,7 @@ public:
     SUMOReal _patchSpeed(const SUMOReal min, const SUMOReal wanted, const SUMOReal max,
                          const MSCFModel& cfModel);
 
-    void changed();
+    void changed(int dir);
 
     void prepareStep();
 

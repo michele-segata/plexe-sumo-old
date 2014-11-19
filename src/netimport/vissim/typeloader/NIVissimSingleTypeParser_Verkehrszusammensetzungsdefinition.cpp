@@ -7,7 +7,7 @@
 ///
 //
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -77,7 +77,7 @@ NIVissimSingleTypeParser_Verkehrszusammensetzungsdefinition::parse(std::istream&
         int vwish;
         from >> tag;
         from >> vwish;
-        assignedTypes.push_back(new NIVissimVehicleClass(type, percentage, vwish));
+        assignedTypes.push_back(new NIVissimVehicleClass(vwish));
         tag = readEndSecure(from, "Fahrzeugtyp");
     }
     //

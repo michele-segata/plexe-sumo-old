@@ -11,7 +11,7 @@ The values are plotted as bars.
 matplotlib (http://matplotlib.org/) has to be installed for this purpose
 
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -22,7 +22,6 @@ the Free Software Foundation; either version 3 of the License, or
 """
 
 import os, subprocess, sys, random, helpers
-from matplotlib import rcParams
 from pylab import *
 from matplotlib.ticker import FuncFormatter as ff
 
@@ -122,7 +121,7 @@ def main(args=None):
       rect.set_edgecolor('k')
     xlim(0, x)
     xticks(ts, labels)
-  helpers.closeFigure(fig, ax, options)
+  helpers.closeFigure(fig, ax, options, False)
 
 if __name__ == "__main__":
   sys.exit(main(sys.argv))

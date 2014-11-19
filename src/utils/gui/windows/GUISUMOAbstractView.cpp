@@ -10,7 +10,7 @@
 ///
 // The base class for a view
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -125,6 +125,7 @@ GUISUMOAbstractView::GUISUMOAbstractView(FXComposite* p,
     myAmInitialised(false),
     myViewportChooser(0),
     myVisualizationChanger(0) {
+    sem_init(&myCanvasSemaphore, 0, 1);
     setTarget(this);
     enable();
     flags |= FLAG_ENABLED;
@@ -284,6 +285,12 @@ GUISUMOAbstractView::getObjectAtPosition(Position pos) {
             if (type == GLO_POI || type == GLO_POLYGON) {
                 layer = dynamic_cast<Shape*>(o)->getLayer();
             }
+#ifdef HAVE_INTERNAL
+            if (type == GLO_LANE && GUIVisualizationSettings::UseMesoSim) {
+                // do not select lanes in meso mode
+                continue;
+            }
+#endif
             // check whether the current object is above a previous one
             if (layer > maxLayer) {
                 idMax = id;
@@ -338,16 +345,24 @@ GUISUMOAbstractView::getObjectsInBoundary(const Boundary& bound) {
     applyGLTransform(false);
 
     // paint in select mode
+    myVisualizationSettings->drawForSelecting = true;
     int hits2 = doPaintGL(GL_SELECT, bound);
+    myVisualizationSettings->drawForSelecting = false;
     // Get the results
     nb_hits = glRenderMode(GL_RENDER);
     if (nb_hits == -1) {
         myApp->setStatusBarText("Selection in boundary failed. Try to select fewer than " + toString(hits2) + " items");
     }
     std::vector<GUIGlID> result;
+    GLuint numNames;
+    GLuint* ptr = hits;
     for (int i = 0; i < nb_hits; ++i) {
-        assert(i * 4 + 3 < NB_HITS_MAX);
-        result.push_back(hits[i * 4 + 3]);
+        numNames = *ptr;
+        ptr += 3;
+        for (int j = 0; j < (int)numNames; j++) {
+            result.push_back(*ptr);
+            ptr++;
+        }
     }
     // switch viewport back to normal
     myChanger->setViewport(oldViewPort);
@@ -525,7 +540,16 @@ GUISUMOAbstractView::setWindowCursorPosition(FXint x, FXint y) {
 
 FXbool
 GUISUMOAbstractView::makeCurrent() {
+    sem_wait(&myCanvasSemaphore);
     FXbool ret = FXGLCanvas::makeCurrent();
+    return ret;
+}
+
+
+FXbool
+GUISUMOAbstractView::makeNonCurrent() {
+    sem_post(&myCanvasSemaphore);
+    FXbool ret = FXGLCanvas::makeNonCurrent();
     return ret;
 }
 
@@ -799,7 +823,7 @@ GUISUMOAbstractView::makeSnapshot(const std::string& destFile) {
         glGetIntegerv(GL_VIEWPORT, viewport);
         while (state == GL2PS_OVERFLOW) {
             buffsize += 1024 * 1024;
-            gl2psBeginPage(destFile.c_str(), "sumo-gui; http://sumo-sim.org", viewport, format, GL2PS_SIMPLE_SORT,
+            gl2psBeginPage(destFile.c_str(), "sumo-gui; http://sumo.dlr.de", viewport, format, GL2PS_SIMPLE_SORT,
                            GL2PS_DRAW_BACKGROUND | GL2PS_USE_CURRENT_VIEWPORT,
                            GL_RGBA, 0, NULL, 0, 0, 0, buffsize, fp, "out.eps");
             glMatrixMode(GL_MODELVIEW);
@@ -850,8 +874,6 @@ GUISUMOAbstractView::makeSnapshot(const std::string& destFile) {
         glReadBuffer(GL_BACK);
         // Read the pixels
         glReadPixels(0, 0, getWidth(), getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)buf);
-        makeNonCurrent();
-        update();
         // mirror
         size_t mwidth = getWidth();
         size_t mheight = getHeight();
@@ -876,6 +898,8 @@ GUISUMOAbstractView::makeSnapshot(const std::string& destFile) {
             errorMessage = "Could not save '" + destFile + "'.\n" + e.what();
         }
         FXFREE(&buf);
+        makeNonCurrent();
+        update();
     }
     return errorMessage;
 }

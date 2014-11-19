@@ -9,7 +9,7 @@
 ///
 // Person in age to go to school: linked to a school object
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2010-2014 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
@@ -50,7 +50,7 @@ public:
     AGChild(int age) :
         AGPerson(age),
         school(NULL) {};
-    void print();
+    void print() const;
     bool setSchool(AGSchool* school);
     /**
      * @param schools: school vector from City object

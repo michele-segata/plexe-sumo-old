@@ -12,7 +12,7 @@
 ///
 // A class that stores and controls tls and switching of their programs
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -771,7 +771,7 @@ MSTLLogicControl::closeWAUT(const std::string& wautid) {
     // activate the first one
     if (first != w->switches.end()) {
         std::vector<WAUTSwitch>::const_iterator mbegin = w->switches.begin();
-        MSNet::getInstance()->getBeginOfTimestepEvents().addEvent(
+        MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(
             new SwitchInitCommand(*this, wautid, (unsigned int)distance(mbegin, first)),
             (*first).when, MSEventControl::NO_CHANGE);
     }

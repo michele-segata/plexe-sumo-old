@@ -9,7 +9,7 @@
 ///
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -200,9 +200,6 @@ private:
 
     /// @brief sets the color according to the current scheme index and some vehicle function
     bool setFunctionalColor(size_t activeScheme) const;
-
-    /// @brief whether the person is visualized as stopped
-    bool myAmVisualizedAsStopped;
 
     /// @name drawing helper methods
     /// @{

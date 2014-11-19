@@ -10,7 +10,7 @@
 Checks schema for files matching certain file names using either
 lxml or SAX2Count.exe depending on availability.
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2009-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -34,7 +34,7 @@ def validate(root, f):
         doc = etree.parse(f)
         schemaLoc = doc.getroot().get('{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation')
         if schemaLoc:
-            localSchema = os.path.join(os.path.dirname(__file__), '..', '..', 'docs', 'internet', 'xsd', os.path.basename(schemaLoc))
+            localSchema = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'xsd', os.path.basename(schemaLoc))
             if os.path.exists(localSchema):
                 schemaLoc = localSchema
 #            if schemaLoc not in schemes: // temporarily disabled due to lxml bug https://bugs.launchpad.net/lxml/+bug/1222132

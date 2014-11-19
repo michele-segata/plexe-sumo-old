@@ -9,7 +9,7 @@
 ///
 // The representation of a single node
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -1510,8 +1510,10 @@ NBNode::guessCrossings() {
                 candidates.push_back(edge);
             } else if (allowsPed) {
                 if (candidates.size() > 0) {
-                    hadCandidates = true;
-                    numGuessed += checkCrossing(candidates);
+                    if (hadCandidates || forbidsPedestriansAfter(normalizedLanes, i)) {
+                        hadCandidates = true;
+                        numGuessed += checkCrossing(candidates);
+                    }
                     candidates.clear();
                 }
             }
@@ -1614,6 +1616,17 @@ NBNode::checkCrossing(EdgeVector candidates) {
             return 1;
         }
     }
+}
+
+
+bool
+NBNode::forbidsPedestriansAfter(std::vector<std::pair<NBEdge*, bool> > normalizedLanes, int startIndex) {
+    for (int i = startIndex; i < (int)normalizedLanes.size(); ++i) {
+        if (!normalizedLanes[i].second) {
+            return true;
+        }
+    }
+    return false;
 }
 
 

@@ -7,7 +7,7 @@
 ///
 // The application's "About" - dialog
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -35,6 +35,7 @@
 
 #include "GUIDialog_AboutSUMO.h"
 #include <utils/foxtools/FXLinkLabel.h>
+#include <utils/common/StdDefs.h>
 #include <utils/gui/images/GUIIconSubSys.h>
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -108,7 +109,7 @@ GUIDialog_AboutSUMO::GUIDialog_AboutSUMO(FXWindow* parent,  const char* name, in
     // "SUMO <VERSION>"
     FXVerticalFrame* f4 = new FXVerticalFrame(f2, FRAME_NONE, 0, 0, 0, 0,   20, 0, 0, 0);
     myHeadlineFont = new FXFont(getApp(), "Arial", 18, FXFont::Bold);
-    FXLabel* l = new FXLabel(f4, (FXString)"PLEXE SUMO " + VERSION_STRING, 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    FXLabel* l = new FXLabel(f4, ("PLEXE SUMO " + getBuildName(VERSION_STRING)).c_str(), 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     l->setFont(myHeadlineFont);
     new FXLabel(f4, "Simulation of Urban MObility", 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     //
@@ -120,8 +121,8 @@ GUIDialog_AboutSUMO::GUIDialog_AboutSUMO(FXWindow* parent,  const char* name, in
     new FXLabel(f3, "Includes the Platooning Extension for Veins (PLEXE)", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     new FXLabel(f3, "Copyright (C) 2001-2014 DLR / Institute of Transportation Systems", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     new FXLabel(f3, "Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
-    FXLinkLabel* link = new FXLinkLabel(f3, "http://sumo-sim.org", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
-    link->setTipText("http://sumo-sim.org");
+    FXLinkLabel* link = new FXLinkLabel(f3, "http://sumo.dlr.de", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
+    link->setTipText("http://sumo.dlr.de");
     FXLinkLabel* plexeLink = new FXLinkLabel(f3, "http://plexe.car2x.org", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
     plexeLink->setTipText("http://plexe.car2x.org");
     // ok-button
