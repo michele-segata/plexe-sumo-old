@@ -186,14 +186,14 @@ MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap
     }
 }
 
-SUMOReal MSCFModel_CC::freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const {
+SUMOReal MSCFModel_CC::freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed, const bool onInsertion) const {
     VehicleVariables *vars = (VehicleVariables *)veh->getCarFollowVariables();
     if (vars->activeController != Plexe::DRIVER)
     {
         return _v(veh, seen, speed, maxSpeed, desiredSpeed(veh), MSCFModel_CC::FREE_SPEED);
     }
     else {
-        return MSCFModel::freeSpeed(veh, speed, seen, maxSpeed);
+        return MSCFModel::freeSpeed(veh, speed, seen, maxSpeed, onInsertion);
     }
 }
 

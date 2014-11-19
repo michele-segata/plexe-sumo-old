@@ -6,7 +6,7 @@
 ///
 // An XML-Handler for amitran and netstate trajectories
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2014-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -54,7 +54,7 @@ public:
      * @param[in] file The file that will be processed
      */
     TrajectoriesHandler(const bool computeA, const SUMOEmissionClass defaultClass,
-                        const SUMOReal defaultSlope, OutputDevice* xmlOut);
+                        const SUMOReal defaultSlope, std::ostream* stdOut, OutputDevice* xmlOut);
 
 
     /// @brief Destructor
@@ -99,9 +99,11 @@ private:
     const bool myComputeA;
     const SUMOEmissionClass myDefaultClass;
     const SUMOReal myDefaultSlope;
+    std::ostream* myStdOut;
     OutputDevice* myXMLOut;
     std::map<std::string, SUMOReal> myLastV;
     SUMOTime myCurrentTime;
+    SUMOReal myStepSize;
     std::map<std::string, PollutantsInterface::Emissions> mySums;
     std::map<std::string, SUMOEmissionClass> myEmissionClassByType;
     std::map<std::string, SUMOEmissionClass> myEmissionClassByVehicle;

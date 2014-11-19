@@ -9,7 +9,7 @@
 
 Extract statistics from the outputs of a duaIterate run for plotting.
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -171,9 +171,6 @@ def matplot(output):
         if output != 'SHOW':
             matplotlib.use('Agg')
         import matplotlib.pyplot as plt
-
-        plt.ylim(0, 1)
-        plt.xticks([1,2], ["Iteration", "Trip durations"])
         plt.boxplot(parse_trip_durations())
         if output == 'SHOW':
             plt.show()

@@ -9,7 +9,7 @@
 ///
 // The main window of the SUMO-gui.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -234,7 +234,7 @@ protected:
 
 private:
     /** starts to load a simulation */
-    void load(const std::string& file, bool isNet, bool isReload = false);
+    void loadConfigOrNet(const std::string& file, bool isNet, bool isReload = false);
 
     /** this method closes all windows and deletes the current simulation */
     void closeAllWindows();
@@ -300,7 +300,7 @@ protected:
     SUMOTime myAlternateSimDelay;
 
     /// List of got requests
-    MFXEventQue myEvents;
+    MFXEventQue<GUIEvent*> myEvents;
 
     /// The menu used for the MDI-windows
     FXMDIMenu* myMDIMenu;

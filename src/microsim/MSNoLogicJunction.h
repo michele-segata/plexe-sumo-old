@@ -9,7 +9,7 @@
 ///
 // logic, e.g. for exits.
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -65,7 +65,7 @@ public:
      * @param[in] incoming The incoming lanes
      * @param[in] internal The internal lanes
      */
-    MSNoLogicJunction(const std::string& id, const Position& position,
+    MSNoLogicJunction(const std::string& id, SumoXMLNodeType type, const Position& position,
                       const PositionVector& shape,
                       std::vector<MSLane*> incoming
 #ifdef HAVE_INTERNAL_LANES

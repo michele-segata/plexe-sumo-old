@@ -8,7 +8,7 @@
 @version $Id$
 
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2013-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -23,7 +23,10 @@ sys.path.append(os.path.join(os.path.dirname(sys.argv[0]), '..', '..', '..', "to
 from sumolib import checkBinary
 
 EDC = checkBinary("emissionsDrivingCycle", os.path.join(os.path.dirname(sys.argv[0]), '..', '..', '..', "bin"))
-PHEMLIGHTp = os.path.join(os.environ["SUMO_HOME"], "data", "emissions", "PHEMlightV3")
+if len(sys.argv) > 2:
+    PHEMLIGHTp = os.path.join(os.environ["SUMO_HOME"], "data", "emissions", sys.argv[2])
+else:
+    PHEMLIGHTp = os.path.join(os.environ["SUMO_HOME"], "data", "emissions", "PHEMlight")
 if not os.path.exists(PHEMLIGHTp):
     PHEMLIGHTp = os.path.join(os.path.dirname(sys.argv[0]), '..', '..', '..', "data", "emissions", "PHEMlight")
 

@@ -8,7 +8,7 @@
 ///
 // Loader for the of turning percentages and source/sink definitions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -122,7 +122,7 @@ private:
     RONet& myNet;
 
     /// @brief The begin and the end of the current interval
-    SUMOTime myIntervalBegin, myIntervalEnd;
+    SUMOReal myIntervalBegin, myIntervalEnd;
 
     /// @brief The current incoming edge the turning probabilities are set into
     ROJTREdge* myEdge;

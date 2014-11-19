@@ -8,7 +8,7 @@
 ///
 // missing_desc
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -35,6 +35,7 @@
 #include <string>
 #include <utils/shapes/PointOfInterest.h>
 #include <utils/gui/globjects/GUIGlObject_AbstractAdd.h>
+#include <utils/gui/settings/GUIVisualizationSettings.h>
 
 
 // ===========================================================================

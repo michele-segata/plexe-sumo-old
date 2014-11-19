@@ -10,7 +10,7 @@
 ///
 // Builds trigger objects for microsim
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -211,7 +211,7 @@ protected:
     virtual MSCalibrator* buildCalibrator(MSNet& net,
                                           const std::string& id, MSEdge* edge, SUMOReal pos,
                                           const std::string& file, const std::string& outfile,
-                                          const SUMOTime freq, MSRouteProbe* probe);
+                                          const SUMOTime freq, const MSRouteProbe* probe);
 #ifdef HAVE_INTERNAL
     /** @brief builds a mesoscopic calibrator
      *

@@ -8,7 +8,7 @@
 ///
 //
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -89,8 +89,11 @@ public:
     }
 
     /// @brief Access to a random number from a normal distribution
-    static inline SUMOReal randNorm(SUMOReal mean, SUMOReal variance, MTRand& rng = myRandomNumberGenerator) {
-        return (SUMOReal) rng.randNorm(mean, variance);
+    static inline SUMOReal randNorm(SUMOReal mean, SUMOReal variance, MTRand* rng = 0) {
+        if (rng == 0) {
+            rng = &myRandomNumberGenerator;
+        }
+        return (SUMOReal) rng->randNorm(mean, variance);
     }
 
     /// @brief Returns a random element from the given vector

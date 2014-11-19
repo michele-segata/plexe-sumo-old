@@ -8,7 +8,7 @@
 ///
 // Calibrates the flow on an edge by removing an inserting vehicles
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -47,7 +47,7 @@
 #include <utils/options/OptionsCont.h>
 #include <utils/xml/SUMOVehicleParserHelper.h>
 #include <utils/common/RandomDistributor.h>
-#include <utils/common/SUMOVehicleParameter.h>
+#include <utils/vehicle/SUMOVehicleParameter.h>
 #include "MSCalibrator.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -115,7 +115,7 @@ MSCalibrator::init() {
         }
         myCurrentStateInterval = myIntervals.begin();
         // calibration should happen after regular insertions have taken place
-        MSNet::getInstance()->getEndOfTimestepEvents().addEvent(this,
+        MSNet::getInstance()->getEndOfTimestepEvents()->addEvent(this,
                 MSNet::getInstance()->getCurrentTimeStep(),
                 MSEventControl::ADAPT_AFTER_EXECUTION);
     } else {
@@ -370,7 +370,7 @@ MSCalibrator::execute(SUMOTime currentTime) {
             newPars->depart = currentTime;
             newPars->routeid = route->getID();
             MSVehicle* vehicle = dynamic_cast<MSVehicle*>(MSNet::getInstance()->getVehicleControl().buildVehicle(
-                                     newPars, route, vtype));
+                                     newPars, route, vtype, true, false));
 #ifdef MSCalibrator_DEBUG
             std::cout << " resetting route pos: " << routeIndex << "\n";
 #endif

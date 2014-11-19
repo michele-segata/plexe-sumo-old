@@ -10,7 +10,7 @@
 ///
 // Changes the speed allowed on a set of lanes
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -96,7 +96,7 @@ MSLaneSpeedTrigger::init() {
     }
 
     // add the processing to the event handler
-    MSNet::getInstance()->getBeginOfTimestepEvents().addEvent(
+    MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(
         new WrappingCommand<MSLaneSpeedTrigger>(this, &MSLaneSpeedTrigger::execute),
         (*myCurrentEntry).first, MSEventControl::NO_CHANGE);
     myDidInit = true;

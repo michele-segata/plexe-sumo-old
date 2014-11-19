@@ -9,7 +9,7 @@
 ///
 // Importer for networks stored in OpenStreetMap format
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -95,6 +95,11 @@ protected:
         bool tlsControlled;
         /// @brief the NBNode that was instantiated
         NBNode* node;
+
+    private:
+        /// invalidated assignment operator
+        NIOSMNode& operator=(const NIOSMNode& s);
+
     };
 
 
@@ -107,7 +112,7 @@ protected:
             myCurrentIsRoad(false) {}
 
         /// @brief The edge's id
-        SUMOLong id;
+        const SUMOLong id;
         /// @brief The edge's street name
         std::string streetName;
         /// @brief number of lanes, or -1 if unknown
@@ -124,6 +129,11 @@ protected:
         std::vector<SUMOLong> myCurrentNodes;
         /// @brief Information whether this is a road
         bool myCurrentIsRoad;
+
+    private:
+        /// invalidated assignment operator
+        Edge& operator=(const Edge& s);
+
     };
 
 

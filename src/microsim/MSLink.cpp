@@ -9,7 +9,7 @@
 ///
 // A connnection between lanes
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -66,7 +66,8 @@ MSLink::MSLink(MSLane* succLane, LinkDirection dir, LinkState state, SUMOReal le
     myDirection(dir),
     myLength(length),
     myHasFoes(false),
-    myAmCont(false)
+    myAmCont(false),
+    myJunction(0)
 #else
 MSLink::MSLink(MSLane* succLane, MSLane* via, LinkDirection dir, LinkState state, SUMOReal length) :
     myLane(succLane),
@@ -76,7 +77,8 @@ MSLink::MSLink(MSLane* succLane, MSLane* via, LinkDirection dir, LinkState state
     myLength(length),
     myHasFoes(false),
     myAmCont(false),
-    myJunctionInlane(via)
+    myJunctionInlane(via),
+    myJunction(0)
 #endif
 {}
 
@@ -94,6 +96,7 @@ MSLink::setRequestInformation(int index, bool hasFoes, bool isCont,
     myAmCont = isCont;
     myFoeLinks = foeLinks;
     myFoeLanes = foeLanes;
+    myJunction = myLane->getEdge().getFromJunction(); // junctionGraph is initialized after the whole network is loaded
 #ifdef MSLink_DEBUG_CROSSING_POINTS
     std::cout << " link " << myIndex << " to " << getViaLaneOrLane()->getID() << " has foes: " << toString(foeLanes) << "\n";
 #endif
@@ -215,7 +218,7 @@ bool
 MSLink::opened(SUMOTime arrivalTime, SUMOReal arrivalSpeed, SUMOReal leaveSpeed, SUMOReal vehicleLength,
                SUMOReal impatience, SUMOReal decel, SUMOTime waitingTime,
                std::vector<const SUMOVehicle*>* collectFoes) const {
-    if (myState == LINKSTATE_TL_RED) {
+    if (haveRed()) {
         return false;
     }
     if (myAmCont && MSGlobals::gUsingInternalLanes) {
@@ -228,7 +231,7 @@ MSLink::opened(SUMOTime arrivalTime, SUMOReal arrivalSpeed, SUMOReal leaveSpeed,
     for (std::vector<MSLink*>::const_iterator i = myFoeLinks.begin(); i != myFoeLinks.end(); ++i) {
 #ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
-            if ((*i)->getState() == LINKSTATE_TL_RED) {
+            if ((*i)->haveRed()) {
                 continue;
             }
         }

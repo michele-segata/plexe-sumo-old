@@ -9,7 +9,7 @@
 @version $Id$
 
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -25,7 +25,7 @@ import traci, sumolib
 
 sumoBinary = sumolib.checkBinary('sumo')
 
-PORT = random.randint(8000, 50000)
+PORT = sumolib.miscutils.getFreeSocketPort()
 sumoProcess = subprocess.Popen("%s -c sumo.sumocfg --remote-port %s" % (sumoBinary, PORT), shell=True, stdout=sys.stdout)
 traci.init(PORT)
 traci.simulation.subscribe((traci.constants.VAR_LOADED_VEHICLES_IDS, traci.constants.VAR_DEPARTED_VEHICLES_IDS))

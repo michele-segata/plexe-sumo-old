@@ -6,7 +6,7 @@
 ///
 // -------------------
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -35,10 +35,8 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
-NIVissimVehicleClass::NIVissimVehicleClass(int type,
-        SUMOReal percentage,
-        int vwish)
-    : myType(type), myPercentage(percentage), myVWish(vwish) {}
+NIVissimVehicleClass::NIVissimVehicleClass(int vwish)
+    : myVWish(vwish) {}
 
 
 NIVissimVehicleClass::~NIVissimVehicleClass() {}

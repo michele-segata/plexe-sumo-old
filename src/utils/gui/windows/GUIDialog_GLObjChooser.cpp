@@ -8,7 +8,7 @@
 ///
 // Class for the window that allows to choose a street, junction or vehicle
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -70,11 +70,9 @@ GUIDialog_GLObjChooser::GUIDialog_GLObjChooser(
     GUIGlChildWindow* parent,
     FXIcon* icon,
     const FXString& title,
-    GUIGlObjectType type,
     const std::vector<GUIGlID>& ids,
     GUIGlObjectStorage& glStorage):
     FXMainWindow(parent->getApp(), title, icon, NULL, DECOR_ALL, 20, 20, 300, 300),
-    myObjectType(type),
     myParent(parent) {
     FXHorizontalFrame* hbox = new FXHorizontalFrame(this, LAYOUT_FILL_X | LAYOUT_FILL_Y, 0, 0, 0, 0, 0, 0, 0, 0);
     // build the list

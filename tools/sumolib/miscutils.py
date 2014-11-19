@@ -7,7 +7,7 @@
 
 Common utility functions
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -21,7 +21,8 @@ import time
 import os
 import math
 import colorsys
-from random import random
+import socket
+import random
 from collections import defaultdict
 
 # append import path stanca:
@@ -121,6 +122,19 @@ class Statistics:
         else:
             return None
 
+    def relStdDev(self, limit=None):
+        """return the relative standard deviation optionally limited to the last limit values"""
+        if limit is None or len(self.values) < limit:
+            limit = len(self.values)
+        if limit > 0:
+            mean = sum(self.values[-limit:]) / float(limit)
+            sumSq = 0.
+            for v in self.values[-limit:]:
+                sumSq += (v - mean) * (v - mean)
+            return math.sqrt(sumSq / limit) / mean
+        else:
+            return None
+
     def mean(self):
         """return the median value"""
         # XXX rename this method
@@ -208,7 +222,7 @@ class Colorgen:
 
     def get_value(self, opt):
         if opt == 'random':
-            return random()
+            return random.random()
         else:
             return float(opt)
 
@@ -225,3 +239,14 @@ class Colorgen:
         return ','.join(map(str, self.byteTuple()))
 
 
+def getFreeSocketPort(numTries=10, minPort=8000, maxPort=50000):
+    for i in range(numTries):
+        try:
+            p = random.randint(minPort, maxPort)
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(("localhost", p))
+            s.close()
+            return p
+        except socket.error:
+            pass
+    return None

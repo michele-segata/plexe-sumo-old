@@ -9,7 +9,7 @@
 ///
 // Main for NETGENERATE
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -205,7 +205,7 @@ main(int argc, char** argv) {
     OptionsCont& oc = OptionsCont::getOptions();
     // give some application descriptions
     oc.setApplicationDescription("Road network generator for the microscopic road traffic simulation SUMO.");
-    oc.setApplicationName("netgenerate", "SUMO netgenerate Version " + (std::string)VERSION_STRING);
+    oc.setApplicationName("netgenerate", "SUMO netgenerate Version " + getBuildName(VERSION_STRING));
     int ret = 0;
     try {
         // initialise the application system (messaging, xml, options)

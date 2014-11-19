@@ -7,7 +7,7 @@
 ///
 // Main for an emissions map writer
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2013-2013 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -95,7 +95,7 @@ main(int argc, char** argv) {
     OptionsCont& oc = OptionsCont::getOptions();
     //  give some application descriptions
     oc.setApplicationDescription("Builds and writes an emissions map.");
-    oc.setApplicationName("emissionsMap", "SUMO emissionsMap Version " + (std::string)VERSION_STRING);
+    oc.setApplicationName("emissionsMap", "SUMO emissionsMap Version " + getBuildName(VERSION_STRING));
     //  add options
     SystemFrame::addConfigurationOptions(oc);
     oc.addOptionSubTopic("Processing");

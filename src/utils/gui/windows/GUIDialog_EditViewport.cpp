@@ -8,7 +8,7 @@
 ///
 // A dialog to change the viewport
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -196,18 +196,12 @@ GUIDialog_EditViewport::onCmdLoad(FXObject*, FXSelector, void* /*data*/) {
 
 long
 GUIDialog_EditViewport::onCmdSave(FXObject*, FXSelector, void* /*data*/) {
-    FXFileDialog opendialog(this, "Save Viewport");
-    opendialog.setIcon(GUIIconSubSys::getIcon(ICON_EMPTY));
-    opendialog.setSelectMode(SELECTFILE_ANY);
-    opendialog.setPatternList("*.xml");
-    if (gCurrentFolder.length() != 0) {
-        opendialog.setDirectory(gCurrentFolder);
-    }
-    if (!opendialog.execute() || !MFXUtils::userPermitsOverwritingWhenFileExists(this, opendialog.getFilename())) {
+    FXString file = MFXUtils::getFilename2Write(this, "Save Viewport", ".xml", GUIIconSubSys::getIcon(ICON_EMPTY), gCurrentFolder);
+    if (file == "") {
         return 1;
     }
     try {
-        OutputDevice& dev = OutputDevice::getDevice(opendialog.getFilename().text());
+        OutputDevice& dev = OutputDevice::getDevice(file.text());
         dev << "<viewsettings>\n";
         dev << "    <viewport zoom=\"" << myZoom->getValue() << "\" x=\"" << myXOff->getValue() << "\" y=\"" << myYOff->getValue();
 #ifdef HAVE_OSG

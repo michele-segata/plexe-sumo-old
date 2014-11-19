@@ -8,7 +8,7 @@
 ///
 // Helper methods for PHEMlight-based emission computation
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2013-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -79,7 +79,7 @@ HelpersPHEMlight::getClassByName(const std::string& eClass, const SUMOVehicleCla
 
 
 SUMOReal
-HelpersPHEMlight::getMaxAccel(SUMOEmissionClass c, double v, double a, double slope) {
+HelpersPHEMlight::getMaxAccel(SUMOEmissionClass c, double v, double a, double slope) const {
     PHEMCEP* currCep = PHEMCEPHandler::getHandlerInstance().GetCep(c);
     if (currCep == 0) {
         return -1.;

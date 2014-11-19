@@ -12,7 +12,7 @@ studio build. The script is also used for the meso build.
 Some paths especially for the temp dir and the compiler are
 hard coded into this script.
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -176,7 +176,9 @@ for platform in ["Win32", "x64"]:
     shutil.rmtree(env["TEXTTEST_TMP"], True)
     if not os.path.exists(env["SUMO_REPORT"]):
         os.makedirs(env["SUMO_REPORT"])
-    for name in ["dfrouter", "duarouter", "jtrrouter", "netconvert", "netgenerate", "od2trips", "sumo", "polyconvert", "sumo-gui", "activitygen"]:
+    for name in ["dfrouter", "duarouter", "jtrrouter", "marouter", "netconvert", "netgenerate",
+                 "od2trips", "sumo", "polyconvert", "sumo-gui", "activitygen",
+                 "emissionsDrivingCycle", "emissionsMap"]:
         binary = os.path.join(options.rootDir, options.binDir, name + programSuffix + ".exe")
         if name == "sumo-gui":
             if os.path.exists(binary):

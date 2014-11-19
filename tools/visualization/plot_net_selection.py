@@ -5,7 +5,7 @@
 @date    2014-02-19
 @version $Id$
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -18,7 +18,6 @@ the Free Software Foundation; either version 3 of the License, or
 import os, subprocess, sys, random, helpers
 from xml.sax import make_parser
 from xml.sax.handler import ContentHandler
-from matplotlib import rcParams
 from pylab import *
 from matplotlib.ticker import FuncFormatter as ff
 import matplotlib.pyplot as plt

@@ -8,7 +8,7 @@
 ///
 // Parser and container for routes during their loading
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -36,7 +36,7 @@
 #include <vector>
 #include <utils/common/RandomDistributor.h>
 #include <utils/common/SUMOTime.h>
-#include <utils/common/PedestrianRouter.h>
+#include <utils/vehicle/PedestrianRouter.h>
 #include <utils/xml/SUMORouteHandler.h>
 
 
@@ -183,9 +183,6 @@ protected:
 
     /// @brief The currently parsed route alternatives
     RORouteDef* myCurrentAlternatives;
-
-    /// @brief The currently parsed route costs
-    SUMOReal myCurrentCosts;
 
 private:
     /// @brief Invalidated copy constructor

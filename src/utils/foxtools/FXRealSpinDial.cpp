@@ -9,7 +9,7 @@
 ///
 //
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2004-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -408,7 +408,7 @@ FXDEFMAP(FXRealSpinDial) FXRealSpinDialMap[] = {
     FXMAPFUNC(SEL_CHANGED, FXRealSpinDial::ID_ENTRY, FXRealSpinDial::onChgEntry),
     FXMAPFUNC(SEL_UPDATE, FXRealSpinDial::ID_DIAL, FXRealSpinDial::onUpdDial),
     FXMAPFUNC(SEL_CHANGED, FXRealSpinDial::ID_DIAL, FXRealSpinDial::onChgDial),
-    FXMAPFUNC(SEL_COMMAND, FXRealSpinDial::ID_DIAL, FXRealSpinDial::onCmdDial),
+    FXMAPFUNC(SEL_COMMAND, FXRealSpinDial::ID_DIAL, FXRealSpinDial::onChgDial),
     FXMAPFUNC(SEL_MOUSEWHEEL, FXRealSpinDial::ID_ENTRY, FXRealSpinDial::onMouseWheel),
     FXMAPFUNC(SEL_MOUSEWHEEL, FXRealSpinDial::ID_DIAL, FXRealSpinDial::onMouseWheel),
     FXMAPFUNC(SEL_MOUSEWHEEL, FXRealSpinDial::ID_INCREMENT, FXRealSpinDial::onMouseWheel),

@@ -50,7 +50,7 @@
 #include <guisim/GUILane.h>
 #endif
 
-MSCACCLaneChanger::MSCACCLaneChanger(std::vector<MSLane*>* lanes, bool allowSwap) :
+MSCACCLaneChanger::MSCACCLaneChanger(const std::vector<MSLane*>* lanes, bool allowSwap) :
     MSLaneChanger(lanes, allowSwap) {
 }
 
@@ -259,17 +259,17 @@ bool MSCACCLaneChanger::change() {
         if (myAllowsSwap && (state & (LCA_URGENT)) != 0) {
             // get the direction ...
             ChangerIt target;
-            int dir;
+            int direction;
             if ((state & (LCA_URGENT)) != 0) {
                 if (state & LCA_LEFT) {
                     // ... wants to go left
                     target = myCandi + 1;
-                    dir = 1;
+                    direction = 1;
                 }
                 else {
                     // ... wants to go right
                     target = myCandi - 1;
-                    dir = -1;
+                    direction = -1;
                 }
             }
             MSVehicle* prohibitor = target->lead;
@@ -310,8 +310,8 @@ bool MSCACCLaneChanger::change() {
                         vehicle->enterLaneAtLaneChange(target->lane);
                         prohibitor->enterLaneAtLaneChange(myCandi->lane);
                         // mark lane change
-                        vehicle->getLaneChangeModel().changed();
-                        prohibitor->getLaneChangeModel().changed();
+                        vehicle->getLaneChangeModel().changed(direction);
+                        prohibitor->getLaneChangeModel().changed(-direction);
                         (myCandi)->dens += prohibitor->getVehicleType().getLengthWithGap();
                         (target)->dens += vehicle->getVehicleType().getLengthWithGap();
                         return true;

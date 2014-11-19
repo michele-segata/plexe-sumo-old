@@ -10,7 +10,7 @@
 ///
 // Definitions of SUMO vehicle classes and helper functions
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
@@ -193,7 +193,7 @@ getVehicleClassID(const std::string& name) {
     if (SumoVehicleClassStrings.hasString(name)) {
         return SumoVehicleClassStrings.get(name);
     }
-    throw ProcessError("Unknown vehicle class '" + name + "'.");
+    throw InvalidArgument("Unknown vehicle class '" + name + "'.");
 }
 
 
@@ -279,7 +279,7 @@ getVehicleShapeID(const std::string& name) {
     if (SumoVehicleShapeStrings.hasString(name)) {
         return SumoVehicleShapeStrings.get(name);
     } else {
-        throw ProcessError("Unknown vehicle shape '" + name + "'.");
+        throw InvalidArgument("Unknown vehicle shape '" + name + "'.");
     }
 }
 

@@ -8,7 +8,7 @@
 
 Python implementation of the TraCI interface.
 
-SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
@@ -25,6 +25,7 @@ _RETURN_VALUE_FUNC = {tc.ID_LIST:                          traci.Storage.readStr
                       tc.JAM_LENGTH_METERS:                traci.Storage.readDouble,
                       tc.JAM_LENGTH_VEHICLE:               traci.Storage.readInt,
                       tc.LAST_STEP_MEAN_SPEED:             traci.Storage.readDouble,
+                      tc.LAST_STEP_VEHICLE_ID_LIST:        traci.Storage.readStringList,
                       tc.LAST_STEP_OCCUPANCY:              traci.Storage.readDouble}
 subscriptionResults = traci.SubscriptionResults(_RETURN_VALUE_FUNC)
 
@@ -66,11 +67,19 @@ def getLastStepMeanSpeed(detID):
     Returns the current mean speed in m/s of vehicles that were on the named e2.
     """
     return _getUniversal(tc.LAST_STEP_MEAN_SPEED, detID)
+
+def getLastStepVehicleIDs(detID):
+    """getLastStepVehicleIDs(string) -> list(string)
+    
+    Returns the list of ids of vehicles that were on the named induction loop in the last simulation step.
+    """
+    return _getUniversal(tc.LAST_STEP_VEHICLE_ID_LIST, detID)
+
 	
 def getLastStepOccupancy(detID):
     """getLastStepMeanSpeed(string) -> double
     
-    Returns the current mean speed in m/s of vehicles that were on the named e2.
+    Returns the percentage of space the detector was occupied by a vehicle [%]
     """
     return _getUniversal(tc.LAST_STEP_OCCUPANCY, detID)
 

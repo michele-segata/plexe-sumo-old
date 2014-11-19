@@ -7,7 +7,7 @@
 ///
 // -------------------
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -41,10 +41,9 @@
  */
 class NIVissimClosedLaneDef {
 public:
-    NIVissimClosedLaneDef(int lane, const std::vector<int>& assignedVehicles);
+    NIVissimClosedLaneDef(const std::vector<int>& assignedVehicles);
     ~NIVissimClosedLaneDef();
 private:
-    int myLaneNo;
     std::vector<int> myAssignedVehicles;
 };
 

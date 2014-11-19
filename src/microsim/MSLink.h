@@ -8,7 +8,7 @@
 ///
 // A connnection between lanes
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -43,6 +43,7 @@
 // class declarations
 // ===========================================================================
 class MSLane;
+class MSJunction;
 class SUMOVehicle;
 class MSVehicle;
 class MSPerson;
@@ -282,8 +283,15 @@ public:
     /** @brief Returns whether this link is a major link
      * @return Whether the link has a large priority
      */
-    bool havePriority() const {
+    inline bool havePriority() const {
         return myState >= 'A' && myState <= 'Z';
+    }
+
+    /** @brief Returns whether this link is blocked by a red (or redyellow) traffic light
+     * @return Whether the link has a red light
+     */
+    inline bool haveRed() const {
+        return myState == LINKSTATE_TL_RED || myState == LINKSTATE_TL_REDYELLOW;
     }
 
 
@@ -341,6 +349,10 @@ public:
     /// @brief write information about all approaching vehicles to the given output device
     void writeApproaching(OutputDevice& od, const std::string fromLaneID) const;
 
+    /// @brief return the junction to which this link belongs
+    const MSJunction* getJunction() const {
+        return myJunction;
+    }
 
 private:
     /// @brief return whether the given vehicles may NOT merge safely
@@ -387,6 +399,9 @@ private:
      * */
     std::vector<std::pair<SUMOReal, SUMOReal> > myLengthsBehindCrossing;
 #endif
+
+    /// @brief the junction to which this link belongs
+    const MSJunction* myJunction;
 
     std::vector<MSLink*> myFoeLinks;
     std::vector<MSLane*> myFoeLanes;

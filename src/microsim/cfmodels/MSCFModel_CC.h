@@ -137,16 +137,20 @@ public:
      */
     SUMOReal stopSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred) const;
 
-    /** @brief Computes the vehicle's safe speed (no dawdling)
+    /** @brief Computes the vehicle's safe speed without a leader
      *
-     * Returns the velocity of the vehicle in dependence to the vehicle's and its leader's values and the distance between them.
+     * Returns the velocity of the vehicle in dependence to the length of the free street and the target
+     *  velocity at the end of the free range. If onInsertion is true, the vehicle may still brake
+     *  before the next movement.
      * @param[in] veh The vehicle (EGO)
      * @param[in] speed The vehicle's speed
      * @param[in] seen The look ahead distance
      * @param[in] maxSpeed The maximum allowed speed
+     * @param[in] onInsertion whether speed at insertion is asked for
      * @return EGO's safe speed
      */
-    SUMOReal freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed) const;
+    virtual SUMOReal freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen,
+                               SUMOReal maxSpeed, const bool onInsertion = false) const;
 
     SUMOReal maxNextSpeed(SUMOReal speed) const;
 

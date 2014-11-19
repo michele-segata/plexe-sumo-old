@@ -9,7 +9,7 @@
 ///
 // This class computes the logic of a junction
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -659,6 +659,10 @@ NBRequest::rightTurnConflict(const NBEdge* from, const NBEdge* to, int fromLane,
         return false;
     }
     // conflict if to is between prohibitorTo and from when going clockwise
+    if (to->getStartAngle() == prohibitorTo->getStartAngle()) {
+        // reduce rounding errors
+        return false;
+    }
     const SUMOReal toAngleAtNode = fmod(to->getStartAngle() + 180, (SUMOReal)360.0);
     const SUMOReal prohibitorToAngleAtNode = fmod(prohibitorTo->getStartAngle() + 180, (SUMOReal)360.0);
     return (lefthand != (GeomHelper::getCWAngleDiff(from->getEndAngle(), toAngleAtNode) <

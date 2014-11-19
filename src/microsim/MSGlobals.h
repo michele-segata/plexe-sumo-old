@@ -9,7 +9,7 @@
 ///
 // Some static variables for faster access
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2003-2014 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
@@ -91,6 +91,9 @@ public:
 
     /** Information whether limited junction control shall be used */
     static bool gMesoLimitedJunctionControl;
+
+    /** Information whether overtaking is enabled in the mesoscopic simulation */
+    static bool gMesoOvertaking;
 
     /// mesoscopic simulation infrastructure
     static MELoop* gMesoNet;

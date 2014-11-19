@@ -11,7 +11,7 @@
 ///
 // Helper methods for parsing vehicle attributes
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
@@ -37,7 +37,7 @@
 #include <utils/common/ToString.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/MsgHandler.h>
-#include <utils/common/SUMOVehicleParameter.h>
+#include <utils/vehicle/SUMOVehicleParameter.h>
 #include <utils/common/FileHelpers.h>
 #include <utils/emissions/PollutantsInterface.h>
 #include <utils/options/OptionsCont.h>
@@ -125,7 +125,7 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
     }
     if (attrs.hasAttribute(SUMO_ATTR_PROB)) {
         ret->repetitionProbability = attrs.get<SUMOReal>(SUMO_ATTR_PROB, id.c_str(), ok);
-        if (ok && (ret->repetitionProbability < 0 || ret->repetitionProbability > 1)) {
+        if (ok && (ret->repetitionProbability <= 0 || ret->repetitionProbability > 1)) {
             delete ret;
             throw ProcessError("Invalid repetition probability in the definition of flow '" + id + "'.");
         }
@@ -166,8 +166,9 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
         }
     } else {
         // interpret repetitionNumber
-        if (ok && ret->repetitionProbability >= 0) {
+        if (ok && ret->repetitionProbability > 0) {
             ret->repetitionNumber = INT_MAX;
+            ret->repetitionEnd = end;
         } else {
             if (ok && ret->repetitionOffset <= 0) {
                 delete ret;
@@ -176,7 +177,7 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
             if (end == SUMOTime_MAX) {
                 ret->repetitionNumber = INT_MAX;
             } else {
-                ret->repetitionNumber = static_cast<int>(static_cast<SUMOReal>(end - ret->depart) / ret->repetitionOffset + 0.5);
+                ret->repetitionNumber = MAX2(1, (int)(((SUMOReal)(end - ret->depart)) / ret->repetitionOffset + 0.5));
             }
         }
     }
