@@ -72,6 +72,7 @@ OptionsCont::getOptions() {
 OptionsCont::OptionsCont()
     : myAddresses(), myValues(), myDeprecatedSynonymes(), myHaveInformedAboutDeprecatedDivider(false) {
     myCopyrightNotices.push_back("Copyright (C) 2001-2014 DLR and contributors; http://sumo.dlr.de");
+    myCopyrightNotices.push_back("Copyright (C) 2012-2014 Michele Segata <segata@ccs-labs.org>");
 }
 
 
@@ -556,8 +557,8 @@ OptionsCont::processMetaOptions(bool missingOptions) {
                     myCopyrightNotices.begin(); it != myCopyrightNotices.end(); ++it) {
             std::cout << " " << *it << std::endl;
         }
-        std::cout << "\n" << myFullName << " is part of SUMO.\n";
-        std::cout << "SUMO is free software: you can redistribute it and/or modify\n";
+        std::cout << "\n" << myFullName << " is part of PLEXE SUMO.\n";
+        std::cout << "PLEXE SUMO is free software: you can redistribute it and/or modify\n";
         std::cout << "it under the terms of the GNU General Public License as published by\n";
         std::cout << "the Free Software Foundation, either version 3 of the License, or\n";
         std::cout << "(at your option) any later version.\n\n";
