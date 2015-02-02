@@ -41,6 +41,7 @@
 #include <utils/gui/images/GUIIconSubSys.h>
 #include <utils/gui/div/GUIGlobalSelection.h>
 #include <utils/gui/globjects/GUIGlObject_AbstractAdd.h>
+#include <guisim/GUIVehicle.h>
 #include "GUIDialog_GLObjChooser.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -127,6 +128,13 @@ GUIDialog_GLObjChooser::onCmdCenter(FXObject*, FXSelector, void*) {
     int selected = myList->getCurrentItem();
     if (selected >= 0) {
         myParent->setView(*static_cast<GUIGlID*>(myList->getItemData(selected)));
+        GUIGlID id = *static_cast<GUIGlID*>(myList->getItemData(selected));
+        GUIGlObject* o = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
+        if (o->getType() == GLO_VEHICLE) {
+            GUIVehicle *v = dynamic_cast<GUIVehicle *>(o);
+            myParent->getView()->startTrack(v->getGlID());
+        }
+        GUIGlObjectStorage::gIDStorage.unblockObject(id);
     }
     return 1;
 }

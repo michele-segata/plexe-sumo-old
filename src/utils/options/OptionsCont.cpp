@@ -72,7 +72,7 @@ OptionsCont::getOptions() {
 OptionsCont::OptionsCont()
     : myAddresses(), myValues(), myDeprecatedSynonymes(), myHaveInformedAboutDeprecatedDivider(false) {
     myCopyrightNotices.push_back("Copyright (C) 2001-2014 DLR and contributors; http://sumo.dlr.de");
-    myCopyrightNotices.push_back("Copyright (C) 2012-2014 Michele Segata <segata@ccs-labs.org>");
+    myCopyrightNotices.push_back("Copyright (C) 2012-2015 Michele Segata <segata@ccs-labs.org>");
 }
 
 

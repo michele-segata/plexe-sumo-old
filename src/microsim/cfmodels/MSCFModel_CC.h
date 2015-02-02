@@ -8,7 +8,7 @@
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.sourceforge.net/
 // Copyright (C) 2001-2011 DLR (http://www.dlr.de/) and contributors
-// Copyright (C) 2012-2014 Michele Segata (segata@ccs-labs.org)
+// Copyright (C) 2012-2015 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
 //   This program is free software; you can redistribute it and/or modify
@@ -459,6 +459,7 @@ public:
             leaderDataReadTime(0), frontDataReadTime(0), position(-1), nCars(8),
             caccXi(-1), caccOmegaN(-1), caccC1(-1), engineTau(-1), caccAlpha1(-1), caccAlpha2(-1),
             caccAlpha3(-1), caccAlpha4(-1), caccAlpha5(-1), engineAlpha(-1), engineOneMinusAlpha(-1),
+            ploegH(0.5), ploegKp(0.2), ploegKd(0.7),
             myccKd(1), myccKs(1) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
@@ -580,6 +581,9 @@ public:
         double caccC1;
         double caccAlpha1, caccAlpha2, caccAlpha3, caccAlpha4, caccAlpha5;
         double engineTau, engineAlpha, engineOneMinusAlpha;
+        double ploegH;
+        double ploegKp;
+        double ploegKd;
         /// @brief parameters for MYCC
         double myccKd, myccKs;
     };
@@ -618,6 +622,18 @@ private:
      * @return the acceleration to be given to the actuator
      */
     SUMOReal _cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const;
+
+    /** @brief controller for the Ploeg's CACC which computes the control input variation.
+     * Opposed to other controllers, this method returns a value which needs to be summed
+     * to the previous desired acceleration.
+     *
+     * @param[in] egoSpeed vehicle current speed
+     * @param[in] predSpeed the speed of the front vehicle
+     * @param[in] predAcceleration acceleration of preceding vehicle
+     * @param[in] gap2pred the distance to preceding vehicle
+     * @return the variation of desired acceleration
+     */
+    SUMOReal _ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred) const;
 
     SUMOReal _mycc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred) const;
 
