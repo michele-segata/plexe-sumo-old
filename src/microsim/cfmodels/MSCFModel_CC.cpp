@@ -265,6 +265,8 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 if (invoker == MSCFModel_CC::FOLLOW_SPEED) {
                     predAcceleration = vars->frontAcceleration;
+                    //overwrite pred speed using data obtained through wireless communication
+                    predSpeed = vars->frontSpeed;
                     leaderAcceleration = vars->leaderAcceleration;
                     leaderSpeed = vars->leaderSpeed;
                 }
@@ -274,6 +276,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                      * vehicles as they were non-moving obstacles
                      */
                     predAcceleration = 0;
+                    predSpeed = 0;
                     leaderAcceleration = 0;
                     leaderSpeed = 0;
                 }
