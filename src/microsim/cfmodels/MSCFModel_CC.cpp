@@ -308,6 +308,31 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 break;
 
+            case Plexe::PLOEG:
+
+                if (invoker == MSCFModel_CC::FOLLOW_SPEED)
+                    predAcceleration = vars->frontAcceleration;
+                else
+                    /* if the method has not been invoked from followSpeed() then it has been
+                     * invoked from stopSpeed(). In such case we set all parameters of preceding
+                     * vehicles as they were non-moving obstacles
+                     */
+                    predAcceleration = 0;
+
+                //TODO: again modify probably range/range-rate controller is needed
+                ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
+                //ploeg's controller computes \dot{u}_i, so we need to sum such value to the previously computed u_i
+                caccAcceleration = vars->controllerAcceleration + _ploeg(veh, egoSpeed, predSpeed, predAcceleration, gap2pred);
+                //if CACC is enabled and we are closer than 20 meters, let it decide
+                if (gap2pred < 20) {
+                    controllerAcceleration = caccAcceleration;
+                }
+                else {
+                    controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+                }
+
+                break;
+
             case Plexe::DRIVER:
 
                 std::cerr << "Switching to normal driver behavior still not implemented in MSCFModel_CC\n";
@@ -377,6 +402,20 @@ MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed,
     //Eq. 7.39 of the Rajamani book
     return fmin(myAccel, fmax(-myDecel, vars->caccAlpha1 * predAcceleration + vars->caccAlpha2 * leaderAcceleration +
                               vars->caccAlpha3 * epsilon_dot + vars->caccAlpha4 * (egoSpeed - leaderSpeed) + vars->caccAlpha5 * epsilon));
+
+}
+
+SUMOReal
+MSCFModel_CC::_ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred) const {
+
+    VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
+
+    return (1/vars->ploegH * (
+        -vars->controllerAcceleration +
+        vars->ploegKp * (gap2pred - (2 + vars->ploegH * egoSpeed)) +
+        vars->ploegKd * (predSpeed - egoSpeed - vars->ploegH * vars->egoAcceleration) +
+        predAcceleration
+    )) * TS ;
 
 }
 
@@ -473,6 +512,18 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
     case CC_SET_ENGINE_TAU: {
         vars->engineTau = *(double*)content;
         recomputeParameters(veh);
+        break;
+    }
+    case CC_SET_PLOEG_H: {
+        vars->ploegH = *(double*)content;
+        break;
+    }
+    case CC_SET_PLOEG_KP: {
+        vars->ploegKp = *(double*)content;
+        break;
+    }
+    case CC_SET_PLOEG_KD: {
+        vars->ploegKd = *(double*)content;
         break;
     }
     default: {

@@ -458,7 +458,8 @@ public:
             accAcceleration(0), followAccAcceleration(0), freeAccAcceleration(0), caccSpacing(5),
             leaderDataReadTime(0), frontDataReadTime(0), position(-1), nCars(8),
             caccXi(-1), caccOmegaN(-1), caccC1(-1), engineTau(-1), caccAlpha1(-1), caccAlpha2(-1),
-            caccAlpha3(-1), caccAlpha4(-1), caccAlpha5(-1), engineAlpha(-1), engineOneMinusAlpha(-1) {
+            caccAlpha3(-1), caccAlpha4(-1), caccAlpha5(-1), engineAlpha(-1), engineOneMinusAlpha(-1),
+            ploegH(0.5), ploegKp(0.2), ploegKd(0.7) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -579,6 +580,9 @@ public:
         double caccC1;
         double caccAlpha1, caccAlpha2, caccAlpha3, caccAlpha4, caccAlpha5;
         double engineTau, engineAlpha, engineOneMinusAlpha;
+        double ploegH;
+        double ploegKp;
+        double ploegKd;
     };
 
 
@@ -615,6 +619,18 @@ private:
      * @return the acceleration to be given to the actuator
      */
     SUMOReal _cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const;
+
+    /** @brief controller for the Ploeg's CACC which computes the control input variation.
+     * Opposed to other controllers, this method returns a value which needs to be summed
+     * to the previous desired acceleration.
+     *
+     * @param[in] egoSpeed vehicle current speed
+     * @param[in] predSpeed the speed of the front vehicle
+     * @param[in] predAcceleration acceleration of preceding vehicle
+     * @param[in] gap2pred the distance to preceding vehicle
+     * @return the variation of desired acceleration
+     */
+    SUMOReal _ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred) const;
 
     /** @brief computes the actual acceleration the actuator is able to apply to the car, given engine time constant and previous
      * acceleration
