@@ -27,6 +27,15 @@
 #include "VehicleEngineHandler.h"
 #include "EngineParameters.h"
 
+//plexe's easter egg :)
+#ifdef EE
+    #include <sys/socket.h>
+    #include <sys/types.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <unistd.h>
+#endif
+
 /**
  * This class implements a detailed engine and braking model which takes into
  * account engine characteristics, gear ratios, external forces due to air
@@ -350,6 +359,14 @@ public:
     virtual void setParameter(const std::string parameter, double value);
     virtual void setParameter(const std::string parameter, int value);
 
+#ifdef EE
+private:
+    //some things for the easter egg :)
+    bool               initee;
+    int                lastTimeStep;
+    struct sockaddr_in serv_addr;
+    int                socketfd;
+#endif
 };
 
 #endif /* ENGINEMODEL_H_ */

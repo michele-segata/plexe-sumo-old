@@ -34,6 +34,10 @@ RealisticEngineModel::RealisticEngineModel() {
     dt_s = 0.01;
     xmlFile = "vehicles.xml";
     minSpeed_mps = rpmToSpeed_mps(ep.minRpm, ep.wheelDiameter_m, ep.differentialRatio, ep.gearRatios[0]);
+#ifdef EE
+    initee = false;
+    lastTimeStep = -1;
+#endif
 }
 
 RealisticEngineModel::~RealisticEngineModel() {}
@@ -216,6 +220,37 @@ double RealisticEngineModel::getRealAcceleration(double speed_mps, double accel_
     else {
         realAccel_mps2 = getRealBrakingAcceleration(speed_mps, accel_mps2, reqAccel_mps2, timeStep);
     }
+
+    //plexe's easter egg :)
+#ifdef EE
+    if (!initee) {
+        initee = true;
+        //create the socket
+        socketfd = socket(AF_INET, SOCK_STREAM, 0);
+        //set server address
+        memset(&serv_addr, '0', sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_port = htons(33333);
+        inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
+        //try to connect
+        if (connect(socketfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0) {
+            close(socketfd);
+            socketfd = -1;
+        }
+    }
+    if (lastTimeStep != timeStep) {
+        lastTimeStep = timeStep;
+        char buf[1024];
+        //format the message for the dashboard
+        double speedAfterAccel = std::max(speed_mps + realAccel_mps2 * ep.dt, 0.0);
+        sprintf(buf, "%f %f %d %f\r\n", speed_mpsToRpm(correctedSpeed), speed_mps*3.6, (int)currentGear+1, (speedAfterAccel - speed_mps) / ep.dt);
+        //send data to the dashboard
+        if (write(socketfd, buf, strlen(buf)) != strlen(buf)) {
+            close(socketfd);
+            connect(socketfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+        }
+    }
+#endif
 
     return realAccel_mps2;
 }
