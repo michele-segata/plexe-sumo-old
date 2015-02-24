@@ -289,7 +289,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                     controllerAcceleration = caccAcceleration;
                 }
                 else {
-                    controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+                    controllerAcceleration = std::min(ccAcceleration, caccAcceleration);
                 }
 
                 break;
@@ -307,7 +307,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
                 caccAcceleration = _cacc(veh, egoSpeed, vars->fakeData.frontSpeed, vars->fakeData.frontAcceleration, vars->fakeData.frontDistance, vars->fakeData.leaderSpeed, vars->fakeData.leaderAcceleration, vars->caccSpacing);
-                controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+                controllerAcceleration = std::min(ccAcceleration, caccAcceleration);
 
                 break;
 
@@ -331,7 +331,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                     controllerAcceleration = caccAcceleration;
                 }
                 else {
-                    controllerAcceleration = fmin(ccAcceleration, caccAcceleration);
+                    controllerAcceleration = std::min(ccAcceleration, caccAcceleration);
                 }
 
                 break;
@@ -382,7 +382,7 @@ SUMOReal
 MSCFModel_CC::_cc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal desSpeed) const {
 
     //Eq. 5.5 of the Rajamani book, with Ki = 0 and bounds on max and min acceleration
-    return fmin(myCcAccel, fmax(-myCcDecel, -myKp * (egoSpeed - desSpeed)));
+    return std::min(myCcAccel, std::max(-myCcDecel, -myKp * (egoSpeed - desSpeed)));
 
 }
 
@@ -390,7 +390,7 @@ SUMOReal
 MSCFModel_CC::_acc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const {
 
     //Eq. 6.18 of the Rajamani book
-    return fmin(myAccel, fmax(-myDecel, -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed))));
+    return std::min(myAccel, std::max(-myDecel, -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed))));
 
 }
 
@@ -403,7 +403,7 @@ MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed,
     //compute epsilon_dot, i.e., the desired speed error
     double epsilon_dot = egoSpeed - predSpeed;
     //Eq. 7.39 of the Rajamani book
-    return fmin(myAccel, fmax(-myDecel, vars->caccAlpha1 * predAcceleration + vars->caccAlpha2 * leaderAcceleration +
+    return std::min(myAccel, std::max(-myDecel, vars->caccAlpha1 * predAcceleration + vars->caccAlpha2 * leaderAcceleration +
                               vars->caccAlpha3 * epsilon_dot + vars->caccAlpha4 * (egoSpeed - leaderSpeed) + vars->caccAlpha5 * epsilon));
 
 }
