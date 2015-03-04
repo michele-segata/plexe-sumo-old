@@ -109,6 +109,16 @@ protected:
     double speed_mpsToRpm(double speed_mps);
 
     /**
+     * Computes engine rotation speed in rpm using stored values and given
+     * gear ratio
+     *
+     * @param[in] speed_mps vehicle speed in meters per second
+     * @param[in] gearRatio gear ratio
+     * @return engine rotation speed in rpm
+     */
+    double speed_mpsToRpm(double speed_mps, double gearRatio);
+
+    /**
      * Given an engine mapping computes the available power (hp) given
      * current engine speed in rpm
      *

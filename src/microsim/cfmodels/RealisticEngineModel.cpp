@@ -60,6 +60,10 @@ double RealisticEngineModel::speed_mpsToRpm(double speed_mps) {
     return ep.__speedToRpmCoefficient * speed_mps * ep.gearRatios[currentGear];
 }
 
+double RealisticEngineModel::speed_mpsToRpm(double speed_mps, double gearRatio) {
+    return ep.__speedToRpmCoefficient * speed_mps * gearRatio;
+}
+
 double RealisticEngineModel::rpmToPower_hp(double rpm, const struct EngineParameters::PolynomialEngineModelRpmToHp *engineMapping) {
     double sum = engineMapping->x[0];
     uint8_t i;
@@ -149,35 +153,26 @@ double RealisticEngineModel::thrust_NToAcceleration_mps2(double thrust_N) {
 }
 
 uint8_t RealisticEngineModel::getCurrentGear(double speed_mps, double acceleration_mps2) {
-    double rpm;
-    //search for a matching gear
-    while (true) {
-        if (acceleration_mps2 >= 0) {
-            if (currentGear == ep.nGears - 1) {
-                return currentGear;
-            }
-            rpm = speed_mpsToRpm(speed_mps);
-            if (rpm >= ep.shiftingRule.rpm + ep.shiftingRule.deltaRpm) {
-                currentGear++;
-            }
-            else {
-                return currentGear;
-            }
-        }
-        else {
-            if (currentGear == 0)
-                return currentGear;
-            rpm = speed_mpsToRpm(speed_mps, ep.wheelDiameter_m, ep.differentialRatio, ep.gearRatios[currentGear-1]);
-            if (rpm <= ep.shiftingRule.rpm - ep.shiftingRule.deltaRpm) {
-                currentGear--;
-            }
-            else {
-                return currentGear;
-            }
+    uint8_t newGear = 0;
+    if (acceleration_mps2 >= 0) {
+        for (newGear = 0; newGear < ep.nGears; newGear++) {
+            double rpm = speed_mpsToRpm(speed_mps, ep.gearRatios[newGear]);
+            if (rpm >= ep.shiftingRule.rpm + ep.shiftingRule.deltaRpm)
+                continue;
+            else
+                break;
         }
     }
-
-    //should never come here
+    else {
+        for (newGear = ep.nGears - 1; newGear >= 0; newGear--) {
+            double rpm = speed_mpsToRpm(speed_mps, ep.gearRatios[newGear]);
+            if (rpm <= ep.shiftingRule.rpm - ep.shiftingRule.deltaRpm)
+                continue;
+            else
+                break;
+        }
+    }
+    currentGear = newGear;
     return currentGear;
 
 }
