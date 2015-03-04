@@ -295,7 +295,7 @@ protected:
      * @param[in] acceleration_mps2 current acceleration in meters per squared second
      * @return current gear (0 based)
      */
-    uint8_t getCurrentGear(double speed_mps, double acceleration_mps2);
+    uint8_t performGearShifting(double speed_mps, double acceleration_mps2);
 
     /**
      * Computes the engine actuation time constant as function of the rpm

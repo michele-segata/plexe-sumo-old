@@ -152,7 +152,7 @@ double RealisticEngineModel::thrust_NToAcceleration_mps2(double thrust_N) {
     return thrust_N / ep.__maxAccelerationCoefficient;
 }
 
-uint8_t RealisticEngineModel::getCurrentGear(double speed_mps, double acceleration_mps2) {
+uint8_t RealisticEngineModel::performGearShifting(double speed_mps, double acceleration_mps2) {
     uint8_t newGear = 0;
     if (acceleration_mps2 >= 0) {
         for (newGear = 0; newGear < ep.nGears; newGear++) {
@@ -193,7 +193,7 @@ double RealisticEngineModel::getRealAcceleration(double speed_mps, double accel_
 
     double realAccel_mps2;
     //perform gear shifting, if needed
-    getCurrentGear(speed_mps, reqAccel_mps2);
+    performGearShifting(speed_mps, reqAccel_mps2);
     //since we consider no clutch (clutch always engaged), 0 speed would mean 0 rpm, and thus
     //0 available power. thus, the car could never start from a complete stop. so we assume
     //a minimum speed of 1 m/s to compute engine power
