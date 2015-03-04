@@ -262,7 +262,7 @@ double RealisticEngineModel::getRealBrakingAcceleration(double speed_mps, double
     //remove the part of the deceleration which is due to friction
     double brakesAccel_mps2 = accel_mps2 + frictionDeceleration;
     //compute the new brakes deceleration
-    double newBrakesAccel_mps2 = ep.__brakesAlpha * brakesAccel_mps2 + ep.__brakesOneMinusAlpha + std::max(-ep.__maxNoSlipAcceleration, reqAccel_mps2);
+    double newBrakesAccel_mps2 = ep.__brakesAlpha * brakesAccel_mps2 + ep.__brakesOneMinusAlpha * std::max(-ep.__maxNoSlipAcceleration, reqAccel_mps2);
     //our brakes limit is tires friction
     newBrakesAccel_mps2 = std::max(-ep.__maxNoSlipAcceleration, newBrakesAccel_mps2);
     //now we need to add back our friction deceleration
