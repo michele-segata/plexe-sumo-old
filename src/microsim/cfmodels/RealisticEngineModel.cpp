@@ -155,7 +155,7 @@ double RealisticEngineModel::thrust_NToAcceleration_mps2(double thrust_N) {
 uint8_t RealisticEngineModel::performGearShifting(double speed_mps, double acceleration_mps2) {
     uint8_t newGear = 0;
     if (acceleration_mps2 >= 0) {
-        for (newGear = 0; newGear < ep.nGears; newGear++) {
+        for (newGear = 0; newGear < ep.nGears - 1; newGear++) {
             double rpm = speed_mpsToRpm(speed_mps, ep.gearRatios[newGear]);
             if (rpm >= ep.shiftingRule.rpm + ep.shiftingRule.deltaRpm)
                 continue;
@@ -164,7 +164,7 @@ uint8_t RealisticEngineModel::performGearShifting(double speed_mps, double accel
         }
     }
     else {
-        for (newGear = ep.nGears - 1; newGear >= 0; newGear--) {
+        for (newGear = ep.nGears - 1; newGear > 0; newGear--) {
             double rpm = speed_mpsToRpm(speed_mps, ep.gearRatios[newGear]);
             if (rpm <= ep.shiftingRule.rpm - ep.shiftingRule.deltaRpm)
                 continue;
