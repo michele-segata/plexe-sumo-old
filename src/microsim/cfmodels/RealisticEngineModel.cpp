@@ -174,7 +174,6 @@ uint8_t RealisticEngineModel::getCurrentGear(double speed_mps, double accelerati
     }
     currentGear = newGear;
     return currentGear;
-
 }
 
 double RealisticEngineModel::maxEngineAcceleration_mps2(double speed_mps) {
@@ -201,16 +200,17 @@ double RealisticEngineModel::getRealAcceleration(double speed_mps, double accel_
     double correctedSpeed = std::max(speed_mps, minSpeed_mps);
     if (reqAccel_mps2 >= 0) {
         //the system wants to accelerate
-        //to compute opposing forces instead, we use the real speed. at 0 speed we have no air drag
-        double maxAccel = maxEngineAcceleration_mps2(correctedSpeed) - thrust_NToAcceleration_mps2(opposingForce_N(speed_mps));
         //the real engine acceleration is the minimum between what the engine can deliver, and what
         //has been requested
-        double engineAccel = std::min(maxAccel, reqAccel_mps2);
+        double engineAccel = std::min(maxEngineAcceleration_mps2(correctedSpeed), reqAccel_mps2);
         //now we need to computed delayed acceleration due to actuation lag
         double tau = getEngineTimeConstant_s(speed_mpsToRpm(speed_mps));
         double alpha = ep.dt / (tau + ep.dt);
+        //compute the acceleration provided by the engine, thus removing friction from current acceleration
+        double currentAccel_mps2 = accel_mps2 + thrust_NToAcceleration_mps2(opposingForce_N(speed_mps));
         //use standard first order lag with time constant depending on engine rpm
-        realAccel_mps2 = alpha * accel_mps2 + (1-alpha) * engineAccel;
+        //add back frictions resistance as well
+        realAccel_mps2 = alpha * currentAccel_mps2 + (1-alpha) * engineAccel - thrust_NToAcceleration_mps2(opposingForce_N(speed_mps));
     }
     else {
         realAccel_mps2 = getRealBrakingAcceleration(speed_mps, accel_mps2, reqAccel_mps2, timeStep);
