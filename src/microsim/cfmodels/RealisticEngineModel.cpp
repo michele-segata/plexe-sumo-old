@@ -204,7 +204,7 @@ double RealisticEngineModel::getRealAcceleration(double speed_mps, double accel_
         //has been requested
         double engineAccel = std::min(maxEngineAcceleration_mps2(correctedSpeed), reqAccel_mps2);
         //now we need to computed delayed acceleration due to actuation lag
-        double tau = getEngineTimeConstant_s(speed_mpsToRpm(speed_mps));
+        double tau = getEngineTimeConstant_s(speed_mpsToRpm(correctedSpeed));
         double alpha = ep.dt / (tau + ep.dt);
         //compute the acceleration provided by the engine, thus removing friction from current acceleration
         double currentAccel_mps2 = accel_mps2 + thrust_NToAcceleration_mps2(opposingForce_N(speed_mps));
