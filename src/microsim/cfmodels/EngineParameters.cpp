@@ -48,7 +48,8 @@ EngineParameters::EngineParameters(const EngineParameters &other) :
     nGears(other.nGears), differentialRatio(other.differentialRatio), wheelDiameter_m(other.wheelDiameter_m),
     mass_kg(other.mass_kg), cAir(other.cAir), a_m2(other.a_m2), rho_kgpm3(other.rho_kgpm3), cr1(other.cr1), cr2(other.cr2),
     slope(other.slope), tiresFrictionCoefficient(other.tiresFrictionCoefficient), engineEfficiency(other.engineEfficiency),
-    massFactor (other.massFactor), cylinders(other.cylinders), dt(other.dt), minRpm(other.minRpm), maxRpm(other.maxRpm) {
+    massFactor (other.massFactor), cylinders(other.cylinders), dt(other.dt), minRpm(other.minRpm), maxRpm(other.maxRpm),
+    brakesTau_s(other.brakesTau_s) {
     id = other.id;
     gearRatios = new double[nGears];
     for (uint8_t i = 0; i < nGears; i++)
@@ -58,7 +59,6 @@ EngineParameters::EngineParameters(const EngineParameters &other) :
         engineMapping.x[i] = other.engineMapping.x[i];
     shiftingRule.rpm = other.shiftingRule.rpm;
     shiftingRule.deltaRpm = other.shiftingRule.deltaRpm;
-    brakesTau_s = other.brakesTau_s;
     computeCoefficients();
 }
 EngineParameters &EngineParameters::operator =(const EngineParameters &other) {
