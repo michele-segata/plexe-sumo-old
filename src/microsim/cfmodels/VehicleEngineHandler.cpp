@@ -231,6 +231,15 @@ void VehicleEngineHandler::loadEngineData(const XERCES_CPP_NAMESPACE::Attributes
     engineParameters.cylinders = parseIntAttribute(ENGINE_TAG_ENGINE, ENGINE_TAG_ENGINE_CYLINDERS, attrs);
     engineParameters.minRpm = parseIntAttribute(ENGINE_TAG_ENGINE, ENGINE_TAG_ENGINE_MINRPM, attrs);
     engineParameters.maxRpm = parseIntAttribute(ENGINE_TAG_ENGINE, ENGINE_TAG_ENGINE_MAXRPM, attrs);
+    engineParameters.tauEx_s = parseDoubleAttribute(ENGINE_TAG_ENGINE, ENGINE_TAG_ENGINE_TAU_EX, attrs);
+    if (existsAttribute(ENGINE_TAG_ENGINE, ENGINE_TAG_ENGINE_TAU_BURN, attrs) != -1) {
+        engineParameters.tauBurn_s = parseDoubleAttribute(ENGINE_TAG_ENGINE, ENGINE_TAG_ENGINE_TAU_BURN, attrs);
+        engineParameters.fixedTauBurn = true;
+    }
+    else {
+        engineParameters.fixedTauBurn = false;
+    }
+    engineParameters.maxRpm = parseIntAttribute(ENGINE_TAG_ENGINE, ENGINE_TAG_ENGINE_MAXRPM, attrs);
     std::string mapType = parseStringAttribute(ENGINE_TAG_ENGINE, ENGINE_TAG_ENGINE_TYPE, attrs);
     if (mapType == "poly")
         engineMapType = POLYNOMIAL;

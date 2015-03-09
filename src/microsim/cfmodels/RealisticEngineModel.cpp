@@ -182,11 +182,17 @@ double RealisticEngineModel::maxEngineAcceleration_mps2(double speed_mps) {
 }
 
 double RealisticEngineModel::getEngineTimeConstant_s(double rpm) {
-    if (rpm <= 0)
+    if (rpm <= 0) {
         return TAU_MAX;
-    else
-        //TODO: check this. this is an engine absolute lower bound
-        return std::max(ep.__timeConstantCoefficient / rpm, TAU_MAX);
+    }
+    else {
+        if (ep.fixedTauBurn)
+            //in this case, tau_burn is fixed and is within __engineTauDe_s
+            return std::min(TAU_MAX, ep.__engineTau2 / rpm + ep.__engineTauDe_s);
+        else
+            //in this case, tau_burn is dynamic and is within __engineTau1
+            return std::min(TAU_MAX, ep.__engineTau1 / rpm + ep.tauEx_s);
+    }
 }
 
 double RealisticEngineModel::getRealAcceleration(double speed_mps, double accel_mps2, double reqAccel_mps2, int timeStep) {

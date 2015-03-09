@@ -23,7 +23,7 @@ EngineParameters::EngineParameters() : nGears(5), differentialRatio(3.714), whee
     mass_kg(1300), cAir(0.3), a_m2(2.7), rho_kgpm3(1.2), cr1(0.0136), cr2(5.18e-7),
     slope(0), tiresFrictionCoefficient(0.7), engineEfficiency(0.8),
     massFactor (1.089), cylinders(4), dt(0.01), minRpm(1000), maxRpm(7000),
-    brakesTau_s(0.2) {
+    brakesTau_s(0.2), tauEx_s(0.1), tauBurn_s(-1), fixedTauBurn(false) {
     id = "";
     //set default gear ratios
     gearRatios = new double[nGears];
@@ -49,7 +49,7 @@ EngineParameters::EngineParameters(const EngineParameters &other) :
     mass_kg(other.mass_kg), cAir(other.cAir), a_m2(other.a_m2), rho_kgpm3(other.rho_kgpm3), cr1(other.cr1), cr2(other.cr2),
     slope(other.slope), tiresFrictionCoefficient(other.tiresFrictionCoefficient), engineEfficiency(other.engineEfficiency),
     massFactor (other.massFactor), cylinders(other.cylinders), dt(other.dt), minRpm(other.minRpm), maxRpm(other.maxRpm),
-    brakesTau_s(other.brakesTau_s) {
+    brakesTau_s(other.brakesTau_s), tauEx_s(other.tauEx_s), tauBurn_s(other.tauBurn_s), fixedTauBurn(other.fixedTauBurn) {
     id = other.id;
     gearRatios = new double[nGears];
     for (uint8_t i = 0; i < nGears; i++)
@@ -90,6 +90,9 @@ EngineParameters &EngineParameters::operator =(const EngineParameters &other) {
     shiftingRule.rpm = other.shiftingRule.rpm;
     shiftingRule.deltaRpm = other.shiftingRule.deltaRpm;
     brakesTau_s = other.brakesTau_s;
+    tauBurn_s = other.tauBurn_s;
+    tauEx_s = other.tauEx_s;
+    fixedTauBurn = other.fixedTauBurn;
     computeCoefficients();
     return *this;
 }
@@ -108,9 +111,11 @@ void EngineParameters::computeCoefficients() {
     __speedToRpmCoefficient = differentialRatio * 60 / (wheelDiameter_m * M_PI);
     __speedToThrustCoefficient = engineEfficiency * HP_TO_W;
     __maxAccelerationCoefficient = mass_kg * massFactor;
-    __timeConstantCoefficient = 2.0 / cylinders * 60;
     __brakesAlpha = dt / (brakesTau_s + dt);
     __brakesOneMinusAlpha = 1 - __brakesAlpha;
+    __engineTau1 = (420.0 * cylinders - 240.0) / (2.0 * cylinders);
+    __engineTau2 = (120.0 * cylinders - 120.0) / cylinders;
+    __engineTauDe_s = tauBurn_s + tauEx_s;
 }
 
 void EngineParameters::dumpParameters(std::ostream &out) {

@@ -55,6 +55,8 @@
 #define ENGINE_TAG_ENGINE_CYLINDERS       "cylinders"
 #define ENGINE_TAG_ENGINE_MINRPM          "minRpm"
 #define ENGINE_TAG_ENGINE_MAXRPM          "maxRpm"
+#define ENGINE_TAG_ENGINE_TAU_EX          "tauEx"
+#define ENGINE_TAG_ENGINE_TAU_BURN        "tauBurn"
 #define ENGINE_TAG_ENGINE_POWER           "power"
 #define ENGINE_TAG_ENGINE_POWER_RPM       "rpm"
 #define ENGINE_TAG_ENGINE_POWER_HP        "hp"

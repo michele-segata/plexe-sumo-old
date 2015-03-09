@@ -96,6 +96,10 @@ public:
     double massFactor;
     //number of cylinders of the engine
     uint32_t cylinders;
+    //engine time constants for exhaust and burning
+    double tauEx_s, tauBurn_s;
+    //whether tauBurn_s is fixed or dynamic
+    bool fixedTauBurn;
     //brakes actuation time constant in second
     double brakesTau_s;
     //other precomputed coefficients
@@ -103,7 +107,9 @@ public:
     double __speedToRpmCoefficient;
     double __speedToThrustCoefficient;
     double __maxAccelerationCoefficient;
-    double __timeConstantCoefficient;
+    double __engineTau1;
+    double __engineTau2;
+    double __engineTauDe_s;
     double __brakesAlpha;
     double __brakesOneMinusAlpha;
     //simulation timestep
