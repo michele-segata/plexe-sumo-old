@@ -162,6 +162,11 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
         return myHumanDriver->followSpeed(veh, speed, gap2pred, predSpeed, predMaxDecel);
 }
 
+SUMOReal
+MSCFModel_CC::insertionFollowSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const {
+    //by returning speed + 1, we tell sumo that "speed" is always a safe speed
+    return speed + 1;
+}
 
 SUMOReal
 MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred) const {

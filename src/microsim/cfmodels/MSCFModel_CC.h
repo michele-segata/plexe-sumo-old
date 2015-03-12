@@ -152,6 +152,13 @@ public:
      */
     SUMOReal followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const;
 
+    /** @brief Overload base MSCFModel::insertionFollowSpeed method to inject
+     * automated vehicles as soon as they are requested, without checking
+     * for safe speed constraints
+     *
+     */
+    virtual SUMOReal insertionFollowSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const;
+
 
     /** @brief Computes the vehicle's safe speed for approaching a non-moving obstacle (no dawdling)
      * @param[in] veh The vehicle (EGO)
