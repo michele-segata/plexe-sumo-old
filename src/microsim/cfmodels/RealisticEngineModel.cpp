@@ -216,7 +216,7 @@ double RealisticEngineModel::getRealAcceleration(double speed_mps, double accel_
         double currentAccel_mps2 = accel_mps2 + thrust_NToAcceleration_mps2(opposingForce_N(speed_mps));
         //use standard first order lag with time constant depending on engine rpm
         //add back frictions resistance as well
-        realAccel_mps2 = alpha * currentAccel_mps2 + (1-alpha) * engineAccel - thrust_NToAcceleration_mps2(opposingForce_N(speed_mps));
+        realAccel_mps2 = alpha * engineAccel + (1-alpha) * currentAccel_mps2 - thrust_NToAcceleration_mps2(opposingForce_N(speed_mps));
     }
     else {
         realAccel_mps2 = getRealBrakingAcceleration(speed_mps, accel_mps2, reqAccel_mps2, timeStep);
@@ -263,7 +263,7 @@ double RealisticEngineModel::getRealBrakingAcceleration(double speed_mps, double
     //remove the part of the deceleration which is due to friction
     double brakesAccel_mps2 = accel_mps2 + frictionDeceleration;
     //compute the new brakes deceleration
-    double newBrakesAccel_mps2 = ep.__brakesAlpha * brakesAccel_mps2 + ep.__brakesOneMinusAlpha * std::max(-ep.__maxNoSlipAcceleration, reqAccel_mps2);
+    double newBrakesAccel_mps2 = ep.__brakesAlpha * std::max(-ep.__maxNoSlipAcceleration, reqAccel_mps2) + ep.__brakesOneMinusAlpha * brakesAccel_mps2;
     //our brakes limit is tires friction
     newBrakesAccel_mps2 = std::max(-ep.__maxNoSlipAcceleration, newBrakesAccel_mps2);
     //now we need to add back our friction deceleration
