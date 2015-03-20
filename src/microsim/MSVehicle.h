@@ -295,6 +295,9 @@ public:
     SUMOReal getSpeed() const {
         return myState.mySpeed;
     }
+    SUMOReal getSpeedKmph() const {
+        return myState.mySpeed * 3.6;
+    }
 
 
     /** @brief Returns the vehicle's acceleration in m/s

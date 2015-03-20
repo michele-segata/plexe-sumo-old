@@ -322,6 +322,8 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getPositionOnLane));
     ret->mkItem("speed [m/s]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getSpeed));
+    ret->mkItem("speed [km/h]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getSpeedKmph));
     ret->mkItem("angle [degree]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getAngle));
     if (getChosenSpeedFactor() != 1) {

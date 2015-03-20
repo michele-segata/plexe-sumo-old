@@ -38,6 +38,10 @@
 #include <microsim/cfmodels/MSCFModel_Krauss.h>
 #include <string.h>
 
+#include "GenericEngineModel.h"
+#include "FirstOrderLagModel.h"
+#include "RealisticEngineModel.h"
+
 
 // ===========================================================================
 // class definitions
@@ -221,6 +225,10 @@ public:
         vars->caccAlpha5 = -vars->caccOmegaN * vars->caccOmegaN;
         vars->engineAlpha = TS / (vars->engineTau + TS);
         vars->engineOneMinusAlpha = 1 - vars->engineAlpha;
+        //by default use a first order lag model for the engine
+        vars->engine = new FirstOrderLagModel();
+        vars->engine->setParameter(FOLM_PAR_TAU, vars->engineTau);
+        vars->engine->setParameter(FOLM_PAR_DT, TS);
         return (VehicleVariables *)vars;
     }
 
@@ -480,7 +488,7 @@ public:
             leaderDataReadTime(0), frontDataReadTime(0), position(-1), nCars(8),
             caccXi(-1), caccOmegaN(-1), caccC1(-1), engineTau(-1), caccAlpha1(-1), caccAlpha2(-1),
             caccAlpha3(-1), caccAlpha4(-1), caccAlpha5(-1), engineAlpha(-1), engineOneMinusAlpha(-1),
-            ploegH(0.5), ploegKp(0.2), ploegKd(0.7), nInitialized(0) {
+            ploegH(0.5), ploegKp(0.2), ploegKd(0.7), nInitialized(0), engine(0) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -496,6 +504,10 @@ public:
             //no data about any vehicle has been set
             for (int i = 0; i < MAX_N_CARS; i++)
                 initialized[i] = false;
+        }
+        ~VehicleVariables() {
+            if (engine)
+                delete engine;
         }
 
         /// @brief last time ego data has been updated
@@ -625,6 +637,9 @@ public:
         double ploegH;
         double ploegKp;
         double ploegKd;
+
+        /// @brief engine model employed by this car
+        GenericEngineModel *engine;
     };
 
 

@@ -125,7 +125,7 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
     //low pass filter will let the acceleration go down to a normal value.
     //so here we check whether computed acceleration has a reasonable value. if not just set it to 0
     double potentialAcceleration = SPEED2ACCEL(vars->egoSpeed - vars->egoPreviousSpeed);
-    vars->egoAcceleration = potentialAcceleration < 5 ? potentialAcceleration : 0;
+    vars->egoAcceleration = potentialAcceleration < 20 ? potentialAcceleration : 0;
     vars->egoDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
 
     return vNext;
@@ -389,7 +389,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     }
 
     //compute the actual acceleration applied by the engine
-    engineAcceleration = _actuator(veh, controllerAcceleration, vars->egoAcceleration);
+    engineAcceleration = vars->engine->getRealAcceleration(egoSpeed, vars->egoAcceleration, controllerAcceleration, MSNet::getInstance()->getCurrentTimeStep());
 
     //compute the speed from the actual acceleration
     speed = MAX2(SUMOReal(0), egoSpeed + ACCEL2SPEED(engineAcceleration));
@@ -647,6 +647,31 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
     }
     case CC_SET_PLOEG_KD: {
         vars->ploegKd = *(double*)content;
+        break;
+    }
+    case CC_SET_VEHICLE_ENGINE_MODEL: {
+        if (vars->engine) {
+            delete vars->engine;
+        }
+        int engineModel = *(int*)content;
+        switch (engineModel) {
+        case CC_ENGINE_MODEL_REALISTIC: {
+            vars->engine = new RealisticEngineModel();
+            vars->engine->setParameter(ENGINE_PAR_DT, TS);
+            break;
+        }
+        case CC_ENGINE_MODEL_FOLM:
+        default: {
+            vars->engine = new FirstOrderLagModel();
+            vars->engine->setParameter(FOLM_PAR_DT, TS);
+            break;
+        }
+        }
+        break;
+    }
+    case CC_SET_VEHICLE_MODEL: {
+        const char *model = (const char *)content;
+        vars->engine->setParameter(ENGINE_PAR_VEHICLE, std::string(model));
         break;
     }
     default: {
