@@ -35,8 +35,32 @@
 #include <microsim/MSEdge.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/SUMOTime.h>
-#include <string.h>
 
+//initialize default L and K matrices
+const int MSCFModel_CC::defaultL[][MAX_N_CARS] =
+    {
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 0, 0, 0, 0, 0, 0},
+    {1, 0, 1, 0, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 0, 1, 0, 0, 0},
+    {1, 0, 0, 0, 0, 1, 0, 0},
+    {1, 0, 0, 0, 0, 0, 1, 0}
+    };
+const double MSCFModel_CC::defaultK[][MAX_N_CARS] =
+    {
+    {0  , 0  , 0  , 0  , 0  , 0  , 0  , 0},
+    {460, 0  , 0  , 0  , 0  , 0  , 0  , 0},
+    {80 , 860, 0  , 0  , 0  , 0  , 0  , 0},
+    {80 , 0  , 860, 0  , 0  , 0  , 0  , 0},
+    {80 , 0  , 0  , 860, 0  , 0  , 0  , 0},
+    {80 , 0  , 0  , 0  , 860, 0  , 0  , 0},
+    {80 , 0  , 0  , 0  , 0  , 860, 0  , 0},
+    {80 , 0  , 0  , 0  , 0  , 0  , 860, 0}
+    };
+const double MSCFModel_CC::defaultB[MAX_N_CARS] = {1800, 1800, 1800, 1800, 1800, 1800, 1800, 1800};
+const double MSCFModel_CC::defaultH[MAX_N_CARS] = {0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
 
 // ===========================================================================
 // method definitions
@@ -336,6 +360,18 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
 
                 break;
 
+            case Plexe::CONSENSUS:
+
+                ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
+                caccAcceleration = _consensus(veh,
+                        egoSpeed,
+                        veh->getPosition(),
+                        STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep() + DELTA_T)
+                );
+                controllerAcceleration = caccAcceleration;
+
+                break;
+
             case Plexe::DRIVER:
 
                 std::cerr << "Switching to normal driver behavior still not implemented in MSCFModel_CC\n";
@@ -423,6 +459,86 @@ MSCFModel_CC::_ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed
 }
 
 SUMOReal
+MSCFModel_CC::d_i_j(const struct Plexe::VEHICLE_DATA *vehicles, const double h[MAX_N_CARS], int i, int j) const {
+
+    int k;
+    SUMOReal d = 0;
+    //compute distance to front vehicles
+    if (j < i) {
+        for (k = j; k <= i - 1; k++)
+            d += h[k] * vehicles[0].speed + vehicles[k].length + 15;
+    }
+    //compute distance to vehicles behind
+    if (j > i) {
+        for (k = i; k <= j - 1; k++)
+            //TODO: initialize my vehicle length
+            d += h[k] * vehicles[0].speed + vehicles[k].length;
+    }
+
+    return d;
+
+}
+
+SUMOReal
+MSCFModel_CC::_consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPosition, SUMOReal time) const {
+    VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
+    int index = vars->position;
+    int nCars = vars->nCars;
+    struct Plexe::VEHICLE_DATA *vehicles = vars->vehicles;
+
+    //loop variable
+    int j;
+    //control input
+    double u_i = 0;
+    //compensation term
+    double compensation = 0;
+    //distance error term
+    double distanceError = 0;
+    //speed error term
+    double speedError = 0;
+    //degree of agent i
+    double d_i = 0;
+    //multiplicative coefficient
+    double multCoefficient = 0;
+
+    //compensate my position: compute prediction of what will be my position at time of actuation
+    egoPosition.set(egoPosition.x() + egoSpeed * STEPS2TIME(DELTA_T), egoPosition.y());
+    vehicles[index].speed = egoSpeed;
+    vehicles[index].positionX = egoPosition.x();
+    vehicles[index].positionY = egoPosition.y();
+
+    //check that data from all vehicles have been received. the control
+    //law might actually need a subset of all the data, but d_i_j needs
+    //the lengths of all vehicles. uninitialized values might cause problems
+    if (vars->nInitialized != vars->nCars - 1)
+        return 0;
+
+    //compute speed error.
+    speedError = -vars->b[index] * (egoSpeed - vehicles[0].speed);
+
+    //compute compensation
+    for (j = 0; j < nCars; j++) {
+        d_i += vars->L[index][j];
+        multCoefficient += vars->K[index][j] * vars->L[index][j] * (time - vehicles[j].time) * vehicles[0].speed;
+    }
+
+
+    compensation = (1 / d_i) * multCoefficient;
+    //compute distance error
+    for (j = 0; j < nCars; j++) {
+        //distance error for consensus with GPS equipped
+        distanceError += vars->K[index][j] * vars->L[index][j] * (std::abs(egoPosition.x() - (vehicles[j].positionX)) - d_i_j(vehicles, vars->h, index, j));
+    }
+
+    distanceError = distanceError / (d_i);
+
+    //original paper formula
+    u_i = fmin(myAccel,fmax(-myDecel, (speedError + compensation + distanceError)/1000));
+
+    return u_i;
+}
+
+SUMOReal
 MSCFModel_CC::_actuator(const MSVehicle *veh, SUMOReal acceleration, SUMOReal currentAcceleration) const {
 
     VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
@@ -485,6 +601,10 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
     case CC_SET_VEHICLE_DATA: {
         const struct Plexe::VEHICLE_DATA* vehicle = (const struct Plexe::VEHICLE_DATA*)content;
         vars->vehicles[vehicle->index] = *vehicle;
+        if (!vars->initialized[vehicle->index] && vehicle->index != vars->position) {
+            vars->nInitialized++;
+        }
+        vars->initialized[vehicle->index] = true;
         break;
     }
     case CC_SET_VEHICLE_POSITION: {

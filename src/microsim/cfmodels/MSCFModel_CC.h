@@ -36,6 +36,7 @@
 #include <microsim/MSVehicleType.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <microsim/cfmodels/MSCFModel_Krauss.h>
+#include <string.h>
 
 
 // ===========================================================================
@@ -81,6 +82,26 @@ public:
         double leaderSpeed;
         double leaderAcceleration;
     };
+
+    /**
+     * Topology matrix L for the consensus controller
+     */
+    const static int defaultL[MAX_N_CARS][MAX_N_CARS];
+
+    /**
+     * Gains matrix K for the consensus controller
+     */
+    const static double defaultK[MAX_N_CARS][MAX_N_CARS];
+
+    /**
+     * Default damping ratios vector b for the consensus controller
+     */
+    const static double defaultB[];
+
+    /**
+     * Default time headways vector h for the consensus controller
+     */
+    const static double defaultH[];
 
     /** @brief Constructor
      * @param[in] accel The maximum acceleration that controllers can output (def. 1.5 m/s^2)
@@ -459,7 +480,7 @@ public:
             leaderDataReadTime(0), frontDataReadTime(0), position(-1), nCars(8),
             caccXi(-1), caccOmegaN(-1), caccC1(-1), engineTau(-1), caccAlpha1(-1), caccAlpha2(-1),
             caccAlpha3(-1), caccAlpha4(-1), caccAlpha5(-1), engineAlpha(-1), engineOneMinusAlpha(-1),
-            ploegH(0.5), ploegKp(0.2), ploegKd(0.7) {
+            ploegH(0.5), ploegKp(0.2), ploegKd(0.7), nInitialized(0) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -467,6 +488,14 @@ public:
             fakeData.leaderSpeed = 0;
             leaderPosition.set(0, 0);
             frontPosition.set(0, 0);
+            //init L, K, b, and h with default values
+            memcpy(L, defaultL, sizeof(int)*MAX_N_CARS*MAX_N_CARS);
+            memcpy(K, defaultK, sizeof(double)*MAX_N_CARS*MAX_N_CARS);
+            memcpy(b, defaultB, sizeof(double)*MAX_N_CARS);
+            memcpy(h, defaultH, sizeof(double)*MAX_N_CARS);
+            //no data about any vehicle has been set
+            for (int i = 0; i < MAX_N_CARS; i++)
+                initialized[i] = false;
         }
 
         /// @brief last time ego data has been updated
@@ -567,8 +596,21 @@ public:
         /// @brief is ego vehicle the leader?
         bool isPlatoonLeader;
 
+        /// @brief L matrix
+        int L[MAX_N_CARS][MAX_N_CARS];
+        /// @brief K matrix
+        double K[MAX_N_CARS][MAX_N_CARS];
+        /// @brief vector of damping ratios b
+        double b[MAX_N_CARS];
+        /// @brief vector of time headways h
+        double h[MAX_N_CARS];
+
         /// @brief data about vehicles in the platoon
         struct Plexe::VEHICLE_DATA vehicles[MAX_N_CARS];
+        /// @brief tells whether data about a certain vehicle has been initialized
+        bool initialized[MAX_N_CARS];
+        /// @brief count of initialized vehicles
+        int nInitialized;
         /// @brief my position within the platoon (0 = first car)
         int position;
         /// @brief number of cars in the platoon
@@ -631,6 +673,26 @@ private:
      * @return the variation of desired acceleration
      */
     SUMOReal _ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred) const;
+
+    /** @brief controller based on consensus strategy
+     *
+     * @param[in] egoSpeed vehicle current speed
+     * @param[in] egoPosition vehicle current position
+     * @param[in] time current time
+     * @return the acceleration to be given to the actuator
+     */
+    SUMOReal _consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPosition, SUMOReal time) const;
+
+    /** @brief computes the desired distance between vehicle i and vehicle j
+     *
+     * @param[in] vehicles data about all vehicles
+     * @param[in] h vector of times headway
+     * @param[in] i index of own vehicle
+     * @param[in] j index of vehicle to compute distance from
+     * @return the desired distance between vehicle i and j
+     *
+     */
+    SUMOReal d_i_j(const struct Plexe::VEHICLE_DATA *vehicles, const double h[MAX_N_CARS], int i, int j) const;
 
     /** @brief computes the actual acceleration the actuator is able to apply to the car, given engine time constant and previous
      * acceleration
