@@ -610,11 +610,15 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
     case CC_SET_VEHICLE_POSITION: {
         int *myPosition = (int *)content;
         vars->position = *myPosition;
+        //we changed our position, reset the controller
+        resetConsensus(veh);
         break;
     }
     case CC_SET_PLATOON_SIZE: {
         int *nCars = (int*)content;
         vars->nCars = *nCars;
+        //we changed the number of cars, reset the controller
+        resetConsensus(veh);
         break;
     }
     case CC_SET_CACC_XI: {
@@ -713,6 +717,14 @@ void MSCFModel_CC::recomputeParameters(const MSVehicle *veh) const {
     vars->caccAlpha5 = -vars->caccOmegaN * vars->caccOmegaN;
     vars->engineAlpha = TS / (vars->engineTau + TS);
     vars->engineOneMinusAlpha = 1 - vars->engineAlpha;
+}
+
+void MSCFModel_CC::resetConsensus(const MSVehicle *veh) const {
+    VehicleVariables* vars = (VehicleVariables*) veh->getCarFollowVariables();
+    for (int i = 0; i < MAX_N_CARS; i++) {
+        vars->initialized[i] = false;
+        vars->nInitialized = 0;
+    }
 }
 
 void MSCFModel_CC::switchOnACC(const MSVehicle *veh, double ccDesiredSpeed)  const {

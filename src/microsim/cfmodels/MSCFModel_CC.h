@@ -473,6 +473,13 @@ private:
      */
     void recomputeParameters(const MSVehicle *veh) const;
 
+    /**
+     * @brief Resets the consensus controller. In particular, sets the
+     * "initialized" vector all to false. This might be useful when changing
+     * topology.
+     */
+    void resetConsensus(const MSVehicle *veh) const;
+
 public:
 
     class VehicleVariables : public MSCFModel::VehicleVariables {
