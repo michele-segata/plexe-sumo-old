@@ -426,7 +426,7 @@ SUMOReal
 MSCFModel_CC::_acc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const {
 
     //Eq. 6.18 of the Rajamani book
-    return std::min(myAccel, std::max(-myDecel, -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed))));
+    return -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed));
 
 }
 
@@ -439,8 +439,8 @@ MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed,
     //compute epsilon_dot, i.e., the desired speed error
     double epsilon_dot = egoSpeed - predSpeed;
     //Eq. 7.39 of the Rajamani book
-    return std::min(myAccel, std::max(-myDecel, vars->caccAlpha1 * predAcceleration + vars->caccAlpha2 * leaderAcceleration +
-                              vars->caccAlpha3 * epsilon_dot + vars->caccAlpha4 * (egoSpeed - leaderSpeed) + vars->caccAlpha5 * epsilon));
+    return vars->caccAlpha1 * predAcceleration + vars->caccAlpha2 * leaderAcceleration +
+           vars->caccAlpha3 * epsilon_dot + vars->caccAlpha4 * (egoSpeed - leaderSpeed) + vars->caccAlpha5 * epsilon;
 
 }
 
@@ -533,7 +533,7 @@ MSCFModel_CC::_consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPo
     distanceError = distanceError / (d_i);
 
     //original paper formula
-    u_i = fmin(myAccel,fmax(-myDecel, (speedError + compensation + distanceError)/1000));
+    u_i = (speedError + compensation + distanceError)/1000;
 
     return u_i;
 }
@@ -671,6 +671,8 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
             break;
         }
         }
+        vars->engine->setMaximumAcceleration(myAccel);
+        vars->engine->setMaximumDeceleration(myDecel);
         break;
     }
     case CC_SET_VEHICLE_MODEL: {

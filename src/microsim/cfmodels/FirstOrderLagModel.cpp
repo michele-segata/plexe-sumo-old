@@ -32,7 +32,13 @@ void FirstOrderLagModel::computeParameters() {
 }
 
 double FirstOrderLagModel::getRealAcceleration(double speed_mps, double accel_mps2, double reqAccel_mps2, int timeStep) {
-    return alpha * reqAccel_mps2 + oneMinusAlpha * accel_mps2;
+    return std::min(
+        maxAcceleration_mpsps,
+        std::max(
+            -maxDeceleration_mpsps,
+            alpha * reqAccel_mps2 + oneMinusAlpha * accel_mps2
+        )
+    );
 }
 
 void FirstOrderLagModel::loadParameters(const ParMap &parameters) {

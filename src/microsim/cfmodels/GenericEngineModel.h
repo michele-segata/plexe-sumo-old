@@ -37,6 +37,8 @@ protected:
 
     //class name, used to log information
     std::string className;
+    //minimum and maximum acceleration of the model, if any
+    double maxAcceleration_mpsps, maxDeceleration_mpsps;
 
     /**
      * Prints a parameter error
@@ -52,7 +54,7 @@ protected:
 
 public:
 
-    GenericEngineModel() {};
+    GenericEngineModel() : maxAcceleration_mpsps(1.5), maxDeceleration_mpsps(7) {};
     virtual ~GenericEngineModel() {};
 
     /**
@@ -87,6 +89,33 @@ public:
     virtual void setParameter(const std::string parameter, const std::string &value) = 0;
     virtual void setParameter(const std::string parameter, double value) = 0;
     virtual void setParameter(const std::string parameter, int value) = 0;
+
+    /**
+     * Sets maximum acceleration value
+     *
+     * @param[in] maximum acceleration in meters per second squared
+     */
+    void setMaximumAcceleration(double maxAcceleration_mpsps);
+    /**
+     * Sets maximum deceleration value
+     *
+     * @param[in] maximum deceleration (positive value) in meters per second
+     * squared
+     */
+    void setMaximumDeceleration(double maxAcceleration_mpsps);
+    /**
+     * Returns the maximum acceleration value
+     *
+     * @return maximum acceleration in meters per second squared
+     */
+    double setMaximumAcceleration();
+    /**
+     * Returns the maximum deceleration value
+     *
+     * @return maximum deceleration (positive value) in meters per second
+     * squared
+     */
+    double setMaximumDeceleration();
 
 };
 
