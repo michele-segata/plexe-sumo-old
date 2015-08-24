@@ -461,26 +461,33 @@ MSCFModel_CC::_ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed
 SUMOReal
 MSCFModel_CC::d_i_j(const struct Plexe::VEHICLE_DATA *vehicles, const double h[MAX_N_CARS], int i, int j) const {
 
-    int k;
+    int k, min_i, max_i;
     SUMOReal d = 0;
-    //compute distance to front vehicles
+    //compute indexes of the summation
     if (j < i) {
-        for (k = j; k <= i - 1; k++)
-            d += h[k] * vehicles[0].speed + vehicles[k].length + 15;
+        min_i = j;
+        max_i = i - 1;
     }
-    //compute distance to vehicles behind
-    if (j > i) {
-        for (k = i; k <= j - 1; k++)
-            //TODO: initialize my vehicle length
-            d += h[k] * vehicles[0].speed + vehicles[k].length;
+    else {
+        min_i = i;
+        max_i = j - 1;
     }
+    //compute distance
+    for (k = min_i; k <= max_i; k++)
+        d += h[k] * vehicles[0].speed + vehicles[k].length + 15;
 
-    return d;
+    if (j < i)
+        return d;
+    else
+        return -d;
 
 }
 
 SUMOReal
 MSCFModel_CC::_consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPosition, SUMOReal time) const {
+    //TODO: this controller, by using real GPS coordinates, does only work
+    //when vehicles are traveling west-to-east on a straight line, basically
+    //on the X axis. This needs to be fixed to consider direction as well
     VehicleVariables* vars = (VehicleVariables*)veh->getCarFollowVariables();
     int index = vars->position;
     int nCars = vars->nCars;
@@ -490,16 +497,14 @@ MSCFModel_CC::_consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPo
     int j;
     //control input
     double u_i = 0;
-    //compensation term
-    double compensation = 0;
-    //distance error term
-    double distanceError = 0;
+    //actual distance term
+    double actualDistance = 0;
+    //desired distance term
+    double desiredDistance = 0;
     //speed error term
     double speedError = 0;
     //degree of agent i
     double d_i = 0;
-    //multiplicative coefficient
-    double multCoefficient = 0;
 
     //compensate my position: compute prediction of what will be my position at time of actuation
     egoPosition.set(egoPosition.x() + egoSpeed * STEPS2TIME(DELTA_T), egoPosition.y());
@@ -516,24 +521,22 @@ MSCFModel_CC::_consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPo
     //compute speed error.
     speedError = -vars->b[index] * (egoSpeed - vehicles[0].speed);
 
-    //compute compensation
+    //compute desired distance term
     for (j = 0; j < nCars; j++) {
         d_i += vars->L[index][j];
-        multCoefficient += vars->K[index][j] * vars->L[index][j] * (time - vehicles[j].time) * vehicles[0].speed;
+        desiredDistance -= vars->K[index][j] * vars->L[index][j] * d_i_j(vehicles, vars->h, index, j);
     }
+    desiredDistance = desiredDistance / d_i;
 
-
-    compensation = (1 / d_i) * multCoefficient;
-    //compute distance error
-    for (j = 0; j < nCars; j++) {
+    //compute actual distance term
+    for (j = 0; j < nCars; j++)
         //distance error for consensus with GPS equipped
-        distanceError += vars->K[index][j] * vars->L[index][j] * (std::abs(egoPosition.x() - (vehicles[j].positionX)) - d_i_j(vehicles, vars->h, index, j));
-    }
+        actualDistance -= vars->K[index][j] * vars->L[index][j] * (egoPosition.x() - vehicles[j].positionX - (time - vehicles[j].time) * vehicles[0].speed);
 
-    distanceError = distanceError / (d_i);
+    actualDistance = actualDistance / (d_i);
 
     //original paper formula
-    u_i = (speedError + compensation + distanceError)/1000;
+    u_i = (speedError + desiredDistance + actualDistance)/1000;
 
     return u_i;
 }
