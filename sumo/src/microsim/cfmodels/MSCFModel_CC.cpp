@@ -638,6 +638,7 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
         vars->engineTau = *(double*)content;
         vars->engine->setParameter(FOLM_PAR_TAU, vars->engineTau);
         recomputeParameters(veh);
+        vars->engine->setParameter(FOLM_PAR_TAU, vars->engineTau);
         break;
     }
     case CC_SET_PLOEG_H: {
