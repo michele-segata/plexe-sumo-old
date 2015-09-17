@@ -158,23 +158,13 @@ double RealisticEngineModel::thrust_NToAcceleration_mps2(double thrust_N) {
 
 uint8_t RealisticEngineModel::performGearShifting(double speed_mps, double acceleration_mps2) {
     uint8_t newGear = 0;
-    if (acceleration_mps2 >= 0) {
-        for (newGear = 0; newGear < ep.nGears - 1; newGear++) {
-            double rpm = speed_mpsToRpm(speed_mps, ep.gearRatios[newGear]);
-            if (rpm >= ep.shiftingRule.rpm + ep.shiftingRule.deltaRpm)
-                continue;
-            else
-                break;
-        }
-    }
-    else {
-        for (newGear = ep.nGears - 1; newGear > 0; newGear--) {
-            double rpm = speed_mpsToRpm(speed_mps, ep.gearRatios[newGear]);
-            if (rpm <= ep.shiftingRule.rpm - ep.shiftingRule.deltaRpm)
-                continue;
-            else
-                break;
-        }
+    double delta = acceleration_mps2 >= 0 ? ep.shiftingRule.deltaRpm : -ep.shiftingRule.deltaRpm;
+    for (newGear = 0; newGear < ep.nGears - 1; newGear++) {
+        double rpm = speed_mpsToRpm(speed_mps, ep.gearRatios[newGear]);
+        if (rpm >= ep.shiftingRule.rpm + delta)
+            continue;
+        else
+            break;
     }
     currentGear = newGear;
     return currentGear;
@@ -203,7 +193,7 @@ double RealisticEngineModel::getRealAcceleration(double speed_mps, double accel_
 
     double realAccel_mps2;
     //perform gear shifting, if needed
-    performGearShifting(speed_mps, reqAccel_mps2);
+    performGearShifting(speed_mps, accel_mps2);
     //since we consider no clutch (clutch always engaged), 0 speed would mean 0 rpm, and thus
     //0 available power. thus, the car could never start from a complete stop. so we assume
     //a minimum speed of 1 m/s to compute engine power
