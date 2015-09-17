@@ -109,7 +109,7 @@ void EngineParameters::computeCoefficients() {
     __airFrictionCoefficient = 0.5 * cAir * a_m2 * rho_kgpm3;
     __cr1 = mass_kg * massFactor * GRAVITY_MPS2 * cr1;
     __cr2 = mass_kg * massFactor * GRAVITY_MPS2 * cr2;
-    __gravity = mass_kg * massFactor * GRAVITY_MPS2 * sin(slope*180/M_PI);
+    __gravity = mass_kg * massFactor * GRAVITY_MPS2 * sin(slope/180*M_PI);
     __maxNoSlipAcceleration = tiresFrictionCoefficient * GRAVITY_MPS2 * cos(slope/180*M_PI);
     __rpmToSpeedCoefficient = wheelDiameter_m * M_PI / (differentialRatio * 60);
     __speedToRpmCoefficient = differentialRatio * 60 / (wheelDiameter_m * M_PI);
