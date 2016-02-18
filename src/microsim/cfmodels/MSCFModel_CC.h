@@ -495,7 +495,8 @@ public:
             leaderDataReadTime(0), frontDataReadTime(0), position(-1), nCars(8),
             caccXi(-1), caccOmegaN(-1), caccC1(-1), engineTau(-1), caccAlpha1(-1), caccAlpha2(-1),
             caccAlpha3(-1), caccAlpha4(-1), caccAlpha5(-1), engineAlpha(-1), engineOneMinusAlpha(-1),
-            ploegH(0.5), ploegKp(0.2), ploegKd(0.7), nInitialized(0), engine(0) {
+            ploegH(0.5), ploegKp(0.2), ploegKd(0.7), nInitialized(0), engine(0),
+            frontInitialized(false), leaderInitialized(false), caccInitialized(false) {
             fakeData.frontAcceleration = 0;
             fakeData.frontDistance = 0;
             fakeData.frontSpeed = 0;
@@ -542,6 +543,8 @@ public:
         Position frontPosition;
         /// @brief when front vehicle data has been readed from GPS
         SUMOReal frontDataReadTime;
+        /// @did we receive at least one packet?
+        bool frontInitialized;
         /// @brief last timestep at which front vehicle data (distance) has been updated
         SUMOTime radarLastUpdate;
         /// @brief current front vehicle distance as provided by the radar
@@ -564,6 +567,9 @@ public:
         Position leaderPosition;
         /// @brief when leader data has been readed from GPS
         SUMOReal leaderDataReadTime;
+        /// @did we receive at least one packet?
+        bool leaderInitialized;
+        bool caccInitialized;
 
         //time at which followSpeed has been invoked. In this way
         //we can tell moveHelper whether controllerFollowSpeed must

@@ -305,15 +305,21 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                     leaderSpeed = 0;
                 }
 
-                //TODO: again modify probably range/range-rate controller is needed
-                ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
-                caccAcceleration = _cacc(veh, egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration, vars->caccSpacing);
-                //if CACC is enabled and we are closer than 20 meters, let it decide
-                if (gap2pred < 20) {
-                    controllerAcceleration = caccAcceleration;
+                if (vars->caccInitialized) {
+                    //TODO: again modify probably range/range-rate controller is needed
+                    ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
+                    caccAcceleration = _cacc(veh, egoSpeed, predSpeed, predAcceleration, gap2pred, leaderSpeed, leaderAcceleration, vars->caccSpacing);
+                    //if CACC is enabled and we are closer than 20 meters, let it decide
+                    if (gap2pred < 20) {
+                        controllerAcceleration = caccAcceleration;
+                    }
+                    else {
+                        controllerAcceleration = std::min(ccAcceleration, caccAcceleration);
+                    }
                 }
                 else {
-                    controllerAcceleration = std::min(ccAcceleration, caccAcceleration);
+                    //do not let CACC take decisions until at least one packet has been received
+                    controllerAcceleration = 0;
                 }
 
                 break;
@@ -575,6 +581,9 @@ MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMORea
     vars->leaderSpeed = speed;
     vars->leaderPosition = position;
     vars->leaderDataReadTime = time;
+    vars->leaderInitialized = true;
+    if (vars->frontInitialized)
+        vars->caccInitialized = true;
 }
 
 void
@@ -585,6 +594,9 @@ MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed
     vars->frontDataLastUpdate = MSNet::getInstance()->getCurrentTimeStep();
     vars->frontPosition = position;
     vars->frontDataReadTime = time;
+    vars->frontInitialized = true;
+    if (vars->leaderInitialized)
+        vars->caccInitialized = true;
 }
 
 void
