@@ -48,7 +48,7 @@
 #include "MSBaseVehicle.h"
 #include "MSLink.h"
 #include "MSLane.h"
-
+#include "cfmodels/CC_VehicleVariables.h"
 
 // ===========================================================================
 // class declarations
@@ -297,6 +297,33 @@ public:
     }
     SUMOReal getSpeedKmph() const {
         return myState.mySpeed * 3.6;
+    }
+    SUMOReal getControllerAcceleration() const {
+        if (myType->getCarFollowModel().getModelID() == SUMO_TAG_CF_CC) {
+            CC_VehicleVariables *vars = (CC_VehicleVariables *)myCFVariables;
+            return vars->controllerAcceleration;
+        }
+        else {
+            return 0;
+        }
+    }
+    SUMOReal getRealAcceleration() const {
+        if (myType->getCarFollowModel().getModelID() == SUMO_TAG_CF_CC) {
+            CC_VehicleVariables *vars = (CC_VehicleVariables *)myCFVariables;
+            return vars->egoAcceleration;
+        }
+        else {
+            return myAcceleration;
+        }
+    }
+    SUMOReal getRadarDistance() const {
+        if (myType->getCarFollowModel().getModelID() == SUMO_TAG_CF_CC) {
+            CC_VehicleVariables *vars = (CC_VehicleVariables *)myCFVariables;
+            return vars->radarFrontDistance;
+        }
+        else {
+            return -1;
+        }
     }
 
 

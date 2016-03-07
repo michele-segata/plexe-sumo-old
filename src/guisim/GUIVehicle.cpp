@@ -315,7 +315,7 @@ GUIParameterTableWindow*
 GUIVehicle::getParameterWindow(GUIMainWindow& app,
                                GUISUMOAbstractView&) {
     GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 35);
+        new GUIParameterTableWindow(app, *this, 39);
     // add items
     ret->mkItem("lane [id]", false, myLane->getID());
     ret->mkItem("position [m]", true,
@@ -324,6 +324,12 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getSpeed));
     ret->mkItem("speed [km/h]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getSpeedKmph));
+    ret->mkItem("u [m/s/s]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getControllerAcceleration));
+    ret->mkItem("acceleration [m/s/s]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getRealAcceleration));
+    ret->mkItem("radar distance [m]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getRadarDistance));
     ret->mkItem("angle [degree]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getAngle));
     if (getChosenSpeedFactor() != 1) {
