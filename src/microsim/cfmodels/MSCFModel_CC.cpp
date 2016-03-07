@@ -361,12 +361,16 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
                 ccAcceleration = _cc(veh, egoSpeed, vars->ccDesiredSpeed);
                 //ploeg's controller computes \dot{u}_i, so we need to sum such value to the previously computed u_i
                 caccAcceleration = vars->controllerAcceleration + _ploeg(veh, egoSpeed, predSpeed, predAcceleration, gap2pred);
-                //if CACC is enabled and we are closer than 20 meters, let it decide
-                if (gap2pred < 20) {
-                    controllerAcceleration = caccAcceleration;
+                //check if we received at least one packet
+                if (vars->frontInitialized) {
+                    //if CACC is enabled and we are closer than 20 meters, let it decide
+                    if (gap2pred < 20)
+                        controllerAcceleration = caccAcceleration;
+                    else
+                        controllerAcceleration = std::min(ccAcceleration, caccAcceleration);
                 }
                 else {
-                    controllerAcceleration = std::min(ccAcceleration, caccAcceleration);
+                    controllerAcceleration = 0;
                 }
 
                 break;
