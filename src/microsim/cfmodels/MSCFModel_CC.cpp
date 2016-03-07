@@ -415,7 +415,7 @@ SUMOReal
 MSCFModel_CC::_acc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const {
 
     //Eq. 6.18 of the Rajamani book
-    return -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed));
+    return -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed + 2));
 
 }
 
