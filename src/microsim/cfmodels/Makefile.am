@@ -16,4 +16,5 @@ GenericEngineModel.cpp GenericEngineModel.h \
 FirstOrderLagModel.cpp FirstOrderLagModel.h \
 RealisticEngineModel.cpp RealisticEngineModel.h \
 EngineParameters.cpp EngineParameters.h \
-VehicleEngineHandler.cpp VehicleEngineHandler.h
+VehicleEngineHandler.cpp VehicleEngineHandler.h \
+CC_VehicleVariables.cpp CC_VehicleVariables.h

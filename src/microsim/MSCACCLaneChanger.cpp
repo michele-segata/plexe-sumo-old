@@ -32,6 +32,7 @@
 #include "MSVehicleType.h"
 #include "MSVehicleTransfer.h"
 #include "MSGlobals.h"
+#include "cfmodels/CC_VehicleVariables.h"
 #include <cassert>
 #include <iterator>
 #include <cstdlib>
@@ -117,7 +118,7 @@ bool MSCACCLaneChanger::change() {
 
     enum Plexe::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
 
-    MSCFModel_CC::VehicleVariables *vars = (MSCFModel_CC::VehicleVariables *)vehicle->getCarFollowVariables();
+    CC_VehicleVariables *vars = (CC_VehicleVariables *)vehicle->getCarFollowVariables();
 
     //first of all: check for the requested action: if it has been fulfilled then change it
     switch (laneChangeAction) {
