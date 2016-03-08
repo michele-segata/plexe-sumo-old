@@ -194,6 +194,8 @@ public:
         vars->engine = new FirstOrderLagModel();
         vars->engine->setParameter(FOLM_PAR_TAU, vars->engineTau);
         vars->engine->setParameter(FOLM_PAR_DT, TS);
+        vars->engine->setMaximumAcceleration(myAccel);
+        vars->engine->setMaximumDeceleration(myDecel);
         return (VehicleVariables *)vars;
     }
 
