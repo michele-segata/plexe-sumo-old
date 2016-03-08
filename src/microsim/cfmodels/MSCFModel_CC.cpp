@@ -636,6 +636,7 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
     }
     case CC_SET_ENGINE_TAU: {
         vars->engineTau = *(double*)content;
+        vars->engine->setParameter(FOLM_PAR_TAU, vars->engineTau);
         recomputeParameters(veh);
         break;
     }
@@ -666,6 +667,7 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
         default: {
             vars->engine = new FirstOrderLagModel();
             vars->engine->setParameter(FOLM_PAR_DT, TS);
+            vars->engine->setParameter(FOLM_PAR_TAU, vars->engineTau);
             break;
         }
         }
