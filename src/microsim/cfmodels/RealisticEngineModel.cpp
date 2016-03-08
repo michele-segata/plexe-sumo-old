@@ -297,14 +297,20 @@ void RealisticEngineModel::loadParameters() {
     VehicleEngineHandler *engineHandler = new VehicleEngineHandler(vehicleType);
     reader->setContentHandler(engineHandler);
     reader->setErrorHandler(engineHandler);
-    //parse the document. if any error is present in the xml file, the simulation will be closed
-    reader->parse(xmlFile.c_str());
-    //copy loaded parameters into our engine parameters
-    ep = engineHandler->getEngineParameters();
-    ep.dt = dt_s;
-    ep.computeCoefficients();
-    //compute "minimum speed" to be used when computing maximum acceleration at speeds close to 0
-    minSpeed_mps = rpmToSpeed_mps(ep.minRpm, ep.wheelDiameter_m, ep.differentialRatio, ep.gearRatios[0]);
+    try {
+        //parse the document. if any error is present in the xml file, the simulation will be closed
+        reader->parse(xmlFile.c_str());
+        //copy loaded parameters into our engine parameters
+        ep = engineHandler->getEngineParameters();
+        ep.dt = dt_s;
+        ep.computeCoefficients();
+        //compute "minimum speed" to be used when computing maximum acceleration at speeds close to 0
+        minSpeed_mps = rpmToSpeed_mps(ep.minRpm, ep.wheelDiameter_m, ep.differentialRatio, ep.gearRatios[0]);
+    }
+    catch (XERCES_CPP_NAMESPACE::SAXException &e) {
+        std::cerr << "Error while parsing " << xmlFile << ": Does the file exist?" << std::endl;
+        exit(1);
+    }
 
     //delete handler and reader
     delete engineHandler;
