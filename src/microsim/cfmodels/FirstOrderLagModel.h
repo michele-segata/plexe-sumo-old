@@ -6,7 +6,7 @@
 ///
 // An engine model using a first order lag
 /****************************************************************************/
-// Copyright (C) 2015 Michele Segata (segata@ccs-labs.org)
+// Copyright (C) 2015-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
 //   This program is free software; you can redistribute it and/or modify

@@ -6,7 +6,7 @@
 ///
 // A detailed engine model
 /****************************************************************************/
-// Copyright (C) 2015 Michele Segata (segata@ccs-labs.org)
+// Copyright (C) 2015-2016 Michele Segata (segata@ccs-labs.org)
 // Copyright (C) 2015 Antonio Saverio Valente (antoniosaverio.valente@unina.it)
 /****************************************************************************/
 //
