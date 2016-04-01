@@ -9,7 +9,7 @@
 // Some methods for traversing lists of edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -162,9 +162,7 @@ public:
          * @return Which edge is more opposite to the related one
          */
         int operator()(NBEdge* e1, NBEdge* e2) const {
-            SUMOReal d1 = getDiff(e1);
-            SUMOReal d2 = getDiff(e2);
-            return d1 > d2;
+            return getDiff(e1) > getDiff(e2);
         }
 
     protected:
@@ -173,8 +171,7 @@ public:
          * @return The angle difference
          */
         SUMOReal getDiff(const NBEdge* const e) const {
-            SUMOReal d = getEdgeAngleAt(e, myNode);
-            return GeomHelper::getMinAngleDiff(d, myAngle);
+            return fabs(GeomHelper::angleDiff(getEdgeAngleAt(e, myNode), myAngle));
         }
 
         /** @brief Returns the given edge's angle at the given node
@@ -185,9 +182,9 @@ public:
          */
         SUMOReal getEdgeAngleAt(const NBEdge* const e, const NBNode* const n) const {
             if (e->getFromNode() == n) {
-                return e->getGeometry().getBegLine().atan2DegreeAngle();
+                return e->getGeometry().angleAt2D(0);
             } else {
-                return e->getGeometry().getEndLine().reverse().atan2DegreeAngle();
+                return e->getGeometry()[-1].angleTo2D(e->getGeometry()[-2]);
             }
         }
 
@@ -353,17 +350,16 @@ public:
     class opposite_finder {
     public:
         /// constructor
-        opposite_finder(NBEdge* edge, const NBNode* n)
-            : myReferenceEdge(edge), myAtNode(n) { }
+        opposite_finder(NBEdge* edge)
+            : myReferenceEdge(edge) { }
 
         bool operator()(NBEdge* e) const {
-            return e->isTurningDirectionAt(myAtNode, myReferenceEdge) ||
-                   myReferenceEdge->isTurningDirectionAt(myAtNode, e);
+            return e->isTurningDirectionAt(myReferenceEdge) ||
+                   myReferenceEdge->isTurningDirectionAt(e);
         }
 
     private:
         NBEdge* myReferenceEdge;
-        const NBNode* myAtNode;
 
     };
 
@@ -374,7 +370,7 @@ public:
     class edge_by_angle_to_nodeShapeCentroid_sorter {
     public:
         /// constructor
-        explicit edge_by_angle_to_nodeShapeCentroid_sorter(NBNode* n) : myNode(n) {}
+        explicit edge_by_angle_to_nodeShapeCentroid_sorter(const NBNode* n) : myNode(n) {}
 
     public:
         /// comparing operation
@@ -382,7 +378,7 @@ public:
 
     private:
         /// the edge to compute the relative angle of
-        NBNode* myNode;
+        const NBNode* myNode;
     };
 
 };

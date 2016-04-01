@@ -9,7 +9,7 @@
 // The base class for traffic light logic definitions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -219,12 +219,14 @@ public:
      * @param[in] possProhibitorFrom The maybe prohibiting connection's begin
      * @param[in] possProhibitorTo The maybe prohibiting connection's end
      * @param[in] regardNonSignalisedLowerPriority Whether the right of way rules without traffic lights shall be regarded
+     * @param[in] sameNodeOnly Whether the check shall only be performed if both edges are incoming to the same node
      * @return Whether the second flow prohibits the first one
      * @see forbids
      */
     bool forbids(const NBEdge* const possProhibitorFrom, const NBEdge* const possProhibitorTo,
                  const NBEdge* const possProhibitedFrom, const NBEdge* const possProhibitedTo,
-                 bool regardNonSignalisedLowerPriority) const;
+                 bool regardNonSignalisedLowerPriority,
+                 bool sameNodeOnly = false) const;
 
 
     /** @brief Returns the information whether the given flows cross
@@ -282,14 +284,6 @@ public:
         UNUSED_PARAMETER(offset);
     }
 
-    /** @brief returns the information whether the given link is a left-mover
-     * @param[in] from The connection's start edge
-     * @param[in] to The connection's end edge
-     * @return Whether the connection is a left-mover
-     */
-    bool isLeftMover(const NBEdge* const from, const NBEdge* const to) const;
-
-
     /** @brief Returns the list of incoming edges (must be build first)
      * @return The edges which are incoming into the tls
      */
@@ -331,6 +325,19 @@ public:
         return myType;
     }
 
+    /* @brief computes whether the given stream may have green minor while the
+     * other stream has green major in the same phase
+     */
+    bool needsCont(const NBEdge* fromE, const NBEdge* toE, const NBEdge* otherFromE, const NBEdge* otherToE) const;
+
+    /// @brief whether the given index must yield to the foeIndex while turing right on a red light
+    bool rightOnRedConflict(int index, int foeIndex) const;
+
+    /* initialize myNeedsContRelation and set myNeedsContRelationReady to true
+     * This information is a byproduct of NBOwnTLDef::myCompute. All other
+     * subclasses instantiate a private instance of NBOwnTLDef to answer this query */
+    virtual void initNeedsContRelation() const;
+
 protected:
     /** @brief Computes the traffic light logic finally in dependence to the type
      * @param[in] ec The edge container
@@ -349,7 +356,7 @@ protected:
 
     /** @brief Build the list of participating edges
      */
-    void collectEdges();
+    virtual void collectEdges();
 
 
     /** @brief Computes the time vehicles may need to brake
@@ -365,7 +372,6 @@ protected:
 
     /// @brief helper method for use in NBOwnTLDef and NBLoadedSUMOTLDef
     void collectAllLinks();
-
 
 protected:
     /// @brief The container with participating nodes
@@ -392,6 +398,44 @@ protected:
     /// @brief The algorithm type for the traffic light
     TrafficLightType myType;
 
+    /// @brief data structure for caching needsCont information
+    struct StreamPair {
+        StreamPair(const NBEdge* _from1, const NBEdge* _to1, const NBEdge* _from2, const NBEdge* _to2):
+            from1(_from1),
+            to1(_to1),
+            from2(_from2),
+            to2(_to2) {}
+
+        bool operator==(const StreamPair& o) const {
+            return (from1 == o.from1 && to1 == o.to1
+                    && from2 == o.from2 && to2 == o.to2);
+        }
+
+        bool operator<(const StreamPair& o) const {
+            if (from1 != o.from1) {
+                return from1 < o.from1;
+            }
+            if (to1 != o.to1) {
+                return to1 < o.to1;
+            }
+            if (from2 != o.from2) {
+                return from2 < o.from2;
+            }
+            return to2 < o.to2;
+        }
+
+        const NBEdge* from1;
+        const NBEdge* to1;
+        const NBEdge* from2;
+        const NBEdge* to2;
+    };
+    typedef std::set<StreamPair> NeedsContRelation;
+    mutable NeedsContRelation myNeedsContRelation;
+    mutable bool myNeedsContRelationReady;
+
+    typedef std::set<std::pair<int, int> > RightOnRedConflicts;
+    mutable RightOnRedConflicts myRightOnRedConflicts;
+    mutable bool myRightOnRedConflictsReady;
 
 };
 

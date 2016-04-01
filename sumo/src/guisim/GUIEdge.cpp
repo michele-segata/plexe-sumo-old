@@ -10,7 +10,7 @@
 // A road/street connecting two junctions (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -52,14 +52,17 @@
 #include <microsim/MSGlobals.h>
 #include <microsim/logging/CastingFunctionBinding.h>
 #include <microsim/logging/FunctionBinding.h>
+#include "GUITriggeredRerouter.h"
 #include "GUIEdge.h"
 #include "GUIVehicle.h"
 #include "GUINet.h"
 #include "GUILane.h"
 #include "GUIPerson.h"
+#include "GUIContainer.h"
 
 #ifdef HAVE_INTERNAL
 #include <mesogui/GUIMEVehicleControl.h>
+#include <mesogui/GUIMEVehicle.h>
 #include <mesosim/MESegment.h>
 #include <mesosim/MELoop.h>
 #include <mesosim/MEVehicle.h>
@@ -99,14 +102,28 @@ std::vector<GUIGlID>
 GUIEdge::getIDs(bool includeInternal) {
     std::vector<GUIGlID> ret;
     ret.reserve(MSEdge::myDict.size());
-    for (MSEdge::DictType::iterator i = MSEdge::myDict.begin(); i != MSEdge::myDict.end(); ++i) {
-        GUIEdge* edge = dynamic_cast<GUIEdge*>(i->second);
+    for (MSEdge::DictType::const_iterator i = MSEdge::myDict.begin(); i != MSEdge::myDict.end(); ++i) {
+        const GUIEdge* edge = dynamic_cast<const GUIEdge*>(i->second);
         assert(edge);
         if (edge->getPurpose() != EDGEFUNCTION_INTERNAL || includeInternal) {
             ret.push_back(edge->getGlID());
         }
     }
     return ret;
+}
+
+
+SUMOReal
+GUIEdge::getTotalLength(bool includeInternal, bool eachLane) {
+    SUMOReal result = 0;
+    for (MSEdge::DictType::const_iterator i = MSEdge::myDict.begin(); i != MSEdge::myDict.end(); ++i) {
+        const MSEdge* edge = i->second;
+        if (edge->getPurpose() != EDGEFUNCTION_INTERNAL || includeInternal) {
+            // @note needs to be change once lanes may have different length
+            result += edge->getLength() * (eachLane ? edge->getLanes().size() : 1);
+        }
+    }
+    return result;
 }
 
 
@@ -253,10 +270,19 @@ GUIEdge::drawGL(const GUIVisualizationSettings& s) const {
     }
     if (s.scale * s.personSize.getExaggeration(s) > s.personSize.minSize) {
         myLock.lock();
-        for (std::set<MSPerson*>::const_iterator i = myPersons.begin(); i != myPersons.end(); ++i) {
+        for (std::set<MSTransportable*>::const_iterator i = myPersons.begin(); i != myPersons.end(); ++i) {
             GUIPerson* person = dynamic_cast<GUIPerson*>(*i);
             assert(person != 0);
             person->drawGL(s);
+        }
+        myLock.unlock();
+    }
+    if (s.scale * s.containerSize.getExaggeration(s) > s.containerSize.minSize) {
+        myLock.lock();
+        for (std::set<MSTransportable*>::const_iterator i = myContainers.begin(); i != myContainers.end(); ++i) {
+            GUIContainer* container = dynamic_cast<GUIContainer*>(*i);
+            assert(container != 0);
+            container->drawGL(s);
         }
         myLock.unlock();
     }
@@ -267,6 +293,7 @@ GUIEdge::drawGL(const GUIVisualizationSettings& s) const {
 void
 GUIEdge::drawMesoVehicles(const GUIVisualizationSettings& s) const {
     const GUIVisualizationTextSettings& nameSettings = s.vehicleName;
+    const SUMOReal exaggeration = s.vehicleSize.getExaggeration(s);
     GUIMEVehicleControl* vehicleControl = GUINet::getGUIInstance()->getGUIMEVehicleControl();
     if (vehicleControl != 0) {
         // draw the meso vehicles
@@ -275,61 +302,34 @@ GUIEdge::drawMesoVehicles(const GUIVisualizationSettings& s) const {
         MESegment::Queue queue;
         for (std::vector<MSLane*>::const_iterator msl = myLanes->begin(); msl != myLanes->end(); ++msl, ++laneIndex) {
             GUILane* l = static_cast<GUILane*>(*msl);
-            const PositionVector& shape = l->getShape();
-            const std::vector<SUMOReal>& shapeRotations = l->getShapeRotations();
-            const std::vector<SUMOReal>& shapeLengths = l->getShapeLengths();
-            const Position& laneBeg = shape[0];
-            glPushMatrix();
-            glTranslated(laneBeg.x(), laneBeg.y(), 0);
-            glRotated(shapeRotations[0], 0, 0, 1);
             // go through the vehicles
-            int shapeIndex = 0;
-            SUMOReal shapeOffset = 0; // ofset at start of current shape
             SUMOReal segmentOffset = 0; // offset at start of current segment
             for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this);
                     segment != 0; segment = segment->getNextSegment()) {
-                const SUMOReal length = segment->getLength() * segment->getLengthGeometryFactor();
+                const SUMOReal length = segment->getLength();
                 if (laneIndex < segment->numQueues()) {
                     // make a copy so we don't have to worry about synchronization
                     queue = segment->getQueue(laneIndex);
                     const SUMOReal avgCarSize = segment->getBruttoOccupancy() / segment->getCarNumber();
                     const size_t queueSize = queue.size();
+                    SUMOReal vehiclePosition = segmentOffset + length;
+                    // draw vehicles beginning with the leader at the end of the segment
+                    SUMOReal xOff = 0;
                     for (size_t i = 0; i < queueSize; ++i) {
-                        MSBaseVehicle* veh = queue[queueSize - i - 1];
-                        setVehicleColor(s, veh);
-                        SUMOReal vehiclePosition = segmentOffset + length - i * avgCarSize;
-                        SUMOReal xOff = 0.f;
+                        GUIMEVehicle* veh = static_cast<GUIMEVehicle*>(queue[queueSize - i - 1]);
+                        const SUMOReal vehLength = veh->getVehicleType().getLengthWithGap();
                         while (vehiclePosition < segmentOffset) {
                             // if there is only a single queue for a
                             // multi-lane edge shift vehicles and start
                             // drawing again from the end of the segment
                             vehiclePosition += length;
-                            xOff += 0.5f;
+                            xOff += 2;
                         }
-                        while (shapeIndex < (int)shapeRotations.size() - 1 && vehiclePosition > shapeOffset + shapeLengths[shapeIndex]) {
-                            glPopMatrix();
-                            shapeOffset += shapeLengths[shapeIndex];
-                            shapeIndex++;
-                            glPushMatrix();
-                            glTranslated(shape[shapeIndex].x(), shape[shapeIndex].y(), 0);
-                            glRotated(shapeRotations[shapeIndex], 0, 0, 1);
-                        }
-                        glPushMatrix();
-                        glTranslated(xOff, -(vehiclePosition - shapeOffset), GLO_VEHICLE);
-                        glPushMatrix();
-                        glScaled(1, avgCarSize, 1);
-                        glBegin(GL_TRIANGLES);
-                        glVertex2d(0, 0);
-                        glVertex2d(0 - 1.25, 1);
-                        glVertex2d(0 + 1.25, 1);
-                        glEnd();
-                        glPopMatrix();
-                        glPopMatrix();
-                        if (nameSettings.show) {
-                            GLHelper::drawText(veh->getID(),
-                                               Position(xOff, -(vehiclePosition - shapeOffset)),
-                                               GLO_MAX, nameSettings.size / s.scale, nameSettings.color, 0);
-                        }
+                        const Position p = l->geometryPositionAtOffset(vehiclePosition);
+                        const SUMOReal angle = l->getShape().rotationAtOffset(l->interpolateLanePosToGeometryPos(vehiclePosition));
+                        veh->setPositionAndAngle(p, angle);
+                        veh->drawGL(s);
+                        vehiclePosition -= vehLength;
                     }
                 }
                 segmentOffset += length;
@@ -471,65 +471,48 @@ GUIEdge::getSegmentAtPosition(const Position& pos) {
 }
 
 
-void
-GUIEdge::setVehicleColor(const GUIVisualizationSettings& s, MSBaseVehicle* veh) const {
-    const GUIColorer& c = s.vehicleColorer;
-    if (!GUIVehicle::setFunctionalColor(c.getActive(), veh)) {
-        GLHelper::setColor(c.getScheme().getColor(getVehicleColorValue(c.getActive(), veh)));
-    }
-}
-
-
-SUMOReal
-GUIEdge::getVehicleColorValue(size_t activeScheme, MSBaseVehicle* veh) const {
-    switch (activeScheme) {
-        case 8:
-            return veh->getSpeed();
-        case 9:
-            return STEPS2TIME(veh->getWaitingTime());
-        case 10:
-            return 0; // invalid getLastLaneChangeOffset();
-        case 11:
-            return MIN2(veh->getMaxSpeed(), getVehicleMaxSpeed(veh));
-        case 12:
-            return 0; // invalid getCO2Emissions();
-        case 13:
-            return 0; // invalid getCOEmissions();
-        case 14:
-            return 0; // invalid getPMxEmissions();
-        case 15:
-            return 0; // invalid  getNOxEmissions();
-        case 16:
-            return 0; // invalid getHCEmissions();
-        case 17:
-            return 0; // invalid getFuelConsumption();
-        case 18:
-            return 0; // invalid getHarmonoise_NoiseEmissions();
-        case 19: // !!! unused!?
-            if (veh->getNumberReroutes() == 0) {
-                return -1;
-            }
-            return veh->getNumberReroutes();
-        case 20:
-            return 0; // invalid gSelected.isSelected(GLO_VEHICLE, getGlID());
-        case 21:
-            return 0; // invalid getBestLaneOffset();
-        case 22:
-            return 0; // invalid getAcceleration();
-        case 23:
-            return 0; // invalid getTimeGap();
-    }
-    return 0;
-}
-
-
-
-
-
-
-
-
 #endif
+
+
+void
+GUIEdge::closeTraffic(const GUILane* lane) {
+    const std::vector<MSLane*>& lanes = getLanes();
+    const bool isClosed = lane->isClosed();
+    for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
+        GUILane* l = dynamic_cast<GUILane*>(*i);
+        if (l->isClosed() == isClosed) {
+            l->closeTraffic(false);
+        }
+    }
+    rebuildAllowedLanes();
+}
+
+
+void
+GUIEdge::addRerouter() {
+    MSEdgeVector edges;
+    edges.push_back(this);
+    GUITriggeredRerouter* rr = new GUITriggeredRerouter(getID() + "_dynamic_rerouter", edges, 1, "", false,
+            GUINet::getGUIInstance()->getVisualisationSpeedUp());
+
+    MSTriggeredRerouter::RerouteInterval ri;
+    ri.begin = MSNet::getInstance()->getCurrentTimeStep();
+    ri.end = SUMOTime_MAX;
+    ri.edgeProbs.add(1, &MSTriggeredRerouter::mySpecialDest_keepDestination);
+    rr->myIntervals.push_back(ri);
+
+    // trigger rerouting for vehicles already on this edge
+    const std::vector<MSLane*>& lanes = getLanes();
+    for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
+        const MSLane::VehCont& vehicles = (*i)->getVehiclesSecure();
+        for (MSLane::VehCont::const_iterator v = vehicles.begin(); v != vehicles.end(); ++v) {
+            if ((*v)->getLane() == (*i)) {
+                rr->notifyEnter(**v, MSMoveReminder::NOTIFICATION_JUNCTION);
+            } // else: this is the shadow during a continuous lane change
+        }
+        (*i)->releaseVehicles();
+    }
+}
 
 /****************************************************************************/
 

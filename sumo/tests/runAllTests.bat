@@ -1,2 +1,2 @@
-call testEnv.bat %1
-%TEXTTESTPY%
+call %~dp0\testEnv.bat %1
+start %TEXTTESTPY%

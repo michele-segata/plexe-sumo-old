@@ -9,7 +9,7 @@
 // A SUMO-compliant built logic for a traffic light
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -55,6 +55,7 @@
 // ===========================================================================
 const char NBTrafficLightLogic::allowedStatesInitializer[] = {LINKSTATE_TL_GREEN_MAJOR,
         LINKSTATE_TL_GREEN_MINOR,
+        LINKSTATE_STOP, // used for NODETYPE_TRAFFIC_LIGHT_RIGHT_ON_RED
         LINKSTATE_TL_RED,
         LINKSTATE_TL_REDYELLOW,
         LINKSTATE_TL_YELLOW_MAJOR,
@@ -63,7 +64,7 @@ const char NBTrafficLightLogic::allowedStatesInitializer[] = {LINKSTATE_TL_GREEN
         LINKSTATE_TL_OFF_NOSIGNAL
                                                              };
 
-const std::string NBTrafficLightLogic::ALLOWED_STATES(NBTrafficLightLogic::allowedStatesInitializer, 8);
+const std::string NBTrafficLightLogic::ALLOWED_STATES(NBTrafficLightLogic::allowedStatesInitializer, 9);
 
 // ===========================================================================
 // member method definitions

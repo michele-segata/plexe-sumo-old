@@ -8,7 +8,7 @@
 // Base class for objects which have an id.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -53,6 +53,11 @@ public:
     /// @brief Destructor
     virtual ~Named() { }
 
+    /// @brief get an identifier for Named-like object which may be Null
+    template<class T>
+    static std::string getIDSecure(const T* obj, const std::string& fallBack = "NULL") {
+        return obj == 0 ? fallBack : obj->getID();
+    }
 
     /** @brief Returns the id
      * @return The stored id

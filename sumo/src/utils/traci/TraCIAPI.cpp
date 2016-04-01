@@ -10,7 +10,7 @@
 // C++ TraCI client API implementation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -96,7 +96,7 @@ TraCIAPI::send_commandSimulationStep(SUMOTime time) const {
     outMsg.writeUnsignedByte(1 + 1 + 4);
     // command id
     outMsg.writeUnsignedByte(CMD_SIMSTEP2);
-    outMsg.writeInt(time);
+    outMsg.writeInt((int)time);
     // send request message
     mySocket->sendExact(outMsg);
 }
@@ -162,7 +162,7 @@ TraCIAPI::send_commandSetValue(int domID, int varID, const std::string& objID, t
 
 
 void
-TraCIAPI::send_commandSubscribeObjectVariable(int domID, const std::string& objID, int beginTime, int endTime,
+TraCIAPI::send_commandSubscribeObjectVariable(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime,
         const std::vector<int>& vars) const {
     if (mySocket == 0) {
         throw tcpip::SocketException("Socket is not initialised");
@@ -175,8 +175,8 @@ TraCIAPI::send_commandSubscribeObjectVariable(int domID, const std::string& objI
     // command id
     outMsg.writeUnsignedByte(domID);
     // time
-    outMsg.writeInt(beginTime);
-    outMsg.writeInt(endTime);
+    outMsg.writeInt((int)beginTime);
+    outMsg.writeInt((int)endTime);
     // object id
     outMsg.writeString(objID);
     // command id
@@ -190,7 +190,7 @@ TraCIAPI::send_commandSubscribeObjectVariable(int domID, const std::string& objI
 
 
 void
-TraCIAPI::send_commandSubscribeObjectContext(int domID, const std::string& objID, int beginTime, int endTime,
+TraCIAPI::send_commandSubscribeObjectContext(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime,
         int domain, SUMOReal range, const std::vector<int>& vars) const {
     if (mySocket == 0) {
         throw tcpip::SocketException("Socket is not initialised");
@@ -203,8 +203,8 @@ TraCIAPI::send_commandSubscribeObjectContext(int domID, const std::string& objID
     // command id
     outMsg.writeUnsignedByte(domID);
     // time
-    outMsg.writeInt(beginTime);
-    outMsg.writeInt(endTime);
+    outMsg.writeInt((int)beginTime);
+    outMsg.writeInt((int)endTime);
     // object id
     outMsg.writeString(objID);
     // domain and range
@@ -273,6 +273,9 @@ TraCIAPI::check_commandGetResult(tcpip::Storage& inMsg, int command, int expecte
         throw tcpip::SocketException("#Error: received response with command id: " + toString(cmdId) + "but expected: " + toString(command + 0x10));
     }
     if (expectedType >= 0) {
+        // not called from the TraCITestClient but from within the TraCIAPI
+        inMsg.readUnsignedByte(); // variableID
+        inMsg.readString(); // objectID
         int valueDataType = inMsg.readUnsignedByte();
         if (valueDataType != expectedType) {
             throw tcpip::SocketException("Expected " + toString(expectedType) + " but got " + toString(valueDataType));
@@ -428,6 +431,14 @@ TraCIAPI::getColor(int cmd, int var, const std::string& id, tcpip::Storage* add)
 }
 
 
+void
+TraCIAPI::simulationStep(SUMOTime time) {
+    send_commandSimulationStep(time);
+    tcpip::Storage inMsg;
+    std::string acknowledgement;
+    check_resultState(inMsg, CMD_SIMSTEP2, false, &acknowledgement);
+}
+
 
 // ---------------------------------------------------------------------------
 // TraCIAPI::EdgeScope-methods
@@ -445,14 +456,14 @@ TraCIAPI::EdgeScope::getIDCount() const {
 SUMOReal
 TraCIAPI::EdgeScope::getAdaptedTraveltime(const std::string& edgeID, SUMOTime time) const {
     tcpip::Storage content;
-    content.writeInt(time);
+    content.writeInt((int)time);
     return myParent.getDouble(CMD_GET_EDGE_VARIABLE, VAR_CO2EMISSION, edgeID, &content);
 }
 
 SUMOReal
 TraCIAPI::EdgeScope::getEffort(const std::string& edgeID, SUMOTime time) const {
     tcpip::Storage content;
-    content.writeInt(time);
+    content.writeInt((int)time);
     return myParent.getDouble(CMD_GET_EDGE_VARIABLE, VAR_CO2EMISSION, edgeID, &content);
 }
 
@@ -1314,11 +1325,11 @@ TraCIAPI::TrafficLightScope::setCompleteRedYellowGreenDefinition(const std::stri
     content.writeInt((int)logic.phases.size());
     for (int i = 0; i < (int) logic.phases.size(); ++i) {
         content.writeUnsignedByte(TYPE_INTEGER);
-        content.writeInt(logic.phases[i].duration);
+        content.writeInt((int)logic.phases[i].duration);
         content.writeUnsignedByte(TYPE_INTEGER);
-        content.writeInt(logic.phases[i].duration1);
+        content.writeInt((int)logic.phases[i].duration1);
         content.writeUnsignedByte(TYPE_INTEGER);
-        content.writeInt(logic.phases[i].duration2);
+        content.writeInt((int)logic.phases[i].duration2);
         content.writeUnsignedByte(TYPE_STRING);
         content.writeString(logic.phases[i].phase);
     }

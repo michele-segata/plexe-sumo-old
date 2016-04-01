@@ -9,7 +9,7 @@
 // Some methods which help to draw certain geometrical objects in openGL
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,7 +36,6 @@
 #include <utility>
 #include <utils/common/RGBColor.h>
 #include <utils/geom/PositionVector.h>
-#include <utils/geom/Line.h>
 
 
 // ===========================================================================
@@ -77,9 +76,10 @@ public:
      * @param[in] rot The direction the line shall be drawn to (in radiants)
      * @param[in] visLength The length of the line
      * @param[in] width The width of the line
+     * @param[in] offset The orthogonal offset
      */
     static void drawBoxLine(const Position& beg, SUMOReal rot,
-                            SUMOReal visLength, SUMOReal width);
+                            SUMOReal visLength, SUMOReal width, SUMOReal offset = 0);
 
 
     /** @brief Draws a thick line using the mean of both given points as begin position
@@ -105,11 +105,30 @@ public:
      * @param[in] lengths The lengths of the lines
      * @param[in] width The width of the lines
      * @param[in] cornerDetail Detail level for filling the corners between angled segments
+     * @param[in] the orthogonal offset
      * @see drawBoxLine
      */
     static void drawBoxLines(const PositionVector& geom,
                              const std::vector<SUMOReal>& rots, const std::vector<SUMOReal>& lengths,
-                             SUMOReal width, int cornerDetail = 0);
+                             SUMOReal width, int cornerDetail = 0, SUMOReal offset = 0);
+
+    /** @brief Draws thick lines with varying color
+     *
+     * Each line is drawn using drawBoxLine.
+     *
+     * @param[in] geom The list of begin positions of the lines
+     * @param[in] rots The directions the lines shall be drawn to (in radiants)
+     * @param[in] lengths The lengths of the lines
+     * @param[in] cols The colors of the lines
+     * @param[in] width The width of the lines
+     * @param[in] cornerDetail Detail level for filling the corners between angled segments
+     * @param[in] the orthogonal offset
+     * @see drawBoxLine
+     */
+    static void drawBoxLines(const PositionVector& geom,
+                             const std::vector<SUMOReal>& rots, const std::vector<SUMOReal>& lengths,
+                             const std::vector<RGBColor>& cols,
+                             SUMOReal width, int cornerDetail = 0, SUMOReal offset = 0);
 
 
     /** @brief Draws thick lines using the mean of the points given in the point lists as begin positions
@@ -175,6 +194,15 @@ public:
     static void drawLine(const PositionVector& v);
 
 
+    /** @brief Draws a thin line along the given position vector with variable color
+     *
+     * The line is drawn as a GL_LINES.
+     *
+     * @param[in] v The positions vector to use
+     */
+    static void drawLine(const PositionVector& v, const std::vector<RGBColor>& cols);
+
+
     /** @brief Draws a thin line between the two points
      *
      * The line is drawn as a GL_LINES.
@@ -236,12 +264,13 @@ public:
 
     /** @brief Draws a triangle at the end of the given line
      *
-     * @param[in] l The line at which end the triangle shall be drawn
+     * @param[in] p1 The start of the line at which end the triangle shall be drawn
+     * @param[in] p2 The end of the line at which end the triangle shall be drawn
      * @param[in] tLength The length of the triangle
      * @param[in] tWidth The width of the triangle
      */
-    static void drawTriangleAtEnd(const Line& l, SUMOReal tLength,
-                                  SUMOReal tWidth);
+    static void drawTriangleAtEnd(const Position& p1, const Position& p2,
+                                  SUMOReal tLength, SUMOReal tWidth);
 
     /// @brief Sets the gl-color to this value
     static void setColor(const RGBColor& c);
@@ -261,6 +290,16 @@ public:
                             const RGBColor& bgColor = RGBColor::WHITE,
                             const RGBColor& borderColor = RGBColor::BLACK,
                             const SUMOReal angle = 0);
+
+    /// @brief draw vertex numbers for the given shape (in a random color)
+    static void debugVertices(const PositionVector& shape, SUMOReal size, SUMOReal layer = 256);
+
+private:
+    /// @brief normalize angle for lookup in myCircleCoords
+    static size_t angleLookup(SUMOReal angleDeg);
+
+    /// @brief whether the road makes a right turn (or goes straight)
+    static bool rightTurn(SUMOReal angle1, SUMOReal angle2);
 
 private:
     /// @brief Storage for precomputed sin/cos-values describing a circle

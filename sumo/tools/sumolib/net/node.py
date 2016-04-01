@@ -11,7 +11,7 @@
 This file contains a Python-representation of a single node.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2015 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -19,8 +19,12 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+
+
 class Node:
+
     """ Nodes from a sumo network """
+
     def __init__(self, id, type, coord, incLanes):
         self._id = id
         self._type = type
@@ -36,7 +40,7 @@ class Node:
 
     def addOutgoing(self, edge):
         self._outgoing.append(edge)
-        
+
     def getOutgoing(self):
         return self._outgoing
 
@@ -53,19 +57,15 @@ class Node:
     def areFoes(self, link1, link2):
         return self._foes[link1][len(self._foes[link1]) - link2 - 1] == '1'
 
-    def getLinkIndex(self, link):
+    def getLinkIndex(self, conn):
         ret = 0
-        for lid in self._incLanes:
-            (e, l) = lid.split("_")
-            lane = None
-            for et in self._incoming:
-                for l in et._lanes:
-                    if l==link[0]:
-                        lane = l
-            
-            if l[0]==link[0] and l[1]==link[1]:
-                return ret
-            ret += 1
+        for lane_id in self._incLanes:
+            (edge_id, index) = lane_id.split("_")
+            edge = [e for e in self._incoming if e.getID() == edge_id][0]
+            for candidate_conn in edge.getLane(int(index)).getOutgoing():
+                if candidate_conn == conn:
+                    return ret
+                ret += 1
         return -1
 
     def forbids(self, possProhibitor, possProhibited):
@@ -74,11 +74,10 @@ class Node:
         if possProhibitorIndex < 0 or possProhibitedIndex < 0:
             return False
         ps = self._prohibits[possProhibitedIndex]
-        return ps[-(possProhibitorIndex-1)]=='1'
+        return ps[-(possProhibitorIndex - 1)] == '1'
 
     def getCoord(self):
         return self._coord
 
     def getType(self):
         return self._type
-

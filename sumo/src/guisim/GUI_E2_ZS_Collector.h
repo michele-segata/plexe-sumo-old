@@ -9,7 +9,7 @@
 // The gui-version of the MS_E2_ZS_Collector
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,11 +33,6 @@
 #endif
 
 #include <microsim/output/MSE2Collector.h>
-#include <microsim/MSNet.h>
-#include <utils/geom/Position.h>
-#include <utils/geom/PositionVector.h>
-#include <utils/common/VectorHelper.h>
-#include <utils/common/ValueSource.h>
 #include "GUIDetectorWrapper.h"
 
 

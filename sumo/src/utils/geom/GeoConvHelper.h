@@ -9,7 +9,7 @@
 // static methods for processing the coordinates conversion for the current net
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,6 +47,7 @@
 // ===========================================================================
 class OptionsCont;
 class PositionVector;
+class OutputDevice;
 
 
 // ===========================================================================
@@ -107,7 +108,7 @@ public:
     /** @brief compute the location attributes which will be used for output
      * based on the loaded location data, the given options and the transformations applied during processing
      */
-    static void computeFinal();
+    static void computeFinal(bool lefthand = false);
 
 
     /** @brief the coordinate transformation for writing the location element
@@ -167,6 +168,9 @@ public:
 
     /// Returns the network offset
     const std::string& getProjString() const;
+
+    /// @brief writes the location element
+    static void writeLocation(OutputDevice& into);
 
 private:
     enum ProjectionMethod {

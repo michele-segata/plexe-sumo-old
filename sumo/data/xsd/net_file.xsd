@@ -21,6 +21,7 @@
     <xsd:complexType name="netType">
         <xsd:sequence>
             <xsd:element name="location" type="locationType" minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="type" type="typeType" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="edge" type="edgeType" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="tlLogic" type="tlLogicType" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="junction" type="junctionType" minOccurs="0" maxOccurs="unbounded"/>
@@ -36,6 +37,9 @@
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>
+        <xsd:attribute name="junctionCornerDetail" type="xsd:int"/>
+        <xsd:attribute name="junctionLinkDetail" type="xsd:int"/>
+        <xsd:attribute name="lefthand" type="boolType"/>
     </xsd:complexType>
 
     <xsd:complexType name="edgeType">
@@ -85,8 +89,9 @@
         <xsd:attribute name="speed" type="positiveFloatType" use="required"/>
         <xsd:attribute name="length" type="positiveFloatType" use="required"/>
         <xsd:attribute name="endOffset" type="positiveFloatType" use="optional"/>
-        <xsd:attribute name="width" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="width" type="nonNegativeFloatType" use="optional"/>
         <xsd:attribute name="shape" type="shapeTypeTwo" use="required"/>
+        <xsd:attribute name="customShape" type="boolType" use="optional"/>
     </xsd:complexType>
 
     <xsd:complexType name="junctionType">
@@ -108,6 +113,9 @@
                     <xsd:enumeration value="traffic_light_unregulated"/>
                     <xsd:enumeration value="allway_stop"/>
                     <xsd:enumeration value="priority_stop"/>
+                    <xsd:enumeration value="rail_signal"/>
+                    <xsd:enumeration value="zipper"/>
+                    <xsd:enumeration value="traffic_light_right_on_red"/>
                     <xsd:enumeration value="internal"/>
                 </xsd:restriction>
             </xsd:simpleType>
@@ -115,6 +123,8 @@
         <xsd:attribute name="incLanes" type="xsd:string" use="required"/>
         <xsd:attribute name="intLanes" type="xsd:string" use="required"/>
         <xsd:attribute name="shape" type="shapeType" use="optional"/>
+        <xsd:attribute name="radius" type="positiveFloatType" use="optional"/>
+        <xsd:attribute name="customShape" type="boolType" use="optional"/>
     </xsd:complexType>
 
     <xsd:complexType name="requestType">
@@ -146,6 +156,8 @@
         <xsd:attribute name="fromLane" type="xsd:nonNegativeInteger" use="required"/>
         <xsd:attribute name="toLane" type="xsd:nonNegativeInteger" use="required"/>
         <xsd:attribute name="pass" type="boolType" use="optional"/>
+        <xsd:attribute name="keepClear" type="boolType" use="optional"/>
+        <xsd:attribute name="contPos" type="xsd:float" use="optional"/>
         <xsd:attribute name="via" type="xsd:string" use="optional"/>
         <xsd:attribute name="tl" type="xsd:string" use="optional"/>
         <xsd:attribute name="linkIndex" type="xsd:nonNegativeInteger" use="optional"/>
@@ -154,6 +166,7 @@
                 <xsd:restriction base="xsd:string">
                     <xsd:enumeration value="s"/>
                     <xsd:enumeration value="t"/>
+                    <xsd:enumeration value="T"/>
                     <xsd:enumeration value="l"/>
                     <xsd:enumeration value="r"/>
                     <xsd:enumeration value="L"/>
@@ -171,6 +184,7 @@
                     <xsd:enumeration value="-"/>
                     <xsd:enumeration value="s"/>
                     <xsd:enumeration value="w"/>
+                    <xsd:enumeration value="Z"/>
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:attribute>

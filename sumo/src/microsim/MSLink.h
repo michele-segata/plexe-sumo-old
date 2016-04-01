@@ -9,7 +9,7 @@
 // A connnection between lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -101,14 +101,17 @@ public:
                                       const bool _willPass,
                                       const SUMOTime _arrivalTimeBraking,
                                       const SUMOReal _arrivalSpeedBraking,
-                                      const SUMOTime _waitingTime
+                                      const SUMOTime _waitingTime,
+                                      const SUMOReal _dist
                                      ) :
             arrivalTime(_arrivalTime), leavingTime(_leavingTime),
             arrivalSpeed(_arrivalSpeed), leaveSpeed(_leaveSpeed),
             willPass(_willPass),
             arrivalTimeBraking(_arrivalTimeBraking),
             arrivalSpeedBraking(_arrivalSpeedBraking),
-            waitingTime(_waitingTime) {}
+            waitingTime(_waitingTime),
+            dist(_dist)
+        {}
 
         /// @brief The time the vehicle's front arrives at the link
         const SUMOTime arrivalTime;
@@ -126,6 +129,8 @@ public:
         const SUMOReal arrivalSpeedBraking;
         /// @brief The waiting duration at the current link
         const SUMOTime waitingTime;
+        /// @brief The distance up to the current link
+        const SUMOReal dist;
 
     private:
         /// invalidated assignment operator
@@ -141,8 +146,9 @@ public:
      * @param[in] dir The direction of this link
      * @param[in] state The state of this link
      * @param[in] length The length of this link
+     * @param[in] keepClear Whether the junction after this link must be kept clear
      */
-    MSLink(MSLane* succLane, LinkDirection dir, LinkState state, SUMOReal length);
+    MSLink(MSLane* succLane, LinkDirection dir, LinkState state, SUMOReal length, bool keepClear);
 #else
     /** @brief Constructor for simulation which uses internal lanes
      *
@@ -152,7 +158,7 @@ public:
      * @param[in] state The state of this link
      * @param[in] length The length of this link
      */
-    MSLink(MSLane* succLane, MSLane* via, LinkDirection dir, LinkState state, SUMOReal length);
+    MSLink(MSLane* succLane, MSLane* via, LinkDirection dir, LinkState state, SUMOReal length, bool keepClear);
 #endif
 
 
@@ -179,7 +185,7 @@ public:
     void setApproaching(const SUMOVehicle* approaching, const SUMOTime arrivalTime,
                         const SUMOReal arrivalSpeed, const SUMOReal leaveSpeed, const bool setRequest,
                         const SUMOTime arrivalTimeBraking, const SUMOReal arrivalSpeedBraking,
-                        const SUMOTime waitingTime);
+                        const SUMOTime waitingTime, SUMOReal dist);
 
     /// @brief removes the vehicle from myApproachingVehicles
     void removeApproaching(const SUMOVehicle* veh);
@@ -250,6 +256,12 @@ public:
     }
 
 
+    //@brief Returns the time of the last state change
+    inline SUMOTime getLastStateChange() const {
+        return myLastStateChange;
+    }
+
+
     /** @brief Returns the direction the vehicle passing this link take
      *
      * @return The direction of this link
@@ -260,6 +272,7 @@ public:
     /** @brief Sets the current tl-state
      *
      * @param[in] state The current state of the link
+     * @param[in] t The time of the state change
      */
     void setTLState(LinkState state, SUMOTime t);
 
@@ -269,6 +282,13 @@ public:
      * @return The lane approached by this link
      */
     MSLane* getLane() const;
+
+
+    /** @brief Returns the lane leading to this link
+     *
+     * @return The lane leading to this link
+     */
+    MSLane* getApproachingLane() const;
 
 
     /** @brief Returns the respond index (for visualization)
@@ -317,6 +337,11 @@ public:
     }
 
 
+    /// @brief whether the junction after this link must be kept clear
+    bool keepClear() const {
+        return myKeepClear;
+    }
+
     /// @brief whether this is a link past an internal junction which currently has priority
     bool lastWasContMajor() const;
 
@@ -339,9 +364,16 @@ public:
     LinkLeaders getLeaderInfo(SUMOReal dist, SUMOReal minGap, std::vector<const MSPerson*>* collectBlockers = 0) const;
 #endif
 
+    /// @brief return the speed at which ego vehicle must approach the zipper link
+    SUMOReal getZipperSpeed(const MSVehicle* ego, const SUMOReal dist, SUMOReal vSafe,
+                            SUMOTime arrivalTime,
+                            std::vector<const SUMOVehicle*>* collectFoes) const;
+
     /// @brief return the via lane if it exists and the lane otherwise
     MSLane* getViaLaneOrLane() const;
 
+    /// @brief return myInternalLaneBefore (always 0 when compiled without internal lanes)
+    const MSLane* getInternalLaneBefore() const;
 
     /// @brief return the expected time at which the given vehicle will clear the link
     SUMOTime getLeaveTime(const SUMOTime arrivalTime, const SUMOReal arrivalSpeed, const SUMOReal leaveSpeed, const SUMOReal vehicleLength) const;
@@ -349,10 +381,11 @@ public:
     /// @brief write information about all approaching vehicles to the given output device
     void writeApproaching(OutputDevice& od, const std::string fromLaneID) const;
 
-    /// @brief return the junction to which this link belongs
-    const MSJunction* getJunction() const {
-        return myJunction;
-    }
+    /// @brief erase vehicle from myLinkLeaders of this links junction
+    void passedJunction(const MSVehicle* vehicle);
+
+    //// @brief @return whether the foe vehicle is a leader for ego
+    bool isLeader(const MSVehicle* ego, const MSVehicle* foe);
 
 private:
     /// @brief return whether the given vehicles may NOT merge safely
@@ -364,8 +397,11 @@ private:
     /// @brief returns whether the given lane may still be occupied by a vehicle currently on it
     static bool maybeOccupied(MSLane* lane);
 
+    /// @brief whether fllower could stay behind leader (possibly by braking)
+    static bool couldBrakeForLeader(SUMOReal followDist, SUMOReal leaderDist, const MSVehicle* follow, const MSVehicle* leader);
+
 private:
-    /// @brief The lane approached by this link
+    /// @brief The lane (but the internal one) approached by this link
     MSLane* myLane;
 
     std::map<const SUMOVehicle*, ApproachingVehicleInformation> myApproachingVehicles;
@@ -376,6 +412,9 @@ private:
 
     /// @brief The state of the link
     LinkState myState;
+
+    /// @brief The time of the last state change
+    SUMOTime myLastStateChange;
 
     /// @brief An abstract (hopefully human readable) definition of the link's direction
     LinkDirection myDirection;
@@ -388,9 +427,14 @@ private:
 
     bool myAmCont;
 
+    bool myKeepClear;
+
 #ifdef HAVE_INTERNAL_LANES
     /// @brief The following junction-internal lane if used
     MSLane* const myJunctionInlane;
+
+    /// @brief The preceding junction-internal lane if used
+    const MSLane* myInternalLaneBefore;
 
     /* @brief lengths after the crossing point with foeLane
      * (lengthOnThis, lengthOnFoe)
@@ -401,11 +445,13 @@ private:
 #endif
 
     /// @brief the junction to which this link belongs
-    const MSJunction* myJunction;
+    MSJunction* myJunction;
 
     std::vector<MSLink*> myFoeLinks;
-    std::vector<MSLane*> myFoeLanes;
-    static SUMOTime myLookaheadTime;
+    std::vector<const MSLane*> myFoeLanes;
+
+    static const SUMOTime myLookaheadTime;
+    static const SUMOTime myLookaheadTimeZipper;
 
 
 private:

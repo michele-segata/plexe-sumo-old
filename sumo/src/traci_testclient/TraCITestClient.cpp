@@ -12,7 +12,7 @@
 /// A test execution class
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2008-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -45,6 +45,7 @@
 
 #include <traci-server/TraCIConstants.h>
 #include <utils/common/SUMOTime.h>
+#include <utils/common/ToString.h>
 #include "TraCITestClient.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -159,6 +160,9 @@ TraCITestClient::run(std::string fileName, int port, std::string host) {
             std::string objID;
             defFile >> domID >> varID >> objID;
             commandSetValue(domID, varID, objID, defFile);
+        }  else if (lineCommand.compare("testAPI") == 0) {
+            // call all native API methods
+            testAPI();
         } else {
             msg << "Error in definition file: " << lineCommand << " is not a valid command";
             errorMsg(msg);
@@ -263,7 +267,7 @@ TraCITestClient::commandSetValue(int domID, int varID, const std::string& objID,
 
 
 void
-TraCITestClient::commandSubscribeObjectVariable(int domID, const std::string& objID, int beginTime, int endTime, int varNo, std::ifstream& defFile) {
+TraCITestClient::commandSubscribeObjectVariable(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime, int varNo, std::ifstream& defFile) {
     std::vector<int> vars;
     for (int i = 0; i < varNo; ++i) {
         int var;
@@ -287,7 +291,7 @@ TraCITestClient::commandSubscribeObjectVariable(int domID, const std::string& ob
 
 
 void
-TraCITestClient::commandSubscribeContextVariable(int domID, const std::string& objID, int beginTime, int endTime,
+TraCITestClient::commandSubscribeContextVariable(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime,
         int domain, SUMOReal range, int varNo, std::ifstream& defFile) {
     std::vector<int> vars;
     for (int i = 0; i < varNo; ++i) {
@@ -667,3 +671,15 @@ TraCITestClient::readAndReportTypeDependent(tcpip::Storage& inMsg, int valueData
 }
 
 
+void
+TraCITestClient::testAPI() {
+    answerLog << "testAPI:\n";
+    answerLog << "  edge:\n";
+    answerLog << "    getIDList: " << joinToString(edge.getIDList(), " ") << "\n";
+    answerLog << "    getIDCount: " << edge.getIDCount() << "\n";
+    //answerLog << "  vehicle:\n";
+    //answerLog << "    getIDList: " << joinToString(vehicle.getIDList(), " ") << "\n";
+    //answerLog << "    getIDCount: " << vehicle.getIDCount() << "\n";
+    answerLog << "  simulation:\n";
+    answerLog << "    getCurrentTime: " << simulation.getCurrentTime() << "\n";
+}

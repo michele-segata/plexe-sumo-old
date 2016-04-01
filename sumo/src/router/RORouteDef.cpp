@@ -9,7 +9,7 @@
 // Base class for a vehicle's route definition
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -105,15 +105,19 @@ void
 RORouteDef::preComputeCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
                                    SUMOTime begin, const ROVehicle& veh) const {
     myNewRoute = false;
+    const OptionsCont& oc = OptionsCont::getOptions();
     assert(myAlternatives[0]->getEdgeVector().size() > 0);
     MsgHandler* mh = (OptionsCont::getOptions().getBool("ignore-errors") ?
                       MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance());
-    if (myAlternatives[0]->getFirst()->prohibits(&veh)) {
-        /// XXX check for specified arrivalLane / departLane
+    if (myAlternatives[0]->getFirst()->prohibits(&veh) && (!oc.getBool("repair.from")
+            // do not try to reassign starting edge for trip input
+            || myMayBeDisconnected || myAlternatives[0]->getEdgeVector().size() < 2)) {
         mh->inform("Vehicle '" + veh.getID() + "' is not allowed to depart on edge '" +
                    myAlternatives[0]->getFirst()->getID() + "'.");
         return;
-    } else if (myAlternatives[0]->getLast()->prohibits(&veh)) {
+    } else if (myAlternatives[0]->getLast()->prohibits(&veh) && (!oc.getBool("repair.to")
+               // do not try to reassign destination edge for trip input
+               || myMayBeDisconnected || myAlternatives[0]->getEdgeVector().size() < 2)) {
         // this check is not strictly necessary unless myTryRepair is set.
         // However, the error message is more helpful than "no connection found"
         mh->inform("Vehicle '" + veh.getID() + "' is not allowed to arrive on edge '" +
@@ -129,7 +133,7 @@ RORouteDef::preComputeCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router
         myPrecomputed = myAlternatives[myLastUsed];
     } else {
         // build a new route to test whether it is better
-        std::vector<const ROEdge*> edges;
+        ConstROEdgeVector edges;
         router.compute(myAlternatives[0]->getFirst(), myAlternatives[0]->getLast(), &veh, begin, edges);
         // check whether the same route was already used
         int cheapest = -1;
@@ -155,9 +159,9 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
                                SUMOTime begin, const ROVehicle& veh) const {
     MsgHandler* mh = (OptionsCont::getOptions().getBool("ignore-errors") ?
                       MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance());
-    std::vector<const ROEdge*> oldEdges = myAlternatives[0]->getEdgeVector();
-    std::vector<const ROEdge*> newEdges;
-    std::vector<const ROEdge*> mandatory;
+    ConstROEdgeVector oldEdges = myAlternatives[0]->getEdgeVector();
+    ConstROEdgeVector newEdges;
+    ConstROEdgeVector mandatory;
     if (oldEdges.size() == 1) {
         if (myUsingJTRR) {
             /// only ROJTRRouter is supposed to handle this type of input
@@ -167,11 +171,42 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
         }
     } else {
         // prepare mandatory edges
+        if (oldEdges.front()->prohibits(&veh)) {
+            // option repair.from is in effect
+            for (ConstROEdgeVector::iterator i = oldEdges.begin(); i != oldEdges.end();) {
+                if ((*i)->prohibits(&veh)) {
+                    i = oldEdges.erase(i);
+                } else {
+                    WRITE_MESSAGE("Changing invalid starting edge '"
+                                  + myAlternatives[0]->getEdgeVector().front()->getID()
+                                  + "' to '" + (*i)->getID() + "' for vehicle '" + veh.getID() + "'.");
+                    break;
+                }
+            }
+        }
+        if (oldEdges.size() == 0) {
+            mh->inform("Could not find new starting edge for vehicle '" + veh.getID() + "'.");
+            return;
+        }
         mandatory.push_back(oldEdges.front());
-        std::vector<const ROEdge*> stops = veh.getStopEdges();
-        for (std::vector<const ROEdge*>::const_iterator i = stops.begin(); i != stops.end(); ++i) {
+        ConstROEdgeVector stops = veh.getStopEdges();
+        for (ConstROEdgeVector::const_iterator i = stops.begin(); i != stops.end(); ++i) {
             if (*i != mandatory.back()) {
                 mandatory.push_back(*i);
+            }
+        }
+        if (oldEdges.back()->prohibits(&veh)) {
+            // option repair.to is in effect
+            for (ConstROEdgeVector::reverse_iterator i = oldEdges.rbegin(); i != oldEdges.rend();) {
+                if ((*i)->prohibits(&veh)) {
+                    ++i;
+                    oldEdges.erase(i.base());
+                } else {
+                    WRITE_MESSAGE("Changing invalid destination edge '"
+                                  + myAlternatives[0]->getEdgeVector().back()->getID()
+                                  + "' to edge '" + (*i)->getID() + "' for vehicle '" + veh.getID() + "'.");
+                    break;
+                }
             }
         }
         if (mandatory.size() < 2 || oldEdges.back() != mandatory.back()) {
@@ -179,7 +214,7 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
         }
         assert(mandatory.size() >= 2);
         // removed prohibited
-        for (std::vector<const ROEdge*>::iterator i = oldEdges.begin(); i != oldEdges.end();) {
+        for (ConstROEdgeVector::iterator i = oldEdges.begin(); i != oldEdges.end();) {
             if ((*i)->prohibits(&veh)) {
                 if (std::find(mandatory.begin(), mandatory.end(), *i) != mandatory.end()) {
                     mh->inform("Mandatory edge '" + (*i)->getID() + "' does not allow vehicle '" + veh.getID() + "'.");
@@ -192,15 +227,18 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
         }
         // reconnect remaining edges
         newEdges.push_back(*(oldEdges.begin()));
-        std::vector<const ROEdge*>::iterator nextMandatory = mandatory.begin() + 1;
+        ConstROEdgeVector::iterator nextMandatory = mandatory.begin() + 1;
         size_t lastMandatory = 0;
-        for (std::vector<const ROEdge*>::iterator i = oldEdges.begin() + 1;
+        for (ConstROEdgeVector::iterator i = oldEdges.begin() + 1;
                 i != oldEdges.end() && nextMandatory != mandatory.end(); ++i) {
-            if ((*(i - 1))->isConnectedTo(*i)) {
-                /// XXX could be connected from a prohibited lane only
+            if ((*(i - 1))->isConnectedTo(*i, &veh)) {
                 newEdges.push_back(*i);
             } else {
-                std::vector<const ROEdge*> edges;
+                if (myAlternatives[0]->getEdgeVector().size() > 2) {
+                    // only inform if the input is (probably) not a trip
+                    WRITE_MESSAGE("Edge '" + (*(i - 1))->getID() + "' not connected to edge '" + (*i)->getID() + "' for vehicle '" + veh.getID() + "'.");
+                }
+                ConstROEdgeVector edges;
                 router.compute(newEdges.back(), *i, &veh, begin, edges);
                 if (edges.size() == 0) {
                     // backtrack: try to route from last mandatory edge to next mandatory edge
@@ -208,7 +246,9 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
                     // (i.e. previous edge to edge after *i)
                     // we would then need to decide whether we have found a good
                     // tradeoff between faithfulness to the input data and detour-length
-                    router.compute(newEdges[lastMandatory], *nextMandatory, &veh, begin, edges);
+                    if (newEdges.back() != newEdges[lastMandatory]) {
+                        router.compute(newEdges[lastMandatory], *nextMandatory, &veh, begin, edges);
+                    }
                     if (edges.size() == 0) {
                         mh->inform("Mandatory edge '" + (*i)->getID() + "' not reachable by vehicle '" + veh.getID() + "'.");
                         return;
@@ -246,8 +286,7 @@ RORouteDef::addAlternative(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
     if (myTryRepair) {
         if (myNewRoute) {
             delete myAlternatives[0];
-            myAlternatives.pop_back();
-            myAlternatives.push_back(current);
+            myAlternatives[0] = current;
         }
         const SUMOReal costs = router.recomputeCosts(current->getEdgeVector(), veh, begin);
         if (costs < 0) {
@@ -355,7 +394,7 @@ RORouteDef::copyOrigDest(const std::string& id) const {
     RORouteDef* result = new RORouteDef(id, 0, true, true);
     RORoute* route = myAlternatives[0];
     RGBColor* col = route->getColor() != 0 ? new RGBColor(*route->getColor()) : 0;
-    std::vector<const ROEdge*> edges;
+    ConstROEdgeVector edges;
     edges.push_back(route->getFirst());
     edges.push_back(route->getLast());
     result->addLoadedAlternative(new RORoute(id, 0, 1, edges, col, route->getStops()));

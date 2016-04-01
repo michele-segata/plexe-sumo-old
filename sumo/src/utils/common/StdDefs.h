@@ -10,7 +10,7 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2005-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2005-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,9 @@
 /* avoiding compiler warning unreferenced parameter */
 #define UNUSED_PARAMETER(x)  ((void)(x))
 
+/// @brief the maximum number of connections across an intersection
+#define  SUMO_MAX_CONNECTIONS 256
+
 class RGBColor;
 
 /* -------------------------------------------------------------------------
@@ -59,6 +62,8 @@ const RGBColor& getLinkColor(const LinkState& ls);
 
 /// @brief attach some build flags to the version string
 const std::string getBuildName(const std::string& version);
+
+
 
 /* -------------------------------------------------------------------------
  * templates for mathematical functions missing in some c++-implementations
@@ -114,6 +119,8 @@ ISNAN(T a) {
 /// @brief global utility flags for debugging
 extern bool gDebugFlag1;
 extern bool gDebugFlag2;
+
+extern std::string gDebugSelectedVehicle;
 
 #endif
 

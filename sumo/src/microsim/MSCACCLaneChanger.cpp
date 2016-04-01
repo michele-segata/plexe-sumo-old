@@ -37,7 +37,7 @@
 #include <iterator>
 #include <cstdlib>
 #include <cmath>
-#include <microsim/MSAbstractLaneChangeModel.h>
+#include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include <utils/common/MsgHandler.h>
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -114,7 +114,7 @@ bool MSCACCLaneChanger::change() {
     }
 
     vehicle->getLaneChangeModel().prepareStep();
-    std::pair<MSVehicle* const, SUMOReal> leader = getRealThisLeader(myCandi);
+    std::pair<MSVehicle* const, SUMOReal> leader = getRealLeader(myCandi);
 
     enum Plexe::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
 

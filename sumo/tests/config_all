@@ -14,6 +14,8 @@ batch_recipients:sumo-tests@dlr.de
 output:\r{REPLACE \n}
 output:[0-9\.]+ms{REPLACE (TIME)}
 output:Version
+log:[0-9\.]+ms{REPLACE (TIME)}
+logPrefixed:[0-9\.]+ms{REPLACE (TIME)}
 errors:UTFDataFormatException
 errors:exceeded byte limit
 errors:invalid multi-byte sequence
@@ -21,7 +23,6 @@ errors:expected end of tag{REPLACE Expected end of tag}
 errors:comment or processing instruction expected{REPLACE Expected comment or processing instruction}
 errors:input ended before all started tags were ended; last tag started is{REPLACE The input ended before all started tags were ended. Last tag started was}
 errors:attribute '(.*)' is already specified for element '(.*)'{REPLACE The attribute '\1' is already used in element '\2'}
-errors:std::_Ios_Fmtflags
 log:[0-9\.]+ms{REPLACE (TIME)}
 
 [bug_system_location]
@@ -29,4 +30,5 @@ trac:http://sumo.dlr.de/trac.wsgi/
 
 [file_to_url]
 /home/delphi:http://sumo.dlr.de/daily
+$REMOTEDIR_BASE:http://sumo.dlr.de
 [end]

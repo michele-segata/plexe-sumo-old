@@ -8,7 +8,7 @@
 // Exporter writing networks using the openDRIVE format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2011-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2011-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -48,6 +48,7 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+#define MIN_TURN_DIAMETER 2.0
 
 
 // ===========================================================================
@@ -62,23 +63,37 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     if (!oc.isSet("opendrive-output")) {
         return;
     }
+    const bool origNames = oc.getBool("output.original-names");
     // some internal mapping containers
-    int edgeID = 0;
-    int nodeID = 0;
+    int edgeID = 1;
+    int nodeID = 1;
     StringBijection<int> edgeMap;
     StringBijection<int> nodeMap;
     //
     OutputDevice& device = OutputDevice::getDevice(oc.getString("opendrive-output"));
     device << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-    device << "<OpenDRIVE>\n";
+    device.openTag("OpenDRIVE");
     time_t now = time(0);
     std::string dstr(ctime(&now));
     const NBNodeCont& nc = nb.getNodeCont();
     const NBEdgeCont& ec = nb.getEdgeCont();
     const Boundary& b = GeoConvHelper::getFinal().getConvBoundary();
-    device << "    <header revMajor=\"1\" revMinor=\"3\" name=\"\" version=\"1.00\" date=\"" << dstr.substr(0, dstr.length() - 1)
-           << "\" north=\"" << b.ymax() << "\" south=\"" << b.ymin() << "\" east=\"" << b.xmax() << "\" west=\"" << b.xmin()
-           << "\" maxRoad=\"" << ec.size() << "\" maxJunc=\"" << nc.size() << "\" maxPrg=\"0\"/>\n";
+    // write header
+    device.openTag("header");
+    device.writeAttr("revMajor", "1");
+    device.writeAttr("revMinor", "3");
+    device.writeAttr("name", "");
+    device.writeAttr("version", "1.00");
+    device.writeAttr("date", dstr.substr(0, dstr.length() - 1));
+    device.writeAttr("north", b.ymax());
+    device.writeAttr("south", b.ymin());
+    device.writeAttr("east", b.xmax());
+    device.writeAttr("west", b.xmin());
+    device.writeAttr("maxRoad", ec.size());
+    device.writeAttr("maxJunc", nc.size());
+    device.writeAttr("maxPrg", 0);
+    device.closeTag();
+
     // write normal edges (road)
     for (std::map<std::string, NBEdge*>::const_iterator i = ec.begin(); i != ec.end(); ++i) {
         const NBEdge* e = (*i).second;
@@ -88,14 +103,9 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         device << "            <successor elementType=\"junction\" elementId=\"" << getID(e->getToNode()->getID(), nodeMap, nodeID) << "\"/>\n";
         device << "        </link>\n";
         device << "        <type s=\"0\" type=\"town\"/>\n";
+        // for the shape we need to use the leftmost border of the leftmost lane
         const std::vector<NBEdge::Lane>& lanes = e->getLanes();
-        unsigned int li = (unsigned int)lanes.size() - 1;
-        PositionVector ls = e->getLaneShape(li);
-        try {
-            ls.move2side(-e->getLaneWidth(li) / 2.);
-        } catch (InvalidArgument&) {
-            // we do not write anything, as this should have been reported, already
-        }
+        PositionVector ls = getLeftBorder(e);
         writePlanView(ls, device);
         device << "        <elevationProfile><elevation s=\"0\" a=\"0\" b=\"0\" c=\"0\" d=\"0\"/></elevationProfile>\n";
         device << "        <lateralProfile/>\n";
@@ -104,11 +114,15 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         writeEmptyCenterLane(device, "solid", 0.13);
         device << "                <right>\n";
         for (int j = e->getNumLanes(); --j >= 0;) {
-            device << "                    <lane id=\"-" << e->getNumLanes() - j << "\" type=\"driving\" level=\"0\">\n";
-            device << "                        <link>\n";
-            device << "                            <predecessor id=\"-1\"/>\n"; // internal roads have this
-            device << "                            <successor id=\"-1\"/>\n"; // internal roads have this
-            device << "                        </link>\n";
+            device << "                    <lane id=\"-" << e->getNumLanes() - j << "\" type=\"" << getLaneType(e->getPermissions(j)) << "\" level=\"0\">\n";
+            device << "                        <link/>\n";
+            // this could be used for geometry-link junctions without u-turn,
+            // predecessor and sucessors would be lane indices,
+            // road predecessor / succesfors would be of type 'road' rather than
+            // 'junction'
+            //device << "                            <predecessor id=\"-1\"/>\n";
+            //device << "                            <successor id=\"-1\"/>\n";
+            //device << "                        </link>\n";
             device << "                        <width sOffset=\"0\" a=\"" << e->getLaneWidth(j) << "\" b=\"0\" c=\"0\" d=\"0\"/>\n";
             std::string markType = "broken";
             if (j == 0) {
@@ -123,6 +137,9 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         device << "        </lanes>\n";
         device << "        <objects/>\n";
         device << "        <signals/>\n";
+        if (origNames) {
+            device << "        <userData sumoId=\"" << e->getID() << "\"/>\n";
+        }
         device << "    </road>\n";
     }
     device << "\n";
@@ -131,28 +148,49 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         NBNode* n = (*i).second;
         const std::vector<NBEdge*>& incoming = (*i).second->getIncomingEdges();
         for (std::vector<NBEdge*>::const_iterator j = incoming.begin(); j != incoming.end(); ++j) {
-            const std::vector<NBEdge::Connection>& elv = (*j)->getConnections();
+            const NBEdge* inEdge = *j;
+            const std::vector<NBEdge::Connection>& elv = inEdge->getConnections();
             for (std::vector<NBEdge::Connection>::const_iterator k = elv.begin(); k != elv.end(); ++k) {
-                if ((*k).toEdge == 0) {
+                const NBEdge::Connection& c = *k;
+                const NBEdge* outEdge = c.toEdge;
+                if (outEdge == 0) {
                     continue;
                 }
-                const NBEdge::Connection& c = *k;
                 PositionVector shape = c.shape;
                 if (c.haveVia) {
                     shape.append(c.viaShape);
                 }
-                const SUMOReal width = SUMO_const_laneWidth;
+                const SUMOReal width = c.toEdge->getLaneWidth(c.toLane);
                 // @todo: this if-clause is a hack which assures that the code also works with connections of zero length, what may be possible
                 // probably, it would make sense to mark such connections and connect the incoming/outgoing streets directly in such cases.
-                try {
-                    shape.move2side(-width / 2.);
-                } catch (InvalidArgument&) {
-                    // we do not write anything, maybe we should
+                if (shape.length() > POSITION_EPS) {
+                    try {
+                        shape.move2side(-width / 2.);
+                    } catch (InvalidArgument&) {
+                        shape.clear();
+                    }
+                } else {
+                    shape.clear();
                 }
+                if (inEdge->isTurningDirectionAt(outEdge)
+                        && getLeftBorder(inEdge).back().distanceTo2D(getLeftBorder(outEdge).front()) < MIN_TURN_DIAMETER) {
+                    shape.clear(); // simplified geometry for sharp turn-arounds
+                }
+                // we need to fix start and endpoints in case the start and
+                // end segments were not in line with the incoming and outgoing lanes
+                if (shape.size() > 1) {
+                    shape[0] = getLeftBorder(inEdge).back();
+                    shape[-1] = getLeftBorder(outEdge).front();
+                } else {
+                    shape.clear();
+                    shape.push_back(getLeftBorder(inEdge).back());
+                    shape.push_back(getLeftBorder(outEdge).front());
+                }
+
                 device << "    <road name=\"" << c.getInternalLaneID() << "\" length=\"" << shape.length() << "\" id=\"" << getID(c.getInternalLaneID(), edgeMap, edgeID) << "\" junction=\"" << getID(n->getID(), nodeMap, nodeID) << "\">\n";
                 device << "        <link>\n";
-                device << "            <predecessor elementType=\"road\" elementId=\"" << getID((*j)->getID(), edgeMap, edgeID) << "\"/>\n";
-                device << "            <successor elementType=\"road\" elementId=\"" << getID((*k).toEdge->getID(), edgeMap, edgeID) << "\"/>\n";
+                device << "            <predecessor elementType=\"road\" elementId=\"" << getID(inEdge->getID(), edgeMap, edgeID) << "\"/>\n";
+                device << "            <successor elementType=\"road\" elementId=\"" << getID(outEdge->getID(), edgeMap, edgeID) << "\"/>\n";
                 device << "        </link>\n";
                 device << "        <type s=\"0\" type=\"town\"/>\n";
                 writePlanView(shape, device);
@@ -162,10 +200,10 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
                 device << "            <laneSection s=\"0\">\n";
                 writeEmptyCenterLane(device, "none", 0);
                 device << "                <right>\n";
-                device << "                    <lane id=\"-1\" type=\"driving\" level=\"0\">\n";
+                device << "                    <lane id=\"-1\" type=\"" << getLaneType(outEdge->getPermissions(c.toLane)) << "\" level=\"0\">\n";
                 device << "                        <link>\n";
-                device << "                            <predecessor id=\"-" << (*j)->getNumLanes() - c.fromLane << "\"/>\n";
-                device << "                            <successor id=\"-" << c.toEdge->getNumLanes() - c.toLane << "\"/>\n";
+                device << "                            <predecessor id=\"-" << inEdge->getNumLanes() - c.fromLane << "\"/>\n";
+                device << "                            <successor id=\"-" << outEdge->getNumLanes() - c.toLane << "\"/>\n";
                 device << "                        </link>\n";
                 device << "                        <width sOffset=\"0\" a=\"" << width << "\" b=\"0\" c=\"0\" d=\"0\"/>\n";
                 device << "                        <roadMark sOffset=\"0\" type=\"none\" weight=\"standard\" color=\"standard\" width=\"0.13\"/>\n";
@@ -187,20 +225,30 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         unsigned int index = 0;
         const std::vector<NBEdge*>& incoming = n->getIncomingEdges();
         for (std::vector<NBEdge*>::const_iterator j = incoming.begin(); j != incoming.end(); ++j) {
-            const std::vector<NBEdge::Connection>& elv = (*j)->getConnections();
+            const NBEdge* inEdge = *j;
+            const std::vector<NBEdge::Connection>& elv = inEdge->getConnections();
             for (std::vector<NBEdge::Connection>::const_iterator k = elv.begin(); k != elv.end(); ++k) {
-                if ((*k).toEdge == 0) {
+                const NBEdge::Connection& c = *k;
+                const NBEdge* outEdge = c.toEdge;
+                if (outEdge == 0) {
                     continue;
                 }
-                device << "    <connection id=\"" << index << "\" incomingRoad=\"" << getID((*j)->getID(), edgeMap, edgeID)
-                       << "\" connectingRoad=\"" << getID((*k).getInternalLaneID(), edgeMap, edgeID) << "\" contactPoint=\"start\"/>\n";
+                device << "    <connection id=\""
+                       << index << "\" incomingRoad=\"" << getID(inEdge->getID(), edgeMap, edgeID)
+                       << "\" connectingRoad=\""
+                       << getID(c.getInternalLaneID(), edgeMap, edgeID)
+                       << "\" contactPoint=\"start\">\n";
+                device << "        <laneLink from=\"-" << inEdge->getNumLanes() - c.fromLane
+                       << "\" to=\"-1"  // every connection has its own edge
+                       << "\"/>\n";
+                device << "    </connection>\n";
                 ++index;
             }
         }
         device << "    </junction>\n";
     }
 
-    device << "</OpenDRIVE>\n";
+    device.closeTag();
     device.close();
 }
 
@@ -211,10 +259,12 @@ NWWriter_OpenDrive::writePlanView(const PositionVector& shape, OutputDevice& dev
     SUMOReal offset = 0;
     for (unsigned int j = 0; j < shape.size() - 1; ++j) {
         const Position& p = shape[j];
-        Line l = shape.lineAt(j);
-        SUMOReal hdg = atan2(l.p2().y() - l.p1().y(), l.p2().x() - l.p1().x());
-        device << "            <geometry s=\"" << offset << "\" x=\"" << p.x() << "\" y=\"" << p.y() << "\" hdg=\"" << hdg << "\" length=\"" << l.length() << "\"><line/></geometry>\n";
-        offset += l.length();
+        const SUMOReal hdg = shape.angleAt2D(j);
+        const SUMOReal length = p.distanceTo(shape[j + 1]);
+        device << std::setprecision(8); // hdg requires higher precision
+        device << "            <geometry s=\"" << offset << "\" x=\"" << p.x() << "\" y=\"" << p.y() << "\" hdg=\"" << hdg << "\" length=\"" << length << "\"><line/></geometry>\n";
+        device << std::setprecision(OUTPUT_ACCURACY);
+        offset += length;
     }
     device << "        </planView>\n";
 }
@@ -242,5 +292,35 @@ NWWriter_OpenDrive::getID(const std::string& origID, StringBijection<int>& map, 
 }
 
 
+std::string
+NWWriter_OpenDrive::getLaneType(SVCPermissions permissions) {
+    switch (permissions) {
+        case SVC_PEDESTRIAN:
+            return "sidewalk";
+            //case (SVC_BICYCLE | SVC_PEDESTRIAN):
+            //    WRITE_WARNING("Ambiguous lane type (biking+driving) for road '" + roadID + "'");
+            //    return "sidewalk";
+        case SVC_BICYCLE:
+            return "biking";
+        case 0:
+            // ambiguous
+            return "none";
+        case SVC_TRAM:
+            return "tram";
+        default:
+            return "driving";
+    }
+}
+
+
+PositionVector
+NWWriter_OpenDrive::getLeftBorder(const NBEdge* edge) {
+    const int leftmost = (int)edge->getNumLanes() - 1;
+    PositionVector result = edge->getLaneShape(leftmost);
+    try {
+        result.move2side(-edge->getLaneWidth(leftmost) / 2);
+    } catch (InvalidArgument&) { }
+    return result;
+}
 /****************************************************************************/
 

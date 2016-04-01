@@ -11,7 +11,7 @@
 // A fixed traffic light logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -37,10 +37,13 @@
 #include <utility>
 #include <vector>
 #include <bitset>
-#include <microsim/MSEventControl.h>
-#include <microsim/MSNet.h>
 #include "MSTrafficLightLogic.h"
-#include "MSPhaseDefinition.h"
+
+
+// ===========================================================================
+// class declarations
+// ===========================================================================
+class MSNet;
 
 
 // ===========================================================================
@@ -81,11 +84,10 @@ public:
     /// @{
 
     /** @brief Switches to the next phase
-     * @param[in] isActive Whether this program is the currently used one
      * @return The time of the next switch
      * @see MSTrafficLightLogic::trySwitch
      */
-    SUMOTime trySwitch(bool isActive);
+    SUMOTime trySwitch();
     /// @}
 
 
@@ -120,6 +122,13 @@ public:
      * @see MSTrafficLightLogic::getPhase
      */
     const MSPhaseDefinition& getPhase(unsigned int givenstep) const;
+
+    /** @brief Returns the type of the logic as a string
+     * @return The type of the logic
+     */
+    const std::string getLogicType() const {
+        return "simpleTrafficLightLogic";
+    }
     /// @}
 
 

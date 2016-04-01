@@ -9,7 +9,7 @@
 // A traffic light logics which must be computed (only nodes/edges are given)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -128,6 +128,16 @@ public:
     static std::string patchStateForCrossings(const std::string& state,
             const std::vector<NBNode::Crossing>& crossings, const EdgeVector& fromEdges, const EdgeVector& toEdges);
 
+    /** @brief helper function for myCompute
+     * @param[in] brakingTime Duration a vehicle needs for braking in front of the tls
+     * @param[in] onlyConts whether the method is only called to compute myNeedsContRelation
+     * @return The computed logic
+     */
+    NBTrafficLightLogic* computeLogicAndConts(unsigned int brakingTimeSeconds, bool onlyConts = false);
+
+    /* initialize myNeedsContRelation and set myNeedsContRelationReady to true */
+    void initNeedsContRelation() const;
+
 protected:
     /// @name Protected methods from NBTrafficLightDefinition-interface
     /// @{
@@ -208,6 +218,33 @@ protected:
     std::pair<NBEdge*, NBEdge*> getBestPair(EdgeVector& incoming);
 
 
+    /// @brief compute whether the given connection is crossed by pedestrians
+    static bool hasCrossing(const NBEdge* from, const NBEdge* to, const std::vector<NBNode::Crossing>& crossings);
+
+    /// @brief get edges that have connections
+    static EdgeVector getConnectedOuterEdges(const EdgeVector& incoming);
+
+
+    /// @brief allow connections that follow on of the chosen edges
+    std::string allowFollowersOfChosen(std::string state, const EdgeVector& fromEdges, const EdgeVector& toEdges);
+
+    /** @brief change 'G' to 'g' for conflicting connections
+     * @param[in] state
+     * @param[in] fromEdges
+     * @param[in] toEdges
+     * @param[in] isTurnaround
+     * @param[in] fromLanes
+     * @param[in] hadGreenMajor
+     * @param[out] haveForbiddenLeftMover
+     * @param[out] rightTurnConflicts
+     * @return The corrected state
+     */
+    std::string correctConflicting(std::string state, const EdgeVector& fromEdges, const EdgeVector& toEdges,
+                                   const std::vector<bool>& isTurnaround,
+                                   const std::vector<int>& fromLanes,
+                                   const std::vector<bool>& hadGreenMajor,
+                                   bool& haveForbiddenLeftMover, std::vector<bool>& rightTurnConflicts);
+
     /** @class edge_by_incoming_priority_sorter
      * @brief Sorts edges by their priority within the node they end at
      */
@@ -225,10 +262,10 @@ protected:
         }
     };
 
+
 private:
     /// @brief Whether left-mover should not have an additional phase
     bool myHaveSinglePhase;
-
 
 };
 

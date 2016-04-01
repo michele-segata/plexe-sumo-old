@@ -10,7 +10,7 @@
 // Performs lane changing of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -154,8 +154,6 @@ protected:
 
     ///  @brief start the lane change maneuver (and finish it instantly if gLaneChangeDuration == 0)
     void startChange(MSVehicle* vehicle, ChangerIt& from, int direction);
-
-    std::pair<MSVehicle* const, SUMOReal> getRealThisLeader(const ChangerIt& target) const;
 
     std::pair<MSVehicle* const, SUMOReal> getRealFollower(const ChangerIt& target) const;
 

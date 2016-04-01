@@ -9,7 +9,7 @@
 // GUI-version of the person control for building gui persons
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -57,8 +57,13 @@ public:
      * @param[in] vtype The type (reusing vehicle type container here)
      * @param[in] plan This person's plan
      */
-    virtual MSPerson* buildPerson(const SUMOVehicleParameter* pars, const MSVehicleType* vtype, MSPerson::MSPersonPlan* plan) const;
+    virtual MSPerson* buildPerson(const SUMOVehicleParameter* pars, const MSVehicleType* vtype, MSTransportable::MSTransportablePlan* plan) const;
 
+    /** @brief Returns the list of all known persons by gl-id
+     * @param[fill] into The list to fill with vehicle ids
+     * @todo Well, what about concurrent modifications?
+     */
+    void insertPersonIDs(std::vector<GUIGlID>& into);
 };
 
 

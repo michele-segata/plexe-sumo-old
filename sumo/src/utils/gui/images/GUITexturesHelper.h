@@ -9,7 +9,7 @@
 // Global storage for textures; manages and draws them
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2006-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2006-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -60,17 +60,17 @@ public:
 
     /// @brief return texture id for the given filename (initialize on first use)
     // @note return -1 on failure
-    static int getTextureID(const std::string& filename);
+    static int getTextureID(const std::string& filename, const bool mirrorX = false);
 
     /// @brief clears loaded textures
     static void clearTextures();
 
-    /// @brief don't draw any textures
+    /// @brief switch texture drawing on and off
     static void allowTextures(const bool val) {
         myAllowTextures = val;
     }
 
-    /// @brief clears loaded textures
+    /// @brief ask whether texture drawing is enabled
     static bool texturesAllowed() {
         return myAllowTextures;
     }

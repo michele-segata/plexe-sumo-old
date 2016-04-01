@@ -8,7 +8,7 @@
 // Builds detectors for guisim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -79,9 +79,10 @@ public:
      * @param[in] lane The lane the detector is placed at
      * @param[in] pos The position on the lane the detector is placed at
      * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
+     * @param[in] show Whether to show the detector in the gui if available
      */
     virtual MSDetectorFileOutput* createInductLoop(const std::string& id,
-            MSLane* lane, SUMOReal pos, bool splitByType);
+            MSLane* lane, SUMOReal pos, bool splitByType, bool show = true);
 
 
     /** @brief Creates an instance of an e1 detector using the given values
@@ -95,21 +96,6 @@ public:
      */
     virtual MSDetectorFileOutput* createInstantInductLoop(const std::string& id,
             MSLane* lane, SUMOReal pos, const std::string& od);
-
-
-#ifdef HAVE_INTERNAL
-    /** @brief Creates an instance of a mesoscopic e1 detector using the given values
-     *
-     * Simply calls the MEInductLoop constructor
-     *
-     * @param[in] id The id the detector shall have
-     * @param[in] s The segment the detector is placed at
-     * @param[in] pos ?
-     * @todo Position is not used, herein!?
-     */
-    virtual MEInductLoop* createMEInductLoop(const std::string& id,
-            MESegment* s, SUMOReal pos);
-#endif
 
 
     /** @brief Creates an instance of an e2-detector (areal detector) using the given values

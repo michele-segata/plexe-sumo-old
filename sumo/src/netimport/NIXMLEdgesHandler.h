@@ -9,7 +9,7 @@
 // Importer for network edges stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -187,6 +187,12 @@ private:
     /// @brief Whether the edge shape shall be kept at reinitilization
     bool myReinitKeepEdgeShape;
 
+    /// @brief The width of the sidewalk that shall be added to the current edge
+    SUMOReal mySidewalkWidth;
+
+    /// @brief The width of the bike lane that shall be added to the current edge
+    SUMOReal myBikeLaneWidth;
+
     /// @}
 
 
@@ -228,10 +234,8 @@ private:
         SUMOReal pos;
         /// @brief The speed after this change
         SUMOReal speed;
-        /// @brief A numerical id
-        int nameid;
-        /// @brief A 2D-position (for the node to insert at this place)
-        Position gpos;
+        /// @brief The new node that is created for this split
+        NBNode* node;
     };
 
     /// @brief The list of this edge's splits
@@ -276,6 +280,9 @@ private:
 
     /// @brief Information whether at least one edge's attributes were overwritten
     bool myHaveReportedAboutOverwriting;
+
+    /// @brief Information whether at least one edge's type was changed
+    bool myHaveReportedAboutTypeOverride;
 
     bool myHaveWarnedAboutDeprecatedLaneId;
 

@@ -10,7 +10,7 @@
 // The GUI-version of a polygon
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -44,6 +44,7 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+//#define GUIPolygon_DEBUG_DRAW_VERTICES
 
 // ===========================================================================
 // method definitions
@@ -54,7 +55,7 @@ GUIPolygon::GUIPolygon(const std::string& id, const std::string& type,
     Polygon(id, type, color, shape, fill, layer, angle, imgFile),
     GUIGlObject_AbstractAdd("poly", GLO_POLYGON, id),
     myDisplayList(0),
-    myLineWidth(-1)
+    myLineWidth(1) // m
 
 {}
 
@@ -137,6 +138,9 @@ GLfloat yPlane[] = {0.0, INV_POLY_TEX_DIM, 0.0, 0.0};
 
 void
 GUIPolygon::drawGL(const GUIVisualizationSettings& s) const {
+    if (s.polySize.getExaggeration(s) == 0) {
+        return;
+    }
     Boundary boundary = myShape.getBoxBoundary();
     if (s.scale * MAX2(boundary.getWidth(), boundary.getHeight()) < s.polySize.minSize) {
         return;
@@ -157,15 +161,14 @@ GUIPolygon::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     glPushMatrix();
     glTranslated(0, 0, getLayer());
-    // XXX shape should be rotated around its center when initializing the polygon. do we even need this?
-    //glRotated(getAngle(), 0, 0, 1);
+    glRotated(-getNaviDegree(), 0, 0, 1);
     GLHelper::setColor(getColor());
 
     int textureID = -1;
     if (getFill()) {
         const std::string& file = getImgFile();
         if (file != "") {
-            textureID = GUITexturesHelper::getTextureID(file);
+            textureID = GUITexturesHelper::getTextureID(file, true);
         }
     }
     // init generation of texture coordinates
@@ -193,7 +196,7 @@ GUIPolygon::drawGL(const GUIVisualizationSettings& s) const {
     }
     // recall tesselation
     //glCallList(myDisplayList);
-    performTesselation(s.polySize.getExaggeration(s));
+    performTesselation(myLineWidth * s.polySize.getExaggeration(s));
     // de-init generation of texture coordinates
     if (textureID >= 0) {
         glEnable(GL_DEPTH_TEST);
@@ -202,8 +205,16 @@ GUIPolygon::drawGL(const GUIVisualizationSettings& s) const {
         glDisable(GL_TEXTURE_GEN_S);
         glDisable(GL_TEXTURE_GEN_T);
     }
+#ifdef GUIPolygon_DEBUG_DRAW_VERTICES
+    GLHelper::debugVertices(myShape, 80 / s.scale);
+#endif
     glPopMatrix();
-    drawName(myShape.getPolygonCenter(), s.scale, s.polyName);
+    const Position namePos = myShape.getPolygonCenter();
+    drawName(namePos, s.scale, s.polyName);
+    if (s.polyType.show) {
+        GLHelper::drawText(myType, namePos + Position(0, -0.6 * s.polyType.size / s.scale),
+                           GLO_MAX, s.polyType.size / s.scale, s.polyType.color);
+    }
     glPopName();
 }
 
@@ -243,9 +254,8 @@ GUIPolygon::performTesselation(SUMOReal lineWidth) const {
         delete[] points;
 
     } else {
-        myLineWidth = lineWidth;
         GLHelper::drawLine(myShape);
-        GLHelper::drawBoxLines(myShape, myLineWidth);
+        GLHelper::drawBoxLines(myShape, lineWidth);
     }
     //std::cout << "OpenGL says: '" << gluErrorString(glGetError()) << "'\n";
 }

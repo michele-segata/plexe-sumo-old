@@ -10,7 +10,7 @@
 // The XML-Handler for network loading
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,20 +33,10 @@
 #include <config.h>
 #endif
 
-#include <xercesc/sax/HandlerBase.hpp>
-#include <xercesc/sax/SAXException.hpp>
-#include <xercesc/sax/AttributeList.hpp>
-#include <utils/common/SUMOTime.h>
-#include <utils/common/Parameterised.h>
-#include <utils/xml/SUMOXMLDefinitions.h>
-#include <microsim/MSLink.h>
+#include <utils/geom/Boundary.h>
+#include <utils/shapes/ShapeHandler.h>
 #include <microsim/MSRouteHandler.h>
-#include <microsim/traffic_lights/MSSimpleTrafficLightLogic.h>
-#include <microsim/traffic_lights/MSActuatedTrafficLightLogic.h>
-#include <microsim/MSBitSetLogic.h>
-#include "NLBuilder.h"
 #include "NLDiscreteEventBuilder.h"
-
 
 
 // ===========================================================================
@@ -54,6 +44,8 @@
 // ===========================================================================
 class NLContainer;
 class NLDetectorBuilder;
+class NLEdgeControlBuilder;
+class NLJunctionControlBuilder;
 class NLTriggerBuilder;
 class MSTrafficLightLogic;
 
@@ -61,6 +53,26 @@ class MSTrafficLightLogic;
 // ===========================================================================
 // class definitions
 // ===========================================================================
+
+
+/**
+ * @class NLShapeHandler
+ * @brief The XML-Handler for shapes loading network loading
+ *
+ * This subclasses ShapeHandler with MSLane specific function
+ */
+class NLShapeHandler : public ShapeHandler {
+public:
+    NLShapeHandler(const std::string& file, ShapeContainer& sc) :
+        ShapeHandler(file, sc) {}
+
+    /// @brief Destructor
+    virtual ~NLShapeHandler() {}
+
+    Position getLanePos(const std::string& poiID, const std::string& laneID, SUMOReal lanePos);
+};
+
+
 /**
  * @class NLHandler
  * @brief The XML-Handler for network loading
@@ -95,6 +107,14 @@ public:
 
     bool haveSeenInternalEdge() const {
         return myHaveSeenInternalEdge;
+    }
+
+    bool lefthand() const {
+        return myLefthand;
+    }
+
+    SUMOReal networkVersion() const {
+        return myNetworkVersion;
     }
 
 protected:
@@ -294,6 +314,9 @@ protected:
     /// The id of the currently processed WAUT
     std::string myCurrentWAUTID;
 
+    /// The id of the currently processed edge type
+    std::string myCurrentTypeID;
+
     /// The network offset
     Position myNetworkOffset;
 
@@ -309,6 +332,15 @@ protected:
     /// @brief whether the loaded network contains internal lanes
     bool myHaveSeenInternalEdge;
 
+    /// @brief whether the loaded network was built for left hand traffic
+    bool myLefthand;
+
+    /// @brief the loaded network version
+    SUMOReal myNetworkVersion;
+
+    /// @brief whether the location element was already loadee
+    bool myNetIsLoaded;
+
     /// @brief temporary data for building the junction graph after network parsing is finished
     typedef std::map<std::string, std::pair<std::string, std::string> > JunctionGraph;
     JunctionGraph myJunctionGraph;
@@ -321,6 +353,8 @@ private:
     NLHandler& operator=(const NLHandler& s);
 
 };
+
+
 
 
 #endif

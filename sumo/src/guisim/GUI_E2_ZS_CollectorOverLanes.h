@@ -9,7 +9,7 @@
 // The gui-version of a MS_E2_ZS_CollectorOverLanes.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,13 +33,13 @@
 #endif
 
 #include <microsim/output/MS_E2_ZS_CollectorOverLanes.h>
-#include <microsim/MSNet.h>
-#include <utils/geom/Position.h>
-#include <utils/geom/PositionVector.h>
-#include <utils/common/VectorHelper.h>
-#include <utils/common/ValueSource.h>
-#include "GUI_E2_ZS_Collector.h"
 #include "GUIDetectorWrapper.h"
+
+
+// ===========================================================================
+// class declarations
+// ===========================================================================
+class GUI_E2_ZS_Collector;
 
 
 // ===========================================================================

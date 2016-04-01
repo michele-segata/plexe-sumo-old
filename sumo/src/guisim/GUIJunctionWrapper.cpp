@@ -11,7 +11,7 @@
 // }
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,7 @@
 #include <osg/Geometry>
 #endif
 #include <microsim/MSLane.h>
+#include <microsim/MSEdge.h>
 #include <microsim/MSJunction.h>
 #include <utils/geom/Position.h>
 #include <microsim/MSNet.h>
@@ -58,6 +59,7 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+//#define GUIJunctionWrapper_DEBUG_DRAW_NODE_SHAPE_VERTICES
 
 // ===========================================================================
 // method definitions
@@ -77,6 +79,19 @@ GUIJunctionWrapper::GUIJunctionWrapper(MSJunction& junction)
 #else
     myIsInner = false;
 #endif
+    myAmWaterway = myJunction.getIncoming().size() + myJunction.getOutgoing().size() > 0;
+    for (ConstMSEdgeVector::const_iterator it = myJunction.getIncoming().begin(); it != myJunction.getIncoming().end(); ++it) {
+        if (!(*it)->isInternal() && !isWaterway((*it)->getPermissions())) {
+            myAmWaterway = false;
+            break;
+        }
+    }
+    for (ConstMSEdgeVector::const_iterator it = myJunction.getOutgoing().begin(); it != myJunction.getOutgoing().end(); ++it) {
+        if (!(*it)->isInternal() && !isWaterway((*it)->getPermissions())) {
+            myAmWaterway = false;
+            break;
+        }
+    }
 }
 
 
@@ -122,11 +137,20 @@ GUIJunctionWrapper::drawGL(const GUIVisualizationSettings& s) const {
         glPushName(getGlID());
         const SUMOReal colorValue = getColorValue(s);
         GLHelper::setColor(s.junctionColorer.getScheme().getColor(colorValue));
-        glTranslated(0, 0, getType());
-        if (s.scale * myMaxSize < 40.) {
-            GLHelper::drawFilledPoly(myJunction.getShape(), true);
-        } else {
-            GLHelper::drawFilledPolyTesselated(myJunction.getShape(), true);
+
+        // recognize full transparency and simply don't draw
+        GLfloat color[4];
+        glGetFloatv(GL_CURRENT_COLOR, color);
+        if (color[3] != 0) {
+            glTranslated(0, 0, getType());
+            if (s.scale * myMaxSize < 40.) {
+                GLHelper::drawFilledPoly(myJunction.getShape(), true);
+            } else {
+                GLHelper::drawFilledPolyTesselated(myJunction.getShape(), true);
+            }
+#ifdef GUIJunctionWrapper_DEBUG_DRAW_NODE_SHAPE_VERTICES
+            GLHelper::debugVertices(myJunction.getShape(), 80 / s.scale);
+#endif
         }
         glPopName();
         glPopMatrix();
@@ -143,7 +167,11 @@ SUMOReal
 GUIJunctionWrapper::getColorValue(const GUIVisualizationSettings& s) const {
     switch (s.junctionColorer.getActive()) {
         case 0:
-            return 0;
+            if (myAmWaterway) {
+                return 1;
+            } else {
+                return 0;
+            }
         case 1:
             return gSelected.isSelected(getType(), getGlID()) ? 1 : 0;
         case 2:
@@ -171,6 +199,12 @@ GUIJunctionWrapper::getColorValue(const GUIVisualizationSettings& s) const {
                 case NODETYPE_INTERNAL:
                     assert(false);
                     return 8;
+                case NODETYPE_RAIL_SIGNAL:
+                    return 9;
+                case NODETYPE_ZIPPER:
+                    return 10;
+                case NODETYPE_TRAFFIC_LIGHT_RIGHT_ON_RED:
+                    return 11;
             }
         default:
             assert(false);

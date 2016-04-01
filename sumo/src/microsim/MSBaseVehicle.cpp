@@ -9,7 +9,7 @@
 // A base class for vehicle implementations
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -71,6 +71,7 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myMoveReminders(0),
     myDeparture(NOT_YET_DEPARTED),
     myArrivalPos(-1),
+    myArrivalLane(-1),
     myNumberReroutes(0)
 #ifdef _DEBUG
     , myTraceMoveReminders(myShallTraceMoveReminders.count(pars->id) > 0)
@@ -83,7 +84,9 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
         myMoveReminders.push_back(std::make_pair(*dev, 0.));
     }
     myRoute->addReference();
-    calculateArrivalPos();
+    if (!pars->wasSet(VEHPARS_FORCE_REROUTE)) {
+        calculateArrivalParams();
+    }
 }
 
 MSBaseVehicle::~MSBaseVehicle() {
@@ -133,28 +136,43 @@ MSBaseVehicle::getEdge() const {
 
 
 void
-MSBaseVehicle::reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, bool withTaz) {
+MSBaseVehicle::reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, const bool onInit, const bool withTaz) {
     // check whether to reroute
-    std::vector<const MSEdge*> edges;
-    if (withTaz && MSEdge::dictionary(myParameter->fromTaz + "-source") && MSEdge::dictionary(myParameter->toTaz + "-sink")) {
-        router.compute(MSEdge::dictionary(myParameter->fromTaz + "-source"), MSEdge::dictionary(myParameter->toTaz + "-sink"), this, t, edges);
-        if (edges.size() >= 2) {
-            edges.erase(edges.begin());
+    const MSEdge* source = withTaz && onInit ? MSEdge::dictionary(myParameter->fromTaz + "-source") : getRerouteOrigin();
+    if (source == 0) {
+        source = getRerouteOrigin();
+    }
+    const MSEdge* sink = withTaz ? MSEdge::dictionary(myParameter->toTaz + "-sink") : myRoute->getLastEdge();
+    if (sink == 0) {
+        sink = myRoute->getLastEdge();
+    }
+    ConstMSEdgeVector edges;
+    const ConstMSEdgeVector stops = getStopEdges();
+    for (MSRouteIterator s = stops.begin(); s != stops.end(); ++s) {
+        if (*s != source) {
+            // !!! need to adapt t here
+            router.compute(source, *s, this, t, edges);
+            source = *s;
             edges.pop_back();
         }
-    } else {
-        router.compute(getRerouteOrigin(), myRoute->getLastEdge(), this, t, edges);
     }
-    if (edges.empty()) {
-        WRITE_WARNING("No route for vehicle '" + getID() + "' found.");
-        return;
+    router.compute(source, sink, this, t, edges);
+    if (!edges.empty() && edges.front()->getPurpose() == MSEdge::EDGEFUNCTION_DISTRICT) {
+        edges.erase(edges.begin());
     }
-    replaceRouteEdges(edges, withTaz);
+    if (!edges.empty() && edges.back()->getPurpose() == MSEdge::EDGEFUNCTION_DISTRICT) {
+        edges.pop_back();
+    }
+    replaceRouteEdges(edges, onInit);
 }
 
 
 bool
-MSBaseVehicle::replaceRouteEdges(MSEdgeVector& edges, bool onInit) {
+MSBaseVehicle::replaceRouteEdges(ConstMSEdgeVector& edges, bool onInit) {
+    if (edges.empty()) {
+        WRITE_WARNING("No route for vehicle '" + getID() + "' found.");
+        return false;
+    }
     // build a new id, first
     std::string id = getID();
     if (id[0] != '!') {
@@ -165,13 +183,20 @@ MSBaseVehicle::replaceRouteEdges(MSEdgeVector& edges, bool onInit) {
     } else {
         id = id + "!var#1";
     }
-    const MSEdge* const origin = getRerouteOrigin();
-    if (origin != *myCurrEdge && edges.front() == origin) {
-        edges.insert(edges.begin(), *myCurrEdge);
+    int oldSize = (int)edges.size();
+    if (!onInit) {
+        const MSEdge* const origin = getRerouteOrigin();
+        if (origin != *myCurrEdge && edges.front() == origin) {
+            edges.insert(edges.begin(), *myCurrEdge);
+            oldSize = (int)edges.size();
+        }
+        edges.insert(edges.begin(), myRoute->begin(), myCurrEdge);
     }
-    const int oldSize = (int)edges.size();
-    edges.insert(edges.begin(), myRoute->begin(), myCurrEdge);
     if (edges == myRoute->getEdges()) {
+        if (onInit) {
+            // if edges = 'from to' we still need to calculate the arrivalPos once
+            calculateArrivalParams();
+        }
         return true;
     }
     const RGBColor& c = myRoute->getColor();
@@ -200,6 +225,7 @@ MSBaseVehicle::replaceRouteEdges(MSEdgeVector& edges, bool onInit) {
 #endif
         return false;
     }
+    calculateArrivalParams();
     return true;
 }
 
@@ -235,9 +261,12 @@ MSBaseVehicle::hasArrived() const {
 }
 
 void
-MSBaseVehicle::addPerson(MSPerson* /*person*/) {
+MSBaseVehicle::addPerson(MSTransportable* /*person*/) {
 }
 
+void
+MSBaseVehicle::addContainer(MSTransportable* /*container*/) {
+}
 
 bool
 MSBaseVehicle::hasValidRoute(std::string& msg) const {
@@ -245,7 +274,7 @@ MSBaseVehicle::hasValidRoute(std::string& msg) const {
     // check connectivity, first
     for (MSRouteIterator e = myCurrEdge; e != last; ++e) {
         if ((*e)->allowedLanes(**(e + 1), myType->getVehicleClass()) == 0) {
-            msg = "No connection between '" + (*e)->getID() + "' and '" + (*(e + 1))->getID() + "'.";
+            msg = "No connection between edge '" + (*e)->getID() + "' and edge '" + (*(e + 1))->getID() + "'.";
             return false;
         }
     }
@@ -311,8 +340,9 @@ MSBaseVehicle::activateReminders(const MSMoveReminder::Notification reason) {
 
 
 void
-MSBaseVehicle::calculateArrivalPos() {
-    const SUMOReal lastLaneLength = (myRoute->getLastEdge()->getLanes())[0]->getLength();
+MSBaseVehicle::calculateArrivalParams() {
+    const std::vector<MSLane*>& lanes = myRoute->getLastEdge()->getLanes();
+    const SUMOReal lastLaneLength = lanes[0]->getLength();
     switch (myParameter->arrivalPosProcedure) {
         case ARRIVAL_POS_GIVEN:
             if (fabs(myParameter->arrivalPos) > lastLaneLength) {
@@ -330,6 +360,20 @@ MSBaseVehicle::calculateArrivalPos() {
         default:
             myArrivalPos = lastLaneLength;
             break;
+    }
+    if (myParameter->arrivalLaneProcedure == ARRIVAL_LANE_GIVEN) {
+        if (myParameter->arrivalLane >= (int)lanes.size() || !lanes[myParameter->arrivalLane]->allowsVehicleClass(myType->getVehicleClass())) {
+            WRITE_WARNING("Vehicle '" + getID() + "' will not be able to arrive at the given lane '" + myRoute->getLastEdge()->getID() + "_" + toString(myParameter->arrivalLane) + "'!");
+        }
+        myArrivalLane = MIN2(myParameter->arrivalLane, (int)(lanes.size() - 1));
+    }
+    if (myParameter->arrivalSpeedProcedure == ARRIVAL_SPEED_GIVEN) {
+        for (std::vector<MSLane*>::const_iterator l = lanes.begin(); l != lanes.end(); ++l) {
+            if (myParameter->arrivalSpeed <= (*l)->getVehicleMaxSpeed(this)) {
+                return;
+            }
+        }
+        WRITE_WARNING("Vehicle '" + getID() + "' will not be able to arrive with the given speed!");
     }
 }
 
@@ -355,7 +399,7 @@ MSBaseVehicle::getDevice(const std::type_info& type) const {
 void
 MSBaseVehicle::saveState(OutputDevice& out) {
     out.openTag(SUMO_TAG_VEHICLE).writeAttr(SUMO_ATTR_ID, myParameter->id);
-    out.writeAttr(SUMO_ATTR_DEPART, myParameter->depart);
+    out.writeAttr(SUMO_ATTR_DEPART, time2string(myParameter->depart));
     out.writeAttr(SUMO_ATTR_ROUTE, myRoute->getID());
     out.writeAttr(SUMO_ATTR_TYPE, myType->getID());
     // here starts the vehicle internal part (see loading)

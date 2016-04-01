@@ -9,7 +9,7 @@
 // Class for the window that allows to choose a street, junction or vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -99,11 +99,11 @@ GUIDialog_GLObjChooser::GUIDialog_GLObjChooser(
                                   this, MID_CHOOSER_CENTER, ICON_BEFORE_TEXT | LAYOUT_FILL_X | FRAME_THICK | FRAME_RAISED,
                                   0, 0, 0, 0, 4, 4, 4, 4);
     new FXHorizontalSeparator(layout, SEPARATOR_GROOVE | LAYOUT_FILL_X);
-    new FXButton(layout, "Hide Unselected\t\t", GUIIconSubSys::getIcon(ICON_FLAG),
+    new FXButton(layout, "&Hide Unselected\t\t", GUIIconSubSys::getIcon(ICON_FLAG),
                  this, MID_CHOOSER_FILTER, ICON_BEFORE_TEXT | LAYOUT_FILL_X | FRAME_THICK | FRAME_RAISED,
                  0, 0, 0, 0, 4, 4, 4, 4);
     new FXHorizontalSeparator(layout, SEPARATOR_GROOVE | LAYOUT_FILL_X);
-    new FXButton(layout, "Close\t\t", GUIIconSubSys::getIcon(ICON_NO),
+    new FXButton(layout, "&Close\t\t", GUIIconSubSys::getIcon(ICON_NO),
                  this, MID_CANCEL, ICON_BEFORE_TEXT | LAYOUT_FILL_X | FRAME_THICK | FRAME_RAISED,
                  0, 0, 0, 0, 4, 4, 4, 4);
 
@@ -131,7 +131,7 @@ GUIDialog_GLObjChooser::onCmdCenter(FXObject*, FXSelector, void*) {
         GUIGlID id = *static_cast<GUIGlID*>(myList->getItemData(selected));
         GUIGlObject* o = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
         if (o->getType() == GLO_VEHICLE) {
-            GUIVehicle *v = dynamic_cast<GUIVehicle *>(o);
+            GUIVehicle *v = (GUIVehicle *)o;
             myParent->getView()->startTrack(v->getGlID());
         }
         GUIGlObjectStorage::gIDStorage.unblockObject(id);

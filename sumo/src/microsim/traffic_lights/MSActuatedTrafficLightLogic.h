@@ -9,7 +9,7 @@
 // An actuated (adaptive) traffic light logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,7 +58,7 @@ class NLDetectorBuilder;
 class MSActuatedTrafficLightLogic : public MSSimpleTrafficLightLogic {
 public:
     /// @brief Definition of a map from lanes to induct loops lying on them
-    typedef std::map<MSLane*, MSInductLoop*> InductLoopMap;
+    typedef std::map<MSLane*, MSDetectorFileOutput*> InductLoopMap;
 
 public:
     /** @brief Constructor
@@ -74,7 +74,8 @@ public:
                                 const std::string& id, const std::string& programID,
                                 const MSSimpleTrafficLightLogic::Phases& phases,
                                 unsigned int step, SUMOTime delay,
-                                const std::map<std::string, std::string>& parameter);
+                                const std::map<std::string, std::string>& parameter,
+                                const std::string& basePath);
 
 
     /** @brief Initialises the tls with information about incoming lanes
@@ -93,11 +94,10 @@ public:
     /// @{
 
     /** @brief Switches to the next phase
-     * @param[in] isActive Whether this program is the currently used one
      * @return The time of the next switch
      * @see MSTrafficLightLogic::trySwitch
      */
-    SUMOTime trySwitch(bool isActive);
+    SUMOTime trySwitch();
     /// @}
 
 
@@ -130,6 +130,18 @@ protected:
 
     /// The detector distance in seconds
     SUMOReal myDetectorGap;
+
+    /// Whether the detectors shall be shown in the GUI
+    bool myShowDetectors;
+
+    /// The output file for generated detectors
+    std::string myFile;
+
+    /// The frequency for aggregating detector output
+    SUMOTime myFreq;
+
+    /// Whether detector output separates by vType
+    bool mySplitByType;
 
 };
 

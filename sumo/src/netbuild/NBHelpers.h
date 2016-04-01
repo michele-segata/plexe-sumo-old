@@ -10,7 +10,7 @@
 // Some mathematical helper methods
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -34,6 +34,7 @@
 #endif
 
 #include <string>
+#include <set>
 
 
 // ===========================================================================
@@ -52,10 +53,6 @@ class Position;
  */
 class NBHelpers {
 public:
-    /** computes the angle of the straight which is described by the two
-        coordinates */
-    static SUMOReal angle(SUMOReal x1, SUMOReal y1, SUMOReal x2, SUMOReal y2);
-
     /** computes the relative angle between the two angles */
     static SUMOReal relAngle(SUMOReal angle1, SUMOReal angle2);
 
@@ -67,6 +64,9 @@ public:
 
     /** returns the distance between both nodes */
     static SUMOReal distance(NBNode* node1, NBNode* node2);
+
+    /// @brief Add edge ids defined in file (either ID or edge::ID per line) into the given set
+    static void loadEdgesFromFile(const std::string& file, std::set<std::string>& into);
 
 };
 

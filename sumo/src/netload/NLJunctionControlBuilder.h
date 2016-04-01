@@ -9,7 +9,7 @@
 // Builder of microsim-junctions and tls
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -41,6 +41,7 @@
 #include <utils/geom/PositionVector.h>
 #include <microsim/traffic_lights/MSSimpleTrafficLightLogic.h>
 #include <microsim/traffic_lights/MSActuatedTrafficLightLogic.h>
+#include <microsim/traffic_lights/MSRailSignal.h>
 #include <microsim/MSBitSetLogic.h>
 #include <microsim/traffic_lights/MSTLLogicControl.h>
 #include <utils/common/UtilExceptions.h>
@@ -122,7 +123,7 @@ public:
      * @todo Throwing ProcessError would get unneeded if the container would be built by default (see prepare)
      * @todo The type of the junctions shoould probably be checked when supprted (in openJunction)
      */
-    void closeJunction();
+    void closeJunction(const std::string& basePath);
 
 
     /** @brief Builds the MSJunctionControl which holds all of the simulations junctions
@@ -179,7 +180,7 @@ public:
      * @todo min/max: maybe only one type of a phase definition should be built
      */
     void addPhase(SUMOTime duration, const std::string& state,
-                  int min, int max);
+                  SUMOTime min, SUMOTime max);
 
 
     /** @brief Returns a previously build tls logic
@@ -212,7 +213,7 @@ public:
      *
      * @exception InvalidArgument If another tls logic with the same name as the currently built was loaded before
      */
-    virtual void closeTrafficLightLogic();
+    virtual void closeTrafficLightLogic(const std::string& basePath);
 
 
     /** @brief Ends the building of a junction logic (row-logic)
@@ -340,7 +341,7 @@ protected:
     MSBitsetLogic::Foes myActiveFoes;
 
     /// @brief The description about which lanes have an internal follower
-    std::bitset<64> myActiveConts;
+    std::bitset<SUMO_MAX_CONNECTIONS> myActiveConts;
 
     /// @brief The current phase definitions for a simple traffic light
     MSSimpleTrafficLightLogic::Phases myActivePhases;

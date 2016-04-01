@@ -7,10 +7,10 @@
 /// @date    Wed, 12 Dez 2001
 /// @version $Id$
 ///
-//	»missingDescription«
+// Container for holding a right-of-way matrix
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -68,7 +68,7 @@ public:
     MSBitSetLogic(unsigned int nLinks,
                   Logic* logic,
                   Foes* foes,
-                  std::bitset<64> conts)
+                  std::bitset<SUMO_MAX_CONNECTIONS> conts)
         : MSJunctionLogic(nLinks), myLogic(logic),
           myInternalLinksFoes(foes), myConts(conts) {}
 
@@ -80,12 +80,13 @@ public:
     }
 
 
-    /// Returns the foes of the given link
-    const MSLogicJunction::LinkFoes& getFoesFor(unsigned int linkIndex) const {
+    /// @brief Returns the response for the given link
+    const MSLogicJunction::LinkBits& getResponseFor(unsigned int linkIndex) const {
         return (*myLogic)[linkIndex];
     }
 
-    const std::bitset<64>& getInternalFoesFor(unsigned int linkIndex) const {
+    /// @brief Returns the foes for the given link
+    const MSLogicJunction::LinkBits& getFoesFor(unsigned int linkIndex) const {
         return (*myInternalLinksFoes)[linkIndex];
     }
 
@@ -109,7 +110,7 @@ private:
     /// internal lanes logic
     Foes* myInternalLinksFoes;
 
-    std::bitset<64> myConts;
+    std::bitset<SUMO_MAX_CONNECTIONS> myConts;
 
 private:
     /// @brief Invalidated copy constructor.
@@ -121,10 +122,10 @@ private:
 };
 
 
-/** To make things easier we use a fixed size. 64 will be sufficient even for
-    pathological junctions. If it will consume to much space, reduce it to 32.
+/** To make things easier we use a fixed size. SUMO_MAX_CONNECTIONS will hopefully be sufficient even for
+    large asian junctions.
     So, here comes the type which should be used by the netbuilder. */
-typedef MSBitSetLogic< 64 > MSBitsetLogic;
+typedef MSBitSetLogic<SUMO_MAX_CONNECTIONS> MSBitsetLogic;
 
 
 #endif

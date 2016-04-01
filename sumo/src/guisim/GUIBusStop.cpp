@@ -9,7 +9,7 @@
 // A lane area vehicles can halt at (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,7 +33,6 @@
 #include <string>
 #include <utils/common/MsgHandler.h>
 #include <utils/geom/PositionVector.h>
-#include <utils/geom/Line.h>
 #include <utils/geom/Boundary.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/common/ToString.h>
@@ -65,11 +64,12 @@
 // method definitions
 // ===========================================================================
 GUIBusStop::GUIBusStop(const std::string& id, const std::vector<std::string>& lines, MSLane& lane,
-                       SUMOReal frompos, SUMOReal topos)
-    : MSBusStop(id, lines, lane, frompos, topos),
-      GUIGlObject_AbstractAdd("busStop", GLO_TRIGGER, id) {
+                       SUMOReal frompos, SUMOReal topos) :
+    MSStoppingPlace(id, lines, lane, frompos, topos),
+    GUIGlObject_AbstractAdd("busStop", GLO_TRIGGER, id) {
+    const SUMOReal offsetSign = MSNet::getInstance()->lefthand() ? -1 : 1;
     myFGShape = lane.getShape();
-    myFGShape.move2side((SUMOReal) 1.65);
+    myFGShape.move2side(1.65 * offsetSign);
     myFGShape = myFGShape.getSubpart(frompos, topos);
     myFGShapeRotations.reserve(myFGShape.size() - 1);
     myFGShapeLengths.reserve(myFGShape.size() - 1);
@@ -81,7 +81,7 @@ GUIBusStop::GUIBusStop(const std::string& id, const std::vector<std::string>& li
         myFGShapeRotations.push_back((SUMOReal) atan2((s.x() - f.x()), (f.y() - s.y())) * (SUMOReal) 180.0 / (SUMOReal) PI);
     }
     PositionVector tmp = myFGShape;
-    tmp.move2side(1.5);
+    tmp.move2side(1.5 * offsetSign);
     myFGSignPos = tmp.getLineCenter();
     myFGSignRot = 0;
     if (tmp.length() != 0) {
@@ -116,7 +116,7 @@ GUIBusStop::getParameterWindow(GUIMainWindow& app,
     // add items
     ret->mkItem("begin position [m]", false, myBegPos);
     ret->mkItem("end position [m]", false, myEndPos);
-    ret->mkItem("person number [#]", true, new FunctionBinding<GUIBusStop, unsigned int>(this, &MSBusStop::getPersonNumber));
+    ret->mkItem("person number [#]", true, new FunctionBinding<GUIBusStop, unsigned int>(this, &MSStoppingPlace::getTransportableNumber));
     // close building
     ret->closeBuilding();
     return ret;
@@ -133,20 +133,20 @@ GUIBusStop::drawGL(const GUIVisualizationSettings& s) const {
     size_t i;
     glTranslated(0, 0, getType());
     GLHelper::setColor(green);
-    GLHelper::drawBoxLines(myFGShape, myFGShapeRotations, myFGShapeLengths, 1.0);
-    // draw details unless zoomed out to far
     const SUMOReal exaggeration = s.addSize.getExaggeration(s);
+    GLHelper::drawBoxLines(myFGShape, myFGShapeRotations, myFGShapeLengths, exaggeration);
+    // draw details unless zoomed out to far
     if (s.scale * exaggeration >= 10) {
         // draw the lines
+        const SUMOReal rotSign = MSNet::getInstance()->lefthand() ? -1 : 1;
         for (i = 0; i != myLines.size(); ++i) {
             glPushMatrix();
             glTranslated(myFGSignPos.x(), myFGSignPos.y(), 0);
             glRotated(180, 1, 0, 0);
-            glRotated(myFGSignRot, 0, 0, 1);
+            glRotated(rotSign * myFGSignRot, 0, 0, 1);
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             pfSetPosition(0, 0);
             pfSetScale(1.f);
-            glScaled(exaggeration, exaggeration, 1);
             glTranslated(1.2, -(double)i, 0);
             pfDrawString(myLines[i].c_str());
             glPopMatrix();
@@ -163,16 +163,12 @@ GUIBusStop::drawGL(const GUIVisualizationSettings& s) const {
         GLHelper::setColor(yellow);
         GLHelper::drawFilledCircle((SUMOReal) 0.9, noPoints);
         if (s.scale * exaggeration >= 4.5) {
-            GLHelper::drawText("H", Position(), .1, 1.6 * exaggeration, green, myFGSignRot);
+            GLHelper::drawText("H", Position(), .1, 1.6, green, myFGSignRot);
         }
     }
     glPopMatrix();
     glPopName();
     drawName(getCenteringBoundary().getCenter(), s.scale, s.addName);
-    for (std::vector<MSPerson*>::const_iterator i = myWaitingPersons.begin(); i != myWaitingPersons.end(); ++i) {
-        glTranslated(0, 1, 0); // make multiple persons viewable
-        static_cast<GUIPerson*>(*i)->drawGL(s);
-    }
 }
 
 

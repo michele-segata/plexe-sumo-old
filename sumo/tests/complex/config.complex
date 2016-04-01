@@ -1,4 +1,5 @@
 import_config_file:../config_all
+kill_timeout:900
 binary:$TEXTTEST_HOME/toolrunner.py
 use_case_record_mode:GUI
 copy_test_path:duarouter.duarcfg
@@ -14,6 +15,7 @@ copy_test_path:input_definitionA.def.xml
 copy_test_path:input_definitionB.def.xml
 copy_test_path:input_flows.flows.xml
 copy_test_path:input_turns.turns.xml
+copy_test_path:input_types.typ.xml
 copy_test_path:settings.xml
 copy_test_path:sumo.sumocfg
 copy_test_path:sumo_log.sumocfg
@@ -40,6 +42,7 @@ output:^Performance:{->}^Vehicles:
 output:visible boundary
 output:uncheck:
 output:@@[^@]*@@
+output:data\\{REPLACE data/}
 net:<!--{[->]}-->
 vehroutes:<!--{[->]}-->
 tripinfo:<!--{[->]}-->

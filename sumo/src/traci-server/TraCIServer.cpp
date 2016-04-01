@@ -16,7 +16,7 @@
 /// TraCI server used to control sumo by a remote TraCI client (e.g., ns2)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2007-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -78,7 +78,6 @@
 #include "TraCIServerAPI_Lane.h"
 #include "TraCIServerAPI_MeMeDetector.h"
 #include "TraCIServerAPI_ArealDetector.h"
-
 #include "TraCIServerAPI_TLS.h"
 #include "TraCIServerAPI_Vehicle.h"
 #include "TraCIServerAPI_VehicleType.h"
@@ -87,6 +86,7 @@
 #include "TraCIServerAPI_Polygon.h"
 #include "TraCIServerAPI_Edge.h"
 #include "TraCIServerAPI_Simulation.h"
+#include "TraCIServerAPI_Person.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -141,6 +141,8 @@ TraCIServer::TraCIServer(const SUMOTime begin, const int port)
     myExecutors[CMD_SET_EDGE_VARIABLE] = &TraCIServerAPI_Edge::processSet;
     myExecutors[CMD_GET_SIM_VARIABLE] = &TraCIServerAPI_Simulation::processGet;
     myExecutors[CMD_SET_SIM_VARIABLE] = &TraCIServerAPI_Simulation::processSet;
+    myExecutors[CMD_GET_PERSON_VARIABLE] = &TraCIServerAPI_Person::processGet;
+    myExecutors[CMD_SET_PERSON_VARIABLE] = &TraCIServerAPI_Person::processSet;
 
     myParameterSizes[VAR_LEADER] = 9;
 
@@ -182,13 +184,14 @@ TraCIServer::~TraCIServer() {
 // ---------- Initialisation and Shutdown
 void
 TraCIServer::openSocket(const std::map<int, CmdExecutor>& execs) {
-    if (myInstance == 0) {
-        if (!myDoCloseConnection && OptionsCont::getOptions().getInt("remote-port") != 0) {
-            myInstance = new TraCIServer(string2time(OptionsCont::getOptions().getString("begin")),
-                                         OptionsCont::getOptions().getInt("remote-port"));
-            for (std::map<int, CmdExecutor>::const_iterator i = execs.begin(); i != execs.end(); ++i) {
-                myInstance->myExecutors[i->first] = i->second;
-            }
+    if (myInstance != 0) {
+        return;
+    }
+    if (!myDoCloseConnection && OptionsCont::getOptions().getInt("remote-port") != 0) {
+        myInstance = new TraCIServer(string2time(OptionsCont::getOptions().getString("begin")),
+                                     OptionsCont::getOptions().getInt("remote-port"));
+        for (std::map<int, CmdExecutor>::const_iterator i = execs.begin(); i != execs.end(); ++i) {
+            myInstance->myExecutors[i->first] = i->second;
         }
     }
 }
@@ -196,11 +199,16 @@ TraCIServer::openSocket(const std::map<int, CmdExecutor>& execs) {
 
 void
 TraCIServer::close() {
-    if (myInstance != 0) {
-        delete myInstance;
-        myInstance = 0;
-        myDoCloseConnection = true;
+    if (myInstance == 0) {
+        return;
     }
+    if (myDoCloseConnection) {
+        myInstance->writeStatusCmd(CMD_CLOSE, RTYPE_OK, "");
+        myInstance->mySocket->sendExact(myInstance->myOutputStorage);
+    }
+    delete myInstance;
+    myInstance = 0;
+    myDoCloseConnection = true;
 }
 
 
@@ -211,10 +219,12 @@ TraCIServer::wasClosed() {
 
 
 void
-TraCIServer::setVTDControlled(MSVehicle* v, MSLane* l, SUMOReal pos, int edgeOffset, MSEdgeVector route) {
+TraCIServer::setVTDControlled(MSVehicle* v, MSLane* l, SUMOReal pos, int edgeOffset, ConstMSEdgeVector route,
+                              SUMOTime t) {
     myVTDControlledVehicles[v->getID()] = v;
-    v->getInfluencer().setVTDControlled(true, l, pos, edgeOffset, route);
+    v->getInfluencer().setVTDControlled(true, l, pos, edgeOffset, route, t);
 }
+
 
 void
 TraCIServer::postProcessVTD() {
@@ -226,12 +236,6 @@ TraCIServer::postProcessVTD() {
         }
     }
     myVTDControlledVehicles.clear();
-}
-
-
-bool
-TraCIServer::vtdDebug() const {
-    return true;
 }
 
 
@@ -299,11 +303,6 @@ TraCIServer::processCommandsUntilSimStep(SUMOTime step) {
         throw ProcessError(e.what());
     } catch (tcpip::SocketException& e) {
         throw ProcessError(e.what());
-    }
-    if (myInstance != NULL) {
-        delete myInstance;
-        myInstance = 0;
-        myDoCloseConnection = true;
     }
 }
 
@@ -433,13 +432,16 @@ TraCIServer::dispatchCommand() {
                 return commandId;
             }
             case CMD_CLOSE:
-                success = commandCloseConnection();
+                myDoCloseConnection = true;
+                success = true;
                 break;
             case CMD_SUBSCRIBE_INDUCTIONLOOP_VARIABLE:
+            case CMD_SUBSCRIBE_AREAL_DETECTOR_VARIABLE:
             case CMD_SUBSCRIBE_MULTI_ENTRY_EXIT_DETECTOR_VARIABLE:
             case CMD_SUBSCRIBE_TL_VARIABLE:
             case CMD_SUBSCRIBE_LANE_VARIABLE:
             case CMD_SUBSCRIBE_VEHICLE_VARIABLE:
+            case CMD_SUBSCRIBE_PERSON_VARIABLE:
             case CMD_SUBSCRIBE_VEHICLETYPE_VARIABLE:
             case CMD_SUBSCRIBE_ROUTE_VARIABLE:
             case CMD_SUBSCRIBE_POI_VARIABLE:
@@ -451,10 +453,12 @@ TraCIServer::dispatchCommand() {
                 success = addObjectVariableSubscription(commandId, false);
                 break;
             case CMD_SUBSCRIBE_INDUCTIONLOOP_CONTEXT:
+            case CMD_SUBSCRIBE_AREAL_DETECTOR_CONTEXT:
             case CMD_SUBSCRIBE_MULTI_ENTRY_EXIT_DETECTOR_CONTEXT:
             case CMD_SUBSCRIBE_TL_CONTEXT:
             case CMD_SUBSCRIBE_LANE_CONTEXT:
             case CMD_SUBSCRIBE_VEHICLE_CONTEXT:
+            case CMD_SUBSCRIBE_PERSON_CONTEXT:
             case CMD_SUBSCRIBE_VEHICLETYPE_CONTEXT:
             case CMD_SUBSCRIBE_ROUTE_CONTEXT:
             case CMD_SUBSCRIBE_POI_CONTEXT:
@@ -502,15 +506,6 @@ TraCIServer::commandGetVersion() {
     myOutputStorage.writeUnsignedByte(CMD_GETVERSION);
     // and the parameter dependant part
     myOutputStorage.writeStorage(answerTmp);
-    return true;
-}
-
-
-bool
-TraCIServer::commandCloseConnection() {
-    myDoCloseConnection = true;
-    // write answer
-    writeStatusCmd(CMD_CLOSE, RTYPE_OK, "");
     return true;
 }
 
@@ -640,6 +635,12 @@ TraCIServer::findObjectShape(int domain, const std::string& id, PositionVector& 
             break;
         case CMD_SUBSCRIBE_VEHICLE_CONTEXT:
             if (TraCIServerAPI_Vehicle::getPosition(id, p)) {
+                shape.push_back(p);
+                return true;
+            }
+            break;
+        case CMD_SUBSCRIBE_PERSON_CONTEXT:
+            if (TraCIServerAPI_Person::getPosition(id, p)) {
                 shape.push_back(p);
                 return true;
             }

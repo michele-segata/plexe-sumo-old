@@ -9,7 +9,7 @@
 // Importer for networks stored in Elmar's format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -329,10 +329,10 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
         if (getColumn(st, CONNECTION, "0") == "1") {
             geoms = geoms.reverse();
         }
-        geoms.push_front(from->getPosition());
+        geoms.insert(geoms.begin(), from->getPosition());
         geoms.push_back(to->getPosition());
         e = new NBEdge(id, from, to, "", speed, numLanes, priority,
-                       NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET, geoms, streetName, LANESPREAD_CENTER);
+                       NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET, geoms, streetName, "", LANESPREAD_CENTER);
     }
     // add vehicle type information to the edge
     if (myVersion < 6.0) {

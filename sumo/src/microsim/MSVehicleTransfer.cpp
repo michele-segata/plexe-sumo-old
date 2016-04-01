@@ -9,7 +9,7 @@
 // A mover of vehicles that got stucked due to grid locks
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,7 +36,7 @@
 #include "MSLane.h"
 #include "MSEdge.h"
 #include "MSVehicle.h"
-#include "MSAbstractLaneChangeModel.h"
+#include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include "MSVehicleControl.h"
 #include "MSVehicleTransfer.h"
 
@@ -57,15 +57,16 @@ const std::set<const MSVehicle*> MSVehicleTransfer::myEmptyVehicleSet;
 // ===========================================================================
 void
 MSVehicleTransfer::add(const SUMOTime t, MSVehicle* veh) {
-    veh->getLaneChangeModel().endLaneChangeManeuver();
     if (veh->isParking()) {
+        veh->getLaneChangeModel().endLaneChangeManeuver(MSMoveReminder::NOTIFICATION_PARKING);
         MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_STARTING_PARKING);
         myParkingVehicles[veh->getLane()].insert(veh); // initialized to empty set on first use
         veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_PARKING);
     } else {
+        veh->getLaneChangeModel().endLaneChangeManeuver(MSMoveReminder::NOTIFICATION_TELEPORT);
         MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_STARTING_TELEPORT);
         if (veh->succEdge(1) == 0) {
-            WRITE_WARNING("Vehicle '" + veh->getID() + "' teleports beyond end of route ('" + veh->getEdge()->getID() + "'), time " + time2string(t) + ".");
+            WRITE_WARNING("Vehicle '" + veh->getID() + "' teleports beyond arrival edge '" + veh->getEdge()->getID() + "', time " + time2string(t) + ".");
             veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_TELEPORT_ARRIVED);
             MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(veh);
             return;
@@ -127,8 +128,8 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) {
                 i++;
             }
         } else {
-            // handle teleporting vehicles
-            if (l->freeInsertion(*(desc.myVeh), MIN2(l->getSpeedLimit(), desc.myVeh->getMaxSpeed()), MSMoveReminder::NOTIFICATION_TELEPORT)) {
+            // handle teleporting vehicles, lane may be 0 because permissions were modified by a closing rerouter or TraCI
+            if (l != 0 && l->freeInsertion(*(desc.myVeh), MIN2(l->getSpeedLimit(), desc.myVeh->getMaxSpeed()), MSMoveReminder::NOTIFICATION_TELEPORT)) {
                 WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' ends teleporting on edge '" + e->getID() + "', time " + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
                 MSNet::getInstance()->informVehicleStateListener(desc.myVeh, MSNet::VEHICLE_STATE_ENDING_TELEPORT);
                 i = myVehicles.erase(i);
@@ -136,7 +137,7 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) {
                 // could not insert. maybe we should proceed in virtual space
                 if (desc.myProceedTime < time) {
                     if (desc.myVeh->succEdge(1) == 0) {
-                        WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' teleports beyond end of route ('" + e->getID() + "'), time " + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
+                        WRITE_WARNING("Vehicle '" + desc.myVeh->getID() + "' teleports beyond arrival edge '" + e->getID() + "', time " + time2string(MSNet::getInstance()->getCurrentTimeStep()) + ".");
                         desc.myVeh->leaveLane(MSMoveReminder::NOTIFICATION_TELEPORT_ARRIVED);
                         MSNet::getInstance()->getVehicleControl().scheduleVehicleRemoval(desc.myVeh);
                         i = myVehicles.erase(i);

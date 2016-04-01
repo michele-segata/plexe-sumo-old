@@ -11,7 +11,7 @@
 // A class that stores and controls tls and switching of their programs
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,10 +36,17 @@
 
 #include <vector>
 #include <map>
-#include "MSTrafficLightLogic.h"
-#include "MSSimpleTrafficLightLogic.h"
+#include <utils/xml/SUMOXMLDefinitions.h>
 #include <utils/common/Command.h>
-#include <utils/common/UtilExceptions.h>
+
+
+// ===========================================================================
+// class declarations
+// ===========================================================================
+class MSTrafficLightLogic;
+class MSLink;
+class MSLane;
+class MSPhaseDefinition;
 
 
 // ===========================================================================

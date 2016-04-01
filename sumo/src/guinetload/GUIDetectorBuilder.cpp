@@ -8,7 +8,7 @@
 // Builds detectors for guisim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,6 +36,7 @@
 #include <guisim/GUI_E2_ZS_CollectorOverLanes.h>
 #include <guisim/GUIE3Collector.h>
 #include <guisim/GUIInstantInductLoop.h>
+#include <microsim/MSGlobals.h>
 #include <microsim/MSNet.h>
 #include <microsim/output/MSInductLoop.h>
 #include <utils/common/UtilExceptions.h>
@@ -64,8 +65,17 @@ GUIDetectorBuilder::~GUIDetectorBuilder() {}
 
 MSDetectorFileOutput*
 GUIDetectorBuilder::createInductLoop(const std::string& id,
-                                     MSLane* lane, SUMOReal pos, bool splitByType) {
-    return new GUIInductLoop(id, lane, pos, splitByType);
+                                     MSLane* lane, SUMOReal pos, bool splitByType, bool show) {
+    if (show) {
+#ifdef HAVE_INTERNAL
+        if (MSGlobals::gUseMesoSim) {
+            return new GUIMEInductLoop(id, MSGlobals::gMesoNet->getSegmentForEdge(lane->getEdge(), pos), pos);
+        }
+#endif
+        return new GUIInductLoop(id, lane, pos, splitByType);
+    } else {
+        return NLDetectorBuilder::createInductLoop(id, lane, pos, splitByType);
+    }
 }
 
 
@@ -74,15 +84,6 @@ GUIDetectorBuilder::createInstantInductLoop(const std::string& id,
         MSLane* lane, SUMOReal pos, const std::string& od) {
     return new GUIInstantInductLoop(id, OutputDevice::getDevice(od), lane, pos);
 }
-
-
-#ifdef HAVE_INTERNAL
-MEInductLoop*
-GUIDetectorBuilder::createMEInductLoop(const std::string& id,
-                                       MESegment* s, SUMOReal pos) {
-    return new GUIMEInductLoop(id, s, pos);
-}
-#endif
 
 
 MSDetectorFileOutput*

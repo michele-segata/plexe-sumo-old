@@ -10,7 +10,7 @@
 // A position in the 2D- or 3D-world
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -161,14 +161,6 @@ public:
         myY = myY / val;
     }
 
-    void reshiftRotate(SUMOReal xoff, SUMOReal yoff, SUMOReal rot) {
-        SUMOReal x = myX * cos(rot) - myY * sin(rot) + xoff;
-        SUMOReal y = myX * sin(rot) + yoff + myY * cos(rot);
-        myX = x;
-        myY = y;
-    }
-
-
     /// Prints to the output
     friend std::ostream& operator<<(std::ostream& os, const Position& p) {
         os << p.x() << "," << p.y();
@@ -221,7 +213,7 @@ public:
     }
 
     bool almostSame(const Position& p2, SUMOReal maxDiv = POSITION_EPS) const {
-        return fabs(myX - p2.myX) < maxDiv && fabs(myY - p2.myY) < maxDiv && fabs(myZ - p2.myZ) < maxDiv;
+        return distanceTo(p2) < maxDiv;
     }
 
 
@@ -245,6 +237,13 @@ public:
     inline SUMOReal distanceSquaredTo2D(const Position& p2) const {
         return (myX - p2.myX) * (myX - p2.myX) + (myY - p2.myY) * (myY - p2.myY);
     }
+
+
+    /// @brief returns the angle in the plane of the vector pointing from here to the other position
+    inline SUMOReal angleTo2D(const Position& other) const {
+        return atan2(other.myY - myY, other.myX - myX);
+    }
+
 
     /// @brief returns the cross product between this point and the second one
     Position crossProduct(const Position& pos) {

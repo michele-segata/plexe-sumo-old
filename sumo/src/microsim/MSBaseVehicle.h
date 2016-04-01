@@ -9,7 +9,7 @@
 // A base class for vehicle implementations
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2010-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2010-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -51,6 +51,9 @@
  */
 class MSBaseVehicle : public SUMOVehicle {
 public:
+
+    friend class GUIBaseVehicle;
+
     /** @brief Constructor
      * @param[in] pars The vehicle description
      * @param[in] route The vehicle's route
@@ -139,6 +142,14 @@ public:
     }
 
 
+    /** @brief Returns an iterator pointing to the current edge in this vehicles route
+     * @return The current route pointer
+     */
+    const MSRouteIterator& getCurrentRouteEdge() const {
+        return myCurrEdge;
+    }
+
+
     /** @brief Performs a rerouting using the given router
      *
      * Tries to find a new route between the current edge and the destination edge, first.
@@ -148,7 +159,7 @@ public:
      * @param[in] router The router to use
      * @see replaceRoute
      */
-    void reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, bool withTaz = false);
+    void reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, const bool onInit = false, const bool withTaz = false);
 
 
     /** @brief Replaces the current route by the given edges
@@ -161,7 +172,7 @@ public:
      * @param[in] simTime The time at which the route was replaced
      * @return Whether the new route was accepted
      */
-    bool replaceRouteEdges(MSEdgeVector& edges, bool onInit = false);
+    bool replaceRouteEdges(ConstMSEdgeVector& edges, bool onInit = false);
 
 
     /** @brief Returns the vehicle's acceleration
@@ -192,12 +203,25 @@ public:
         return myDeparture;
     }
 
+    /** @brief Returns the depart delay */
+    SUMOTime getDepartDelay() const {
+        return getDeparture() - getParameter().depart;
+    }
+
+
+
     /** @brief Returns this vehicle's desired arrivalPos for its current route
      * (may change on reroute)
      * @return This vehicle's real arrivalPos
      */
     virtual SUMOReal getArrivalPos() const {
         return myArrivalPos;
+    }
+
+    /** @brief Sets this vehicle's desired arrivalPos for its current route
+     */
+    virtual void setArrivalPos(SUMOReal arrivalPos) {
+        myArrivalPos = arrivalPos;
     }
 
     /** @brief Returns whether this vehicle has already departed
@@ -233,7 +257,16 @@ public:
      *
      * @param[in] person The person to add
      */
-    virtual void addPerson(MSPerson* person);
+    virtual void addPerson(MSTransportable* person);
+
+
+    /** @brief Adds a container to this vehicle
+     *
+     * The default implementation does nothing since containers are not supported by default
+     *
+     * @param[in] container The container to add
+     */
+    virtual void addContainer(MSTransportable* container);
 
     /** @brief Validates the current route
      * @param[out] msg Description why the route is not valid (if it is the case)
@@ -304,9 +337,13 @@ public:
 
 
 protected:
-    /** @brief (Re-)Calculates the arrival position from the vehicle parameters
+    /** @brief (Re-)Calculates the arrival position and lane from the vehicle parameters
      */
-    void calculateArrivalPos();
+    void calculateArrivalParams();
+
+    /** @brief Returns the list of still pending stop edges
+     */
+    virtual const ConstMSEdgeVector getStopEdges() const = 0;
 
 protected:
     /// @brief This Vehicle's parameter.
@@ -343,6 +380,9 @@ protected:
 
     /// the position on the destination lane where the vehicle stops
     SUMOReal myArrivalPos;
+
+    /// the position on the destination lane where the vehicle stops
+    int myArrivalLane;
 
     /// @brief The number of reroutings
     unsigned int myNumberReroutes;

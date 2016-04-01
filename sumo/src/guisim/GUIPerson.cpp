@@ -9,7 +9,7 @@
 // A MSPerson extended by some values for usage within the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -34,16 +34,16 @@
 #include <vector>
 #include <string>
 #include <foreign/polyfonts/polyfonts.h>
-#include <microsim/MSPerson.h>
-#include <microsim/MSPModel_Striping.h>
+#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/pedestrians/MSPModel_Striping.h>
 #include <microsim/logging/CastingFunctionBinding.h>
 #include <microsim/logging/FunctionBinding.h>
 #include <microsim/MSVehicleControl.h>
-#include <microsim/MSAbstractLaneChangeModel.h>
 #include <microsim/devices/MSDevice_Vehroutes.h>
 #include <utils/common/StringUtils.h>
 #include <utils/vehicle/SUMOVehicleParameter.h>
 #include <utils/common/AbstractMutex.h>
+#include <utils/geom/GeomHelper.h>
 #include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/gui/windows/GUISUMOAbstractView.h>
 #include <utils/gui/windows/GUIAppEnum.h>
@@ -51,39 +51,34 @@
 #include <utils/gui/div/GUIGlobalSelection.h>
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/div/GLObjectValuePassConnector.h>
+#include <utils/gui/globjects/GLIncludes.h>
 #include <gui/GUIApplicationWindow.h>
 #include <gui/GUIGlobals.h>
-#include "GUIPerson.h"
+#include "GUILane.h"
 #include "GUINet.h"
 #include "GUIEdge.h"
-#include <utils/gui/globjects/GLIncludes.h>
+#include "GUIPerson.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
-//#define GUIPerson_DEBUG_DRAW_WALKING_AREA_SHAPE
+//#define GUIPerson_DEBUG_DRAW_WALKINGAREA_PATHS 1
 
 // ===========================================================================
 // FOX callback mapping
 // ===========================================================================
-/*
 FXDEFMAP(GUIPerson::GUIPersonPopupMenu) GUIPersonPopupMenuMap[] = {
-    FXMAPFUNC(SEL_COMMAND, MID_SHOW_ALLROUTES, GUIPerson::GUIPersonPopupMenu::onCmdShowAllRoutes),
-    FXMAPFUNC(SEL_COMMAND, MID_HIDE_ALLROUTES, GUIPerson::GUIPersonPopupMenu::onCmdHideAllRoutes),
-    FXMAPFUNC(SEL_COMMAND, MID_SHOW_CURRENTROUTE, GUIPerson::GUIPersonPopupMenu::onCmdShowCurrentRoute),
-    FXMAPFUNC(SEL_COMMAND, MID_HIDE_CURRENTROUTE, GUIPerson::GUIPersonPopupMenu::onCmdHideCurrentRoute),
-    FXMAPFUNC(SEL_COMMAND, MID_SHOW_BEST_LANES, GUIPerson::GUIPersonPopupMenu::onCmdShowBestLanes),
-    FXMAPFUNC(SEL_COMMAND, MID_HIDE_BEST_LANES, GUIPerson::GUIPersonPopupMenu::onCmdHideBestLanes),
-    FXMAPFUNC(SEL_COMMAND, MID_START_TRACK, GUIPerson::GUIPersonPopupMenu::onCmdStartTrack),
-    FXMAPFUNC(SEL_COMMAND, MID_STOP_TRACK, GUIPerson::GUIPersonPopupMenu::onCmdStopTrack),
-    FXMAPFUNC(SEL_COMMAND, MID_SHOW_LFLINKITEMS, GUIPerson::GUIPersonPopupMenu::onCmdShowLFLinkItems),
-    FXMAPFUNC(SEL_COMMAND, MID_HIDE_LFLINKITEMS, GUIPerson::GUIPersonPopupMenu::onCmdHideLFLinkItems),
+    FXMAPFUNC(SEL_COMMAND, MID_SHOW_CURRENTROUTE,     GUIPerson::GUIPersonPopupMenu::onCmdShowCurrentRoute),
+    FXMAPFUNC(SEL_COMMAND, MID_HIDE_CURRENTROUTE,     GUIPerson::GUIPersonPopupMenu::onCmdHideCurrentRoute),
+    FXMAPFUNC(SEL_COMMAND, MID_SHOW_WALKINGAREA_PATH, GUIPerson::GUIPersonPopupMenu::onCmdShowWalkingareaPath),
+    FXMAPFUNC(SEL_COMMAND, MID_HIDE_WALKINGAREA_PATH, GUIPerson::GUIPersonPopupMenu::onCmdHideWalkingareaPath),
+    FXMAPFUNC(SEL_COMMAND, MID_START_TRACK,           GUIPerson::GUIPersonPopupMenu::onCmdStartTrack),
+    FXMAPFUNC(SEL_COMMAND, MID_STOP_TRACK,            GUIPerson::GUIPersonPopupMenu::onCmdStopTrack),
 };
 
 // Object implementation
 FXIMPLEMENT(GUIPerson::GUIPersonPopupMenu, GUIGLObjectPopupMenu, GUIPersonPopupMenuMap, ARRAYNUMBER(GUIPersonPopupMenuMap))
-*/
 
 
 
@@ -95,21 +90,77 @@ FXIMPLEMENT(GUIPerson::GUIPersonPopupMenu, GUIGLObjectPopupMenu, GUIPersonPopupM
  * ----------------------------------------------------------------------- */
 GUIPerson::GUIPersonPopupMenu::GUIPersonPopupMenu(
     GUIMainWindow& app, GUISUMOAbstractView& parent,
-    GUIGlObject& o, std::map<GUISUMOAbstractView*, int>& additionalVisualizations)
-    : GUIGLObjectPopupMenu(app, parent, o), myVehiclesAdditionalVisualizations(additionalVisualizations) {
-}
+    GUIGlObject& o, std::map<GUISUMOAbstractView*, int>& additionalVisualizations) :
+    GUIGLObjectPopupMenu(app, parent, o),
+    myVehiclesAdditionalVisualizations(additionalVisualizations)
+{}
 
 
 GUIPerson::GUIPersonPopupMenu::~GUIPersonPopupMenu() {}
+
+long
+GUIPerson::GUIPersonPopupMenu::onCmdShowCurrentRoute(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_PERSON);
+    if (!static_cast<GUIPerson*>(myObject)->hasActiveAddVisualisation(myParent, VO_SHOW_ROUTE)) {
+        static_cast<GUIPerson*>(myObject)->addActiveAddVisualisation(myParent, VO_SHOW_ROUTE);
+    }
+    return 1;
+}
+
+long
+GUIPerson::GUIPersonPopupMenu::onCmdHideCurrentRoute(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_PERSON);
+    static_cast<GUIPerson*>(myObject)->removeActiveAddVisualisation(myParent, VO_SHOW_ROUTE);
+    return 1;
+}
+
+
+
+long
+GUIPerson::GUIPersonPopupMenu::onCmdShowWalkingareaPath(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_PERSON);
+    if (!static_cast<GUIPerson*>(myObject)->hasActiveAddVisualisation(myParent, VO_SHOW_WALKINGAREA_PATH)) {
+        static_cast<GUIPerson*>(myObject)->addActiveAddVisualisation(myParent, VO_SHOW_WALKINGAREA_PATH);
+    }
+    return 1;
+}
+
+long
+GUIPerson::GUIPersonPopupMenu::onCmdHideWalkingareaPath(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_PERSON);
+    static_cast<GUIPerson*>(myObject)->removeActiveAddVisualisation(myParent, VO_SHOW_WALKINGAREA_PATH);
+    return 1;
+}
+
+
+long
+GUIPerson::GUIPersonPopupMenu::onCmdStartTrack(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_PERSON);
+    if (!static_cast<GUIPerson*>(myObject)->hasActiveAddVisualisation(myParent, VO_TRACKED)) {
+        myParent->startTrack(static_cast<GUIPerson*>(myObject)->getGlID());
+        static_cast<GUIPerson*>(myObject)->addActiveAddVisualisation(myParent, VO_TRACKED);
+    }
+    return 1;
+}
+
+long
+GUIPerson::GUIPersonPopupMenu::onCmdStopTrack(FXObject*, FXSelector, void*) {
+    assert(myObject->getType() == GLO_PERSON);
+    static_cast<GUIPerson*>(myObject)->removeActiveAddVisualisation(myParent, VO_TRACKED);
+    myParent->stopTrack();
+    return 1;
+}
+
 
 
 
 /* -------------------------------------------------------------------------
  * GUIPerson - methods
  * ----------------------------------------------------------------------- */
-GUIPerson::GUIPerson(const SUMOVehicleParameter* pars, const MSVehicleType* vtype, MSPerson::MSPersonPlan* plan) :
+GUIPerson::GUIPerson(const SUMOVehicleParameter* pars, const MSVehicleType* vtype, MSTransportable::MSTransportablePlan* plan) :
     MSPerson(pars, vtype, plan),
-    GUIGlObject(GLO_PERSON, pars->id)
+    GUIGlObject(GLO_PERSON, pars->id),
+    myPositionInVehicle(Position::INVALID)
 { }
 
 
@@ -125,6 +176,24 @@ GUIPerson::getPopUpMenu(GUIMainWindow& app,
     buildCenterPopupEntry(ret);
     buildNameCopyPopupEntry(ret);
     buildSelectionPopupEntry(ret);
+    if (hasActiveAddVisualisation(&parent, VO_SHOW_ROUTE)) {
+        new FXMenuCommand(ret, "Hide Current Route", 0, ret, MID_HIDE_CURRENTROUTE);
+    } else {
+        new FXMenuCommand(ret, "Show Current Route", 0, ret, MID_SHOW_CURRENTROUTE);
+    }
+    if (hasActiveAddVisualisation(&parent, VO_SHOW_WALKINGAREA_PATH)) {
+        new FXMenuCommand(ret, "Hide Walkingarea Path", 0, ret, MID_HIDE_WALKINGAREA_PATH);
+    } else {
+        new FXMenuCommand(ret, "Show Walkingarea Path", 0, ret, MID_SHOW_WALKINGAREA_PATH);
+    }
+    new FXMenuSeparator(ret);
+    int trackedID = parent.getTrackedID();
+    if (trackedID < 0 || (size_t)trackedID != getGlID()) {
+        new FXMenuCommand(ret, "Start Tracking", 0, ret, MID_START_TRACK);
+    } else {
+        new FXMenuCommand(ret, "Stop Tracking", 0, ret, MID_STOP_TRACK);
+    }
+    new FXMenuSeparator(ret);
     //
     buildShowParamsPopupEntry(ret);
     buildPositionCopyEntry(ret, false);
@@ -136,7 +205,7 @@ GUIParameterTableWindow*
 GUIPerson::getParameterWindow(GUIMainWindow& app,
                               GUISUMOAbstractView&) {
     GUIParameterTableWindow* ret =
-        new GUIParameterTableWindow(app, *this, 8);
+        new GUIParameterTableWindow(app, *this, 16);
     // add items
     //ret->mkItem("type [NAME]", false, myType->getID());
     ret->mkItem("stage", false, getCurrentStageDescription());
@@ -145,8 +214,18 @@ GUIPerson::getParameterWindow(GUIMainWindow& app,
     ret->mkItem("edge [id]", false, getEdge()->getID());
     ret->mkItem("position [m]", true, new FunctionBinding<GUIPerson, SUMOReal>(this, &GUIPerson::getEdgePos));
     ret->mkItem("speed [m/s]", true, new FunctionBinding<GUIPerson, SUMOReal>(this, &GUIPerson::getSpeed));
-    ret->mkItem("angle [degree]", true, new FunctionBinding<GUIPerson, SUMOReal>(this, &GUIPerson::getAngle));
+    ret->mkItem("angle [degree]", true, new FunctionBinding<GUIPerson, SUMOReal>(this, &GUIPerson::getNaviDegree));
     ret->mkItem("waiting time [s]", true, new FunctionBinding<GUIPerson, SUMOReal>(this, &GUIPerson::getWaitingSeconds));
+
+    ret->mkItem("parameters [key:val]", false, toString(getParameter().getMap()));
+    ret->mkItem("", false, "");
+    ret->mkItem("Type Information:", false, "");
+    ret->mkItem("type [id]", false, myVType->getID());
+    ret->mkItem("length", false, myVType->getLength());
+    ret->mkItem("minGap", false, myVType->getMinGap());
+    ret->mkItem("maximum speed [m/s]", false, myVType->getMaxSpeed());
+
+    ret->mkItem("type parameters [key:val]", false, toString(myVType->getParameter().getMap()));
     // close building
     ret->closeBuilding();
     return ret;
@@ -156,7 +235,12 @@ GUIPerson::getParameterWindow(GUIMainWindow& app,
 Boundary
 GUIPerson::getCenteringBoundary() const {
     Boundary b;
-    b.add(getPosition());
+    // ensure that the vehicle is drawn, otherwise myPositionInVehicle will not be updated
+    if (getCurrentStageType() == DRIVING && !isWaiting4Vehicle()) {
+        b.add(getVehicle()->getPosition());
+    } else {
+        b.add(getPosition());
+    }
     b.grow(20);
     return b;
 }
@@ -189,10 +273,18 @@ GUIPerson::drawGL(const GUIVisualizationSettings& s) const {
             break;
     }
     glPopMatrix();
+#ifdef GUIPerson_DEBUG_DRAW_WALKINGAREA_PATHS
+    drawAction_drawWalkingareaPath(s);
+#endif
+    drawName(p1, s.scale, s.personName);
+    glPopName();
+}
 
-#ifdef GUIPerson_DEBUG_DRAW_WALKING_AREA_SHAPE
+void
+GUIPerson::drawAction_drawWalkingareaPath(const GUIVisualizationSettings& s) const {
     MSPersonStage_Walking* stage = dynamic_cast<MSPersonStage_Walking*>(getCurrentStage());
     if (stage != 0) {
+        setColor(s);
         MSPModel_Striping::PState* stripingState = dynamic_cast<MSPModel_Striping::PState*>(stage->getPedestrianState());
         if (stripingState != 0) {
             MSPModel_Striping::WalkingAreaPath* waPath = stripingState->myWalkingAreaPath;
@@ -204,64 +296,32 @@ GUIPerson::drawGL(const GUIVisualizationSettings& s) const {
             }
         }
     }
-#endif
-
-    drawName(p1, s.scale, s.personName);
-    glPopName();
 }
 
-
 void
-GUIPerson::drawGLAdditional(GUISUMOAbstractView* const /* parent */, const GUIVisualizationSettings& /* s */) const {
+GUIPerson::drawGLAdditional(GUISUMOAbstractView* const parent, const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     glPushMatrix();
-    /*
     glTranslated(0, 0, getType() - .1); // don't draw on top of other cars
-    if (hasActiveAddVisualisation(parent, VO_SHOW_BEST_LANES)) {
-        drawBestLanes();
+    if (hasActiveAddVisualisation(parent, VO_SHOW_WALKINGAREA_PATH)) {
+        drawAction_drawWalkingareaPath(s);
     }
     if (hasActiveAddVisualisation(parent, VO_SHOW_ROUTE)) {
-        drawRoute(s, 0, 0.25);
-    }
-    if (hasActiveAddVisualisation(parent, VO_SHOW_ALL_ROUTES)) {
-        if (getNumberReroutes() > 0) {
-            const int noReroutePlus1 = getNumberReroutes() + 1;
-            for (int i = noReroutePlus1 - 1; i >= 0; i--) {
-                SUMOReal darken = SUMOReal(0.4) / SUMOReal(noReroutePlus1) * SUMOReal(i);
-                drawRoute(s, i, darken);
-            }
-        } else {
-            drawRoute(s, 0, 0.25);
-        }
-    }
-    if (hasActiveAddVisualisation(parent, VO_SHOW_LFLINKITEMS)) {
-        for (DriveItemVector::const_iterator i = myLFLinkLanes.begin(); i != myLFLinkLanes.end(); ++i) {
-            if((*i).myLink==0) {
-                continue;
-            }
-            MSLink* link = (*i).myLink;
-    #ifdef HAVE_INTERNAL_LANES
-            MSLane *via = link->getViaLane();
-            if (via == 0) {
-                via = link->getLane();
-            }
-    #else
-            MSLane *via = link->getLane();
-    #endif
-            if (via != 0) {
-                Position p = via->getShape()[0];
-                if((*i).mySetRequest) {
-                    glColor3f(0, 1, 0);
-                } else {
-                    glColor3f(1, 0, 0);
-                }
-                glTranslated(p.x(), p.y(), -.1);
-                GLHelper::drawFilledCircle(1);
-                glTranslated(-p.x(), -p.y(), .1);
+        if (getCurrentStageType() == MOVING_WITHOUT_VEHICLE) {
+            setColor(s);
+            RGBColor current = GLHelper::getColor();
+            RGBColor darker = current.changedBrightness(-51);
+            GLHelper::setColor(darker);
+            MSPersonStage_Walking* stage = dynamic_cast<MSPersonStage_Walking*>(getCurrentStage());
+            assert(stage != 0);
+            const SUMOReal exaggeration = s.personSize.getExaggeration(s);
+            const ConstMSEdgeVector& edges = stage->getRoute();
+            for (ConstMSEdgeVector::const_iterator it = edges.begin(); it != edges.end(); ++it) {
+                GUILane* lane = static_cast<GUILane*>((*it)->getLanes()[0]);
+                GLHelper::drawBoxLines(lane->getShape(), lane->getShapeRotations(), lane->getShapeLengths(), exaggeration);
             }
         }
     }
-    */
     glPopMatrix();
     glPopName();
 }
@@ -306,9 +366,15 @@ GUIPerson::setFunctionalColor(size_t activeScheme) const {
             }
             return false;
         }
-        case 8: {
-            SUMOReal hue = getAngle() + 180; // [0-360]
+        case 8: { // color by angle
+            SUMOReal hue = GeomHelper::naviDegree(getAngle());
             GLHelper::setColor(RGBColor::fromHSV(hue, 1., 1.));
+            return true;
+        }
+        case 9: { // color randomly (by pointer)
+            const SUMOReal hue = (long)this % 360; // [0-360]
+            const SUMOReal sat = (((long)this / 360) % 67) / 100.0 + 0.33; // [0.33-1]
+            GLHelper::setColor(RGBColor::fromHSV(hue, sat, 1.));
             return true;
         }
         default:
@@ -355,9 +421,9 @@ GUIPerson::getPosition() const {
 
 
 SUMOReal
-GUIPerson::getAngle() const {
+GUIPerson::getNaviDegree() const {
     AbstractMutex::ScopedLocker locker(myLock);
-    return MSPerson::getAngle();
+    return GeomHelper::naviDegree(MSPerson::getAngle());
 }
 
 
@@ -378,20 +444,29 @@ GUIPerson::getSpeed() const {
 void
 GUIPerson::drawAction_drawAsTriangle(const GUIVisualizationSettings& /* s */) const {
     // draw triangle pointing forward
-    glRotated(getAngle(), 0, 0, 1);
+    glRotated(RAD2DEG(getAngle() + PI / 2.), 0, 0, 1);
     glScaled(getVehicleType().getLength(), getVehicleType().getWidth(), 1);
     glBegin(GL_TRIANGLES);
     glVertex2d(0., 0.);
     glVertex2d(1, -0.5);
     glVertex2d(1, 0.5);
     glEnd();
+    // draw a smaller triangle to indicate facing
+    GLHelper::setColor(GLHelper::getColor().changedBrightness(-64));
+    glTranslated(0, 0, .045);
+    glBegin(GL_TRIANGLES);
+    glVertex2d(0., 0.);
+    glVertex2d(0.5, -0.25);
+    glVertex2d(0.5, 0.25);
+    glEnd();
+    glTranslated(0, 0, -.045);
 }
 
 
 void
 GUIPerson::drawAction_drawAsPoly(const GUIVisualizationSettings& /* s */) const {
     // draw pedestrian shape
-    glRotated(getAngle(), 0, 0, 1);
+    glRotated(GeomHelper::naviDegree(getAngle()) - 180, 0, 0, -1);
     glScaled(getVehicleType().getLength(), getVehicleType().getWidth(), 1);
     RGBColor lighter = GLHelper::getColor().changedBrightness(51);
     glTranslated(0, 0, .045);
@@ -419,7 +494,7 @@ GUIPerson::drawAction_drawAsImage(const GUIVisualizationSettings& s) const {
     const std::string& file = getVehicleType().getImgFile();
     if (file != "") {
         if (getVehicleType().getGuiShape() == SVS_PEDESTRIAN) {
-            glRotated(getAngle(), 0, 0, 1);
+            glRotated(RAD2DEG(getAngle() + PI / 2.), 0, 0, 1);
         }
         int textureID = GUITexturesHelper::getTextureID(file);
         if (textureID > 0) {
@@ -432,6 +507,30 @@ GUIPerson::drawAction_drawAsImage(const GUIVisualizationSettings& s) const {
         // fallback if no image is defined
         drawAction_drawAsPoly(s);
     }
+}
+
+
+// ------------ Additional visualisations
+bool
+GUIPerson::hasActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) const {
+    return myAdditionalVisualizations.find(parent) != myAdditionalVisualizations.end() && (myAdditionalVisualizations.find(parent)->second & which) != 0;
+}
+
+
+void
+GUIPerson::addActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) {
+    if (myAdditionalVisualizations.find(parent) == myAdditionalVisualizations.end()) {
+        myAdditionalVisualizations[parent] = 0;
+    }
+    myAdditionalVisualizations[parent] |= which;
+    parent->addAdditionalGLVisualisation(this);
+}
+
+
+void
+GUIPerson::removeActiveAddVisualisation(GUISUMOAbstractView* const parent, int which) {
+    myAdditionalVisualizations[parent] &= ~which;
+    parent->removeAdditionalGLVisualisation(this);
 }
 /****************************************************************************/
 

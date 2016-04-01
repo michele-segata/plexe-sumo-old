@@ -9,7 +9,7 @@
 // The GUI-version of a point of interest
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -107,7 +107,7 @@ GUIPointOfInterest::drawGL(const GUIVisualizationSettings& s) const {
     glPushMatrix();
     GLHelper::setColor(getColor());
     glTranslated(x(), y(), getLayer());
-    glRotated(getAngle(), 0, 0, 1);
+    glRotated(-getNaviDegree(), 0, 0, 1);
 
     if (myImgFile != "") {
         int textureID = GUITexturesHelper::getTextureID(myImgFile);
@@ -121,8 +121,12 @@ GUIPointOfInterest::drawGL(const GUIVisualizationSettings& s) const {
         GLHelper::drawFilledCircle((SUMOReal) 1.3 * exaggeration, 16);
     }
     glPopMatrix();
-    drawName(Position(x() + 1.32 * exaggeration, y() + 1.32 * exaggeration),
-             s.scale, s.poiName);
+    const Position namePos = Position(x() + 1.32 * exaggeration, y() + 1.32 * exaggeration);
+    drawName(namePos, s.scale, s.poiName);
+    if (s.poiType.show) {
+        GLHelper::drawText(myType, namePos + Position(0, -0.6 * s.poiType.size / s.scale),
+                           GLO_MAX, s.poiType.size / s.scale, s.poiType.color);
+    }
     glPopName();
 }
 /****************************************************************************/

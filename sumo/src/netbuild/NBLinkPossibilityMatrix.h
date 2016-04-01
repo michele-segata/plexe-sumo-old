@@ -9,7 +9,7 @@
 // A matric to describe whether two links are foes to each other
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -44,7 +44,7 @@
  * Storing the information which links may be used simultanously, this matrix
  * is simply made by a vector of bitsets
  */
-typedef std::vector<std::bitset<64> > NBLinkPossibilityMatrix;
+typedef std::vector<std::bitset<SUMO_MAX_CONNECTIONS> > NBLinkPossibilityMatrix;
 
 
 #endif

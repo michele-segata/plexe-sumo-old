@@ -1,5 +1,7 @@
 #include "BiArc.h"
+#include <stdexcept>
 #include <cassert>
+#include <cmath> // added for cygwin build 2015-06-10 MB
 
 void BiArc::compute_biarc_params(void)
 {
@@ -130,7 +132,7 @@ void BiArc::compute_biarc_params(void)
       }
       else {
         //this should never happen
-        assert(false);
+        throw std::runtime_error("Could not compute biarc parameters");
       }
     }
   }

@@ -12,7 +12,7 @@
 // Performs lane changing of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -42,19 +42,12 @@
 #include <iterator>
 #include <cstdlib>
 #include <cmath>
-#include <microsim/MSAbstractLaneChangeModel.h>
+#include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include <utils/common/MsgHandler.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
-
-//#define DEBUG_VEHICLE_GUI_SELECTION 1
-#ifdef DEBUG_VEHICLE_GUI_SELECTION
-#include <utils/gui/div/GUIGlobalSelection.h>
-#include <guisim/GUIVehicle.h>
-#include <guisim/GUILane.h>
-#endif
 
 
 // ===========================================================================
@@ -136,7 +129,7 @@ MSLaneChanger::change() {
     myCandi = findCandidate();
     MSVehicle* vehicle = veh(myCandi);
 #ifdef DEBUG_VEHICLE_GUI_SELECTION
-    if (gSelected.isSelected(GLO_VEHICLE, static_cast<const GUIVehicle*>(vehicle)->getGlID())) {
+    if (gDebugSelectedVehicle == vehicle->getID()) {
         int bla = 0;
     }
 #endif
@@ -155,7 +148,7 @@ MSLaneChanger::change() {
         vehicle->adaptBestLanesOccupation(i, myChanger[i].dens);
     }
     const std::vector<MSVehicle::LaneQ>& preb = vehicle->getBestLanes();
-    std::pair<MSVehicle* const, SUMOReal> leader = getRealThisLeader(myCandi);
+    std::pair<MSVehicle* const, SUMOReal> leader = getRealLeader(myCandi);
     // check whether the vehicle wants and is able to change to right lane
     int state1 = 0;
     if (myCandi != myChanger.begin() && (myCandi - 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
@@ -300,42 +293,6 @@ MSLaneChanger::startChange(MSVehicle* vehicle, ChangerIt& from, int direction) {
 
 
 std::pair<MSVehicle* const, SUMOReal>
-MSLaneChanger::getRealThisLeader(const ChangerIt& target) const {
-    // get the leading vehicle on the lane to change to
-    MSVehicle* leader = target->lead;
-    if (leader == 0) {
-        MSLane* targetLane = target->lane;
-        MSVehicle* predP = targetLane->getPartialOccupator();
-        if (predP != 0) {
-            return std::pair<MSVehicle*, SUMOReal>(predP, targetLane->getPartialOccupatorEnd() - veh(myCandi)->getPositionOnLane());
-        }
-        const std::vector<MSLane*>& bestLaneConts = veh(myCandi)->getBestLanesContinuation();
-        MSLinkCont::const_iterator link = MSLane::succLinkSec(*veh(myCandi), 1, *targetLane, bestLaneConts);
-        if (targetLane->isLinkEnd(link)) {
-            return std::pair<MSVehicle*, SUMOReal>(static_cast<MSVehicle*>(0), -1);
-        }
-        MSLane* nextLane = (*link)->getLane();
-        if (nextLane == 0) {
-            return std::pair<MSVehicle*, SUMOReal>(static_cast<MSVehicle*>(0), -1);
-        }
-        leader = nextLane->getLastVehicle();
-        if (leader == 0) {
-            return std::pair<MSVehicle*, SUMOReal>(static_cast<MSVehicle*>(0), -1);
-        }
-        SUMOReal gap =
-            leader->getPositionOnLane() - leader->getVehicleType().getLength()
-            +
-            (myCandi->lane->getLength() - veh(myCandi)->getPositionOnLane() - veh(myCandi)->getVehicleType().getMinGap()); // !!! recheck
-        return std::pair<MSVehicle* const, SUMOReal>(leader, MAX2((SUMOReal) 0, gap));
-    } else {
-        MSVehicle* candi = veh(myCandi);
-        SUMOReal gap = leader->getPositionOnLane() - leader->getVehicleType().getLength() - candi->getPositionOnLane() - candi->getVehicleType().getMinGap();
-        return std::pair<MSVehicle* const, SUMOReal>(leader, MAX2((SUMOReal) 0, gap));
-    }
-}
-
-
-std::pair<MSVehicle* const, SUMOReal>
 MSLaneChanger::getRealLeader(const ChangerIt& target) const {
     // get the leading vehicle on the lane to change to
     MSVehicle* neighLead = target->lead;
@@ -379,14 +336,8 @@ MSLaneChanger::getRealFollower(const ChangerIt& target) const {
     }
     if (neighFollow == 0) {
         MSVehicle* candi = veh(myCandi);
-        // in order to look back, we'd need the minimum braking ability of vehicles in the net...
-        // we'll assume it to be 4m/s^2
-        // !!!revisit
-        SUMOReal speed = target->lane->getSpeedLimit();
-        SUMOReal dist = speed * speed / (2.*4.) + SPEED2DIST(speed) + candi->getVehicleType().getLength();
-        dist = MIN2(dist, (SUMOReal) 500.);
         return target->lane->getFollowerOnConsecutive(
-                   dist, candi->getPositionOnLane() - candi->getVehicleType().getLength(),
+                   candi->getPositionOnLane() - candi->getVehicleType().getLength(),
                    candi->getSpeed(), candi->getCarFollowModel().getMaxDecel());
     } else {
         MSVehicle* candi = veh(myCandi);
@@ -405,7 +356,7 @@ MSLaneChanger::updateChanger(bool vehHasChanged) {
     // "Push" the vehicles to the back, i.e. follower becomes vehicle,
     // vehicle becomes leader, and leader becomes predecessor of vehicle,
     // if it exists.
-    if (!vehHasChanged) {
+    if (!vehHasChanged || MSGlobals::gLaneChangeDuration > DELTA_T) {
         myCandi->lead = veh(myCandi);
     }
     myCandi->veh    = myCandi->veh + 1;
@@ -518,6 +469,77 @@ MSLaneChanger::checkChange(
                     && (neighLead2.second < vehicle->getCarFollowModel().getSecureGap(
                             vehicle->getSpeed(), neighLead2.first->getSpeed(), neighLead2.first->getCarFollowModel().getMaxDecel()))) {
                 state |= blockedByLeader;
+            }
+        }
+    }
+    if ((state & LCA_BLOCKED) == 0 && (state & LCA_WANTS_LANECHANGE) != 0 && MSGlobals::gLaneChangeDuration > DELTA_T) {
+        // ensure that a continuous lane change manoeuvre can be completed
+        // before the next turning movement
+        SUMOReal seen = myCandi->lane->getLength() - vehicle->getPositionOnLane();
+        const SUMOReal decel = vehicle->getCarFollowModel().getMaxDecel() * STEPS2TIME(MSGlobals::gLaneChangeDuration);
+        const SUMOReal avgSpeed = 0.5 * (vehicle->getSpeed() + MAX2((SUMOReal)0, vehicle->getSpeed() - decel));
+        const SUMOReal space2change = avgSpeed * STEPS2TIME(MSGlobals::gLaneChangeDuration);
+        // for finding turns it doesn't matter whether we look along the current lane or the target lane
+        const std::vector<MSLane*>& bestLaneConts = vehicle->getBestLanesContinuation();
+        unsigned int view = 1;
+        MSLane* nextLane = vehicle->getLane();
+        MSLinkCont::const_iterator link = MSLane::succLinkSec(*vehicle, view, *nextLane, bestLaneConts);
+        while (!nextLane->isLinkEnd(link) && seen <= space2change) {
+            if ((*link)->getDirection() == LINKDIR_LEFT || (*link)->getDirection() == LINKDIR_RIGHT
+                    // the lanes after an internal junction are on different
+                    // edges and do not allow lane-changing
+                    || (nextLane->getEdge().isInternal() && (*link)->getViaLaneOrLane()->getEdge().isInternal())
+               ) {
+                state |= LCA_INSUFFICIENT_SPACE;
+                break;
+            }
+#ifdef HAVE_INTERNAL_LANES
+            if ((*link)->getViaLane() == 0) {
+                view++;
+            }
+#else
+            view++;
+#endif
+            nextLane = (*link)->getViaLaneOrLane();
+            seen += nextLane->getLength();
+            // get the next link used
+            link = MSLane::succLinkSec(*vehicle, view, *nextLane, bestLaneConts);
+        }
+
+        if ((state & LCA_BLOCKED) == 0) {
+            // check for dangerous leaders in case the target lane changes laterally between
+            // now and the lane-changing midpoint
+            const SUMOReal speed = vehicle->getSpeed();
+            seen = myCandi->lane->getLength() - vehicle->getPositionOnLane();
+            nextLane = vehicle->getLane();
+            view = 1;
+            const SUMOReal dist = vehicle->getCarFollowModel().brakeGap(speed) + vehicle->getVehicleType().getMinGap();
+            MSLinkCont::const_iterator link = MSLane::succLinkSec(*vehicle, view, *nextLane, bestLaneConts);
+            while (!nextLane->isLinkEnd(link) && seen <= space2change && seen <= dist) {
+                nextLane = (*link)->getViaLaneOrLane();
+                MSLane* targetLane = nextLane->getParallelLane(laneOffset);
+                if (targetLane == 0) {
+                    state |= LCA_INSUFFICIENT_SPACE;
+                    break;
+                } else {
+                    std::pair<MSVehicle* const, SUMOReal> neighLead2 = targetLane->getLeader(vehicle, -seen, true);
+                    if (neighLead2.first != 0 && neighLead2.first != neighLead.first
+                            && (neighLead2.second < vehicle->getCarFollowModel().getSecureGap(
+                                    vehicle->getSpeed(), neighLead2.first->getSpeed(), neighLead2.first->getCarFollowModel().getMaxDecel()))) {
+                        state |= blockedByLeader;
+                        break;
+                    }
+                }
+#ifdef HAVE_INTERNAL_LANES
+                if ((*link)->getViaLane() == 0) {
+                    view++;
+                }
+#else
+                view++;
+#endif
+                seen += nextLane->getLength();
+                // get the next link used
+                link = MSLane::succLinkSec(*vehicle, view, *nextLane, bestLaneConts);
             }
         }
     }

@@ -9,7 +9,7 @@
 // Importer for networks stored in openDrive format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -352,9 +352,13 @@ protected:
      * @brief Representation of an openDrive "link"
      */
     struct OpenDriveEdge {
-        OpenDriveEdge(const std::string& idArg, const std::string& junctionArg, SUMOReal lengthArg)
-            : id(idArg), junction(junctionArg), length(lengthArg),
-              from(0), to(0) {
+        OpenDriveEdge(const std::string& idArg, const std::string& streetNameArg, const std::string& junctionArg, SUMOReal lengthArg) :
+            id(idArg),
+            streetName(streetNameArg),
+            junction(junctionArg),
+            length(lengthArg),
+            from(0),
+            to(0) {
             isInner = junction != "" && junction != "-1";
         }
 
@@ -370,6 +374,8 @@ protected:
 
         /// @brief The id of the edge
         std::string id;
+        /// @brief The road name of the edge
+        std::string streetName;
         /// @brief The id of the junction the edge belongs to
         std::string junction;
         /// @brief The length of the edge
@@ -498,10 +504,10 @@ protected:
     static NBNode* getOrBuildNode(const std::string& id, const Position& pos, NBNodeCont& nc);
 
 
-    static std::vector<Position> geomFromLine(const OpenDriveEdge& e, const OpenDriveGeometry& g);
-    static std::vector<Position> geomFromSpiral(const OpenDriveEdge& e, const OpenDriveGeometry& g);
-    static std::vector<Position> geomFromArc(const OpenDriveEdge& e, const OpenDriveGeometry& g);
-    static std::vector<Position> geomFromPoly(const OpenDriveEdge& e, const OpenDriveGeometry& g);
+    static PositionVector geomFromLine(const OpenDriveEdge& e, const OpenDriveGeometry& g);
+    static PositionVector geomFromSpiral(const OpenDriveEdge& e, const OpenDriveGeometry& g);
+    static PositionVector geomFromArc(const OpenDriveEdge& e, const OpenDriveGeometry& g);
+    static PositionVector geomFromPoly(const OpenDriveEdge& e, const OpenDriveGeometry& g);
     static Position calculateStraightEndPoint(double hdg, double length, const Position& start);
     static void calculateCurveCenter(SUMOReal* ad_x, SUMOReal* ad_y, SUMOReal ad_radius, SUMOReal ad_hdg);
     static void calcPointOnCurve(SUMOReal* ad_x, SUMOReal* ad_y, SUMOReal ad_centerX, SUMOReal ad_centerY,

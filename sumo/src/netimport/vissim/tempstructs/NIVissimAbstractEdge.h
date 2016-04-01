@@ -8,7 +8,7 @@
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -52,8 +52,6 @@ public:
     bool overlapsWith(const AbstractPoly& p, SUMOReal offset = 0.0) const;
     virtual void setNodeCluster(int nodeid) = 0;
     bool hasNodeCluster() const;
-    SUMOReal crossesAtPoint(const Position& p1,
-                            const Position& p2) const;
 
     virtual void buildGeom() = 0;
     int getID() const;

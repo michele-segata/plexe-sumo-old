@@ -8,7 +8,7 @@
 // The main interface for loading a microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -35,7 +35,6 @@
 #include <map>
 #include <vector>
 #include <utils/xml/SAXWeightsHandler.h>
-#include <microsim/MSNet.h>
 
 
 // ===========================================================================
@@ -52,6 +51,7 @@ class NLJunctionControlBuilder;
 class NLDetectorBuilder;
 class NLTriggerBuilder;
 class SUMORouteLoader;
+class SUMORouteLoaderControl;
 
 
 // ===========================================================================

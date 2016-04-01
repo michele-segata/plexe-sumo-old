@@ -15,7 +15,7 @@
 // Representation of a vehicle in the micro simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -59,15 +59,17 @@ class MSLaneChanger;
 class MSCACCLaneChanger;
 class MSVehicleTransfer;
 class MSAbstractLaneChangeModel;
-class MSBusStop;
+class MSStoppingPlace;
+class MSChargingStation;
 class MSPerson;
 class MSDevice;
 class MSEdgeWeightsStorage;
 class OutputDevice;
 class Position;
 class MSDevice_Person;
+class MSDevice_Container;
+class MSContainer;
 class MSJunction;
-
 
 // ===========================================================================
 // class definitions
@@ -478,6 +480,10 @@ public:
     MSAbstractLaneChangeModel& getLaneChangeModel();
     const MSAbstractLaneChangeModel& getLaneChangeModel() const;
 
+    const std::vector<MSLane*>& getFurtherLanes() const {
+        return myFurtherLanes;
+    }
+
     /// @name strategical/tactical lane choosing methods
     /// @{
 
@@ -594,7 +600,11 @@ public:
         /// @brief The lane to stop at
         const MSLane* lane;
         /// @brief (Optional) bus stop if one is assigned to the stop
-        MSBusStop* busstop;
+        MSStoppingPlace* busstop;
+        /// @brief (Optional) container stop if one is assigned to the stop
+        MSStoppingPlace* containerstop;
+        /// @brief (Optional) charging station if one is assigned to the stop
+        MSChargingStation* chargingStation;
         /// @brief The stopping position start
         SUMOReal startPos;
         /// @brief The stopping position end
@@ -605,12 +615,21 @@ public:
         SUMOTime until;
         /// @brief whether an arriving person lets the vehicle continue
         bool triggered;
+        /// @brief whether an arriving container lets the vehicle continue
+        bool containerTriggered;
         /// @brief whether the vehicle is removed from the net while stopping
         bool parking;
         /// @brief Information whether the stop has been reached
         bool reached;
         /// @brief IDs of persons the vehicle has to wait for until departing
         std::set<std::string> awaitedPersons;
+        /// @brief IDs of containers the vehicle has to wait for until departing
+        std::set<std::string> awaitedContainers;
+        /// @brief The time at which the vehicle is able to board another person
+        SUMOTime timeToBoardNextPerson;
+        /// @brief The time at which the vehicle is able to load another container
+        SUMOTime timeToLoadNextContainer;
+
     };
 
 
@@ -645,6 +664,10 @@ public:
      * @return whether the vehicle is on a triggered stop
      */
     bool isStoppedTriggered() const;
+
+    /** @brief return whether the given position is within range of the current stop
+     */
+    bool isStoppedInRange(SUMOReal pos) const;
     /// @}
 
     bool knowsEdgeTest(MSEdge& edge) const;
@@ -653,20 +676,21 @@ public:
     /**
      * Compute distance that will be covered, if the vehicle moves to a given position on its route,
      * starting at its current position.
-     * @param destPos:	position on the destination edge that shall be reached
+     * @param destPos:  position on the destination edge that shall be reached
      * @param destEdge: destination edge that shall be reached
-     * @return			distance from the vehicles current position to the destination position,
-     *					or a near infinite real value if the destination position is not contained
-     *					within the vehicles route or the vehicle is not active
+     * @return      distance from the vehicles current position to the destination position,
+     *          or a near infinite real value if the destination position is not contained
+     *          within the vehicles route or the vehicle is not active
      */
-    SUMOReal getDistanceToPosition(SUMOReal destPos, const MSEdge* destEdge);
+    SUMOReal getDistanceToPosition(SUMOReal destPos, const MSEdge* destEdge) const;
 
 
     /** @brief Processes stops, returns the velocity needed to reach the stop
      * @return The velocity in dependance to the next/current stop
      * @todo Describe more detailed
      * @see Stop
-     * @see MSBusStop
+     * @see MSStoppingPlace
+     * @see MSStoppingPlace
      */
     SUMOReal processNextStop(SUMOReal currentVelocity);
 
@@ -674,7 +698,7 @@ public:
      *
      * If the distance is not given it is calculated from the brake gap.
      * The gap returned does not include the minGap.
-     * @param dist		up to which distance to look for a leader
+     * @param dist    up to which distance to look for a leader
      * @return The leading vehicle together with the gap; (0, -1) if no leader was found.
      */
     std::pair<const MSVehicle* const, SUMOReal> getLeader(SUMOReal dist = 0) const;
@@ -741,13 +765,26 @@ public:
     /** @brief Adds a passenger
      * @param[in] person The person to add
      */
-    void addPerson(MSPerson* person);
+    void addPerson(MSTransportable* person);
+
+    /// @name Interaction with containers
+    //@{
+
+    /** @brief Adds a container
+     * @param[in] container The container to add
+     */
+    void addContainer(MSTransportable* container);
 
 
     /** @brief Returns the number of persons
      * @return The number of passengers on-board
      */
     unsigned int getPersonNumber() const;
+
+    /** @brief Returns the number of containers
+     * @return The number of contaiers on-board
+     */
+    unsigned int getContainerNumber() const;
 
     /// @name Access to bool signals
     /// @{
@@ -856,15 +893,31 @@ public:
     /**
      * schedule a new stop for the vehicle; each time a stop is reached, the vehicle
      * will wait for the given duration before continuing on its route
-     * @param lane		lane on wich to stop
-     * @param pos		position on the given lane at wich to stop
-     * @param radius	the vehicle will stop if it is within the range [pos-radius, pos+radius]
-     * @param duration	after waiting for the time period duration, the vehicle will
+     * @param lane     lane on wich to stop
+     * @param startPos start position on the given lane at wich to stop
+     * @param endPos   end position on the given lane at wich to stop
+     * @param duration waiting time duration
+     * @param until    time step at which the stop shall end
+     * @param parking  a flag indicating whether the traci stop is used for parking or not
+     * @param triggered a flag indicating whether the traci stop is triggered or not
+     * @param containerTriggered a flag indicating whether the traci stop is triggered by a container or not
+     */
+    bool addTraciStop(MSLane* const lane, const SUMOReal startPos, const SUMOReal endPos, const SUMOTime duration, const SUMOTime until,
+                      const bool parking, const bool triggered, const bool containerTriggered, std::string& errorMsg);
+
+    /**
+     * schedule a new stop for the vehicle; each time a stop is reached, the vehicle
+     * will wait for the given duration before continuing on its route
+     * @param stopId    bus or container stop id
+     * @param duration waiting time duration
+     * @param until    time step at which the stop shall end
      * @param parking   a flag indicating whether the traci stop is used for parking or not
      * @param triggered a flag indicating whether the traci stop is triggered or not
+     * @param containerTriggered a flag indicating whether the traci stop is triggered by a container or not
+     * @param isContainerStop a flag indicating whether the stop is a container stop
      */
-    bool addTraciStop(MSLane* lane, SUMOReal pos, SUMOReal radius, SUMOTime duration,
-                      bool parking, bool triggered, std::string& errorMsg);
+    bool addTraciBusOrContainerStop(const std::string& stopId, const SUMOTime duration, const SUMOTime until, const bool parking,
+                                    const bool triggered, const bool containerTriggered, const bool isContainerStop, std::string& errorMsg);
 
     /**
     * returns the next imminent stop in the stop queue
@@ -1002,19 +1055,35 @@ public:
             return myOriginalSpeed;
         }
 
-        void setVTDControlled(bool c, MSLane* l, SUMOReal pos, int edgeOffset, const MSEdgeVector& route) {
+        void setVTDControlled(bool c, MSLane* l, SUMOReal pos, int edgeOffset, const ConstMSEdgeVector& route, SUMOTime t) {
             myAmVTDControlled = c;
             myVTDLane = l;
             myVTDPos = pos;
             myVTDEdgeOffset = edgeOffset;
             myVTDRoute = route;
+            myLastVTDAccess = t;
+        }
+
+        SUMOTime getLastAccessTimeStep() const {
+            return myLastVTDAccess;
         }
 
         void postProcessVTD(MSVehicle* v);
 
+        /// @brief return the speed that is implicit in the new VTD position
+        SUMOReal implicitSpeedVTD(const MSVehicle* veh, SUMOReal oldSpeed);
+
+        /// @brief return the change in longitudinal position that is implicit in the new VTD position
+        SUMOReal implicitDeltaPosVTD(const MSVehicle* veh);
+
         inline bool isVTDControlled() const {
             return myAmVTDControlled;
         }
+
+        inline bool isVTDAffected(SUMOTime t) const {
+            return myAmVTDControlled && myLastVTDAccess >= t - TIME2STEPS(10);
+        }
+
 
     private:
         /// @brief The velocity time line to apply
@@ -1048,7 +1117,8 @@ public:
         MSLane* myVTDLane;
         SUMOReal myVTDPos;
         int myVTDEdgeOffset;
-        MSEdgeVector myVTDRoute;
+        ConstMSEdgeVector myVTDRoute;
+        SUMOTime myLastVTDAccess;
 
         /// @name Flags for managing conflicts between the laneChangeModel and TraCI laneTimeLine
         //@{
@@ -1127,8 +1197,16 @@ protected:
 
     void setBlinkerInformation();
 
+    /** @brief sets the blue flashing light for emergency vehicles
+     */
+    void setEmergencyBlueLight(SUMOTime currentTime);
+
     /// updates LaneQ::nextOccupation and myCurrentLaneInBestLanes
     void updateOccupancyAndCurrentBestLane(const MSLane* startLane);
+
+    /** @brief Returns the list of still pending stop edges
+     */
+    const ConstMSEdgeVector getStopEdges() const;
 
 
     /// @brief The time the vehicle waits (is not faster than 0.1m/s) in seconds
@@ -1155,6 +1233,9 @@ protected:
     /// @brief The passengers this vehicle may have
     MSDevice_Person* myPersonDevice;
 
+    /// @brief The containers this vehicle may have
+    MSDevice_Container* myContainerDevice;
+
     /// @brief The current acceleration after dawdling in m/s
     SUMOReal myAcceleration;
 
@@ -1169,6 +1250,9 @@ protected:
 
     /// @brief Whether this vehicle is registered as waiting for a person (for deadlock-recognition)
     bool myAmRegisteredAsWaitingForPerson;
+
+    /// @brief Whether this vehicle is registered as waiting for a container (for deadlock-recognition)
+    bool myAmRegisteredAsWaitingForContainer;
 
     bool myHaveToWaitOnNextLink;
 
@@ -1247,6 +1331,7 @@ protected:
      * @param[in] dist The distance during which accelerating takes place
      * @param[in] v The initial speed
      * @param[in] accel The acceleration
+     * XXX affected by ticket #860 (the formula is invalid for the current position update rule)
      */
     inline SUMOReal estimateSpeedAfterDistance(const SUMOReal dist, const SUMOReal v, const SUMOReal accel) const {
         // dist=v*t + 0.5*accel*t^2, solve for t and multiply with accel, then add v
@@ -1255,7 +1340,9 @@ protected:
     }
 
 
-    /* @brief estimate speed while accelerating for the given distance
+    /* @brief adapt safe velocity in accordance to a moving obstacle:
+     * - a leader vehicle
+     * - a vehicle or pedestrian that crosses this vehicles path on an upcoming intersection
      * @param[in] leaderInfo The leading vehicle and the (virtual) distance to it
      * @param[in] seen the distance to the end of the current lane
      * @param[in] lastLink the lastLink index
@@ -1268,11 +1355,6 @@ protected:
                        const SUMOReal seen, DriveProcessItem* const lastLink,
                        const MSLane* const lane, SUMOReal& v, SUMOReal& vLinkPass,
                        SUMOReal distToCrossing = -1) const;
-
-#ifdef HAVE_INTERNAL_LANES
-    /// @brief ids of vehicles being followed across a link (for resolving priority)
-    mutable std::map<const MSJunction*, std::set<std::string> > myLinkLeaders;
-#endif
 
 private:
     /* @brief The vehicle's knowledge about edge efforts/travel times; @see MSEdgeWeightsStorage

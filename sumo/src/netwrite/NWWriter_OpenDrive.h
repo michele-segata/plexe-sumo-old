@@ -7,7 +7,7 @@
 // Exporter writing networks using the openDRIVE format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -31,12 +31,14 @@
 #endif
 
 #include <utils/common/StringBijection.h>
+#include <utils/common/SUMOVehicleClass.h>
 
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
 class NBNetBuilder;
+class NBEdge;
 class OptionsCont;
 class PositionVector;
 class OutputDevice;
@@ -64,6 +66,10 @@ protected:
     static void writeEmptyCenterLane(OutputDevice& device, const std::string& mark, SUMOReal markWidth);
     static int getID(const std::string& origID, StringBijection<int>& map, int& lastID);
 
+    static std::string getLaneType(SVCPermissions permissions);
+
+    /// @brief get the left border of the leftmost lane
+    static PositionVector getLeftBorder(const NBEdge* edge);
 };
 
 

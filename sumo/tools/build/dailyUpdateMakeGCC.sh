@@ -32,6 +32,7 @@ make -f Makefile.cvs >> $MAKELOG 2>&1 || (echo "autoreconf failed" | tee -a $STA
 ./configure --prefix=$PREFIX/sumo $CONFIGURE_OPT >> $MAKELOG 2>&1 || (echo "configure failed" | tee -a $STATUSLOG; tail -10 $MAKELOG)
 if make >> $MAKELOG 2>&1; then
   $PREFIX/sumo/unittest/src/sumo-unittest >> $MAKELOG 2>&1 || (echo "unit tests failed" | tee -a $STATUSLOG; tail -10 $MAKELOG)
+  $PREFIX/sumo/unittest/testSuiteTools.py >> $MAKELOG 2>&1 || (echo "python unit tests failed" | tee -a $STATUSLOG; tail -10 $MAKELOG)
   if make install >> $MAKELOG 2>&1; then
     if test -d "$NIGHTDIR"; then
       make distcheck >> $MAKELOG 2>&1 || (echo "make distcheck failed" | tee -a $STATUSLOG; tail -10 $MAKELOG)
@@ -42,7 +43,7 @@ if make >> $MAKELOG 2>&1; then
             scp -q $f $REMOTEDIR
           fi
         done
-        rsync -rcz $PREFIX/sumo/docs/pydoc $PREFIX/sumo/docs/doxygen $PREFIX/sumo/docs/userdoc $REMOTEDIR
+        rsync -rcz $PREFIX/sumo/docs/pydoc $PREFIX/sumo/docs/doxygen $PREFIX/sumo/docs/userdoc $PREFIX/sumo/docs/javadoc $REMOTEDIR
       else
         echo "make dist-complete failed" | tee -a $STATUSLOG; tail -10 $MAKELOG
       fi
@@ -72,8 +73,8 @@ if test -e $SUMO_BINDIR/sumo -a $SUMO_BINDIR/sumo -nt $PREFIX/sumo/configure; th
     tests/runTests.sh -a sumo.gui -b $FILEPREFIX -name `date +%d%b%y`r$SVNREV >> $TESTLOG 2>&1
   fi
   tests/runTests.sh -b $FILEPREFIX -name `date +%d%b%y`r$SVNREV -coll >> $TESTLOG 2>&1
-  find $TEXTTEST_TMP -name batchreport."*" -exec echo -n '{} ' \; -exec head -1 '{}' \; | sort >> $STATUSLOG
-  rsync -r $SUMO_REPORT $REMOTEDIR
+  echo "batchreport" >> $STATUSLOG
+  rsync -rL $SUMO_REPORT $REMOTEDIR
 fi
 
 echo "--" >> $STATUSLOG

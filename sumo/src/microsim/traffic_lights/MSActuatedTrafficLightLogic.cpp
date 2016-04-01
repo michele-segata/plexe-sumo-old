@@ -11,7 +11,7 @@
 // An actuated (adaptive) traffic light logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -37,7 +37,9 @@
 #include <vector>
 #include <bitset>
 #include <microsim/MSEventControl.h>
+#include <microsim/output/MSDetectorControl.h>
 #include <microsim/output/MSInductLoop.h>
+#include <microsim/MSGlobals.h>
 #include <microsim/MSNet.h>
 #include "MSTrafficLightLogic.h"
 #include "MSActuatedTrafficLightLogic.h"
@@ -65,12 +67,17 @@ MSActuatedTrafficLightLogic::MSActuatedTrafficLightLogic(MSTLLogicControl& tlcon
         const std::string& id, const std::string& programID,
         const Phases& phases,
         unsigned int step, SUMOTime delay,
-        const std::map<std::string, std::string>& parameter) :
+        const std::map<std::string, std::string>& parameter,
+        const std::string& basePath) :
     MSSimpleTrafficLightLogic(tlcontrol, id, programID, phases, step, delay, parameter) {
 
     myMaxGap = TplConvert::_2SUMOReal(getParameter("max-gap", DEFAULT_MAX_GAP).c_str());
     myPassingTime = TplConvert::_2SUMOReal(getParameter("passing-time", DEFAULT_PASSING_TIME).c_str());
     myDetectorGap = TplConvert::_2SUMOReal(getParameter("detector-gap", DEFAULT_DETECTOR_GAP).c_str());
+    myShowDetectors = TplConvert::_2bool(getParameter("show-detectors", "false").c_str());
+    myFile = FileHelpers::checkForRelativity(getParameter("file", "NUL"), basePath);
+    myFreq = TIME2STEPS(TplConvert::_2SUMOReal(getParameter("freq", "300").c_str()));
+    mySplitByType = TplConvert::_2bool(getParameter("splitByType", "false").c_str());
 }
 
 
@@ -98,24 +105,20 @@ MSActuatedTrafficLightLogic::init(NLDetectorBuilder& nb) {
             // Build the induct loop and set it into the container
             std::string id = "TLS" + myID + "_" + myProgramID + "_InductLoopOn_" + lane->getID();
             if (myInductLoops.find(lane) == myInductLoops.end()) {
-                myInductLoops[lane] = dynamic_cast<MSInductLoop*>(nb.createInductLoop(id, lane, ilpos, false));
-                assert(myInductLoops[lane] != 0);
+                myInductLoops[lane] = nb.createInductLoop(id, lane, ilpos, mySplitByType);
+                MSNet::getInstance()->getDetectorControl().add(SUMO_TAG_INDUCTION_LOOP, myInductLoops[lane], myFile, myFreq, myShowDetectors);
             }
         }
     }
 }
 
 
-MSActuatedTrafficLightLogic::~MSActuatedTrafficLightLogic() {
-    for (InductLoopMap::iterator i = myInductLoops.begin(); i != myInductLoops.end(); ++i) {
-        delete(*i).second;
-    }
-}
+MSActuatedTrafficLightLogic::~MSActuatedTrafficLightLogic() { }
 
 
 // ------------ Switching and setting current rows
 SUMOTime
-MSActuatedTrafficLightLogic::trySwitch(bool) {
+MSActuatedTrafficLightLogic::trySwitch() {
     // checks if the actual phase should be continued
     // @note any vehicles which arrived during the previous phases which are now waiting between the detector and the stop line are not
     // considere here. RiLSA recommends to set minDuration in a way that lets all vehicles pass the detector
@@ -146,7 +149,7 @@ MSActuatedTrafficLightLogic::duration(const SUMOReal detectionGap) const {
     // ensure that minimum duration is kept
     SUMOTime newDuration = getCurrentPhaseDef().minDuration - actDuration;
     // try to let the last detected vehicle pass the intersection (duration must be positive)
-    newDuration = MAX3(newDuration, TIME2STEPS(myDetectorGap - detectionGap), 1);
+    newDuration = MAX3(newDuration, TIME2STEPS(myDetectorGap - detectionGap), SUMOTime(1));
     // cut the decimal places to ensure that phases always have integer duration
     if (newDuration % 1000 != 0) {
         const SUMOTime totalDur = newDuration + actDuration;
@@ -182,10 +185,11 @@ MSActuatedTrafficLightLogic::gapControl() {
                 if (myInductLoops.find(*j) == myInductLoops.end()) {
                     continue;
                 }
-                SUMOReal actualGap =
-                    myInductLoops.find(*j)->second->getTimestepsSinceLastDetection();
-                if (actualGap < myMaxGap) {
-                    result = MIN2(result, actualGap);
+                if (!MSGlobals::gUseMesoSim) {
+                    const SUMOReal actualGap = static_cast<MSInductLoop*>(myInductLoops.find(*j)->second)->getTimestepsSinceLastDetection();
+                    if (actualGap < myMaxGap) {
+                        result = MIN2(result, actualGap);
+                    }
                 }
             }
         }

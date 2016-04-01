@@ -9,7 +9,7 @@
 // Dijkstra shortest path algorithm using other values
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -54,7 +54,7 @@
  * The template parameters are:
  * @param E The edge class to use (MSEdge/ROEdge)
  * @param V The vehicle class to use (MSVehicle/ROVehicle)
- * @param PF The prohibition function to use (prohibited_withRestrictions/prohibited_noRestrictions)
+ * @param PF The prohibition function to use (prohibited_withPermissions/noProhibitions)
  * @param EC The class to retrieve the effort for an edge from
  *
  * The router is edge-based. It must know the number of edges for internal reasons
@@ -152,14 +152,33 @@ public:
     virtual void compute(const E* from, const E* to, const V* const vehicle,
                          SUMOTime msTime, std::vector<const E*>& into) {
         assert(from != 0 && to != 0);
+        // check whether from and to can be used
+        if (PF::operator()(from, vehicle)) {
+            myErrorMsgHandler->inform("Vehicle  '" + vehicle->getID() + "' is not allowed on from edge '" + from->getID() + "'.");
+            return;
+        }
+        if (PF::operator()(to, vehicle)) {
+            myErrorMsgHandler->inform("Vehicle  '" + vehicle->getID() + "' is not allowed on to edge '" + to->getID() + "'.");
+            return;
+        }
         this->startQuery();
-        init();
-        // add begin node
-        EdgeInfo* const fromInfo = &(myEdgeInfos[from->getNumericalID()]);
-        fromInfo->effort = 0;
-        fromInfo->prev = 0;
-        fromInfo->leaveTime = STEPS2TIME(msTime);
-        myFrontierList.push_back(fromInfo);
+        const SUMOVehicleClass vClass = vehicle == 0 ? SVC_IGNORING : vehicle->getVClass();
+        if (this->myBulkMode) {
+            const EdgeInfo& toInfo = myEdgeInfos[to->getNumericalID()];
+            if (toInfo.visited) {
+                buildPathFrom(&toInfo, into);
+                this->endQuery(1);
+                return;
+            }
+        } else {
+            init();
+            // add begin node
+            EdgeInfo* const fromInfo = &(myEdgeInfos[from->getNumericalID()]);
+            fromInfo->effort = 0;
+            fromInfo->prev = 0;
+            fromInfo->leaveTime = STEPS2TIME(msTime);
+            myFrontierList.push_back(fromInfo);
+        }
         // loop
         int num_visited = 0;
         while (!myFrontierList.empty()) {
@@ -180,10 +199,9 @@ public:
             const SUMOReal effort = minimumInfo->effort + this->getEffort(minEdge, vehicle, minimumInfo->leaveTime);
             const SUMOReal leaveTime = minimumInfo->leaveTime + getTravelTime(minEdge, vehicle, minimumInfo->leaveTime);
             // check all ways from the node with the minimal length
-            unsigned int i = 0;
-            const unsigned int length_size = minEdge->getNumSuccessors();
-            for (i = 0; i < length_size; i++) {
-                const E* const follower = minEdge->getSuccessor(i);
+            const std::vector<E*>& successors = minEdge->getSuccessors(vClass);
+            for (typename std::vector<E*>::const_iterator it = successors.begin(); it != successors.end(); ++it) {
+                const E* const follower = *it;
                 EdgeInfo* const followerInfo = &(myEdgeInfos[follower->getNumericalID()]);
                 // check whether it can be used
                 if (PF::operator()(follower, vehicle)) {
@@ -206,7 +224,7 @@ public:
             }
         }
         this->endQuery(num_visited);
-        myErrorMsgHandler->inform("No connection between '" + from->getID() + "' and '" + to->getID() + "' found.");
+        myErrorMsgHandler->inform("No connection between edge '" + from->getID() + "' and edge '" + to->getID() + "' found.");
     }
 
 
@@ -225,13 +243,13 @@ public:
 
 public:
     /// Builds the path from marked edges
-    void buildPathFrom(EdgeInfo* rbegin, std::vector<const E*>& edges) {
-        std::deque<const E*> tmp;
+    void buildPathFrom(const EdgeInfo* rbegin, std::vector<const E*>& edges) {
+        std::vector<const E*> tmp;
         while (rbegin != 0) {
-            tmp.push_front((E*) rbegin->edge);  // !!!
+            tmp.push_back(rbegin->edge);
             rbegin = rbegin->prev;
         }
-        std::copy(tmp.begin(), tmp.end(), std::back_inserter(edges));
+        std::copy(tmp.rbegin(), tmp.rend(), std::back_inserter(edges));
     }
 
 private:

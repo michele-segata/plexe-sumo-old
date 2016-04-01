@@ -12,7 +12,7 @@
 // Instance responsible for building networks
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -63,7 +63,8 @@
 // method definitions
 // ===========================================================================
 NBNetBuilder::NBNetBuilder() :
-    myEdgeCont(myTypeCont)
+    myEdgeCont(myTypeCont),
+    myHaveLoadedNetworkWithoutInternalEdges(false)
 {}
 
 
@@ -72,25 +73,6 @@ NBNetBuilder::~NBNetBuilder() {}
 
 void
 NBNetBuilder::applyOptions(OptionsCont& oc) {
-    // we possibly have to load the edges to keep
-    if (oc.isSet("keep-edges.input-file")) {
-        std::ifstream strm(oc.getString("keep-edges.input-file").c_str());
-        if (!strm.good()) {
-            throw ProcessError("Could not load names of edges too keep from '" + oc.getString("keep-edges.input-file") + "'.");
-        }
-        std::ostringstream oss;
-        bool first = true;
-        while (strm.good()) {
-            if (!first) {
-                oss << ',';
-            }
-            std::string name;
-            strm >> name;
-            oss << name;
-            first = false;
-        }
-        oc.set("keep-edges.explicit", oss.str());
-    }
     // apply options to type control
     myTypeCont.setDefaults(oc.getInt("default.lanenumber"), oc.getFloat("default.speed"), oc.getInt("default.priority"));
     // apply options to edge control
@@ -107,6 +89,11 @@ NBNetBuilder::compute(OptionsCont& oc,
     GeoConvHelper& geoConvHelper = GeoConvHelper::getProcessing();
 
 
+    const bool lefthand = oc.getBool("lefthand");
+    if (lefthand) {
+        mirrorX();
+    };
+
     // MODIFYING THE SETS OF NODES AND EDGES
 
     // Removes edges that are connecting the same node
@@ -121,27 +108,22 @@ NBNetBuilder::compute(OptionsCont& oc,
     }
     //
     if (oc.exists("keep-edges.postload") && oc.getBool("keep-edges.postload")) {
-        if (oc.isSet("keep-edges.explicit")) {
+        if (oc.isSet("keep-edges.explicit") || oc.isSet("keep-edges.input-file")) {
             PROGRESS_BEGIN_MESSAGE("Removing unwished edges");
             myEdgeCont.removeUnwishedEdges(myDistrictCont);
             PROGRESS_DONE_MESSAGE();
         }
     }
-    // join junctions (may create new "geometry"-nodes so it needs to come before removing these
-    if (oc.exists("junctions.join-exclude") && oc.isSet("junctions.join-exclude")) {
-        myNodeCont.addJoinExclusion(oc.getStringVector("junctions.join-exclude"));
-    }
-    unsigned int numJoined = myNodeCont.joinLoadedClusters(myDistrictCont, myEdgeCont, myTLLCont);
-    if (oc.getBool("junctions.join")) {
-        PROGRESS_BEGIN_MESSAGE("Joining junction clusters");
+    if (oc.getBool("junctions.join") || (oc.exists("ramps.guess") && oc.getBool("ramps.guess"))) {
         // preliminary geometry computations to determine the length of edges
         // This depends on turning directions and sorting of edge list
         // in case junctions are joined geometry computations have to be repeated
-        NBTurningDirectionsComputer::computeTurnDirections(myNodeCont);
-        NBNodesEdgesSorter::sortNodesEdges(myNodeCont, oc.getBool("lefthand"));
-        myNodeCont.computeNodeShapes(oc.getBool("lefthand"));
+        // preliminary roundabout computations to avoid damaging roundabouts via junctions.join or ramps.guess
+        NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false);
+        NBNodesEdgesSorter::sortNodesEdges(myNodeCont);
+        myEdgeCont.computeLaneShapes();
+        myNodeCont.computeNodeShapes();
         myEdgeCont.computeEdgeShapes();
-        // preliminary roundabout computations to avoid destroying roundabouts
         if (oc.getBool("roundabouts.guess")) {
             myEdgeCont.guessRoundabouts();
         }
@@ -154,10 +136,20 @@ NBNetBuilder::compute(OptionsCont& oc,
             }
             myNodeCont.addJoinExclusion(nodeIDs);
         }
+    }
+    // join junctions (may create new "geometry"-nodes so it needs to come before removing these
+    if (oc.exists("junctions.join-exclude") && oc.isSet("junctions.join-exclude")) {
+        myNodeCont.addJoinExclusion(oc.getStringVector("junctions.join-exclude"));
+    }
+    unsigned int numJoined = myNodeCont.joinLoadedClusters(myDistrictCont, myEdgeCont, myTLLCont);
+    if (oc.getBool("junctions.join")) {
+        PROGRESS_BEGIN_MESSAGE("Joining junction clusters");
         numJoined += myNodeCont.joinJunctions(oc.getFloat("junctions.join-dist"), myDistrictCont, myEdgeCont, myTLLCont);
+        PROGRESS_DONE_MESSAGE();
+    }
+    if (oc.getBool("junctions.join") || (oc.exists("ramps.guess") && oc.getBool("ramps.guess"))) {
         // reset geometry to avoid influencing subsequent steps (ramps.guess)
         myEdgeCont.computeLaneShapes();
-        PROGRESS_DONE_MESSAGE();
     }
     if (numJoined > 0) {
         // bit of a misnomer since we're already done
@@ -168,6 +160,8 @@ NBNetBuilder::compute(OptionsCont& oc,
         unsigned int no = 0;
         const bool removeGeometryNodes = oc.exists("geometry.remove") && oc.getBool("geometry.remove");
         PROGRESS_BEGIN_MESSAGE("Removing empty nodes" + std::string(removeGeometryNodes ? " and geometry nodes" : ""));
+        // removeUnwishedNodes needs turnDirections. @todo: try to call this less often
+        NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false);
         no = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myJoinedEdges, myTLLCont, removeGeometryNodes);
         PROGRESS_DONE_MESSAGE();
         WRITE_MESSAGE("   " + toString(no) + " nodes removed.");
@@ -185,9 +179,9 @@ NBNetBuilder::compute(OptionsCont& oc,
     geoConvHelper.setConvBoundary(boundary);
 
     if (!oc.getBool("offset.disable-normalization") && oc.isDefault("offset.x") && oc.isDefault("offset.y")) {
-        moveToOrigin(geoConvHelper);
+        moveToOrigin(geoConvHelper, lefthand);
     }
-    geoConvHelper.computeFinal(); // information needed for location element fixed at this point
+    geoConvHelper.computeFinal(lefthand); // information needed for location element fixed at this point
 
     if (oc.exists("geometry.min-dist") && oc.isSet("geometry.min-dist")) {
         PROGRESS_BEGIN_MESSAGE("Reducing geometries");
@@ -196,7 +190,7 @@ NBNetBuilder::compute(OptionsCont& oc,
     }
     // @note: removing geometry can create similar edges so joinSimilarEdges  must come afterwards
     // @note: likewise splitting can destroy similarities so joinSimilarEdges must come before
-    if (removeElements) {
+    if (removeElements && oc.getBool("edges.join")) {
         PROGRESS_BEGIN_MESSAGE("Joining similar edges");
         myJoinedEdges.init(myEdgeCont);
         myNodeCont.joinSimilarEdges(myDistrictCont, myEdgeCont, myTLLCont);
@@ -208,18 +202,25 @@ NBNetBuilder::compute(OptionsCont& oc,
         myEdgeCont.splitGeometry(myNodeCont);
         PROGRESS_DONE_MESSAGE();
     }
+    // turning direction
+    PROGRESS_BEGIN_MESSAGE("Computing turning directions");
+    NBTurningDirectionsComputer::computeTurnDirections(myNodeCont);
+    PROGRESS_DONE_MESSAGE();
+    // correct edge geometries to avoid overlap
+    myNodeCont.avoidOverlap();
     // guess ramps
     if ((oc.exists("ramps.guess") && oc.getBool("ramps.guess")) || (oc.exists("ramps.set") && oc.isSet("ramps.set"))) {
         PROGRESS_BEGIN_MESSAGE("Guessing and setting on-/off-ramps");
-        NBNodesEdgesSorter::sortNodesEdges(myNodeCont, oc.getBool("lefthand"));
+        NBNodesEdgesSorter::sortNodesEdges(myNodeCont);
         NBRampsComputer::computeRamps(*this, oc);
         PROGRESS_DONE_MESSAGE();
     }
     // guess sidewalks
-    if (oc.getBool("sidewalks.guess")) {
+    if (oc.getBool("sidewalks.guess") || oc.getBool("sidewalks.guess.from-permissions")) {
         const int sidewalks = myEdgeCont.guessSidewalks(oc.getFloat("default.sidewalk-width"),
                               oc.getFloat("sidewalks.guess.min-speed"),
-                              oc.getFloat("sidewalks.guess.max-speed"));
+                              oc.getFloat("sidewalks.guess.max-speed"),
+                              oc.getBool("sidewalks.guess.from-permissions"));
         WRITE_MESSAGE("Guessed " + toString(sidewalks) + " sidewalks.");
     }
 
@@ -228,33 +229,32 @@ NBNetBuilder::compute(OptionsCont& oc,
     //
     if (oc.exists("geometry.max-angle")) {
         myEdgeCont.checkGeometries(
-            oc.getFloat("geometry.max-angle"),
+            DEG2RAD(oc.getFloat("geometry.max-angle")),
             oc.getFloat("geometry.min-radius"),
             oc.getBool("geometry.min-radius.fix"));
     }
 
     // GEOMETRY COMPUTATION
     //
-    PROGRESS_BEGIN_MESSAGE("Computing turning directions");
-    NBTurningDirectionsComputer::computeTurnDirections(myNodeCont);
-    PROGRESS_DONE_MESSAGE();
-    //
     PROGRESS_BEGIN_MESSAGE("Sorting nodes' edges");
-    NBNodesEdgesSorter::sortNodesEdges(myNodeCont, oc.getBool("lefthand"));
+    NBNodesEdgesSorter::sortNodesEdges(myNodeCont);
     PROGRESS_DONE_MESSAGE();
     myEdgeCont.computeLaneShapes();
     //
     PROGRESS_BEGIN_MESSAGE("Computing node shapes");
     if (oc.exists("geometry.junction-mismatch-threshold")) {
-        myNodeCont.computeNodeShapes(oc.getBool("lefthand"), oc.getFloat("geometry.junction-mismatch-threshold"));
+        myNodeCont.computeNodeShapes(oc.getFloat("geometry.junction-mismatch-threshold"));
     } else {
-        myNodeCont.computeNodeShapes(oc.getBool("lefthand"));
+        myNodeCont.computeNodeShapes();
     }
     PROGRESS_DONE_MESSAGE();
     //
     PROGRESS_BEGIN_MESSAGE("Computing edge shapes");
     myEdgeCont.computeEdgeShapes();
     PROGRESS_DONE_MESSAGE();
+    // resort edges based on the node and edge shapes
+    NBNodesEdgesSorter::sortNodesEdges(myNodeCont, true);
+    NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false);
 
     // APPLY SPEED MODIFICATIONS
     if (oc.exists("speed.offset")) {
@@ -275,24 +275,29 @@ NBNetBuilder::compute(OptionsCont& oc,
     NBNodeTypeComputer::computeNodeTypes(myNodeCont);
     PROGRESS_DONE_MESSAGE();
     //
-    bool buildCrossingsAndWalkingAreas = false;
+    bool haveCrossings = false;
     if (oc.getBool("crossings.guess")) {
-        buildCrossingsAndWalkingAreas = true;
+        haveCrossings = true;
         int crossings = 0;
         for (std::map<std::string, NBNode*>::const_iterator i = myNodeCont.begin(); i != myNodeCont.end(); ++i) {
             crossings += (*i).second->guessCrossings();
         }
         WRITE_MESSAGE("Guessed " + toString(crossings) + " pedestrian crossings.");
     }
-    if (!oc.getBool("no-internal-links") && !buildCrossingsAndWalkingAreas) {
+    if (!haveCrossings) {
         // recheck whether we had crossings in the input
         for (std::map<std::string, NBNode*>::const_iterator i = myNodeCont.begin(); i != myNodeCont.end(); ++i) {
             if (i->second->getCrossings().size() > 0) {
-                buildCrossingsAndWalkingAreas = true;
+                haveCrossings = true;
                 break;
             }
         }
     }
+
+    if (oc.isDefault("no-internal-links") && !haveCrossings && myHaveLoadedNetworkWithoutInternalEdges) {
+        oc.set("no-internal-links", "true");
+    }
+
     //
     PROGRESS_BEGIN_MESSAGE("Computing priorities");
     NBEdgePriorityComputer::computeEdgePriorities(myNodeCont);
@@ -304,17 +309,20 @@ NBNetBuilder::compute(OptionsCont& oc,
     //
     if (oc.getBool("roundabouts.guess")) {
         PROGRESS_BEGIN_MESSAGE("Guessing and setting roundabouts");
-        myEdgeCont.guessRoundabouts();
+        const int numGuessed = myEdgeCont.guessRoundabouts();
+        if (numGuessed > 0) {
+            WRITE_MESSAGE(" Guessed " + toString(numGuessed) + " roundabout(s).");
+        }
         PROGRESS_DONE_MESSAGE();
     }
     myEdgeCont.markRoundabouts();
     //
     PROGRESS_BEGIN_MESSAGE("Computing approaching lanes");
-    myEdgeCont.computeLanes2Edges(buildCrossingsAndWalkingAreas);
+    myEdgeCont.computeLanes2Edges();
     PROGRESS_DONE_MESSAGE();
     //
     PROGRESS_BEGIN_MESSAGE("Dividing of lanes on approached lanes");
-    myNodeCont.computeLanes2Lanes(buildCrossingsAndWalkingAreas);
+    myNodeCont.computeLanes2Lanes();
     myEdgeCont.sortOutgoingLanesConnections();
     PROGRESS_DONE_MESSAGE();
     //
@@ -327,9 +335,14 @@ NBNetBuilder::compute(OptionsCont& oc,
     PROGRESS_DONE_MESSAGE();
     //
     PROGRESS_BEGIN_MESSAGE("Rechecking of lane endings");
-    myEdgeCont.recheckLanes(buildCrossingsAndWalkingAreas);
+    myEdgeCont.recheckLanes();
     PROGRESS_DONE_MESSAGE();
 
+    if (haveCrossings && !oc.getBool("no-internal-links")) {
+        for (std::map<std::string, NBNode*>::const_iterator i = myNodeCont.begin(); i != myNodeCont.end(); ++i) {
+            i->second->buildCrossingsAndWalkingAreas();
+        }
+    }
 
     // GUESS TLS POSITIONS
     PROGRESS_BEGIN_MESSAGE("Assigning nodes to traffic lights");
@@ -339,7 +352,7 @@ NBNetBuilder::compute(OptionsCont& oc,
         for (std::vector<std::string>::const_iterator i = tlControlledNodes.begin(); i != tlControlledNodes.end(); ++i) {
             NBNode* node = myNodeCont.retrieve(*i);
             if (node == 0) {
-                WRITE_WARNING("Building a tl-logic for node '" + *i + "' is not possible." + "\n The node '" + *i + "' is not known.");
+                WRITE_WARNING("Building a tl-logic for junction '" + *i + "' is not possible." + "\n The junction '" + *i + "' is not known.");
             } else {
                 myNodeCont.setAsTLControlled(node, myTLLCont, type);
             }
@@ -358,7 +371,7 @@ NBNetBuilder::compute(OptionsCont& oc,
     // COMPUTING RIGHT-OF-WAY AND TRAFFIC LIGHT PROGRAMS
     //
     PROGRESS_BEGIN_MESSAGE("Computing traffic light control information");
-    myTLLCont.setTLControllingInformation(myEdgeCont);
+    myTLLCont.setTLControllingInformation(myEdgeCont, myNodeCont);
     PROGRESS_DONE_MESSAGE();
     //
     PROGRESS_BEGIN_MESSAGE("Computing node logics");
@@ -388,11 +401,13 @@ NBNetBuilder::compute(OptionsCont& oc,
         }
         // walking areas shall only be built if crossings are wished as well
         for (std::map<std::string, NBNode*>::const_iterator i = myNodeCont.begin(); i != myNodeCont.end(); ++i) {
-            (*i).second->buildInnerEdges(buildCrossingsAndWalkingAreas);
+            (*i).second->buildInnerEdges();
         }
         PROGRESS_DONE_MESSAGE();
     }
-
+    if (lefthand) {
+        mirrorX();
+    };
 
     // report
     WRITE_MESSAGE("-----------------------------------------------------");
@@ -413,11 +428,14 @@ NBNetBuilder::compute(OptionsCont& oc,
 
 
 void
-NBNetBuilder::moveToOrigin(GeoConvHelper& geoConvHelper) {
+NBNetBuilder::moveToOrigin(GeoConvHelper& geoConvHelper, bool lefthand) {
     PROGRESS_BEGIN_MESSAGE("Moving network to origin");
     Boundary boundary = geoConvHelper.getConvBoundary();
     const SUMOReal x = -boundary.xmin();
-    const SUMOReal y = -boundary.ymin();
+    const SUMOReal y = -(lefthand ? boundary.ymax() : boundary.ymin());
+    //if (lefthand) {
+    //    y = boundary.ymax();
+    //}
     for (std::map<std::string, NBNode*>::const_iterator i = myNodeCont.begin(); i != myNodeCont.end(); ++i) {
         (*i).second->reshiftPosition(x, y);
     }
@@ -429,6 +447,21 @@ NBNetBuilder::moveToOrigin(GeoConvHelper& geoConvHelper) {
     }
     geoConvHelper.moveConvertedBy(x, y);
     PROGRESS_DONE_MESSAGE();
+}
+
+
+void
+NBNetBuilder::mirrorX() {
+    // mirror the network along the X-axis
+    for (std::map<std::string, NBNode*>::const_iterator i = myNodeCont.begin(); i != myNodeCont.end(); ++i) {
+        (*i).second->mirrorX();
+    }
+    for (std::map<std::string, NBEdge*>::const_iterator i = myEdgeCont.begin(); i != myEdgeCont.end(); ++i) {
+        (*i).second->mirrorX();
+    }
+    for (std::map<std::string, NBDistrict*>::const_iterator i = myDistrictCont.begin(); i != myDistrictCont.end(); ++i) {
+        (*i).second->mirrorX();
+    }
 }
 
 
@@ -471,7 +504,7 @@ NBNetBuilder::transformCoordinates(PositionVector& from, bool includeInBoundary,
             while (length > maxLength) {
                 length -= maxLength;
                 steps++;
-                from.insertAt(i + inserted + 1, start + (step * steps));
+                from.insert(from.begin() + i + inserted + 1, start + (step * steps));
                 inserted++;
             }
         }

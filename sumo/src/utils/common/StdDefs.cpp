@@ -8,7 +8,7 @@
 ///
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2014-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2014-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,6 +47,7 @@ const RGBColor SUMO_color_MINOR(51, 51, 51);
 const RGBColor SUMO_color_EQUAL(128, 128, 128);
 const RGBColor SUMO_color_STOP(128, 0, 128);
 const RGBColor SUMO_color_ALLWAY_STOP(0, 0, 192);
+const RGBColor SUMO_color_ZIPPER(192, 128, 64);
 const RGBColor SUMO_color_DEADEND(0, 0, 0);
 
 const RGBColor& getLinkColor(const LinkState& ls) {
@@ -77,6 +78,8 @@ const RGBColor& getLinkColor(const LinkState& ls) {
             return SUMO_color_STOP;
         case LINKSTATE_ALLWAY_STOP:
             return SUMO_color_ALLWAY_STOP;
+        case LINKSTATE_ZIPPER:
+            return SUMO_color_ZIPPER;
         case LINKSTATE_DEADEND:
             return SUMO_color_DEADEND;
         default:
@@ -98,6 +101,7 @@ const std::string getBuildName(const std::string& version) {
 
 bool gDebugFlag1 = false;
 bool gDebugFlag2 = false;
+std::string gDebugSelectedVehicle = "";
 
 /****************************************************************************/
 

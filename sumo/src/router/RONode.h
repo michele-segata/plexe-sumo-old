@@ -8,7 +8,7 @@
 // Base class for nodes used by the router
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -41,6 +41,8 @@
 // ===========================================================================
 class ROEdge;
 
+typedef std::vector<const ROEdge*> ConstROEdgeVector;
+
 // ===========================================================================
 // class definitions
 // ===========================================================================
@@ -69,16 +71,16 @@ public:
     /** @brief Returns the position of the node
      * @return This node's position
      */
-    const Position& getPosition() {
+    const Position& getPosition() const {
         return myPosition;
     }
 
 
-    inline const std::vector<const ROEdge*>& getIncoming() const {
+    inline const ConstROEdgeVector& getIncoming() const {
         return myIncoming;
     }
 
-    inline const std::vector<const ROEdge*>& getOutgoing() const {
+    inline const ConstROEdgeVector& getOutgoing() const {
         return myOutgoing;
     }
 
@@ -95,9 +97,9 @@ private:
     Position myPosition;
 
     /// @brief incoming edges
-    std::vector<const ROEdge*> myIncoming;
+    ConstROEdgeVector myIncoming;
     /// @brief outgoing edges
-    std::vector<const ROEdge*> myOutgoing;
+    ConstROEdgeVector myOutgoing;
 
 
 private:

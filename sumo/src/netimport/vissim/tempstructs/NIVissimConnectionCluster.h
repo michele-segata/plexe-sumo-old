@@ -8,7 +8,7 @@
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -34,8 +34,8 @@
 
 #include <iostream>
 #include <vector>
-#include <utils/geom/Position.h>
 #include <utils/geom/Boundary.h>
+#include <utils/geom/GeomHelper.h>
 #include "NIVissimConnection.h"
 
 
@@ -140,10 +140,9 @@ private:
     public:
         /// comparing operation
         int operator()(NIVissimConnection* c1, NIVissimConnection* c2) const {
-            return
-                fabs(c1->getGeometry().beginEndAngle() - myAngle)
-                <
-                fabs(c2->getGeometry().beginEndAngle() - myAngle);
+            return fabs(GeomHelper::angleDiff(c1->getGeometry().beginEndAngle(), myAngle))
+                   <
+                   fabs(GeomHelper::angleDiff(c2->getGeometry().beginEndAngle(), myAngle));
         }
     };
 

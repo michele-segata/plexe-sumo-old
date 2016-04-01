@@ -11,7 +11,7 @@
 // Importer for networks stored in ArcView-shape format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -125,8 +125,13 @@ void
 NIImporter_ArcView::load() {
 #ifdef HAVE_GDAL
     PROGRESS_BEGIN_MESSAGE("Loading data from '" + mySHPName + "'");
+#if GDAL_VERSION_MAJOR < 2
     OGRRegisterAll();
     OGRDataSource* poDS = OGRSFDriverRegistrar::Open(mySHPName.c_str(), FALSE);
+#else
+    GDALAllRegister();
+    GDALDataset* poDS = (GDALDataset*) GDALOpen(mySHPName.c_str(), GA_ReadOnly);
+#endif
     if (poDS == NULL) {
         WRITE_ERROR("Could not open shape description '" + mySHPName + "'.");
         return;
@@ -270,17 +275,16 @@ NIImporter_ArcView::load() {
         if (dir == "B" || dir == "F" || dir == "" || myOptions.getBool("shapefile.all-bidirectional")) {
             if (myEdgeCont.retrieve(id) == 0) {
                 LaneSpreadFunction spread = dir == "B" || dir == "FALSE" ? LANESPREAD_RIGHT : LANESPREAD_CENTER;
-                NBEdge* edge = new NBEdge(id, from, to, type, speed, nolanes, priority, width, NBEdge::UNSPECIFIED_OFFSET, shape, "", spread);
+                NBEdge* edge = new NBEdge(id, from, to, type, speed, nolanes, priority, width, NBEdge::UNSPECIFIED_OFFSET, shape, name, id, spread);
                 myEdgeCont.insert(edge);
                 checkSpread(edge);
             }
         }
         // add negative direction if wanted
         if (dir == "B" || dir == "T" || myOptions.getBool("shapefile.all-bidirectional")) {
-            id = "-" + id;
-            if (myEdgeCont.retrieve(id) == 0) {
+            if (myEdgeCont.retrieve("-" + id) == 0) {
                 LaneSpreadFunction spread = dir == "B" || dir == "FALSE" ? LANESPREAD_RIGHT : LANESPREAD_CENTER;
-                NBEdge* edge = new NBEdge(id, to, from, type, speed, nolanes, priority, width, NBEdge::UNSPECIFIED_OFFSET, shape.reverse(), "", spread);
+                NBEdge* edge = new NBEdge("-" + id, to, from, type, speed, nolanes, priority, width, NBEdge::UNSPECIFIED_OFFSET, shape.reverse(), name, id, spread);
                 myEdgeCont.insert(edge);
                 checkSpread(edge);
             }

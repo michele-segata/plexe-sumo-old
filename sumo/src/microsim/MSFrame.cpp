@@ -1,4 +1,4 @@
-/****************************************************************************/
+﻿/****************************************************************************/
 /// @file    MSFrame.cpp
 /// @author  Daniel Krajzewicz
 /// @author  Eric Nicolay
@@ -13,7 +13,7 @@
 // Sets and checks options for microsim; inits global outputs and settings
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,7 +38,6 @@
 #include <iomanip>
 #include <fstream>
 #include <ctime>
-#include <stdlib.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/options/Option.h>
 #include <utils/common/MsgHandler.h>
@@ -51,7 +50,7 @@
 #include <microsim/MSRoute.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSGlobals.h>
-#include <microsim/MSAbstractLaneChangeModel.h>
+#include <microsim/lcmodels/MSAbstractLaneChangeModel.h>
 #include <microsim/devices/MSDevice.h>
 #include <microsim/devices/MSDevice_Vehroutes.h>
 #include <utils/common/RandHelper.h>
@@ -79,6 +78,7 @@ MSFrame::fillOptions() {
     oc.addOptionSubTopic("Output");
     oc.addOptionSubTopic("Time");
     oc.addOptionSubTopic("Processing");
+    oc.addOptionSubTopic("Routing");
     SystemFrame::addReportOptions(oc); // fill this subtopic, too
 
 
@@ -106,7 +106,7 @@ MSFrame::fillOptions() {
     oc.doRegister("load-state", new Option_FileName());//!!! check, describe
     oc.addDescription("load-state", "Input", "Loads a network state from FILE");
     oc.doRegister("load-state.offset", new Option_String("0", "TIME"));//!!! check, describe
-    oc.addDescription("load-state.offset", "Input", "Sets the time offset for vehicle segment exit times");
+    oc.addDescription("load-state.offset", "Input", "Shifts all times loaded from a saved state by the given offset");
 
     //  register output options
     oc.doRegister("netstate-dump", new Option_FileName());
@@ -119,10 +119,21 @@ MSFrame::fillOptions() {
     oc.addSynonyme("netstate-dump.empty-edges", "netstate-output.empty-edges");
     oc.addSynonyme("netstate-dump.empty-edges", "dump-empty-edges", true);
     oc.addDescription("netstate-dump.empty-edges", "Output", "Write also empty edges completely when dumping");
+    oc.doRegister("netstate-dump.precision", new Option_Integer(OUTPUT_ACCURACY));
+    oc.addSynonyme("netstate-dump.precision", "netstate.precision");
+    oc.addSynonyme("netstate-dump.precision", "netstate-output.precision");
+    oc.addSynonyme("netstate-dump.precision", "dump-precision", true);
+    oc.addDescription("netstate-dump.precision", "Output", "Write positions and speeds with the given precision (default 2)");
 
 
     oc.doRegister("emission-output", new Option_FileName());
     oc.addDescription("emission-output", "Output", "Save the emission values of each vehicle");
+
+    oc.doRegister("battery-output", new Option_FileName());
+    oc.addDescription("battery-output", "Output", "Save the battery values of each vehicle");
+    oc.doRegister("battery-output.precision", new Option_Integer(OUTPUT_ACCURACY));
+    oc.addDescription("battery-output.precision", "Output", "Write battery values with the given precision (default 2)");
+
     oc.doRegister("fcd-output", new Option_FileName());
     oc.addDescription("fcd-output", "Output", "Save the Floating Car Data");
     oc.doRegister("fcd-output.geo", new Option_Bool(false));
@@ -141,8 +152,6 @@ MSFrame::fillOptions() {
 
     oc.doRegister("summary-output", new Option_FileName());
     oc.addSynonyme("summary-output", "summary");
-    oc.addSynonyme("summary-output", "emissions-output", true);
-    oc.addSynonyme("summary-output", "emissions", true);
     oc.addDescription("summary-output", "Output", "Save aggregated vehicle departure info into FILE");
 
     oc.doRegister("tripinfo-output", new Option_FileName());
@@ -176,6 +185,10 @@ MSFrame::fillOptions() {
     oc.addSynonyme("vehroute-output.intended-depart", "vehroutes.intended-depart");
     oc.addDescription("vehroute-output.intended-depart", "Output", "Write the output with the intended instead of the real departure time");
 
+    oc.doRegister("vehroute-output.route-length", new Option_Bool(false));
+    oc.addSynonyme("vehroute-output.route-length", "vehroutes.route-length");
+    oc.addDescription("vehroute-output.route-length", "Output", "Include total route length in the output");
+
     oc.doRegister("vehroute-output.write-unfinished", new Option_Bool(false));
     oc.addDescription("vehroute-output.write-unfinished", "Output", "Write vehroute output for vehicles which have not arrived at simulation end");
 
@@ -183,7 +196,7 @@ MSFrame::fillOptions() {
     oc.addDescription("link-output", "Output", "Save links states into FILE");
 
     oc.doRegister("bt-output", new Option_FileName());
-    oc.addDescription("bt-output", "Output", "Save bt visibilities into FILE");
+    oc.addDescription("bt-output", "Output", "Save bluetooth visibilities into FILE (in conjunction with device.btreceiver and device.btsender)");
 
 
 #ifdef _DEBUG
@@ -226,17 +239,16 @@ MSFrame::fillOptions() {
 #endif
 
     oc.doRegister("ignore-accidents", new Option_Bool(false));
-    oc.addDescription("ignore-accidents", "Processing", "Do not check whether accidents occure more deeply");
+    oc.addDescription("ignore-accidents", "Processing", "Do not check whether accidents occur");
 
     oc.doRegister("ignore-route-errors", new Option_Bool(false));
     oc.addDescription("ignore-route-errors", "Processing", "Do not check whether routes are connected");
 
     oc.doRegister("max-num-vehicles", new Option_Integer(-1));
-    oc.addSynonyme("max-num-vehicles", "too-many-vehicles", true);
-    oc.addDescription("max-num-vehicles", "Processing", "Quit simulation if this number of vehicles is exceeded");
+    oc.addDescription("max-num-vehicles", "Processing", "Delay vehicle insertion to stay within the given maximum number");
 
     oc.doRegister("scale", new Option_Float());
-    oc.addDescription("scale", "Processing", "Scale demand by the given factor (0..1)");
+    oc.addDescription("scale", "Processing", "Scale demand by the given factor (by discarding or duplicating vehicles)");
 
     oc.doRegister("time-to-teleport", new Option_String("300", "TIME"));
     oc.addDescription("time-to-teleport", "Processing", "Specify how long a vehicle may wait until being teleported, defaults to 300, non-positive values disable teleporting");
@@ -264,9 +276,6 @@ MSFrame::fillOptions() {
     oc.doRegister("lanechange.overtake-right", new Option_Bool(false));
     oc.addDescription("lanechange.overtake-right", "Processing", "Whether overtaking on the right on motorways is permitted");
 
-    oc.doRegister("routing-algorithm", new Option_String("dijkstra"));
-    oc.addDescription("routing-algorithm", "Processing",
-                      "Select among routing algorithms ['dijkstra', 'astar', 'CH', 'CHWrapper']");
     // pedestrian model
     oc.doRegister("pedestrian.model", new Option_String("striping"));
     oc.addDescription("pedestrian.model", "Processing", "Select among pedestrian models ['nonInteracting', 'striping']");
@@ -277,18 +286,32 @@ MSFrame::fillOptions() {
     oc.doRegister("pedestrian.striping.dawdling", new Option_Float(0.2));
     oc.addDescription("pedestrian.striping.dawdling", "Processing", "factor for random slow-downs [0,1] for use with model 'striping'");
 
+    oc.doRegister("pedestrian.striping.jamtime", new Option_String("300", "TIME"));
+    oc.addDescription("pedestrian.striping.jamtime", "Processing", "Time in seconds after which pedestrians start squeezing through a jam when using model 'striping' (non-positive values disable squeezing)");
+
+    // generic routing options
+    oc.doRegister("routing-algorithm", new Option_String("dijkstra"));
+    oc.addDescription("routing-algorithm", "Routing",
+                      "Select among routing algorithms ['dijkstra', 'astar', 'CH', 'CHWrapper']");
+    oc.doRegister("weights.random-factor", new Option_Float(1.));
+    oc.addDescription("weights.random-factor", "Routing", "Edge weights for routing are dynamically disturbed by a random factor drawn uniformly from [1,FLOAT)");
+
     // devices
     oc.addOptionSubTopic("Emissions");
-    std::string plp = getenv("PHEMLIGHT_PATH") == 0 ? "./PHEMlight/" : std::string(getenv("PHEMLIGHT_PATH"));
-    oc.doRegister("phemlight-path", new Option_FileName(plp));
+    oc.doRegister("phemlight-path", new Option_FileName("./PHEMlight/"));
     oc.addDescription("phemlight-path", "Emissions", "Determines where to load PHEMlight definitions from.");
 
     oc.addOptionSubTopic("Communication");
+    oc.addOptionSubTopic("Battery");
     MSDevice::insertOptions(oc);
 
     // register report options
-    oc.doRegister("no-duration-log", new Option_Bool(false));
-    oc.addDescription("no-duration-log", "Report", "Disable performance reports for individual simulation steps");
+    oc.doRegister("duration-log.disable", new Option_Bool(false));
+    oc.addSynonyme("duration-log.disable", "no-duration-log", false);
+    oc.addDescription("duration-log.disable", "Report", "Disable performance reports for individual simulation steps");
+
+    oc.doRegister("duration-log.statistics", new Option_Bool(false));
+    oc.addDescription("duration-log.statistics", "Report", "Enable statistics on vehicle trips");
 
     oc.doRegister("no-step-log", new Option_Bool(false));
     oc.addDescription("no-step-log", "Report", "Disable console output of current simulation step");
@@ -372,6 +395,7 @@ MSFrame::buildStreams() {
     //extended
     OutputDevice::createDeviceByOption("fcd-output", "fcd-export", "fcd_file.xsd");
     OutputDevice::createDeviceByOption("emission-output", "emission-export", "emission_file.xsd");
+    OutputDevice::createDeviceByOption("battery-output", "battery-export");
     OutputDevice::createDeviceByOption("full-output", "full-export", "full_file.xsd");
     OutputDevice::createDeviceByOption("queue-output", "queue-export", "queue_file.xsd");
     OutputDevice::createDeviceByOption("amitran-output", "trajectories", "amitran/trajectories.xsd\" timeStepSize=\"" + toString(STEPS2MS(DELTA_T)));
@@ -442,6 +466,9 @@ MSFrame::checkOptions() {
 #endif
     if (oc.getBool("sloppy-insert")) {
         WRITE_WARNING("The option 'sloppy-insert' is deprecated, because it is now activated by default, see the new option 'eager-insert'.");
+    }
+    if (oc.getBool("duration-log.statistics") && oc.isDefault("verbose")) {
+        oc.set("verbose", "true");
     }
     return ok;
 }

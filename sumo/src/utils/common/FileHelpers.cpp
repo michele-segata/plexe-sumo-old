@@ -8,7 +8,7 @@
 // Functions for an easier usage of files
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -129,12 +129,25 @@ FileHelpers::checkForRelativity(const std::string& filename,
     if (filename == "stderr" || filename == "STDERR") {
         return "stderr";
     }
+    if (filename == "nul" || filename == "NUL") {
+        return "/dev/null";
+    }
     if (!isSocket(filename) && !isAbsolute(filename)) {
         return getConfigurationRelative(basePath, filename);
     }
     return filename;
 }
 
+
+std::string
+FileHelpers::prependToLastPathComponent(const std::string& prefix, const std::string& path) {
+    size_t sep_index = path.find_last_of("\\/");
+    if (sep_index == std::string::npos) {
+        return prefix + path;
+    } else {
+        return path.substr(0, sep_index + 1) + prefix + path.substr(sep_index + 1);
+    }
+}
 
 // ---------------------------------------------------------------------------
 // binary reading/writing functions

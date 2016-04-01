@@ -9,9 +9,13 @@
 
 # a service road (allowing pedestrians and delivery) enters a street with sidewalks at a T-junction
 3_arm_service_entering
+3_arm_unprioritized
 
 # 4 arm junction with crossings on all sides
 4_arm_complete
+
+# 4 arm junction with crossings on all sides, built for a left-hand network
+4_arm_complete_lefthand
 
 # slanted 4 arm junction with crossings on all sides
 4_arm_slanted_complete
@@ -24,6 +28,10 @@
 
 # 4 arm junction with 2 crossings on neighboring sides
 4_arm_2_neighboring
+4_arm_2_neighboring_corner_detail
+
+# without green verge
+4_arm_2_neighboring_corner_detail_noverge
 
 # crossings have intermediate walking areas
 4_arm_3_neighboring_split
@@ -45,3 +53,8 @@ patch_joined_tls_from_sumonet
 # build an uncontrolled crossing at a traffic light node
 uncontrolled_at_tls_node
 error_empty_edges
+across_3
+traffic_light_unregulated
+
+# remove a crossing
+discard

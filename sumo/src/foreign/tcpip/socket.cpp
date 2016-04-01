@@ -17,7 +17,6 @@
 
 
 #ifndef WIN32
-	#include <unistd.h>
 	#include <sys/types.h>
 	#include <sys/socket.h>
 	#include <netinet/in.h>
@@ -49,8 +48,6 @@
 #include <string>
 #include <algorithm>
 #include <string.h>
-
-using namespace std;
 
 
 #ifdef SHAWN
@@ -175,7 +172,7 @@ namespace tcpip
 	{
 		fd_set fds;
 		FD_ZERO( &fds );
-		FD_SET( sock, &fds );
+		FD_SET( (unsigned int)sock, &fds );
 
 		struct timeval tv;
 		tv.tv_sec = 0;
@@ -245,12 +242,12 @@ namespace tcpip
 			
 			//"Address already in use" error protection
 			{
-				int reuseaddr = 1;
 
 				#ifdef WIN32
 					//setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuseaddr, sizeof(reuseaddr));
 					// No address reuse in Windows!!!
 				#else
+    				int reuseaddr = 1;
 					setsockopt(server_socket_, SOL_SOCKET, SO_REUSEADDR, &reuseaddr, sizeof(reuseaddr));
 				#endif
 			}
@@ -258,7 +255,7 @@ namespace tcpip
 			// Initialize address/port structure
 			memset(&self, 0, sizeof(self));
 			self.sin_family = AF_INET;
-			self.sin_port = htons(port_);
+			self.sin_port = htons((unsigned short)port_);
 			self.sin_addr.s_addr = htonl(INADDR_ANY);
 
 			// Assign a port number to the socket
@@ -324,7 +321,7 @@ namespace tcpip
 		sockaddr_in address;
 		memset( (char*)&address, 0, sizeof(address) );
 		address.sin_family = AF_INET;
-		address.sin_port = htons( port_ );
+		address.sin_port = htons((unsigned short)port_);
 		address.sin_addr.s_addr = addr.s_addr;
 
 		socket_ = static_cast<int>(socket( PF_INET, SOCK_STREAM, 0 ));
@@ -404,7 +401,7 @@ namespace tcpip
 		// Sending length_storage and b independently would probably be possible and
 		// avoid some copying here, but both parts would have to go through the
 		// TCP/IP stack on their own which probably would cost more performance.
-		vector<unsigned char> msg;
+		std::vector<unsigned char> msg;
 		msg.insert(msg.end(), length_storage.begin(), length_storage.end());
 		msg.insert(msg.end(), b.begin(), b.end());
 		send(msg);
@@ -454,23 +451,23 @@ namespace tcpip
 	{
 		if (verbose_)
 		{
-			cerr << label << " " << buffer.size() <<  " bytes via tcpip::Socket: [";
+			std::cerr << label << " " << buffer.size() <<  " bytes via tcpip::Socket: [";
 			// cache end iterator for performance
-			const vector<unsigned char>::const_iterator end = buffer.end();
-			for (vector<unsigned char>::const_iterator it = buffer.begin(); end != it; ++it)
-				cerr << " " << static_cast<int>(*it) << " ";
-			cerr << "]" << endl;
+			const std::vector<unsigned char>::const_iterator end = buffer.end();
+			for (std::vector<unsigned char>::const_iterator it = buffer.begin(); end != it; ++it)
+				std::cerr << " " << static_cast<int>(*it) << " ";
+			std::cerr << "]" << std::endl;
 		}
 	}
 
 
 	// ----------------------------------------------------------------------
-	vector<unsigned char> 
+	std::vector<unsigned char> 
 		Socket::
 		receive(int bufSize)
 		throw( SocketException )
 	{
-		vector<unsigned char> buffer;
+		std::vector<unsigned char> buffer;
 
 		if( socket_ < 0 )
 			connect();
@@ -499,7 +496,7 @@ namespace tcpip
 		// buffer for received bytes
 		// According to the C++ standard elements of a std::vector are stored
 		// contiguously. Explicitly &buffer[n] == &buffer[0] + n for 0 <= n < buffer.size().
-		vector<unsigned char> buffer(lengthLen);
+		std::vector<unsigned char> buffer(lengthLen);
 
 		// receive length of TraCI message
 		receiveComplete(&buffer[0], lengthLen);
@@ -616,7 +613,7 @@ namespace tcpip
 /*-----------------------------------------------------------------------
 * Source  $Source: $
 * Version $Revision: 645 $
-* Date    $Date: 2012-04-27 05:03:33 -0700 (Fri, 27 Apr 2012) $
+* Date    $Date: 2012-04-27 14:03:33 +0200 (Fri, 27 Apr 2012) $
 *-----------------------------------------------------------------------
 * $Log: $
 *-----------------------------------------------------------------------*/

@@ -9,7 +9,7 @@
 // A window displaying the phase diagram of a tl-logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2014 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,7 @@
 #include <microsim/traffic_lights/MSTrafficLightLogic.h>
 #include <microsim/MSLink.h>
 #include <utils/common/ToString.h>
+#include <utils/common/MsgHandler.h>
 #include <guisim/GUITrafficLightLogicWrapper.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/images/GUIIconSubSys.h>
@@ -253,6 +254,10 @@ GUITLLogicPhasesTrackerWindow::drawValues(GUITLLogicPhasesTrackerPanel& caller) 
             myPhases.push_back(*(*j));
             myDurations.push_back((*j)->duration);
             myLastTime += (*j)->duration;
+        }
+        if (myLastTime <= myBeginTime) {
+            WRITE_ERROR("Overflow in time computation occured.");
+            return;
         }
     } else {
         SUMOTime beginOffset = TIME2STEPS(myBeginOffset->getValue());
