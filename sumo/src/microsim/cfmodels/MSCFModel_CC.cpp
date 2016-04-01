@@ -680,6 +680,11 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
         vars->engine->setParameter(ENGINE_PAR_VEHICLE, std::string(model));
         break;
     }
+    case CC_SET_VEHICLES_FILE: {
+        const char *file = (const char *)content;
+        vars->engine->setParameter(ENGINE_PAR_XMLFILE, std::string(file));
+        break;
+    }
     default: {
         break;
     }
