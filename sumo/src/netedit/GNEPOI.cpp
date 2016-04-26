@@ -8,7 +8,7 @@
 // GUIPointOfInterest and NLHandler)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -74,8 +74,8 @@ GNEPOI::GNEPOI(const std::string& id, const std::string& type,
                const RGBColor& color, SUMOReal layer, SUMOReal angle, const std::string& imgFile,
                const Position& pos, SUMOReal width, SUMOReal height) :
     GUIPointOfInterest(id, type, color, pos, layer, angle, imgFile, width, height),
-    GNEAttributeCarrier(SUMO_TAG_POI)
-{}
+    GNEAttributeCarrier(SUMO_TAG_POI) {
+}
 
 
 GNEPOI::~GNEPOI() { }

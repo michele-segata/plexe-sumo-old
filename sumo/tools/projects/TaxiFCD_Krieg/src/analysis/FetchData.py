@@ -12,7 +12,7 @@ Fetches Information of the simulated Data and the FCD.
 For each taxi the time, speed and position of every step will be collected and stored in a file. 
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -20,6 +20,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 import profile
 import util.Path as path
@@ -39,8 +41,8 @@ withoutEmptyEdges = True
 
 
 def main():
-    print "start program"
-    # multi change pathes (routen müssen immer extra neu erstellt werden wegen
+    print("start program")
+    # multi change pathes (routen muessen immer extra neu erstellt werden wegen
     # taxiIDpickleList)
     path.simFcd = path.newPath(
         path.main, "simProzessiertFCD/t2MitVerschiedenenLosfahrzeiten/linkspeeds.simulatedRawFCD_-4.dat")
@@ -51,7 +53,7 @@ def main():
     path.analysisWEE = path.newPath(
         path.main, "auswertung/reisezeit/analysisFiles/taxiAnalysisInformationWEE_-4.xml")
     arrangeData()
-    print "end"
+    print("end")
 
 
 def arrangeData():
@@ -66,28 +68,28 @@ def arrangeData():
     rawTuple = (None, None, None, None)
 
     # read needed files
-    print "read rawFcdDict file"
+    print("read rawFcdDict file")
     rawFcdDict = readRawFCD(path.rawFcd)
-    print "read simRawFcdDict file"
+    print("read simRawFcdDict file")
     simRawFcdDict = readRawFCD(path.simRawFcd, True)
 
-    print "read readVtypeprobe file"
+    print("read readVtypeprobe file")
     readVtypeprobe()
 
-    print "read fcdDict file"
+    print("read fcdDict file")
     fcdDict = readFCDComplete(path.fcd)
-    print "read simFcdDict file"
+    print("read simFcdDict file")
     simFcdDict = readSimFCDComplete(path.simFcd)
 
     if withoutEmptyEdges:
-        print "read drivenEdges file"
+        print("read drivenEdges file")
         drivenEdgesSet = readRoute_EdgesMod()
         outputFile = open(path.analysisWEE, 'w')
     else:
         outputFile = open(path.analysis, 'w')
     outputFile.write("<vehicles>\n")
 
-    print "write Infos"
+    print("write Infos")
     # iterate over the lowest common denominator
 
     for taxiId in simFcdDict.keys():
@@ -140,7 +142,7 @@ def arrangeData():
                 # Reset values after write of line:
                 rawTuple = (None, None, None, None)
         except KeyError:
-            print "Warning: taxId %s not found!" % taxiId
+            print("Warning: taxId %s not found!" % taxiId)
         outputFile.write("\t</vehicle>\n")
 
     outputFile.write("</vehicles>\n")
@@ -205,7 +207,7 @@ def testFCDUniqueness():
         if words[0] == taxiId and words[4] == "90":
             list.add(words[1])
     inputFile.close()
-    print len(list)
+    print(len(list))
 
     inputFile = open(path.fcd, 'r')
     for line in inputFile:
@@ -213,8 +215,8 @@ def testFCDUniqueness():
         if words[4] == taxiId:
             if words[0]in list:
                 list.remove(words[0])
-    print len(list)
-    print list
+    print(len(list))
+    print(list)
     inputFile.close()
 
 

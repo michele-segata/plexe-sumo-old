@@ -11,7 +11,7 @@
 // Builds trigger objects for microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -52,9 +52,7 @@ class MSStoppingPlace;
 class MSCalibrator;
 class MSRouteProbe;
 
-#ifdef HAVE_INTERNAL
 class METriggeredCalibrator;
-#endif
 
 
 // ===========================================================================
@@ -132,22 +130,23 @@ public:
                                const std::string& base);
 
 
-    /** @brief Parses his values and builds a bus stop
+    /** @brief Parses the values and builds a stopping places for busses, trains or container vehicles
      *
-     * @param[in] net The network the bus stop belongs to
-     * @param[in] attrs SAX-attributes which define the trigger
+     * @param[in] net The network the stop belongs to
+     * @param[in] attrs SAX-attributes which define the stop
+     * @param[in] element which kind of stop is to be built
      * @exception InvalidArgument If a parameter (lane/position) is not valid
      */
-    void parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attrs);
+    void parseAndBuildStoppingPlace(MSNet& net, const SUMOSAXAttributes& attrs, const SumoXMLTag element);
 
 
-    /** @brief Parses his values and builds a container stop
+    /** @brief Parses the values and adds an access point to the currently parsed stopping place
      *
-     * @param[in] net The network the container stop belongs to
-     * @param[in] attrs SAX-attributes which define the trigger
+     * @param[in] net The network the stop belongs to
+     * @param[in] attrs SAX-attributes which define the access
      * @exception InvalidArgument If a parameter (lane/position) is not valid
      */
-    void parseAndBuildContainerStop(MSNet& net, const SUMOSAXAttributes& attrs);
+    void addAccess(MSNet& net, const SUMOSAXAttributes& attrs);
 
 
     /** @brief Parses his values and builds a charging station
@@ -197,21 +196,21 @@ protected:
             const std::string& file);
 
 
-    /** @brief Builds a bus stop
+    /** @brief Builds a stopping place
      *
      * Simply calls the MSStoppingPlace constructor.
      *
-     * @param[in] net The net the bus stop belongs to
-     * @param[in] id The id of the bus stop
-     * @param[in] lines Names of the bus lines that halt on this bus stop
-     * @param[in] lane The lane the bus stop is placed on
-     * @param[in] frompos Begin position of the bus stop on the lane
-     * @param[in] topos End position of the bus stop on the lane
-     * @exception InvalidArgument If the bus stop can not be added to the net (is duplicate)
+     * @param[in] net The net the stop belongs to
+     * @param[in] id The id of the stop
+     * @param[in] lines Names of the lines that halt on this bus stop
+     * @param[in] lane The lane the stop is placed on
+     * @param[in] frompos Begin position of the stop on the lane
+     * @param[in] topos End position of the stop on the lane
+     * @param[in] element which kind of stop is to be built
+     * @exception InvalidArgument If the stop can not be added to the net (is duplicate)
      */
-    virtual void buildBusStop(MSNet& net,
-                              const std::string& id, const std::vector<std::string>& lines,
-                              MSLane* lane, SUMOReal frompos, SUMOReal topos);
+    virtual void buildStoppingPlace(MSNet& net, const std::string& id, const std::vector<std::string>& lines,
+                                    MSLane* lane, SUMOReal frompos, SUMOReal topos, const SumoXMLTag element);
 
     /** @brief Builds a charging Station
      *
@@ -227,24 +226,8 @@ protected:
      */
     virtual void buildChargingStation(MSNet& net,
                                       const std::string& id, const std::vector<std::string>& lines,
-                                      MSLane* lane, SUMOReal frompos, SUMOReal topos, SUMOReal chrgpower, SUMOReal efficiency, SUMOReal chargeInTransit, SUMOReal ChargeDelay);
-
-    /** @brief Builds a container stop
-     *
-     * Simply calls the MSStoppingPlace constructor.
-     *
-     * @param[in] net The net the container stop belongs to
-     * @param[in] id The id of the container stop
-     * @param[in] lines Names of the lines that halt on this container stop
-     * @param[in] lane The lane the container stop is placed on
-     * @param[in] frompos Begin position of the container stop on the lane
-     * @param[in] topos End position of the container stop on the lane
-     * @exception InvalidArgument If the container stop can not be added to the net (is duplicate)
-     */
-    virtual void buildContainerStop(MSNet& net,
-                                    const std::string& id, const std::vector<std::string>& lines,
-                                    MSLane* lane, SUMOReal frompos, SUMOReal topos);
-
+                                      MSLane* lane, SUMOReal frompos, SUMOReal topos, SUMOReal chrgpower,
+                                      SUMOReal efficiency, SUMOReal chargeInTransit, SUMOReal ChargeDelay);
 
     /** @brief builds a microscopic calibrator
      *
@@ -261,7 +244,7 @@ protected:
                                           const std::string& id, MSEdge* edge, SUMOReal pos,
                                           const std::string& file, const std::string& outfile,
                                           const SUMOTime freq, const MSRouteProbe* probe);
-#ifdef HAVE_INTERNAL
+
     /** @brief builds a mesoscopic calibrator
      *
      * Simply calls the METriggeredCalibrator constructor.
@@ -277,7 +260,6 @@ protected:
             const std::string& id, const MSEdge* edge, SUMOReal pos,
             const std::string& file, const std::string& outfile,
             const SUMOTime freq, MSRouteProbe* probe);
-#endif
 
 
     /** @brief builds an rerouter
@@ -353,7 +335,8 @@ protected:
     /// @brief The parent handler to set for subhandlers
     NLHandler* myHandler;
 
-
+    /// @brief The currently parsed stop to add access points to
+    MSStoppingPlace* myCurrentStop;
 };
 
 

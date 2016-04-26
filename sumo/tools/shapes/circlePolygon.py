@@ -9,7 +9,7 @@
 Approximates a list of circles by polygons.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2010-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2010-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -19,6 +19,7 @@ the Free Software Foundation; either version 3 of the License, or
 """
 
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import sys
 import math
@@ -61,8 +62,8 @@ for idx, d in enumerate(args):
     angle = 2 * math.pi / c
     shape = ""
     for i in range(c):
-        shape += "%s,%s " % (math.cos(i * angle) * r + x,
-                             math.sin(i * angle) * r + y)
+        shape += "%.2f,%.2f " % (math.cos(i * angle) * r + x,
+                                 math.sin(i * angle) * r + y)
     print('    <poly id="%s%s" type="%s" color="%s" fill="%i" layer="%s" shape="%s"/>' % (
         options.prefix, idx, options.type, options.color, options.fill, options.layer, shape[:-1]),
         file=output)

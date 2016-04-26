@@ -8,7 +8,7 @@
 // A MSVehicle extended by some values for usage within the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -113,7 +113,7 @@ public:
     virtual void drawGLAdditional(GUISUMOAbstractView* const parent, const GUIVisualizationSettings& s) const;
     //@}
 
-    /* @brief set the position of a container while being transporte by a vehicle
+    /* @brief set the position of a container while being transported by a vehicle
      * @note This must be called by the vehicle before the call to drawGl */
     void setPositionInVehicle(const Position& pos) {
         myPositionInVehicle = pos;

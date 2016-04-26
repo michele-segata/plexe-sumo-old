@@ -10,7 +10,7 @@
 // Structure representing possible vehicle parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -67,7 +67,7 @@ const int VEHPARS_TO_TAZ_SET = 2 << 12;
 const int VEHPARS_FORCE_REROUTE = 2 << 13;
 const int VEHPARS_PERSON_CAPACITY_SET = 2 << 14;
 const int VEHPARS_PERSON_NUMBER_SET = 2 << 15;
-const int VEHPARS_CONTAINER_NUMBER_SET = 2 << 15;
+const int VEHPARS_CONTAINER_NUMBER_SET = 2 << 16;
 
 const int STOP_INDEX_END = -1;
 const int STOP_INDEX_FIT = -2;
@@ -141,12 +141,8 @@ enum DepartPosDefinition {
     DEPART_POS_FREE,
     /// @brief Back-at-zero position
     DEPART_POS_BASE,
-    /// @brief Simple max-flow insertion by P.Wagner
-    DEPART_POS_PWAG_SIMPLE,
-    /// @brief Generic max-flow insertion by P.Wagner
-    DEPART_POS_PWAG_GENERIC,
-    /// @brief A gap is chosen where the maximum speed may be achieved
-    DEPART_POS_MAX_SPEED_GAP,
+    /// @brief Insert behind the last vehicle as close as possible to still allow the specified departSpeed. Fallback to DEPART_POS_BASE if there is no vehicle on the departLane yet.
+    DEPART_POS_LAST,
     /// @brief If a fixed number of random choices fails, a free position is chosen
     DEPART_POS_RANDOM_FREE,
     /// @brief Tag for the last element in the enum for safe int casting
@@ -257,17 +253,11 @@ public:
      *
      * @param[in, out] dev The device to write into
      * @param[in] oc The options to get defaults from
+     * @param[in] tag The "root" tag to write (defaults to vehicle)
      * @exception IOError not yet implemented
      */
-    void write(OutputDevice& dev, const OptionsCont& oc) const;
+    void write(OutputDevice& dev, const OptionsCont& oc, const SumoXMLTag tag = SUMO_TAG_VEHICLE) const;
 
-
-    /** @brief Writes the enclosed stops
-     *
-     * @param[in, out] dev The device to write into
-     * @exception IOError not yet implemented
-     */
-    void writeStops(OutputDevice& dev) const;
 
     /** @brief Returns whether the defaults shall be used
      * @param[in] oc The options to get the options from
@@ -441,11 +431,7 @@ public:
     /// @brief The number of times the vehicle was already inserted
     int repetitionsDone;
     /// @brief The time offset between vehicle reinsertions
-#ifdef HAVE_SUBSECOND_TIMESTEPS
     SUMOTime repetitionOffset;
-#else
-    SUMOReal repetitionOffset;
-#endif
     /// @brief The probability for emitting a vehicle per second
     SUMOReal repetitionProbability;
     /// @brief The time at which the flow ends (only needed when using repetitionProbability)
@@ -492,10 +478,19 @@ public:
         std::set<std::string> awaitedPersons;
         /// @brief IDs of containers the vehicle has to wait for until departing
         std::set<std::string> awaitedContainers;
+        /// @brief lanes and positions connected to this stop
+        std::multimap<std::string, SUMOReal> accessPos;
         /// @brief at which position in the stops list
         int index;
         /// @brief Information for the output which parameter were set
         int setParameter;
+
+        /** @brief Writes the stop as XML
+         *
+         * @param[in, out] dev The device to write into
+         * @exception IOError not yet implemented
+         */
+        void write(OutputDevice& dev) const;
     };
 
     /// @brief List of the stops the vehicle will make

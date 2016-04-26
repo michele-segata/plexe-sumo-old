@@ -7,7 +7,7 @@
 
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -15,6 +15,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 from numpy import append, array, dot, shape, transpose
 from numpy.linalg import det, svd
@@ -23,7 +25,7 @@ from numpy.linalg import det, svd
 def superpose(nodes1, nodes2, select1, select2):
     vecs1 = array(nodes1)[array(select1)]
     vecs2 = array(nodes2)[array(select2)]
-    print vecs1, vecs2
+    print(vecs1, vecs2)
 
     n_vec, vec_size = shape(vecs1)
     center1 = sum(vecs1, 0) / float(n_vec)
@@ -35,7 +37,7 @@ def superpose(nodes1, nodes2, select1, select2):
 
     is_reflection = (det(V) * det(W_trans)) < 0.0
     if is_reflection:
-        V[-1, :] = V[-1,:] * (-1.0)
+        V[-1, :] = V[-1, :] * (-1.0)
 
     optimal_rotation = dot(V, W_trans)
     return dot(array(nodes2) - center2, optimal_rotation) + center1

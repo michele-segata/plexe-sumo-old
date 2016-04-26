@@ -11,7 +11,7 @@
 // A road/street connecting two junctions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -62,7 +62,6 @@ class MSPerson;
 class MSJunction;
 class MSEdge;
 class MSContainer;
-
 
 // ===========================================================================
 // class definitions
@@ -187,6 +186,14 @@ public:
         return *myLanes;
     }
 
+    /** @brief Returns this edge's persons set.
+     *  @brief Avoids the creation of new vector as in getSortedPersons
+     *
+     * @return This edge's persons.
+     */
+    inline const std::set<MSTransportable*>& getPersons() const {
+        return myPersons;
+    }
 
     /** @brief Returns this edge's persons sorted by pos
      *
@@ -278,6 +285,20 @@ public:
     }
     /// @}
 
+    /**@brief Sets the crossed edge ids for a crossing edge
+     *
+     */
+    void setCrossingEdges(const std::vector<std::string>& crossingEdges)		{
+        myCrossingEdges.clear();
+        myCrossingEdges.insert(myCrossingEdges.begin(), crossingEdges.begin(), crossingEdges.end());
+    }
+
+    /**@brief Gets the crossed edge ids
+     *@return The list of crossed edge ids in a crossing edge or an empty vector
+     */
+    const std::vector<std::string>& getCrossingEdges() const {
+        return myCrossingEdges;
+    }
 
 
     /// @name Access to succeeding/predecessing edges
@@ -301,6 +322,12 @@ public:
         return myPredecessors;
     }
 
+    /** @brief Returns the list of edges that may be reached from this edge
+     * @return Edges that may be reached from this edge
+     */
+    const std::vector<MSEdge*>& getOutgoingEdges() const {
+        return mySuccessors;
+    }
 
     /** @brief Returns the number of edges that may be reached from this edge
      * @return The number of following edges
@@ -503,7 +530,7 @@ public:
 
 #ifdef HAVE_INTERNAL_LANES
     /// @todo extension: inner junctions are not filled
-    const MSEdge* getInternalFollowingEdge(MSEdge* followerAfterInternal) const;
+    const MSEdge* getInternalFollowingEdge(const MSEdge* followerAfterInternal) const;
 #endif
 
     /// @brief Returns whether the vehicle (class) is not allowed on the edge
@@ -543,6 +570,10 @@ public:
      */
     SUMOReal getSpeedLimit() const;
 
+    /** @brief Sets a new maximum speed for all lanes (used by TraCI and MSCalibrator)
+     * @param[in] val the new speed in m/s
+     */
+    void setMaxSpeed(SUMOReal val) const;
 
     /** @brief Returns the maximum speed the vehicle may use on this edge
      *
@@ -587,6 +618,15 @@ public:
         myAmDelayed = true;
     }
 
+    /// @brief get the mean speed for mesoscopic simulation
+    SUMOReal getMesoMeanSpeed() const;
+
+    /// @brief grant exclusive access to the mesoscopic state
+    virtual void lock() const {}
+
+    /// @brief release exclusive access to the mesoscopic state
+    virtual void unlock() const {};
+
     /** @brief Inserts edge into the static dictionary
         Returns true if the key id isn't already in the dictionary. Otherwise
         returns false. */
@@ -595,14 +635,11 @@ public:
     /** @brief Returns the MSEdge associated to the key id if exists, otherwise returns 0. */
     static MSEdge* dictionary(const std::string& id);
 
-    /** @brief Returns the MSEdge at the index */
-    static MSEdge* dictionary(size_t index);
-
     /// @brief Returns the number of edges
     static size_t dictSize();
 
-    /// @brief Returns the number of edges with a numerical id
-    static size_t numericalDictSize();
+    /// @brief Returns all edges with a numerical id
+    static const MSEdgeVector& getAllEdges();
 
     /** @brief Clears the dictionary */
     static void clear();
@@ -703,6 +740,9 @@ protected:
     /// @brief The time of last insertion failure
     mutable SUMOTime myLastFailedInsertionTime;
 
+    /// @brief The crossed edges id for a crossing edge. On not crossing edges it is empty
+    std::vector<std::string> myCrossingEdges;
+
     /// @brief The succeeding edges
     MSEdgeVector mySuccessors;
 
@@ -713,7 +753,7 @@ protected:
     MSJunction* myFromJunction;
     MSJunction* myToJunction;
 
-    /// @brief Persons on the edge (only for drawing)
+    /// @brief Persons on the edge for drawing and pushbutton
     mutable std::set<MSTransportable*> myPersons;
 
     /// @brief Containers on the edge

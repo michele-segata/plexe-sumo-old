@@ -7,7 +7,7 @@
 // Intermediate class for storing visum traffic lights during their import
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,7 @@
 #include <utils/common/SUMOTime.h>
 
 class NBTrafficLightLogicCont;
+class NBEdgeCont;
 
 
 // ===========================================================================
@@ -169,7 +170,7 @@ public:
     SignalGroup& getSignalGroup(const std::string& name);
 
     /// @brief build the traffic light and add it to the given container
-    void build(NBTrafficLightLogicCont& tlc);
+    void build(NBEdgeCont& ec, NBTrafficLightLogicCont& tlc);
 
 private:
     /// @brief The name of traffic light

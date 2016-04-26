@@ -7,7 +7,7 @@
 // The main window of Netedit (adapted from GUIApplicationWindow)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -168,7 +168,7 @@ GNEApplicationWindow::GNEApplicationWindow(FXApp* a,
       hadDependentBuild(false),
       myNet(0),
       myUndoList(new GNEUndoList(this)),
-      myTitlePrefix(("NETEDIT " + getBuildName(VERSION_STRING)).c_str()) {
+      myTitlePrefix("NETEDIT " VERSION_STRING) {
     GUIIconSubSys::init(a);
 }
 #ifdef _MSC_VER

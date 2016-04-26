@@ -8,7 +8,7 @@
 // The pedestrian following model (prototype)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2014-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2014-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -104,6 +104,9 @@ public:
     // @brief the utility penalty for oncoming conflicts on stripes (corresponds to meters)
     static const SUMOReal ONCOMING_CONFLICT_PENALTY;
 
+    // @brief the minimum utility that indicates obstruction
+    static const SUMOReal OBSTRUCTION_THRESHOLD;
+
     // @brief the factor by which pedestrian width is reduced when sqeezing past each other
     static const SUMOReal SQUEEZE;
 
@@ -147,14 +150,14 @@ protected:
         NextLaneInfo(const MSLane* _lane, const MSLink* _link, int _dir) :
             lane(_lane),
             link(_link),
-            dir(_dir)
-        { }
+            dir(_dir) {
+        }
 
         NextLaneInfo() :
             lane(0),
             link(0),
-            dir(UNDEFINED_DIRECTION)
-        { }
+            dir(UNDEFINED_DIRECTION) {
+        }
 
         // @brief the next lane to be used
         const MSLane* lane;
@@ -190,8 +193,8 @@ protected:
             to(_to),
             lane(_walkingArea),
             shape(_shape),
-            length(_shape.length())
-        {}
+            length(_shape.length()) {
+        }
 
         WalkingAreaPath(): from(0), to(0), lane(0) {};
 
@@ -293,7 +296,12 @@ protected:
         int stripe(const SUMOReal relY) const;
         int otherStripe(const SUMOReal relY) const;
 
-        /// @brief calculate distance to the given obstacle, positive values mean in front of me in walking direction, negative behind me, 0 means overlap
+        /* @brief calculate distance to the given obstacle,
+         * - non-negative values signify an obstacle in front of ego
+         * the special values DIST_OVERLAP and DIST_BEHIND are used to signify
+         * obstacles that overlap and obstacles behind ego respectively
+         * the result is the same regardless of walking direction
+         */
         SUMOReal distanceTo(const Obstacle& obs, const bool includeMinGap = true) const;
 
         /// @brief replace obstacles in the first vector with obstacles from the second if they are closer to me

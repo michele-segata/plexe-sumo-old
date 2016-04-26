@@ -9,7 +9,7 @@
 
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -18,6 +18,8 @@ the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
 
+from __future__ import print_function
+from __future__ import absolute_import
 import os
 import subprocess
 import sys
@@ -36,20 +38,20 @@ sumoProcess = subprocess.Popen(
     "%s -c sumo.sumocfg --remote-port %s" % (sumoBinary, PORT), shell=True, stdout=sys.stdout)
 traci.init(PORT)
 for step in range(3):
-    print "step", step
+    print("step", step)
     traci.simulationStep()
-print "routes", traci.route.getIDList()
-print "route count", traci.route.getIDCount()
+print("routes", traci.route.getIDList())
+print("route count", traci.route.getIDCount())
 routeID = "horizontal"
-print "examining", routeID
-print "edges", traci.route.getEdges(routeID)
+print("examining", routeID)
+print("edges", traci.route.getEdges(routeID))
 traci.route.subscribe(routeID)
-print traci.route.getSubscriptionResults(routeID)
+print(traci.route.getSubscriptionResults(routeID))
 for step in range(3, 6):
-    print "step", step
+    print("step", step)
     traci.simulationStep(step)
-    print traci.route.getSubscriptionResults(routeID)
+    print(traci.route.getSubscriptionResults(routeID))
 traci.route.add("h2", ["1o"])
-print "routes", traci.route.getIDList()
-print "edges", traci.route.getEdges("h2")
+print("routes", traci.route.getIDList())
+print("edges", traci.route.getEdges("h2"))
 traci.close()

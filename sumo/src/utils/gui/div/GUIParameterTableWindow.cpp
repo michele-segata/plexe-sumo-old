@@ -10,7 +10,7 @@
 // The window that holds the table of an object's parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -73,8 +73,8 @@ GUIParameterTableWindow::GUIParameterTableWindow(GUIMainWindow& app,
         GUIGlObject& o, size_t noRows)
     : FXMainWindow(app.getApp(), (o.getFullName() + " Parameter").c_str(),
                    NULL, NULL, DECOR_ALL, 20, 20, 500, (FXint)(noRows * 20 + 60)),
-    myObject(&o),
-    myApplication(&app), myCurrentPos(0) {
+      myObject(&o),
+      myApplication(&app), myCurrentPos(0) {
     myTable = new FXTable(this, this, MID_TABLE, TABLE_COL_SIZABLE | TABLE_ROW_SIZABLE | LAYOUT_FILL_X | LAYOUT_FILL_Y);
     myTable->setVisibleRows((FXint)(noRows + 1));
     myTable->setVisibleColumns(3);
@@ -158,6 +158,9 @@ GUIParameterTableWindow::onRightButtonPress(FXObject* sender,
     }
     GUIParameterTableItemInterface* i = myItems[row];
     if (!i->dynamic()) {
+        return 1;
+    }
+    if (myObject == 0) {
         return 1;
     }
 

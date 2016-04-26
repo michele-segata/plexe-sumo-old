@@ -8,7 +8,7 @@
 // Builds detectors for guisim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -110,7 +110,7 @@ public:
      * @param[in] haltingSpeedThreshold Detector parameter: the speed a vehicle's speed must be below to be assigned as jammed
      * @param[in] jamDistThreshold Detector parameter: the distance between two vehicles in order to not count them to one jam
      */
-    virtual MSDetectorFileOutput* createSingleLaneE2Detector(const std::string& id,
+    virtual MSE2Collector* createSingleLaneE2Detector(const std::string& id,
             DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold,
             SUMOReal haltingSpeedThreshold,

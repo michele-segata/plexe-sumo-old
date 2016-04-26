@@ -11,7 +11,7 @@
 // Loader for networks and route imports
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -112,8 +112,8 @@ ROLoader::ROLoader(OptionsCont& oc, const bool emptyDestinationsAllowed, const b
     myOptions(oc),
     myEmptyDestinationsAllowed(emptyDestinationsAllowed),
     myLogSteps(logSteps),
-    myLoaders(oc.exists("unsorted-input") && oc.getBool("unsorted-input") ? 0 : DELTA_T)
-{}
+    myLoaders(oc.exists("unsorted-input") && oc.getBool("unsorted-input") ? 0 : DELTA_T) {
+}
 
 
 ROLoader::~ROLoader() {
@@ -199,7 +199,7 @@ ROLoader::openRoutes(RONet& net) {
 
 void
 ROLoader::processRoutes(const SUMOTime start, const SUMOTime end, const SUMOTime increment,
-                        RONet& net, SUMOAbstractRouter<ROEdge, ROVehicle>& router) {
+                        RONet& net, const RORouterProvider& provider) {
     const SUMOTime absNo = end - start;
     const bool endGiven = !OptionsCont::getOptions().isDefault("end");
     // skip routes that begin before the simulation's begin
@@ -213,7 +213,7 @@ ROLoader::processRoutes(const SUMOTime start, const SUMOTime end, const SUMOTime
         if (!net.furtherStored() || MsgHandler::getErrorInstance()->wasInformed()) {
             break;
         }
-        lastStep = net.saveAndRemoveRoutesUntil(myOptions, router, time);
+        lastStep = net.saveAndRemoveRoutesUntil(myOptions, provider, time);
         if ((!net.furtherStored() && myLoaders.haveAllLoaded()) || MsgHandler::getErrorInstance()->wasInformed()) {
             break;
         }
@@ -280,7 +280,7 @@ ROLoader::loadWeights(RONet& net, const std::string& optionName,
     EdgeFloatTimeLineRetriever_EdgeWeight eRetriever(net);
     if (measure != "traveltime") {
         std::string umeasure = measure;
-        if (measure == "CO" || measure == "CO2" || measure == "HC" || measure == "PMx" || measure == "NOx" || measure == "fuel") {
+        if (measure == "CO" || measure == "CO2" || measure == "HC" || measure == "PMx" || measure == "NOx" || measure == "fuel" || measure == "electricity") {
             umeasure = measure + "_perVeh";
         }
         retrieverDefs.push_back(new SAXWeightsHandler::ToRetrieveDefinition(umeasure, !useLanes, eRetriever));

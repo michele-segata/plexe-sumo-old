@@ -9,7 +9,7 @@
 // A DFROUTER-network
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -32,13 +32,14 @@
 #include <config.h>
 #endif
 
-#include <router/RONet.h>
 #include <utils/options/OptionsCont.h>
+#include <utils/common/StdDefs.h>
+#include <utils/common/SUMOTime.h>
+#include <router/ROEdge.h>
+#include <router/RONet.h>
 #include "RODFDetector.h"
 #include "RODFRouteDesc.h"
 #include "RODFRouteCont.h"
-#include <utils/common/StdDefs.h>
-#include <utils/common/SUMOTime.h>
 
 
 // ===========================================================================

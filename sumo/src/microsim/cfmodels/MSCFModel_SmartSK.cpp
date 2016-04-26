@@ -10,7 +10,7 @@
 // A smarter SK
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -46,7 +46,7 @@ MSCFModel_SmartSK::MSCFModel_SmartSK(const MSVehicleType* vtype,  SUMOReal accel
                                      SUMOReal tmp1, SUMOReal tmp2, SUMOReal tmp3, SUMOReal tmp4, SUMOReal tmp5)
 // check whether setting these variables here with default values is ''good'' SUMO design
 //        SUMOReal tmp1=0.0, SUMOReal tmp2=5.0, SUMOReal tmp3=0.0, SUMOReal tmp4, SUMOReal tmp5)
-    : MSCFModel(vtype, accel, decel, headwayTime), myDawdle(dawdle), myTauDecel(decel* headwayTime),
+    : MSCFModel(vtype, accel, decel, headwayTime), myDawdle(dawdle), myTauDecel(decel * headwayTime),
       myTmp1(tmp1), myTmp2(tmp2), myTmp3(tmp3), myTmp4(tmp4), myTmp5(tmp5) {
     // the variable tmp1 is the acceleration delay time, e.g. two seconds (or something like this).
     // for use in the upate process, a rule like if (v<myTmp1) vsafe = 0; is needed.

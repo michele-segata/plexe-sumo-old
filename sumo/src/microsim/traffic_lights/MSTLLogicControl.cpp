@@ -13,7 +13,7 @@
 // A class that stores and controls tls and switching of their programs
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -227,7 +227,7 @@ MSTLLogicControl::TLSLogicVariants::executeOnSwitchActions() const {
 
 
 void
-MSTLLogicControl::TLSLogicVariants::addLink(MSLink* link, MSLane* lane, unsigned int pos) {
+MSTLLogicControl::TLSLogicVariants::addLink(MSLink* link, MSLane* lane, int pos) {
     for (std::map<std::string, MSTrafficLightLogic*>::iterator i = myVariants.begin(); i != myVariants.end(); ++i) {
         (*i).second->addLink(link, lane, pos);
     }

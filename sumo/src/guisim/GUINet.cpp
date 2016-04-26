@@ -10,7 +10,7 @@
 // A MSNet extended by some values for usage within the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -63,9 +63,7 @@
 #include <gui/GUIGlobals.h>
 #include "GUINet.h"
 
-#ifdef HAVE_INTERNAL
 #include <mesogui/GUIMEVehicleControl.h>
-#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -529,12 +527,10 @@ GUINet::unlock() {
     myLock.unlock();
 }
 
-#ifdef HAVE_INTERNAL
 GUIMEVehicleControl*
 GUINet::getGUIMEVehicleControl() {
     return dynamic_cast<GUIMEVehicleControl*>(myVehicleControl);
 }
-#endif
 
 
 #ifdef HAVE_OSG

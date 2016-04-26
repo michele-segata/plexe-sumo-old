@@ -8,7 +8,7 @@
 // A BT sender
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2013-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -68,6 +68,14 @@ MSDevice_BTsender::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& i
     if (equippedByDefaultAssignmentOptions(OptionsCont::getOptions(), "btsender", v)) {
         MSDevice_BTsender* device = new MSDevice_BTsender(v, "btsender_" + v.getID());
         into.push_back(device);
+    }
+}
+
+void
+MSDevice_BTsender::cleanup() {
+    std::map<std::string, MSDevice_BTsender::VehicleInformation*>::iterator i;
+    for (i = sVehicles.begin(); i != sVehicles.end(); i++) {
+        delete i->second;
     }
 }
 

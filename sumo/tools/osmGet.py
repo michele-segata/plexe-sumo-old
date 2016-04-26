@@ -10,7 +10,7 @@
 Retrieves an area from OpenStreetMap.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2009-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2009-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -18,10 +18,14 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
-import httplib
-import StringIO
+try:
+    import httplib
+except ImportError:
+    import http.client as httplib
 import gzip
 import optparse
 from os import path
@@ -45,9 +49,9 @@ def readCompressed(conn, query, filename):
     <print mode="body"/>
     </osm-script>""" % query)
     response = conn.getresponse()
-    print response.status, response.reason
+    print(response.status, response.reason)
     if response.status == 200:
-        out = open(path.join(os.getcwd(), filename), "w")
+        out = open(path.join(os.getcwd(), filename), "wb")
         out.write(response.read())
         out.close()
 
@@ -103,7 +107,7 @@ def get(args=None):
             req = "/api/0.6/map?bbox=%s,%s,%s,%s" % (b, south, e, north)
             conn.request("GET", req)
             r = conn.getresponse()
-            print req, r.status, r.reason
+            print(req, r.status, r.reason)
             out = open(
                 path.join(os.getcwd(), "%s%s_%s.osm.xml" % (options.prefix, i, num)), "w")
             out.write(r.read())

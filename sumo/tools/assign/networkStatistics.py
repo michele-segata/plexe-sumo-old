@@ -18,7 +18,7 @@ The analyzed parameters include:
 - stop time
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -26,6 +26,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import sys
@@ -63,7 +65,7 @@ def getBasicStats(verbose, method, vehicles, assignments):
         totalTravelSpeed += veh.speed
         totalDepartDelay += veh.departdelay
     if verbose:
-        print 'totalVeh:', totalVeh
+        print('totalVeh:', totalVeh)
 
     totalVehDivisor = max(1, totalVeh)  # avoid division by 0
     avgTravelTime = totalTravelTime / totalVehDivisor
@@ -94,7 +96,7 @@ def getBasicStats(verbose, method, vehicles, assignments):
 # that the population standard deviations should be equal.
 def doTTestForAvg(verbose, tValueAvg, assignments):
     if verbose:
-        print 'begin the t test!'
+        print('begin the t test!')
     for num, A in enumerate(assignments):
         for B in assignments[num + 1:]:
             sdABTravelTime = 0.
@@ -135,7 +137,8 @@ def doTTestForAvg(verbose, tValueAvg, assignments):
                         A.avgWaitTime - B.avgWaitTime) / sdABWaitTime * tempvalue
                 else:
                     avgwaittime = 0.
-                    print 'check if the information about veh.waittime exists!'
+                    print(
+                        'check if the information about veh.waittime exists!')
                 freedomdegree = A.totalVeh + B.totalVeh - 2
                 if freedomdegree > 30 and freedomdegree <= 40:
                     freedomdegree = 31
@@ -158,9 +161,9 @@ def doTTestForAvg(verbose, tValueAvg, assignments):
 
 def doKruskalWallisTest(verbose, groups, combivehlist, assignments, label, hValues):
     if verbose:
-        print '\nbegin the Kruskal-Wallis test!'
-        print 'methods:', label
-        print 'number of samples:', len(combivehlist)
+        print('\nbegin the Kruskal-Wallis test!')
+        print('methods:', label)
+        print('number of samples:', len(combivehlist))
     adjlabel = label + '_' + "adjusted"
     if groups >= 100.:
         groups = 100.
@@ -199,7 +202,7 @@ def doKruskalWallisTest(verbose, groups, combivehlist, assignments, label, hValu
                 elif index == "waittime":
                     value = combivehlist[current].waittime
             else:
-                print 'error!'
+                print('error!')
 
             for j in range(current, len(combivehlist)):
                 if index == "traveltime":
@@ -242,7 +245,7 @@ def doKruskalWallisTest(verbose, groups, combivehlist, assignments, label, hValu
 
             if current > (len(combivehlist) - 1):
                 break
-                print 'current:', current
+                print('current:', current)
 
         for veh in combivehlist:
             for method in assignments.itervalues():
@@ -323,19 +326,19 @@ combilabel = ''
 
 assignments = {}
 # calculate/read the basic statistics
-for method, vehicles in allvehicles.iteritems():
+for method, vehicles in allvehicles.items():
     getBasicStats(options.verbose, method, vehicles, assignments)
 
 getStatisticsOutput(assignments, options.outputfile)
-print 'The calculation of network statistics is done!'
+print('The calculation of network statistics is done!')
 
 # begin the significance test for the observations with a normal distribution
 if options.ttest:
-    print 'begin the t test!'
+    print('begin the t test!')
     for A in assignments.itervalues():
         tValueAvg[A] = {}
     doTTestForAvg(options.verbose, tValueAvg, list(assignments.itervalues()))
-    print 'The t test is done!'
+    print('The t test is done!')
 if options.kwtest:
     # The Kruskal-Wallis test is applied for the data, not drawn from a
     # normally distributed population.
@@ -346,7 +349,7 @@ if options.kwtest:
             combilabel = ''
             combivehlist = []
             combilabel = A[0] + '_' + B[0]
-            print 'Test for:', combilabel
+            print('Test for:', combilabel)
             for veh in A[1]:
                 combivehlist.append(veh)
             for veh in B[1]:
@@ -356,4 +359,4 @@ if options.kwtest:
 
 getSignificanceTestOutput(
     assignments, options.ttest, tValueAvg, hValues, options.sgtoutputfile)
-print 'The Significance test is done!'
+print('The Significance test is done!')

@@ -7,7 +7,7 @@
 // Realises dumping Emission Data
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -64,7 +64,7 @@ public:
      * @param[in] timestep The current time step
      * @exception IOError If an error on writing occurs (!!! not yet implemented)
      */
-    static void write(OutputDevice& of, SUMOTime timestep);
+    static void write(OutputDevice& of, SUMOTime timestep, int precision);
 
 
 private:

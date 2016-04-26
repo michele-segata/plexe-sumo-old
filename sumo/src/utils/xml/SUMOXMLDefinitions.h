@@ -12,7 +12,7 @@
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -93,6 +93,10 @@ enum SumoXMLTag {
     SUMO_TAG_REROUTER,
     /// @brief A bus stop
     SUMO_TAG_BUS_STOP,
+    /// @brief A train stop (alias for bus stop)
+    SUMO_TAG_TRAIN_STOP,
+    /// @brief An access point for a train stop
+    SUMO_TAG_ACCESS,
     /// @brief A container stop
     SUMO_TAG_CONTAINER_STOP,
     /// @brief A Charging Station
@@ -200,7 +204,6 @@ enum SumoXMLTag {
 
     SUMO_TAG_CF_KRAUSS,
     SUMO_TAG_CF_KRAUSS_PLUS_SLOPE,
-    SUMO_TAG_CF_KRAUSS_ACCEL_BOUND,
     SUMO_TAG_CF_KRAUSS_ORIG1,
     SUMO_TAG_CF_SMART_SK,
     SUMO_TAG_CF_DANIEL1,
@@ -212,6 +215,7 @@ enum SumoXMLTag {
     SUMO_TAG_CF_CC,
 
     SUMO_TAG_PERSON,
+    SUMO_TAG_PERSONTRIP,
     SUMO_TAG_RIDE,
     SUMO_TAG_WALK,
 
@@ -364,6 +368,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_CONTAINER_CAPACITY,
     SUMO_ATTR_PERSON_NUMBER,
     SUMO_ATTR_CONTAINER_NUMBER,
+    SUMO_ATTR_MODES,
     /* source definitions */
     SUMO_ATTR_FUNCTION,
     SUMO_ATTR_POSITION,
@@ -599,8 +604,10 @@ enum SumoXMLAttr {
     /* first coordinate of edge shape */
     GNE_ATTR_SHAPE_START,
     /* last coordinate of edge shape */
-    GNE_ATTR_SHAPE_END
+    GNE_ATTR_SHAPE_END,
     //@}
+
+    SUMO_ATTR_TARGETLANE
 };
 
 /*
@@ -620,6 +627,7 @@ enum SumoXMLNodeType {
     NODETYPE_TRAFFIC_LIGHT_NOJUNCTION, // junction controlled only by traffic light but without other prohibitions,
     NODETYPE_TRAFFIC_LIGHT_RIGHT_ON_RED,
     NODETYPE_RAIL_SIGNAL,
+    NODETYPE_RAIL_CROSSING,
     NODETYPE_PRIORITY,
     NODETYPE_PRIORITY_STOP, // like priority but all minor links have stop signs
     NODETYPE_RIGHT_BEFORE_LEFT,
@@ -741,7 +749,15 @@ enum LinkDirection {
 enum TrafficLightType {
     TLTYPE_STATIC,
     TLTYPE_RAIL,
-    TLTYPE_ACTUATED
+    TLTYPE_ACTUATED,
+    TLTYPE_SOTL_PHASE,
+    TLTYPE_SOTL_PLATOON,
+    TLTYPE_SOTL_REQUEST,
+    TLTYPE_SOTL_WAVE,
+    TLTYPE_SOTL_MARCHING,
+    TLTYPE_SWARM_BASED,
+    TLTYPE_HILVL_DETERMINISTIC,
+    TLTYPE_INVALID //< must be the last one
 };
 
 

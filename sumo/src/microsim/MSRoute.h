@@ -11,7 +11,7 @@
 // A vehicle route
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -43,6 +43,10 @@
 #include <utils/common/RGBColor.h>
 #include <utils/vehicle/SUMOVehicleParameter.h>
 #include <utils/common/Parameterised.h>
+#ifdef HAVE_FOX
+#include <fx.h>
+#include <FXThread.h>
+#endif
 
 
 // ===========================================================================
@@ -257,6 +261,10 @@ private:
     /// The dictionary container
     static RouteDistDict myDistDict;
 
+#ifdef HAVE_FOX
+    /// @brief the mutex for the route dictionaries
+    static FXMutex myDictMutex;
+#endif
 private:
     /** invalid assignment operator */
     MSRoute& operator=(const MSRoute& s);

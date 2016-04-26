@@ -11,7 +11,7 @@ Converts a VISSIM-tls-description into a SUMO-tls-description and writes
 the appended information to a copy of the given sumo.net file
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2009-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2009-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@ the Free Software Foundation; either version 3 of the License, or
 # TODO: usage doc.ref
 
 from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import argparse

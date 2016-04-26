@@ -8,7 +8,7 @@
 // Builds detectors for guisim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -43,10 +43,8 @@
 #include <utils/common/FileHelpers.h>
 #include "GUIDetectorBuilder.h"
 
-#ifdef HAVE_INTERNAL
 #include <mesogui/GUIMEInductLoop.h>
 #include <mesosim/MELoop.h>
-#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -67,11 +65,9 @@ MSDetectorFileOutput*
 GUIDetectorBuilder::createInductLoop(const std::string& id,
                                      MSLane* lane, SUMOReal pos, bool splitByType, bool show) {
     if (show) {
-#ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             return new GUIMEInductLoop(id, MSGlobals::gMesoNet->getSegmentForEdge(lane->getEdge(), pos), pos);
         }
-#endif
         return new GUIInductLoop(id, lane, pos, splitByType);
     } else {
         return NLDetectorBuilder::createInductLoop(id, lane, pos, splitByType);
@@ -86,7 +82,7 @@ GUIDetectorBuilder::createInstantInductLoop(const std::string& id,
 }
 
 
-MSDetectorFileOutput*
+MSE2Collector*
 GUIDetectorBuilder::createSingleLaneE2Detector(const std::string& id,
         DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
         SUMOTime haltingTimeThreshold,

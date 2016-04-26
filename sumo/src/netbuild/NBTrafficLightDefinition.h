@@ -9,7 +9,7 @@
 // The base class for traffic light logic definitions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -143,11 +143,10 @@ public:
      * Does some initialisation at first, then calls myCompute to finally
      *  build the tl-logic
      *
-     * @param[in] ec The edge container in order to retrieve edge information
      * @param[in] oc The options container holding options needed during the building
      * @return The built logic (may be 0)
      */
-    NBTrafficLightLogic* compute(const NBEdgeCont& ec, OptionsCont& oc);
+    NBTrafficLightLogic* compute(OptionsCont& oc);
 
 
 
@@ -241,9 +240,8 @@ public:
 
 
     /** @brief Informs edges about being controlled by a tls
-     * @param[in] ec The container of edges
      */
-    virtual void setTLControllingInformation(const NBEdgeCont& ec) const = 0;
+    virtual void setTLControllingInformation() const = 0;
 
 
     /** @brief Builds the list of participating nodes/edges/links
@@ -331,7 +329,7 @@ public:
     bool needsCont(const NBEdge* fromE, const NBEdge* toE, const NBEdge* otherFromE, const NBEdge* otherToE) const;
 
     /// @brief whether the given index must yield to the foeIndex while turing right on a red light
-    bool rightOnRedConflict(int index, int foeIndex) const;
+    virtual bool rightOnRedConflict(int index, int foeIndex) const;
 
     /* initialize myNeedsContRelation and set myNeedsContRelationReady to true
      * This information is a byproduct of NBOwnTLDef::myCompute. All other
@@ -339,13 +337,14 @@ public:
     virtual void initNeedsContRelation() const;
 
 protected:
+    /// @brief id for temporary definitions
+    static const std::string DummyID;
+
     /** @brief Computes the traffic light logic finally in dependence to the type
-     * @param[in] ec The edge container
      * @param[in] brakingTime Duration a vehicle needs for braking in front of the tls
      * @return The computed logic
      */
-    virtual NBTrafficLightLogic* myCompute(const NBEdgeCont& ec,
-                                           unsigned int brakingTime) = 0;
+    virtual NBTrafficLightLogic* myCompute(unsigned int brakingTime) = 0;
 
 
     /** @brief Collects the links participating in this traffic light
@@ -436,6 +435,10 @@ protected:
     typedef std::set<std::pair<int, int> > RightOnRedConflicts;
     mutable RightOnRedConflicts myRightOnRedConflicts;
     mutable bool myRightOnRedConflictsReady;
+
+private:
+    static std::set<NBEdge*> collectReachable(EdgeVector outer, const EdgeVector& within, bool checkControlled);
+
 
 };
 

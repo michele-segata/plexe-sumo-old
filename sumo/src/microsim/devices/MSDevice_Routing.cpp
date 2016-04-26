@@ -11,7 +11,7 @@
 // A device that performs vehicle rerouting based on current edge speeds
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -61,6 +61,7 @@ SUMOTime MSDevice_Routing::myLastAdaptation = -1;
 bool MSDevice_Routing::myWithTaz;
 std::map<std::pair<const MSEdge*, const MSEdge*>, const MSRoute*> MSDevice_Routing::myCachedRoutes;
 SUMOAbstractRouter<MSEdge, SUMOVehicle>* MSDevice_Routing::myRouter = 0;
+AStarRouter<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >* MSDevice_Routing::myRouterWithProhibited = 0;
 SUMOReal MSDevice_Routing::myRandomizeWeightsFactor = 0;
 #ifdef HAVE_FOX
 FXWorkerThread::Pool MSDevice_Routing::myThreadPool;
@@ -119,13 +120,13 @@ MSDevice_Routing::insertOptions(OptionsCont& oc) {
 
 void
 MSDevice_Routing::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& into) {
-    bool needRerouting = v.getParameter().wasSet(VEHPARS_FORCE_REROUTE);
     OptionsCont& oc = OptionsCont::getOptions();
+    bool needRerouting = v.getParameter().wasSet(VEHPARS_FORCE_REROUTE);
+    needRerouting |= equippedByDefaultAssignmentOptions(oc, "rerouting", v);
     if (!needRerouting && oc.getFloat("device.rerouting.probability") == 0 && !oc.isSet("device.rerouting.explicit")) {
         // no route computation is modelled
         return;
     }
-    needRerouting |= equippedByDefaultAssignmentOptions(oc, "rerouting", v);
     if (needRerouting) {
         // route computation is enabled
         myWithTaz = oc.getBool("device.rerouting.with-taz");
@@ -236,8 +237,13 @@ MSDevice_Routing::preInsertionReroute(const SUMOTime currentTime) {
     if (source->getPurpose() == MSEdge::EDGEFUNCTION_DISTRICT && dest->getPurpose() == MSEdge::EDGEFUNCTION_DISTRICT) {
         const std::pair<const MSEdge*, const MSEdge*> key = std::make_pair(source, dest);
         if (myCachedRoutes.find(key) != myCachedRoutes.end()) {
-            myHolder.replaceRoute(myCachedRoutes[key], true);
-            return myPreInsertionPeriod;
+            if (myCachedRoutes[key]->size() > 2) {
+                myHolder.replaceRoute(myCachedRoutes[key], true);
+                return myPreInsertionPeriod;
+            } else {
+                WRITE_WARNING("No route for vehicle '" + myHolder.getID() + "' found.");
+                return myPreInsertionPeriod;
+            }
         }
     }
     reroute(currentTime, true);
@@ -263,6 +269,12 @@ MSDevice_Routing::getEffort(const MSEdge* const e, const SUMOVehicle* const v, S
         return effort;
     }
     return 0;
+}
+
+
+SUMOReal
+MSDevice_Routing::getAssumedSpeed(const MSEdge* edge) {
+    return edge->getLength() / getEffort(edge, 0, 0);
 }
 
 
@@ -324,41 +336,41 @@ MSDevice_Routing::reroute(const SUMOTime currentTime, const bool onInit) {
         if (routingAlgorithm == "dijkstra") {
             if (mayHaveRestrictions) {
                 myRouter = new DijkstraRouterTT<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >(
-                    MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort);
+                    MSEdge::getAllEdges(), true, &MSDevice_Routing::getEffort);
             } else {
                 myRouter = new DijkstraRouterTT<MSEdge, SUMOVehicle, noProhibitions<MSEdge, SUMOVehicle> >(
-                    MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort);
+                    MSEdge::getAllEdges(), true, &MSDevice_Routing::getEffort);
             }
         } else if (routingAlgorithm == "astar") {
             if (mayHaveRestrictions) {
                 typedef AStarRouter<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> > AStar;
                 const AStar::LookupTable* lookup = 0;
                 if (oc.isSet("device.rerouting.shortest-path-file")) {
-                    lookup = AStar::createLookupTable(oc.getString("device.rerouting.shortest-path-file"), (int)MSEdge::numericalDictSize());
+                    lookup = AStar::createLookupTable(oc.getString("device.rerouting.shortest-path-file"), (int)MSEdge::getAllEdges().size());
                 }
-                myRouter = new AStar(MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort, lookup);
+                myRouter = new AStar(MSEdge::getAllEdges(), true, &MSDevice_Routing::getEffort, lookup);
             } else {
                 typedef AStarRouter<MSEdge, SUMOVehicle, noProhibitions<MSEdge, SUMOVehicle> > AStar;
                 const AStar::LookupTable* lookup = 0;
                 if (oc.isSet("device.rerouting.shortest-path-file")) {
-                    lookup = AStar::createLookupTable(oc.getString("device.rerouting.shortest-path-file"), (int)MSEdge::numericalDictSize());
+                    lookup = AStar::createLookupTable(oc.getString("device.rerouting.shortest-path-file"), (int)MSEdge::getAllEdges().size());
                 }
-                myRouter = new AStar(MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort, lookup);
+                myRouter = new AStar(MSEdge::getAllEdges(), true, &MSDevice_Routing::getEffort, lookup);
             }
         } else if (routingAlgorithm == "CH") {
             const SUMOTime weightPeriod = myAdaptationInterval > 0 ? myAdaptationInterval : std::numeric_limits<int>::max();
             if (mayHaveRestrictions) {
                 myRouter = new CHRouter<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >(
-                    MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort, myHolder.getVClass(), weightPeriod, true);
+                    MSEdge::getAllEdges(), true, &MSDevice_Routing::getEffort, myHolder.getVClass(), weightPeriod, true);
             } else {
                 myRouter = new CHRouter<MSEdge, SUMOVehicle, noProhibitions<MSEdge, SUMOVehicle> >(
-                    MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort, myHolder.getVClass(), weightPeriod, false);
+                    MSEdge::getAllEdges(), true, &MSDevice_Routing::getEffort, myHolder.getVClass(), weightPeriod, false);
             }
         } else if (routingAlgorithm == "CHWrapper") {
             const SUMOTime begin = string2time(oc.getString("begin"));
             const SUMOTime weightPeriod = myAdaptationInterval > 0 ? myAdaptationInterval : std::numeric_limits<int>::max();
             myRouter = new CHRouterWrapper<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >(
-                MSEdge::numericalDictSize(), true, &MSDevice_Routing::getEffort, begin, weightPeriod);
+                MSEdge::getAllEdges(), true, &MSDevice_Routing::getEffort, begin, weightPeriod);
         } else {
             throw ProcessError("Unknown routing algorithm '" + routingAlgorithm + "'!");
         }
@@ -382,8 +394,22 @@ MSDevice_Routing::reroute(const SUMOTime currentTime, const bool onInit) {
 }
 
 
+SUMOAbstractRouter<MSEdge, SUMOVehicle>&
+MSDevice_Routing::getRouterTT(const MSEdgeVector& prohibited) {
+    if (myRouterWithProhibited == 0) {
+        myRouterWithProhibited = new AStarRouter<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >(
+            MSEdge::getAllEdges(), true, &MSDevice_Routing::getEffort);
+    }
+    myRouterWithProhibited->prohibit(prohibited);
+    return *myRouterWithProhibited;
+}
+
+
+
 void
 MSDevice_Routing::cleanup() {
+    delete myRouterWithProhibited;
+    myRouterWithProhibited = 0;
 #ifdef HAVE_FOX
     if (myThreadPool.size() > 0) {
         // we cannot wait for the static destructor to do the cleanup

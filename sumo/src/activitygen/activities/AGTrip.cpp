@@ -11,7 +11,7 @@
 // Class containing all information of a given trip (car, bus)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2010-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2010-2016 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
@@ -167,12 +167,12 @@ AGTrip::setVehicleName(std::string name) {
 
 void
 AGTrip::setArr(AGPosition arrival) {
-    myTo = *new AGPosition(arrival.getStreet(), arrival.getPosition());
+    myTo = AGPosition(arrival.getStreet(), arrival.getPosition());
 }
 
 void
 AGTrip::setDep(AGPosition departure) {
-    myFrom = *new AGPosition(departure.getStreet(), departure.getPosition());
+    myFrom = AGPosition(departure.getStreet(), departure.getPosition());
 }
 
 bool

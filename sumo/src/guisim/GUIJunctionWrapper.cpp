@@ -11,7 +11,7 @@
 // }
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -121,7 +121,7 @@ GUIJunctionWrapper::getParameterWindow(GUIMainWindow& /*app*/,
 Boundary
 GUIJunctionWrapper::getCenteringBoundary() const {
     Boundary b = myBoundary;
-    b.grow(20);
+    b.grow(1);
     return b;
 }
 
@@ -205,6 +205,8 @@ GUIJunctionWrapper::getColorValue(const GUIVisualizationSettings& s) const {
                     return 10;
                 case NODETYPE_TRAFFIC_LIGHT_RIGHT_ON_RED:
                     return 11;
+                case NODETYPE_RAIL_CROSSING:
+                    return 12;
             }
         default:
             assert(false);

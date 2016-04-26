@@ -10,7 +10,7 @@ Cut down routes from a large scenario to a sub-scenario optionally using exitTim
 Output can be a route file or a tripfile.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -18,9 +18,12 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import sys
+PY3 = sys.version_info > (3,)
 import codecs
 from optparse import OptionParser
 from collections import defaultdict
@@ -91,7 +94,7 @@ def cut_routes(areaEdges, orig_net, options, busStopEdges=None):
     teleportFactorSum = 0.0
     too_short = 0
     for routeFile in options.routeFiles:
-        print "Parsing routes from %s" % routeFile
+        print("Parsing routes from %s" % routeFile)
         for vehicle in parse(routeFile, 'vehicle'):
             num_vehicles += 1
             edges = vehicle.route[0].edges.split()
@@ -118,7 +121,8 @@ def cut_routes(areaEdges, orig_net, options, busStopEdges=None):
                                        (orig_net.getEdge(e).getSpeed() * options.speed_factor))
                                       for e in edges[:fromIndex]]))
                 else:
-                    print "Could not reconstruct new departure time for vehicle '%s'. Using old departure time." % vehicle.id
+                    print(
+                        "Could not reconstruct new departure time for vehicle '%s'. Using old departure time." % vehicle.id)
                     newDepart = float(vehicle.depart)
             else:
                 exitTimes = vehicle.route[0].exitTimes.split()
@@ -134,10 +138,12 @@ def cut_routes(areaEdges, orig_net, options, busStopEdges=None):
                 for stop in vehicle.stop:
                     if stop.busStop:
                         if not busStopEdges:
-                            print "No bus stop locations parsed, skipping bus stop '%s'." % stop.busStop
+                            print(
+                                "No bus stop locations parsed, skipping bus stop '%s'." % stop.busStop)
                             continue
                         if stop.busStop not in busStopEdges:
-                            print "Skipping bus stop '%s', which could not be located." % stop.busStop
+                            print(
+                                "Skipping bus stop '%s', which could not be located." % stop.busStop)
                             continue
                         if busStopEdges[stop.busStop] in remaining:
                             stops.append(stop)
@@ -155,10 +161,13 @@ def cut_routes(areaEdges, orig_net, options, busStopEdges=None):
     else:
         teleports = ""
 
-    print "Parsed %s vehicles and kept %s routes%s" % (num_vehicles, num_returned, teleports)
+    print("Parsed %s vehicles and kept %s routes%s" %
+          (num_vehicles, num_returned, teleports))
     if too_short > 0:
-        print "Discarded %s routes because they have less than %s edges" % (too_short, options.min_length)
-    print "Number of disconnected routes: %s. Most frequent missing edges:" % multiAffectedRoutes
+        print("Discarded %s routes because they have less than %s edges" %
+              (too_short, options.min_length))
+    print("Number of disconnected routes: %s. Most frequent missing edges:" %
+          multiAffectedRoutes)
     printTop(missingEdgeOccurences)
 
 
@@ -180,10 +189,10 @@ def missingEdges(areaEdges, edges, missingEdgeOccurences):
 
 def printTop(missingEdgeOccurences, num=1000):
     counts = sorted(
-        [(v, k) for k, v in missingEdgeOccurences.iteritems()], reverse=True)
+        [(v, k) for k, v in missingEdgeOccurences.items()], reverse=True)
     counts.sort(reverse=True)
     for count, edge in counts[:num]:
-        print count, edge
+        print(count, edge)
 
 
 def write_trip(file, vehicle):
@@ -211,7 +220,7 @@ def main():
         orig_net = readNet(options.orig_net)
     else:
         orig_net = None
-    print "Valid area contains %s edges" % len(edges)
+    print("Valid area contains %s edges" % len(edges))
 
     if options.trips:
         output_type = 'trips'
@@ -245,7 +254,7 @@ def main():
             num_routes += 1
             writer(f, v)
         f.write('</%s>\n' % output_type)
-        print "Wrote %s %s" % (num_routes, output_type)
+        print("Wrote %s %s" % (num_routes, output_type))
 
     if options.big:
         # write output unsorted

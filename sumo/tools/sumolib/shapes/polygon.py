@@ -9,7 +9,7 @@
 Library for reading and storing polygons.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -17,6 +17,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
 
 from xml.sax import handler, parse
 from .. import color
@@ -69,6 +70,9 @@ class Polygon:
                 ret += '<param key="%s" value="%s"/>' % (a, self.attributes[a])
             ret += '</poly>'
         return ret
+
+    def __lt__(self, other):
+        return self.id < other.id
 
 
 class PolygonReader(handler.ContentHandler):

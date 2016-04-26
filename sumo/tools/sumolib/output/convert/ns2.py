@@ -10,7 +10,7 @@ This module includes functions for converting SUMO's fcd-output into
 data files read by ns2.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2013-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -19,6 +19,7 @@ the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
 from __future__ import print_function
+from __future__ import absolute_import
 import math
 import datetime
 import sumolib.output
@@ -79,7 +80,7 @@ def fcd2ns2mobility(inpFCD, outSTRM, further):
 
 
 def writeNS2activity(outSTRM, vehInfo):
-    for v in vehInfo:
+    for v in sorted(vehInfo):
         i = vehInfo[v]
         print('$ns_ at %s "$g(%s) start"; # SUMO-ID: %s' %
               (i[1], i[0], v), file=outSTRM)

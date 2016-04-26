@@ -1,14 +1,14 @@
 /****************************************************************************/
 /// @file    MSDevice_Battery.cpp
 /// @author  Tamas Kurczveil
-/// @author  Pablo Alvarez López
+/// @author  Pablo Alvarez Lopez
 /// @date    20.12.2013
 /// @version $Id$
 ///
 // The Battery parameters for the vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2013-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -39,8 +39,6 @@
 #include <microsim/MSVehicle.h>
 #include "MSDevice_Tripinfo.h"
 #include "MSDevice_Battery.h"
-
-#define PI 3.141592654
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -133,8 +131,8 @@ MSDevice_Battery::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& in
 
 
 bool MSDevice_Battery::notifyMove(SUMOVehicle& veh, SUMOReal /* oldPos */, SUMOReal /* newPos */, SUMOReal /* newSpeed */) {
-    // Start vehicleStoppedTimer if the vehicle is stopped (that's mean, speed is < 0.2). In other case reset timer
-    if (veh.getSpeed() < 0.2) {
+    // Start vehicleStoppedTimer if the vehicle is stopped. In other case reset timer
+    if (veh.getSpeed() < SUMO_const_haltingSpeed) {
         // Increase vehicle stopped timer
         increaseVehicleStoppedTimer();
     } else {
@@ -173,9 +171,9 @@ bool MSDevice_Battery::notifyMove(SUMOVehicle& veh, SUMOReal /* oldPos */, SUMOR
         MSChargingStation* ChargingStationPointer = MSNet::getInstance()->getChargingStation(ChargingStationID);
 
         // if the vehicle is almost stopped, or charge in transit is enabled, then charge vehicle
-        if ((veh.getSpeed() < 0.2) || (ChargingStationPointer->getChargeInTransit() == 1)) {
+        if ((veh.getSpeed() < SUMO_const_haltingSpeed) || (ChargingStationPointer->getChargeInTransit() == 1)) {
             // Set Flags Stopped/intransit to
-            if (veh.getSpeed() < 0.2) {
+            if (veh.getSpeed() < SUMO_const_haltingSpeed) {
                 // vehicle ist almost stopped, then is charging stopped
                 ItsChargingStopped = true;
 
@@ -194,7 +192,7 @@ bool MSDevice_Battery::notifyMove(SUMOVehicle& veh, SUMOReal /* oldPos */, SUMOR
 
             // Only update charging start time if vehicle allow charge in transit, or in other case
             // if the vehicle not allow charge in transit but it's stopped.
-            if (ChargingStationPointer->getChargeInTransit() == 1 || veh.getSpeed() < 0.2) {
+            if (ChargingStationPointer->getChargeInTransit() == 1 || veh.getSpeed() < SUMO_const_haltingSpeed) {
                 // Update Charging start time
                 increaseChargingStartTime();
             }
@@ -341,8 +339,8 @@ MSDevice_Battery::MSDevice_Battery(SUMOVehicle& holder, const std::string& id, c
 }
 
 
-MSDevice_Battery::~MSDevice_Battery()
-{}
+MSDevice_Battery::~MSDevice_Battery() {
+}
 
 
 // SET FUNCTIONS
@@ -604,7 +602,7 @@ SUMOReal MSDevice_Battery::getPropEnergy(SUMOVehicle& veh) {
 
     // Calculate energy losses:
     // EnergyLoss,Air = 1/2 * rho_air [kg/m^3] * FrontSurfaceArea [m^2] * AirDragCoefficient [-] * v_Veh^2 [m/s] * s [m]
-    //                    ... with rho_air [kg/m^3] = 1,2041 kg/m^3 (at T = 20°C)
+    //                    ... with rho_air [kg/m^3] = 1,2041 kg/m^3 (at T = 20C)
     //                    ... with s [m] = v_Veh [m/s] * 1 [s]
     EnergyLoss += 0.5 * 1.2041 * getFrontSurfaceArea() * getAirDragCoefficient() * fabs(veh.getSpeed() * veh.getSpeed() * veh.getSpeed());
 
@@ -639,7 +637,7 @@ SUMOReal MSDevice_Battery::getPropEnergy(SUMOVehicle& veh) {
     EnergyLoss = EnergyLoss / 3600 ; // EnergyLoss[Ws] * 1[h]/3600[s] * 1[k]/1000
 
     // Return calculated energy
-    return(EnergyLoss);
+    return (EnergyLoss);
 }
 
 

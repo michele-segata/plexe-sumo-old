@@ -13,7 +13,7 @@
 // Container for nodes during the netbuilding process
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -884,6 +884,9 @@ NBNodeCont::guessTLs(OptionsCont& oc, NBTrafficLightLogicCont& tlc) {
         // check which nodes should be controlled
         for (std::map<std::string, NBNode*>::const_iterator i = myNodes.begin(); i != myNodes.end(); ++i) {
             NBNode* node = i->second;
+            if (find(ncontrolled.begin(), ncontrolled.end(), node) != ncontrolled.end()) {
+                continue;
+            }
             const EdgeVector& incoming = node->getIncomingEdges();
             const EdgeVector& outgoing = node->getOutgoingEdges();
             if (!node->isTLControlled() && incoming.size() > 1 && !node->geometryLike()) {
@@ -1129,6 +1132,7 @@ NBNodeCont::printBuiltNodesStatistics() const {
             case NODETYPE_PRIORITY_STOP:
             case NODETYPE_TRAFFIC_LIGHT:
             case NODETYPE_TRAFFIC_LIGHT_RIGHT_ON_RED:
+            case NODETYPE_RAIL_CROSSING:
                 ++numPriorityJunctions;
                 break;
             case NODETYPE_RIGHT_BEFORE_LEFT:

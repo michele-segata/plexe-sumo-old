@@ -16,7 +16,7 @@
 /// TraCI server used to control sumo by a remote TraCI client (e.g., ns2)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -219,10 +219,10 @@ TraCIServer::wasClosed() {
 
 
 void
-TraCIServer::setVTDControlled(MSVehicle* v, MSLane* l, SUMOReal pos, int edgeOffset, ConstMSEdgeVector route,
+TraCIServer::setVTDControlled(MSVehicle* v, MSLane* l, SUMOReal pos, SUMOReal angle, int edgeOffset, ConstMSEdgeVector route,
                               SUMOTime t) {
     myVTDControlledVehicles[v->getID()] = v;
-    v->getInfluencer().setVTDControlled(true, l, pos, edgeOffset, route, t);
+    v->getInfluencer().setVTDControlled(l, pos, angle, edgeOffset, route, t);
 }
 
 

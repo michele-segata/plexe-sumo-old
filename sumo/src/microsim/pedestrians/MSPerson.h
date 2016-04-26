@@ -10,7 +10,7 @@
 // The class for modelling person-movements
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -410,6 +410,9 @@ public:
 
     /// @brief return the list of internal edges if this person is walking and the pedestrian model allows it
     const std::string& getNextEdge() const;
+
+    /// @brief returns the next edge ptr if this person is walking and the pedestrian model allows it
+    const MSEdge* getNextEdgePtr() const;
 
 private:
     /// @brief Invalidated copy constructor.

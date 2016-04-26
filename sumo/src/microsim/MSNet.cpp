@@ -15,7 +15,7 @@
 // The simulated network and simulation perfomer
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -70,6 +70,7 @@
 #include <microsim/devices/MSDevice_Routing.h>
 #include <microsim/devices/MSDevice_Vehroutes.h>
 #include <microsim/devices/MSDevice_Tripinfo.h>
+#include <microsim/devices/MSDevice_BTsender.h>
 #include "traffic_lights/MSTrafficLightLogic.h"
 #include <utils/shapes/Polygon.h>
 #include <utils/shapes/ShapeContainer.h>
@@ -99,10 +100,7 @@
 #include "MSEdgeWeightsStorage.h"
 #include "MSStateHandler.h"
 
-#ifdef HAVE_INTERNAL
 #include <mesosim/MELoop.h>
-#include <utils/iodevices/BinaryInputDevice.h>
-#endif
 
 #ifndef NO_TRACI
 #include <traci-server/TraCIServer.h>
@@ -203,11 +201,9 @@ MSNet::MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
     myInsertionEvents = insertionEvents;
     myLanesRTree.first = false;
 
-#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         MSGlobals::gMesoNet = new MELoop(string2time(oc.getString("meso-recheck")));
     }
-#endif
     myInstance = this;
 }
 
@@ -273,13 +269,15 @@ MSNet::~MSNet() {
     delete myRouterTTDijkstra;
     delete myRouterTTAStar;
     delete myRouterEffort;
+    if (myPedestrianRouter != 0) {
+        delete myPedestrianRouter;
+    }
     myLanesRTree.second.RemoveAll();
     clearAll();
-#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         delete MSGlobals::gMesoNet;
     }
-#endif
+//    delete myPedestrianRouter;
     myInstance = 0;
 }
 
@@ -447,12 +445,9 @@ MSNet::simulationStep() {
     // check whether the tls programs need to be switched
     myLogics->check2Switch(myStep);
 
-#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         MSGlobals::gMesoNet->simulate(myStep);
     } else {
-#endif
-
         // assure all lanes with vehicles are 'active'
         myEdges->patchActiveLanes();
 
@@ -472,9 +467,7 @@ MSNet::simulationStep() {
         if (MSGlobals::gCheck4Accidents) {
             myEdges->detectCollisions(myStep, STAGE_LANECHANGE);
         }
-#ifdef HAVE_INTERNAL
     }
-#endif
     loadRoutes();
 
     // persons
@@ -581,7 +574,7 @@ MSNet::clearAll() {
     MSCalibrator::cleanup();
     MSPModel::cleanup();
     MSCModel_NonInteracting::cleanup();
-    PedestrianEdge<MSEdge, MSLane, MSJunction>::cleanup();
+    MSDevice_BTsender::cleanup();
 }
 
 
@@ -604,7 +597,8 @@ MSNet::writeOutput() {
 
     // check emission dumps
     if (OptionsCont::getOptions().isSet("emission-output")) {
-        MSEmissionExport::write(OutputDevice::getDeviceByOption("emission-output"), myStep);
+        MSEmissionExport::write(OutputDevice::getDeviceByOption("emission-output"), myStep,
+                                oc.getInt("emission-output.precision"));
     }
 
     // battery dumps
@@ -856,13 +850,13 @@ MSNet::getRouterTT(const MSEdgeVector& prohibited) const {
         const std::string routingAlgorithm = OptionsCont::getOptions().getString("routing-algorithm");
         if (routingAlgorithm == "dijkstra") {
             myRouterTTDijkstra = new DijkstraRouterTT<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >(
-                MSEdge::numericalDictSize(), true, &MSNet::getTravelTime);
+                MSEdge::getAllEdges(), true, &MSNet::getTravelTime);
         } else {
             if (routingAlgorithm != "astar") {
                 WRITE_WARNING("TraCI and Triggers cannot use routing algorithm '" + routingAlgorithm + "'. using 'astar' instead.");
             }
             myRouterTTAStar = new AStarRouter<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >(
-                MSEdge::numericalDictSize(), true, &MSNet::getTravelTime);
+                MSEdge::getAllEdges(), true, &MSNet::getTravelTime);
         }
     }
     if (myRouterTTDijkstra != 0) {
@@ -880,7 +874,7 @@ SUMOAbstractRouter<MSEdge, SUMOVehicle>&
 MSNet::getRouterEffort(const MSEdgeVector& prohibited) const {
     if (myRouterEffort == 0) {
         myRouterEffort = new DijkstraRouterEffort<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >(
-            MSEdge::numericalDictSize(), true, &MSNet::getEffort, &MSNet::getTravelTime);
+            MSEdge::getAllEdges(), true, &MSNet::getEffort, &MSNet::getTravelTime);
     }
     myRouterEffort->prohibit(prohibited);
     return *myRouterEffort;

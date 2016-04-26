@@ -9,7 +9,7 @@
 Wrapper script for running tool tests with TextTest.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -29,7 +29,5 @@ if tool[0].endswith(".jar"):
 if tool[0].endswith(".py"):
     tool = [os.environ.get('PYTHON', 'python')] + tool
 
-import os
-from sys import version_info
 subprocess.call(tool + sys.argv[1:-1], env=os.environ,
                 stdout=sys.stdout, stderr=sys.stderr)

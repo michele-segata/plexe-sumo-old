@@ -9,7 +9,7 @@
 // Calibrates the flow on an edge by removing an inserting vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2005-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2005-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -292,9 +292,7 @@ MSCalibrator::execute(SUMOTime currentTime) {
         reset();
         if (!mySpeedIsDefault) {
             // reset speed to default
-            for (std::vector<MSLane*>::const_iterator i = myEdge->getLanes().begin(); i != myEdge->getLanes().end(); ++i) {
-                (*i)->setMaxSpeed(myDefaultSpeed);
-            }
+            myEdge->setMaxSpeed(myDefaultSpeed);
             mySpeedIsDefault = true;
         }
         if (myCurrentStateInterval == myIntervals.end()) {
@@ -305,9 +303,7 @@ MSCalibrator::execute(SUMOTime currentTime) {
     }
     // we are active
     if (!myDidSpeedAdaption && myCurrentStateInterval->v >= 0) {
-        for (std::vector<MSLane*>::const_iterator i = myEdge->getLanes().begin(); i != myEdge->getLanes().end(); ++i) {
-            (*i)->setMaxSpeed(myCurrentStateInterval->v);
-        }
+        myEdge->setMaxSpeed(myCurrentStateInterval->v);
         mySpeedIsDefault = false;
         myDidSpeedAdaption = true;
     }
@@ -376,7 +372,6 @@ MSCalibrator::execute(SUMOTime currentTime) {
 #endif
             vehicle->resetRoutePosition(routeIndex);
             if (myEdge->insertVehicle(*vehicle, currentTime)) {
-                vehicle->onDepart();
                 if (!MSNet::getInstance()->getVehicleControl().addVehicle(vehicle->getID(), vehicle)) {
                     throw ProcessError("Emission of vehicle '" + vehicle->getID() + "' in calibrator '" + getID() + "'failed!");
                 }

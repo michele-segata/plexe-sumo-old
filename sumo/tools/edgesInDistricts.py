@@ -12,7 +12,7 @@ this script writes a taz file with all the edges which are inside
 the relevant taz.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@ the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import collections
 from optparse import OptionParser
@@ -70,8 +71,8 @@ class DistrictEdgeComputer:
             if options.verbose and idx % 100 == 0:
                 sys.stdout.write("%s/%s\r" % (idx, len(self._net.getEdges())))
         if options.complete:
-            for edge, districts in self._edgeDistricts.iteritems():
-                if len(districts) > 1:
+            for edge in self._edgeDistricts:
+                if len(self._edgeDistricts[edge]) > 1:
                     self._invalidatedEdges.add(edge)
 
     def getEdgeDistrictMap(self):
@@ -84,7 +85,7 @@ class DistrictEdgeComputer:
     def writeResults(self, options):
         fd = open(options.output, "w")
         fd.write("<tazs>\n")
-        for district, edges in sorted(self._districtEdges.iteritems()):
+        for district, edges in sorted(self._districtEdges.items()):
             filtered = [
                 edge for edge in edges if edge not in self._invalidatedEdges]
             if len(filtered) == 0:
@@ -170,4 +171,3 @@ if __name__ == "__main__":
     if options.verbose:
         print("Writing results")
     reader.writeResults(options)
-

@@ -10,7 +10,7 @@
 // A point-of-interest (2D)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2005-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2005-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -71,8 +71,8 @@ public:
         Shape(id, type, color, layer, angle, imgFile),
         Position(pos),
         myHalfImgWidth(width / 2.0),
-        myHalfImgHeight(height / 2.0)
-    {}
+        myHalfImgHeight(height / 2.0) {
+    }
 
 
     /// @brief Destructor

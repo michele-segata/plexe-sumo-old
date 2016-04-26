@@ -11,7 +11,7 @@
 // A fixed traffic light logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -101,9 +101,9 @@ MSSimpleTrafficLightLogic::trySwitch() {
 
 
 // ------------ Static Information Retrieval
-unsigned int
+int
 MSSimpleTrafficLightLogic::getPhaseNumber() const {
-    return (unsigned int) myPhases.size();
+    return (int) myPhases.size();
 }
 
 
@@ -120,14 +120,14 @@ MSSimpleTrafficLightLogic::getPhases() {
 
 
 const MSPhaseDefinition&
-MSSimpleTrafficLightLogic::getPhase(unsigned int givenStep) const {
-    assert(myPhases.size() > givenStep);
+MSSimpleTrafficLightLogic::getPhase(int givenStep) const {
+    assert((int)myPhases.size() > givenStep);
     return *myPhases[givenStep];
 }
 
 
 // ------------ Dynamic Information Retrieval
-unsigned int
+int
 MSSimpleTrafficLightLogic::getCurrentPhaseIndex() const {
     return myStep;
 }
@@ -208,8 +208,8 @@ MSSimpleTrafficLightLogic::changeStepAndDuration(MSTLLogicControl& tlcontrol,
 
 
 void
-MSSimpleTrafficLightLogic::setPhases(const Phases& phases, unsigned int step) {
-    assert(step < phases.size());
+MSSimpleTrafficLightLogic::setPhases(const Phases& phases, int step) {
+    assert(step < (int)phases.size());
     deletePhases();
     myPhases = phases;
     myStep = step;

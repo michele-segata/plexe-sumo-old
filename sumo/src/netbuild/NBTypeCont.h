@@ -11,7 +11,7 @@
 // A storage for available types of edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -239,8 +239,8 @@ private:
             oneWay(true), discard(false),
             width(NBEdge::UNSPECIFIED_WIDTH),
             sidewalkWidth(NBEdge::UNSPECIFIED_WIDTH),
-            bikeLaneWidth(NBEdge::UNSPECIFIED_WIDTH)
-        { }
+            bikeLaneWidth(NBEdge::UNSPECIFIED_WIDTH) {
+        }
 
         /// @brief Constructor
         TypeDefinition(int _numLanes, SUMOReal _speed, int _priority,
@@ -251,8 +251,8 @@ private:
             permissions(_permissions),
             oneWay(_oneWay), discard(false), width(_width),
             sidewalkWidth(_sideWalkWidth),
-            bikeLaneWidth(_bikeLaneWidth)
-        { }
+            bikeLaneWidth(_bikeLaneWidth) {
+        }
 
         /// @brief The number of lanes of an edge
         int numLanes;

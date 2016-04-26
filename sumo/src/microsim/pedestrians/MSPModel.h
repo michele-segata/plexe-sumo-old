@@ -7,7 +7,7 @@
 // The pedestrian following model (prototype)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2014-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2014-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,9 +58,6 @@ public:
 
     /// @brief remove state at simulation end
     static void cleanup();
-
-    /// @brief return the appropriate lane to walk on
-    static MSLane* getSidewalk(const MSEdge* edge);
 
     virtual ~MSPModel() {};
 

@@ -13,7 +13,7 @@ and lets the user start them as a game. Furthermore it
 saves highscores to local disc and to the central highscore server.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2010-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2010-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -21,6 +21,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import subprocess
 import sys
@@ -148,7 +150,7 @@ class StartDialog(Tkinter.Frame):
 
         # 2 button for each config (start, highscore)
         for row, cfg in enumerate(configs):
-            if "bs3" in cfg and "meso-gui" not in guisimPath:
+            if "bs3" in cfg and not haveOSG:
                 continue
             category = self.category_name(cfg)
             # lambda must make a copy of cfg argument
@@ -205,12 +207,12 @@ class StartDialog(Tkinter.Frame):
         # remember which which cfg was launched
         self.category = self.category_name(cfg)
         if _DEBUG:
-            print "starting", cfg
+            print("starting", cfg)
         self.gametime = parseEndTime(cfg)
         self.ret = subprocess.call(
             [guisimPath, "-S", "-G", "-Q", "-c", cfg, '-l', 'log'], stderr=sys.stderr)
         if _DEBUG:
-            print "ended", cfg
+            print("ended", cfg)
 
         # compute score
         totalDistance = 0
@@ -221,7 +223,7 @@ class StartDialog(Tkinter.Frame):
         for line in open(os.path.join(base, "%s.netstate.xml" % start.category)):
             m = re.search('<interval begin="0(.00)?" end="([^"]*)"', line)
             if m and float(m.group(2)) != start.gametime:
-                print "error: incomplete output"
+                print("error: incomplete output")
                 complete = False
             m = re.search('sampledSeconds="([^"]*)".*speed="([^"]*)"', line)
             if m:
@@ -251,7 +253,7 @@ class StartDialog(Tkinter.Frame):
         score = 10000 - totalWaitingTime
         lang = start._language_text
         if _DEBUG:
-            print switch, score, totalArrived, complete
+            print(switch, score, totalArrived, complete)
         if complete:
             ScoreDialog(self, switch, score, self.category, lang)
         # if ret != 0:
@@ -348,7 +350,7 @@ class ScoreDialog:
                     self.category, name, "_".join(self.switch), self.score))
                 if _DEBUG:
                     r1 = conn.getresponse()
-                    print r1.status, r1.reason, r1.read()
+                    print(r1.status, r1.reason, r1.read())
             except:
                 pass
         else:
@@ -380,13 +382,9 @@ def findSumoBinary(guisimBinary):
         guisimPath = guisimBinary
     return guisimPath
 
-guisimPath = findSumoBinary("meso-gui")
-try:
-    subprocess.call([guisimPath, "-Q", "-c", "blub"], stderr=open(os.devnull))
-except OSError:
-    print("meso-gui not found. 3D scenario will not work.")
-    guisimPath = findSumoBinary("sumo-gui")
 
+guisimPath = findSumoBinary("sumo-gui")
+haveOSG = "OSG" in subprocess.check_output(findSumoBinary("sumo"))
 
 if options.stereo:
     for m in stereoModes:

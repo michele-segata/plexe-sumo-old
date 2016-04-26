@@ -9,7 +9,7 @@
 // Stores the information about how to visualize structures
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -42,9 +42,7 @@
 // ===========================================================================
 // static members
 // ===========================================================================
-#ifdef HAVE_INTERNAL
 bool GUIVisualizationSettings::UseMesoSim = false;
-#endif
 
 // ===========================================================================
 // member method definitions
@@ -226,6 +224,16 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     scheme.addColor(RGBColor::BLUE, (SUMOReal)(1));
     scheme.addColor(RGBColor::MAGENTA, (SUMOReal)(1.25));
     laneColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by routing device assumed speed ", RGBColor::RED);
+    scheme.addColor(RGBColor::YELLOW, (SUMOReal)(30 / 3.6));
+    scheme.addColor(RGBColor::GREEN, (SUMOReal)(55 / 3.6));
+    scheme.addColor(RGBColor::CYAN, (SUMOReal)(80 / 3.6));
+    scheme.addColor(RGBColor::BLUE, (SUMOReal)(120 / 3.6));
+    scheme.addColor(RGBColor::MAGENTA, (SUMOReal)(150 / 3.6));
+    laneColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by electricity consumption", RGBColor::GREEN);
+    scheme.addColor(RGBColor::RED, (SUMOReal)(1 / 7.5 / 5.));
+    laneColorer.addScheme(scheme);
 
 
     /// add vehicle coloring schemes
@@ -249,6 +257,12 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     scheme.addColor(RGBColor::GREEN, (SUMOReal)100);
     scheme.addColor(RGBColor::YELLOW, (SUMOReal)200);
     scheme.addColor(RGBColor::RED, (SUMOReal)300);
+    vehicleColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by accumulated waiting time", RGBColor::BLUE);
+    scheme.addColor(RGBColor::CYAN, (SUMOReal)25);
+    scheme.addColor(RGBColor::GREEN, (SUMOReal)50);
+    scheme.addColor(RGBColor::YELLOW, (SUMOReal)75);
+    scheme.addColor(RGBColor::RED, (SUMOReal)100);
     vehicleColorer.addScheme(scheme);
     scheme = GUIColorScheme("by time since lane change", RGBColor(179, 179, 179, 255), "0");
     scheme.addColor(RGBColor(189, 189, 179, 255), -180);
@@ -320,6 +334,9 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     scheme.addColor(RGBColor::GREEN, (SUMOReal)100);
     scheme.addColor(RGBColor::YELLOW, (SUMOReal)200);
     scheme.addColor(RGBColor::RED, (SUMOReal)300);
+    vehicleColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by electricity consumption", RGBColor::GREEN);
+    scheme.addColor(RGBColor::RED, (SUMOReal)5);
     vehicleColorer.addScheme(scheme);
     vehicleColorer.addScheme(GUIColorScheme("random", RGBColor::YELLOW, "", true));
 
@@ -393,8 +410,9 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     scheme.addColor(RGBColor::MAGENTA, 7, "unregulated");
     scheme.addColor(RGBColor::BLACK, 8, "dead_end");
     scheme.addColor(RGBColor::ORANGE, 9, "rail_signal");
-    scheme.addColor(RGBColor(192, 128, 64), 10, "zipper");
-    scheme.addColor(RGBColor(192, 255, 192), 11, "traffic_light_right_on_red");
+    scheme.addColor(RGBColor(192, 128, 64), 10, "zipper"); // light brown
+    scheme.addColor(RGBColor(192, 255, 192), 11, "traffic_light_right_on_red"); // light green
+    scheme.addColor(RGBColor(128, 0, 128), 12, "rail_crossing"); // dark purple
     junctionColorer.addScheme(scheme);
 
 
@@ -473,10 +491,12 @@ GUIVisualizationSettings::GUIVisualizationSettings()
         scheme.addColor(2, (SUMOReal)(1));
         scheme.addColor(10, (SUMOReal)(2));
         laneScaler.addScheme(scheme);
+        scheme = GUIScaleScheme("by electricity consumption", 0);
+        scheme.addColor(10, (SUMOReal)(1 / 7.5 / 5.));
+        laneScaler.addScheme(scheme);
     }
 
 
-#ifdef HAVE_INTERNAL
     /// add edge coloring schemes
     edgeColorer.addScheme(GUIColorScheme("uniform (streetwise)", RGBColor::BLACK, "", true));
     scheme = GUIColorScheme("by selection (streetwise)", RGBColor(128, 128, 128, 255), "unselected", true);
@@ -537,51 +557,42 @@ GUIVisualizationSettings::GUIVisualizationSettings()
         scheme.addColor(20, (SUMOReal)1);
         edgeScaler.addScheme(scheme);
     }
-#endif
 
 }
 
 
 size_t
 GUIVisualizationSettings::getLaneEdgeMode() const {
-#ifdef HAVE_INTERNAL
     if (UseMesoSim) {
         return edgeColorer.getActive();
     }
-#endif
     return laneColorer.getActive();
 }
 
 
 size_t
 GUIVisualizationSettings::getLaneEdgeScaleMode() const {
-#ifdef HAVE_INTERNAL
     if (UseMesoSim) {
         return edgeScaler.getActive();
     }
-#endif
     return laneScaler.getActive();
 }
 
 
 GUIColorScheme&
 GUIVisualizationSettings::getLaneEdgeScheme() {
-#ifdef HAVE_INTERNAL
     if (UseMesoSim) {
         return edgeColorer.getScheme();
     }
-#endif
     return laneColorer.getScheme();
 }
 
 
 GUIScaleScheme&
 GUIVisualizationSettings::getLaneEdgeScaleScheme() {
-#ifdef HAVE_INTERNAL
     if (UseMesoSim) {
         return edgeScaler.getScheme();
     }
-#endif
     return laneScaler.getScheme();
 }
 
@@ -622,10 +633,8 @@ GUIVisualizationSettings::save(OutputDevice& dev) const {
     streetName.print(dev, "streetName");
     laneColorer.save(dev);
     laneScaler.save(dev);
-#ifdef HAVE_INTERNAL
     edgeColorer.save(dev);
     edgeScaler.save(dev);
-#endif
     dev.closeTag();
     // vehicles
     dev.openTag(SUMO_TAG_VIEWSETTINGS_VEHICLES);
@@ -728,14 +737,12 @@ GUIVisualizationSettings::operator==(const GUIVisualizationSettings& v2) {
         return false;
     }
 
-#ifdef HAVE_INTERNAL
     if (!(edgeColorer == v2.edgeColorer)) {
         return false;
     }
     if (!(edgeScaler == v2.edgeScaler)) {
         return false;
     }
-#endif
     if (!(laneColorer == v2.laneColorer)) {
         return false;
     }

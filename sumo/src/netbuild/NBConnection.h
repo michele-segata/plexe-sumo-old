@@ -9,7 +9,7 @@
 // The class holds a description of a connection between two edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -120,6 +120,9 @@ public:
     bool operator!=(const NBConnection& c) const {
         return !(*this == c);
     }
+
+    /// Output operator
+    friend std::ostream& operator<<(std::ostream& os, const NBConnection& c);
 
     const static int InvalidTlIndex;
     const static NBConnection InvalidConnection;

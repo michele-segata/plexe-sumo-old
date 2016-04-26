@@ -12,7 +12,7 @@
 // streets, households, bus lines, work positions and school
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2010-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2010-2016 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
@@ -412,13 +412,13 @@ AGCity::getStreet(const std::string& edge) {
         ++it;
     }
     std::cout << "===> ERROR: WRONG STREET EDGE (" << edge << ") given and not found in street set." << std::endl;
-    throw(std::runtime_error("Street not found with edge id " + edge));
+    throw (std::runtime_error("Street not found with edge id " + edge));
 }
 
 const AGStreet&
 AGCity::getRandomStreet() {
     if (streets.empty()) {
-        throw(std::runtime_error("No street found in this city"));
+        throw (std::runtime_error("No street found in this city"));
     }
     return *streets[RandHelper::rand(streets.size())];
 }

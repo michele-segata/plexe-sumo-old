@@ -9,7 +9,7 @@
 // Representation of a lane in the micro simulation (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -51,6 +51,7 @@
 #include <microsim/MSVehicleTransfer.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSEdgeWeightsStorage.h>
+#include <microsim/devices/MSDevice_Routing.h>
 #include "GUILane.h"
 #include "GUIEdge.h"
 #include "GUIVehicle.h"
@@ -73,7 +74,7 @@ GUILane::GUILane(const std::string& id, SUMOReal maxSpeed, SUMOReal length,
                  MSEdge* const edge, unsigned int numericalID,
                  const PositionVector& shape, SUMOReal width,
                  SVCPermissions permissions, unsigned int index) :
-    MSLane(id, maxSpeed, length, edge, numericalID, shape, width, permissions),
+    MSLane(id, maxSpeed, length, edge, numericalID, shape, width, permissions, index),
     GUIGlObject(GLO_LANE, id),
     myAmClosed(false) {
     myShapeRotations.reserve(myShape.size() - 1);
@@ -89,7 +90,6 @@ GUILane::GUILane(const std::string& id, SUMOReal maxSpeed, SUMOReal length,
     //
     myHalfLaneWidth = (SUMOReal)(myWidth / 2.);
     myQuarterLaneWidth = (SUMOReal)(myWidth / 4.);
-    myIndex = index;
 }
 
 
@@ -423,10 +423,8 @@ GUILane::drawGL(const GUIVisualizationSettings& s) const {
     bool mustDrawMarkings = false;
     SUMOReal exaggeration = s.laneWidthExaggeration;
     if (MSGlobals::gUseMesoSim) {
-#ifdef HAVE_INTERNAL
         GUIEdge* myGUIEdge = dynamic_cast<GUIEdge*>(myEdge);
         exaggeration *= s.edgeScaler.getScheme().getColor(myGUIEdge->getScaleValue(s.edgeScaler.getActive()));
-#endif
     } else {
         exaggeration *= s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
     }
@@ -570,10 +568,9 @@ void
 GUILane::drawMarkings(const GUIVisualizationSettings& s, SUMOReal scale) const {
     glPushMatrix();
     glTranslated(0, 0, GLO_EDGE);
-#ifdef HAVE_INTERNAL
-    if (!MSGlobals::gUseMesoSim)
-#endif
+    if (!MSGlobals::gUseMesoSim) {
         setColor(s);
+    }
     // optionally draw inverse markings
     if (myIndex > 0 && (myEdge->getLanes()[myIndex - 1]->getPermissions() & myPermissions) != 0) {
         SUMOReal mw = (myHalfLaneWidth + SUMO_const_laneOffset + .01) * scale * (MSNet::getInstance()->lefthand() ? -1 : 1);
@@ -712,7 +709,9 @@ GUILane::getCenteringBoundary() const {
     Boundary b;
     b.add(myShape[0]);
     b.add(myShape[-1]);
-    b.grow(20);
+    b.grow(10);
+    // ensure that vehicles and persons on the side are drawn even if the edge
+    // is outside the view
     return b;
 }
 
@@ -913,6 +912,12 @@ GUILane::getColorValue(size_t activeScheme) const {
             // color by average relative speed
             return getMeanSpeed() / myMaxSpeed;
         }
+        case 27: {
+            // color by routing device assumed speed
+            return MSDevice_Routing::getAssumedSpeed(&getEdge());
+        }
+        case 28:
+            return getElectricityConsumption() / myLength;
     }
     return 0;
 }
@@ -980,6 +985,8 @@ GUILane::getScaleValue(size_t activeScheme) const {
             // scale by average relative speed
             return getMeanSpeed() / myMaxSpeed;
         }
+        case 21:
+            return getElectricityConsumption() / myLength;
     }
     return 0;
 }

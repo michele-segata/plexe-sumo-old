@@ -8,7 +8,7 @@
 // A rail signal logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -232,7 +232,7 @@ MSRailSignal::updateCurrentPhase() {
 
 
 // ------------ Static Information Retrieval
-unsigned int
+int
 MSRailSignal::getPhaseNumber() const {
     return 0;
 }
@@ -243,12 +243,12 @@ MSRailSignal::getPhases() const {
 }
 
 const MSPhaseDefinition&
-MSRailSignal::getPhase(unsigned int) const {
+MSRailSignal::getPhase(int) const {
     return myCurrentPhase;
 }
 
 // ------------ Dynamic Information Retrieval
-unsigned int
+int
 MSRailSignal::getCurrentPhaseIndex() const {
     return 0;
 }

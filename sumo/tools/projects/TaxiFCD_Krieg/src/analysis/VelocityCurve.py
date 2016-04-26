@@ -11,7 +11,7 @@
 Shows a velocity time-variation curve for a given Taxi or for the hole day all average values.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -19,6 +19,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 from pylab import *
 from analysis.Taxi import *
@@ -29,14 +31,14 @@ WEE = True  # =withoutEmptyEdges decide which analysis file should be used
 
 
 def main():
-    print "start program"
+    print("start program")
 
     taxiId = '154_2'
     interval = 900
     plotCurve(interval)
 
     show()
-    print "end"
+    print("end")
 
 
 def plotCurve(interval=10, taxiId=None):

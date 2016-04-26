@@ -10,7 +10,7 @@
 // A storage for options (typed value containers)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -73,7 +73,7 @@ OptionsCont::getOptions() {
 
 OptionsCont::OptionsCont()
     : myAddresses(), myValues(), myDeprecatedSynonymes(), myHaveInformedAboutDeprecatedDivider(false) {
-    myCopyrightNotices.push_back("Copyright (C) 2001-2015 DLR and contributors; http://sumo.dlr.de");
+    myCopyrightNotices.push_back("Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de");
     myCopyrightNotices.push_back("Copyright (C) 2012-2016 Michele Segata <segata@ccs-labs.org>");
 }
 
@@ -129,6 +129,12 @@ OptionsCont::addSynonyme(const std::string& name1, const std::string& name2, boo
             myDeprecatedSynonymes[name2] = false;
         }
     }
+}
+
+
+void
+OptionsCont::addXMLDefault(const std::string& name, const std::string& xmlRoot) {
+    myXMLDefaults[xmlRoot] = name;
 }
 
 
@@ -258,6 +264,28 @@ OptionsCont::set(const std::string& name, const std::string& value) {
 }
 
 
+bool
+OptionsCont::setDefault(const std::string& name, const std::string& value) {
+    if (set(name, value)) {
+        getSecure(name)->resetDefault();
+        return true;
+    }
+    return false;
+}
+
+
+bool
+OptionsCont::setByRootElement(const std::string& root, const std::string& value) {
+    if (myXMLDefaults.count(root) > 0) {
+        return set(myXMLDefaults[root], value);
+    }
+    if (myXMLDefaults.count("") > 0) {
+        return set(myXMLDefaults[""], value);
+    }
+    return false;
+}
+
+
 std::vector<std::string>
 OptionsCont::getSynonymes(const std::string& name) const {
     Option* o = getSecure(name);
@@ -322,7 +350,11 @@ OptionsCont::relocateFiles(const std::string& configuration) const {
                 conv += StringUtils::urlDecode(tmp);
             }
             if (conv != (*i)->getString()) {
+                const bool hadDefault = (*i)->isDefault();
                 (*i)->set(conv);
+                if (hadDefault) {
+                    (*i)->resetDefault();
+                }
             }
         }
     }
@@ -535,6 +567,7 @@ OptionsCont::processMetaOptions(bool missingOptions) {
     if (missingOptions) {
         // no options are given
         std::cout << myFullName << std::endl;
+        std::cout << " Build features: " << HAVE_ENABLED << std::endl;
         for (std::vector<std::string>::const_iterator it =
                     myCopyrightNotices.begin(); it != myCopyrightNotices.end(); ++it) {
             std::cout << " " << *it << std::endl;
@@ -557,6 +590,7 @@ OptionsCont::processMetaOptions(bool missingOptions) {
     // check whether the help shall be printed
     if (getBool("version")) {
         std::cout << myFullName << std::endl;
+        std::cout << " Build features: " << HAVE_ENABLED << std::endl;
         for (std::vector<std::string>::const_iterator it =
                     myCopyrightNotices.begin(); it != myCopyrightNotices.end(); ++it) {
             std::cout << " " << *it << std::endl;

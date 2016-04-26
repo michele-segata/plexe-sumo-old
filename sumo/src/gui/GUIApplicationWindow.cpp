@@ -10,7 +10,7 @@
 // The main window of the SUMO-gui.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -90,6 +90,7 @@
 #include <foreign/nvwa/debug_new.h>
 #endif
 
+//#define HAVE_DANGEROUS_SOUNDS
 
 // ===========================================================================
 // FOX-declarations
@@ -266,7 +267,7 @@ GUIApplicationWindow::dependentBuild() {
     // set the status bar
     myStatusbar->getStatusLine()->setText("Ready.");
     // set the caption
-    setTitle(MFXUtils::getTitleText(("PLEXE SUMO " + getBuildName(VERSION_STRING)).c_str()));
+    setTitle(MFXUtils::getTitleText("PLEXE SUMO " VERSION_STRING));
 
     // start the simulation-thread (it will loop until the application ends deciding by itself whether to perform a step or not)
     myRunThread->start();
@@ -690,8 +691,8 @@ GUIApplicationWindow::onCmdEditChosen(FXObject* menu, FXSelector, void*) {
     } else {
         if (!myAmLoading && myRunThread->simulationAvailable()) {
             const SUMOVehicleClass svc = SumoVehicleClassStrings.get(mc->getText().text());
-            for (size_t i = 0; i < MSEdge::dictSize(); ++i) {
-                const std::vector<MSLane*>& lanes = MSEdge::dictionary(i)->getLanes();
+            for (MSEdgeVector::const_iterator i = MSEdge::getAllEdges().begin(); i != MSEdge::getAllEdges().end(); ++i) {
+                const std::vector<MSLane*>& lanes = (*i)->getLanes();
                 for (std::vector<MSLane*>::const_iterator it = lanes.begin(); it != lanes.end(); ++it) {
                     GUILane* lane = dynamic_cast<GUILane*>(*it);
                     assert(lane != 0);
@@ -747,7 +748,7 @@ GUIApplicationWindow::onCmdNetedit(FXObject*, FXSelector, void*) {
     if (sumoPath != 0) {
         std::string newPath = std::string(sumoPath) + "/bin/netedit";
         if (FileHelpers::isReadable(newPath) || FileHelpers::isReadable(newPath + ".exe")) {
-            netedit = newPath;
+            netedit = "\"" + newPath + "\"";
         }
     }
     std::string cmd = netedit + " --registry-viewport -s "  + OptionsCont::getOptions().getString("net-file");
@@ -755,7 +756,8 @@ GUIApplicationWindow::onCmdNetedit(FXObject*, FXSelector, void*) {
 #ifndef WIN32
     cmd = cmd + " &";
 #else
-    cmd = "start " + cmd;
+    // see "help start" for the parameters
+    cmd = "start /B \"\" " + cmd;
 #endif
     WRITE_MESSAGE("Running " + cmd + ".");
     // yay! fun with dangerous commands... Never use this over the internet
@@ -1270,8 +1272,7 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
                 setTitle("SUMO Interactive Traffic Light");
             } else {
                 // set simulation name on the caption
-                std::string caption = "PLEXE SUMO " + getBuildName(VERSION_STRING);
-                setTitle(MFXUtils::getTitleText(caption.c_str(), ec->myFile.c_str()));
+                setTitle(MFXUtils::getTitleText("PLEXE SUMO " VERSION_STRING, ec->myFile.c_str()));
             }
             // set simulation step begin information
             myLCDLabel->setText("-------------");
@@ -1346,7 +1347,7 @@ GUIApplicationWindow::checkGamingEvents() {
     MSVehicleControl& vc = MSNet::getInstance()->getVehicleControl();
     MSVehicleControl::constVehIt it = vc.loadedVehBegin();
     MSVehicleControl::constVehIt end = vc.loadedVehEnd();
-#ifdef HAVE_INTERNAL
+#ifdef HAVE_DANGEROUS_SOUNDS // disable user-configurable command execution for public build
     if (myJamSounds.getOverallProb() > 0) {
         // play honking sound if some vehicle is waiting too long
         for (; it != end; ++it) {
@@ -1441,7 +1442,7 @@ GUIApplicationWindow::closeAllWindows() {
     // delete the simulation
     myRunThread->deleteSim();
     // reset the caption
-    setTitle(MFXUtils::getTitleText(("PLEXE SUMO " + getBuildName(VERSION_STRING)).c_str()));
+    setTitle(MFXUtils::getTitleText("PLEXE SUMO " VERSION_STRING));
     // delete other children
     while (myTrackerWindows.size() != 0) {
         delete myTrackerWindows[0];
@@ -1492,6 +1493,10 @@ GUIApplicationWindow::setStatusBarText(const std::string& text) {
 void
 GUIApplicationWindow::updateTimeLCD(SUMOTime time) {
     time -= DELTA_T; // synchronize displayed time with netstate output
+    if (time < 0) {
+        myLCDLabel->setText("-------------");
+        return;
+    }
     if (myAmGaming) {
         // show time counting backwards
         time = myRunThread->getSimEndTime() - time;

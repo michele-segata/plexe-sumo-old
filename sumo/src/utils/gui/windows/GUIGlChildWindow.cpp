@@ -9,7 +9,7 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -160,10 +160,10 @@ GUIGlChildWindow::buildScreenshotToolBar() {
 //    myScreenshotToolBar = new FXToolBar(myContentFrame,LAYOUT_DOCK_SAME|LAYOUT_SIDE_TOP|LAYOUT_FILL_X|FRAME_RAISED);
     new FXToolBarGrip(myNavigationToolBar, NULL, 0, TOOLBARGRIP_SINGLE | FRAME_SUNKEN);
     // snapshot
-    new FXButton(myNavigationToolBar,
-                 "\tMake Snapshot\tMakes a snapshot of the view.",
-                 GUIIconSubSys::getIcon(ICON_CAMERA), this, MID_MAKESNAPSHOT,
-                 ICON_ABOVE_TEXT | BUTTON_TOOLBAR | FRAME_RAISED | LAYOUT_TOP | LAYOUT_LEFT);
+    new MFXCheckableButton(false, myNavigationToolBar,
+                           "\tMake Snapshot\tMakes a snapshot of the view.",
+                           GUIIconSubSys::getIcon(ICON_CAMERA), this, MID_MAKESNAPSHOT,
+                           ICON_ABOVE_TEXT | BUTTON_TOOLBAR | FRAME_RAISED | LAYOUT_TOP | LAYOUT_LEFT);
 }
 
 
@@ -245,9 +245,8 @@ GUIGlChildWindow::onCmdChangeColorScheme(FXObject*, FXSelector , void* data) {
 
 void
 GUIGlChildWindow::setView(GUIGlID id) {
-    // this is used by the locator widget. zoom using fixed distance makes it easier to identify objects
-    // (long streets in particular)
-    myView->centerTo(id, true);
+    // this is used by the locator widget. zooming to bounding box
+    myView->centerTo(id, true, -1);
     myView->update();
 }
 

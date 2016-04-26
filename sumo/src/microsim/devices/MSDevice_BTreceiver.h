@@ -8,7 +8,7 @@
 // A BT receiver
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2013-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -253,7 +253,19 @@ private:
         VehicleInformation(const std::string& id, const SUMOReal _range) : MSDevice_BTsender::VehicleInformation(id), range(_range) {}
 
         /// @brief Destructor
-        ~VehicleInformation() {}
+        ~VehicleInformation() {
+            std::map<std::string, SeenDevice*>::iterator i;
+            for (i = currentlySeen.begin(); i != currentlySeen.end(); i++) {
+                delete i->second;
+            }
+            std::map<std::string, std::vector<SeenDevice*> >::iterator j;
+            std::vector<SeenDevice*>::iterator k;
+            for (j = seen.begin(); j != seen.end(); j++) {
+                for (k = j->second.begin(); k != j->second.end(); k++) {
+                    delete *k;
+                }
+            }
+        }
 
         /// @brief Recognition range of the vehicle
         const SUMOReal range;

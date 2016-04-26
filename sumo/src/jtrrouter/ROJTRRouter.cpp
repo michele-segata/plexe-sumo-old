@@ -9,7 +9,7 @@
 // Computes routes using junction turning percentages
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -48,14 +48,14 @@ ROJTRRouter::ROJTRRouter(bool unbuildIsWarningOnly, bool acceptAllDestinations,
     SUMOAbstractRouter<ROEdge, ROVehicle>(0, "JTRRouter"),
     myUnbuildIsWarningOnly(unbuildIsWarningOnly),
     myAcceptAllDestination(acceptAllDestinations), myMaxEdges(maxEdges),
-    myIgnoreClasses(ignoreClasses), myAllowLoops(allowLoops)
-{ }
+    myIgnoreClasses(ignoreClasses), myAllowLoops(allowLoops) {
+}
 
 
 ROJTRRouter::~ROJTRRouter() {}
 
 
-void
+bool
 ROJTRRouter::compute(const ROEdge* from, const ROEdge* to,
                      const ROVehicle* const vehicle,
                      SUMOTime time, ConstROEdgeVector& into) {
@@ -77,16 +77,18 @@ ROJTRRouter::compute(const ROEdge* from, const ROEdge* to,
     // check whether no valid ending edge was found
     if (current == 0 || (int) into.size() >= myMaxEdges) {
         if (myAcceptAllDestination) {
-            return;
+            return true;
         } else {
             MsgHandler* mh = myUnbuildIsWarningOnly ? MsgHandler::getWarningInstance() : MsgHandler::getErrorInstance();
             mh->inform("The route starting at edge '" + from->getID() + "' could not be closed.");
+            return false;
         }
     }
     // append the sink
     if (current != 0) {
         into.push_back(current);
     }
+    return true;
 }
 
 

@@ -7,7 +7,7 @@
 // A view on the network being edited (adapted from GUIViewTraffic)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -152,9 +152,6 @@ public:
     /// @brief replace node by geometry
     long onCmdNodeReplace(FXObject*, FXSelector, void*);
 
-    /// @brief switch color scheme
-    long onCmdVisualizeHeight(FXObject*, FXSelector, void*);
-
     /** @brief sets edit mode (from hotkey)
      * @param[in] selid An id MID_GNE_MODE_<foo> as defined in GUIAppEnum
      */
@@ -274,9 +271,6 @@ private:
     // @}
 
     /// @name state-variables of inspect-mode
-    // @{
-    FXMenuCheck* myVisualizeHeight;
-    // @}
     //
     /// @name state-variables of select-mode
     // @{

@@ -9,7 +9,7 @@
 // A lane area vehicles can halt at (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -94,6 +94,13 @@ GUIBusStop::GUIBusStop(const std::string& id, const std::vector<std::string>& li
 GUIBusStop::~GUIBusStop() {}
 
 
+void
+GUIBusStop::addAccess(MSLane* lane, const SUMOReal pos) {
+    MSStoppingPlace::addAccess(lane, pos);
+    myAccessCoords.push_back(lane->getShape().positionAtOffset(pos));
+}
+
+
 GUIGLObjectPopupMenu*
 GUIBusStop::getPopUpMenu(GUIMainWindow& app,
                          GUISUMOAbstractView& parent) {
@@ -151,6 +158,9 @@ GUIBusStop::drawGL(const GUIVisualizationSettings& s) const {
             pfDrawString(myLines[i].c_str());
             glPopMatrix();
         }
+        for (std::vector<Position>::const_iterator i = myAccessCoords.begin(); i != myAccessCoords.end(); ++i) {
+            GLHelper::drawBoxLine(*i, RAD2DEG(myFGSignPos.angleTo2D(*i)) - 90, myFGSignPos.distanceTo2D(*i), .05);
+        }
         // draw the sign
         glTranslated(myFGSignPos.x(), myFGSignPos.y(), 0);
         int noPoints = 9;
@@ -175,7 +185,7 @@ GUIBusStop::drawGL(const GUIVisualizationSettings& s) const {
 Boundary
 GUIBusStop::getCenteringBoundary() const {
     Boundary b = myFGShape.getBoxBoundary();
-    b.grow(20);
+    b.grow(SUMO_const_laneWidth);
     return b;
 }
 

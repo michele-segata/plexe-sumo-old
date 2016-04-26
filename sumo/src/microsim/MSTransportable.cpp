@@ -9,7 +9,7 @@
 // The common superclass for modelling transportable objects like persons and containers
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -98,10 +98,13 @@ MSTransportable::MSTransportable(const SUMOVehicleParameter* pars, const MSVehic
 }
 
 MSTransportable::~MSTransportable() {
-    for (MSTransportablePlan::const_iterator i = myPlan->begin(); i != myPlan->end(); ++i) {
-        delete *i;
+    if (myPlan != 0) {
+        for (MSTransportablePlan::const_iterator i = myPlan->begin(); i != myPlan->end(); ++i) {
+            delete *i;
+        }
+        delete myPlan;
+        myPlan = 0;
     }
-    delete myPlan;
     delete myParameter;
 }
 

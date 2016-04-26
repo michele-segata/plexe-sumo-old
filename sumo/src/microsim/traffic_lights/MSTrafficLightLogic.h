@@ -11,7 +11,7 @@
 // The parent class for traffic light logics
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -117,7 +117,7 @@ public:
      * @param[in] lane The lane this link starts at
      * @param[in] pos The link's index (signal group) within this program
      */
-    void addLink(MSLink* link, MSLane* lane, unsigned int pos);
+    virtual void addLink(MSLink* link, MSLane* lane, int pos);
 
 
     /** @brief Applies information about controlled links and lanes from the given logic
@@ -148,7 +148,6 @@ public:
     /// @{
 
     /** @brief Switches to the next phase
-     * @param[in] isActive Whether this program is the currently used one
      * @return The time of the next switch
      */
     virtual SUMOTime trySwitch() = 0;
@@ -224,7 +223,7 @@ public:
     /** @brief Returns the number of phases
      * @return The number of this tls program's phases
      */
-    virtual unsigned int getPhaseNumber() const = 0;
+    virtual int getPhaseNumber() const = 0;
 
 
     /** @brief Returns the phases of this tls program
@@ -237,7 +236,7 @@ public:
      * @param[in] givenstep The index of the phase within the plan
      * @return The definition of the phase at the given position
      */
-    virtual const MSPhaseDefinition& getPhase(unsigned int givenstep) const = 0;
+    virtual const MSPhaseDefinition& getPhase(int givenstep) const = 0;
 
     /** @brief Returns the type of the logic as a string
      * @return The type of the logic
@@ -253,7 +252,7 @@ public:
     /** @brief Returns the current index within the program
      * @return The index of the current phase within the tls
      */
-    virtual unsigned int getCurrentPhaseIndex() const = 0;
+    virtual int getCurrentPhaseIndex() const = 0;
 
 
     /** @brief Returns the definition of the current phase
@@ -394,6 +393,7 @@ protected:
 
     };
 
+
 protected:
     /// @brief The id of the logic
     std::string myProgramID;
@@ -418,6 +418,10 @@ protected:
 
     /// @brief An empty lane vector
     static const LaneVector myEmptyLaneVector;
+
+private:
+    /// @brief initialize optional meso penalties
+    void initMesoTLSPenalties();
 
 
 private:

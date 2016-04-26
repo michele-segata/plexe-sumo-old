@@ -9,7 +9,7 @@
 // Variables, methods, and tools for internal time representation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,9 +36,7 @@
 // ===========================================================================
 // type definitions
 // ===========================================================================
-#ifdef HAVE_SUBSECOND_TIMESTEPS
 SUMOTime DELTA_T = 1000;
-#endif
 
 
 // ===========================================================================

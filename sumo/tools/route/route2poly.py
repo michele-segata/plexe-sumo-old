@@ -10,7 +10,7 @@ From a sumo network and a route file, this script generates a polygon (polyline)
 which can be loaded with sumo-gui for visualization
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -18,6 +18,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
 import sys
 import os
 import itertools
@@ -40,6 +41,8 @@ def parse_args():
                          help="brightness for polygons (float from [0,1] or 'random')")
     optParser.add_option(
         "-l", "--layer", default=100, help="layer for generated polygons")
+    optParser.add_option("--geo", action="store_true",
+                         default=False, help="write polgyons with geo-coordinates")
     options, args = optParser.parse_args()
     try:
         options.net, options.routefile = args
@@ -52,12 +55,16 @@ def parse_args():
     return options
 
 
-def generate_poly(net, id, color, layer, edges, outf):
+def generate_poly(net, id, color, layer, geo, edges, outf):
     shape = list(itertools.chain(*list(net.getEdge(e).getLane(0).getShape()
                                        for e in edges)))
+    geoFlag = ""
+    if geo:
+        shape = [net.convertXY2LonLat(*pos) for pos in shape]
+        geoFlag = ' geo="true"'
     shapeString = ' '.join('%s,%s' % (x, y) for x, y in shape)
-    outf.write('<poly id="%s" color="%s" layer="%s" type="route" shape="%s"/>\n' % (
-        id, color, layer, shapeString))
+    outf.write('<poly id="%s" color="%s" layer="%s" type="route" shape="%s"%s/>\n' % (
+        id, color, layer, shapeString, geoFlag))
 
 
 def main():
@@ -67,7 +74,7 @@ def main():
         outf.write('<polygons>\n')
         for vehicle in parse(options.routefile, 'vehicle'):
             generate_poly(net, vehicle.id, options.colorgen(),
-                          options.layer, vehicle.route[0].edges.split(), outf)
+                          options.layer, options.geo, vehicle.route[0].edges.split(), outf)
         outf.write('</polygons>\n')
 
 if __name__ == "__main__":

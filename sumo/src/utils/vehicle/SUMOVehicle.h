@@ -9,7 +9,7 @@
 // Abstract base class for vehicle representations
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -201,6 +201,11 @@ public:
      * @return This vehicle's real departure time
      */
     virtual SUMOTime getDeparture() const = 0;
+
+    /** @brief Returns this vehicle's real departure position
+     * @return This vehicle's real departure position
+     */
+    virtual SUMOReal getDepartPos() const = 0;
 
     /** @brief Returns this vehicle's desired arrivalPos for its current route
      * (may change on reroute)

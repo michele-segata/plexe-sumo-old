@@ -10,7 +10,7 @@
 // APIs for getting/setting traffic light values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2009-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2009-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -60,7 +60,7 @@ TraCIServerAPI_TLS::processGet(TraCIServer& server, tcpip::Storage& inputStorage
             && variable != TL_CURRENT_PHASE && variable != TL_CURRENT_PROGRAM
             && variable != TL_NEXT_SWITCH && variable != TL_PHASE_DURATION && variable != ID_COUNT
             && variable != VAR_PARAMETER && variable != TL_EXTERNAL_STATE) {
-        return server.writeErrorStatusCmd(CMD_GET_TL_VARIABLE, "Get TLS Variable: unsupported variable specified", outputStorage);
+        return server.writeErrorStatusCmd(CMD_GET_TL_VARIABLE, "Get TLS Variable: unsupported variable " + toHex(variable, 2) + " specified", outputStorage);
     }
     // begin response building
     tcpip::Storage tempMsg;
@@ -113,14 +113,14 @@ TraCIServerAPI_TLS::processGet(TraCIServer& server, tcpip::Storage& inputStorage
                     ++cnt;
                     // (current) phase index
                     tempContent.writeUnsignedByte(TYPE_INTEGER);
-                    tempContent.writeInt((int) logic->getCurrentPhaseIndex());
+                    tempContent.writeInt(logic->getCurrentPhaseIndex());
                     ++cnt;
                     // phase number
-                    unsigned int phaseNo = logic->getPhaseNumber();
+                    int phaseNo = logic->getPhaseNumber();
                     tempContent.writeUnsignedByte(TYPE_INTEGER);
-                    tempContent.writeInt((int) phaseNo);
+                    tempContent.writeInt(phaseNo);
                     ++cnt;
-                    for (unsigned int j = 0; j < phaseNo; ++j) {
+                    for (int j = 0; j < phaseNo; ++j) {
                         MSPhaseDefinition phase = logic->getPhase(j);
                         tempContent.writeUnsignedByte(TYPE_INTEGER);
                         tempContent.writeInt((int)phase.duration);
@@ -197,7 +197,7 @@ TraCIServerAPI_TLS::processGet(TraCIServer& server, tcpip::Storage& inputStorage
             break;
             case TL_CURRENT_PHASE:
                 tempMsg.writeUnsignedByte(TYPE_INTEGER);
-                tempMsg.writeInt((int) vars.getActive()->getCurrentPhaseIndex());
+                tempMsg.writeInt(vars.getActive()->getCurrentPhaseIndex());
                 break;
             case TL_CURRENT_PROGRAM:
                 tempMsg.writeUnsignedByte(TYPE_STRING);
@@ -299,7 +299,7 @@ TraCIServerAPI_TLS::processSet(TraCIServer& server, tcpip::Storage& inputStorage
     if (variable != TL_PHASE_INDEX && variable != TL_PROGRAM && variable != TL_PHASE_DURATION
             && variable != TL_RED_YELLOW_GREEN_STATE && variable != TL_COMPLETE_PROGRAM_RYG
             && variable != VAR_PARAMETER) {
-        return server.writeErrorStatusCmd(CMD_SET_TL_VARIABLE, "Change TLS State: unsupported variable specified", outputStorage);
+        return server.writeErrorStatusCmd(CMD_SET_TL_VARIABLE, "Change TLS State: unsupported variable " + toHex(variable, 2) + " specified", outputStorage);
     }
     std::string id = inputStorage.readString();
     if (!MSNet::getInstance()->getTLSControl().knows(id)) {
@@ -314,9 +314,9 @@ TraCIServerAPI_TLS::processSet(TraCIServer& server, tcpip::Storage& inputStorage
             if (!server.readTypeCheckingInt(inputStorage, index)) {
                 return server.writeErrorStatusCmd(CMD_SET_TL_VARIABLE, "The phase index must be given as an integer.", outputStorage);
             }
-            if (index < 0 || vars.getActive()->getPhaseNumber() <= (unsigned int)index) {
+            if (index < 0 || vars.getActive()->getPhaseNumber() <= index) {
                 return server.writeErrorStatusCmd(CMD_SET_TL_VARIABLE, "The phase index " + toString(index) + " is not in the allowed range [0,"
-                                                  + toString((int)vars.getActive()->getPhaseNumber() - 1) + "].", outputStorage);
+                                                  + toString(vars.getActive()->getPhaseNumber() - 1) + "].", outputStorage);
             }
             const SUMOTime duration = vars.getActive()->getPhase(index).duration;
             vars.getActive()->changeStepAndDuration(tlsControl, cTime, index, duration);

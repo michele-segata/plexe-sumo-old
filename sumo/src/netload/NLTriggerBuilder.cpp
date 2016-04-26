@@ -12,7 +12,7 @@
 // Builds trigger objects for microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -56,10 +56,8 @@
 #include <utils/xml/XMLSubSys.h>
 
 
-#ifdef HAVE_INTERNAL
 #include <mesosim/MELoop.h>
 #include <mesosim/METriggeredCalibrator.h>
-#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -192,8 +190,9 @@ NLTriggerBuilder::parseAndBuildChargingStation(MSNet& net, const SUMOSAXAttribut
     buildChargingStation(net, id, lines, lane, frompos, topos, chrgpower, efficiency, chargeInTransit, ChargeDelay);
 }
 
+
 void
-NLTriggerBuilder::parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attrs) {
+NLTriggerBuilder::parseAndBuildStoppingPlace(MSNet& net, const SUMOSAXAttributes& attrs, const SumoXMLTag element) {
     bool ok = true;
     // get the id, throw if not given or empty...
     std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
@@ -201,44 +200,37 @@ NLTriggerBuilder::parseAndBuildBusStop(MSNet& net, const SUMOSAXAttributes& attr
         throw ProcessError();
     }
     // get the lane
-    MSLane* lane = getLane(attrs, "busStop", id);
+    MSLane* lane = getLane(attrs, toString(element), id);
     // get the positions
     SUMOReal frompos = attrs.getOpt<SUMOReal>(SUMO_ATTR_STARTPOS, id.c_str(), ok, 0);
     SUMOReal topos = attrs.getOpt<SUMOReal>(SUMO_ATTR_ENDPOS, id.c_str(), ok, lane->getLength());
     const bool friendlyPos = attrs.getOpt<bool>(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
     if (!ok || !myHandler->checkStopPos(frompos, topos, lane->getLength(), POSITION_EPS, friendlyPos)) {
-        throw InvalidArgument("Invalid position for bus stop '" + id + "'.");
+        throw InvalidArgument("Invalid position for " + toString(element) + " '" + id + "'.");
     }
     // get the lines
     std::vector<std::string> lines;
     SUMOSAXAttributes::parseStringVector(attrs.getOpt<std::string>(SUMO_ATTR_LINES, id.c_str(), ok, "", false), lines);
     // build the bus stop
-    buildBusStop(net, id, lines, lane, frompos, topos);
+    buildStoppingPlace(net, id, lines, lane, frompos, topos, element);
 }
 
+
 void
-NLTriggerBuilder::parseAndBuildContainerStop(MSNet& net, const SUMOSAXAttributes& attrs) {
-    bool ok = true;
-    // get the id, throw if not given or empty...
-    std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
-    if (!ok) {
-        throw ProcessError();
-    }
+NLTriggerBuilder::addAccess(MSNet& /* net */, const SUMOSAXAttributes& attrs) {
     // get the lane
-    MSLane* lane = getLane(attrs, "containerStop", id);
+    MSLane* lane = getLane(attrs, "access" , "");
     // get the positions
-    SUMOReal frompos = attrs.getOpt<SUMOReal>(SUMO_ATTR_STARTPOS, id.c_str(), ok, 0);
-    SUMOReal topos = attrs.getOpt<SUMOReal>(SUMO_ATTR_ENDPOS, id.c_str(), ok, lane->getLength());
-    const bool friendlyPos = attrs.getOpt<bool>(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
-    if (!ok || !myHandler->checkStopPos(frompos, topos, lane->getLength(), POSITION_EPS, friendlyPos)) {
-        throw InvalidArgument("Invalid position for container stop '" + id + "'.");
+    bool ok = true;
+    SUMOReal pos = attrs.getOpt<SUMOReal>(SUMO_ATTR_POSITION, "access", ok, 0);
+    const bool friendlyPos = attrs.getOpt<bool>(SUMO_ATTR_FRIENDLY_POS, "access", ok, false);
+    if (!ok || !myHandler->checkStopPos(pos, pos, lane->getLength(), 0, friendlyPos)) {
+        throw InvalidArgument("Invalid position for access in stop '" + myCurrentStop->getID() + "'.");
     }
-    // get the lines
-    std::vector<std::string> lines;
-    SUMOSAXAttributes::parseStringVector(attrs.getOpt<std::string>(SUMO_ATTR_LINES, id.c_str(), ok, "", false), lines);
-    // build the container stop
-    buildContainerStop(net, id, lines, lane, frompos, topos);
+    // build the bus stop
+    myCurrentStop->addAccess(lane, pos);
 }
+
 
 void
 NLTriggerBuilder::parseAndBuildCalibrator(MSNet& net, const SUMOSAXAttributes& attrs,
@@ -261,12 +253,10 @@ NLTriggerBuilder::parseAndBuildCalibrator(MSNet& net, const SUMOSAXAttributes& a
         probe = dynamic_cast<MSRouteProbe*>(net.getDetectorControl().getTypedDetectors(SUMO_TAG_ROUTEPROBE).get(routeProbe));
     }
     if (MSGlobals::gUseMesoSim) {
-#ifdef HAVE_INTERNAL
         METriggeredCalibrator* trigger = buildMECalibrator(net, id, &lane->getEdge(), pos, file, outfile, freq, probe);
         if (file == "") {
             trigger->registerParent(SUMO_TAG_CALIBRATOR, myHandler);
         }
-#endif
     } else {
         MSCalibrator* trigger = buildCalibrator(net, id, &lane->getEdge(), pos, file, outfile, freq, probe);
         if (file == "") {
@@ -330,7 +320,6 @@ NLTriggerBuilder::buildLaneSpeedTrigger(MSNet& /*net*/, const std::string& id,
 }
 
 
-#ifdef HAVE_INTERNAL
 METriggeredCalibrator*
 NLTriggerBuilder::buildMECalibrator(MSNet& /*net*/, const std::string& id,
                                     const MSEdge* edge, SUMOReal pos,
@@ -339,7 +328,6 @@ NLTriggerBuilder::buildMECalibrator(MSNet& /*net*/, const std::string& id,
                                     const SUMOTime freq, MSRouteProbe* probe) {
     return new METriggeredCalibrator(id, edge, pos, file, outfile, freq, MSGlobals::gMesoNet->getSegmentForEdge(*edge, pos)->getLength(), probe);
 }
-#endif
 
 
 MSCalibrator*
@@ -361,27 +349,17 @@ NLTriggerBuilder::buildRerouter(MSNet&, const std::string& id,
 
 
 void
-NLTriggerBuilder::buildBusStop(MSNet& net, const std::string& id,
-                               const std::vector<std::string>& lines,
-                               MSLane* lane, SUMOReal frompos, SUMOReal topos) {
-    MSStoppingPlace* stop = new MSStoppingPlace(id, lines, *lane, frompos, topos);
-    if (!net.addBusStop(stop)) {
-        delete stop;
-        throw InvalidArgument("Could not build bus stop '" + id + "'; probably declared twice.");
-    }
-}
-
-
-void
-NLTriggerBuilder::buildContainerStop(MSNet& net, const std::string& id,
+NLTriggerBuilder::buildStoppingPlace(MSNet& net, const std::string& id,
                                      const std::vector<std::string>& lines,
-                                     MSLane* lane, SUMOReal frompos, SUMOReal topos) {
-    MSStoppingPlace* stop = new MSStoppingPlace(id, lines, *lane, frompos, topos);
-    if (!net.addContainerStop(stop)) {
-        delete stop;
-        throw InvalidArgument("Could not build container stop '" + id + "'; probably declared twice.");
+                                     MSLane* lane, SUMOReal frompos, SUMOReal topos, const SumoXMLTag element) {
+    myCurrentStop = new MSStoppingPlace(id, lines, *lane, frompos, topos);
+    const bool success = element == SUMO_TAG_CONTAINER_STOP ? net.addContainerStop(myCurrentStop) : net.addBusStop(myCurrentStop);
+    if (!success) {
+        delete myCurrentStop;
+        throw InvalidArgument("Could not build " + toString(element) + " '" + id + "'; probably declared twice.");
     }
 }
+
 
 void
 NLTriggerBuilder::buildChargingStation(MSNet& net, const std::string& id,

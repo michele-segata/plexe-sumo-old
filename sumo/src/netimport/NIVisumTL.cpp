@@ -9,7 +9,7 @@
 // Intermediate class for storing visum traffic lights during their import
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2003-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2003-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -34,6 +34,7 @@
 #include <utils/options/OptionsCont.h>
 #include <netbuild/NBLoadedTLDef.h>
 #include <netbuild/NBTrafficLightLogicCont.h>
+#include <netbuild/NBEdgeCont.h>
 #include "NIVisumTL.h"
 
 #ifdef CHECK_MEMORY_LEAKS
@@ -47,8 +48,8 @@
 NIVisumTL::NIVisumTL(const std::string& name, SUMOTime cycleTime, SUMOTime offset,
                      SUMOTime intermediateTime, bool phaseDefined)
     : myName(name), myCycleTime(cycleTime), myOffset(offset),
-      myIntermediateTime(intermediateTime), myPhaseDefined(phaseDefined)
-{}
+      myIntermediateTime(intermediateTime), myPhaseDefined(phaseDefined) {
+}
 
 
 NIVisumTL::~NIVisumTL() {
@@ -80,11 +81,11 @@ NIVisumTL::getSignalGroup(const std::string& name) {
 
 
 void
-NIVisumTL::build(NBTrafficLightLogicCont& tlc) {
+NIVisumTL::build(NBEdgeCont& ec, NBTrafficLightLogicCont& tlc) {
     for (std::vector<NBNode*>::iterator ni = myNodes.begin(); ni != myNodes.end(); ni++) {
         NBNode* node = (*ni);
         TrafficLightType type = SUMOXMLDefinitions::TrafficLightTypes.get(OptionsCont::getOptions().getString("tls.default-type"));
-        NBLoadedTLDef* def = new NBLoadedTLDef(node->getID(), node, myOffset, type);
+        NBLoadedTLDef* def = new NBLoadedTLDef(ec, node->getID(), node, myOffset, type);
         tlc.insert(def);
         def->setCycleDuration((unsigned int) myCycleTime);
         // signalgroups

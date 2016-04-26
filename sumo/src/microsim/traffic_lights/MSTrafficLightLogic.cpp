@@ -9,7 +9,7 @@
 // The parent class for traffic light logics
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -39,6 +39,7 @@
 #include <microsim/MSEventControl.h>
 #include <microsim/MSJunctionLogic.h>
 #include <microsim/MSNet.h>
+#include <microsim/MSGlobals.h>
 #include "MSTLLogicControl.h"
 #include "MSTrafficLightLogic.h"
 
@@ -77,9 +78,9 @@ MSTrafficLightLogic::SwitchCommand::execute(SUMOTime t) {
     }
     //
     const bool isActive = myTLControl.isActive(myTLLogic);
-    size_t step1 = myTLLogic->getCurrentPhaseIndex();
+    int step1 = myTLLogic->getCurrentPhaseIndex();
     SUMOTime next = myTLLogic->trySwitch();
-    size_t step2 = myTLLogic->getCurrentPhaseIndex();
+    int step2 = myTLLogic->getCurrentPhaseIndex();
     if (step1 != step2) {
         if (isActive) {
             // execute any action connected to this tls
@@ -122,6 +123,9 @@ MSTrafficLightLogic::MSTrafficLightLogic(MSTLLogicControl& tlcontrol, const std:
 void
 MSTrafficLightLogic::init(NLDetectorBuilder&) {
     const Phases& phases = getPhases();
+    if (phases.size() > 0 && MSGlobals::gMesoTLSPenalty > 0) {
+        initMesoTLSPenalties();
+    }
     if (phases.size() > 1) {
         bool haveWarnedAboutUnusedStates = false;
         std::vector<bool> foundGreen(phases.front()->getState().size(), false);
@@ -167,7 +171,6 @@ MSTrafficLightLogic::init(NLDetectorBuilder&) {
                 break;
             }
         }
-
     }
 }
 
@@ -180,16 +183,16 @@ MSTrafficLightLogic::~MSTrafficLightLogic() {
 
 // ----------- Handling of controlled links
 void
-MSTrafficLightLogic::addLink(MSLink* link, MSLane* lane, unsigned int pos) {
+MSTrafficLightLogic::addLink(MSLink* link, MSLane* lane, int pos) {
     // !!! should be done within the loader (checking necessary)
     myLinks.reserve(pos + 1);
-    while (myLinks.size() <= pos) {
+    while ((int)myLinks.size() <= pos) {
         myLinks.push_back(LinkVector());
     }
     myLinks[pos].push_back(link);
     //
     myLanes.reserve(pos + 1);
-    while (myLanes.size() <= pos) {
+    while ((int)myLanes.size() <= pos) {
         myLanes.push_back(LaneVector());
     }
     myLanes[pos].push_back(lane);
@@ -281,6 +284,44 @@ MSTrafficLightLogic::setCurrentDurationIncrement(SUMOTime delay) {
     myCurrentDurationIncrement = delay;
 }
 
+
+void MSTrafficLightLogic::initMesoTLSPenalties() {
+    // set mesoscopic time penalties
+    const Phases& phases = getPhases();
+    const int numLinks = (int)phases.front()->getState().size();
+    assert(myLinks.size() >= numLinks);
+    SUMOTime duration = 0;
+    std::vector<SUMOReal> redDuration(numLinks, 0);
+    std::vector<SUMOReal> penalty(numLinks, 0);
+    for (int i = 0; i < (int)phases.size(); ++i) {
+        const std::string& state = phases[i]->getState();
+        duration += phases[i]->duration;
+        // warn about transitions from green to red without intermediate yellow
+        for (int j = 0; j < numLinks; ++j) {
+            if ((LinkState)state[j] == LINKSTATE_TL_RED
+                    || (LinkState)state[j] == LINKSTATE_TL_REDYELLOW) {
+                redDuration[j] += STEPS2TIME(phases[i]->duration);
+            } else if (redDuration[j] > 0) {
+                penalty[j] += 0.5 * (redDuration[j] * redDuration[j] + redDuration[j]);
+                redDuration[j] = 0;
+            }
+        }
+    }
+    /// XXX penalty for wrap-around red phases is underestimated
+    for (int j = 0; j < numLinks; ++j) {
+        if (redDuration[j] > 0) {
+            penalty[j] += 0.5 * (redDuration[j] * redDuration[j] + redDuration[j]);
+            redDuration[j] = 0;
+        }
+    }
+    const SUMOReal durationSeconds = STEPS2TIME(duration);
+    for (int j = 0; j < numLinks; ++j) {
+        for (int k = 0; k < (int)myLinks[j].size(); ++k) {
+            myLinks[j][k]->setMesoTLSPenalty(TIME2STEPS(MSGlobals::gMesoTLSPenalty * penalty[j] / durationSeconds));
+            //std::cout << " tls=" << getID() << " link=" << j << " penalty=" << penalty[j] / durationSeconds << " durSecs=" << durationSeconds << "\n";
+        }
+    }
+}
 
 /****************************************************************************/
 

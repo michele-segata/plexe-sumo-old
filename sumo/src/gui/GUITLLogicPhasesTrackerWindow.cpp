@@ -9,7 +9,7 @@
 // A window displaying the phase diagram of a tl-logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -157,7 +157,7 @@ GUITLLogicPhasesTrackerWindow::GUITLLogicPhasesTrackerWindow(
     ValueSource<std::pair<SUMOTime, MSPhaseDefinition> >* src)
     : FXMainWindow(app.getApp(), "TLS-Tracker", NULL, NULL, DECOR_ALL,
                    20, 20, 300, 200),
-    myApplication(&app), myTLLogic(&logic), myAmInTrackingMode(true) {
+      myApplication(&app), myTLLogic(&logic), myAmInTrackingMode(true) {
     // build the toolbar
     myToolBarDrag = new FXToolBarShell(this, FRAME_NORMAL);
     myToolBar = new FXToolBar(this, myToolBarDrag, LAYOUT_SIDE_TOP | LAYOUT_FILL_X | FRAME_RAISED);
@@ -194,8 +194,8 @@ GUITLLogicPhasesTrackerWindow::GUITLLogicPhasesTrackerWindow(
     const MSSimpleTrafficLightLogic::Phases& /*phases*/)
     : FXMainWindow(app.getApp(), "TLS-Tracker", NULL, NULL, DECOR_ALL,
                    20, 20, 300, 200),
-    myApplication(&app), myTLLogic(&logic), myAmInTrackingMode(false),
-    myToolBarDrag(0), myBeginOffset(0) {
+      myApplication(&app), myTLLogic(&logic), myAmInTrackingMode(false),
+      myToolBarDrag(0), myBeginOffset(0) {
     myConnector = 0;
     FXint height = (FXint)(myTLLogic->getLinks().size() * 20 + 30 + 8);
     setTitle("TLS-Tracker");
@@ -366,9 +366,9 @@ GUITLLogicPhasesTrackerWindow::drawValues(GUITLLogicPhasesTrackerPanel& caller) 
         SUMOReal x2 = x + a;
 
         // go through the links
-        for (unsigned int j = 0; j < (unsigned int) myTLLogic->getLinks().size(); ++j) {
+        for (int j = 0; j < (int) myTLLogic->getLinks().size(); ++j) {
             // determine the current link's color
-            LinkState state = (*pi).getSignalState(j);
+            LinkState state = pi->getSignalState(j);
             // draw the bar (red is drawn as a line)
             GLHelper::setColor(getLinkColor(state));
             switch (state) {

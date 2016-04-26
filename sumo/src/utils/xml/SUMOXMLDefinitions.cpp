@@ -12,7 +12,7 @@
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -72,6 +72,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "calibrator",       SUMO_TAG_CALIBRATOR },
     { "rerouter",         SUMO_TAG_REROUTER },
     { "busStop",          SUMO_TAG_BUS_STOP },
+    { "trainStop",        SUMO_TAG_TRAIN_STOP },
+    { "access",           SUMO_TAG_ACCESS },
     { "containerStop",    SUMO_TAG_CONTAINER_STOP },
     { "chargingStation",  SUMO_TAG_CHARGING_STATION },
     { "vTypeProbe",       SUMO_TAG_VTYPEPROBE },
@@ -158,7 +160,6 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "carFollowing-IDMM",        SUMO_TAG_CF_IDMM },
     { "carFollowing-Krauss",      SUMO_TAG_CF_KRAUSS },
     { "carFollowing-KraussPS",    SUMO_TAG_CF_KRAUSS_PLUS_SLOPE },
-    { "carFollowing-KraussAB",    SUMO_TAG_CF_KRAUSS_ACCEL_BOUND },
     { "carFollowing-KraussOrig1", SUMO_TAG_CF_KRAUSS_ORIG1 },
     { "carFollowing-SmartSK",     SUMO_TAG_CF_SMART_SK },
     { "carFollowing-Daniel1",     SUMO_TAG_CF_DANIEL1 },
@@ -168,6 +169,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "carFollowing-CC",          SUMO_TAG_CF_CC },
 
     { "person",           SUMO_TAG_PERSON },
+    { "personTrip",       SUMO_TAG_PERSONTRIP },
     { "ride",             SUMO_TAG_RIDE },
     { "walk",             SUMO_TAG_WALK },
 
@@ -298,6 +300,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "containerCapacity", SUMO_ATTR_CONTAINER_CAPACITY },
     { "personNumber",   SUMO_ATTR_PERSON_NUMBER },
     { "containerNumber", SUMO_ATTR_CONTAINER_NUMBER },
+    { "modes",          SUMO_ATTR_MODES },
 
     { "function",       SUMO_ATTR_FUNCTION },
     { "pos",            SUMO_ATTR_POSITION },
@@ -490,6 +493,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "shapeStartNotForPrinting", GNE_ATTR_SHAPE_START},
     { "shapeEndNotForPrinting", GNE_ATTR_SHAPE_END},
 
+    { "targetLanes",   SUMO_ATTR_TARGETLANE },
+
     { "",               SUMO_ATTR_NOTHING }
 };
 
@@ -499,6 +504,7 @@ StringBijection<SumoXMLNodeType>::Entry SUMOXMLDefinitions::sumoNodeTypeValues[]
     {"traffic_light_unregulated", NODETYPE_TRAFFIC_LIGHT_NOJUNCTION},
     {"traffic_light_right_on_red", NODETYPE_TRAFFIC_LIGHT_RIGHT_ON_RED},
     {"rail_signal",         NODETYPE_RAIL_SIGNAL},
+    {"rail_crossing",       NODETYPE_RAIL_CROSSING},
     {"priority",            NODETYPE_PRIORITY},
     {"priority_stop",       NODETYPE_PRIORITY_STOP},
     {"right_before_left",   NODETYPE_RIGHT_BEFORE_LEFT},
@@ -567,6 +573,14 @@ StringBijection<TrafficLightType>::Entry SUMOXMLDefinitions::trafficLightTypesVa
     { "static", TLTYPE_STATIC },
     { "rail", TLTYPE_RAIL },
     { "actuated", TLTYPE_ACTUATED },
+    { "sotl_phase", TLTYPE_SOTL_PHASE },
+    { "sotl_platoon", TLTYPE_SOTL_PLATOON },
+    { "sotl_request", TLTYPE_SOTL_REQUEST },
+    { "sotl_wave", TLTYPE_SOTL_WAVE },
+    { "sotl_marching", TLTYPE_SOTL_MARCHING },
+    { "swarm", TLTYPE_SWARM_BASED },
+    { "deterministic", TLTYPE_HILVL_DETERMINISTIC },
+    { "<invalid>", TLTYPE_INVALID } //< must be the last one
 };
 
 
@@ -581,7 +595,6 @@ StringBijection<SumoXMLTag>::Entry SUMOXMLDefinitions::carFollowModelValues[] = 
     { "IDMM",        SUMO_TAG_CF_IDMM },
     { "Krauss",      SUMO_TAG_CF_KRAUSS },
     { "KraussPS",    SUMO_TAG_CF_KRAUSS_PLUS_SLOPE },
-    { "KraussAB",    SUMO_TAG_CF_KRAUSS_ACCEL_BOUND },
     { "KraussOrig1", SUMO_TAG_CF_KRAUSS_ORIG1 },
     { "SmartSK",     SUMO_TAG_CF_SMART_SK },
     { "Daniel1",     SUMO_TAG_CF_DANIEL1 },
@@ -613,7 +626,7 @@ StringBijection<LinkDirection> SUMOXMLDefinitions::LinkDirections(
     SUMOXMLDefinitions::linkDirectionValues, LINKDIR_NODIR);
 
 StringBijection<TrafficLightType> SUMOXMLDefinitions::TrafficLightTypes(
-    SUMOXMLDefinitions::trafficLightTypesVales, TLTYPE_ACTUATED);
+    SUMOXMLDefinitions::trafficLightTypesVales, TLTYPE_INVALID);
 
 StringBijection<LaneChangeModel> SUMOXMLDefinitions::LaneChangeModels(
     SUMOXMLDefinitions::laneChangeModelValues, LCM_JE2013);

@@ -10,7 +10,7 @@
 // Data collector for edges/lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -43,11 +43,9 @@
 #include "MSMeanData_Amitran.h"
 #include "MSMeanData.h"
 
-#ifdef HAVE_INTERNAL
 #include <microsim/MSGlobals.h>
-#include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
-#endif
+#include <mesosim/MELoop.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -111,11 +109,9 @@ MSMeanData::MeanDataValues::notifyMove(SUMOVehicle& veh, SUMOReal oldPos, SUMORe
 
 bool
 MSMeanData::MeanDataValues::notifyLeave(SUMOVehicle& /*veh*/, SUMOReal /*lastPos*/, MSMoveReminder::Notification reason) {
-#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         return false; // reminder is re-added on every segment (@recheck for performance)
     }
-#endif
     return reason == MSMoveReminder::NOTIFICATION_JUNCTION;
 }
 
@@ -157,13 +153,27 @@ MSMeanData::MeanDataValueTracker::MeanDataValueTracker(MSLane* const lane,
 
 
 MSMeanData::MeanDataValueTracker::~MeanDataValueTracker() {
+    std::list<TrackerEntry*>::iterator i;
+    for (i = myCurrentData.begin(); i != myCurrentData.end(); i++) {
+        delete *i;
+    }
+
+    // FIXME: myTrackedData may still hold some undeleted TrackerEntries. When to delete those? (Leo), refers to #2251
+    // code below fails
+
+//	std::map<SUMOVehicle*, TrackerEntry*>::iterator j;
+//	for(j=myTrackedData.begin(); j!=myTrackedData.end();j++){
+//		delete j->second;
+//	}
 }
 
 
 void
 MSMeanData::MeanDataValueTracker::reset(bool afterWrite) {
     if (afterWrite) {
-        myCurrentData.pop_front();
+        if (myCurrentData.begin() != myCurrentData.end()) {
+            myCurrentData.pop_front();
+        }
     } else {
         myCurrentData.push_back(new TrackerEntry(myParent->createValues(myLane, myLaneLength, false)));
     }
@@ -282,7 +292,6 @@ MSMeanData::init() {
             myEdges.push_back(*e);
             myMeasures.push_back(std::vector<MeanDataValues*>());
             const std::vector<MSLane*>& lanes = (*e)->getLanes();
-#ifdef HAVE_INTERNAL
             if (MSGlobals::gUseMesoSim) {
                 MeanDataValues* data;
                 if (myTrackVehicles) {
@@ -302,7 +311,6 @@ MSMeanData::init() {
                 data->reset(true);
                 continue;
             }
-#endif
             if (myAmEdgeBased && myTrackVehicles) {
                 myMeasures.back().push_back(new MeanDataValueTracker(0, lanes[0]->getLength(), &myVehicleTypes, this));
             }
@@ -334,7 +342,6 @@ MSMeanData::~MSMeanData() {
 void
 MSMeanData::resetOnly(SUMOTime stopTime) {
     UNUSED_PARAMETER(stopTime);
-#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         MSEdgeVector::iterator edge = myEdges.begin();
         for (std::vector<std::vector<MeanDataValues*> >::const_iterator i = myMeasures.begin(); i != myMeasures.end(); ++i, ++edge) {
@@ -348,7 +355,6 @@ MSMeanData::resetOnly(SUMOTime stopTime) {
         }
         return;
     }
-#endif
     for (std::vector<std::vector<MeanDataValues*> >::const_iterator i = myMeasures.begin(); i != myMeasures.end(); ++i) {
         for (std::vector<MeanDataValues*>::const_iterator j = (*i).begin(); j != (*i).end(); ++j) {
             (*j)->reset();
@@ -367,7 +373,6 @@ void
 MSMeanData::writeEdge(OutputDevice& dev,
                       const std::vector<MeanDataValues*>& edgeValues,
                       MSEdge* edge, SUMOTime startTime, SUMOTime stopTime) {
-#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         MESegment* s = MSGlobals::gMesoNet->getSegmentForEdge(*edge);
         MeanDataValues* data = edgeValues.front();
@@ -383,7 +388,6 @@ MSMeanData::writeEdge(OutputDevice& dev,
         data->reset(true);
         return;
     }
-#endif
     std::vector<MeanDataValues*>::const_iterator lane;
     if (!myAmEdgeBased) {
         bool writeCheck = myDumpEmpty;

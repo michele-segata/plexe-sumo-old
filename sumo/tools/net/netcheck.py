@@ -14,7 +14,7 @@ It tests whether the network is (weakly) connected.
 It needs one parameter, the SUMO net (.net.xml).
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -22,6 +22,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 from optparse import OptionParser
@@ -38,6 +40,8 @@ def parse_args():
                          default=False, help="List edges which can reach the destination")
     optParser.add_option("-o", "--selection-output",
                          help="Write output to file(s) as a loadable selection")
+    optParser.add_option("--ignore-connections", action="store_true",
+                         default=False, help="Assume full connectivity at each node when computing all connected components")
     optParser.add_option(
         "-l", "--vclass", help="Include only edges allowing VCLASS")
     optParser.add_option("-c", "--component-output",
@@ -52,7 +56,7 @@ def parse_args():
     return options
 
 
-def getWeaklyConnected(net, vclass=None):
+def getWeaklyConnected(net, vclass=None, ignore_connections=False):
     components = []
     edgesLeft = set(net.getEdges())
     queue = list()
@@ -63,16 +67,25 @@ def getWeaklyConnected(net, vclass=None):
             edge = queue.pop(0)
             if vclass is None or edge.allows(vclass):
                 component.add(edge.getID())
-                for n in edge.getOutgoing().iterkeys():
-                    if n in edgesLeft:
-                        queue.append(n)
-                        edgesLeft.remove(n)
-                for n in edge.getIncoming().iterkeys():
-                    if n in edgesLeft:
-                        queue.append(n)
-                        edgesLeft.remove(n)
+                if ignore_connections:
+                    for n in (edge.getFromNode().getOutgoing()
+                              + edge.getFromNode().getIncoming()
+                              + edge.getToNode().getOutgoing()
+                              + edge.getToNode().getIncoming()):
+                        if n in edgesLeft:
+                            queue.append(n)
+                            edgesLeft.remove(n)
+                else:
+                    for n in edge.getOutgoing():
+                        if n in edgesLeft:
+                            queue.append(n)
+                            edgesLeft.remove(n)
+                    for n in edge.getIncoming():
+                        if n in edgesLeft:
+                            queue.append(n)
+                            edgesLeft.remove(n)
         if component:
-            components.append(component)
+            components.append(sorted(component))
     return components
 
 
@@ -89,7 +102,7 @@ def getReachable(net, source_id, options, useIncoming=False):
         new_fringe = []
         for edge in fringe:
             cands = edge.getIncoming() if useIncoming else edge.getOutgoing()
-            for reachable in cands.iterkeys():
+            for reachable in cands:
                 if options.vclass is None or reachable.allows(options.vclass):
                     if not reachable in found:
                         found.add(reachable)
@@ -97,9 +110,11 @@ def getReachable(net, source_id, options, useIncoming=False):
         fringe = new_fringe
 
     if useIncoming:
-        print "{} of {} edges can reach edge '{}':".format(len(found), len(net.getEdges()), source_id)
+        print("{} of {} edges can reach edge '{}':".format(
+            len(found), len(net.getEdges()), source_id))
     else:
-        print "{} of {} edges are reachable from edge '{}':".format(len(found), len(net.getEdges()), source_id)
+        print("{} of {} edges are reachable from edge '{}':".format(
+            len(found), len(net.getEdges()), source_id))
 
     ids = sorted([e.getID() for e in found])
     if options.selection_output:
@@ -107,7 +122,7 @@ def getReachable(net, source_id, options, useIncoming=False):
             for e in ids:
                 f.write("edge:{}\n".format(e))
     else:
-        print ids
+        print(ids)
 
 
 if __name__ == "__main__":
@@ -119,9 +134,10 @@ if __name__ == "__main__":
     elif options.destination:
         getReachable(net, options.destination, options, True)
     else:
-        components = getWeaklyConnected(net, options.vclass)
+        components = getWeaklyConnected(
+            net, options.vclass, options.ignore_connections)
         if len(components) != 1:
-            print "Warning! Net is not connected."
+            print("Warning! Net is not connected.")
 
         total = 0
         max = 0
@@ -133,7 +149,7 @@ if __name__ == "__main__":
         dist_str_list = []
 
         # Iterate through components to output and summarise
-        for idx, comp in enumerate(sorted(components, key=lambda c: iter(c).next())):
+        for idx, comp in enumerate(sorted(components, key=lambda c: next(iter(c)))):
             if options.selection_output:
                 with open("{}comp{}.txt".format(options.selection_output, idx), 'w') as f:
                     for e in comp:
@@ -150,7 +166,7 @@ if __name__ == "__main__":
             edge_count_dist[edge_count] += 1
             output_str = "Component: #{} Edge Count: {}\n {}\n".format(
                 idx, edge_count, " ".join(comp))
-            print output_str
+            print(output_str)
             output_str_list.append(output_str)
 
         # Output the summary of all edges checked and largest component
@@ -160,26 +176,28 @@ if __name__ == "__main__":
             coverage = round(max * 100.0 / total, 2)
         summary_str = "Total Edges: {}\nLargest Component: #{} Edge Count: {} Coverage: {}%\n".format(
             total, max_idx, max, coverage)
-        print summary_str
+        print(summary_str)
         dist_str = "Edges\tIncidence"
-        print dist_str
+        print(dist_str)
         dist_str_list.append(dist_str)
 
         # Output the distribution of components by edge counts
-        for key, value in sorted(edge_count_dist.iteritems()):
+        for key, value in sorted(edge_count_dist.items()):
             dist_str = "{}\t{}".format(key, value)
-            print dist_str
+            print(dist_str)
             dist_str_list.append(dist_str)
 
         # Check for output of components to file
         if options.component_output is not None:
-            print "Writing component output to: {}".format(options.component_output)
+            print("Writing component output to: {}".format(
+                options.component_output))
             with open(options.component_output, 'w') as f:
                 f.write("\n".join(output_str_list))
 
         # Check for output of results summary to file
         if options.results_output is not None:
-            print "Writing results output to: {}".format(options.results_output)
+            print(
+                "Writing results output to: {}".format(options.results_output))
             with open(options.results_output, 'w') as r:
                 r.write(summary_str)
                 r.write("\n".join(dist_str_list))

@@ -9,7 +9,7 @@
 // The class holds a description of a connection between two edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -55,8 +55,8 @@ NBConnection::NBConnection(NBEdge* from, NBEdge* to) :
     myFrom(from), myTo(to),
     myFromID(from->getID()), myToID(to->getID()),
     myFromLane(-1), myToLane(-1),
-    myTlIndex(InvalidTlIndex)
-{}
+    myTlIndex(InvalidTlIndex) {
+}
 
 
 NBConnection::NBConnection(const std::string& fromID, NBEdge* from,
@@ -64,8 +64,8 @@ NBConnection::NBConnection(const std::string& fromID, NBEdge* from,
     myFrom(from), myTo(to),
     myFromID(fromID), myToID(toID),
     myFromLane(-1), myToLane(-1),
-    myTlIndex(InvalidTlIndex)
-{}
+    myTlIndex(InvalidTlIndex) {
+}
 
 
 NBConnection::NBConnection(NBEdge* from, int fromLane,
@@ -89,8 +89,8 @@ NBConnection::NBConnection(const NBConnection& c) :
     myFrom(c.myFrom), myTo(c.myTo),
     myFromID(c.myFromID), myToID(c.myToID),
     myFromLane(c.myFromLane), myToLane(c.myToLane),
-    myTlIndex(c.myTlIndex)
-{}
+    myTlIndex(c.myTlIndex) {
+}
 
 
 NBEdge*
@@ -109,7 +109,11 @@ bool
 NBConnection::replaceFrom(NBEdge* which, NBEdge* by) {
     if (myFrom == which) {
         myFrom = by;
-        myFromID = myFrom->getID();
+        if (myFrom != 0) {
+            myFromID = myFrom->getID();
+        } else {
+            myFromID = "invalidFrom";
+        }
         return true;
     }
     return false;
@@ -121,7 +125,11 @@ NBConnection::replaceFrom(NBEdge* which, int whichLane,
                           NBEdge* by, int byLane) {
     if (myFrom == which && (myFromLane == whichLane || myFromLane < 0 || whichLane < 0)) {
         myFrom = by;
-        myFromID = myFrom->getID();
+        if (myFrom != 0) {
+            myFromID = myFrom->getID();
+        } else {
+            myFromID = "invalidFrom";
+        }
         myFromLane = byLane;
         return true;
     }
@@ -133,7 +141,11 @@ bool
 NBConnection::replaceTo(NBEdge* which, NBEdge* by) {
     if (myTo == which) {
         myTo = by;
-        myToID = myTo->getID();
+        if (myTo != 0) {
+            myToID = myTo->getID();
+        } else {
+            myToID = "invalidTo";
+        }
         return true;
     }
     return false;
@@ -145,7 +157,11 @@ NBConnection::replaceTo(NBEdge* which, int whichLane,
                         NBEdge* by, int byLane) {
     if (myTo == which && (myToLane == whichLane || myFromLane < 0 || whichLane < 0)) {
         myTo = by;
-        myToID = myTo->getID();
+        if (myTo != 0) {
+            myToID = myTo->getID();
+        } else {
+            myToID = "invalidTo";
+        }
         myToLane = byLane;
         return true;
     }
@@ -237,6 +253,21 @@ NBConnection::shiftLaneIndex(NBEdge* edge, int offset) {
         myToLane += offset;
     }
 }
+
+
+std::ostream&
+operator<<(std::ostream& os, const NBConnection& c) {
+    os
+            << "Con(from=" << Named::getIDSecure(c.getFrom())
+            << " fromLane=" << c.getFromLane()
+            << " to=" << Named::getIDSecure(c.getTo())
+            << " toLane=" << c.getToLane()
+            << " tlIndex=" << c.getTLIndex()
+            << ")";
+    return os;
+}
+
+
 
 /****************************************************************************/
 

@@ -8,7 +8,7 @@
 // Exporter writing networks using the openDRIVE format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2011-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2011-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -105,7 +105,7 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         device << "        <type s=\"0\" type=\"town\"/>\n";
         // for the shape we need to use the leftmost border of the leftmost lane
         const std::vector<NBEdge::Lane>& lanes = e->getLanes();
-        PositionVector ls = getLeftBorder(e);
+        PositionVector ls = getLeftLaneBorder(e);
         writePlanView(ls, device);
         device << "        <elevationProfile><elevation s=\"0\" a=\"0\" b=\"0\" c=\"0\" d=\"0\"/></elevationProfile>\n";
         device << "        <lateralProfile/>\n";
@@ -173,24 +173,24 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
                     shape.clear();
                 }
                 if (inEdge->isTurningDirectionAt(outEdge)
-                        && getLeftBorder(inEdge).back().distanceTo2D(getLeftBorder(outEdge).front()) < MIN_TURN_DIAMETER) {
+                        && getLeftLaneBorder(inEdge).back().distanceTo2D(getLeftLaneBorder(outEdge).front()) < MIN_TURN_DIAMETER) {
                     shape.clear(); // simplified geometry for sharp turn-arounds
                 }
                 // we need to fix start and endpoints in case the start and
                 // end segments were not in line with the incoming and outgoing lanes
                 if (shape.size() > 1) {
-                    shape[0] = getLeftBorder(inEdge).back();
-                    shape[-1] = getLeftBorder(outEdge).front();
+                    shape[0] = getLeftLaneBorder(inEdge, c.fromLane).back();
+                    shape[-1] = getLeftLaneBorder(outEdge, c.toLane).front();
                 } else {
                     shape.clear();
-                    shape.push_back(getLeftBorder(inEdge).back());
-                    shape.push_back(getLeftBorder(outEdge).front());
+                    shape.push_back(getLeftLaneBorder(inEdge, c.fromLane).back());
+                    shape.push_back(getLeftLaneBorder(outEdge, c.toLane).front());
                 }
 
                 device << "    <road name=\"" << c.getInternalLaneID() << "\" length=\"" << shape.length() << "\" id=\"" << getID(c.getInternalLaneID(), edgeMap, edgeID) << "\" junction=\"" << getID(n->getID(), nodeMap, nodeID) << "\">\n";
                 device << "        <link>\n";
-                device << "            <predecessor elementType=\"road\" elementId=\"" << getID(inEdge->getID(), edgeMap, edgeID) << "\"/>\n";
-                device << "            <successor elementType=\"road\" elementId=\"" << getID(outEdge->getID(), edgeMap, edgeID) << "\"/>\n";
+                device << "            <predecessor elementType=\"road\" elementId=\"" << getID(inEdge->getID(), edgeMap, edgeID) << "\" contactPoint=\"end\"/>\n";
+                device << "            <successor elementType=\"road\" elementId=\"" << getID(outEdge->getID(), edgeMap, edgeID) << "\" contactPoint=\"start\"/>\n";
                 device << "        </link>\n";
                 device << "        <type s=\"0\" type=\"town\"/>\n";
                 writePlanView(shape, device);
@@ -297,9 +297,9 @@ NWWriter_OpenDrive::getLaneType(SVCPermissions permissions) {
     switch (permissions) {
         case SVC_PEDESTRIAN:
             return "sidewalk";
-            //case (SVC_BICYCLE | SVC_PEDESTRIAN):
-            //    WRITE_WARNING("Ambiguous lane type (biking+driving) for road '" + roadID + "'");
-            //    return "sidewalk";
+        //case (SVC_BICYCLE | SVC_PEDESTRIAN):
+        //    WRITE_WARNING("Ambiguous lane type (biking+driving) for road '" + roadID + "'");
+        //    return "sidewalk";
         case SVC_BICYCLE:
             return "biking";
         case 0:
@@ -314,13 +314,26 @@ NWWriter_OpenDrive::getLaneType(SVCPermissions permissions) {
 
 
 PositionVector
-NWWriter_OpenDrive::getLeftBorder(const NBEdge* edge) {
+NWWriter_OpenDrive::getLeftLaneBorder(const NBEdge* edge, int laneIndex) {
+    if (laneIndex == -1) {
+        // leftmost lane
+        laneIndex = (int)edge->getNumLanes() - 1;
+    }
     const int leftmost = (int)edge->getNumLanes() - 1;
+    SUMOReal widthOffset = -(edge->getLaneWidth(leftmost) / 2);
+
+    // collect lane widths from left border of edge to left border of lane to connect to
+    for (int i = leftmost; i > laneIndex; i--) {
+        widthOffset += edge->getLaneWidth(i);
+    }
+
     PositionVector result = edge->getLaneShape(leftmost);
     try {
-        result.move2side(-edge->getLaneWidth(leftmost) / 2);
+        result.move2side(widthOffset);
     } catch (InvalidArgument&) { }
     return result;
 }
+
+
 /****************************************************************************/
 

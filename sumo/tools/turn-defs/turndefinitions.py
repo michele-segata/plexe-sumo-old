@@ -9,7 +9,7 @@
 Operations and classes necessary to work on SUMO turn definitions.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2011-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -17,6 +17,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
 
 import connections
 import logging
@@ -62,7 +63,7 @@ class TurnDefinitions():
         """ Returns all of the turn definitions incoming edges. The result
             will be sorted in alphabetical. """
 
-        sources = self.turn_definitions.keys()
+        sources = list(self.turn_definitions.keys())
         sources.sort()
         return sources
 

@@ -7,7 +7,7 @@
 // Realises dumping Floating Car Data (FCD) Data
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -56,7 +56,7 @@ class MSLane;
  */
 class MSFCDExport {
 public:
-    /** @brief Writes the posion and the angle of each vehcile into the given device
+    /** @brief Writes the position and the angle of each vehicle into the given device
      *
      *  Opens the current time step and export the values vehicle id, position and angle
      *
@@ -67,6 +67,9 @@ public:
      */
     static void write(OutputDevice& of, SUMOTime timestep, bool elevation);
 
+private:
+    /// @brief write transportable
+    static void writeTransportable(OutputDevice& of, const MSEdge* e, MSTransportable* p, SumoXMLTag tag, bool useGeo, bool elevation);
 
 private:
     /// @brief Invalidated copy constructor.

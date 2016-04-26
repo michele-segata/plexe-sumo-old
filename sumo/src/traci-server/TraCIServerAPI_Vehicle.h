@@ -8,7 +8,7 @@
 // APIs for getting/setting vehicle values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -89,6 +89,8 @@ private:
 
     static bool vtdMap_matchingRoutePosition(const Position& pos, const std::string& origID, MSVehicle& v,
             SUMOReal& bestDistance, MSLane** lane, SUMOReal& lanePos, int& routeOffset, ConstMSEdgeVector& edges);
+
+    static bool findCloserLane(const MSEdge* edge, const Position& pos, SUMOReal& bestDistance, MSLane** lane);
 
     static std::map<std::string, std::vector<MSLane*> > gVTDMap;
 

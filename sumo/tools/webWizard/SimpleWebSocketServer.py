@@ -9,7 +9,7 @@ Originally distributed under the MIT license at
 https://github.com/dpallot/simple-websocket-server/tree/master/SimpleWebSocketServer.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2015-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2015-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -17,7 +17,15 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
-import SocketServer
+from __future__ import absolute_import
+try:
+    import SocketServer
+    from BaseHTTPServer import BaseHTTPRequestHandler
+    from StringIO import StringIO
+except ImportError:
+    import socketserver
+    from http.server import BaseHTTPRequestHandler
+    from io import StringIO
 import hashlib
 import base64
 import socket
@@ -27,8 +35,6 @@ import sys
 import errno
 import codecs
 from collections import deque
-from BaseHTTPServer import BaseHTTPRequestHandler
-from StringIO import StringIO
 from select import select
 
 __all__ = ['WebSocket', 'SimpleWebSocketServer', 'SimpleSSLWebSocketServer']
@@ -259,7 +265,7 @@ class WebSocket(object):
                     self.request = HTTPRequest(self.headerbuffer)
 
                     # handshake rfc 6455
-                    if self.request.headers.has_key('Sec-WebSocket-Key'.lower()):
+                    if 'Sec-WebSocket-Key'.lower() in self.request.headers:
                         key = self.request.headers['Sec-WebSocket-Key'.lower()]
                         hStr = HANDSHAKE_STR % {
                             'acceptstr':  base64.b64encode(hashlib.sha1(key + GUID_STR).digest())}

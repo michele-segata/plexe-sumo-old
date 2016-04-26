@@ -10,7 +10,7 @@
 // A DFROUTER-network
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -32,6 +32,7 @@
 #include <cassert>
 #include <iostream>
 #include <map>
+#include <queue>
 #include <vector>
 #include <iterator>
 #include "RODFNet.h"

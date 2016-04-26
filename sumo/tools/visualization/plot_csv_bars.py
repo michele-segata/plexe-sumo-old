@@ -12,7 +12,7 @@ matplotlib (http://matplotlib.org/) has to be installed for this purpose
 
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -20,6 +20,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import subprocess
@@ -65,7 +67,7 @@ def main(args=None):
     options, remaining_args = optParser.parse_args(args=args)
 
     if options.input == None:
-        print "Error: at least one csv file must be given"
+        print("Error: at least one csv file must be given")
         sys.exit(1)
 
     fd = open(options.input)

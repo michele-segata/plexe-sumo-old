@@ -9,7 +9,7 @@
 // A traffic lights logic which represents a tls in an off-mode
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -89,7 +89,7 @@ MSOffTrafficLightLogic::rebuildPhase() {
 
 
 // ------------ Static Information Retrieval
-unsigned int
+int
 MSOffTrafficLightLogic::getPhaseNumber() const {
     return 0;
 }
@@ -102,13 +102,13 @@ MSOffTrafficLightLogic::getPhases() const {
 
 
 const MSPhaseDefinition&
-MSOffTrafficLightLogic::getPhase(unsigned int) const {
+MSOffTrafficLightLogic::getPhase(int) const {
     return *myPhaseDefinition[0];
 }
 
 
 // ------------ Dynamic Information Retrieval
-unsigned int
+int
 MSOffTrafficLightLogic::getCurrentPhaseIndex() const {
     return 0;
 }

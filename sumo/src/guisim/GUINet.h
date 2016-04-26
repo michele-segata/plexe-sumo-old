@@ -9,7 +9,7 @@
 // A MSNet extended by some values for usage within the gui
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -65,9 +65,7 @@ class GUIVehicle;
 class GUIVehicleControl;
 class MSVehicleControl;
 class MFXMutex;
-#ifdef HAVE_INTERNAL
 class GUIMEVehicleControl;
-#endif
 
 
 // ===========================================================================
@@ -295,14 +293,12 @@ public:
      */
     GUIVehicleControl* getGUIVehicleControl();
 
-#ifdef HAVE_INTERNAL
     /** @brief Returns the vehicle control
      * @return The vehicle control
      * @see MSVehicleControl
      * @see myVehicleControl
      */
     GUIMEVehicleControl* getGUIMEVehicleControl();
-#endif
 
 #ifdef HAVE_OSG
     void updateColor(const GUIVisualizationSettings& s);

@@ -9,7 +9,7 @@
 // Importer for networks stored in MATSim format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -177,9 +177,9 @@ NIImporter_MATSim::EdgesHandler::EdgesHandler(const NBNodeCont& nc, NBEdgeCont& 
         NBCapacity2Lanes capacity2Lanes)
     : GenericSAXHandler(matsimTags, MATSIM_TAG_NOTHING,
                         matsimAttrs, MATSIM_ATTR_NOTHING, "matsim - file"),
-    myNodeCont(nc), myEdgeCont(toFill), myCapacityNorm(3600),
-    myKeepEdgeLengths(keepEdgeLengths), myLanesFromCapacity(lanesFromCapacity),
-    myCapacity2Lanes(capacity2Lanes) {
+      myNodeCont(nc), myEdgeCont(toFill), myCapacityNorm(3600),
+      myKeepEdgeLengths(keepEdgeLengths), myLanesFromCapacity(lanesFromCapacity),
+      myCapacity2Lanes(capacity2Lanes) {
 }
 
 

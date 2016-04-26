@@ -9,7 +9,7 @@
 // Calculators for route costs and probabilities
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -34,7 +34,11 @@
 
 #include <vector>
 #include <map>
+#include <cmath>
+#include <utils/common/StdDefs.h>
+#include <utils/common/SUMOTime.h>
 #include <utils/options/OptionsCont.h>
+
 
 // ===========================================================================
 // class definitions

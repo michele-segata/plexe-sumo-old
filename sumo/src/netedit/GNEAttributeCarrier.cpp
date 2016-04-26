@@ -7,7 +7,7 @@
 // Abstract Base class for gui objects which carry attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -69,6 +69,18 @@ GNEAttributeCarrier::isValid(SumoXMLAttr key, const std::string& value) {
 bool
 GNEAttributeCarrier::isValidID(const std::string& value) {
     return value.find_first_of(" \t\n\r@$%^&/|\\{}*'\";:<>") == std::string::npos;
+}
+
+
+template<> int
+GNEAttributeCarrier::parse(const std::string& string) {
+    return TplConvert::_str2int(string);
+}
+
+
+template<> SUMOReal
+GNEAttributeCarrier::parse(const std::string& string) {
+    return TplConvert::_str2SUMOReal(string);
 }
 
 // ===========================================================================

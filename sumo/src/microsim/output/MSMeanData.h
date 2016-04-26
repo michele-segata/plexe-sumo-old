@@ -8,7 +8,7 @@
 // Data collector for edges/lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -279,6 +279,11 @@ public:
             /** @brief Constructor */
             TrackerEntry(MeanDataValues* const values)
                 : myNumVehicleEntered(0), myNumVehicleLeft(0), myValues(values) {}
+
+            /** @brief Constructor */
+            virtual ~TrackerEntry() {
+                delete myValues;
+            }
 
             /// @brief The number of vehicles which entered in the current interval
             int myNumVehicleEntered;

@@ -10,7 +10,7 @@
 // A VISUM network importer
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -205,7 +205,7 @@ NIImporter_VISUM::load() {
     }
     // build traffic lights
     for (NIVisumTL_Map::iterator j = myTLS.begin(); j != myTLS.end(); j++) {
-        j->second->build(myNetBuilder.getTLLogicCont());
+        j->second->build(myNetBuilder.getEdgeCont(), myNetBuilder.getTLLogicCont());
     }
     // build district shapes
     for (std::map<NBDistrict*, PositionVector>::const_iterator k = myDistrictShapes.begin(); k != myDistrictShapes.end(); ++k) {
@@ -1205,7 +1205,7 @@ NIImporter_VISUM::getEdge(NBNode* FromNode, NBNode* ToNode) {
     EdgeVector::const_iterator i;
     for (i = FromNode->getOutgoingEdges().begin(); i != FromNode->getOutgoingEdges().end(); i++) {
         if (ToNode == (*i)->getToNode()) {
-            return(*i);
+            return (*i);
         }
     }
     //!!!

@@ -9,7 +9,7 @@
 Builds the installer based on the nightly zip.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2011-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -17,6 +17,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
 import optparse
 import subprocess
 import zipfile
@@ -26,7 +27,7 @@ import tempfile
 import glob
 import shutil
 
-INPUT_DEFAULT = r"O:\Daten\Sumo\Nightly\sumo-win32-svn.zip"
+INPUT_DEFAULT = r"O:\Daten\Sumo\daily\sumo-win32-svn.zip"
 OUTPUT_DEFAULT = "sumo.msi"
 WIX_DEFAULT = "%sbin" % os.environ.get(
     "WIX", r"D:\Programme\Windows Installer XML v3.5\\")
@@ -35,13 +36,14 @@ WXS_DEFAULT = os.path.join(
 LICENSE = os.path.join(
     os.path.dirname(__file__), "..", "..", "build", "wix", "License.rtf")
 
-SKIP_FILES = [r"osmWebWizard.py"]
+SKIP_FILES = ["osmWebWizard.py", "sumo-gui.exe",
+              "netedit.exe", "start-command-line.bat"]
 
 
 def buildFragment(wixBin, sourceDir, targetLabel, tmpDir, log=None):
     base = os.path.basename(sourceDir)
     subprocess.call([os.path.join(wixBin, "heat.exe"), "dir", sourceDir,
-                     "-cg", base, "-gg", "-dr", targetLabel,
+                     "-cg", base, "-gg", "-dr", targetLabel, "-sreg",
                      "-out", os.path.join(tmpDir, base + "RawFragment.wxs")],
                     stdout=log, stderr=log)
     fragIn = open(os.path.join(tmpDir, base + "RawFragment.wxs"))
@@ -67,7 +69,7 @@ def buildMSI(sourceZip=INPUT_DEFAULT, outFile=OUTPUT_DEFAULT,
     zipfile.ZipFile(sourceZip).extractall(tmpDir)
     sumoRoot = glob.glob(os.path.join(tmpDir, "sumo-*"))[0]
     fragments = [buildFragment(wixBin, os.path.join(
-        sumoRoot, d), "INSTALLDIR", tmpDir, log) for d in ["data", "tools"]]
+        sumoRoot, d), "INSTALLDIR", tmpDir, log) for d in ["bin", "data", "tools"]]
     for d in ["userdoc", "pydoc", "javadoc", "tutorial", "examples"]:
         fragments.append(
             buildFragment(wixBin, os.path.join(sumoRoot, "docs", d), "DOCDIR", tmpDir, log))

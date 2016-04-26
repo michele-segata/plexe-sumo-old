@@ -10,7 +10,7 @@
 // The representation of a single node
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -237,8 +237,8 @@ NBNode::NBNode(const std::string& id, const Position& position,
     myRadius(OptionsCont::getOptions().isDefault("default.junctions.radius") ? UNSPECIFIED_RADIUS : OptionsCont::getOptions().getFloat("default.junctions.radius")),
     myKeepClear(OptionsCont::getOptions().getBool("default.junctions.keep-clear")),
     myDiscardAllCrossings(false),
-    myCrossingsLoadedFromSumoNet(0)
-{ }
+    myCrossingsLoadedFromSumoNet(0) {
+}
 
 
 NBNode::NBNode(const std::string& id, const Position& position, NBDistrict* district) :
@@ -251,8 +251,8 @@ NBNode::NBNode(const std::string& id, const Position& position, NBDistrict* dist
     myRadius(OptionsCont::getOptions().isDefault("default.junctions.radius") ? UNSPECIFIED_RADIUS : OptionsCont::getOptions().getFloat("default.junctions.radius")),
     myKeepClear(OptionsCont::getOptions().getBool("default.junctions.keep-clear")),
     myDiscardAllCrossings(false),
-    myCrossingsLoadedFromSumoNet(0)
-{ }
+    myCrossingsLoadedFromSumoNet(0) {
+}
 
 
 NBNode::~NBNode() {
@@ -312,7 +312,7 @@ void
 NBNode::addTrafficLight(NBTrafficLightDefinition* tlDef) {
     myTrafficLights.insert(tlDef);
     // rail signals receive a temporary traffic light in order to set connection tl-linkIndex
-    if (!isTrafficLight(myType) && myType != NODETYPE_RAIL_SIGNAL) {
+    if (!isTrafficLight(myType) && myType != NODETYPE_RAIL_SIGNAL && myType != NODETYPE_RAIL_CROSSING) {
         myType = NODETYPE_TRAFFIC_LIGHT;
     }
 }
@@ -632,7 +632,12 @@ NBNode::needsCont(const NBEdge* fromE, const NBEdge* otherFromE,
     }
     if (c.tlID != "" && !bothLeft) {
         assert(myTrafficLights.size() > 0);
-        return (c.contPos != NBEdge::UNSPECIFIED_CONTPOS) || (*myTrafficLights.begin())->needsCont(fromE, toE, otherFromE, otherToE);
+        for (std::set<NBTrafficLightDefinition*>::const_iterator it = myTrafficLights.begin(); it != myTrafficLights.end(); ++it) {
+            if ((*it)->needsCont(fromE, toE, otherFromE, otherToE)) {
+                return true;
+            }
+        }
+        return false;
     }
     if (fromE->getJunctionPriority(this) > 0 && otherFromE->getJunctionPriority(this) > 0) {
         return mustBrake(fromE, toE, c.fromLane, c.toLane, false);
@@ -652,7 +657,7 @@ NBNode::computeLogic(const NBEdgeCont& ec, OptionsCont& oc) {
         removeTrafficLights();
         for (std::set<NBTrafficLightDefinition*>::const_iterator i = trafficLights.begin(); i != trafficLights.end(); ++i) {
             (*i)->setParticipantsInformation();
-            (*i)->setTLControllingInformation(ec);
+            (*i)->setTLControllingInformation();
         }
         return;
     }
@@ -751,7 +756,7 @@ NBNode::computeLanes2Lanes() {
                 && in != out
                 && in->isConnectedTo(out)) {
             for (int i = inOffset; i < (int) in->getNumLanes(); ++i) {
-                in->setConnection(i, out, i + 1, NBEdge::L2L_COMPUTED);
+                in->setConnection(i, out, i - inOffset + outOffset + 1, NBEdge::L2L_COMPUTED);
             }
             in->setConnection(inOffset, out, outOffset, NBEdge::L2L_COMPUTED);
             return;
@@ -837,6 +842,29 @@ NBNode::computeLanes2Lanes() {
             return;
         }
     }
+    // special case f):
+    //  one in, one out, same number of lanes
+    if (myIncomingEdges.size() == 1 && myOutgoingEdges.size() == 1) {
+        NBEdge* in = myIncomingEdges[0];
+        NBEdge* out = myOutgoingEdges[0];
+        // check if it's not the turnaround
+        if (in->getTurnDestination() == out) {
+            // will be added later or not...
+            return;
+        }
+        const int inOffset = MAX2(0, in->getFirstNonPedestrianLaneIndex(FORWARD, true));
+        const int outOffset = MAX2(0, out->getFirstNonPedestrianLaneIndex(FORWARD, true));
+        if (in->getStep() <= NBEdge::LANES2EDGES
+                && in->getNumLanes() - inOffset == out->getNumLanes() - outOffset
+                && in != out
+                && in->isConnectedTo(out)) {
+            for (int i = inOffset; i < (int) in->getNumLanes(); ++i) {
+                in->setConnection(i, out, i - inOffset + outOffset, NBEdge::L2L_COMPUTED);
+            }
+            //std::cout << " special case f at node=" << getID() << " inOffset=" << inOffset << " outOffset=" << outOffset << "\n";
+            return;
+        }
+    }
 
     // go through this node's outgoing edges
     //  for every outgoing edge, compute the distribution of the node's
@@ -857,7 +885,7 @@ NBNode::computeLanes2Lanes() {
         // ensure that all modes have a connection if possible
         for (EdgeVector::const_iterator i = myIncomingEdges.begin(); i != myIncomingEdges.end(); i++) {
             NBEdge* incoming = *i;
-            if (incoming->getConnectionLanes(currentOutgoing).size() > 0) {
+            if (incoming->getConnectionLanes(currentOutgoing).size() > 0 && incoming->getStep() <= NBEdge::LANES2LANES_DONE) {
                 // no connections are needed for pedestrians during this step
                 // no satisfaction is possible if the outgoing edge disallows
                 SVCPermissions unsatisfied = incoming->getPermissions() & currentOutgoing->getPermissions() & ~SVC_PEDESTRIAN;
@@ -890,6 +918,18 @@ NBNode::computeLanes2Lanes() {
                     //if (unsatisfied != 0) {
                     //    std::cout << "     still unsatisfied modes from edge=" << incoming->getID() << " toEdge=" << currentOutgoing->getID() << " deadModes=" << getVehicleClassNames(unsatisfied) << "\n";
                     //}
+                }
+            }
+        }
+    }
+    // special case e): rail_crossing
+    // there should only be straight connections here
+    if (myType == NODETYPE_RAIL_CROSSING) {
+        for (EdgeVector::const_iterator i = myIncomingEdges.begin(); i != myIncomingEdges.end(); i++) {
+            const std::vector<NBEdge::Connection> cons = (*i)->getConnections();
+            for (std::vector<NBEdge::Connection>::const_iterator k = cons.begin(); k != cons.end(); ++k) {
+                if (getDirection(*i, (*k).toEdge) != LINKDIR_STRAIGHT) {
+                    (*i)->removeFromConnections((*k).toEdge);
                 }
             }
         }
@@ -1191,6 +1231,10 @@ NBNode::removeEdge(NBEdge* edge, bool removeFromConnections) {
                 (*i)->removeFromConnections(edge);
             }
         }
+        // invalidate controlled connections for loaded traffic light plans
+        for (std::set<NBTrafficLightDefinition*>::iterator i = myTrafficLights.begin(); i != myTrafficLights.end(); ++i) {
+            (*i)->replaceRemoved(edge, -1, 0, -1);
+        }
     }
 }
 
@@ -1490,6 +1534,9 @@ NBNode::getDirection(const NBEdge* const incoming, const NBEdge* const outgoing,
 LinkState
 NBNode::getLinkState(const NBEdge* incoming, NBEdge* outgoing, int fromlane, int toLane,
                      bool mayDefinitelyPass, const std::string& tlID) const {
+    if (myType == NODETYPE_RAIL_CROSSING && isRailway(incoming->getPermissions())) {
+        return LINKSTATE_MAJOR; // the trains must run on time
+    }
     if (tlID != "") {
         return LINKSTATE_TL_OFF_BLINKING;
     }
@@ -1785,7 +1832,7 @@ NBNode::checkCrossing(EdgeVector candidates) {
             }
             if (!isTLControlled() && edge->getSpeed() > OptionsCont::getOptions().getFloat("crossings.guess.speed-threshold")) {
                 if (gDebugFlag1) {
-                    std::cout << "no crossing added (uncontrolled, edge with speed=" << edge->getSpeed() << ")\n";
+                    std::cout << "no crossing added (uncontrolled, edge with speed > " << edge->getSpeed() << ")\n";
                 }
                 return 0;
             }
@@ -2167,6 +2214,9 @@ NBNode::buildWalkingAreas(int cornerDetail) {
         }
         if (count < 2 && !connectsCrossing) {
             // not relevant for walking
+            if (gDebugFlag1) {
+                std::cout << "    not relevant for walking: count=" << count << " connectsCrossing=" << connectsCrossing << "\n";
+            }
             continue;
         }
         // build shape and connections
@@ -2213,11 +2263,15 @@ NBNode::buildWalkingAreas(int cornerDetail) {
                 wa.shape.push_back_noDoublePos(endCrossingShape[-1]);
             }
         }
-        if (connected.size() == 2 && !connectsCrossing && wa.nextSidewalks.size() == 1 && wa.prevSidewalks.size() == 1) {
+        if (connected.size() == 2 && !connectsCrossing && wa.nextSidewalks.size() == 1 && wa.prevSidewalks.size() == 1
+                && normalizedLanes.size() == 2) {
             // do not build a walkingArea since a normal connection exists
             NBEdge* e1 = *connected.begin();
             NBEdge* e2 = *(++connected.begin());
             if (e1->hasConnectionTo(e2, 0, 0) || e2->hasConnectionTo(e1, 0, 0)) {
+                if (gDebugFlag1) {
+                    std::cout << "    not building a walkingarea since normal connections exist\n";
+                }
                 continue;
             }
         }

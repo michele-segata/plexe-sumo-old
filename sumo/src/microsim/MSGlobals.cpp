@@ -9,7 +9,7 @@
 // Some static variables for faster access
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2003-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2003-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -55,14 +55,13 @@ bool MSGlobals::gCheckRoutes;
 SUMOTime MSGlobals::gLaneChangeDuration;
 
 bool MSGlobals::gStateLoaded;
-#ifdef HAVE_INTERNAL
 bool MSGlobals::gUseMesoSim;
 bool MSGlobals::gMesoLimitedJunctionControl;
 bool MSGlobals::gMesoOvertaking;
+SUMOReal MSGlobals::gMesoTLSPenalty;
 MELoop* MSGlobals::gMesoNet;
-#else
-const bool MSGlobals::gUseMesoSim = false;
-#endif
 
+
+SUMOTime MSGlobals::gWaitingTimeMemory;
 /****************************************************************************/
 

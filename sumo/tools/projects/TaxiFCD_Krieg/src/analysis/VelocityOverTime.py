@@ -11,7 +11,7 @@
 Shows the velocityCurve of the chosen taxi for all available sources, thereby the time duration per Edge is apparent.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -19,6 +19,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 from pylab import *
 import profile
@@ -37,7 +39,7 @@ taxis = []
 
 
 def main():
-    print "start program"
+    print("start program")
     global taxis, edgeDict
 
     # decide if you want to save charts for every taxi or show a single one
@@ -55,7 +57,7 @@ def main():
         plotIt(taxiId)
         show()
 
-    print "end"
+    print("end")
 
 
 def plotAllTaxis():
@@ -65,13 +67,13 @@ def plotAllTaxis():
     lastProz = 0
     for i in range(5, 105, 5):
         s = "%02d" % i
-        print s,
-    print "%"
+        print(s, end=' ')
+    print("%")
 
     for i in range(allT):
         actProz = (100 * i / allT)
         if actProz != lastProz and actProz % 5 == 0:
-            print "**",
+            print("**", end=' ')
             lastProz = actProz
         if plotIt(taxis[i].id) != -1:
             savefig(
@@ -111,7 +113,7 @@ def fetchData(taxiId):
                 values[1 + x].append(step.speed)
 
                 actLen += getTime(routeLen, step.speed)
-                print "l ", actLen, " rL ", routeLen, " s ", step.speed
+                print("l ", actLen, " rL ", routeLen, " s ", step.speed)
                 route[0 + x].append(step.edge)  # label
                 route[1 + x].append(actLen)  # location
 

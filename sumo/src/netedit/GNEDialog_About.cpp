@@ -7,7 +7,7 @@
 // The "About" - dialog for NETEDIT, (adapted from GUIDialog_AboutSUMO)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -109,14 +109,15 @@ GNEDialog_About::GNEDialog_About(FXWindow* parent)
     FXVerticalFrame* f4 = new FXVerticalFrame(f2, FRAME_NONE, 0, 0, 0, 0,   20, 0, 0, 0);
     new FXButton(f2, "", GUIIconSubSys::getIcon(ICON_NETEDIT), 0, 0, LAYOUT_CENTER_Y | TEXT_OVER_ICON, 5, 0, 40 + 5, 0,  12, 0, 0, 0);
     myHeadlineFont = new FXFont(getApp(), "Arial", 18, FXFont::Bold);
-    FXLabel* l = new FXLabel(f4, ("NETEDIT " + getBuildName(VERSION_STRING)).c_str(), 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    FXLabel* l = new FXLabel(f4, "NETEDIT " VERSION_STRING, 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     l->setFont(myHeadlineFont);
     new FXLabel(f4, "Network editor for SUMO, the Simulation of Urban MObility", 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    new FXLabel(f4, HAVE_ENABLED, 0, LAYOUT_CENTER_Y | LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
     //
     // additional infos
     FXVerticalFrame* f3 = new FXVerticalFrame(f1, FRAME_NONE, 0, 0, 0, 0, 0, 0, 0, 0);
     // copyright notice
-    new FXLabel(f3, "Copyright (C) 2001-2015 DLR / Institute of Transportation Systems", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    new FXLabel(f3, "Copyright (C) 2001-2016 DLR / Institute of Transportation Systems", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
 
     FXLinkLabel* link = new FXLinkLabel(f3, "http://sumo.dlr.de", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
     link->setTipText("http://sumo.dlr.de");

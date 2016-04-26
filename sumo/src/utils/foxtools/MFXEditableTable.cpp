@@ -7,7 +7,7 @@
 // missing_desc
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2004-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2004-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -136,7 +136,7 @@ MFXEditableTable::onLeftBtnPress(FXObject* sender, FXSelector sel, void* ptr) {
 
 
 long
-MFXEditableTable::onLeftBtnClicked(FXObject* , FXSelector , void* ptr) {
+MFXEditableTable::onLeftBtnClicked(FXObject*, FXSelector , void* ptr) {
     FXTablePos* e = (FXTablePos*)ptr;
     int r = e->row;
     int c = e->col;

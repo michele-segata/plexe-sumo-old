@@ -11,7 +11,7 @@
 // Realises dumping the complete network state
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -110,6 +110,8 @@ private:
      */
     static void writeLane(OutputDevice& of, const MSLane& lane);
 
+    /// @brief write transportable
+    static void writeTransportable(OutputDevice& of, const MSTransportable* p, SumoXMLTag tag);
 
 private:
     /// @brief Invalidated copy constructor.

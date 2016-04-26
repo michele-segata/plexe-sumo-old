@@ -10,7 +10,7 @@
 // The base class for a view
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -176,15 +176,30 @@ public:
     /** @brief Takes a snapshots and writes it into the given file
      *
      * The format to use is determined from the extension.
+     * If compiled with ffmpeg and a video format is requested it will instantiate
+     * a video encoder.
      * @param[in] destFile The name of the file to write the snapshot into
      * @return The error message, if an error occcured; "" otherwise
      */
     std::string makeSnapshot(const std::string& destFile);
 
 
+    /** @brief Adds a frame to a video snapshot which will be initialized if neccessary
+     */
+    virtual void saveFrame(const std::string& destFile, FXColor* buf) {
+        UNUSED_PARAMETER(destFile);
+        UNUSED_PARAMETER(buf);
+    }
+
+
+    /** @brief Ends a video snapshot
+     */
+    virtual void endSnapshot() {}
+
+
     /** @brief Checks whether it is time for a snapshot
      */
-    void checkSnapshots();
+    virtual void checkSnapshots();
 
     /// @brief get the current simulation time
     virtual SUMOTime getCurrentTimeStep() const {
@@ -202,6 +217,10 @@ public:
     void showToolTips(bool val);
     virtual bool setColorScheme(const std::string&) {
         return true;
+    }
+
+    GUIVisualizationSettings* getVisualisationSettings() const {
+        return myVisualizationSettings;
     }
 
     void remove(GUIDialog_EditViewport*) {

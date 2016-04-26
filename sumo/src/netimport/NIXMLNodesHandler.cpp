@@ -10,7 +10,7 @@
 // Importer for network nodes stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -67,8 +67,8 @@ NIXMLNodesHandler::NIXMLNodesHandler(NBNodeCont& nc,
     myOptions(options),
     myNodeCont(nc),
     myTLLogicCont(tlc),
-    myLocation(0)
-{}
+    myLocation(0) {
+}
 
 
 NIXMLNodesHandler::~NIXMLNodesHandler() {

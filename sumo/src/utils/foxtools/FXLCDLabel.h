@@ -9,7 +9,7 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2004-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2004-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -54,7 +54,7 @@ enum {
  * number.  Also supports the 'JUSTIFY_RIGHT' option, for right alignment.
  */
 class /* FXAPI // patch by Daniel Krajzewicz 24.02.2004 */
-        FXLCDLabel : public FXHorizontalFrame {
+    FXLCDLabel : public FXHorizontalFrame {
     FXDECLARE(FXLCDLabel)
 
 protected:

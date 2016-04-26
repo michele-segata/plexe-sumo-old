@@ -10,7 +10,7 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2005-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2005-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -59,10 +59,6 @@ const SUMOReal SUMO_const_haltingSpeed = (SUMOReal) 0.1;
 /* @brief map from LinkState to color constants (see above)
  */
 const RGBColor& getLinkColor(const LinkState& ls);
-
-/// @brief attach some build flags to the version string
-const std::string getBuildName(const std::string& version);
-
 
 
 /* -------------------------------------------------------------------------

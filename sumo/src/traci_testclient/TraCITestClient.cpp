@@ -12,7 +12,7 @@
 /// A test execution class
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -677,9 +677,25 @@ TraCITestClient::testAPI() {
     answerLog << "  edge:\n";
     answerLog << "    getIDList: " << joinToString(edge.getIDList(), " ") << "\n";
     answerLog << "    getIDCount: " << edge.getIDCount() << "\n";
-    //answerLog << "  vehicle:\n";
-    //answerLog << "    getIDList: " << joinToString(vehicle.getIDList(), " ") << "\n";
-    //answerLog << "    getIDCount: " << vehicle.getIDCount() << "\n";
+    answerLog << "  vehicle:\n";
+    answerLog << "    getIDList: " << joinToString(vehicle.getIDList(), " ") << "\n";
+    answerLog << "    getIDCount: " << vehicle.getIDCount() << "\n";
+    answerLog << "  inductionloop:\n";
+    answerLog << "    getIDList: " << joinToString(inductionloop.getIDList(), " ") << "\n";
+    answerLog << "    getVehicleData:\n";
+    std::vector<InductionLoopScope::VehicleData> result = inductionloop.getVehicleData("det1");
+    for (int i = 0; i < (int)result.size(); ++i) {
+        const InductionLoopScope::VehicleData& vd = result[i];
+        answerLog << "      veh=" << vd.id << " length=" << vd.length << " entered=" << vd.entryTime << " left=" << vd.leaveTime << " type=" << vd.typeID << "\n";
+    }
     answerLog << "  simulation:\n";
     answerLog << "    getCurrentTime: " << simulation.getCurrentTime() << "\n";
+    answerLog << "  gui:\n";
+    try {
+        answerLog << "    setScheme: \n";
+        gui.setSchema("View #0", "real world");
+        answerLog << "    getScheme: " << gui.getSchema("View #0") << "\n";
+    } catch (tcpip::SocketException&) {
+        answerLog << "    no support for gui commands\n";
+    }
 }

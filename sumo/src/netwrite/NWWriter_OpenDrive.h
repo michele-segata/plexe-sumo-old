@@ -7,7 +7,7 @@
 // Exporter writing networks using the openDRIVE format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -68,8 +68,8 @@ protected:
 
     static std::string getLaneType(SVCPermissions permissions);
 
-    /// @brief get the left border of the leftmost lane
-    static PositionVector getLeftBorder(const NBEdge* edge);
+    /// @brief get the left border of the given lane (the leftmost one by default)
+    static PositionVector getLeftLaneBorder(const NBEdge* edge, int laneIndex = -1);
 };
 
 

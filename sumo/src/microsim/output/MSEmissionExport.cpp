@@ -10,7 +10,7 @@
 // Realises dumping Emission Data
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -48,8 +48,9 @@
 // method definitions
 // ===========================================================================
 void
-MSEmissionExport::write(OutputDevice& of, SUMOTime timestep) {
+MSEmissionExport::write(OutputDevice& of, SUMOTime timestep, int precision) {
     of.openTag("timestep").writeAttr("time", time2string(timestep));
+    of.setPrecision(precision);
     MSVehicleControl& vc = MSNet::getInstance()->getVehicleControl();
     for (MSVehicleControl::constVehIt it = vc.loadedVehBegin(); it != vc.loadedVehEnd(); ++it) {
         const SUMOVehicle* veh = it->second;
@@ -60,7 +61,7 @@ MSEmissionExport::write(OutputDevice& of, SUMOTime timestep) {
             PollutantsInterface::Emissions emiss = PollutantsInterface::computeAll(veh->getVehicleType().getEmissionClass(), veh->getSpeed(), veh->getAcceleration(), veh->getSlope());
             of.openTag("vehicle").writeAttr("id", veh->getID()).writeAttr("eclass", PollutantsInterface::getName(veh->getVehicleType().getEmissionClass()));
             of.writeAttr("CO2", emiss.CO2).writeAttr("CO", emiss.CO).writeAttr("HC", emiss.HC).writeAttr("NOx", emiss.NOx);
-            of.writeAttr("PMx", emiss.PMx).writeAttr("fuel", emiss.fuel);
+            of.writeAttr("PMx", emiss.PMx).writeAttr("fuel", emiss.fuel).writeAttr("electricity", emiss.electricity);
             of.writeAttr("noise", HelpersHarmonoise::computeNoise(veh->getVehicleType().getEmissionClass(), veh->getSpeed(), veh->getAcceleration()));
             of.writeAttr("route", veh->getRoute().getID()).writeAttr("type", fclass);
             if (microVeh != 0) {
@@ -72,5 +73,6 @@ MSEmissionExport::write(OutputDevice& of, SUMOTime timestep) {
             of.closeTag();
         }
     }
+    of.setPrecision(OUTPUT_ACCURACY);
     of.closeTag();
 }

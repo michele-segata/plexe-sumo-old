@@ -11,7 +11,7 @@
 // A single child window which contains a view of the simulation area
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -64,9 +64,7 @@
 #include "GUIApplicationWindow.h"
 #include "GUISUMOViewParent.h"
 
-#ifdef HAVE_INTERNAL
 #include <mesogui/GUIMEVehicleControl.h>
-#endif
 
 #ifdef HAVE_OSG
 #include <osgview/GUIOSGView.h>
@@ -149,15 +147,26 @@ GUISUMOViewParent::setToolBarVisibility(const bool value) {
 
 
 long
-GUISUMOViewParent::onCmdMakeSnapshot(FXObject*, FXSelector, void*) {
+GUISUMOViewParent::onCmdMakeSnapshot(FXObject* sender, FXSelector, void*) {
+    MFXCheckableButton* button = static_cast<MFXCheckableButton*>(sender);
+    if (button->amChecked()) {
+        myView->endSnapshot();
+        button->setChecked(false);
+        return 1;
+    }
     // get the new file name
     FXFileDialog opendialog(this, "Save Snapshot");
     opendialog.setIcon(GUIIconSubSys::getIcon(ICON_EMPTY));
     opendialog.setSelectMode(SELECTFILE_ANY);
-    opendialog.setPatternList("All Image Files (*.gif, *.bmp, *.xpm, *.pcx, *.ico, *.rgb, *.xbm, *.tga, *.png, *.jpg, *.jpeg, *.tif, *.tiff, *.ps, *.eps, *.pdf, *.svg, *.tex, *.pgf)\n"
+#ifdef HAVE_FFMPEG
+    opendialog.setPatternList("All Image and Video Files (*.gif,*.bmp,*.xpm,*.pcx,*.ico,*.rgb,*.xbm,*.tga,*.png,*.jpg,*.jpeg,*.tif,*.tiff,*.ps,*.eps,*.pdf,*.svg,*.tex,*.pgf,*.h264,*.hevc)\n"
+                              "All Video Files (*.h264,*.hevc)\n"
+#else
+    opendialog.setPatternList("All Image Files (*.gif,*.bmp,*.xpm,*.pcx,*.ico,*.rgb,*.xbm,*.tga,*.png,*.jpg,*.jpeg,*.tif,*.tiff,*.ps,*.eps,*.pdf,*.svg,*.tex,*.pgf)\n"
+#endif
                               "GIF Image (*.gif)\nBMP Image (*.bmp)\nXPM Image (*.xpm)\nPCX Image (*.pcx)\nICO Image (*.ico)\n"
                               "RGB Image (*.rgb)\nXBM Image (*.xbm)\nTARGA Image (*.tga)\nPNG Image  (*.png)\n"
-                              "JPEG Image (*.jpg, *.jpeg)\nTIFF Image (*.tif, *.tiff)\n"
+                              "JPEG Image (*.jpg,*.jpeg)\nTIFF Image (*.tif,*.tiff)\n"
                               "Postscript (*.ps)\nEncapsulated Postscript (*.eps)\nPortable Document Format (*.pdf)\n"
                               "Scalable Vector Graphics (*.svg)\nLATEX text strings (*.tex)\nPortable LaTeX Graphics (*.pgf)\n"
                               "All Files (*)");
@@ -170,7 +179,9 @@ GUISUMOViewParent::onCmdMakeSnapshot(FXObject*, FXSelector, void*) {
     gCurrentFolder = opendialog.getDirectory();
     std::string file = opendialog.getFilename().text();
     std::string error = myView->makeSnapshot(file);
-    if (error != "") {
+    if (error == "video") {
+        button->setChecked(!button->amChecked());
+    } else if (error != "") {
         FXMessageBox::error(this, MBOX_OK, "Saving failed.", "%s", error.c_str());
     }
     return 1;
@@ -195,9 +206,7 @@ GUISUMOViewParent::onCmdLocate(FXObject*, FXSelector sel, void*) {
             break;
         case MID_LOCATEVEHICLE:
             if (MSGlobals::gUseMesoSim) {
-#ifdef HAVE_INTERNAL
                 static_cast<GUIMEVehicleControl*>(static_cast<GUINet*>(MSNet::getInstance())->getGUIMEVehicleControl())->insertVehicleIDs(ids);
-#endif
             } else {
                 static_cast<GUIVehicleControl&>(MSNet::getInstance()->getVehicleControl()).insertVehicleIDs(ids);
             }

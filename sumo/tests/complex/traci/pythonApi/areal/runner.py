@@ -9,7 +9,7 @@
 
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -18,6 +18,8 @@ the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
 
+from __future__ import print_function
+from __future__ import absolute_import
 import os
 import subprocess
 import sys
@@ -34,24 +36,24 @@ sumoProcess = subprocess.Popen(
     "%s -c sumo.sumocfg --remote-port %s" % (sumoBinary, PORT), shell=True, stdout=sys.stdout)
 traci.init(PORT)
 for step in range(4):
-    print "step", step
+    print("step", step)
     traci.simulationStep()
-print "areals", traci.areal.getIDList()
-print "areal count", traci.areal.getIDCount()
+print("areals", traci.areal.getIDList())
+print("areal count", traci.areal.getIDCount())
 detID = "det0"
-print "examining", detID
-print "pos", traci.areal.getPosition(detID)
-print "length", traci.areal.getLength(detID)
-print "lane", traci.areal.getLaneID(detID)
-print "vehNum", traci.areal.getLastStepVehicleNumber(detID)
-print "meanSpeed", traci.areal.getLastStepMeanSpeed(detID)
-print "vehIDs", traci.areal.getLastStepVehicleIDs(detID)
-print "occupancy", traci.areal.getLastStepOccupancy(detID)
+print("examining", detID)
+print("pos", traci.areal.getPosition(detID))
+print("length", traci.areal.getLength(detID))
+print("lane", traci.areal.getLaneID(detID))
+print("vehNum", traci.areal.getLastStepVehicleNumber(detID))
+print("meanSpeed", traci.areal.getLastStepMeanSpeed(detID))
+print("vehIDs", traci.areal.getLastStepVehicleIDs(detID))
+print("occupancy", traci.areal.getLastStepOccupancy(detID))
 
 traci.areal.subscribe(detID)
-print traci.areal.getSubscriptionResults(detID)
+print(traci.areal.getSubscriptionResults(detID))
 for step in range(3, 6):
-    print "step", step
+    print("step", step)
     traci.simulationStep()
-    print traci.areal.getSubscriptionResults(detID)
+    print(traci.areal.getSubscriptionResults(detID))
 traci.close()

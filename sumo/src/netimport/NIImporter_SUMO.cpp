@@ -9,7 +9,7 @@
 // Importer for networks stored in SUMO format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -86,8 +86,8 @@ NIImporter_SUMO::NIImporter_SUMO(NBNetBuilder& nb)
       myHaveSeenInternalEdge(false),
       myAmLefthand(false),
       myCornerDetail(0),
-      myLinkDetail(-1)
-{}
+      myLinkDetail(-1) {
+}
 
 
 NIImporter_SUMO::~NIImporter_SUMO() {
@@ -538,7 +538,8 @@ NIImporter_SUMO::addJunction(const SUMOSAXAttributes& attrs) {
             node->setCustomLaneShape(it->first, it->second);
         }
     }
-    if (type == NODETYPE_RAIL_SIGNAL) {
+    if (type == NODETYPE_RAIL_SIGNAL || type == NODETYPE_RAIL_CROSSING) {
+        // both types of nodes come without a tlLogic
         myRailSignals.insert(id);
     }
 }

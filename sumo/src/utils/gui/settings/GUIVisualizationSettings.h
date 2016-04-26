@@ -9,7 +9,7 @@
 // Stores the information about how to visualize structures
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -143,7 +143,6 @@ public:
     /// @name lane visualization settings
     //@{
 
-#ifdef HAVE_INTERNAL
     /// @brief The mesoscopic edge colorer
     GUIColorer edgeColorer;
     /// @brief The mesoscopic edge scaler
@@ -151,7 +150,6 @@ public:
 
     /// @brief this should be set at the same time as MSGlobals::gUseMesoSim
     static bool UseMesoSim;
-#endif
     /// @brief The lane colorer
     GUIColorer laneColorer;
     /// @brief The lane scaler

@@ -9,7 +9,7 @@
 // Structure representing possible vehicle parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -66,8 +66,8 @@ SUMOVehicleParameter::defaultOptionOverrides(const OptionsCont& oc, const std::s
 
 
 void
-SUMOVehicleParameter::write(OutputDevice& dev, const OptionsCont& oc) const {
-    dev.openTag(SUMO_TAG_VEHICLE).writeAttr(SUMO_ATTR_ID, id);
+SUMOVehicleParameter::write(OutputDevice& dev, const OptionsCont& oc, const SumoXMLTag tag) const {
+    dev.openTag(tag).writeAttr(SUMO_ATTR_ID, id);
     if (wasSet(VEHPARS_VTYPE_SET)) {
         dev.writeAttr(SUMO_ATTR_TYPE, vtypeid);
     }
@@ -126,14 +126,8 @@ SUMOVehicleParameter::write(OutputDevice& dev, const OptionsCont& oc) const {
             case DEPART_POS_FREE:
                 val = "free";
                 break;
-            case DEPART_POS_PWAG_SIMPLE:
-                val = "pwagSimple";
-                break;
-            case DEPART_POS_PWAG_GENERIC:
-                val = "pwagGeneric";
-                break;
-            case DEPART_POS_MAX_SPEED_GAP:
-                val = "maxSpeedGap";
+            case DEPART_POS_LAST:
+                val = "last";
                 break;
             case DEPART_POS_BASE:
                 val = "base";
@@ -249,51 +243,49 @@ SUMOVehicleParameter::write(OutputDevice& dev, const OptionsCont& oc) const {
 
 
 void
-SUMOVehicleParameter::writeStops(OutputDevice& dev) const {
-    for (std::vector<Stop>::const_iterator stop = stops.begin(); stop != stops.end(); ++stop) {
-        dev.openTag(SUMO_TAG_STOP);
-        if (stop->busstop != "") {
-            dev.writeAttr(SUMO_ATTR_BUS_STOP, stop->busstop);
-        }
-        if (stop->containerstop != "") {
-            dev.writeAttr(SUMO_ATTR_CONTAINER_STOP, stop->containerstop);
-        }
-        if (stop->busstop == "" && stop->containerstop == "") {
-            dev.writeAttr(SUMO_ATTR_LANE, stop->lane);
-            if ((stop->setParameter & STOP_START_SET) != 0) {
-                dev.writeAttr(SUMO_ATTR_STARTPOS, stop->startPos);
-            }
-            if ((stop->setParameter & STOP_END_SET) != 0) {
-                dev.writeAttr(SUMO_ATTR_ENDPOS, stop->endPos);
-            }
-        }
-        if (stop->duration >= 0) {
-            dev.writeAttr(SUMO_ATTR_DURATION, STEPS2TIME(stop->duration));
-        }
-        if (stop->until >= 0) {
-            dev.writeAttr(SUMO_ATTR_UNTIL, STEPS2TIME(stop->until));
-        }
-        if ((stop->setParameter & STOP_TRIGGER_SET) != 0) {
-            dev.writeAttr(SUMO_ATTR_TRIGGERED, stop->triggered);
-        }
-        if ((stop->setParameter & STOP_CONTAINER_TRIGGER_SET) != 0) {
-            dev.writeAttr(SUMO_ATTR_CONTAINER_TRIGGERED, stop->containerTriggered);
-        }
-        if ((stop->setParameter & STOP_PARKING_SET) != 0) {
-            dev.writeAttr(SUMO_ATTR_PARKING, stop->parking);
-        }
-        // look, we are writing the set of expected persons in its current state...
-        //  if this method is used somewhere in the simulation output,
-        //  one should consider keeping the original values additionally,
-        //  as the ones we write may hev changed.
-        if ((stop->setParameter & STOP_EXPECTED_SET) != 0) {
-            dev.writeAttr(SUMO_ATTR_EXPECTED, stop->awaitedPersons);
-        }
-        if ((stop->setParameter & STOP_EXPECTED_CONTAINERS_SET) != 0) {
-            dev.writeAttr(SUMO_ATTR_EXPECTED_CONTAINERS, stop->awaitedContainers);
-        }
-        dev.closeTag();
+SUMOVehicleParameter::Stop::write(OutputDevice& dev) const {
+    dev.openTag(SUMO_TAG_STOP);
+    if (busstop != "") {
+        dev.writeAttr(SUMO_ATTR_BUS_STOP, busstop);
     }
+    if (containerstop != "") {
+        dev.writeAttr(SUMO_ATTR_CONTAINER_STOP, containerstop);
+    }
+    if (busstop == "" && containerstop == "") {
+        dev.writeAttr(SUMO_ATTR_LANE, lane);
+        if ((setParameter & STOP_START_SET) != 0) {
+            dev.writeAttr(SUMO_ATTR_STARTPOS, startPos);
+        }
+        if ((setParameter & STOP_END_SET) != 0) {
+            dev.writeAttr(SUMO_ATTR_ENDPOS, endPos);
+        }
+    }
+    if (duration >= 0) {
+        dev.writeAttr(SUMO_ATTR_DURATION, STEPS2TIME(duration));
+    }
+    if (until >= 0) {
+        dev.writeAttr(SUMO_ATTR_UNTIL, STEPS2TIME(until));
+    }
+    if ((setParameter & STOP_TRIGGER_SET) != 0) {
+        dev.writeAttr(SUMO_ATTR_TRIGGERED, triggered);
+    }
+    if ((setParameter & STOP_CONTAINER_TRIGGER_SET) != 0) {
+        dev.writeAttr(SUMO_ATTR_CONTAINER_TRIGGERED, containerTriggered);
+    }
+    if ((setParameter & STOP_PARKING_SET) != 0) {
+        dev.writeAttr(SUMO_ATTR_PARKING, parking);
+    }
+    // look, we are writing the set of expected persons in its current state...
+    //  if this method is used somewhere in the simulation output,
+    //  one should consider keeping the original values additionally,
+    //  as the ones we write may hev changed.
+    if ((setParameter & STOP_EXPECTED_SET) != 0) {
+        dev.writeAttr(SUMO_ATTR_EXPECTED, awaitedPersons);
+    }
+    if ((setParameter & STOP_EXPECTED_CONTAINERS_SET) != 0) {
+        dev.writeAttr(SUMO_ATTR_EXPECTED_CONTAINERS, awaitedContainers);
+    }
+    dev.closeTag();
 }
 
 
@@ -367,12 +359,8 @@ SUMOVehicleParameter::parseDepartPos(const std::string& val, const std::string& 
         dpd = DEPART_POS_FREE;
     } else if (val == "base") {
         dpd = DEPART_POS_BASE;
-    } else if (val == "pwagSimple") {
-        dpd = DEPART_POS_PWAG_SIMPLE;
-    } else if (val == "pwagGeneric") {
-        dpd = DEPART_POS_PWAG_GENERIC;
-    } else if (val == "maxSpeedGap") {
-        dpd = DEPART_POS_MAX_SPEED_GAP;
+    } else if (val == "last") {
+        dpd = DEPART_POS_LAST;
     } else {
         try {
             pos = TplConvert::_2SUMOReal(val.c_str());
@@ -382,7 +370,7 @@ SUMOVehicleParameter::parseDepartPos(const std::string& val, const std::string& 
         }
     }
     if (!ok) {
-        error = "Invalid departPos definition for " + element + " '" + id + "';\n must be one of (\"random\", \"random_free\", \"free\", \"base\", \"pwagSimple\", \"pwagGeneric\", \"maxSpeedGap\", or a float)";
+        error = "Invalid departPos definition for " + element + " '" + id + "';\n must be one of (\"random\", \"random_free\", \"free\", \"base\", \"last\" or a float)";
     }
     return ok;
 }

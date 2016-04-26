@@ -10,7 +10,7 @@
 // Parser and container for routes during their loading
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,7 +58,8 @@ ROMARouteHandler::myStartElement(int element,
                                  const SUMOSAXAttributes& attrs) {
     if (element == SUMO_TAG_TRIP || element == SUMO_TAG_VEHICLE) {
         SUMOVehicleParameter* parameter = SUMOVehicleParserHelper::parseVehicleAttributes(attrs);
-        myMatrix.add(parameter->id, parameter->depart, parameter->fromTaz, parameter->toTaz, parameter->vtypeid);
+        std::pair<const std::string, const std::string> od = std::make_pair(parameter->fromTaz, parameter->toTaz);
+        myMatrix.add(parameter->id, parameter->depart, od, parameter->vtypeid);
     }
 }
 

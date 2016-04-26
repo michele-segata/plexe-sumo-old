@@ -12,7 +12,7 @@ It reads the routes from a file given as first parameter
 and outputs the trips to stdout.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@ the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 import datetime
 
@@ -44,18 +45,18 @@ class RouteReader(handler.ContentHandler):
         if name == 'vehicle':
             self._vehicleAttrs = dict(attrs)
             self._vID = attrs['id']
-            if attrs.has_key('route'):
+            if 'route' in attrs:
                 self._routeString = self._routes[attrs['route']]
                 del self._vehicleAttrs['route']
         elif name == 'route':
             if not self._vID:
                 self._routeID = attrs['id']
             self._routeString = ''
-            if attrs.has_key('edges'):
+            if 'edges' in attrs:
                 self._routeString = attrs['edges']
         elif name == 'vType':
             # XXX does not handle child elements
-            print('    <vType %s/>' % (' '.join(['%s="%s"' % (key, value) for key, value in dict(attrs).items()])),
+            print('    <vType %s/>' % (' '.join(['%s="%s"' % (key, value) for key, value in sorted(dict(attrs).items())])),
                   file=self.outfile)
         elif name == 'routes':
             print("""<?xml version="1.0"?>
@@ -78,7 +79,7 @@ class RouteReader(handler.ContentHandler):
             else:
                 del self._vehicleAttrs['id']
                 items = sorted(['%s="%s"' % (key, val)
-                                for key, val in self._vehicleAttrs.iteritems()])
+                                for key, val in self._vehicleAttrs.items()])
                 print('    <trip id="%s" %s/>' % (self._vID, ' '.join(items)),
                       file=self.outfile)
             self._vID = ''

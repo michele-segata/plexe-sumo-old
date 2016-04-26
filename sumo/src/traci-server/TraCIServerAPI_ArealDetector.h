@@ -8,7 +8,7 @@
 // APIs for getting/setting areal detector values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2013-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -33,9 +33,13 @@
 
 #ifndef NO_TRACI
 
-#include "TraCIException.h"
-#include "TraCIServer.h"
 #include <foreign/tcpip/storage.h>
+
+
+// ===========================================================================
+// class declarations
+// ===========================================================================
+class TraCIServer;
 
 
 // ===========================================================================

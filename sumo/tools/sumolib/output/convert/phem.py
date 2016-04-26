@@ -10,7 +10,7 @@ This module includes functions for converting SUMO's fcd-output into
 data files read by PHEM.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2013-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -19,6 +19,7 @@ the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
 from __future__ import print_function
+from __future__ import absolute_import
 import math
 import sumolib
 
@@ -52,7 +53,7 @@ def fcd2dri(inpFCD, outSTRM, ignored):
         if q.vehicle:
             for v in q.vehicle:
                 percSlope = math.sin(float(v.slope)) * 100.
-                print("%s,%s,%s" % (
+                print("%s,%.3f,%s" % (
                     sumolib._intTime(q.time), float(v.speed) * 3.6, percSlope), file=outSTRM)
 
 
@@ -108,7 +109,7 @@ def fcd2fzp(inpFCD, outSTRM, further):
                 sid = sIDm.g(v.edge)
                 percSlope = math.sin(float(v.slope)) * 100.
                 if outSTRM != None:
-                    print("%s,%s,%s,%s,%s,%s,%s,%s" % (
+                    print("%s,%s,%s,%s,%.3f,%s,%s,%s" % (
                         sumolib._intTime(q.time), float(v.x), float(v.y),
                         vid, float(v.speed) * 3.6, percSlope, vtid, sid), file=outSTRM)
     return vIDm, vtIDm
@@ -119,9 +120,9 @@ def vehicleTypes2flt(outSTRM, vtIDm):
     Currently, rather a stub than an implementation. Writes the vehicle ids stored
     in the given "vtIDm" map formatted as a .flt file readable by PHEM.
 
-    The following may be a matter of changes:               
+    The following may be a matter of changes:
     - A default map is assigned to all vehicle types with the same probability 
     """
-    for q in vtIDm._m:
+    for q in sorted(vtIDm._m):
         print("%s,%s,%s" %
               (vtIDm.g(q), "<VEHDIR>\PC\PC_%s.GEN" % q, 1.), file=outSTRM)

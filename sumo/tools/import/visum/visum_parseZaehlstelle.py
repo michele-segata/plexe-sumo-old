@@ -12,7 +12,7 @@ This script reads "Zaehlstellen" from a given VISUM-network
 The parsed "Zaehlstellen" are written as POIs.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -20,6 +20,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 import sys
 import os
@@ -30,15 +32,15 @@ sys.path.append(
 import sumonet
 
 if len(sys.argv) < 3:
-    print "Usage: " + sys.argv[0] + " <SUMO-net> <VISUM-net> <output>"
+    print("Usage: " + sys.argv[0] + " <SUMO-net> <VISUM-net> <output>")
     sys.exit()
-print "Reading net..."
+print("Reading net...")
 parser = make_parser()
 net = sumonet.NetReader()
 parser.setContentHandler(net)
 parser.parse(sys.argv[1])
 
-print "Reading VISUM..."
+print("Reading VISUM...")
 fd = open(sys.argv[2])
 fdo = open(sys.argv[3], "w")
 fdo.write("<pois>\n")
@@ -49,7 +51,7 @@ for line in fd:
             parsingCounts = False
             continue
 
-        print line
+        print(line)
         vals = line.split(";")
         id = vals[0] + ";" + vals[1]
         fromNode = vals[3]
@@ -62,7 +64,7 @@ for line in fd:
             if e._id == strID or e._id == "-" + strID:
                 me = e
         if me == None:
-            print "Not found " + line
+            print("Not found " + line)
         else:
             l = str(me._id) + "_0"
             p = str(me._length * float(vals[6]))

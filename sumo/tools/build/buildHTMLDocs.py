@@ -32,7 +32,7 @@ the page is saved into options.output/<PAGE_PATH>. All images are copied
 from options.mirror/images to options.output/images.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2011-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -40,6 +40,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import urllib
 import os
 import sys
@@ -159,9 +161,9 @@ for p in pages:
     e = p.find("\"", b)
     name = p[b + 6:e]
     if name.endswith(".css"):
-        print "Skipping css-file %s" % name
+        print("Skipping css-file %s" % name)
         continue
-    print "Fetching %s" % name
+    print("Fetching %s" % name)
     c = readParsePage(name)
     if name.find("/") > 0:
         try:
@@ -182,7 +184,7 @@ for p in pages:
 
 imageFiles = []
 for i in images:
-    print "Fetching image %s" % i
+    print("Fetching image %s" % i)
     if i.find(":") >= 0:
         f = urllib.urlopen("http://sumo.dlr.de%s" % i)
         c = f.read()
@@ -273,7 +275,7 @@ for p in pages:
     e = p.find("\"", b)
     name = p[b + 6:e]
     if name.endswith(".css"):
-        print "Skipping css-file %s" % name
+        print("Skipping css-file %s" % name)
         continue
     fromStr = 'generated on %s from <a href="http://sumo.dlr.de/wiki/%s">the wiki page for %s</a>' % (
         datetime.datetime.now(), name, name)

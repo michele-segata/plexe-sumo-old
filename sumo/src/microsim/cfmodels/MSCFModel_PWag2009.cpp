@@ -7,10 +7,10 @@
 /// @date    03.04.2010
 /// @version $Id$
 ///
-// Scalable model based on Krauﬂ by Peter Wagner
+// Scalable model based on Krauss by Peter Wagner
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2010-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2010-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -43,7 +43,7 @@
 MSCFModel_PWag2009::MSCFModel_PWag2009(const MSVehicleType* vtype,  SUMOReal accel, SUMOReal decel,
                                        SUMOReal dawdle, SUMOReal headwayTime, SUMOReal tauLast, SUMOReal apProb)
     : MSCFModel(vtype, accel, decel, headwayTime), myDawdle(dawdle),
-      myTauDecel(decel* headwayTime), myDecelDivTau(decel / headwayTime), myTauLastDecel(decel* tauLast),
+      myTauDecel(decel * headwayTime), myDecelDivTau(decel / headwayTime), myTauLastDecel(decel * tauLast),
       myActionPointProbability(apProb) {
 }
 

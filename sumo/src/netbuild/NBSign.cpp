@@ -9,7 +9,7 @@
 // A class representing a street sign
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -71,8 +71,8 @@ StringBijection<NBSign::SignType> NBSign::SignTypeStrings(
 NBSign::NBSign(SignType type, SUMOReal offset, const std::string label) :
     myType(type),
     myOffset(offset),
-    myLabel(label)
-{ }
+    myLabel(label) {
+}
 
 
 NBSign::~NBSign() {}

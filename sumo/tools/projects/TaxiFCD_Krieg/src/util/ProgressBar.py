@@ -10,7 +10,7 @@
 A simple progress bar for the console
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -18,6 +18,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import print_function
 
 
 def startTask(list, fct):
@@ -29,13 +30,13 @@ def startTask(list, fct):
     lastProz = 0
     for i in range(5, 105, 5):
         s = "%02d" % i
-        print s,
-    print "%"
+        print(s, end=' ')
+    print("%")
 
     for i in range(listLen):
         actProz = (100 * i / listLen)
         if actProz != lastProz and actProz % 5 == 0:
-            print "**",
+            print("**", end=' ')
             lastProz = actProz
         # call the function
         fct(list[i])

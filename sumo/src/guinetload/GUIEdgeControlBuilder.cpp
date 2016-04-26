@@ -9,7 +9,7 @@
 // Derivation of NLEdgeControlBuilder which build gui-edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -62,8 +62,9 @@ GUIEdgeControlBuilder::addLane(const std::string& id,
                                SUMOReal maxSpeed, SUMOReal length,
                                const PositionVector& shape,
                                SUMOReal width,
-                               SVCPermissions permissions) {
-    MSLane* lane = new GUILane(id, maxSpeed, length, myActiveEdge, myCurrentNumericalLaneID++, shape, width, permissions, (int)myLaneStorage->size());
+                               SVCPermissions permissions,
+                               int index) {
+    MSLane* lane = new GUILane(id, maxSpeed, length, myActiveEdge, myCurrentNumericalLaneID++, shape, width, permissions, index);
     myLaneStorage->push_back(lane);
     return lane;
 }

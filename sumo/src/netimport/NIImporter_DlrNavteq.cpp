@@ -9,7 +9,7 @@
 // Importer for networks stored in Elmar's format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -211,8 +211,8 @@ NIImporter_DlrNavteq::EdgesHandler::EdgesHandler(NBNodeCont& nc, NBEdgeCont& ec,
     myGeoms(geoms),
     myStreetNames(streetNames),
     myVersion(0),
-    myFile(file)
-{ }
+    myFile(file) {
+}
 
 
 NIImporter_DlrNavteq::EdgesHandler::~EdgesHandler() {}

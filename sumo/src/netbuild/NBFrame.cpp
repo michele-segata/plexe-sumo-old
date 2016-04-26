@@ -9,7 +9,7 @@
 // Sets and checks options for netbuild
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -161,7 +161,7 @@ NBFrame::fillOptions(bool forNetgen) {
 
     oc.doRegister("edges.join", new Option_Bool(false));
     oc.addDescription("edges.join", "Processing",
-                      "Merges edges whch connect the same nodes and are close to each other (recommended for VISSIM import)");
+                      "Merges edges which connect the same nodes and are close to each other (recommended for VISSIM import)");
 
     oc.doRegister("junctions.join", new Option_Bool(false));
     oc.addDescription("junctions.join", "Processing",

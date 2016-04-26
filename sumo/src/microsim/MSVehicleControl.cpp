@@ -9,7 +9,7 @@
 // The class responsible for building and deletion of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -71,7 +71,7 @@ MSVehicleControl::MSVehicleControl() :
     myScale(-1),
     myMaxSpeedFactor(1),
     myMinDeceleration(SUMOVTypeParameter::getDefaultDecel(SVC_IGNORING)) {
-    SUMOVTypeParameter defType(DEFAULT_VTYPE_ID, SVC_IGNORING);
+    SUMOVTypeParameter defType(DEFAULT_VTYPE_ID, SVC_PASSENGER);
     myVTypeDict[DEFAULT_VTYPE_ID] = MSVehicleType::build(defType);
     SUMOVTypeParameter defPedType(DEFAULT_PEDTYPE_ID, SVC_PEDESTRIAN);
     defPedType.setParameter |= VTYPEPARS_VEHICLECLASS_SET;
@@ -156,8 +156,9 @@ MSVehicleControl::vehicleDeparted(const SUMOVehicle& v) {
 
 
 void
-MSVehicleControl::setState(int runningVehNo, int endedVehNo, SUMOReal totalDepartureDelay, SUMOReal totalTravelTime) {
+MSVehicleControl::setState(int runningVehNo, int loadedVehNo, int endedVehNo, SUMOReal totalDepartureDelay, SUMOReal totalTravelTime) {
     myRunningVehNo = runningVehNo;
+    myLoadedVehNo = loadedVehNo;
     myEndedVehNo = endedVehNo;
     myTotalDepartureDelay = totalDepartureDelay;
     myTotalTravelTime = totalTravelTime;
@@ -166,8 +167,12 @@ MSVehicleControl::setState(int runningVehNo, int endedVehNo, SUMOReal totalDepar
 
 void
 MSVehicleControl::saveState(OutputDevice& out) {
-    out.openTag(SUMO_TAG_DELAY).writeAttr(SUMO_ATTR_NUMBER, myRunningVehNo).writeAttr(SUMO_ATTR_END, myEndedVehNo);
-    out.writeAttr(SUMO_ATTR_DEPART, myTotalDepartureDelay).writeAttr(SUMO_ATTR_TIME, myTotalTravelTime).closeTag();
+    out.openTag(SUMO_TAG_DELAY);
+    out.writeAttr(SUMO_ATTR_NUMBER, myRunningVehNo);
+    out.writeAttr(SUMO_ATTR_BEGIN, myLoadedVehNo);
+    out.writeAttr(SUMO_ATTR_END, myEndedVehNo);
+    out.writeAttr(SUMO_ATTR_DEPART, myTotalDepartureDelay);
+    out.writeAttr(SUMO_ATTR_TIME, myTotalTravelTime).closeTag();
     // save vehicle types
     for (VTypeDictType::iterator it = myVTypeDict.begin(); it != myVTypeDict.end(); ++it) {
         it->second->getParameter().write(out);

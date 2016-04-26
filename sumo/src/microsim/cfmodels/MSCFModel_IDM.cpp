@@ -9,7 +9,7 @@
 // The Intelligent Driver Model (IDM) car-following model
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,7 +47,7 @@ MSCFModel_IDM::MSCFModel_IDM(const MSVehicleType* vtype,
     : MSCFModel(vtype, accel, decel, headwayTime), myDelta(delta),
       myAdaptationFactor(1.), myAdaptationTime(0.),
       myIterations(MAX2(1, int(TS / internalStepping + .5))),
-      myTwoSqrtAccelDecel(SUMOReal(2 * sqrt(accel* decel))) {
+      myTwoSqrtAccelDecel(SUMOReal(2 * sqrt(accel * decel))) {
 }
 
 
@@ -59,7 +59,7 @@ MSCFModel_IDM::MSCFModel_IDM(const MSVehicleType* vtype,
     : MSCFModel(vtype, accel, decel, headwayTime), myDelta(4.),
       myAdaptationFactor(adaptationFactor), myAdaptationTime(adaptationTime),
       myIterations(MAX2(1, int(TS / internalStepping + .5))),
-      myTwoSqrtAccelDecel(SUMOReal(2 * sqrt(accel* decel))) {
+      myTwoSqrtAccelDecel(SUMOReal(2 * sqrt(accel * decel))) {
 }
 
 

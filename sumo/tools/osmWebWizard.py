@@ -10,7 +10,7 @@
 Browser GUI for OSMget, OSMbuild, optionally randomTrips and SUMO GUI
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2014-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2014-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -18,6 +18,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import sys
@@ -89,7 +91,9 @@ BATCH_MODE |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 
 
 def quoted_str(s):
-    if type(s) != str:
+    if type(s) == float:
+        return "%.6f" % s
+    elif type(s) != str:
         return str(s)
     elif '"' in s:
         if os.name == "nt":
@@ -205,7 +209,7 @@ class Builder(object):
                 SUMO_HOME, "tools", "randomTrips.py")
             batchFile = "build.bat"
             with open(batchFile, 'w') as f:
-                for opts in randomTripsCalls:
+                for opts in sorted(randomTripsCalls):
                     f.write("python %s %s\n" %
                             (randomTripsPath, " ".join(map(quoted_str, opts))))
 
@@ -377,8 +381,8 @@ if __name__ == "__main__":
             [sumolib.checkBinary("sumo"), "-c", builder.files["config"]])
     else:
         if not args.remote:
-            webbrowser.open(
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), "webWizard", "index.html"))
+            webbrowser.open("file://" +
+                            os.path.join(os.path.dirname(os.path.abspath(__file__)), "webWizard", "index.html"))
 
         server = SimpleWebSocketServer(
             args.address, args.port, OSMImporterWebSocket)

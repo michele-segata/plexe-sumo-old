@@ -10,7 +10,7 @@
 // A device which collects info on the vehicle trip
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2009-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2009-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -130,7 +130,6 @@ MSDevice_Vehroutes::~MSDevice_Vehroutes() {
 bool
 MSDevice_Vehroutes::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) {
     if (reason == MSMoveReminder::NOTIFICATION_DEPARTED) {
-        myDepartPos = veh.getPositionOnLane();
         if (mySorted && myStateListener.myDevices[&veh] == this) {
             const SUMOTime departure = myIntendedDepart ? myHolder.getParameter().depart : MSNet::getInstance()->getCurrentTimeStep();
             myDepartureCounts[departure]++;
@@ -231,7 +230,7 @@ MSDevice_Vehroutes::generateOutput() const {
         od.writeAttr("arrival", time2string(MSNet::getInstance()->getCurrentTimeStep()));
         if (myRouteLength) {
             const bool includeInternalLengths = MSGlobals::gUsingInternalLanes && MSNet::getInstance()->hasInternalLinks();
-            const SUMOReal routeLength = myHolder.getRoute().getDistanceBetween(myDepartPos, myHolder.getArrivalPos(),
+            const SUMOReal routeLength = myHolder.getRoute().getDistanceBetween(myHolder.getDepartPos(), myHolder.getArrivalPos(),
                                          myHolder.getRoute().begin(), myHolder.getCurrentRouteEdge(), includeInternalLengths);
             od.writeAttr("routeLength", routeLength);
         }

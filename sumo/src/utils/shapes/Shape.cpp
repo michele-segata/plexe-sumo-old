@@ -8,7 +8,7 @@
 // A 2D- or 3D-Shape
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -56,8 +56,8 @@ Shape::Shape(const std::string& id, const std::string& type,
     myColor(color),
     myLayer(layer),
     myNaviDegreeAngle(angle),
-    myImgFile(imgFile)
-{}
+    myImgFile(imgFile) {
+}
 
 
 Shape::~Shape() {}

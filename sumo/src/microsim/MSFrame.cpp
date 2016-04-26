@@ -13,7 +13,7 @@
 // Sets and checks options for microsim; inits global outputs and settings
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -87,6 +87,7 @@ MSFrame::fillOptions() {
     oc.doRegister("net-file", 'n', new Option_FileName());
     oc.addSynonyme("net-file", "net");
     oc.addDescription("net-file", "Input", "Load road network description from FILE");
+    oc.addXMLDefault("net-file", "net");
 
     oc.doRegister("route-files", 'r', new Option_FileName());
     oc.addSynonyme("route-files", "routes");
@@ -128,6 +129,8 @@ MSFrame::fillOptions() {
 
     oc.doRegister("emission-output", new Option_FileName());
     oc.addDescription("emission-output", "Output", "Save the emission values of each vehicle");
+    oc.doRegister("emission-output.precision", new Option_Integer(OUTPUT_ACCURACY));
+    oc.addDescription("emission-output.precision", "Output", "Write emission values with the given precision (default 2)");
 
     oc.doRegister("battery-output", new Option_FileName());
     oc.addDescription("battery-output", "Output", "Save the battery values of each vehicle");
@@ -215,16 +218,13 @@ MSFrame::fillOptions() {
 
     // register the simulation settings
     oc.doRegister("begin", 'b', new Option_String("0", "TIME"));
-    oc.addDescription("begin", "Time", "Defines the begin time; The simulation starts at this time");
+    oc.addDescription("begin", "Time", "Defines the begin time in seconds; The simulation starts at this time");
 
     oc.doRegister("end", 'e', new Option_String("-1", "TIME"));
-    oc.addDescription("end", "Time", "Defines the end time; The simulation ends at this time");
+    oc.addDescription("end", "Time", "Defines the end time in seconds; The simulation ends at this time");
 
-#ifdef HAVE_SUBSECOND_TIMESTEPS
     oc.doRegister("step-length", new Option_String("1", "TIME"));
-    oc.addDescription("step-length", "Time", "Defines the step duration");
-#endif
-
+    oc.addDescription("step-length", "Time", "Defines the step duration in seconds");
 
     // register the processing options
     oc.doRegister("route-steps", 's', new Option_String("200", "TIME"));
@@ -252,8 +252,12 @@ MSFrame::fillOptions() {
 
     oc.doRegister("time-to-teleport", new Option_String("300", "TIME"));
     oc.addDescription("time-to-teleport", "Processing", "Specify how long a vehicle may wait until being teleported, defaults to 300, non-positive values disable teleporting");
+
     oc.doRegister("time-to-teleport.highways", new Option_String("0", "TIME"));
     oc.addDescription("time-to-teleport.highways", "Processing", "The waiting time after which vehicles on a fast road (speed > 69m/s) are teleported if they are on a non-continuing lane");
+
+    oc.doRegister("waiting-time-memory", new Option_String("100", "TIME"));
+    oc.addDescription("waiting-time-memory", "Processing", "Length of time interval, over which accumulated waiting time is taken into account");
 
     oc.doRegister("max-depart-delay", new Option_String("-1", "TIME"));
     oc.addDescription("max-depart-delay", "Processing", "How long vehicles wait for departure before being skipped, defaults to -1 which means vehicles are never skipped");
@@ -328,7 +332,6 @@ MSFrame::fillOptions() {
 #endif
 #endif
     //
-#ifdef HAVE_INTERNAL
     oc.addOptionSubTopic("Mesoscopic");
     oc.doRegister("mesosim", new Option_Bool(false));
     oc.addDescription("mesosim", "Mesoscopic", "Enables mesoscopic simulation");
@@ -343,18 +346,22 @@ MSFrame::fillOptions() {
     oc.doRegister("meso-taujj", new Option_String("2", "TIME"));
     oc.addDescription("meso-taujj", "Mesoscopic", "Factor for calculating the jam-jam headway time");
     oc.doRegister("meso-jam-threshold", new Option_Float(-1));
-    oc.addDescription("meso-jam-threshold", "Mesoscopic", "Minimum percentage of occupied space to consider a segment jammed. A negative argument causes thresholds to be computed based on edge speed and tauff (default)");
+    oc.addDescription("meso-jam-threshold", "Mesoscopic",
+                      "Minimum percentage of occupied space to consider a segment jammed. A negative argument causes thresholds to be computed based on edge speed and tauff (default)");
     oc.doRegister("meso-multi-queue", new Option_Bool(true));
     oc.addDescription("meso-multi-queue", "Mesoscopic", "Enable multiple queues at edge ends");
     oc.doRegister("meso-junction-control", new Option_Bool(false));
     oc.addDescription("meso-junction-control", "Mesoscopic", "Enable mesoscopic traffic light and priority junction handling");
     oc.doRegister("meso-junction-control.limited", new Option_Bool(false));
-    oc.addDescription("meso-junction-control.limited", "Mesoscopic", "Enable mesoscopic traffic light and priority junction handling for saturated links. This prevents faulty traffic lights from hindering flow in low-traffic situations");
+    oc.addDescription("meso-junction-control.limited", "Mesoscopic",
+                      "Enable mesoscopic traffic light and priority junction handling for saturated links. This prevents faulty traffic lights from hindering flow in low-traffic situations");
+    oc.doRegister("meso-tls-penalty", new Option_Float(0));
+    oc.addDescription("meso-tls-penalty", "Mesoscopic",
+                      "Apply scaled time penalties when driving across tls controlled junctions based on green split instead of checking actual phases");
     oc.doRegister("meso-overtaking", new Option_Bool(false));
     oc.addDescription("meso-overtaking", "Mesoscopic", "Enable mesoscopic overtaking");
     oc.doRegister("meso-recheck", new Option_String("0", "TIME"));
     oc.addDescription("meso-recheck", "Mesoscopic", "Time interval for rechecking insertion into the next segment after failure");
-#endif
 
     // add rand options
     RandHelper::insertRandOptions();
@@ -377,7 +384,7 @@ MSFrame::fillOptions() {
     oc.doRegister("disable-textures", 'T', new Option_Bool(false));
     oc.addDescription("disable-textures", "GUI Only", "Do not load background pictures");
 
-#ifdef HAVE_INTERNAL
+#ifdef HAVE_OSG
     oc.doRegister("osg-view", new Option_Bool(false));
     oc.addDescription("osg-view", "GUI Only", "Start with an OpenSceneGraph view instead of the regular 2D view");
 #endif
@@ -435,11 +442,9 @@ MSFrame::checkOptions() {
             !oc.isUsableFileList("gui-settings-file")) {
         ok = false;
     }
-#ifdef HAVE_INTERNAL
     if (oc.getBool("meso-junction-control.limited") && !oc.getBool("meso-junction-control")) {
         oc.set("meso-junction-control", "true");
     }
-#endif
     const SUMOTime begin = string2time(oc.getString("begin"));
     const SUMOTime end = string2time(oc.getString("end"));
     if (begin < 0) {
@@ -452,12 +457,10 @@ MSFrame::checkOptions() {
             ok = false;
         }
     }
-#ifdef HAVE_SUBSECOND_TIMESTEPS
     if (string2time(oc.getString("step-length")) <= 0) {
         WRITE_ERROR("the minimum step-length is 0.001");
         ok = false;
     }
-#endif
 #ifdef _DEBUG
     if (oc.isSet("movereminder-output.vehicles") && !oc.isSet("movereminder-output")) {
         WRITE_ERROR("option movereminder-output.vehicles requires option movereminder-output to be set");
@@ -466,6 +469,9 @@ MSFrame::checkOptions() {
 #endif
     if (oc.getBool("sloppy-insert")) {
         WRITE_WARNING("The option 'sloppy-insert' is deprecated, because it is now activated by default, see the new option 'eager-insert'.");
+    }
+    if (oc.getBool("lanechange.allow-swap")) {
+        WRITE_WARNING("The option 'lanechange.allow-swap' is deprecated, and will not be supported in future versions of SUMO.");
     }
     if (oc.getBool("duration-log.statistics") && oc.isDefault("verbose")) {
         oc.set("verbose", "true");
@@ -495,19 +501,18 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
     MSGlobals::gCheckRoutes = !oc.getBool("ignore-route-errors");
     MSGlobals::gLaneChangeDuration = string2time(oc.getString("lanechange.duration"));
     MSGlobals::gStateLoaded = oc.isSet("load-state");
-#ifdef HAVE_INTERNAL
     MSGlobals::gUseMesoSim = oc.getBool("mesosim");
     MSGlobals::gMesoLimitedJunctionControl = oc.getBool("meso-junction-control.limited");
     MSGlobals::gMesoOvertaking = oc.getBool("meso-overtaking");
+    MSGlobals::gMesoTLSPenalty = oc.getFloat("meso-tls-penalty");
     if (MSGlobals::gUseMesoSim) {
         MSGlobals::gUsingInternalLanes = false;
     }
-#endif
+    MSGlobals::gWaitingTimeMemory = string2time(oc.getString("waiting-time-memory"));
     MSAbstractLaneChangeModel::initGlobalOptions(oc);
 
-#ifdef HAVE_SUBSECOND_TIMESTEPS
+
     DELTA_T = string2time(oc.getString("step-length"));
-#endif
 #ifdef _DEBUG
     if (oc.isSet("movereminder-output")) {
         MSBaseVehicle::initMoveReminderOutput(oc);

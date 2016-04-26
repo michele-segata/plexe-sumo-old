@@ -11,7 +11,7 @@
 // Changes the speed allowed on a set of lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -45,11 +45,9 @@
 #include <microsim/MSEdge.h>
 #include "MSLaneSpeedTrigger.h"
 
-#ifdef HAVE_INTERNAL
 #include <microsim/MSGlobals.h>
 #include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
-#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -117,18 +115,19 @@ MSLaneSpeedTrigger::processCommand(bool move2next, SUMOTime currentTime) {
     UNUSED_PARAMETER(currentTime);
     std::vector<MSLane*>::iterator i;
     const SUMOReal speed = getCurrentSpeed();
-    for (i = myDestLanes.begin(); i != myDestLanes.end(); ++i) {
-#ifdef HAVE_INTERNAL
-        if (MSGlobals::gUseMesoSim) {
-            MESegment* first = MSGlobals::gMesoNet->getSegmentForEdge((*i)->getEdge());
+    if (MSGlobals::gUseMesoSim) {
+        if (myDestLanes.size() > 0 && myDestLanes.front()->getSpeedLimit() != speed) {
+            myDestLanes.front()->getEdge().setMaxSpeed(speed);
+            MESegment* first = MSGlobals::gMesoNet->getSegmentForEdge(myDestLanes.front()->getEdge());
             while (first != 0) {
                 first->setSpeed(speed, currentTime, -1);
                 first = first->getNextSegment();
             }
-            continue;
         }
-#endif
-        (*i)->setMaxSpeed(speed);
+    } else {
+        for (i = myDestLanes.begin(); i != myDestLanes.end(); ++i) {
+            (*i)->setMaxSpeed(speed);
+        }
     }
     if (!move2next) {
         // changed from the gui

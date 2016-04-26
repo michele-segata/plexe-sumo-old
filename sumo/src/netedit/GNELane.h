@@ -7,7 +7,7 @@
 // A class for visualizing Lane geometry (adapted from GUILaneWrapper)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -63,7 +63,7 @@ public:
      * @param[in] the edge this lane belongs to
      * @param[in] the index of this lane
      */
-    GNELane(GNEEdge& edge, const unsigned int index);
+    GNELane(GNEEdge& edge, const int index);
 
 
     /// @brief Destructor
@@ -169,7 +169,7 @@ private:
     GNEEdge& myParentEdge;
 
     /// The index of this lane
-    unsigned int myIndex;
+    int myIndex;
 
     /// @name computed only once (for performance) in updateGeometry()
     //@{

@@ -13,7 +13,7 @@
 // Representation of a lane in the micro simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -107,11 +107,12 @@ public:
      * @param[in] shape The shape of the lane
      * @param[in] width The width of the lane
      * @param[in] permissions Encoding of the Vehicle classes that may drive on this lane
+     * @param[in] index The index of this lane within its parent edge
      * @see SUMOVehicleClass
      */
     MSLane(const std::string& id, SUMOReal maxSpeed, SUMOReal length, MSEdge* const edge,
            unsigned int numericalID, const PositionVector& shape, SUMOReal width,
-           SVCPermissions permissions);
+           SVCPermissions permissions, int index);
 
 
     /// @brief Destructor
@@ -199,9 +200,7 @@ public:
                             MSMoveReminder::Notification notification);
 
     bool checkFailure(MSVehicle* aVehicle, SUMOReal& speed, SUMOReal& dist, const SUMOReal nspeed, const bool patchSpeed, const std::string errorMsg) const;
-    bool pWagGenericInsertion(MSVehicle& veh, SUMOReal speed, SUMOReal maxPos, SUMOReal minPos);
-    bool pWagSimpleInsertion(MSVehicle& veh, SUMOReal speed, SUMOReal maxPos, SUMOReal minPos);
-    bool maxSpeedGapInsertion(MSVehicle& veh, SUMOReal mspeed);
+    bool lastInsertion(MSVehicle& veh, SUMOReal mspeed);
 
     /** @brief Tries to insert the given vehicle on any place
      *
@@ -394,6 +393,13 @@ public:
     SUMOReal getWidth() const {
         return myWidth;
     }
+
+    /** @brief Returns the lane's index
+     * @return This lane's index
+     */
+    int getIndex() const {
+        return myIndex;
+    }
     /// @}
 
     /// @brief return the index of the link to the next crossing if this is walkingArea, else -1
@@ -550,20 +556,13 @@ public:
     MSVehicle* getLastVehicle() const;
     MSVehicle* getFirstVehicle() const;
 
-
     /* @brief remove the vehicle from this lane
      * @param[notify] whether moveReminders of the vehicle shall be triggered
      */
     virtual MSVehicle* removeVehicle(MSVehicle* remVehicle, MSMoveReminder::Notification notification, bool notify = true);
 
-    /// The shape of the lane
-    PositionVector myShape;
-
-
-
     void leftByLaneChange(MSVehicle* v);
     void enteredByLaneChange(MSVehicle* v);
-
 
     /** @brief Returns the lane with the given offset parallel to this one or 0 if it does not exist
      * @param[in] offset The offset of the result lane
@@ -744,9 +743,15 @@ public:
 
 
     /** @brief Returns the sum of last step fuel consumption
-     * @return fuel consumption of vehicles on this lane during the last step
-     */
+    * @return fuel consumption of vehicles on this lane during the last step
+    */
     SUMOReal getFuelConsumption() const;
+
+
+    /** @brief Returns the sum of last step electricity consumption
+    * @return electricity consumption of vehicles on this lane during the last step
+    */
+    SUMOReal getElectricityConsumption() const;
 
 
     /** @brief Returns the sum of last step noise emissions
@@ -828,9 +833,18 @@ protected:
      */
     SUMOReal getDepartSpeed(const MSVehicle& veh, bool& patchSpeed);
 
+    /// @brief departure position where the vehicle fits fully onto the lane (if possible)
+    SUMOReal basePos(const MSVehicle& veh) const;
+
 protected:
     /// Unique numerical ID (set on reading by netload)
     size_t myNumericalID;
+
+    /// The shape of the lane
+    PositionVector myShape;
+
+    /// The lane index
+    int myIndex;
 
     /** @brief The lane's vehicles.
         The entering vehicles are inserted at the front

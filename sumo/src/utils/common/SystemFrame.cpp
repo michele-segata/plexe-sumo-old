@@ -9,7 +9,7 @@
 // A set of actions common to all applications
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -53,6 +53,7 @@ SystemFrame::addConfigurationOptions(OptionsCont& oc) {
     oc.doRegister("configuration-file", 'c', new Option_FileName());
     oc.addSynonyme("configuration-file", "configuration");
     oc.addDescription("configuration-file", "Configuration", "Loads the named config on startup");
+    oc.addXMLDefault("configuration-file");
 
     oc.doRegister("save-configuration", new Option_FileName());
     oc.addSynonyme("save-config", "save-configuration");

@@ -4,14 +4,13 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
-/// @author  Michele Segata
 /// @date    2006-01-24
 /// @version $Id$
 ///
 // Definitions of SUMO vehicle classes and helper functions
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //

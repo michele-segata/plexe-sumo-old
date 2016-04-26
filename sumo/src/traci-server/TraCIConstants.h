@@ -18,7 +18,7 @@
 /// holds codes used for TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -36,7 +36,7 @@
 // ****************************************
 // VERSION
 // ****************************************
-#define TRACI_VERSION 10
+#define TRACI_VERSION 11
 
 
 // ****************************************
@@ -730,6 +730,9 @@
 
 // clears the simulation of all not inserted vehicles (set: simulation)
 #define CMD_CLEAR_PENDING_VEHICLES 0x94
+
+// triggers saving simulation state (set: simulation)
+#define CMD_SAVE_SIMSTATE 0x95
 
 // sets/retrieves abstract parameter
 #define VAR_PARAMETER 0x7e

@@ -9,7 +9,7 @@
 // Main for JTRROUTER
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -42,25 +42,26 @@
 #include <limits.h>
 #include <ctime>
 #include <set>
-#include <router/ROFrame.h>
-#include <router/ROLoader.h>
-#include <router/RONet.h>
 #include <utils/common/MsgHandler.h>
-#include <utils/options/Option.h>
-#include <utils/options/OptionsCont.h>
-#include <utils/options/OptionsIO.h>
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/SystemFrame.h>
 #include <utils/common/ToString.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/StringTokenizer.h>
+#include <utils/iodevices/OutputDevice.h>
+#include <utils/options/Option.h>
+#include <utils/options/OptionsCont.h>
+#include <utils/options/OptionsIO.h>
 #include <utils/xml/XMLSubSys.h>
+#include <router/ROFrame.h>
+#include <router/ROLoader.h>
+#include <router/RONet.h>
+#include <router/RORouteDef.h>
 #include "ROJTREdgeBuilder.h"
 #include "ROJTRRouter.h"
 #include "ROJTREdge.h"
 #include "ROJTRTurnDefLoader.h"
 #include "ROJTRFrame.h"
-#include <utils/iodevices/OutputDevice.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -153,9 +154,11 @@ computeRoutes(RONet& net, ROLoader& loader, OptionsCont& oc) {
                                           (int)(((SUMOReal) net.getEdgeNo()) * OptionsCont::getOptions().getFloat("max-edges-factor")),
                                           oc.getBool("ignore-vclasses"), oc.getBool("allow-loops"));
     RORouteDef::setUsingJTRR();
+    RORouterProvider provider(router, new PedestrianRouterDijkstra<ROEdge, ROLane, RONode, ROVehicle>(),
+                              new ROIntermodalRouter(RONet::adaptIntermodalRouter));
     loader.processRoutes(string2time(oc.getString("begin")), string2time(oc.getString("end")),
-                         string2time(oc.getString("route-steps")), net, *router);
-    net.cleanup(router);
+                         string2time(oc.getString("route-steps")), net, provider);
+    net.cleanup();
 }
 
 
@@ -167,7 +170,7 @@ main(int argc, char** argv) {
     OptionsCont& oc = OptionsCont::getOptions();
     // give some application descriptions
     oc.setApplicationDescription("Router for the microscopic road traffic simulation SUMO based on junction turning ratios.");
-    oc.setApplicationName("jtrrouter", "SUMO jtrrouter Version " + getBuildName(VERSION_STRING));
+    oc.setApplicationName("jtrrouter", "SUMO jtrrouter Version " VERSION_STRING);
     int ret = 0;
     RONet* net = 0;
     try {

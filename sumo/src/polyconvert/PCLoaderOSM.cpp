@@ -11,7 +11,7 @@
 // A reader of pois and polygons stored in OSM-format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -356,8 +356,8 @@ PCLoaderOSM::RelationsHandler::RelationsHandler(RelationsMap& additionalWays,
     myRelations(relations),
     myWithAttributes(withAttributes),
     myErrorHandler(errorHandler),
-    myCurrentRelation(0)
-{ }
+    myCurrentRelation(0) {
+}
 
 
 PCLoaderOSM::RelationsHandler::~RelationsHandler() {
@@ -442,8 +442,8 @@ PCLoaderOSM::EdgesHandler::EdgesHandler(const std::map<long long int, PCOSMNode*
     myErrorHandler(errorHandler),
     myOSMNodes(osmNodes),
     myEdgeMap(toFill),
-    myAdditionalWays(additionalWays)
-{ }
+    myAdditionalWays(additionalWays) {
+}
 
 
 PCLoaderOSM::EdgesHandler::~EdgesHandler() {

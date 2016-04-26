@@ -11,7 +11,7 @@
 // Detectors container; responsible for string and output generation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -43,10 +43,6 @@
 #include <microsim/output/MSE3Collector.h>
 #include <microsim/output/MSInductLoop.h>
 #include <microsim/output/MSRouteProbe.h>
-
-#ifdef HAVE_INTERNAL
-#include <mesosim/MEInductLoop.h>
-#endif
 
 
 // ===========================================================================

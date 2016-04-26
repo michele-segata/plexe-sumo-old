@@ -11,7 +11,7 @@
 // The handler for parsing the statistics file.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 // activitygen module
 // Copyright 2010 TUM (Technische Universitaet Muenchen, http://www.tum.de/)
 /****************************************************************************/
@@ -113,9 +113,9 @@ AGActivityGenHandler::myStartElement(int element, const SUMOSAXAttributes& attrs
             case AGEN_TAG_POPULATION:
                 parsePopulation();
                 break;
-                /*case AGEN_TAG_CHILD_ACOMP:
-                    parseChildrenAccompaniment();
-                    break;*/
+            /*case AGEN_TAG_CHILD_ACOMP:
+                parseChildrenAccompaniment();
+                break;*/
             case AGEN_TAG_BRACKET:
                 parseBracket(attrs);
                 break;

@@ -10,7 +10,7 @@
 // The class for modelling person-movements
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -264,8 +264,7 @@ MSPerson::MSPersonStage_Driving::getPosition(SUMOTime /* now */) const {
         }
         return getEdgePosition(myWaitingEdge, myWaitingPos, MSPModel::SIDEWALK_OFFSET);
     }
-    /// @bug this fails while vehicle is driving across a junction
-    return myVehicle->getEdge()->getLanes()[0]->getShape().positionAtOffset(myVehicle->getPositionOnLane());
+    return myVehicle->getPosition();
 }
 
 
@@ -525,15 +524,31 @@ MSPerson::routeOutput(OutputDevice& os) const {
 
 const std::string&
 MSPerson::getNextEdge() const {
+//    if (getCurrentStageType() == MOVING_WITHOUT_VEHICLE) {
+//        MSPersonStage_Walking* walkingStage =  dynamic_cast<MSPersonStage_Walking*>(*myStep);
+//        assert(walkingStage != 0);
+//        const MSEdge* nextEdge = walkingStage->getPedestrianState()->getNextEdge(*walkingStage);
+//        if (nextEdge != 0) {
+//            return nextEdge->getID();
+//        }
+//    }
+//    return StringUtils::emptyString;
+    const MSEdge* nextEdge = getNextEdgePtr();
+    if (nextEdge != 0) {
+        return nextEdge->getID();
+    }
+    return StringUtils::emptyString;
+}
+
+const MSEdge*
+MSPerson::getNextEdgePtr() const {
     if (getCurrentStageType() == MOVING_WITHOUT_VEHICLE) {
         MSPersonStage_Walking* walkingStage =  dynamic_cast<MSPersonStage_Walking*>(*myStep);
         assert(walkingStage != 0);
-        const MSEdge* nextEdge = walkingStage->getPedestrianState()->getNextEdge(*walkingStage);
-        if (nextEdge != 0) {
-            return nextEdge->getID();
-        }
+        return walkingStage->getPedestrianState()->getNextEdge(*walkingStage);
+
     }
-    return StringUtils::emptyString;
+    return 0;
 }
 /****************************************************************************/
 

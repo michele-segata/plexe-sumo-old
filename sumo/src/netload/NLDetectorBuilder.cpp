@@ -12,7 +12,7 @@
 // Builds detectors for microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -59,11 +59,9 @@
 #include "NLDetectorBuilder.h"
 #include <microsim/output/MSDetectorControl.h>
 
-#ifdef HAVE_INTERNAL
 #include <mesosim/MEInductLoop.h>
 #include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
-#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -95,7 +93,9 @@ NLDetectorBuilder::NLDetectorBuilder(MSNet& net)
     : myNet(net), myE3Definition(0) {}
 
 
-NLDetectorBuilder::~NLDetectorBuilder() {}
+NLDetectorBuilder::~NLDetectorBuilder() {
+    delete myE3Definition;
+}
 
 
 void
@@ -344,7 +344,7 @@ NLDetectorBuilder::buildRouteProbe(const std::string& id, const std::string& edg
 
 
 // -------------------
-MSDetectorFileOutput*
+MSE2Collector*
 NLDetectorBuilder::buildSingleLaneE2Det(const std::string& id,
                                         DetectorUsage usage,
                                         MSLane* lane, SUMOReal pos, SUMOReal length,
@@ -374,11 +374,9 @@ NLDetectorBuilder::buildMultiLaneE2Det(const std::string& id, DetectorUsage usag
 MSDetectorFileOutput*
 NLDetectorBuilder::createInductLoop(const std::string& id,
                                     MSLane* lane, SUMOReal pos, bool splitByType, bool) {
-#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         return new MEInductLoop(id, MSGlobals::gMesoNet->getSegmentForEdge(lane->getEdge(), pos), pos);
     }
-#endif
     return new MSInductLoop(id, lane, pos, splitByType);
 }
 
@@ -390,7 +388,7 @@ NLDetectorBuilder::createInstantInductLoop(const std::string& id,
 }
 
 
-MSDetectorFileOutput*
+MSE2Collector*
 NLDetectorBuilder::createSingleLaneE2Detector(const std::string& id,
         DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
         SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold, SUMOReal jamDistThreshold) {

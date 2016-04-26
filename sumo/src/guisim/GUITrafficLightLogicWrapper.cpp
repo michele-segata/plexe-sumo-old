@@ -10,7 +10,7 @@
 // A wrapper for tl-logics to allow their visualisation and interaction
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -245,8 +245,8 @@ GUITrafficLightLogicWrapper::drawGL(const GUIVisualizationSettings& s) const {
         if (curState.find_first_of("gG") == std::string::npos) {
             // no link is 'green' at the moment. find those that turn green next
             const MSTrafficLightLogic::Phases& phases = myTLLogic.getPhases();
-            unsigned int curPhaseIdx = myTLLogic.getCurrentPhaseIndex();
-            unsigned int phaseIdx = (curPhaseIdx + 1) % phases.size();
+            int curPhaseIdx = myTLLogic.getCurrentPhaseIndex();
+            int phaseIdx = (curPhaseIdx + 1) % phases.size();
             std::vector<unsigned int> nextGreen;
             while (phaseIdx != curPhaseIdx) {
                 const std::string& state = phases[phaseIdx]->getState();

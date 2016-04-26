@@ -1,14 +1,14 @@
 /****************************************************************************/
 /// @file    MSDevice_Battery.h
 /// @author  Tamas Kurczveil
-/// @author  Pablo Alvarez López
+/// @author  Pablo Alvarez Lopez
 /// @date    20-12-13
 /// @version $Id$
 ///
 // The Battery parameters for the vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2013-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.

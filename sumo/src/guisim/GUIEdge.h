@@ -10,7 +10,7 @@
 // A road/street connecting two junctions (gui-version)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -43,9 +43,7 @@
 // ===========================================================================
 // class declarations
 // ===========================================================================
-#ifdef HAVE_INTERNAL
 class MESegment;
-#endif
 class MSBaseVehicle;
 class GUILane;
 
@@ -166,11 +164,9 @@ public:
         MSEdge::removeContainer(c);
     }
 
-#ifdef HAVE_INTERNAL
     unsigned int getVehicleNo() const;
     std::string getVehicleIDs() const;
     SUMOReal getBruttoOccupancy() const;
-    SUMOReal getMeanSpeed() const;
     SUMOReal getAllowedSpeed() const;
     /// @brief return flow based on meanSpead @note: may produced incorrect results when jammed
     SUMOReal getFlow() const;
@@ -191,7 +187,15 @@ public:
 
     void drawMesoVehicles(const GUIVisualizationSettings& s) const;
 
-#endif
+    /// @brief grant exclusive access to the mesoscopic state
+    void lock() const {
+        myLock.lock();
+    }
+
+    /// @brief release exclusive access to the mesoscopic state
+    void unlock() const {
+        myLock.unlock();
+    }
 
     /// @brief close this edge for traffic
     void closeTraffic(const GUILane* lane);

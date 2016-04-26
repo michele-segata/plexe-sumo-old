@@ -12,7 +12,7 @@
 // Main for the DFROUTER
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -264,7 +264,7 @@ main(int argc, char** argv) {
     OptionsCont& oc = OptionsCont::getOptions();
     // give some application descriptions
     oc.setApplicationDescription("Builds vehicle routes for SUMO using detector values.");
-    oc.setApplicationName("dfrouter", "SUMO dfrouter Version " + getBuildName(VERSION_STRING));
+    oc.setApplicationName("dfrouter", "SUMO dfrouter Version " VERSION_STRING);
     int ret = 0;
     RODFNet* net = 0;
     RODFDetectorCon* detectors = 0;

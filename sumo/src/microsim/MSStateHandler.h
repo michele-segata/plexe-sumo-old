@@ -9,7 +9,7 @@
 // Parser and output filter for routes and vehicles state saving and loading
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -39,9 +39,7 @@
 // ===========================================================================
 // class declarations
 // ===========================================================================
-#ifdef HAVE_INTERNAL
 class MESegment;
-#endif
 
 
 // ===========================================================================
@@ -97,9 +95,7 @@ protected:
 private:
     const SUMOTime myOffset;
     SUMOTime myTime;
-#ifdef HAVE_INTERNAL
     MESegment* mySegment;
-#endif
     std::pair<int, int> myEdgeAndLane;
     unsigned int myQueIndex;
 

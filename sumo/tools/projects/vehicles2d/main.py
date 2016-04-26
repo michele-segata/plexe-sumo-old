@@ -9,7 +9,7 @@
 Main module.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2014-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2014-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -21,9 +21,9 @@ the Free Software Foundation; either version 3 of the License, or
 import sys
 import inspect
 try:
-    import Image
-    import ImageDraw
-    import ImageColor
+    from PIL import Image
+    from PIL import ImageDraw
+    from PIL import ImageColor
     haveImaging = True
 except ImportError:
     print >> sys.stderr, "No imaging"

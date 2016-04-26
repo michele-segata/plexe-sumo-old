@@ -10,7 +10,7 @@
 // Stores all persons in the net and handles their waiting for cars.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -52,8 +52,8 @@
 MSPersonControl::MSPersonControl():
     myLoadedPersonNumber(0),
     myRunningPersonNumber(0),
-    myJammedPersonNumber(0)
-{}
+    myJammedPersonNumber(0) {
+}
 
 
 MSPersonControl::~MSPersonControl() {

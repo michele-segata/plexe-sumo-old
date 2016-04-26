@@ -9,7 +9,7 @@
 // A traffic light logics which must be computed (only nodes/edges are given)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -107,10 +107,9 @@ public:
 
 
     /** @brief Informs edges about being controlled by a tls
-     * @param[in] ec The container of edges
      * @see NBTrafficLightDefinition::setTLControllingInformation
      */
-    void setTLControllingInformation(const NBEdgeCont& ec) const;
+    void setTLControllingInformation() const;
     /// @}
 
 
@@ -119,6 +118,11 @@ public:
     void setSinglePhase() {
         myHaveSinglePhase = true;
     }
+
+    /// @brief add an additional pedestrian phase if there are crossings that did not get green yet
+    static void addPedestrianScramble(NBTrafficLightLogic* logic, unsigned int noLinksAll,
+                                      SUMOTime greenTime, SUMOTime yellowTime,
+                                      const std::vector<NBNode::Crossing>& crossings, const EdgeVector& fromEdges, const EdgeVector& toEdges);
 
     /// @brief add 1 or 2 phases depending on the presence of pedestrian crossings
     static std::string addPedestrianPhases(NBTrafficLightLogic* logic, SUMOTime greenTime,
@@ -143,13 +147,11 @@ protected:
     /// @{
 
     /** @brief Computes the traffic light logic finally in dependence to the type
-     * @param[in] ec The edge container
      * @param[in] brakingTime Duration a vehicle needs for braking in front of the tls
      * @return The computed logic
      * @see NBTrafficLightDefinition::myCompute
      */
-    NBTrafficLightLogic* myCompute(const NBEdgeCont& ec,
-                                   unsigned int brakingTimeSeconds);
+    NBTrafficLightLogic* myCompute(unsigned int brakingTimeSeconds);
 
 
     /** @brief Collects the nodes participating in this traffic light

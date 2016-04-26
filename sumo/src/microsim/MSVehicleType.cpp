@@ -5,14 +5,13 @@
 /// @author  Jakob Erdmann
 /// @author  Thimor Bohn
 /// @author  Michael Behrisch
-/// @author  Michele Segata
 /// @date    Tue, 06 Mar 2001
 /// @version $Id$
 ///
 // The car-following model and parameter
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -45,7 +44,6 @@
 #include "cfmodels/MSCFModel_Krauss.h"
 #include "cfmodels/MSCFModel_KraussOrig1.h"
 #include "cfmodels/MSCFModel_KraussPS.h"
-#include "cfmodels/MSCFModel_KraussAccelBound.h"
 #include "cfmodels/MSCFModel_SmartSK.h"
 #include "cfmodels/MSCFModel_Daniel1.h"
 #include "cfmodels/MSCFModel_PWag2009.h"
@@ -68,7 +66,7 @@ int MSVehicleType::myNextIndex = 0;
 // method definitions
 // ===========================================================================
 MSVehicleType::MSVehicleType(const SUMOVTypeParameter& parameter)
-    : myParameter(parameter), myIndex(myNextIndex++), myOriginalType(0) {
+    : myParameter(parameter), myIndex(myNextIndex++), myCarFollowModel(0), myOriginalType(0) {
     assert(getLength() > 0);
     assert(getMaxSpeed() > 0);
 }
@@ -227,9 +225,6 @@ MSVehicleType::build(SUMOVTypeParameter& from) {
             break;
         case SUMO_TAG_CF_KRAUSS_PLUS_SLOPE:
             vtype->myCarFollowModel = new MSCFModel_KraussPS(vtype, accel, decel, sigma, tau);
-            break;
-        case SUMO_TAG_CF_KRAUSS_ACCEL_BOUND:
-            vtype->myCarFollowModel = new MSCFModel_KraussAccelBound(vtype, accel, decel, sigma, tau);
             break;
         case SUMO_TAG_CF_SMART_SK:
             vtype->myCarFollowModel = new MSCFModel_SmartSK(vtype, accel, decel, sigma, tau,

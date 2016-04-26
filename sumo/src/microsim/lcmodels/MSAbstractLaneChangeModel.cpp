@@ -11,7 +11,7 @@
 // Interface for lane-change models
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -215,6 +215,11 @@ MSAbstractLaneChangeModel::continueLaneChangeManeuver(bool moved) {
         const SUMOReal sourceHalfWidth = myShadowLane->getWidth() / 2.0;
         const SUMOReal targetHalfWidth = myVehicle.getLane()->getWidth() / 2.0;
         if (myLaneChangeCompletion * (sourceHalfWidth + targetHalfWidth) - myVehicle.getVehicleType().getWidth() / 2.0 > sourceHalfWidth) {
+            // removing partial occupator shadows - will be rebuilt in enterLaneAtLaneChange
+            for (std::vector<MSLane*>::const_iterator it = myPartiallyOccupatedByShadow.begin(); it != myPartiallyOccupatedByShadow.end(); ++it) {
+                (*it)->resetPartialOccupation(&myVehicle);
+            }
+            myPartiallyOccupatedByShadow.clear();
             removeLaneChangeShadow(MSMoveReminder::NOTIFICATION_LANE_CHANGE);
         }
     }

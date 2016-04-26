@@ -9,7 +9,7 @@
 // Parses the command line arguments
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -49,11 +49,6 @@
 bool
 OptionsParser::parse(int argc, char** argv) {
     bool ok = true;
-    if (argc == 2 && argv[1][0] != '-') {
-        // special case only one parameter is handled like config
-        check("-c", argv[1], ok);
-        return ok;
-    }
     for (int i = 1; i < argc;) {
         try {
             int add;

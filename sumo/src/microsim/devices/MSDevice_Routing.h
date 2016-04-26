@@ -9,7 +9,7 @@
 // A device that performs vehicle rerouting based on current edge speeds
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,6 +38,7 @@
 #include <utils/common/SUMOTime.h>
 #include <utils/common/WrappingCommand.h>
 #include <utils/vehicle/SUMOAbstractRouter.h>
+#include <utils/vehicle/AStarRouter.h>
 #include <microsim/MSVehicle.h>
 #include "MSDevice.h"
 
@@ -108,6 +109,10 @@ public:
         return !myWithTaz && !myEdgeEfforts.empty();
     }
 
+    /// @brief return the router instance
+    static SUMOAbstractRouter<MSEdge, SUMOVehicle>& getRouterTT(
+        const MSEdgeVector& prohibited = MSEdgeVector());
+
 #ifdef HAVE_FOX
     static void waitForAll();
     static void lock() {
@@ -169,6 +174,9 @@ public:
     void skipRouting(const SUMOTime currentTime) {
         mySkipRouting = currentTime;
     }
+
+    /// @brief return current travel speed assumption
+    static SUMOReal getAssumedSpeed(const MSEdge* edge);
 
 
 private:
@@ -327,6 +335,9 @@ private:
 
     /// @brief The router to use
     static SUMOAbstractRouter<MSEdge, SUMOVehicle>* myRouter;
+
+    /// @brief The router to use by rerouter elements
+    static AStarRouter<MSEdge, SUMOVehicle, prohibited_withPermissions<MSEdge, SUMOVehicle> >* myRouterWithProhibited;
 
     /// @brief Whether to disturb edge weights dynamically
     static SUMOReal myRandomizeWeightsFactor;

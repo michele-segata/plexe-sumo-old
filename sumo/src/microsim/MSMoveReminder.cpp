@@ -9,7 +9,7 @@
 // Something on a lane to be noticed about vehicle movement
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,7 +47,6 @@ MSMoveReminder::MSMoveReminder(const std::string& description, MSLane* const lan
 }
 
 
-#ifdef HAVE_INTERNAL
 void
 MSMoveReminder::updateDetector(SUMOVehicle& veh, SUMOReal entryPos, SUMOReal leavePos,
                                SUMOTime entryTime, SUMOTime currentTime, SUMOTime leaveTime,
@@ -95,6 +94,5 @@ void
 MSMoveReminder::removeFromVehicleUpdateValues(SUMOVehicle& veh) {
     myLastVehicleUpdateValues.erase(&veh);
 }
-#endif
 /****************************************************************************/
 

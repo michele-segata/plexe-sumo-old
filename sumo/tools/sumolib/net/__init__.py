@@ -12,7 +12,7 @@ This file contains a content handler for parsing sumo network xml files.
 It uses other classes from this module to represent the road network.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@ the Free Software Foundation; either version 3 of the License, or
 """
 
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import sys
 import math
@@ -129,6 +130,7 @@ class Net:
         self._rtree = None
         self._allLanes = []
         self._origIdx = None
+        self.hasWarnedAboutMissingRTree = False
 
     def setLocation(self, netOffset, convBoundary, origBoundary, projParameter):
         self._location["netOffset"] = netOffset
@@ -213,6 +215,11 @@ class Net:
                 if d < r:
                     edges.append((e, d))
         except ImportError:
+            if not self.hasWarnedAboutMissingRTree:
+                print(
+                    "Warning: Module 'rtree' not available. Using brute-force fallback")
+                self.hasWarnedAboutMissingRTree = True
+
             for edge in self._edges:
                 d = sumolib.geomhelper.distancePointToPolygon(
                     (x, y), edge.getShape(includeJunctions))
@@ -388,14 +395,14 @@ class NetReader(handler.ContentHandler):
             function = attrs.get('function', '')
             if function == '' or self._withInternal:
                 prio = -1
-                if attrs.has_key('priority'):
+                if 'priority' in attrs:
                     prio = int(attrs['priority'])
                 name = ""
-                if attrs.has_key('name'):
+                if 'name' in attrs:
                     name = attrs['name']
                 self._currentEdge = self._net.addEdge(attrs['id'],
                                                       attrs.get('from', None), attrs.get('to', None), prio, function, name)
-                if attrs.has_key('shape'):
+                if 'shape' in attrs:
                     self.processShape(self._currentEdge, attrs['shape'])
             else:
                 if function in ['crossing', 'walkingarea']:
@@ -408,7 +415,7 @@ class NetReader(handler.ContentHandler):
                 float(attrs['length']),
                 attrs.get('allow'),
                 attrs.get('disallow'))
-            if attrs.has_key('shape'):
+            if 'shape' in attrs:
                 # deprecated: at some time, this is mandatory
                 self._currentShape = attrs['shape']
             else:
@@ -430,7 +437,7 @@ class NetReader(handler.ContentHandler):
             if lid[0] != ':' and lid != "SUMO_NO_DESTINATION" and self._currentEdge:
                 connected = self._net.getEdge(lid[:lid.rfind('_')])
                 tolane = int(lid[lid.rfind('_') + 1:])
-                if attrs.has_key('tl') and attrs['tl'] != "":
+                if 'tl' in attrs and attrs['tl'] != "":
                     tl = attrs['tl']
                     tllink = int(attrs['linkIdx'])
                     tlid = attrs['tl']
@@ -456,7 +463,7 @@ class NetReader(handler.ContentHandler):
                 toEdge = self._net.getEdge(toEdgeID)
                 fromLane = fromEdge.getLane(int(attrs['fromLane']))
                 toLane = toEdge.getLane(int(attrs['toLane']))
-                if attrs.has_key('tl') and attrs['tl'] != "":
+                if 'tl' in attrs and attrs['tl'] != "":
                     tl = attrs['tl']
                     tllink = int(attrs['linkIndex'])
                     tls = self._net.addTLS(tl, fromLane, toLane, tllink)

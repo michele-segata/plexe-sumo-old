@@ -8,7 +8,7 @@
 // Helper for parsing command line arguments and reading configuration files
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -83,6 +83,16 @@ public:
      *  the name of the configuration).
      */
     static void loadConfiguration();
+
+
+private:
+    /** @brief Retrieves the XML root element of a supposed configuration or net
+     *
+     * @param[in] filename the XML file to parse
+     * @return the root element if any
+     */
+    static std::string getRoot(const std::string& filename);
+
 
 private:
     static int myArgC;

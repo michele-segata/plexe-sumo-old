@@ -8,7 +8,7 @@
 // Tests the cfmodel functions 
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -56,7 +56,7 @@ class MSCFModelTest : public testing::Test {
 
         virtual void TearDown(){
             delete m;
-//            delete type; // !!! seems to lead to a segfault on linux
+            delete type;
         }
 };
 

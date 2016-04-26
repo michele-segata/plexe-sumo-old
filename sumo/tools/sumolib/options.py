@@ -8,7 +8,7 @@
 Provides utility functions for dealing with program options
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2012-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -18,6 +18,7 @@ the Free Software Foundation; either version 3 of the License, or
 """
 
 from __future__ import print_function
+from __future__ import absolute_import
 import os
 import sys
 import subprocess
@@ -27,18 +28,14 @@ from xml.sax import parse, handler
 
 
 def get_long_option_names(application):
-    # using option --save-template and parsing xml would be prettier
-    # but we do not want to rely on a temporary file
-    output, error = subprocess.Popen(
-        [application, '--help'],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE).communicate()
-    reprog = re.compile('(--\S*)\s')
+    # @todo using option "--save-template stdout" and parsing xml would be prettier
+    output = subprocess.check_output([application, '--help'])
+    reprog = re.compile(b'(--\S*)\s')
     result = []
-    for line in output.split(os.linesep):
+    for line in output.splitlines():
         m = reprog.search(line)
         if m:
-            result.append(m.group(1))
+            result.append(m.group(1).decode('utf-8'))
     return result
 
 
@@ -53,7 +50,7 @@ class OptionReader(handler.ContentHandler):
         self.opts = []
 
     def startElement(self, name, attrs):
-        if attrs.has_key('value'):
+        if 'value' in attrs:
             self.opts.append(
                 Option(name, attrs['value'], attrs.get('type'), attrs.get('help')))
 

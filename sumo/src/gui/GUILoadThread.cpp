@@ -9,7 +9,7 @@
 // Class describing the thread that performs the loading of a simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -63,9 +63,7 @@
 #include "GUIGlobals.h"
 #include "GUIEvent_SimulationLoaded.h"
 
-#ifdef HAVE_INTERNAL
 #include <mesogui/GUIMEVehicleControl.h>
-#endif
 
 #ifndef NO_TRACI
 #include <traci-server/TraCIServer.h>
@@ -167,13 +165,12 @@ GUILoadThread::run() {
         myParent->onCmdGaming(0, 0, 0);
     }
     MSVehicleControl* vehControl = 0;
-#ifdef HAVE_INTERNAL
     GUIVisualizationSettings::UseMesoSim = MSGlobals::gUseMesoSim;
     if (MSGlobals::gUseMesoSim) {
         vehControl = new GUIMEVehicleControl();
-    } else
-#endif
+    } else {
         vehControl = new GUIVehicleControl();
+    }
 
     GUINet* net = 0;
     int simStartTime = 0;
@@ -212,7 +209,7 @@ GUILoadThread::run() {
             simStartTime = string2time(oc.getString("begin"));
             simEndTime = string2time(oc.getString("end"));
             guiSettingsFiles = oc.getStringVector("gui-settings-file");
-#ifdef HAVE_INTERNAL
+#ifdef HAVE_OSG
             osgView = oc.getBool("osg-view");
 #endif
         }

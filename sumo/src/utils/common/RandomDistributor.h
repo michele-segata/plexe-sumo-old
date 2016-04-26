@@ -9,7 +9,7 @@
 // Represents a generic random distribution
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2005-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2005-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -60,8 +60,8 @@ public:
      *   older entrys will be removed when adding more than the maximumSize
      */
     RandomDistributor() :
-        myProb(0)
-    {}
+        myProb(0) {
+    }
 
     /// @brief Destructor
     ~RandomDistributor() { }

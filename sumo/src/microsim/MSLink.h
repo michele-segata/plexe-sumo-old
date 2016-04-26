@@ -9,7 +9,7 @@
 // A connnection between lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -76,6 +76,9 @@ class OutputDevice;
 class MSLink {
 public:
 
+    // distance to link in m below which adaptation for zipper-merging should take place
+    static const SUMOReal ZIPPER_ADAPT_DIST;
+
     struct LinkLeader {
         LinkLeader(MSVehicle* _veh, SUMOReal _gap, SUMOReal _distToCrossing) :
             vehAndGap(std::make_pair(_veh, _gap)),
@@ -110,8 +113,8 @@ public:
             arrivalTimeBraking(_arrivalTimeBraking),
             arrivalSpeedBraking(_arrivalSpeedBraking),
             waitingTime(_waitingTime),
-            dist(_dist)
-        {}
+            dist(_dist) {
+        }
 
         /// @brief The time the vehicle's front arrives at the link
         const SUMOTime arrivalTime;
@@ -196,6 +199,11 @@ public:
      * approaching (dummy values otherwise)
      * @note used for visualisation of link items */
     ApproachingVehicleInformation getApproaching(const SUMOVehicle* veh) const;
+
+    /// @brief return all approaching vehicles
+    const std::map<const SUMOVehicle*, ApproachingVehicleInformation>& getApproaching() const {
+        return myApproachingVehicles;
+    }
 
     /** @brief Returns the information whether the link may be passed
      *
@@ -314,6 +322,9 @@ public:
         return myState == LINKSTATE_TL_RED || myState == LINKSTATE_TL_REDYELLOW;
     }
 
+    inline bool isTLSControlled() const {
+        return myLastStateChange != SUMOTime_MIN;
+    }
 
     /** @brief Returns the length of this link
      *
@@ -387,6 +398,25 @@ public:
     //// @brief @return whether the foe vehicle is a leader for ego
     bool isLeader(const MSVehicle* ego, const MSVehicle* foe);
 
+    /// @brief return whether the fromLane of this link is an internal lane
+    bool fromInternalLane() const;
+
+    /// @brief return whether the fromLane of this link is an internal lane and toLane is a normal lane
+    bool isExitLink() const;
+
+    /// @brief return whether the fromLane and the toLane of this link are internal lanes
+    bool isInternalJunctionLink() const;
+
+    /** @brief Returns the time penalty for passing a tls-controlled link (meso) */
+    SUMOTime getMesoTLSPenalty() const {
+        return myMesoTLSPenalty;
+    }
+
+    /** @brief Sets the time penalty for passing a tls-controlled link (meso) */
+    void setMesoTLSPenalty(const SUMOTime penalty) {
+        myMesoTLSPenalty = penalty;
+    }
+
 private:
     /// @brief return whether the given vehicles may NOT merge safely
     static inline bool unsafeMergeSpeeds(SUMOReal leaderSpeed, SUMOReal followerSpeed, SUMOReal leaderDecel, SUMOReal followerDecel) {
@@ -428,6 +458,9 @@ private:
     bool myAmCont;
 
     bool myKeepClear;
+
+    /// @brief penalty time for mesoscopic simulation
+    SUMOTime myMesoTLSPenalty;
 
 #ifdef HAVE_INTERNAL_LANES
     /// @brief The following junction-internal lane if used

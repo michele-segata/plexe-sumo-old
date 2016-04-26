@@ -1,5 +1,5 @@
 /****************************************************************************/
-/// @file    MSChargingStation_h.h
+/// @file    MSChargingStation.h
 /// @author  Daniel Krajzewicz
 /// @author  Tamas Kurzveil
 /// @author  Pablo Alvarez Lopez
@@ -9,7 +9,7 @@
 // Chargin Station for Electric vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.

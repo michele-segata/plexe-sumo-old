@@ -11,7 +11,7 @@
 // Importer for network edges stored in XML
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -61,11 +61,6 @@
 
 
 // ===========================================================================
-// used constants
-// ===========================================================================
-const SUMOReal SUMOXML_INVALID_POSITION = -999999.;
-
-// ===========================================================================
 // method definitions
 // ===========================================================================
 NIXMLEdgesHandler::NIXMLEdgesHandler(NBNodeCont& nc,
@@ -84,8 +79,8 @@ NIXMLEdgesHandler::NIXMLEdgesHandler(NBNodeCont& nc,
       myCurrentEdge(0), myHaveReportedAboutOverwriting(false),
       myHaveReportedAboutTypeOverride(false),
       myHaveWarnedAboutDeprecatedLaneId(false),
-      myKeepEdgeShape(!options.getBool("plain.extend-edge-shape"))
-{}
+      myKeepEdgeShape(!options.getBool("plain.extend-edge-shape")) {
+}
 
 
 NIXMLEdgesHandler::~NIXMLEdgesHandler() {}

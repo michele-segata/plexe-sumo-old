@@ -9,7 +9,7 @@
 // Sets and checks options for netgen
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2011-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2011-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -223,6 +223,7 @@ NGFrame::checkOptions() {
                 type != toString(NODETYPE_ZIPPER) &&
                 type != toString(NODETYPE_NOJUNCTION) &&
                 type != toString(NODETYPE_RAIL_SIGNAL) &&
+                type != toString(NODETYPE_RAIL_CROSSING) &&
                 type != toString(NODETYPE_RIGHT_BEFORE_LEFT)) {
             WRITE_ERROR("Only the following junction types are known: " +
                         toString(NODETYPE_TRAFFIC_LIGHT) + ", " +
@@ -234,6 +235,7 @@ NGFrame::checkOptions() {
                         toString(NODETYPE_ZIPPER) + ", " +
                         toString(NODETYPE_NOJUNCTION) + ", " +
                         toString(NODETYPE_RAIL_SIGNAL) + ", " +
+                        toString(NODETYPE_RAIL_CROSSING) + ", " +
                         toString(NODETYPE_RIGHT_BEFORE_LEFT));
             ok = false;
         }

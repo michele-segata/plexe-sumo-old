@@ -10,7 +10,7 @@
 // Builds detectors for microsim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,7 +36,7 @@
 #include <string>
 #include <microsim/output/MSCrossSection.h>
 #include <microsim/traffic_lights/MSTLLogicControl.h>
-
+#include <microsim/output/MSE2Collector.h>
 
 // ===========================================================================
 // class declarations
@@ -45,10 +45,8 @@ class MSDetectorFileOutput;
 class MSLane;
 class MSEdge;
 
-#ifdef HAVE_INTERNAL
 class MEInductLoop;
 class MESegment;
-#endif
 
 
 // ===========================================================================
@@ -366,7 +364,7 @@ public:
      * @param[in] haltingSpeedThreshold Detector parameter: the speed a vehicle's speed must be below to be assigned as jammed
      * @param[in] jamDistThreshold Detector parameter: the distance between two vehicles in order to not count them to one jam
      */
-    virtual MSDetectorFileOutput* createSingleLaneE2Detector(const std::string& id,
+    virtual MSE2Collector* createSingleLaneE2Detector(const std::string& id,
             DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
             SUMOTime haltingTimeThreshold,
             SUMOReal haltingSpeedThreshold,
@@ -447,10 +445,10 @@ public:
      * @param[in] jamDistThreshold Detector parameter: the distance between two vehicles in order to not count them to one jam
      * @todo Check whether this method is really needful
      */
-    MSDetectorFileOutput* buildSingleLaneE2Det(const std::string& id,
-            DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
-            SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
-            SUMOReal jamDistThreshold);
+    MSE2Collector* buildSingleLaneE2Det(const std::string& id,
+                                        DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
+                                        SUMOTime haltingTimeThreshold, SUMOReal haltingSpeedThreshold,
+                                        SUMOReal jamDistThreshold);
 
 
     /** @brief Builds an e2 detector that continues on preceeding lanes

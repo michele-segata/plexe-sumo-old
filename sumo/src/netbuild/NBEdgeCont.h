@@ -9,7 +9,7 @@
 // Storage for edges, including some functionality operating on multiple edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -549,8 +549,8 @@ private:
          * @param[in] mayDefinitelyPass Whether the connection may be passed without braking
          */
         PostProcessConnection(const std::string& from_, int fromLane_, const std::string& to_, int toLane_, bool mayDefinitelyPass_, bool keepClear_, SUMOReal contPos_) :
-            from(from_), fromLane(fromLane_), to(to_), toLane(toLane_), mayDefinitelyPass(mayDefinitelyPass_), keepClear(keepClear_), contPos(contPos_)
-        { }
+            from(from_), fromLane(fromLane_), to(to_), toLane(toLane_), mayDefinitelyPass(mayDefinitelyPass_), keepClear(keepClear_), contPos(contPos_) {
+        }
         /// @brief The id of the edge the connection starts at
         std::string from;
         /// @brief The number of the lane the connection starts at

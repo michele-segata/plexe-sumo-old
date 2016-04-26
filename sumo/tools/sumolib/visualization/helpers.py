@@ -9,7 +9,7 @@
 Helper methods for plotting
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2013-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -17,6 +17,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import matplotlib
@@ -124,7 +126,8 @@ def applyPlotOptions(fig, ax, options):
             xticks(
                 arange(float(vals[0]), float(vals[1]), float(vals[2])), size=float(vals[3]))
         else:
-            print "Error: ticks must be given as one float (<SIZE>) or four floats (<MIN>,<MAX>,<STEP>,<SIZE>)"
+            print(
+                "Error: ticks must be given as one float (<SIZE>) or four floats (<MIN>,<MAX>,<STEP>,<SIZE>)")
             sys.exit()
     if options.xtime1:
         ax.xaxis.set_major_formatter(ff(m2hm1))
@@ -150,7 +153,8 @@ def applyPlotOptions(fig, ax, options):
             yticks(
                 arange(float(vals[0]), float(vals[1]), float(vals[2])), size=float(vals[3]))
         else:
-            print "Error: ticks must be given as one float (<SIZE>) or four floats (<MIN>,<MAX>,<STEP>,<SIZE>)"
+            print(
+                "Error: ticks must be given as one float (<SIZE>) or four floats (<MIN>,<MAX>,<STEP>,<SIZE>)")
             sys.exit()
     if options.ytime1:
         ax.yaxis.set_major_formatter(ff(m2hm1))
@@ -175,7 +179,8 @@ def applyPlotOptions(fig, ax, options):
             fig.subplots_adjust(left=float(vals[0]), bottom=float(
                 vals[1]), right=float(vals[2]), top=float(vals[3]))
         else:
-            print "Error: adjust must be given as two floats (<LEFT>,<BOTTOM>) or four floats (<LEFT>,<BOTTOM>,<RIGHT>,<TOP>)"
+            print(
+                "Error: adjust must be given as two floats (<LEFT>,<BOTTOM>) or four floats (<LEFT>,<BOTTOM>,<RIGHT>,<TOP>)")
             sys.exit()
 
 
@@ -201,7 +206,7 @@ def getColor(options, i, a):
     if options.colors:
         v = options.colors.split(",")
         if i >= len(v):
-            print "Error: not enough colors given"
+            print("Error: not enough colors given")
             sys.exit(1)
         return v[i]
     if options.colormap[0] == '#':
@@ -264,9 +269,9 @@ def logNormalise(values, maxValue):
         if values[e] != 0:
             values[e] = log(values[e]) / log(maxValue)
         if not emin or emin > values[e]:
-            emin = edgeValuesC[e]
+            emin = values[e]
         if not emax or emax < values[e]:
-            emax = edgeValuesC[e]
+            emax = values[e]
     for e in values:
         values[e] = (values[e] - emin) / (emax - emin)
 

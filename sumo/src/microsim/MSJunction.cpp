@@ -9,7 +9,7 @@
 // The base class for an intersection
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -56,8 +56,8 @@ MSJunction::MSJunction(const std::string& id, SumoXMLNodeType type, const Positi
     Named(id),
     myType(type),
     myPosition(position),
-    myShape(shape)
-{}
+    myShape(shape) {
+}
 
 
 MSJunction::~MSJunction() {}

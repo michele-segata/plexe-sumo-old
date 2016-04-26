@@ -67,8 +67,11 @@ meandata:lane-mean-data.add.xml
 connections:connections.con.xml
 turndefs:turn-defs.xml
 changednet:input_net.net.xml.chg
+edges:edges.edg.xml
+nodes:nodes.nod.xml
 edges:edges.xml
 nodes:nodes.xml
+net:net.net.xml
 connections:connections.xml
 fixed:routes.rou.xml.fixed
 activityfile:activityfile.tcl
@@ -127,6 +130,7 @@ output:instance at 0x[0-9A-Fa-f]+{REPLACE instance at <ADDRESS>}
 output:Written configuration to .*{REPLACE Written configuration to <PATH>}
 trips:<!-- generated on
 osmtrips:<!-- generated on
+districts:<!-- generated on
 pois:<!--
 routes:<!-- generated on
 errors:Execution of .*duarouter.*'{REPLACE Execution of <path-to>duarouter'}
@@ -145,9 +149,13 @@ osmimport:<!--{[->]}-->
 osmbatch:python.*randomTrips\.py{REPLACE python /path/to/randomTrips.py}
 osmbatch:python.*route2trips\.py{REPLACE python /path/to/route2trips.py}
 osmbatch:--trip-attributes.*--{REPLACE --trip-attributes <attrs-with-os-dependent-quoting> --}
+image:id="[^"]*"{REPLACE id="ReplacedTransientID"}
+image:url\(.*\){REPLACE ulr(ReplacedTransientURL)}
+image:href="[^"]*"{REPLACE href="ReplacedTransientHREF"}
 
 [floating_point_tolerance]
 net:0.0101
+image:0.001
 
 [unordered_text]
 errors:ERROR:SCHEMA

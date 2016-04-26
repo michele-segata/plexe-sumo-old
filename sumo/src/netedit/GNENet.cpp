@@ -15,7 +15,7 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -709,7 +709,6 @@ void
 GNENet::computeJunction(GNEJunction* junction) {
     // recompute tl-logics
     OptionsCont& oc = OptionsCont::getOptions();
-    NBEdgeCont& ec = myNetBuilder->getEdgeCont();
     NBTrafficLightLogicCont& tllCont = getTLLogicCont();
 
     NBNode* nbn = junction->getNBNode();
@@ -717,8 +716,8 @@ GNENet::computeJunction(GNEJunction* junction) {
     for (std::set<NBTrafficLightDefinition*>::iterator it = tldefs.begin(); it != tldefs.end(); it++) {
         NBTrafficLightDefinition* def = *it;
         def->setParticipantsInformation();
-        def->setTLControllingInformation(ec);
-        tllCont.computeSingleLogic(ec, oc, def);
+        def->setTLControllingInformation();
+        tllCont.computeSingleLogic(oc, def);
     }
 
     // @todo compute connections etc...
@@ -1017,6 +1016,9 @@ GNENet::computeAndUpdate(OptionsCont& oc) {
     }
     for (GNEJunctions::const_iterator it = myJunctions.begin(); it != myJunctions.end(); it++) {
         it->second->setLogicValid(true);
+        // updated shape
+        it->second->updateBoundary();
+        refreshElement(it->second);
     }
     myNeedRecompute = false;
 }

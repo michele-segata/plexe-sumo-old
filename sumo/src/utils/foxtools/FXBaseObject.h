@@ -9,7 +9,7 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2004-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2004-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -60,7 +60,7 @@ namespace FXEX {
  * This is a base class for ojects which can send messages to the application
  */
 class /* FXAPI // patch by Daniel Krajzewicz 24.02.2004 */
-        FXBaseObject : public FXObject {
+    FXBaseObject : public FXObject {
     FXDECLARE(FXBaseObject)
 
 protected:

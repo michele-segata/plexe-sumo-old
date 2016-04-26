@@ -9,7 +9,7 @@
 // Sets and checks options for netimport
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -62,6 +62,7 @@ NIFrame::fillOptions() {
     oc.doRegister("sumo-net-file", 's', new Option_FileName());
     oc.addSynonyme("sumo-net-file", "sumo-net", true);
     oc.addDescription("sumo-net-file", "Input", "Read SUMO-net from FILE");
+    oc.addXMLDefault("sumo-net-file", "net");
 
     oc.doRegister("node-files", 'n', new Option_FileName());
     oc.addSynonyme("node-files", "xml-node-files", true);
@@ -308,11 +309,9 @@ NIFrame::checkOptions() {
         } else {
             const std::string path = sumoPath + std::string("/data/typemap/");
             if (oc.isSet("osm-files")) {
-                oc.unSet("type-files");
                 oc.set("type-files", path + "osmNetconvert.typ.xml");
             }
             if (oc.isSet("opendrive-files")) {
-                oc.unSet("type-files");
                 oc.set("type-files", path + "opendriveNetconvert.typ.xml");
             }
         }

@@ -12,7 +12,7 @@
 // Helper methods for parsing vehicle attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -106,11 +106,7 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
     // parse repetition information
     if (attrs.hasAttribute(SUMO_ATTR_PERIOD)) {
         ret->setParameter |= VEHPARS_PERIODFREQ_SET;
-#ifdef HAVE_SUBSECOND_TIMESTEPS
         ret->repetitionOffset = attrs.getSUMOTimeReporting(SUMO_ATTR_PERIOD, id.c_str(), ok);
-#else
-        ret->repetitionOffset = attrs.get<SUMOReal>(SUMO_ATTR_PERIOD, id.c_str(), ok);
-#endif
     }
     if (attrs.hasAttribute(SUMO_ATTR_VEHSPERHOUR)) {
         ret->setParameter |= VEHPARS_PERIODFREQ_SET;
@@ -139,14 +135,14 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
         delete ret;
         throw ProcessError("Negative begin time in the definition of flow '" + id + "'.");
     }
-    SUMOTime end = endDefault;
-    if (end < 0) {
-        end = SUMOTime_MAX;
+    ret->repetitionEnd = endDefault;
+    if (ret->repetitionEnd < 0) {
+        ret->repetitionEnd = SUMOTime_MAX;
     }
     if (attrs.hasAttribute(SUMO_ATTR_END)) {
-        end = attrs.getSUMOTimeReporting(SUMO_ATTR_END, id.c_str(), ok);
+        ret->repetitionEnd = attrs.getSUMOTimeReporting(SUMO_ATTR_END, id.c_str(), ok);
     }
-    if (ok && end <= ret->depart) {
+    if (ok && ret->repetitionEnd <= ret->depart) {
         delete ret;
         throw ProcessError("Flow '" + id + "' ends before or at its begin time.");
     }
@@ -161,23 +157,23 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
                 throw ProcessError("Negative repetition number in the definition of flow '" + id + "'.");
             }
             if (ok && ret->repetitionOffset < 0) {
-                ret->repetitionOffset = (end - ret->depart) / ret->repetitionNumber;
+                ret->repetitionOffset = (ret->repetitionEnd - ret->depart) / ret->repetitionNumber;
             }
         }
+        ret->repetitionEnd = ret->depart + ret->repetitionNumber * ret->repetitionOffset;
     } else {
         // interpret repetitionNumber
         if (ok && ret->repetitionProbability > 0) {
             ret->repetitionNumber = std::numeric_limits<int>::max();
-            ret->repetitionEnd = end;
         } else {
             if (ok && ret->repetitionOffset <= 0) {
                 delete ret;
                 throw ProcessError("Invalid repetition rate in the definition of flow '" + id + "'.");
             }
-            if (end == SUMOTime_MAX) {
+            if (ret->repetitionEnd == SUMOTime_MAX) {
                 ret->repetitionNumber = std::numeric_limits<int>::max();
             } else {
-                ret->repetitionNumber = MAX2(1, (int)(((SUMOReal)(end - ret->depart)) / ret->repetitionOffset + 0.5));
+                ret->repetitionNumber = MAX2(1, (int)(((SUMOReal)(ret->repetitionEnd - ret->depart)) / ret->repetitionOffset + 0.5));
             }
         }
     }
@@ -499,7 +495,6 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         allowedCFModelAttrs[SUMO_TAG_CF_KRAUSS] = krausParams;
         allowedCFModelAttrs[SUMO_TAG_CF_KRAUSS_ORIG1] = krausParams;
         allowedCFModelAttrs[SUMO_TAG_CF_KRAUSS_PLUS_SLOPE] = krausParams;
-        allowedCFModelAttrs[SUMO_TAG_CF_KRAUSS_ACCEL_BOUND] = krausParams;
 
         std::set<SumoXMLAttr> smartSKParams;
         smartSKParams.insert(SUMO_ATTR_ACCEL);

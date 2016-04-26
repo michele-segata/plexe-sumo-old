@@ -9,7 +9,7 @@
 Coordinates traffic lights in a sumo net for a given demand
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2010-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2010-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -17,6 +17,8 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os
 import sys
@@ -52,9 +54,10 @@ def pair2str(p, full=True):
 
 
 def logAddedPair(TLSP, sets, operation):
-    print "added pair %s,%s with operation %s" % (TLSP.otl.getID(), TLSP.tl.getID(), operation)
+    print("added pair %s,%s with operation %s" %
+          (TLSP.otl.getID(), TLSP.tl.getID(), operation))
     for s in sets:
-        print "    " + "   ".join([pair2str(p, False) for p in s])
+        print("    " + "   ".join([pair2str(p, False) for p in s]))
 
 
 def get_options(args=None):
@@ -247,7 +250,7 @@ def getFirstGreenOffset(tl, connection):
     if len(tlp) != 1:
         raise RuntimeError("Found %s programs for tl %s" %
                            (len(tlp), connection._tls))
-    phases = tlp.values()[0].getPhases()
+    phases = list(tlp.values())[0].getPhases()
     start = 0
     for state, duration in phases:
         if state[index] in ['G', 'g']:
@@ -306,11 +309,11 @@ def main(options):
     tlPairsList = [
         value for sortKey, value in sorted(sortHelper, reverse=True)]
 
-    print("number of tls-pairs: %s" % (len(tlPairsList)))
+    print("number of tls-pairs: %s" % len(tlPairsList))
     if options.verbose:
-        print '\n'.join(["edges=%s,%s prio=%s numVehicles/time=%s" % (
+        print('\n'.join(["edges=%s,%s prio=%s numVehicles/time=%s" % (
             pairKey.edgeID, pairKey.edgeID2, pairData.prio, pairData.numVehicles / pairData.travelTime)
-            for pairKey, pairData in tlPairsList])
+            for pairKey, pairData in tlPairsList]))
 
     coordinatedSets = computePairOffsets(
         [pairData for pairKey, pairData in tlPairsList], options.verbose)
@@ -319,9 +322,9 @@ def main(options):
 
     with open(options.outfile, 'w') as outf:
         outf.write('<additional>\n')
-        for ID, startOffset in offsetDict.items():
-            outf.write('    <tlLogic id="%s" programID="0" offset="%s"/>\n' %
-                       (ID, str(startOffset)))
+        for ID, startOffset in sorted(offsetDict.items()):
+            outf.write('    <tlLogic id="%s" programID="0" offset="%.2f"/>\n' %
+                       (ID, startOffset))
         outf.write('</additional>\n')
 
     sumo = sumolib.checkBinary('sumo')

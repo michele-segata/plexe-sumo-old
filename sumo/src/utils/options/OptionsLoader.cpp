@@ -9,7 +9,7 @@
 // A SAX-Handler for loading options
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -50,8 +50,8 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-OptionsLoader::OptionsLoader()
-    : myError(false), myOptions(OptionsCont::getOptions()), myItem() {}
+OptionsLoader::OptionsLoader(const bool rootOnly)
+    : myRootOnly(rootOnly), myError(false), myOptions(OptionsCont::getOptions()), myItem() {}
 
 
 OptionsLoader::~OptionsLoader() {}
@@ -60,15 +60,17 @@ OptionsLoader::~OptionsLoader() {}
 void OptionsLoader::startElement(const XMLCh* const name,
                                  XERCES_CPP_NAMESPACE::AttributeList& attributes) {
     myItem = TplConvert::_2str(name);
-    for (int i = 0; i < (int) attributes.getLength(); i++) {
-        std::string key = TplConvert::_2str(attributes.getName(i));
-        std::string value = TplConvert::_2str(attributes.getValue(i));
-        if (key == "value" || key == "v") {
-            setValue(myItem, value);
+    if (!myRootOnly) {
+        for (int i = 0; i < (int)attributes.getLength(); i++) {
+            std::string key = TplConvert::_2str(attributes.getName(i));
+            std::string value = TplConvert::_2str(attributes.getValue(i));
+            if (key == "value" || key == "v") {
+                setValue(myItem, value);
+            }
+            // could give a hint here about unsupported attributes in configuration files
         }
-        // could give a hint here about unsupported attributes in configuration files
+        myValue = "";
     }
-    myValue = "";
 }
 
 

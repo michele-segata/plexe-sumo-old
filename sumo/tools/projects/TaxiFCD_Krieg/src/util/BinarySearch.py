@@ -10,7 +10,7 @@
 binary search helper functions.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -46,7 +46,7 @@ def isElmInListFaster(list, elm):
     pos = 0
     # aktuelle Teilungsposition
 
-    # solange der Schlüssel im Bereich liegt (andernfalls ist das gesuchte
+    # solange der Schluessel im Bereich liegt (andernfalls ist das gesuchte
     # Element nicht vorhanden)
     while elm >= list[links] and elm <= list[rechts]:
         # Aktualisierung der Anzahl der verschiedenen Elemente
@@ -58,12 +58,12 @@ def isElmInListFaster(list, elm):
 
         if elm > list[pos]:             # rechtes Teilintervall
             links = pos + 1
-            # daten[pos] bereits überprüft
+            # daten[pos] bereits ueberprueft
         elif elm < list[pos]:        # linkes Teilintervall
             rechts = pos - 1
-            # daten[pos] bereits überprüft
+            # daten[pos] bereits ueberprueft
         else:                                     # Element gefunden
             return True
-            # Position zurückgeben
+            # Position zurueckgeben
     return False
     # Element nicht gefunden

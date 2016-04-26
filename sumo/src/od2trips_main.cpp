@@ -11,7 +11,7 @@
 // Main for OD2TRIPS
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -236,7 +236,7 @@ main(int argc, char** argv) {
     OptionsCont& oc = OptionsCont::getOptions();
     // give some application descriptions
     oc.setApplicationDescription("Importer of O/D-matrices for the road traffic simulation SUMO.");
-    oc.setApplicationName("od2trips", "SUMO od2trips Version " + getBuildName(VERSION_STRING));
+    oc.setApplicationName("od2trips", "SUMO od2trips Version " VERSION_STRING);
     int ret = 0;
     try {
         // initialise subsystems

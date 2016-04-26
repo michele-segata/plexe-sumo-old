@@ -7,7 +7,7 @@
 // A view on the network being edited (adapted from GUIViewTraffic)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -85,8 +85,7 @@ FXDEFMAP(GNEViewNet) GNEViewNetMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_DELETE_GEOMETRY, GNEViewNet::onCmdDeleteGeometry),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_DUPLICATE_LANE, GNEViewNet::onCmdDuplicateLane),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_NODE_SHAPE, GNEViewNet::onCmdNodeShape),
-    FXMAPFUNC(SEL_COMMAND,  MID_GNE_NODE_REPLACE, GNEViewNet::onCmdNodeReplace),
-    FXMAPFUNC(SEL_COMMAND,  MID_GNE_VIS_HEIGHT, GNEViewNet::onCmdVisualizeHeight)
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_NODE_REPLACE, GNEViewNet::onCmdNodeReplace)
 };
 
 // Object implementation
@@ -244,6 +243,7 @@ GNEViewNet::GNEViewNet(
     scheme.addColor(RGBColor::ORANGE, 9, "rail_signal");
     scheme.addColor(RGBColor(192, 128, 64), 10, "zipper");
     scheme.addColor(RGBColor(192, 255, 192), 11, "traffic_light_right_on_red");
+    scheme.addColor(RGBColor(128, 0, 128), 12, "rail_crossing"); // dark purple
     junctionColorer.addScheme(scheme);
     myVisualizationSettings->junctionColorer = junctionColorer;
 }
@@ -1011,17 +1011,6 @@ GNEViewNet::onCmdNodeReplace(FXObject*, FXSelector, void*) {
 }
 
 
-long
-GNEViewNet::onCmdVisualizeHeight(FXObject*, FXSelector, void* /* data */) {
-    if (myVisualizeHeight->getCheck()) {
-        myVisualizationSettings->laneColorer.setActive(1); // colorZ
-    } else {
-        myVisualizationSettings->laneColorer.setActive(0); // default
-    }
-    update();
-    return 1;
-}
-
 // ===========================================================================
 // private
 // ===========================================================================
@@ -1045,10 +1034,6 @@ GNEViewNet::setEditMode(EditMode mode) {
                 // modes which depend on computed data
                 myNet->computeEverything((GNEApplicationWindow*)myApp);
                 break;
-            case GNE_MODE_INSPECT:
-                if (myVisualizeHeight->getCheck()) {
-                    myVisualizationSettings->laneColorer.setActive(1); // colorZ
-                }
             default:
                 break;
         }
@@ -1089,7 +1074,6 @@ GNEViewNet::buildEditModeControls() {
 
     myWarnAboutMerge = new FXMenuCheck(myToolbar, "ask for merge\t\tAsk for confirmation before merging junctions.", this, 0);
     myWarnAboutMerge->setCheck();
-    myVisualizeHeight = new FXMenuCheck(myToolbar, "show height\t\tVisualize height by color (green is low, red is high).", this, MID_GNE_VIS_HEIGHT);
 
     myChangeAllPhases = new FXMenuCheck(myToolbar, "apply change to all phases\t\tToggle whether clicking should apply state changes to all phases of the current traffic light plan", this, 0);
     myChangeAllPhases->setCheck(false);
@@ -1109,7 +1093,6 @@ GNEViewNet::updateModeSpecificControls() {
     myExtendToEdgeNodes->hide();
     myChangeAllPhases->hide();
     myWarnAboutMerge->hide();
-    myVisualizeHeight->hide();
     int widthChange = 0;
     if (myInspector->shown()) {
         widthChange += myInspector->getWidth() + addChange;
@@ -1141,7 +1124,6 @@ GNEViewNet::updateModeSpecificControls() {
             widthChange -= myInspector->getWidth() + addChange;
             myInspector->show();
             mySelectEdges->show();
-            myVisualizeHeight->show();
             break;
         case GNE_MODE_SELECT:
             widthChange -= mySelector->getWidth() + addChange;

@@ -9,7 +9,7 @@
 // Network state mean data collector for edges/lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2004-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2004-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -40,11 +40,9 @@
 #include "MSMeanData_Net.h"
 #include <limits>
 
-#ifdef HAVE_INTERNAL
 #include <microsim/MSGlobals.h>
 #include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
-#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -120,11 +118,9 @@ MSMeanData_Net::MSLaneMeanDataValues::notifyMoveInternal(SUMOVehicle& veh, SUMOR
 bool
 MSMeanData_Net::MSLaneMeanDataValues::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/, MSMoveReminder::Notification reason) {
     if (vehicleApplies(veh) && (getLane() == 0 || getLane() == static_cast<MSVehicle&>(veh).getLane())) {
-#ifdef HAVE_INTERNAL
         if (MSGlobals::gUseMesoSim) {
             removeFromVehicleUpdateValues(veh);
         }
-#endif
         if (reason == MSMoveReminder::NOTIFICATION_ARRIVED) {
             ++nVehArrived;
         } else if (reason == MSMoveReminder::NOTIFICATION_LANE_CHANGE) {
@@ -136,11 +132,9 @@ MSMeanData_Net::MSLaneMeanDataValues::notifyLeave(SUMOVehicle& veh, SUMOReal /*l
             }
         }
     }
-#ifdef HAVE_INTERNAL
     if (MSGlobals::gUseMesoSim) {
         return false;
     }
-#endif
     return reason == MSMoveReminder::NOTIFICATION_JUNCTION;
 }
 
@@ -225,7 +219,7 @@ MSMeanData_Net::MSMeanData_Net(const std::string& id,
                                const std::set<std::string> vTypes)
     : MSMeanData(id, dumpBegin, dumpEnd, useLanes, withEmpty, printDefaults,
                  withInternal, trackVehicles, maxTravelTime, minSamples, vTypes),
-    myHaltSpeed(haltSpeed) {
+      myHaltSpeed(haltSpeed) {
 }
 
 

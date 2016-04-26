@@ -9,7 +9,7 @@
 // The representation of a single edge during network building
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -167,7 +167,7 @@ public:
         /// @brief The id of the traffic light that controls this connection
         std::string tlID;
         /// @brief The index of this connection within the controlling traffic light
-        unsigned int tlLinkNo;
+        int tlLinkNo;
         /// @brief Information about being definitely free to drive (on-ramps)
         bool mayDefinitelyPass;
         /// @brief whether the junction must be kept clear when using this connection
@@ -414,6 +414,8 @@ public:
         return myLoadedLength > 0 ? myLoadedLength : myLength;
     }
 
+    /// @brief length that will be assigned to the lanes in the final network
+    SUMOReal getFinalLength() const;
 
     /** @brief Returns whether a length was set explicitly
      * @return Wether the edge's length was specified
@@ -708,7 +710,7 @@ public:
      * @param[in] mayDefinitelyPass Whether this connection is definitely undistrubed (special case for on-ramps)
      * @todo Check difference between "setConnection" and "addLane2LaneConnection"
      */
-    void setConnection(unsigned int lane, NBEdge* destEdge,
+    bool setConnection(unsigned int lane, NBEdge* destEdge,
                        unsigned int destLane,
                        Lane2LaneInfoType type,
                        bool mayUseSameDestination = false,
@@ -942,7 +944,7 @@ public:
      *  of this edge to the leftmost lane of myTurnDestination).
      * @param[in] noTLSControlled Whether the turnaround shall not be connected if this edge is controlled by a tls
      */
-    void appendTurnaround(bool noTLSControlled);
+    void appendTurnaround(bool noTLSControlled, bool checkPermissions);
 
 
 

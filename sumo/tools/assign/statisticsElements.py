@@ -12,7 +12,7 @@ This script is to define classes, functions, parse-reader and output files/forma
 - writing results into files.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
 
 import string
 from xml.sax import saxutils, make_parser, handler
@@ -133,14 +134,14 @@ class VehInformationReader(handler.ContentHandler):
 
 
 def getStatisticsOutput(assignments, outputfile):
-    foutveh = file(outputfile, 'w')
+    foutveh = open(outputfile, 'w')
     foutveh.write(
         'average vehicular travel time(s) = the sum of all vehicular travel times / the number of vehicles\n')
     foutveh.write(
         'average vehicular travel length(m) = the sum of all vehicular travel lengths / the number of vehicles\n')
     foutveh.write(
         'average vehicular travel speed(m/s) = the sum of all vehicular travel speeds / the number of vehicles\n')
-    for method in assignments.itervalues():
+    for method in assignments.values():
         foutveh.write('\nAssignment Method:%s\n' % method.label)
         foutveh.write('- total number of vehicles:%s\n' % method.totalVeh)
         foutveh.write('- total departure delay(s):%s, ' %
@@ -166,7 +167,7 @@ def getStatisticsOutput(assignments, outputfile):
 
 
 def getSignificanceTestOutput(assignments, tTest, tValueAvg, hValues, outputfile):
-    foutSGtest = file(outputfile, 'w')
+    foutSGtest = open(outputfile, 'w')
     if tTest:
         foutSGtest.write(
             'The significances of the performance averages among the used assignment models are examined with the t test.\n')

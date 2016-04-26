@@ -10,7 +10,7 @@
 // Importer for networks stored in OpenStreetMap format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -304,14 +304,18 @@ NIImporter_OpenStreetMap::insertEdge(Edge* e, int index, NBNode* from, NBNode* t
         index = 0;
     }
     if (from == to) {
-        // in the special case of a looped way split again using passed
         assert(passed.size() >= 2);
-        std::vector<long long int> geom(passed);
-        geom.pop_back(); // remove to-node
-        NBNode* intermediate = insertNodeChecking(geom.back(), nc, tlsc);
-        index = insertEdge(e, index, from, intermediate, geom, nb);
-        geom.clear();
-        return insertEdge(e, index, intermediate, to, geom, nb);
+        if (passed.size() == 2) {
+            WRITE_WARNING("Discarding edge '" + id + "' which connects two identical nodes without geometry.");
+            return index;
+        }
+        // in the special case of a looped way split again using passed
+        size_t intermediateIndex = passed.size() / 2;
+        NBNode* intermediate = insertNodeChecking(passed[intermediateIndex], nc, tlsc);
+        std::vector<long long int> part1(passed.begin(), passed.begin() + intermediateIndex);
+        std::vector<long long int> part2(passed.begin() + intermediateIndex + 1, passed.end());
+        index = insertEdge(e, index, from, intermediate, part1, nb);
+        return insertEdge(e, index, intermediate, to, part2, nb);
     }
     const int newIndex = index + 1;
 
@@ -556,8 +560,8 @@ NIImporter_OpenStreetMap::NodesHandler::NodesHandler(
     myIsInValidNodeTag(false),
     myHierarchyLevel(0),
     myUniqueNodes(uniqueNodes),
-    myImportElevation(importElevation)
-{ }
+    myImportElevation(importElevation) {
+}
 
 
 NIImporter_OpenStreetMap::NodesHandler::~NodesHandler() {}

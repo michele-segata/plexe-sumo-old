@@ -22,7 +22,7 @@ this is changed without adding comments. The same is true for camelCase
 changes of attributes.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2007-2015 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -30,10 +30,15 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 """
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import string
 import sys
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from xml.sax import saxutils, make_parser, handler
 from optparse import OptionParser
 from collections import defaultdict
@@ -64,7 +69,7 @@ class NetReader(handler.ContentHandler):
         self._nb = {}
 
     def startElement(self, name, attrs):
-        if name == 'edge' and (not attrs.has_key('function') or attrs['function'] != 'internal'):
+        if name == 'edge' and ('function' not in attrs or attrs['function'] != 'internal'):
             self._nb[attrs['id']] = set()
         elif name == 'connection':
             if attrs['from'] in self._nb and attrs['to'] in self._nb:
@@ -101,7 +106,7 @@ class RouteReader(handler.ContentHandler):
 
     def startDocument(self):
         if self._out:
-            print >> self._out, '<?xml version="1.0"?>'
+            print('<?xml version="1.0"?>', file=self._out)
 
     def endDocument(self):
         if self._out:
@@ -112,7 +117,7 @@ class RouteReader(handler.ContentHandler):
     def condOutputRedirect(self):
         if self._out and not self._fileOut:
             self._fileOut = self._out
-            self._out = StringIO.StringIO()
+            self._out = StringIO()
 
     def endOutputRedirect(self):
         if self._fileOut:
@@ -131,38 +136,39 @@ class RouteReader(handler.ContentHandler):
             self._fileOut = None
 
     def startElement(self, name, attrs):
-        if name == 'vehicle' and not attrs.has_key('route'):
+        if name == 'vehicle' and 'route' not in attrs:
             self.condOutputRedirect()
             self._vID = attrs['id']
         if name == 'route':
             self.condOutputRedirect()
-            if attrs.has_key('id'):
+            if 'id' in attrs:
                 self._routeID = attrs['id']
             else:
                 self._routeID = "for vehicle " + self._vID
             self._routeString = ''
-            if attrs.has_key('edges'):
+            if 'edges' in attrs:
                 self._routeString = attrs['edges']
             else:
                 self._changed = True
-                print "Warning: No edges attribute in route " + self._routeID
+                print("Warning: No edges attribute in route " + self._routeID)
         elif self._routeID:
-            print "Warning: This script does not handle nested '%s' elements properly." % name
+            print(
+                "Warning: This script does not handle nested '%s' elements properly." % name)
         if self._out:
             if name in camelCase:
                 name = camelCase[name]
                 self._changed = True
             self._out.write('<' + name)
-            if options.fix_length and attrs.has_key('length') and not attrs.has_key('minGap'):
+            if options.fix_length and 'length' in attrs and 'minGap' not in attrs:
                 length = float(attrs["length"])
                 minGap = 2.5
-                if attrs.has_key('guiOffset'):
+                if 'guiOffset' in attrs:
                     minGap = float(attrs["guiOffset"])
                 attrs = dict(attrs)
                 attrs["length"] = str(length - minGap)
                 attrs["minGap"] = str(minGap)
                 self._changed = True
-            for (key, value) in attrs.items():
+            for key, value in sorted(attrs.items()):
                 if key in camelCase:
                     key = camelCase[key]
                     self._changed = True
@@ -203,7 +209,7 @@ class RouteReader(handler.ContentHandler):
             returnValue = True
             edgeList = self._routeString.split()
             if len(edgeList) == 0:
-                print "Warning: Route %s is empty" % self._routeID
+                print("Warning: Route %s is empty" % self._routeID)
                 return False
             if net == None:
                 return True
@@ -213,20 +219,22 @@ class RouteReader(handler.ContentHandler):
                 if self._net.hasEdge(v):
                     cleanedEdgeList.append(v)
                 else:
-                    print "Warning: Unknown edge " + v + " in route " + self._routeID
+                    print(
+                        "Warning: Unknown edge " + v + " in route " + self._routeID)
                     returnValue = False
             while doConnectivityTest:
                 doConnectivityTest = False
                 for i, v in enumerate(cleanedEdgeList):
                     if i < len(cleanedEdgeList) - 1 and not self._net.isNeighbor(v, cleanedEdgeList[i + 1]):
-                        print "Warning: Route " + self._routeID + " disconnected between " + v + " and " + cleanedEdgeList[i + 1]
+                        print("Warning: Route " + self._routeID +
+                              " disconnected between " + v + " and " + cleanedEdgeList[i + 1])
                         interEdge = self._net.getIntermediateEdge(
                             v, cleanedEdgeList[i + 1])
                         if interEdge != '':
                             cleanedEdgeList.insert(i + 1, interEdge)
                             self._changed = True
                             self._addedString += interEdge + " "
-                            self._routeString = string.join(cleanedEdgeList)
+                            self._routeString = ' '.join(cleanedEdgeList)
                             doConnectivityTest = True
                             break
                         returnValue = False
@@ -272,11 +280,11 @@ for f in args:
     ffix = f + '.fixed'
     if options.fix:
         if options.verbose:
-            print "fixing " + f
+            print("fixing " + f)
         parser.setContentHandler(RouteReader(net, ffix))
     else:
         if options.verbose:
-            print "checking " + f
+            print("checking " + f)
     parser.parse(f)
     if options.fix and os.path.exists(ffix) and options.inplace:
         os.rename(ffix, f)

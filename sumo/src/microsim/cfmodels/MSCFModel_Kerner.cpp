@@ -9,7 +9,7 @@
 // car-following model by B. Kerner
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -42,7 +42,7 @@
 MSCFModel_Kerner::MSCFModel_Kerner(const MSVehicleType* vtype, SUMOReal accel,
                                    SUMOReal decel, SUMOReal headwayTime, SUMOReal k, SUMOReal phi)
     : MSCFModel(vtype, accel, decel, headwayTime), myK(k), myPhi(phi),
-      myTauDecel(decel* headwayTime) {
+      myTauDecel(decel * headwayTime) {
 }
 
 

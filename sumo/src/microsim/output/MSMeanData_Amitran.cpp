@@ -8,7 +8,7 @@
 // Network state mean data collector for edges/lanes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2015 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -38,12 +38,6 @@
 #include <utils/iodevices/OutputDevice.h>
 #include "MSMeanData_Amitran.h"
 #include <limits>
-
-#ifdef HAVE_INTERNAL
-#include <microsim/MSGlobals.h>
-#include <mesosim/MELoop.h>
-#include <mesosim/MESegment.h>
-#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -160,7 +154,7 @@ MSMeanData_Amitran::MSMeanData_Amitran(const std::string& id,
                                        const std::set<std::string> vTypes)
     : MSMeanData(id, dumpBegin, dumpEnd, useLanes, withEmpty, printDefaults,
                  withInternal, trackVehicles, maxTravelTime, minSamples, vTypes),
-    myHaltSpeed(haltSpeed) {
+      myHaltSpeed(haltSpeed) {
 }
 
 
