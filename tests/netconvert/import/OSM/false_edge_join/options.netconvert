@@ -1,1 +1,0 @@
---osm-files osm.xml -t=input_types.typ.xml --proj.utm --remove-edges.by-vclass=rail,rail_electric,bicycle,pedestrian --no-turnarounds --output.street-names

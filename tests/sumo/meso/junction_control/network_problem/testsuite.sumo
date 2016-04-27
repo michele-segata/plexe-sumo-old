@@ -1,8 +1,0 @@
-# deadlock in roundabout
-no_control
-
-# problem at traffic light
-control
-
-# smooth flow
-control.limited

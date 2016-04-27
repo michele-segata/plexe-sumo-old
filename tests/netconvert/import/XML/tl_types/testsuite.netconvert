@@ -1,8 +1,0 @@
-default
-default_actuated
-static
-actuated
-plain_tll_actuated
-
-# test a tl-controlled junction which has no junction logic
-unregulated
