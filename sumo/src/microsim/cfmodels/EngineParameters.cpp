@@ -18,6 +18,10 @@
 
 #include "EngineParameters.h"
 #include <cmath>
+//define M_PI if this is not defined in <cmath>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 EngineParameters::EngineParameters() : nGears(5), differentialRatio(3.714), wheelDiameter_m(0.94),
     mass_kg(1300), cAir(0.3), a_m2(2.7), rho_kgpm3(1.2), cr1(0.0136), cr2(5.18e-7),
@@ -119,7 +123,7 @@ void EngineParameters::computeCoefficients() {
 }
 
 void EngineParameters::dumpParameters(std::ostream &out) {
-    out << "ID: " << id << std::endl;
+    out << "ID: " << id.c_str() << std::endl;
 
     out << "Gearbox:\n";
     out << "\tGears number: " << (int)nGears << std::endl;

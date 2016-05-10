@@ -19,6 +19,10 @@
 
 #include "RealisticEngineModel.h"
 #include <cmath>
+//define M_PI if this is not defined in <cmath>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 #include <stdio.h>
 #include <iostream>
 
