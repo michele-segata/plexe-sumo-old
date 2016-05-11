@@ -18,6 +18,10 @@
 
 #include "EngineParameters.h"
 #include <cmath>
+//define M_PI if this is not defined in <cmath>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 EngineParameters::EngineParameters() : nGears(5), differentialRatio(3.714), wheelDiameter_m(0.94),
     mass_kg(1300), cAir(0.3), a_m2(2.7), rho_kgpm3(1.2), cr1(0.0136), cr2(5.18e-7),
@@ -105,7 +109,7 @@ void EngineParameters::computeCoefficients() {
     __airFrictionCoefficient = 0.5 * cAir * a_m2 * rho_kgpm3;
     __cr1 = mass_kg * massFactor * GRAVITY_MPS2 * cr1;
     __cr2 = mass_kg * massFactor * GRAVITY_MPS2 * cr2;
-    __gravity = mass_kg * massFactor * GRAVITY_MPS2 * sin(slope*180/M_PI);
+    __gravity = mass_kg * massFactor * GRAVITY_MPS2 * sin(slope/180*M_PI);
     __maxNoSlipAcceleration = tiresFrictionCoefficient * GRAVITY_MPS2 * cos(slope/180*M_PI);
     __rpmToSpeedCoefficient = wheelDiameter_m * M_PI / (differentialRatio * 60);
     __speedToRpmCoefficient = differentialRatio * 60 / (wheelDiameter_m * M_PI);
@@ -119,7 +123,7 @@ void EngineParameters::computeCoefficients() {
 }
 
 void EngineParameters::dumpParameters(std::ostream &out) {
-    out << "ID: " << id << std::endl;
+    out << "ID: " << id.c_str() << std::endl;
 
     out << "Gearbox:\n";
     out << "\tGears number: " << (int)nGears << std::endl;

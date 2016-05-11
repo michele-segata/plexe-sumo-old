@@ -115,6 +115,9 @@
     <ClCompile Include="..\..\..\src\microsim\MSTransportable.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\microsim\MSCACCLaneChanger.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\microsim\MSBitSetLogic.h">
@@ -223,6 +226,9 @@
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSStoppingPlace.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\microsim\MSCACCLaneChanger.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
   </ItemGroup>

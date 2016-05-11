@@ -54,8 +54,9 @@
 #include <utils/shapes/Polygon.h>
 #include <utils/gui/globjects/GUIGlObjectTypes.h>
 #include <foreign/rtree/SUMORTree.h>
+#ifndef _MSC_VER
 #include <semaphore.h>
-
+#endif
 
 // ===========================================================================
 // class declarations
@@ -126,8 +127,10 @@ public:
     /// A reimplementation due to some internal reasons
     FXbool makeCurrent();
 
+#ifndef _MSC_VER
     /// A reimplementation due to some internal reasons
     FXbool makeNonCurrent();
+#endif
 
     /// returns true, if the edit button was pressed
     bool isInEditMode();
@@ -450,8 +453,10 @@ protected:
     /// @brief List of objects for which GUIGlObject::drawGLAdditional is called
     std::map<GUIGlObject*, int> myAdditionallyDrawn;
 
+#ifndef _MSC_VER
     /// @brief semaphore to avoid two threads accessing the canvas at the same time
     sem_t myCanvasSemaphore;
+#endif
 
 protected:
     GUISUMOAbstractView() { }

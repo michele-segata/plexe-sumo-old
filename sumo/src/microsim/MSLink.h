@@ -323,7 +323,11 @@ public:
     }
 
     inline bool isTLSControlled() const {
+#ifdef _MSC_VER
+        return myLastStateChange != LLONG_MIN;
+#else
         return myLastStateChange != SUMOTime_MIN;
+#endif
     }
 
     /** @brief Returns the length of this link

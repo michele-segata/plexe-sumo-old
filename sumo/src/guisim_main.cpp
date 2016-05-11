@@ -51,7 +51,9 @@
 #include <gui/GUIApplicationWindow.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
+#ifndef _MSC_VER
 #include <X11/Xlib.h>
+#endif
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -66,7 +68,9 @@
  * ----------------------------------------------------------------------- */
 int
 main(int argc, char** argv) {
+#ifndef _MSC_VER
     XInitThreads();
+#endif
     // make the output aware of threading
     MFXMutex lock;
     MsgHandler::assignLock(&lock);

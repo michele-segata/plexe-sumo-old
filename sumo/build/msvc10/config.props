@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="UserMacros">
+    <XERCES>C:\Users\USER\src\xerces</XERCES>
+    <FOX16>C:\Users\USER\src\fox</FOX16>
+    <PYTHON_64_LIB_DIR>C:\Python27\libs</PYTHON_64_LIB_DIR>
+    <PYTHON_64_INCLUDE_DIR>C:\Python27\include</PYTHON_64_INCLUDE_DIR>
+  </PropertyGroup>
+</Project>

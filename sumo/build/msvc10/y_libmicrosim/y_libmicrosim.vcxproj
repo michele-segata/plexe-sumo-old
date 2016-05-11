@@ -32,21 +32,27 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Fastbuild|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Fastbuild|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -101,8 +107,14 @@
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\microsim\MSBaseVehicle.cpp" />
+    <ClCompile Include="..\..\..\src\microsim\MSCACCLaneChanger.cpp" />
     <ClCompile Include="..\..\..\src\microsim\MSCModel_NonInteracting.cpp" />
     <ClCompile Include="..\..\..\src\microsim\MSContainer.cpp" />
     <ClCompile Include="..\..\..\src\microsim\MSContainerControl.cpp" />
@@ -141,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\src\microsim\MSBaseVehicle.h" />
     <ClInclude Include="..\..\..\src\microsim\MSBitSetLogic.h" />
+    <ClInclude Include="..\..\..\src\microsim\MSCACCLaneChanger.h" />
     <ClInclude Include="..\..\..\src\microsim\MSCModel_NonInteracting.h" />
     <ClInclude Include="..\..\..\src\microsim\MSContainer.h" />
     <ClInclude Include="..\..\..\src\microsim\MSContainerControl.h" />
@@ -175,6 +188,16 @@
     <ClInclude Include="..\..\..\src\microsim\MSVehicleControl.h" />
     <ClInclude Include="..\..\..\src\microsim\MSVehicleTransfer.h" />
     <ClInclude Include="..\..\..\src\microsim\MSVehicleType.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\z_libmicrosim_cfmodels\z_libmicrosim_cfmodels.vcxproj">
+      <Project>{014f0919-66a3-4aed-8901-b6e02f56dc7c}</Project>
+      <Private>false</Private>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

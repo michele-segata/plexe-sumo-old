@@ -127,7 +127,9 @@ GUISUMOAbstractView::GUISUMOAbstractView(FXComposite* p,
       myWindowCursorPositionX(getWidth() / 2),
       myWindowCursorPositionY(getHeight() / 2),
       myVisualizationChanger(0) {
+#ifndef _MSC_VER
     sem_init(&myCanvasSemaphore, 0, 1);
+#endif
     setTarget(this);
     enable();
     flags |= FLAG_ENABLED;
@@ -543,18 +545,21 @@ GUISUMOAbstractView::setWindowCursorPosition(FXint x, FXint y) {
 
 FXbool
 GUISUMOAbstractView::makeCurrent() {
+#ifndef _MSC_VER
     sem_wait(&myCanvasSemaphore);
+#endif
     FXbool ret = FXGLCanvas::makeCurrent();
     return ret;
 }
 
-
+#ifndef _MSC_VER
 FXbool
 GUISUMOAbstractView::makeNonCurrent() {
     sem_post(&myCanvasSemaphore);
     FXbool ret = FXGLCanvas::makeNonCurrent();
     return ret;
 }
+#endif
 
 
 long

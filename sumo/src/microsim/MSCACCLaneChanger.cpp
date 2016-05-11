@@ -384,7 +384,26 @@ MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, SUMOReal>& lead
     if (rLead.first != 0) {
         // !!! eigentlich: vsafe braucht die Max. Geschwindigkeit beider Spuren
         if (rLead.second < veh(myCandi)->getCarFollowModel().getSecureGap(veh(myCandi)->getSpeed(), rLead.first->getSpeed(), rLead.first->getCarFollowModel().getMaxDecel())) {
-            blocked |= LCA_BLOCKED_BY_LEFT_LEADER;
+            const MSCFModel& carFollowModel = veh(myCandi)->getCarFollowModel();
+            if (carFollowModel.getModelID() == SUMO_TAG_CF_CC) {
+                //the car is controlled by MSCFModel_CC
+                const MSCFModel_CC& ccCarFollowModel = static_cast<const MSCFModel_CC &>(carFollowModel);
+                Plexe::ACTIVE_CONTROLLER controller = ccCarFollowModel.getActiveController(veh(myCandi));
+                //if the gap is not enough to safely change lane
+                if (controller == Plexe::DRIVER || controller == Plexe::ACC) {
+                    //if the active controller is either a human, or an ACC, then the movement must be blocked
+                    blocked |= LCA_BLOCKED_BY_LEFT_LEADER;
+                }
+                else {
+                    //otherwise the movement must be blocked only if the relative speed is greater than a certain threshold
+                    if (veh(myCandi)->getSpeed() - rLead.first->getSpeed() > 3) {
+                        blocked |= LCA_BLOCKED_BY_LEFT_LEADER;
+                    }
+                }
+            }
+            else {
+                blocked |= LCA_BLOCKED_BY_LEFT_LEADER;
+            }
         }
     }
     MSAbstractLaneChangeModel::MSLCMessager msg(leader.first, rLead.first, rFollow.first);
@@ -440,7 +459,26 @@ MSCACCLaneChanger::change2right(const std::pair<MSVehicle* const, SUMOReal>& lea
     if (rLead.first != 0) {
         // !!! eigentlich: vsafe braucht die Max. Geschwindigkeit beider Spuren
         if (rLead.second < veh(myCandi)->getCarFollowModel().getSecureGap(veh(myCandi)->getSpeed(), rLead.first->getSpeed(), rLead.first->getCarFollowModel().getMaxDecel())) {
-            blocked |= LCA_BLOCKED_BY_RIGHT_LEADER;
+            const MSCFModel& carFollowModel = veh(myCandi)->getCarFollowModel();
+            if (carFollowModel.getModelID() == SUMO_TAG_CF_CC) {
+                //the car is controlled by MSCFModel_CC
+                const MSCFModel_CC& ccCarFollowModel = static_cast<const MSCFModel_CC &>(carFollowModel);
+                Plexe::ACTIVE_CONTROLLER controller = ccCarFollowModel.getActiveController(veh(myCandi));
+                //if the gap is not enough to safely change lane
+                if (controller == Plexe::DRIVER || controller == Plexe::ACC) {
+                    //if the active controller is either a human, or an ACC, then the movement must be blocked
+                    blocked |= LCA_BLOCKED_BY_RIGHT_LEADER;
+                }
+                else {
+                    //otherwise the movement must be blocked only if the relative speed is greater than a certain threshold
+                    if (veh(myCandi)->getSpeed() - rLead.first->getSpeed() > 3) {
+                        blocked |= LCA_BLOCKED_BY_RIGHT_LEADER;
+                    }
+                }
+            }
+            else {
+                blocked |= LCA_BLOCKED_BY_RIGHT_LEADER;
+            }
         }
     }
 

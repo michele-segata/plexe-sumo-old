@@ -27,7 +27,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\microsim\cfmodels\CC_Const.h" />
+    <ClInclude Include="..\..\..\src\microsim\cfmodels\CC_VehicleVariables.h" />
+    <ClInclude Include="..\..\..\src\microsim\cfmodels\EngineParameters.h" />
+    <ClInclude Include="..\..\..\src\microsim\cfmodels\FirstOrderLagModel.h" />
+    <ClInclude Include="..\..\..\src\microsim\cfmodels\GenericEngineModel.h" />
     <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel.h" />
+    <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_CC.h" />
     <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_Daniel1.h" />
     <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_IDM.h" />
     <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_Kerner.h" />
@@ -37,9 +43,16 @@
     <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_PWag2009.h" />
     <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_SmartSK.h" />
     <ClInclude Include="..\..\..\src\microsim\cfmodels\MSCFModel_Wiedemann.h" />
+    <ClInclude Include="..\..\..\src\microsim\cfmodels\RealisticEngineModel.h" />
+    <ClInclude Include="..\..\..\src\microsim\cfmodels\VehicleEngineHandler.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\microsim\cfmodels\CC_VehicleVariables.cpp" />
+    <ClCompile Include="..\..\..\src\microsim\cfmodels\EngineParameters.cpp" />
+    <ClCompile Include="..\..\..\src\microsim\cfmodels\FirstOrderLagModel.cpp" />
+    <ClCompile Include="..\..\..\src\microsim\cfmodels\GenericEngineModel.cpp" />
     <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel.cpp" />
+    <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_CC.cpp" />
     <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_Daniel1.cpp" />
     <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_IDM.cpp" />
     <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_Kerner.cpp" />
@@ -49,6 +62,8 @@
     <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_PWag2009.cpp" />
     <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_SmartSK.cpp" />
     <ClCompile Include="..\..\..\src\microsim\cfmodels\MSCFModel_Wiedemann.cpp" />
+    <ClCompile Include="..\..\..\src\microsim\cfmodels\RealisticEngineModel.cpp" />
+    <ClCompile Include="..\..\..\src\microsim\cfmodels\VehicleEngineHandler.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{014F0919-66A3-4AED-8901-B6E02F56DC7C}</ProjectGuid>
@@ -56,21 +71,27 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Fastbuild|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Fastbuild|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -143,6 +164,9 @@
     <ResourceCompile>
       <Culture>0x0407</Culture>
     </ResourceCompile>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ResourceCompile>
