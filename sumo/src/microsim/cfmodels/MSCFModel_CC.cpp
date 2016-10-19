@@ -598,6 +598,9 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
     //TODO: extend
     case CC_SET_VEHICLE_DATA: {
         const struct Plexe::VEHICLE_DATA* vehicle = (const struct Plexe::VEHICLE_DATA*)content;
+        //if the index is larger than the number of cars, simply ignore the data
+        if (vehicle->index >= vars->nCars)
+            break;
         vars->vehicles[vehicle->index] = *vehicle;
         if (!vars->initialized[vehicle->index] && vehicle->index != vars->position) {
             vars->nInitialized++;
@@ -614,7 +617,19 @@ void MSCFModel_CC::setGenericInformation(const MSVehicle* veh, const struct Plex
     }
     case CC_SET_PLATOON_SIZE: {
         int *nCars = (int*)content;
-        vars->nCars = *nCars;
+        if (*nCars > MAX_N_CARS) {
+            //given that we have a static matrix, check that we're not
+            //setting a number of cars larger than the size of that matrix
+            vars->nCars = MAX_N_CARS;
+            std::stringstream ss;
+            ss << "MSCFModel_CC: setting a number of cars of " << *nCars << " out of a maximum of " << MAX_N_CARS <<
+                  ". The CONSENSUS controller will not work properly if chosen. If you are using a different controller " <<
+                  "you can ignore this warning";
+            WRITE_WARNING(ss.str());
+        }
+        else {
+            vars->nCars = *nCars;
+        }
         //we changed the number of cars, reset the controller
         resetConsensus(veh);
         break;
