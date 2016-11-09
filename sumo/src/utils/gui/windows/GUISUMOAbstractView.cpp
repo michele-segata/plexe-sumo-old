@@ -124,6 +124,7 @@ GUISUMOAbstractView::GUISUMOAbstractView(FXComposite* p, GUIMainWindow& app, GUI
     myWindowCursorPositionX(getWidth() / 2),
     myWindowCursorPositionY(getHeight() / 2),
     myVisualizationChanger(0) {
+    sem_init(&myCanvasSemaphore, 0, 1);
     setTarget(this);
     enable();
     flags |= FLAG_ENABLED;
@@ -569,7 +570,16 @@ GUISUMOAbstractView::setWindowCursorPosition(FXint x, FXint y) {
 
 FXbool
 GUISUMOAbstractView::makeCurrent() {
+    sem_wait(&myCanvasSemaphore);
     FXbool ret = FXGLCanvas::makeCurrent();
+    return ret;
+}
+
+
+FXbool
+GUISUMOAbstractView::makeNonCurrent() {
+    sem_post(&myCanvasSemaphore);
+    FXbool ret = FXGLCanvas::makeNonCurrent();
     return ret;
 }
 
@@ -890,8 +900,6 @@ GUISUMOAbstractView::makeSnapshot(const std::string& destFile) {
         glReadBuffer(GL_BACK);
         // Read the pixels
         glReadPixels(0, 0, getWidth(), getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)buf);
-        makeNonCurrent();
-        update();
         // mirror
         int mwidth = getWidth();
         int mheight = getHeight();
@@ -926,6 +934,8 @@ GUISUMOAbstractView::makeSnapshot(const std::string& destFile) {
             errorMessage = "Could not save '" + destFile + "'.\n" + e.what();
         }
         FXFREE(&buf);
+        makeNonCurrent();
+        update();
     }
     return errorMessage;
 }
