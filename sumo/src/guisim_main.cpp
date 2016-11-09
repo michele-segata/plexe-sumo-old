@@ -51,6 +51,7 @@
 #include <gui/GUIApplicationWindow.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
+#include <X11/Xlib.h>
 
 #ifndef NO_TRACI
 #include <traci-server/TraCIServer.h>
@@ -62,6 +63,7 @@
 // ===========================================================================
 int
 main(int argc, char** argv) {
+    XInitThreads();
     // make the output aware of threading
     MFXMutex lock;
     MsgHandler::assignLock(&lock);
