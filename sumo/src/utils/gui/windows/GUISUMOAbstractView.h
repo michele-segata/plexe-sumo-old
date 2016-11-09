@@ -54,6 +54,7 @@
 #include <utils/shapes/Polygon.h>
 #include <utils/gui/globjects/GUIGlObjectTypes.h>
 #include <foreign/rtree/SUMORTree.h>
+#include <semaphore.h>
 
 
 // ===========================================================================
@@ -123,6 +124,9 @@ public:
 
     ///@brief A reimplementation due to some internal reasons
     FXbool makeCurrent();
+
+    ///@brief A reimplementation due to some internal reasons
+    FXbool makeNonCurrent();
 
     ///@brief returns true, if the edit button was pressed
     bool isInEditMode();
@@ -421,6 +425,9 @@ protected:
 
     ///@brief List of objects for which GUIGlObject::drawGLAdditional is called
     std::map<const GUIGlObject*, int> myAdditionallyDrawn;
+
+    ///@brief semaphore to avoid two threads accessing the canvas at the same time
+    sem_t myCanvasSemaphore;
 
 protected:
     ///@brief empty constructor
