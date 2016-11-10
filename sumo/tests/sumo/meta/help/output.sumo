@@ -1,4 +1,4 @@
-SUMO Version dev-SVN-r21198
+SUMO Version dev-SVN-r21734
  Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de
 A microscopic road traffic simulation.
 
@@ -95,6 +95,9 @@ Time Options:
   --step-length TIME                   Defines the step duration in seconds
 
 Processing Options:
+  --step-method.ballistic              Whether to use ballistic method for the
+                                         positional update of vehicles (default
+                                         is a semi-implicit Euler method).
   --lateral-resolution FLOAT           Defines the resolution in m when
                                          handling lateral positioning within a
                                          lane (with -1 all vehicles drive at the
@@ -136,8 +139,6 @@ Processing Options:
   --random-depart-offset TIME          Each vehicle receives a random offset to
                                          its depart value drawn uniformly from
                                          [0, TIME]
-  --lanechange.allow-swap              Whether blocking vehicles trying to
-                                         change lanes may be swapped
   --lanechange.duration TIME           Duration of a lane change maneuver
                                          (default 0)
   --lanechange.overtake-right          Whether overtaking on the right on
@@ -179,8 +180,9 @@ Routing Options:
                                          edge weights
   --device.rerouting.with-taz          Use zones (districts) as routing start-
                                          and endpoints
-  --device.rerouting.init-with-loaded-weights  Use given weight files for
-                                         initializing edge weights
+  --device.rerouting.init-with-loaded-weights  Use weight files given with
+                                         option --weight-files for initializing
+                                         edge weights
   --device.rerouting.shortest-path-file FILE  Initialize lookup table for astar
                                          from the given distance matrix
   --device.rerouting.threads INT       The number of parallel execution threads
@@ -306,6 +308,8 @@ GUI Only Options:
   -D, --demo                           Restart the simulation after ending
                                          (demo mode)
   -T, --disable-textures               Do not load background pictures
+  --window-size STR                    Create initial window with the given x,y
+                                         size
 
 
 Examples:

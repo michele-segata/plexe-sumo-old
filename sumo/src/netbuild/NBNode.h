@@ -540,9 +540,10 @@ public:
      * @param[in] fromE The starting edge
      * @param[in] con The connection for this internal lane
      * @param[in] numPoints The number of geometry points for the internal lane
+     * @param[in] recordError The node itself if the displacement error during shape computation shall be recorded
      * @return The shape of the internal lane
      */
-    PositionVector computeInternalLaneShape(NBEdge* fromE, const NBEdge::Connection& con, int numPoints) const;
+    PositionVector computeInternalLaneShape(NBEdge* fromE, const NBEdge::Connection& con, int numPoints, NBNode* recordError = 0) const;
 
 
     /** @brief Compute a smooth curve between the given geometries
@@ -552,6 +553,7 @@ public:
      * @param[in] isTurnaround Whether this shall be the shape for a turnaround
      * @param[in] extrapolateBeg Extrapolation distance at the beginning
      * @param[in] extrapolateEnd Extrapolation distance at the end
+     * @param[in] recordError The node itself if the displacement error during shape computation shall be recorded
      * @return The shape of the internal lane
      */
     PositionVector computeSmoothShape(
@@ -560,14 +562,23 @@ public:
         int numPoints,
         bool isTurnaround,
         SUMOReal extrapolateBeg,
-        SUMOReal extrapolateEnd) const;
+        SUMOReal extrapolateEnd,
+        NBNode* recordError = 0) const;
 
     static PositionVector bezierControlPoints(
         const PositionVector& begShape,
         const PositionVector& endShape,
         bool isTurnaround,
         SUMOReal extrapolateBeg,
-        SUMOReal extrapolateEnd);
+        SUMOReal extrapolateEnd,
+        bool& ok,
+        NBNode* recordError = 0);
+
+
+    /// @brief compute the displacement error during s-curve computation
+    SUMOReal getDisplacementError() const {
+        return myDisplacementError;
+    }
 
     /** @brief Replaces occurences of the first edge within the list of incoming by the second
         Connections are remapped, too */
@@ -710,9 +721,10 @@ public:
     /// @brief return whether the given type is a traffic light
     static bool isTrafficLight(SumoXMLNodeType type);
 
-private:
-    bool isSimpleContinuation() const;
+    bool isSimpleContinuation(bool checkLaneNumbers = true) const;
 
+
+private:
     /// sets the priorites in case of a priority junction
     void setPriorityJunctionPriorities();
 
@@ -791,6 +803,9 @@ private:
 
     /// @brief number of crossings loaded from a sumo net
     int myCrossingsLoadedFromSumoNet;
+
+    /// @brief geometry error after computation of internal lane shapes
+    SUMOReal myDisplacementError;
 
 private:
     /// @brief invalidated copy constructor

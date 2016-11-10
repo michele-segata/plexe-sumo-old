@@ -168,6 +168,9 @@
     </time>
 
     <processing>
+        <!-- Whether to use ballistic method for the positional update of vehicles (default is a semi-implicit Euler method). -->
+        <step-method.ballistic value="false" type="BOOL"/>
+
         <!-- Defines the resolution in m when handling lateral positioning within a lane (with -1 all vehicles drive at the center of their lane -->
         <lateral-resolution value="-1" type="FLOAT"/>
 
@@ -196,7 +199,7 @@
         <max-num-vehicles value="-1" type="INT"/>
 
         <!-- Scale demand by the given factor (by discarding or duplicating vehicles) -->
-        <scale value="" type="FLOAT"/>
+        <scale value="1" type="FLOAT"/>
 
         <!-- Specify how long a vehicle may wait until being teleported, defaults to 300, non-positive values disable teleporting -->
         <time-to-teleport value="300" type="TIME"/>
@@ -218,9 +221,6 @@
 
         <!-- Each vehicle receives a random offset to its depart value drawn uniformly from [0, TIME] -->
         <random-depart-offset value="0" type="TIME"/>
-
-        <!-- Whether blocking vehicles trying to change lanes may be swapped -->
-        <lanechange.allow-swap value="false" type="BOOL"/>
 
         <!-- Duration of a lane change maneuver (default 0) -->
         <lanechange.duration value="0" type="TIME"/>
@@ -279,7 +279,7 @@
         <!-- Use zones (districts) as routing start- and endpoints -->
         <device.rerouting.with-taz value="false" synonymes="device.routing.with-taz with-taz" type="BOOL"/>
 
-        <!-- Use given weight files for initializing edge weights -->
+        <!-- Use weight files given with option --weight-files for initializing edge weights -->
         <device.rerouting.init-with-loaded-weights value="false" type="BOOL"/>
 
         <!-- Initialize lookup table for astar from the given distance matrix -->
@@ -482,6 +482,9 @@
 
         <!-- Do not load background pictures -->
         <disable-textures value="false" synonymes="T" type="BOOL"/>
+
+        <!-- Create initial window with the given x,y size -->
+        <window-size value="" type="STR"/>
 
     </gui_only>
 

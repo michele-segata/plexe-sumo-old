@@ -98,14 +98,18 @@ public:
         SUMOTime end;
         /// The list of closed edges
         MSEdgeVector closed;
+        /// The list of closed lanes
+        std::vector<MSLane*> closedLanes;
+        /// The list of edges that are affect by closed lanes
+        MSEdgeVector closedLanesAffected;
         /// The distributions of new destinations to use
         RandomDistributor<MSEdge*> edgeProbs;
         /// The distributions of new routes to use
         RandomDistributor<const MSRoute*> routeProbs;
         /// The permissions to use
         SVCPermissions permissions;
-        /// The old permissions for all lanes
-        std::vector<SVCPermissions> prevPermissions;
+        /// unique ID for this interval
+        long id;
     };
 
     /** @brief Tries to reroute the vehicle
@@ -212,6 +216,8 @@ protected:
     SUMOTime myCurrentIntervalBegin, myCurrentIntervalEnd;
     /// List of closed edges
     MSEdgeVector myCurrentClosed;
+    /// List of closed lanes
+    std::vector<MSLane*> myCurrentClosedLanes;
     /// List of permissions for closed edges
     SVCPermissions myCurrentPermissions;
     /// new destinations with probabilities

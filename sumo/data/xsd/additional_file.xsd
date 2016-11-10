@@ -61,7 +61,7 @@
         <xsd:attribute name="pos" type="xsd:float" use="required"/>
         <xsd:attribute name="freq" type="positiveFloatType" use="required"/>
         <xsd:attribute name="file" type="xsd:string" use="required"/>
-        <xsd:attribute name="splitByType" use="optional" type="boolType"/>
+        <xsd:attribute name="vTypes" type="xsd:string" use="optional"/>
         <xsd:attribute name="friendlyPos" use="optional" type="boolType"/>
     </xsd:complexType>
 
@@ -85,6 +85,7 @@
         <xsd:attribute name="timeThreshold" type="xsd:int" use="optional"/>
         <xsd:attribute name="speedThreshold" type="xsd:float" use="optional"/>
         <xsd:attribute name="jamThreshold" type="xsd:float" use="optional"/>
+        <xsd:attribute name="vTypes" type="xsd:string" use="optional"/>
         <xsd:attribute name="friendlyPos" use="optional" type="boolType"/>
     </xsd:complexType>
 
@@ -100,6 +101,7 @@
         <xsd:attribute name="file" type="xsd:string" use="required"/>
         <xsd:attribute name="timeThreshold" type="xsd:float" use="optional"/>
         <xsd:attribute name="speedThreshold" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="vTypes" type="xsd:string" use="optional"/>
     </xsd:complexType>
 
     <xsd:complexType name="detEntryExitType">
@@ -182,7 +184,7 @@
             <xsd:element name="step" minOccurs="1" maxOccurs="unbounded">
                 <xsd:complexType>
                     <xsd:attribute name="time" type="nonNegativeFloatType" use="required"/>
-                    <xsd:attribute name="speed" type="xsd:float" use="required"/>
+                    <xsd:attribute name="speed" type="xsd:float" use="optional"/>
                 </xsd:complexType>
             </xsd:element>
         </xsd:sequence>
@@ -197,6 +199,7 @@
         <xsd:attribute name="begin" type="nonNegativeFloatType" use="optional"/>
         <xsd:attribute name="freq" type="positiveFloatType" use="required"/>
         <xsd:attribute name="file" type="xsd:string" use="required"/>
+        <xsd:attribute name="vTypes" type="xsd:string" use="optional"/>
     </xsd:complexType>
 
     <xsd:complexType name="rerouterType">
@@ -205,6 +208,13 @@
                 <xsd:complexType>
                     <xsd:choice maxOccurs="unbounded">
                         <xsd:element name="closingReroute">
+                            <xsd:complexType>
+                                <xsd:attribute name="id" type="xsd:string" use="required"/>
+                                <xsd:attribute name="allow" type="xsd:string" use="optional"/>
+                                <xsd:attribute name="disallow" type="xsd:string" use="optional"/>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="closingLaneReroute">
                             <xsd:complexType>
                                 <xsd:attribute name="id" type="xsd:string" use="required"/>
                                 <xsd:attribute name="allow" type="xsd:string" use="optional"/>
@@ -299,7 +309,7 @@
         </xsd:sequence>
         <xsd:attribute name="id" type="xsd:string" use="required"/>
         <xsd:attribute name="type" type="xsd:string" use="optional"/>
-        <xsd:attribute name="color" type="colorType" use="required"/>
+        <xsd:attribute name="color" type="colorType" use="optional"/>
         <xsd:attribute name="fill" type="boolType" use="optional"/>
         <xsd:attribute name="geo" type="boolType" use="optional"/>
         <xsd:attribute name="layer" type="xsd:float" use="optional"/>
@@ -314,7 +324,7 @@
         </xsd:sequence>
         <xsd:attribute name="id" type="xsd:string" use="required"/>
         <xsd:attribute name="type" type="xsd:string" use="optional"/>
-        <xsd:attribute name="color" type="colorType" use="required"/>
+        <xsd:attribute name="color" type="colorType" use="optional"/>
         <xsd:attribute name="layer" type="xsd:float" use="optional"/>
         <xsd:attribute name="x" type="xsd:float" use="optional"/>
         <xsd:attribute name="y" type="xsd:float" use="optional"/>

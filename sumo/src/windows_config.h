@@ -33,6 +33,8 @@
 #pragma warning(disable: 4786)
 /* Disable "C++ Exception Specification ignored" warnings */
 #pragma warning(disable: 4290)
+/* Disable DLL-Interface warnings */
+#pragma warning(disable: 4251)
 
 /* Disable "unsafe" warnings for crt functions in VC++ 2005. */
 #if _MSC_VER >= 1400
@@ -66,7 +68,7 @@
 
 /* Version number of package */
 #ifndef HAVE_VERSION_H
-#define VERSION_STRING "0.27.1"
+#define VERSION_STRING "0.28.0"
 #endif
 
 /* Define if junction internal lanes should be used. */

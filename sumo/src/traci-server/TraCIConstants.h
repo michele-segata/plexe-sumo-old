@@ -36,7 +36,7 @@
 // ****************************************
 // VERSION
 // ****************************************
-#define TRACI_VERSION 12
+#define TRACI_VERSION 13
 
 
 // ****************************************
@@ -644,6 +644,9 @@
 
 // get/set minimum lateral gap (vehicle, vtypes)
 #define VAR_MINGAP_LAT 0xbb
+
+// get/set vehicle height (vehicle, vtypes)
+#define VAR_HEIGHT 0xbc
 
 // current CO2 emission of a node (get: vehicle, lane, edge)
 #define VAR_CO2EMISSION 0x60

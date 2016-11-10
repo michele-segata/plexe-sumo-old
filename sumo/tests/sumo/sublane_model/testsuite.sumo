@@ -1,6 +1,9 @@
 # vehicles overtaking a bicycle on a single-lane road
 overtaking_bicycle
 
+# vehicles overtaking a bicycle on a single-lane road
+overtaking_bicycle_step0.2
+
 # like overtaking_bicyle but with severly reduced lateral speed
 maxSpeedLat
 
@@ -37,4 +40,11 @@ push_for_merge
 # a vehicle urgently needs to change lanes but is configured to refrain from pushing 
 # 
 nopush_for_merge
+
+# a vehicle urgently needs to change lanes but is configured to refrain from pushing. Instead it becomes impatient and forces braking in a (potentially) unsafe maneuver
+# 
+nopush_for_merge_impatience
+
+# test angles during lane-changing
+angles
 bugs

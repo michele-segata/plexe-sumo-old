@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <ctime>
+#include <utils/xml/XMLSubSys.h>
 #include <utils/gui/events/GUIEvent_Message.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/globjects/GUIGlObjectStorage.h>
@@ -52,6 +53,7 @@
 #include "GNELoadThread.h"
 #include "GNENet.h"
 #include "GNEEvent_NetworkLoaded.h"
+#include "GNEAdditionalHandler.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -113,6 +115,7 @@ GNELoadThread::run() {
         submitEndAndCleanup(net);
         return 0;
     }
+    XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
     // this netbuilder instance becomes the responsibility of the GNENet
     NBNetBuilder* netBuilder = new NBNetBuilder();
 
@@ -139,11 +142,22 @@ GNELoadThread::run() {
             if (oc.getBool("ignore-errors")) {
                 MsgHandler::getErrorInstance()->clear();
             }
+
             // check whether any errors occured
             if (MsgHandler::getErrorInstance()->wasInformed()) {
                 throw ProcessError();
             } else {
                 net = new GNENet(netBuilder);
+            }
+
+            // enable load additionals after creation of net if was specified in the command line
+            if (myAdditionalFile != "") {
+                net->setAdditionalsFile(myAdditionalFile);
+            }
+
+            // Set additionals output file
+            if (myAdditionalOutputFile != "") {
+                net->setAdditionalsOutputFile(myAdditionalOutputFile);
             }
         } catch (ProcessError& e) {
             if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
@@ -153,13 +167,14 @@ GNELoadThread::run() {
             delete net;
             delete netBuilder;
             net = 0;
-#ifndef _DEBUG
         } catch (std::exception& e) {
             WRITE_ERROR(e.what());
+#ifdef _DEBUG
+            throw;
+#endif
             delete net;
             delete netBuilder;
             net = 0;
-#endif
         }
     }
     // only a single setting file is supported
@@ -200,6 +215,15 @@ GNELoadThread::fillOptions(OptionsCont& oc) {
     oc.addOptionSubTopic("Building Defaults");
     oc.addOptionSubTopic("Visualisation");
 
+    oc.doRegister("new", new Option_Bool(false)); // !!!
+    oc.addDescription("new", "Input", "Start with a new network");
+
+    oc.doRegister("sumo-additionals-file", new Option_String());
+    oc.addDescription("sumo-additionals-file", "Input", "load additionals");
+
+    oc.doRegister("disable-laneIcons", new Option_Bool(false));
+    oc.addDescription("disable-laneIcons", "Visualisation", "Disable icons of special lanes");
+
     oc.doRegister("disable-textures", 'T', new Option_Bool(false)); // !!!
     oc.addDescription("disable-textures", "Visualisation", "");
 
@@ -208,6 +232,12 @@ GNELoadThread::fillOptions(OptionsCont& oc) {
 
     oc.doRegister("registry-viewport", new Option_Bool(false));
     oc.addDescription("registry-viewport", "Visualisation", "Load current viewport from registry");
+
+    oc.doRegister("window-size", new Option_String());
+    oc.addDescription("window-size", "Visualisation", "Create initial window with the given x,y size");
+
+    oc.doRegister("additionals-output", new Option_String());
+    oc.addDescription("additionals-output", "Output", "default value for additionals output file");
 
     SystemFrame::addReportOptions(oc); // this subtopic is filled here, too
 
@@ -254,13 +284,21 @@ GNELoadThread::initOptions() {
 
 
 void
-GNELoadThread::loadConfigOrNet(const std::string& file, bool isNet, bool optionsReady, bool newNet) {
+GNELoadThread::loadConfigOrNet(const std::string& file, bool isNet, bool useStartupOptions, bool newNet) {
     myFile = file;
     myLoadNet = isNet;
-    if (myFile != "") {
+
+    const OptionsCont& OC = OptionsCont::getOptions();
+    if (OC.isSet("sumo-additionals-file")) {
+        myAdditionalFile = OC.getString("sumo-additionals-file");
+    }
+    if (OC.isSet("additionals-output")) {
+        myAdditionalOutputFile = OC.getString("additionals-output");
+    }
+
+    if (myFile != "" && !useStartupOptions) {
         OptionsIO::setArgs(0, 0);
     }
-    myOptionsReady = optionsReady;
     myNewNet = newNet;
     start();
 }

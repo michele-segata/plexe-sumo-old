@@ -187,9 +187,9 @@
         <tls.yellow.patch-small value="false" synonymes="patch-small-tyellow" type="BOOL"/>
 
         <!-- Set INT as fixed time for yellow phase durations -->
-        <tls.yellow.time value="" synonymes="traffic-light-yellow" type="INT"/>
+        <tls.yellow.time value="-1" synonymes="traffic-light-yellow" type="INT"/>
 
-        <!-- Use INT as green phase duration for left turns (s) -->
+        <!-- Use INT as green phase duration for left turns (s). Setting this value to 0 disables additional left-turning phases -->
         <tls.left-green.time value="6" type="INT"/>
 
         <!-- TLSs in STR will be shifted by half-phase -->
@@ -229,7 +229,7 @@
 
     <edge_removal>
         <!-- Only keep edges with speed in meters/second &gt; FLOAT -->
-        <keep-edges.min-speed value="" synonymes="edges-min-speed" type="FLOAT"/>
+        <keep-edges.min-speed value="-1" synonymes="edges-min-speed" type="FLOAT"/>
 
         <!-- Remove edges in STR -->
         <remove-edges.explicit value="" synonymes="remove-edges" type="STR"/>
@@ -415,7 +415,7 @@
         <geometry.max-segment-length value="0" type="FLOAT"/>
 
         <!-- reduces too similar geometry points -->
-        <geometry.min-dist value="" type="FLOAT"/>
+        <geometry.min-dist value="-1" type="FLOAT"/>
 
         <!-- Warn about edge geometries with an angle above DEGREES in successive segments -->
         <geometry.max-angle value="99" type="FLOAT"/>
@@ -469,13 +469,19 @@
         <speed.factor value="1" type="FLOAT"/>
 
         <!-- Modifies all edge speeds to at least FLOAT -->
-        <speed.minimum value="" type="FLOAT"/>
+        <speed.minimum value="0" type="FLOAT"/>
 
         <!-- Generate INT intermediate points to smooth out intersection corners -->
         <junctions.corner-detail value="0" type="INT"/>
 
         <!-- Generate INT intermediate points to smooth out lanes within the intersection -->
         <junctions.internal-link-detail value="5" type="INT"/>
+
+        <!-- Generate longer intersections to allow for smooth s-curves when the number of lanes changes -->
+        <junctions.scurve-stretch value="0" type="FLOAT"/>
+
+        <!-- Forces rectangular cuts between lanes and intersections -->
+        <rectangular-lane-cut value="false" type="BOOL"/>
 
         <!-- Allow driving onto a multi-lane road if there are foes on other lanes (at roundabouts) -->
         <check-lane-foes.roundabout value="true" type="BOOL"/>
@@ -521,6 +527,9 @@
 
         <!-- The default width of added sidewalks -->
         <default.sidewalk-width value="2" type="FLOAT"/>
+
+        <!-- The default for disallowed vehicle classes -->
+        <default.disallow value="" type="STR"/>
 
         <!-- Whether junctions should be kept clear by default -->
         <default.junctions.keep-clear value="true" type="BOOL"/>

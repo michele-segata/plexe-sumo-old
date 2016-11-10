@@ -306,8 +306,7 @@ GUIBaseVehicle::getPopUpMenu(GUIMainWindow& app,
         new FXMenuCommand(ret, "Show Link Items", 0, ret, MID_SHOW_LFLINKITEMS);
     }
     new FXMenuSeparator(ret);
-    const GUIGlID trackedID = parent.getTrackedID();
-    if (trackedID < 0 || trackedID != (int)getGlID()) {
+    if (parent.getTrackedID() != getGlID()) {
         new FXMenuCommand(ret, "Start Tracking", 0, ret, MID_START_TRACK);
     } else {
         new FXMenuCommand(ret, "Stop Tracking", 0, ret, MID_STOP_TRACK);
@@ -369,7 +368,7 @@ void
 GUIBaseVehicle::drawPoly(double* poses, SUMOReal offset) {
     glPushMatrix();
     glTranslated(0, 0, offset * .1);
-    glPolygonOffset(0, offset * -1);
+    glPolygonOffset(0, (GLfloat) - offset);
     glBegin(GL_TRIANGLE_FAN);
     int i = 0;
     while (poses[i] > -999) {

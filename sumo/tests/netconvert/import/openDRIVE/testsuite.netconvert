@@ -1,5 +1,8 @@
 # example networks from VIRES; many thanks to Marius Dupuis for supplying them
 Crossing8Course
+
+# example networks from VIRES; many thanks to Marius Dupuis for supplying them
+Crossing8Course_leftgreen
 CrossingComplex8Course
 Roundabout8Course
 
@@ -34,6 +37,12 @@ error_simple1_nolanes
 # convert osm to openDrive
 from_osm
 
+# convert osm to openDrive
+from_osm2
+
+# convert osm to openDrive
+from_osm_shanghai_crossing
+
 # include sumo edge ids if option --output.original-names is given
 orig-names
 
@@ -42,3 +51,9 @@ imprecise_geometry
 
 # import and export elevation
 elevation_roundtrip
+
+# convert sumo network to xodr
+sumo_to_xodr
+
+# as above but smoothed
+sumo_to_xodr_scurve_stretch

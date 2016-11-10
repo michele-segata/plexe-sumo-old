@@ -221,12 +221,12 @@ protected:
                       const MSLeaderDistanceInfo& neighBlockers,
                       std::vector<CLeaderDist>* collectLeadBlockers = 0,
                       std::vector<CLeaderDist>* collectFollowBlockers = 0,
-                      bool saveOriginalLatDist = true);
+                      bool keepLatGapManeuver = false);
 
     /// @brief check whether any of the vehicles overlaps with ego
-    static int checkBlockingVehicles(const MSVehicle* ego, const MSLeaderDistanceInfo& vehicles,
-                                     SUMOReal latDist, SUMOReal foeOffset, bool leaders, LaneChangeAction blockType,
-                                     std::vector<CLeaderDist>* collectBlockers = 0);
+    int checkBlockingVehicles(const MSVehicle* ego, const MSLeaderDistanceInfo& vehicles,
+                              SUMOReal latDist, SUMOReal foeOffset, bool leaders, LaneChangeAction blockType,
+                              std::vector<CLeaderDist>* collectBlockers = 0) const;
 
     /// @brief return whether the given intervals overlap
     static bool overlap(SUMOReal right, SUMOReal left, SUMOReal right2, SUMOReal left2);
@@ -316,6 +316,7 @@ protected:
     const SUMOReal mySublaneParam;
     // @brief willingness to encroach on other vehicles laterally (pushing them around)
     const SUMOReal myPushy;
+    const SUMOReal myAssertive;
     //@}
 
     /// @name derived parameters

@@ -156,6 +156,7 @@ enum SumoXMLTag {
     SUMO_TAG_STOP,
     SUMO_TAG_DEST_PROB_REROUTE,
     SUMO_TAG_CLOSING_REROUTE,
+    SUMO_TAG_CLOSING_LANE_REROUTE,
     SUMO_TAG_ROUTE_PROB_REROUTE,
     SUMO_TAG_POLYTYPE,
     SUMO_TAG_CONNECTION,
@@ -325,6 +326,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_DEPARTSPEED,
     SUMO_ATTR_ARRIVALLANE,
     SUMO_ATTR_ARRIVALPOS,
+    SUMO_ATTR_ARRIVALPOS_LAT,
     SUMO_ATTR_ARRIVALSPEED,
     SUMO_ATTR_ROUTE,
     SUMO_ATTR_MAXSPEED,
@@ -363,6 +365,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_LCA_KEEPRIGHT_PARAM,
     SUMO_ATTR_LCA_SUBLANE_PARAM,
     SUMO_ATTR_LCA_PUSHY,
+    SUMO_ATTR_LCA_ASSERTIVE,
     /* route alternatives / distribution attributes */
     SUMO_ATTR_LAST,
     SUMO_ATTR_COST,
@@ -426,6 +429,8 @@ enum SumoXMLAttr {
     SUMO_ATTR_DIR,
     /// The state of a link
     SUMO_ATTR_STATE,
+    /// foe visibility distance of a link
+    SUMO_ATTR_VISIBILITY_DISTANCE,
     /// A layer number
     SUMO_ATTR_LAYER,
     /// Fill the polygon
@@ -772,6 +777,7 @@ enum TrafficLightType {
     TLTYPE_STATIC,
     TLTYPE_RAIL,
     TLTYPE_ACTUATED,
+    TLTYPE_DELAYBASED,
     TLTYPE_SOTL_PHASE,
     TLTYPE_SOTL_PLATOON,
     TLTYPE_SOTL_REQUEST,
@@ -864,7 +870,6 @@ enum LaneChangeAction {
 enum LaneChangeModel {
     LCM_DK2008,
     LCM_LC2013,
-    LCM_JE2013,
     LCM_SL2015,
     LCM_DEFAULT
 };

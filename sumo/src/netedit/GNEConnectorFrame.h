@@ -149,14 +149,6 @@ private:
     /// @brief return the status of toLane
     LaneStatus getLaneStatus(const std::vector<NBEdge::Connection>& connections, GNELane* targetLane);
 
-    /* @brief return the link number (tlLinkNo) of an existing connection
-     * @param[in] connections All connections of the current edge from the given lane
-     * @param[in] targetLane The target lane of the connection
-     */
-    int getTLLLinkNumber(const std::vector<NBEdge::Connection>& connections, GNELane* targetLane);
-
-    /// @brief builds internal lanes for the given node
-    void buildIinternalLanes(NBNode* node);
 };
 
 

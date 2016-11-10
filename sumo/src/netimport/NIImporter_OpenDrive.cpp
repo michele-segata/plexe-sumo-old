@@ -382,9 +382,9 @@ NIImporter_OpenDrive::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
             // build lanes to right
             NBEdge* currRight = 0;
             if ((*j).rightLaneNumber > 0) {
-                currRight = new NBEdge("-" + id, sFrom, sTo, "", defaultSpeed, (*j).rightLaneNumber, priorityR,
+                currRight = new NBEdge("-" + id, sFrom, sTo, (*j).rightType, defaultSpeed, (*j).rightLaneNumber, priorityR,
                                        NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET, geom, e->streetName, id, LANESPREAD_RIGHT, true);
-                if (!nb.getEdgeCont().insert(currRight)) {
+                if (!nb.getEdgeCont().insert(currRight, myImportAllTypes)) {
                     throw ProcessError("Could not add edge '" + currRight->getID() + "'.");
                 }
                 lanesBuilt = true;
@@ -415,9 +415,9 @@ NIImporter_OpenDrive::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
             // build lanes to left
             NBEdge* currLeft = 0;
             if ((*j).leftLaneNumber > 0) {
-                currLeft = new NBEdge(id, sTo, sFrom, "", defaultSpeed, (*j).leftLaneNumber, priorityL,
+                currLeft = new NBEdge(id, sTo, sFrom, (*j).leftType, defaultSpeed, (*j).leftLaneNumber, priorityL,
                                       NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET, geom.reverse(), e->streetName, id, LANESPREAD_RIGHT, true);
-                if (!nb.getEdgeCont().insert(currLeft)) {
+                if (!nb.getEdgeCont().insert(currLeft, myImportAllTypes)) {
                     throw ProcessError("Could not add edge '" + currLeft->getID() + "'.");
                 }
                 lanesBuilt = true;
@@ -614,33 +614,28 @@ NIImporter_OpenDrive::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
             continue;
         }
         NBNode* toNode = e->getToNode();
-        NBTrafficLightDefinition* tlDef = 0;
         if (!toNode->isTLControlled()) {
             TrafficLightType type = SUMOXMLDefinitions::TrafficLightTypes.get(OptionsCont::getOptions().getString("tls.default-type"));
-            tlDef = new NBOwnTLDef(toNode->getID(), toNode, 0, type);
+            NBOwnTLDef* tlDef = new NBOwnTLDef(toNode->getID(), toNode, 0, type);
             if (!nb.getTLLogicCont().insert(tlDef)) {
                 // actually, nothing should fail here
                 delete tlDef;
                 throw ProcessError();
             }
             toNode->addTrafficLight(tlDef);
-            static_cast<NBOwnTLDef*>(tlDef)->setSinglePhase();
+            //tlDef->setSinglePhase();
         }
-        tlDef = *toNode->getControllingTLS().begin();
+        NBTrafficLightDefinition* tlDef = *toNode->getControllingTLS().begin();
         tlDef->addParameter("connection:" + id, (*i).second);
     }
 
     // -------------------------
     // clean up
     // -------------------------
-    if (oc.exists("geometry.min-dist") && oc.isSet("geometry.min-dist")) {
-        oc.unSet("geometry.min-dist");
-    }
     for (std::map<std::string, OpenDriveEdge*>::iterator i = edges.begin(); i != edges.end(); ++i) {
         delete(*i).second;
     }
 }
-
 
 
 void
@@ -760,6 +755,7 @@ std::string NIImporter_OpenDrive::revertID(const std::string& id) {
     return "-" + id;
 }
 
+
 NBNode*
 NIImporter_OpenDrive::getOrBuildNode(const std::string& id, const Position& pos,
                                      NBNodeCont& nc) {
@@ -793,11 +789,6 @@ NIImporter_OpenDrive::setNodeSecure(NBNodeCont& nc, OpenDriveEdge& e,
         e.from = n;
     }
 }
-
-
-
-
-
 
 
 void
@@ -845,7 +836,7 @@ NIImporter_OpenDrive::computeShapes(std::map<std::string, OpenDriveEdge*>& edges
             }
             prevType = g.type;
         }
-        if (oc.exists("geometry.min-dist") && oc.isSet("geometry.min-dist")) {
+        if (oc.exists("geometry.min-dist") && !oc.isDefault("geometry.min-dist")) {
             e.geom.removeDoublePoints(oc.getFloat("geometry.min-dist"), true);
         }
         for (int j = 0; j < (int)e.geom.size(); ++j) {
@@ -1114,21 +1105,35 @@ NIImporter_OpenDrive::OpenDriveLaneSection::OpenDriveLaneSection(SUMOReal sArg) 
 void
 NIImporter_OpenDrive::OpenDriveLaneSection::buildLaneMapping(const NBTypeCont& tc) {
     int sumoLane = 0;
+    bool singleType = true;
+    std::vector<std::string> types;
     const std::vector<OpenDriveLane>& dirLanesR = lanesByDir.find(OPENDRIVE_TAG_RIGHT)->second;
     for (std::vector<OpenDriveLane>::const_reverse_iterator i = dirLanesR.rbegin(); i != dirLanesR.rend(); ++i) {
         if (myImportAllTypes || (tc.knows((*i).type) && !tc.getShallBeDiscarded((*i).type))) {
             laneMap[(*i).id] = sumoLane++;
+            types.push_back((*i).type);
+            if (types.front() != types.back()) {
+                singleType = false;
+            }
         }
     }
     rightLaneNumber = sumoLane;
+    rightType = sumoLane > 0 ? (singleType ? types.front() : joinToString(types, "|")) : "";
     sumoLane = 0;
+    singleType = true;
+    types.clear();
     const std::vector<OpenDriveLane>& dirLanesL = lanesByDir.find(OPENDRIVE_TAG_LEFT)->second;
     for (std::vector<OpenDriveLane>::const_iterator i = dirLanesL.begin(); i != dirLanesL.end(); ++i) {
         if (myImportAllTypes || (tc.knows((*i).type) && !tc.getShallBeDiscarded((*i).type))) {
             laneMap[(*i).id] = sumoLane++;
+            types.push_back((*i).type);
+            if (types.front() != types.back()) {
+                singleType = false;
+            }
         }
     }
     leftLaneNumber = sumoLane;
+    leftType = sumoLane > 0 ? (singleType ? types.front() : joinToString(types, "|")) : "";
 }
 
 

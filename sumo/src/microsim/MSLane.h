@@ -261,7 +261,7 @@ public:
      *  does not cause unexpected behaviour on consecutive lanes. Returns false
      *  if the vehicle can not be inserted.
      *
-     * If the insertion can take place, incorporateVehicleis called and true is returned.
+     * If the insertion can take place, incorporateVehicle() is called and true is returned.
      *
      * @param[in] vehicle The vehicle to insert
      * @param[in] speed The speed with which it shall be inserted
@@ -276,7 +276,12 @@ public:
                             bool recheckNextLanes,
                             MSMoveReminder::Notification notification);
 
+    // XXX: Documentation?
     bool checkFailure(MSVehicle* aVehicle, SUMOReal& speed, SUMOReal& dist, const SUMOReal nspeed, const bool patchSpeed, const std::string errorMsg) const;
+
+    /** @todo documentation
+     *
+     */
     bool lastInsertion(MSVehicle& veh, SUMOReal mspeed);
 
     /** @brief Tries to insert the given vehicle on any place
@@ -545,7 +550,6 @@ public:
     /// returns the container with all links !!!
     const MSLinkCont& getLinkCont() const;
 
-
     /// Returns true if there is not a single vehicle on the lane.
     bool empty() const {
         assert(myVehBuffer.size() == 0);
@@ -629,6 +633,7 @@ public:
 
 
 
+    // XXX: succLink does not exist... Documentation?
     /** Same as succLink, but does not throw any assertions when
         the succeeding link could not be found;
         Returns the myLinks.end() instead; Further, the number of edges to
@@ -650,6 +655,9 @@ public:
     /** Returns the information whether the lane is has no vehicle and no
         partial occupation*/
     bool isEmpty() const;
+
+    /** Returns whether the lane pertains to an internal edge*/
+    bool isInternal() const;
 
     /// @brief returns the last vehicle for which this lane is responsible or 0
     MSVehicle* getLastFullVehicle() const;
@@ -677,9 +685,12 @@ public:
     MSLane* getParallelLane(int offset) const;
 
 
-    inline void setPermissions(SVCPermissions permissions) {
-        myPermissions = permissions;
-    }
+    /** @brief Sets the permissions to the given value. If a transientID is given, the permissions are recored as temporary
+     * @param[in] permissions The new permissions
+     * @param[in] transientID The id of the permission-modification or the special value PERMANENT
+     */
+    void setPermissions(SVCPermissions permissions, long transientID);
+    void resetPermissions(long transientID);
 
 
     inline bool allowsVehicleClass(SUMOVehicleClass vclass) const {
@@ -964,6 +975,9 @@ public:
         return myCollisionAction == COLLISION_ACTION_TELEPORT;
     }
 
+    static const long CHANGE_PERMISSIONS_PERMANENT = 0;
+    static const long CHANGE_PERMISSIONS_GUI = 1;
+
 protected:
     /// moves myTmpVehicles int myVehicles after a lane change procedure
     virtual void swapAfterLaneChange(SUMOTime t);
@@ -1070,6 +1084,9 @@ protected:
     /// The vClass permissions for this lane
     SVCPermissions myPermissions;
 
+    /// The original vClass permissions for this lane (before temporary modifications)
+    SVCPermissions myOriginalPermissions;
+
     /// The vClass speed restrictions for this lane
     const std::map<SUMOVehicleClass, SUMOReal>* myRestrictions;
 
@@ -1111,6 +1128,9 @@ protected:
 
     // @brief the ids of neighboring lanes
     std::vector<std::string> myNeighs;
+
+    // @brief transient changes in permissions
+    std::map<long, SVCPermissions> myPermissionChanges;
 
     /// definition of the static dictionary type
     typedef std::map< std::string, MSLane* > DictType;

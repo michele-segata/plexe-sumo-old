@@ -51,8 +51,8 @@
 #include <guisim/GUILane.h>
 #endif
 
-MSCACCLaneChanger::MSCACCLaneChanger(const std::vector<MSLane*>* lanes, bool allowChanging, bool allowSwap) :
-    MSLaneChanger(lanes, allowChanging, allowSwap) {
+MSCACCLaneChanger::MSCACCLaneChanger(const std::vector<MSLane*>* lanes, bool allowChanging) :
+    MSLaneChanger(lanes, allowChanging) {
 }
 
 MSCACCLaneChanger::~MSCACCLaneChanger() {
@@ -254,71 +254,6 @@ bool MSCACCLaneChanger::change() {
             }
             vehicle->getLaneChangeModel().setOwnState(state);
 
-        }
-
-        // check whether the vehicles should be swapped
-        if (myAllowsSwap && (state & (LCA_URGENT)) != 0) {
-            // get the direction ...
-            ChangerIt target;
-            int direction;
-            if ((state & (LCA_URGENT)) != 0) {
-                if (state & LCA_LEFT) {
-                    // ... wants to go left
-                    target = myCandi + 1;
-                    direction = 1;
-                }
-                else {
-                    // ... wants to go right
-                    target = myCandi - 1;
-                    direction = -1;
-                }
-            }
-            MSVehicle* prohibitor = target->lead;
-            if (target->hoppedVeh != 0) {
-                SUMOReal hoppedPos = target->hoppedVeh->getPositionOnLane();
-                if (prohibitor == 0 || (hoppedPos > vehicle->getPositionOnLane() && prohibitor->getPositionOnLane() > hoppedPos)) {
-                    prohibitor = 0; // !!! vehicles should not jump over more than one lanetarget->hoppedVeh;
-                }
-            }
-            if (prohibitor != 0 && ((prohibitor->getLaneChangeModel().getOwnState() & (LCA_URGENT/*|LCA_SPEEDGAIN*/)) != 0 && (prohibitor->getLaneChangeModel().getOwnState() & (LCA_LEFT | LCA_RIGHT)) != (vehicle->getLaneChangeModel().getOwnState() & (LCA_LEFT | LCA_RIGHT)))) {
-
-                // check for position and speed
-                if (prohibitor->getVehicleType().getLengthWithGap() - vehicle->getVehicleType().getLengthWithGap() == 0) {
-                    // ok, may be swapped
-                    // remove vehicle to swap with
-                    MSLane::VehCont::iterator i = find(target->lane->myTmpVehicles.begin(), target->lane->myTmpVehicles.end(), prohibitor);
-                    if (i != target->lane->myTmpVehicles.end()) {
-                        MSVehicle* bla = *i;
-                        assert(bla == prohibitor);
-                        target->lane->myTmpVehicles.erase(i);
-                        // set this vehicle
-                        target->hoppedVeh = vehicle;
-                        target->lane->myTmpVehicles.insert(target->lane->myTmpVehicles.begin(), vehicle);
-                        myCandi->hoppedVeh = prohibitor;
-                        myCandi->lane->myTmpVehicles.insert(target->lane->myTmpVehicles.begin(), prohibitor);
-
-                        // leave lane and detectors
-                        vehicle->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE);
-                        prohibitor->leaveLane(MSMoveReminder::NOTIFICATION_LANE_CHANGE);
-                        // patch position and speed
-                        SUMOReal p1 = vehicle->getPositionOnLane();
-                        vehicle->myState.myPos = prohibitor->myState.myPos;
-                        prohibitor->myState.myPos = p1;
-                        p1 = vehicle->getSpeed();
-                        vehicle->myState.mySpeed = prohibitor->myState.mySpeed;
-                        prohibitor->myState.mySpeed = p1;
-                        // enter lane and detectors
-                        vehicle->enterLaneAtLaneChange(target->lane);
-                        prohibitor->enterLaneAtLaneChange(myCandi->lane);
-                        // mark lane change
-                        vehicle->getLaneChangeModel().startLaneChangeManeuver(myCandi->lane, target->lane, direction);
-                        prohibitor->getLaneChangeModel().startLaneChangeManeuver(myCandi->lane, target->lane, -direction);
-                        (myCandi)->dens += prohibitor->getVehicleType().getLengthWithGap();
-                        (target)->dens += vehicle->getVehicleType().getLengthWithGap();
-                        return true;
-                    }
-                }
-            }
         }
 
     }

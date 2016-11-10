@@ -188,12 +188,6 @@ Option::getTypeName() const {
 /* -------------------------------------------------------------------------
  * Option_Integer - methods
  * ----------------------------------------------------------------------- */
-Option_Integer::Option_Integer()
-    : Option() {
-    myTypeName = "INT";
-}
-
-
 Option_Integer::Option_Integer(int value)
     : Option(true), myValue(value) {
     myTypeName = "INT";
@@ -305,12 +299,6 @@ Option_String::getValueString() const {
 /* -------------------------------------------------------------------------
  * Option_Float - methods
  * ----------------------------------------------------------------------- */
-Option_Float::Option_Float()
-    : Option() {
-    myTypeName = "FLOAT";
-}
-
-
 Option_Float::Option_Float(SUMOReal value)
     : Option(true), myValue(value) {
     myTypeName = "FLOAT";
@@ -366,12 +354,6 @@ Option_Float::getValueString() const {
 /* -------------------------------------------------------------------------
  * Option_Bool - methods
  * ----------------------------------------------------------------------- */
-Option_Bool::Option_Bool()
-    : Option() {
-    myTypeName = "BOOL";
-}
-
-
 Option_Bool::Option_Bool(bool value)
     : Option(true), myValue(value) {
     myTypeName = "BOOL";

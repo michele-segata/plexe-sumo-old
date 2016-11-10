@@ -34,7 +34,9 @@ sumoBinary = sumolib.checkBinary('sumo')
 PORT = sumolib.miscutils.getFreeSocketPort()
 sumoProcess = subprocess.Popen([sumoBinary,
                                 '-c', 'sumo.sumocfg',
-                                '--additional-files', 'input_additional.add.xml',
+                                '--ignore-route-errors',
+                                '--additional-files',
+                                'input_additional.add.xml,input_additional2.add.xml',
                                 '--remote-port', str(PORT)], stdout=sys.stdout)
 traci.init(PORT)
 
@@ -91,6 +93,7 @@ def check(vehID):
     print("shape", traci.vehicle.getShapeClass(vehID))
     print("MinGap", traci.vehicle.getMinGap(vehID))
     print("width", traci.vehicle.getWidth(vehID))
+    print("height", traci.vehicle.getHeight(vehID))
     print("person number", traci.vehicle.getPersonNumber(vehID))
     print("waiting time", traci.vehicle.getWaitingTime(vehID))
     print("driving dist", traci.vehicle.getDrivingDistance(vehID, "4fi", 2.))
@@ -128,6 +131,7 @@ traci.vehicle.setEmissionClass(vehID, "zero")
 traci.vehicle.setShapeClass(vehID, "bicycle")
 traci.vehicle.setMinGap(vehID, 1.1)
 traci.vehicle.setWidth(vehID, 1.1)
+traci.vehicle.setHeight(vehID, 1.6)
 traci.vehicle.setColor(vehID, (255, 0, 0, 255))
 traci.vehicle.setAdaptedTraveltime(vehID, 0, 1000, "1o", 55)
 traci.vehicle.setStop(
@@ -299,6 +303,19 @@ print("step", step())
 traci.vehicle.moveToXY(moved, "dummy", 0, 448.99, 491.19, 90, 0)
 print("step", step())
 check(moved)
+# add vehicle and route between taz
+traci.vehicle.add("tazVeh", "withTaz2")
+print("tazVeh edges", traci.vehicle.getRoute("tazVeh"))
+print("step", step())
+print("tazVeh pos=%s edges=%s" % (traci.vehicle.getLanePosition(
+    "tazVeh"), traci.vehicle.getRoute("tazVeh")))
+# add vehicle and attempt to route between disconnected edges
+traci.vehicle.add("failVeh", "failRoute")
+print("failVeh edges", traci.vehicle.getRoute("failVeh"))
+for i in range(5):
+    print("step", step())
+    print("failVeh pos=%s edges=%s" % (traci.vehicle.getLanePosition("failVeh"),
+                                       traci.vehicle.getRoute("failVeh")))
 
 # done
 traci.close()

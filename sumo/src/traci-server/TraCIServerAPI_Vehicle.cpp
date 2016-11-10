@@ -108,6 +108,7 @@ TraCIServerAPI_Vehicle::processGet(TraCIServer& server, tcpip::Storage& inputSto
             && variable != VAR_SPEEDSETMODE
             && variable != VAR_NEXT_TLS
             && variable != VAR_SLOPE
+            && variable != VAR_HEIGHT
             && variable != VAR_GET_SPEED_AND_ACCELERATION
             && variable != VAR_GET_LANES_COUNT
             && variable != VAR_GET_CC_INSTALLED
@@ -736,6 +737,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
             && variable != VAR_TAU && variable != VAR_LANECHANGE_MODE
             && variable != VAR_SPEED && variable != VAR_SPEEDSETMODE && variable != VAR_COLOR
             && variable != ADD && variable != ADD_FULL && variable != REMOVE
+            && variable != VAR_HEIGHT
             && variable != VAR_MOVE_TO_VTD && variable != VAR_PARAMETER/* && variable != VAR_SPEED_TIME_LINE && variable != VAR_LANE_TIME_LINE*/
             && variable != VAR_SET_LEADER_SPEED_AND_ACCELERATION
             && variable != VAR_SET_ACTIVE_CONTROLLER
@@ -1333,6 +1335,7 @@ TraCIServerAPI_Vehicle::processSet(TraCIServer& server, tcpip::Storage& inputSto
                     return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Invalid departure time.", outputStorage);
                 }
                 vehicleParams.departProcedure = (DepartDefinition)proc;
+                vehicleParams.depart = MSNet::getInstance()->getCurrentTimeStep();
             } else if (depart < MSNet::getInstance()->getCurrentTimeStep()) {
                 vehicleParams.depart = MSNet::getInstance()->getCurrentTimeStep();
                 WRITE_WARNING("Departure time for vehicle '" + id + "' is in the past; using current time instead.");

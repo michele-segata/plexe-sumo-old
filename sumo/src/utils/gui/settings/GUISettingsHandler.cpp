@@ -133,6 +133,7 @@ GUISettingsHandler::myStartElement(int element,
             int laneEdgeScaleMode = TplConvert::_2int(attrs.getStringSecure("scaleMode", "0").c_str());
             mySettings.laneShowBorders = TplConvert::_2bool(attrs.getStringSecure("laneShowBorders", toString(mySettings.laneShowBorders)).c_str());
             mySettings.showLinkDecals = TplConvert::_2bool(attrs.getStringSecure("showLinkDecals", toString(mySettings.showLinkDecals)).c_str());
+            mySettings.showLinkRules = TplConvert::_2bool(attrs.getStringSecure("showLinkRules", toString(mySettings.showLinkRules)).c_str());
             mySettings.showRails = TplConvert::_2bool(attrs.getStringSecure("showRails", toString(mySettings.showRails)).c_str());
             mySettings.edgeName = parseTextSettings("edgeName", attrs, mySettings.edgeName);
             mySettings.internalEdgeName = parseTextSettings("internalEdgeName", attrs, mySettings.internalEdgeName);
@@ -276,6 +277,7 @@ GUISettingsHandler::myStartElement(int element,
             d.tilt = TplConvert::_2SUMOReal(attrs.getStringSecure("tilt", toString(d.tilt)).c_str());
             d.roll = TplConvert::_2SUMOReal(attrs.getStringSecure("roll", toString(d.roll)).c_str());
             d.layer = attrs.getOpt<SUMOReal>(SUMO_ATTR_LAYER, 0, ok, d.layer);
+            d.screenRelative = TplConvert::_2bool(attrs.getStringSecure("screenRelative", toString(d.screenRelative)).c_str());
             d.initialised = false;
             myDecals.push_back(d);
         }
