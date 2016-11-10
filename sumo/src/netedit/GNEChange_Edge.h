@@ -20,6 +20,7 @@
 #ifndef GNEChange_Edge_h
 #define GNEChange_Edge_h
 
+
 // ===========================================================================
 // included modules
 // ===========================================================================
@@ -31,6 +32,8 @@
 
 #include <fx.h>
 #include <utils/foxtools/fxexdefs.h>
+#include <vector>
+#include <map>
 #include "GNEChange.h"
 
 // ===========================================================================
@@ -38,6 +41,8 @@
 // ===========================================================================
 class GNENet;
 class GNEEdge;
+class GNELane;
+class GNEAdditionalSet;
 
 // ===========================================================================
 // class definitions
@@ -47,10 +52,11 @@ class GNEEdge;
  * A network change in which a single edge is created or deleted
  */
 class GNEChange_Edge : public GNEChange {
+    // @brief FOX Declaration
     FXDECLARE_ABSTRACT(GNEChange_Edge)
 
 public:
-    /** @brief Constructor for creating/deleting an edge
+    /**@brief Constructor for creating/deleting an edge
      * @param[in] net The net on which to apply changes
      * @param[in] edge The edge to be created/deleted
      * @param[in] forward Whether to create/delete (true/false)
@@ -60,17 +66,33 @@ public:
     /// @brief Destructor
     ~GNEChange_Edge();
 
+    /// @name inherited from GNEChange
+    /// @{
+    /// @brief get undo Name
     FXString undoName() const;
+
+    /// @brief get Redo name
     FXString redoName() const;
+
+    /// @brief undo action
     void undo();
+
+    /// @brief redo action
     void redo();
+    /// @}
 
 
 private:
-    /** @brief full information regarding the edge that is to be created/deleted
-     * we assume shared responsibility for the pointer (via reference counting)
+    /**@brief full information regarding the edge that is to be created/deleted
+     * @note we assume shared responsibility for the pointer (via reference counting)
      */
     GNEEdge* myEdge;
+
+    /// @brief additional sets vinculated with this edge
+    std::vector<GNEAdditionalSet*> myAdditionalSetsEdge;
+
+    /// @brief additional sets vinculated with the lanes of edge
+    std::map<GNELane*, std::vector<GNEAdditionalSet*> > myAdditionalSetsLanes;
 };
 
 #endif

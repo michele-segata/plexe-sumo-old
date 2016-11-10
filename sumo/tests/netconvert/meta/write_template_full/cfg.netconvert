@@ -145,6 +145,7 @@
         <opendrive.import-all-lanes value="false" type="BOOL" help="Imports all lane types"/>
         <opendrive.ignore-widths value="false" type="BOOL" help="Whether lane widths shall be ignored."/>
         <no-internal-links value="false" type="BOOL" help="Omits internal links"/>
+        <numerical-ids value="false" type="BOOL" help="Remaps alphanumerical IDs of nodes and edges to ensure that all IDs are integers"/>
         <dismiss-vclasses value="false" type="BOOL" help="Removes vehicle class restrictions from imported edges"/>
         <no-turnarounds value="false" type="BOOL" help="Disables building turnarounds"/>
         <no-turnarounds.tls value="false" synonymes="no-tls-turnarounds" type="BOOL" help="Disables building turnarounds at tls-controlled junctions"/>
@@ -164,6 +165,7 @@
         <offset.y value="0" synonymes="y-offset-to-apply" type="FLOAT" help="Adds FLOAT to net y-positions"/>
         <flip-y-axis value="false" synonymes="flip-y" type="BOOL" help="Flips the y-coordinate along zero"/>
         <roundabouts.guess value="false" synonymes="guess-roundabouts" type="BOOL" help="Enable roundabout-guessing"/>
+        <opposites.guess value="false" type="BOOL" help="Enable guessing of opposite direction lanes usable for overtaking"/>
         <lefthand value="false" type="BOOL" help="Assumes left-hand traffic on the network"/>
         <edges.join value="false" type="BOOL" help="Merges edges which connect the same nodes and are close to each other (recommended for VISSIM import)"/>
         <junctions.join value="false" type="BOOL" help="Joins junctions that are close to each other (recommended for OSM import)"/>
@@ -171,6 +173,7 @@
         <junctions.join-exclude value="" type="STR" help="Interprets STR as list of junctions to exclude from joining"/>
         <speed.offset value="0" type="FLOAT" help="Modifies all edge speeds by adding FLOAT"/>
         <speed.factor value="1" type="FLOAT" help="Modifies all edge speeds by multiplying by FLOAT"/>
+        <speed.minimum value="" type="FLOAT" help="Modifies all edge speeds to at least FLOAT"/>
         <junctions.corner-detail value="0" type="INT" help="Generate INT intermediate points to smooth out intersection corners"/>
         <junctions.internal-link-detail value="5" type="INT" help="Generate INT intermediate points to smooth out lanes within the intersection"/>
         <check-lane-foes.roundabout value="true" type="BOOL" help="Allow driving onto a multi-lane road if there are foes on other lanes (at roundabouts)"/>
@@ -186,6 +189,7 @@
 
     <building_defaults>
         <default.lanenumber value="1" synonymes="L lanenumber" type="INT" help="The default number of lanes in an edge"/>
+        <default.lanewidth value="-1" synonymes="lanewidth" type="FLOAT" help="The default width of lanes"/>
         <default.speed value="13.9" synonymes="S speed" type="FLOAT" help="The default speed on an edge (in m/s)"/>
         <default.priority value="-1" synonymes="P priority" type="INT" help="The default priority of an edge"/>
         <default.sidewalk-width value="2" type="FLOAT" help="The default width of added sidewalks"/>

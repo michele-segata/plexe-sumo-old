@@ -381,6 +381,9 @@
         <!-- Omits internal links -->
         <no-internal-links value="false" type="BOOL"/>
 
+        <!-- Remaps alphanumerical IDs of nodes and edges to ensure that all IDs are integers -->
+        <numerical-ids value="false" type="BOOL"/>
+
         <!-- Removes vehicle class restrictions from imported edges -->
         <dismiss-vclasses value="false" type="BOOL"/>
 
@@ -438,6 +441,9 @@
         <!-- Enable roundabout-guessing -->
         <roundabouts.guess value="false" synonymes="guess-roundabouts" type="BOOL"/>
 
+        <!-- Enable guessing of opposite direction lanes usable for overtaking -->
+        <opposites.guess value="false" type="BOOL"/>
+
         <!-- Assumes left-hand traffic on the network -->
         <lefthand value="false" type="BOOL"/>
 
@@ -458,6 +464,9 @@
 
         <!-- Modifies all edge speeds by multiplying by FLOAT -->
         <speed.factor value="1" type="FLOAT"/>
+
+        <!-- Modifies all edge speeds to at least FLOAT -->
+        <speed.minimum value="" type="FLOAT"/>
 
         <!-- Generate INT intermediate points to smooth out intersection corners -->
         <junctions.corner-detail value="0" type="INT"/>
@@ -497,6 +506,9 @@
     <building_defaults>
         <!-- The default number of lanes in an edge -->
         <default.lanenumber value="1" synonymes="L lanenumber" type="INT"/>
+
+        <!-- The default width of lanes -->
+        <default.lanewidth value="-1" synonymes="lanewidth" type="FLOAT"/>
 
         <!-- The default speed on an edge (in m/s) -->
         <default.speed value="13.9" synonymes="S speed" type="FLOAT"/>

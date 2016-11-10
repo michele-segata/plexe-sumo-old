@@ -59,7 +59,7 @@ MSRailCrossing::MSRailCrossing(MSTLLogicControl& tlcontrol,
     /// XXX compute reasonable time depending on link length
     myYellowTime(TIME2STEPS(5)) {
     // dummy phase, used to avoid crashing in MSTrafficLightLogic::setTrafficLightSignals()
-    myPhases.push_back(new MSPhaseDefinition(1, 1, 1, std::string(myLinks.size(), 'X')));
+    myPhases.push_back(new MSPhaseDefinition(1, 1, 1, std::string(SUMO_MAX_CONNECTIONS, 'X')));
 }
 
 void
@@ -112,7 +112,7 @@ MSRailCrossing::updateCurrentPhase() {
             }
         }
 #ifdef HAVE_INTERNAL_LANES
-        if ((*it_link)->getViaLane() != 0 && (*it_link)->getViaLane()->getLastVehicleInformation().first != 0) {
+        if ((*it_link)->getViaLane() != 0 && (*it_link)->getViaLane()->getVehicleNumberWithPartials() > 0) {
             // do not open if there is still a train on the crossing
             stayRedUntil = MAX2(stayRedUntil, now + DELTA_T);
         }

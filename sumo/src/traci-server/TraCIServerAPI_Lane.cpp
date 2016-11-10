@@ -61,7 +61,8 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
     if (variable != ID_LIST && variable != LANE_LINK_NUMBER && variable != LANE_EDGE_ID && variable != VAR_LENGTH
             && variable != VAR_MAXSPEED && variable != LANE_LINKS && variable != VAR_SHAPE
             && variable != VAR_CO2EMISSION && variable != VAR_COEMISSION && variable != VAR_HCEMISSION && variable != VAR_PMXEMISSION
-            && variable != VAR_NOXEMISSION && variable != VAR_FUELCONSUMPTION && variable != VAR_NOISEEMISSION && variable != VAR_WAITING_TIME
+            && variable != VAR_NOXEMISSION && variable != VAR_FUELCONSUMPTION && variable != VAR_NOISEEMISSION
+            && variable != VAR_ELECTRICITYCONSUMPTION && variable != VAR_WAITING_TIME
             && variable != LAST_STEP_MEAN_SPEED && variable != LAST_STEP_VEHICLE_NUMBER
             && variable != LAST_STEP_VEHICLE_ID_LIST && variable != LAST_STEP_OCCUPANCY && variable != LAST_STEP_VEHICLE_HALTING_NUMBER
             && variable != LAST_STEP_LENGTH && variable != VAR_CURRENT_TRAVELTIME
@@ -210,6 +211,10 @@ TraCIServerAPI_Lane::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             case VAR_NOISEEMISSION:
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
                 tempMsg.writeDouble(lane->getHarmonoise_NoiseEmissions());
+                break;
+            case VAR_ELECTRICITYCONSUMPTION:
+                tempMsg.writeUnsignedByte(TYPE_DOUBLE);
+                tempMsg.writeDouble(lane->getElectricityConsumption());
                 break;
             case LAST_STEP_VEHICLE_NUMBER:
                 tempMsg.writeUnsignedByte(TYPE_INTEGER);
@@ -394,7 +399,7 @@ TraCIServerAPI_Lane::StoringVisitor::add(const MSLane* const l) const {
         case CMD_GET_VEHICLE_VARIABLE: {
             const MSLane::VehCont& vehs = l->getVehiclesSecure();
             for (MSLane::VehCont::const_iterator j = vehs.begin(); j != vehs.end(); ++j) {
-                if (myShape.distance((*j)->getPosition()) <= myRange) {
+                if (myShape.distance2D((*j)->getPosition()) <= myRange) {
                     myIDs.insert((*j)->getID());
                 }
             }
@@ -402,13 +407,13 @@ TraCIServerAPI_Lane::StoringVisitor::add(const MSLane* const l) const {
         }
         break;
         case CMD_GET_EDGE_VARIABLE: {
-            if (myShape.size() != 1 || l->getShape().distance(myShape[0]) <= myRange) {
+            if (myShape.size() != 1 || l->getShape().distance2D(myShape[0]) <= myRange) {
                 myIDs.insert(l->getEdge().getID());
             }
         }
         break;
         case CMD_GET_LANE_VARIABLE: {
-            if (myShape.size() != 1 || l->getShape().distance(myShape[0]) <= myRange) {
+            if (myShape.size() != 1 || l->getShape().distance2D(myShape[0]) <= myRange) {
                 myIDs.insert(l->getID());
             }
         }

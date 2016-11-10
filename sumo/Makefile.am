@@ -17,6 +17,15 @@ doxygen:
 	mkdir docs/doxygen
 	doxygen sumo.doxyconf &> doxygen.log
 
+lcov:
+	rm -rf docs/lcov
+	mkdir docs/lcov
+	lcov -d . -c --no-external --output-file docs/lcov/lcov.info
+	genhtml -o docs/lcov/html docs/lcov/lcov.info
+
+lcov-reset:
+	lcov -d . -z
+
 userdoc:
 	tools/build/buildHTMLDocs.py -o docs/userdoc -i docs/wiki/index.html -r $(VERSION) && cp docs/wiki/*.png docs/wiki/*.css docs/userdoc
 
@@ -50,7 +59,7 @@ dist-hook:
 	if test -d tests; then \
 	    for f in `find build data tools tests/complex/tutorial -name .svn -prune -o -type d -print`; do mkdir -p $(abs_distdir)/$$f; done ; \
 	    mkdir -p $(abs_distdir)/docs ; \
-	    find tests/complex/tutorial -regex ".*\.\(xml\|txt\|sumocfg\|netccfg\|py\)" -print0 | xargs -0 cp -v --parents --target-directory $(abs_distdir) ; \
+	    find tests/complex/tutorial -regex ".*\.\(xml\|txt\|sumocfg\|netccfg\|py\|osm\)" -print0 | xargs -0 cp -v --parents --target-directory $(abs_distdir) ; \
 	    mv -v ${abs_distdir}/tests/complex/tutorial $(abs_distdir)/docs ; \
 	    rm -rf $(abs_distdir)/tests ; \
 	    tools/extractTest.py -i -f tests/examples.txt -o $(abs_distdir)/docs ; \
@@ -66,7 +75,7 @@ dist-doc: doc
 	cd $(srcdir)
 	$(am__remove_distdir)
 	mkdir -p $(distdir)/docs
-	find tests/complex/tutorial -regex ".*\.\(xml\|txt\|sumocfg\|netccfg\|py\)" -print0 | xargs -0 cp --parents --target-directory $(distdir)
+	find tests/complex/tutorial -regex ".*\.\(xml\|txt\|sumocfg\|netccfg\|py\|osm\)" -print0 | xargs -0 cp --parents --target-directory $(distdir)
 	mv $(distdir)/tests/complex/tutorial $(distdir)/docs
 	rmdir $(distdir)/tests/complex
 	rmdir $(distdir)/tests

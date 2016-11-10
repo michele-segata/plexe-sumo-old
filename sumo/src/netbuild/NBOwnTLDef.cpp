@@ -103,9 +103,9 @@ NBOwnTLDef::getDirectionalWeight(LinkDirection dir) {
 SUMOReal
 NBOwnTLDef::computeUnblockedWeightedStreamNumber(const NBEdge* const e1, const NBEdge* const e2) {
     SUMOReal val = 0;
-    for (unsigned int e1l = 0; e1l < e1->getNumLanes(); e1l++) {
+    for (int e1l = 0; e1l < e1->getNumLanes(); e1l++) {
         std::vector<NBEdge::Connection> approached1 = e1->getConnectionsFromLane(e1l);
-        for (unsigned int e2l = 0; e2l < e2->getNumLanes(); e2l++) {
+        for (int e2l = 0; e2l < e2->getNumLanes(); e2l++) {
             std::vector<NBEdge::Connection> approached2 = e2->getConnectionsFromLane(e2l);
             for (std::vector<NBEdge::Connection>::iterator e1c = approached1.begin(); e1c != approached1.end(); ++e1c) {
                 if (e1->getTurnDestination() == (*e1c).toEdge) {
@@ -557,16 +557,18 @@ NBOwnTLDef::replaceRemoved(NBEdge* /*removed*/, int /*removedLane*/,
 
 void
 NBOwnTLDef::initNeedsContRelation() const {
-    if (!myNeedsContRelationReady && !amInvalid()) {
-        assert(myControlledNodes.size() > 0);
-        // we use a dummy node just to maintain const-correctness
-        myNeedsContRelation.clear();
-        NBOwnTLDef dummy(DummyID, myControlledNodes, 0, TLTYPE_STATIC);
-        dummy.setParticipantsInformation();
-        dummy.computeLogicAndConts(0, true);
-        myNeedsContRelation = dummy.myNeedsContRelation;
-        for (std::vector<NBNode*>::const_iterator i = myControlledNodes.begin(); i != myControlledNodes.end(); i++) {
-            (*i)->removeTrafficLight(&dummy);
+    if (!myNeedsContRelationReady) {
+        if (myControlledNodes.size() > 0) {
+            // we use a dummy node just to maintain const-correctness
+            myNeedsContRelation.clear();
+            NBOwnTLDef dummy(DummyID, myControlledNodes, 0, TLTYPE_STATIC);
+            dummy.setParticipantsInformation();
+            NBTrafficLightLogic* tllDummy = dummy.computeLogicAndConts(0, true);
+            delete tllDummy;
+            myNeedsContRelation = dummy.myNeedsContRelation;
+            for (std::vector<NBNode*>::const_iterator i = myControlledNodes.begin(); i != myControlledNodes.end(); i++) {
+                (*i)->removeTrafficLight(&dummy);
+            }
         }
         myNeedsContRelationReady = true;
     }
@@ -685,7 +687,7 @@ NBOwnTLDef::addPedestrianScramble(NBTrafficLightLogic* logic, unsigned int noLin
                     }
                 }
                 // add yellow step
-                if (needYellowPhase) {
+                if (needYellowPhase && brakingTime > 0) {
                     logic->addStep(brakingTime, state);
                 }
             }

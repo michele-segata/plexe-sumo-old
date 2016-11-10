@@ -63,9 +63,9 @@ MSCFModel::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
     //  in this case, we neglect dawdling, nonetheless, using
     //  vSafe does not incorporate speed reduction due to interaction
     //  on lane changing
-    const SUMOReal vMin = getSpeedAfterMaxDecel(oldV);
     const SUMOReal vMax = MIN3(veh->getLane()->getVehicleMaxSpeed(veh), maxNextSpeed(oldV, veh), vSafe);
-    assert(vMin <= vMax);
+    // we cannot rely on never braking harder than maxDecel because TraCI or strange cf models may decide to do so
+    const SUMOReal vMin = MIN2(getSpeedAfterMaxDecel(oldV), vMax);
     return veh->getLaneChangeModel().patchSpeed(vMin, vMax, vMax, *this);
 }
 
@@ -110,7 +110,8 @@ MSCFModel::maximumSafeStopSpeed(SUMOReal gap) const {
     if (gap <= 0) {
         return 0;
     } else if (gap <= ACCEL2SPEED(myDecel)) {
-        return gap;
+        // workaround for #2310
+        return MIN2(ACCEL2SPEED(myDecel), DIST2SPEED(gap));
     }
     const SUMOReal g = gap;
     const SUMOReal b = ACCEL2SPEED(myDecel);

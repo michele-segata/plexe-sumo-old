@@ -32,8 +32,6 @@
 #endif
 
 #include "TraCIAPI.h"
-#include <traci-server/TraCIConstants.h>
-#include <utils/common/ToString.h>
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -53,7 +51,7 @@ TraCIAPI::TraCIAPI()
     : edge(*this), gui(*this), inductionloop(*this),
       junction(*this), lane(*this), multientryexit(*this), poi(*this),
       polygon(*this), route(*this), simulation(*this), trafficlights(*this),
-      vehicletype(*this), vehicle(*this),
+      vehicletype(*this), vehicle(*this), person(*this),
       mySocket(0) {}
 #ifdef _MSC_VER
 #pragma warning(default: 4355)
@@ -219,8 +217,25 @@ TraCIAPI::send_commandSubscribeObjectContext(int domID, const std::string& objID
     mySocket->sendExact(outMsg);
 }
 
-
-
+void
+TraCIAPI::send_commandMoveToXY(const std::string& vehicleID, const std::string& edgeID, const int lane, const SUMOReal x, const SUMOReal y, const SUMOReal angle, const int keepRoute) const {
+    tcpip::Storage content;
+    content.writeUnsignedByte(TYPE_COMPOUND);
+    content.writeInt(6);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(edgeID);
+    content.writeUnsignedByte(TYPE_INTEGER);
+    content.writeInt(lane);
+    content.writeUnsignedByte(TYPE_DOUBLE);
+    content.writeDouble(x);
+    content.writeUnsignedByte(TYPE_DOUBLE);
+    content.writeDouble(y);
+    content.writeUnsignedByte(TYPE_DOUBLE);
+    content.writeDouble(angle);
+    content.writeUnsignedByte(TYPE_BYTE);
+    content.writeByte(keepRoute);
+    send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, VAR_MOVE_TO_VTD, vehicleID, content);
+}
 
 void
 TraCIAPI::check_resultState(tcpip::Storage& inMsg, int command, bool ignoreCommandId, std::string* acknowledgement) const {
@@ -261,7 +276,7 @@ TraCIAPI::check_resultState(tcpip::Storage& inMsg, int command, bool ignoreComma
 }
 
 
-void
+int
 TraCIAPI::check_commandGetResult(tcpip::Storage& inMsg, int command, int expectedType, bool ignoreCommandId) const {
     inMsg.position(); // respStart
     int length = inMsg.readUnsignedByte();
@@ -281,6 +296,7 @@ TraCIAPI::check_commandGetResult(tcpip::Storage& inMsg, int command, int expecte
             throw tcpip::SocketException("Expected " + toString(expectedType) + " but got " + toString(valueDataType));
         }
     }
+    return cmdId;
 }
 
 
@@ -430,12 +446,94 @@ TraCIAPI::getColor(int cmd, int var, const std::string& id, tcpip::Storage* add)
     return c;
 }
 
+void
+TraCIAPI::readVariables(tcpip::Storage& inMsg, const std::string& objectID, int variableCount, SubscribedValues& into) {
+    while (variableCount > 0) {
+
+        const int variableID = inMsg.readUnsignedByte();
+        const int status = inMsg.readUnsignedByte();
+        const int type = inMsg.readUnsignedByte();
+
+        if (status == RTYPE_OK) {
+
+            TraCIValue v;
+
+            switch (type) {
+                case TYPE_DOUBLE:
+                    v.scalar = inMsg.readDouble();
+                    break;
+                case TYPE_STRING:
+                    v.string = inMsg.readString();
+                    break;
+                case POSITION_3D:
+                    v.position.x = inMsg.readDouble();
+                    v.position.y = inMsg.readDouble();
+                    v.position.z = inMsg.readDouble();
+                    break;
+                case TYPE_COLOR:
+                    v.color.r = inMsg.readUnsignedByte();
+                    v.color.g = inMsg.readUnsignedByte();
+                    v.color.b = inMsg.readUnsignedByte();
+                    v.color.a = inMsg.readUnsignedByte();
+                    break;
+                case TYPE_INTEGER:
+                    v.scalar = inMsg.readInt();
+                    break;
+
+                // TODO Other data types
+
+                default:
+                    throw tcpip::SocketException("Unimplemented subscription type: " + toString(type));
+            }
+
+            into[objectID][variableID] = v;
+        } else {
+            throw tcpip::SocketException("Subscription response error: variableID=" + toString(variableID) + " status=" + toString(status));
+        }
+
+        variableCount--;
+    }
+}
+
+void
+TraCIAPI::readVariableSubscription(tcpip::Storage& inMsg) {
+    const std::string objectID = inMsg.readString();
+    const int variableCount = inMsg.readUnsignedByte();
+    readVariables(inMsg, objectID, variableCount, mySubscribedValues);
+}
+
+void
+TraCIAPI::readContextSubscription(tcpip::Storage& inMsg) {
+    const std::string contextID = inMsg.readString();
+    inMsg.readUnsignedByte(); // context domain
+    const int variableCount = inMsg.readUnsignedByte();
+    int numObjects = inMsg.readInt();
+
+    while (numObjects > 0) {
+        std::string objectID = inMsg.readString();
+        readVariables(inMsg, objectID, variableCount, mySubscribedContextValues[contextID]);
+        numObjects--;
+    }
+}
 
 void
 TraCIAPI::simulationStep(SUMOTime time) {
     send_commandSimulationStep(time);
     tcpip::Storage inMsg;
     check_resultState(inMsg, CMD_SIMSTEP2);
+
+    mySubscribedValues.clear();
+    mySubscribedContextValues.clear();
+    int numSubs = inMsg.readInt();
+    while (numSubs > 0) {
+        int cmdId = check_commandGetResult(inMsg, 0, -1, true);
+        if (cmdId >= RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE && cmdId <= RESPONSE_SUBSCRIBE_PERSON_VARIABLE) {
+            readVariableSubscription(inMsg);
+        } else {
+            readContextSubscription(inMsg);
+        }
+        numSubs--;
+    }
 }
 
 
@@ -499,6 +597,11 @@ TraCIAPI::EdgeScope::getFuelConsumption(const std::string& edgeID) const {
 SUMOReal
 TraCIAPI::EdgeScope::getNoiseEmission(const std::string& edgeID) const {
     return myParent.getDouble(CMD_GET_EDGE_VARIABLE, VAR_NOISEEMISSION, edgeID);
+}
+
+SUMOReal
+TraCIAPI::EdgeScope::getElectricityConsumption(const std::string& edgeID) const {
+    return myParent.getDouble(CMD_GET_EDGE_VARIABLE, VAR_ELECTRICITYCONSUMPTION, edgeID);
 }
 
 SUMOReal
@@ -643,6 +746,7 @@ TraCIAPI::GUIScope::setBoundary(const std::string& viewID, SUMOReal xmin, SUMORe
 void
 TraCIAPI::GUIScope::screenshot(const std::string& viewID, const std::string& filename) const {
     tcpip::Storage content;
+    content.writeUnsignedByte(TYPE_STRING);
     content.writeString(filename);
     myParent.send_commandSetValue(CMD_SET_GUI_VARIABLE, VAR_SCREENSHOT, viewID, content);
     tcpip::Storage inMsg;
@@ -652,6 +756,7 @@ TraCIAPI::GUIScope::screenshot(const std::string& viewID, const std::string& fil
 void
 TraCIAPI::GUIScope::trackVehicle(const std::string& viewID, const std::string& vehID) const {
     tcpip::Storage content;
+    content.writeUnsignedByte(TYPE_STRING);
     content.writeString(vehID);
     myParent.send_commandSetValue(CMD_SET_GUI_VARIABLE, VAR_TRACK_VEHICLE, viewID, content);
     tcpip::Storage inMsg;
@@ -801,82 +906,87 @@ TraCIAPI::LaneScope::getLinkNumber(const std::string& /* laneID */) const {
 
 TraCIAPI::TraCIPositionVector
 TraCIAPI::LaneScope::getShape(const std::string& laneID) const {
-    throw myParent.getPolygon(CMD_GET_LANE_VARIABLE, VAR_SHAPE, laneID);
+    return myParent.getPolygon(CMD_GET_LANE_VARIABLE, VAR_SHAPE, laneID);
 }
 
 std::string
 TraCIAPI::LaneScope::getEdgeID(const std::string& laneID) const {
-    throw myParent.getString(CMD_GET_LANE_VARIABLE, LANE_EDGE_ID, laneID);
+    return myParent.getString(CMD_GET_LANE_VARIABLE, LANE_EDGE_ID, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getCO2Emission(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_CO2EMISSION, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_CO2EMISSION, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getCOEmission(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_COEMISSION, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_COEMISSION, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getHCEmission(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_HCEMISSION, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_HCEMISSION, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getPMxEmission(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_PMXEMISSION, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_PMXEMISSION, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getNOxEmission(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_NOXEMISSION, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_NOXEMISSION, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getFuelConsumption(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_FUELCONSUMPTION, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_FUELCONSUMPTION, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getNoiseEmission(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_NOISEEMISSION, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_NOISEEMISSION, laneID);
+}
+
+SUMOReal
+TraCIAPI::LaneScope::getElectricityConsumption(const std::string& laneID) const {
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_ELECTRICITYCONSUMPTION, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getLastStepMeanSpeed(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, LAST_STEP_MEAN_SPEED, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, LAST_STEP_MEAN_SPEED, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getLastStepOccupancy(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, LAST_STEP_OCCUPANCY, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, LAST_STEP_OCCUPANCY, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getLastStepLength(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, LAST_STEP_LENGTH, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, LAST_STEP_LENGTH, laneID);
 }
 
 SUMOReal
 TraCIAPI::LaneScope::getTraveltime(const std::string& laneID) const {
-    throw myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_CURRENT_TRAVELTIME, laneID);
+    return myParent.getDouble(CMD_GET_LANE_VARIABLE, VAR_CURRENT_TRAVELTIME, laneID);
 }
 
 unsigned int
 TraCIAPI::LaneScope::getLastStepVehicleNumber(const std::string& laneID) const {
-    throw myParent.getInt(CMD_GET_LANE_VARIABLE, LAST_STEP_VEHICLE_NUMBER, laneID);
+    return myParent.getInt(CMD_GET_LANE_VARIABLE, LAST_STEP_VEHICLE_NUMBER, laneID);
 }
 
 unsigned int
 TraCIAPI::LaneScope::getLastStepHaltingNumber(const std::string& laneID) const {
-    throw myParent.getInt(CMD_GET_LANE_VARIABLE, LAST_STEP_VEHICLE_HALTING_NUMBER, laneID);
+    return myParent.getInt(CMD_GET_LANE_VARIABLE, LAST_STEP_VEHICLE_HALTING_NUMBER, laneID);
 }
 
 std::vector<std::string>
 TraCIAPI::LaneScope::getLastStepVehicleIDs(const std::string& laneID) const {
-    throw myParent.getStringVector(CMD_GET_LANE_VARIABLE, LAST_STEP_VEHICLE_ID_LIST, laneID);
+    return myParent.getStringVector(CMD_GET_LANE_VARIABLE, LAST_STEP_VEHICLE_ID_LIST, laneID);
 }
 
 
@@ -1180,7 +1290,7 @@ TraCIAPI::RouteScope::add(const std::string& routeID, const std::vector<std::str
     tcpip::Storage content;
     content.writeUnsignedByte(TYPE_STRINGLIST);
     content.writeStringList(edges);
-    myParent.send_commandSetValue(CMD_SET_ROUTE_VARIABLE, VAR_POSITION, routeID, content);
+    myParent.send_commandSetValue(CMD_SET_ROUTE_VARIABLE, ADD, routeID, content);
     tcpip::Storage inMsg;
     myParent.check_resultState(inMsg, CMD_SET_ROUTE_VARIABLE);
 }
@@ -1262,6 +1372,55 @@ TraCIAPI::SimulationScope::getMinExpectedNumber() const {
     return myParent.getInt(CMD_GET_SIM_VARIABLE, VAR_MIN_EXPECTED_VEHICLES, "");
 }
 
+void
+TraCIAPI::SimulationScope::subscribe(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime, const std::vector<int>& vars) const {
+    myParent.send_commandSubscribeObjectVariable(domID, objID, beginTime, endTime, vars);
+    tcpip::Storage inMsg;
+    myParent.check_resultState(inMsg, domID);
+    myParent.check_commandGetResult(inMsg, domID);
+    myParent.readVariableSubscription(inMsg);
+}
+
+void
+TraCIAPI::SimulationScope::subscribeContext(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime, int domain, SUMOReal range, const std::vector<int>& vars) const {
+
+    myParent.send_commandSubscribeObjectContext(domID, objID, beginTime, endTime, domain, range, vars);
+    tcpip::Storage inMsg;
+    myParent.check_resultState(inMsg, domID);
+    myParent.check_commandGetResult(inMsg, domID);
+    myParent.readContextSubscription(inMsg);
+}
+
+TraCIAPI::SubscribedValues
+TraCIAPI::SimulationScope::getSubscriptionResults() {
+    return myParent.mySubscribedValues;
+}
+
+
+TraCIAPI::TraCIValues
+TraCIAPI::SimulationScope::getSubscriptionResults(const std::string& objID) {
+    if (myParent.mySubscribedValues.find(objID) != myParent.mySubscribedValues.end()) {
+        return myParent.mySubscribedValues[objID];
+    } else {
+        throw; // Something?
+    }
+}
+
+
+TraCIAPI::SubscribedContextValues
+TraCIAPI::SimulationScope::getContextSubscriptionResults() {
+    return myParent.mySubscribedContextValues;
+}
+
+
+TraCIAPI::SubscribedValues
+TraCIAPI::SimulationScope::getContextSubscriptionResults(const std::string& objID) {
+    if (myParent.mySubscribedContextValues.find(objID) != myParent.mySubscribedContextValues.end()) {
+        return myParent.mySubscribedContextValues[objID];
+    } else {
+        throw; // Something?
+    }
+}
 
 
 // ---------------------------------------------------------------------------
@@ -1667,70 +1826,228 @@ TraCIAPI::VehicleScope::getIDCount() const {
 }
 
 SUMOReal
-TraCIAPI::VehicleScope::getSpeed(const std::string& typeID) const {
-    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_SPEED, typeID);
+TraCIAPI::VehicleScope::getSpeed(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_SPEED, vehicleID);
 }
 
 TraCIAPI::TraCIPosition
-TraCIAPI::VehicleScope::getPosition(const std::string& typeID) const {
-    return myParent.getPosition(CMD_GET_VEHICLE_VARIABLE, VAR_POSITION, typeID);
+TraCIAPI::VehicleScope::getPosition(const std::string& vehicleID) const {
+    return myParent.getPosition(CMD_GET_VEHICLE_VARIABLE, VAR_POSITION, vehicleID);
 }
 
 SUMOReal
-TraCIAPI::VehicleScope::getAngle(const std::string& typeID) const {
-    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_ANGLE, typeID);
+TraCIAPI::VehicleScope::getAngle(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_ANGLE, vehicleID);
 }
 
 std::string
-TraCIAPI::VehicleScope::getRoadID(const std::string& typeID) const {
-    return myParent.getString(CMD_GET_VEHICLE_VARIABLE, VAR_ROAD_ID, typeID);
+TraCIAPI::VehicleScope::getRoadID(const std::string& vehicleID) const {
+    return myParent.getString(CMD_GET_VEHICLE_VARIABLE, VAR_ROAD_ID, vehicleID);
 }
 
 std::string
-TraCIAPI::VehicleScope::getLaneID(const std::string& typeID) const {
-    return myParent.getString(CMD_GET_VEHICLE_VARIABLE, VAR_LANE_ID, typeID);
+TraCIAPI::VehicleScope::getLaneID(const std::string& vehicleID) const {
+    return myParent.getString(CMD_GET_VEHICLE_VARIABLE, VAR_LANE_ID, vehicleID);
 }
 
 unsigned int
-TraCIAPI::VehicleScope::getLaneIndex(const std::string& typeID) const {
-    return myParent.getInt(CMD_GET_VEHICLE_VARIABLE, VAR_LANE_INDEX, typeID);
+TraCIAPI::VehicleScope::getLaneIndex(const std::string& vehicleID) const {
+    return myParent.getInt(CMD_GET_VEHICLE_VARIABLE, VAR_LANE_INDEX, vehicleID);
 }
 
 std::string
-TraCIAPI::VehicleScope::getTypeID(const std::string& typeID) const {
-    return myParent.getString(CMD_GET_VEHICLE_VARIABLE, VAR_TYPE, typeID);
+TraCIAPI::VehicleScope::getTypeID(const std::string& vehicleID) const {
+    return myParent.getString(CMD_GET_VEHICLE_VARIABLE, VAR_TYPE, vehicleID);
 }
 
 std::string
-TraCIAPI::VehicleScope::getRouteID(const std::string& typeID) const {
-    return myParent.getString(CMD_GET_VEHICLE_VARIABLE, VAR_ROAD_ID, typeID);
+TraCIAPI::VehicleScope::getRouteID(const std::string& vehicleID) const {
+    return myParent.getString(CMD_GET_VEHICLE_VARIABLE, VAR_ROAD_ID, vehicleID);
 }
 
 unsigned int
-TraCIAPI::VehicleScope::getRouteIndex(const std::string& typeID) const {
-    return myParent.getInt(CMD_GET_VEHICLE_VARIABLE, VAR_ROUTE_INDEX, typeID);
+TraCIAPI::VehicleScope::getRouteIndex(const std::string& vehicleID) const {
+    return myParent.getInt(CMD_GET_VEHICLE_VARIABLE, VAR_ROUTE_INDEX, vehicleID);
 }
 
 std::vector<std::string>
-TraCIAPI::VehicleScope::getEdges(const std::string& typeID) const {
-    return myParent.getStringVector(CMD_GET_VEHICLE_VARIABLE, VAR_EDGES, typeID);
+TraCIAPI::VehicleScope::getEdges(const std::string& vehicleID) const {
+    return myParent.getStringVector(CMD_GET_VEHICLE_VARIABLE, VAR_EDGES, vehicleID);
 }
 
 TraCIAPI::TraCIColor
-TraCIAPI::VehicleScope::getColor(const std::string& typeID) const {
-    return myParent.getColor(CMD_GET_VEHICLE_VARIABLE, VAR_COLOR, typeID);
+TraCIAPI::VehicleScope::getColor(const std::string& vehicleID) const {
+    return myParent.getColor(CMD_GET_VEHICLE_VARIABLE, VAR_COLOR, vehicleID);
 }
 
 SUMOReal
-TraCIAPI::VehicleScope::getLanePosition(const std::string& typeID) const {
-    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_LANEPOSITION, typeID);
+TraCIAPI::VehicleScope::getLanePosition(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_LANEPOSITION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getCO2Emission(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_CO2EMISSION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getCOEmission(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_COEMISSION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getHCEmission(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_HCEMISSION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getPMxEmission(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_PMXEMISSION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getNOxEmission(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_NOXEMISSION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getFuelConsumption(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_FUELCONSUMPTION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getNoiseEmission(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_NOISEEMISSION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getElectricityConsumption(const std::string& vehicleID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_ELECTRICITYCONSUMPTION, vehicleID);
+}
+
+SUMOReal
+TraCIAPI::VehicleScope::getWaitingTime(const std::string& vehID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_WAITING_TIME, vehID);
 }
 
 
+int
+TraCIAPI::VehicleScope::getSpeedMode(const std::string& vehID) const {
+    return myParent.getInt(CMD_GET_VEHICLE_VARIABLE, VAR_SPEEDSETMODE, vehID);
+}
+
+
+SUMOReal
+TraCIAPI::VehicleScope::getSlope(const std::string& vehID) const {
+    return myParent.getDouble(CMD_GET_VEHICLE_VARIABLE, VAR_SLOPE, vehID);
+}
+
+
+std::vector<TraCIAPI::VehicleScope::NextTLSData>
+TraCIAPI::VehicleScope::getNextTLS(const std::string& vehID) const {
+    tcpip::Storage inMsg;
+    myParent.send_commandGetVariable(CMD_GET_VEHICLE_VARIABLE, VAR_NEXT_TLS, vehID);
+    myParent.processGET(inMsg, CMD_GET_VEHICLE_VARIABLE, TYPE_COMPOUND);
+    std::vector<NextTLSData> result;
+    inMsg.readInt(); // components
+    // number of items
+    inMsg.readUnsignedByte();
+    const int n = inMsg.readInt();
+    for (int i = 0; i < n; ++i) {
+        NextTLSData d;
+        inMsg.readUnsignedByte();
+        d.id = inMsg.readString();
+
+        inMsg.readUnsignedByte();
+        d.tlIndex = inMsg.readInt();
+
+        inMsg.readUnsignedByte();
+        d.dist = inMsg.readDouble();
+
+        inMsg.readUnsignedByte();
+        d.state = inMsg.readByte();
+
+        result.push_back(d);
+    }
+    return result;
+}
 
 
 void
-TraCIAPI::VehicleScope::moveTo(const std::string& typeID, const std::string& laneID, SUMOReal position) const {
+TraCIAPI::VehicleScope::add(const std::string& vehicleID,
+                            const std::string& routeID,
+                            const std::string& typeID,
+                            std::string depart,
+                            const std::string& departLane,
+                            const std::string& departPos,
+                            const std::string& departSpeed,
+                            const std::string& arrivalLane,
+                            const std::string& arrivalPos,
+                            const std::string& arrivalSpeed,
+                            const std::string& fromTaz,
+                            const std::string& toTaz,
+                            const std::string& line,
+                            int personCapacity,
+                            int personNumber) const {
+
+    if (depart == "-1") {
+        depart = toString(myParent.simulation.getCurrentTime() / 1000.0);
+    }
+    tcpip::Storage content;
+    content.writeUnsignedByte(TYPE_COMPOUND);
+    content.writeInt(14);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(routeID);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(typeID);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(depart);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(departLane);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(departPos);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(departSpeed);
+
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(arrivalLane);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(arrivalPos);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(arrivalSpeed);
+
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(fromTaz);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(toTaz);
+    content.writeUnsignedByte(TYPE_STRING);
+    content.writeString(line);
+
+    content.writeUnsignedByte(TYPE_INTEGER);
+    content.writeInt(personCapacity);
+    content.writeUnsignedByte(TYPE_INTEGER);
+    content.writeInt(personNumber);
+
+    myParent.send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, ADD_FULL, vehicleID, content);
+    tcpip::Storage inMsg;
+    myParent.check_resultState(inMsg, CMD_SET_VEHICLE_VARIABLE);
+}
+
+
+void
+TraCIAPI::VehicleScope::remove(const std::string& vehicleID, char reason) const {
+    tcpip::Storage content;
+    content.writeUnsignedByte(TYPE_BYTE);
+    content.writeUnsignedByte(reason);
+    myParent.send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, REMOVE, vehicleID, content);
+    tcpip::Storage inMsg;
+    myParent.check_resultState(inMsg, CMD_SET_VEHICLE_VARIABLE);
+
+}
+
+
+void
+TraCIAPI::VehicleScope::moveTo(const std::string& vehicleID, const std::string& laneID, SUMOReal position) const {
     tcpip::Storage content;
     content.writeUnsignedByte(TYPE_COMPOUND);
     content.writeInt(2);
@@ -1738,13 +2055,21 @@ TraCIAPI::VehicleScope::moveTo(const std::string& typeID, const std::string& lan
     content.writeString(laneID);
     content.writeUnsignedByte(TYPE_DOUBLE);
     content.writeDouble(position);
-    myParent.send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, VAR_MOVE_TO, typeID, content);
+    myParent.send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, VAR_MOVE_TO, vehicleID, content);
     tcpip::Storage inMsg;
     myParent.check_resultState(inMsg, CMD_SET_VEHICLE_VARIABLE);
 }
 
 void
-TraCIAPI::VehicleScope::slowDown(const std::string& typeID, SUMOReal speed, int duration) const {
+TraCIAPI::VehicleScope::moveToXY(const std::string& vehicleID, const std::string& edgeID, const int lane, const SUMOReal x, const SUMOReal y, const SUMOReal angle, const int keepRoute) const {
+    myParent.send_commandMoveToXY(vehicleID, edgeID, lane, x, y, angle, keepRoute);
+    tcpip::Storage inMsg;
+    myParent.check_resultState(inMsg, CMD_SET_VEHICLE_VARIABLE);
+}
+
+
+void
+TraCIAPI::VehicleScope::slowDown(const std::string& vehicleID, SUMOReal speed, int duration) const {
     tcpip::Storage content;
     content.writeUnsignedByte(TYPE_COMPOUND);
     content.writeInt(2);
@@ -1752,21 +2077,64 @@ TraCIAPI::VehicleScope::slowDown(const std::string& typeID, SUMOReal speed, int 
     content.writeDouble(speed);
     content.writeUnsignedByte(TYPE_INTEGER);
     content.writeInt(duration);
-    myParent.send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, CMD_SLOWDOWN, typeID, content);
+    myParent.send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, CMD_SLOWDOWN, vehicleID, content);
     tcpip::Storage inMsg;
     myParent.check_resultState(inMsg, CMD_SET_VEHICLE_VARIABLE);
 }
 
 void
-TraCIAPI::VehicleScope::setSpeed(const std::string& typeID, SUMOReal speed) const {
+TraCIAPI::VehicleScope::setSpeed(const std::string& vehicleID, SUMOReal speed) const {
     tcpip::Storage content;
     content.writeUnsignedByte(TYPE_DOUBLE);
     content.writeDouble(speed);
-    myParent.send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, VAR_SPEED, typeID, content);
+    myParent.send_commandSetValue(CMD_SET_VEHICLE_VARIABLE, VAR_SPEED, vehicleID, content);
     tcpip::Storage inMsg;
     myParent.check_resultState(inMsg, CMD_SET_VEHICLE_VARIABLE);
 }
 
+// ---------------------------------------------------------------------------
+// // TraCIAPI::PersonScope-methods
+//  ---------------------------------------------------------------------------
+
+std::vector<std::string>
+TraCIAPI::PersonScope::getIDList() const {
+    return myParent.getStringVector(CMD_GET_PERSON_VARIABLE, ID_LIST, "");
+}
+
+unsigned int
+TraCIAPI::PersonScope::getIDCount() const {
+    return myParent.getInt(CMD_GET_PERSON_VARIABLE, ID_COUNT, "");
+}
+
+SUMOReal
+TraCIAPI::PersonScope::getSpeed(const std::string& typeID) const {
+    return myParent.getDouble(CMD_GET_PERSON_VARIABLE, VAR_SPEED, typeID);
+}
+
+TraCIAPI::TraCIPosition
+TraCIAPI::PersonScope::getPosition(const std::string& typeID) const {
+    return myParent.getPosition(CMD_GET_PERSON_VARIABLE, VAR_POSITION, typeID);
+}
+
+std::string
+TraCIAPI::PersonScope::getRoadID(const std::string& typeID) const {
+    return myParent.getString(CMD_GET_PERSON_VARIABLE, VAR_ROAD_ID, typeID);
+}
+
+std::string
+TraCIAPI::PersonScope::getTypeID(const std::string& typeID) const {
+    return myParent.getString(CMD_GET_PERSON_VARIABLE, VAR_TYPE, typeID);
+}
+
+SUMOReal
+TraCIAPI::PersonScope::getWaitingTime(const std::string& typeID) const {
+    return myParent.getDouble(CMD_GET_PERSON_VARIABLE, VAR_WAITING_TIME, typeID);
+}
+
+std::string
+TraCIAPI::PersonScope::getNextEdge(const std::string& typeID) const {
+    return myParent.getString(CMD_GET_PERSON_VARIABLE, VAR_NEXT_EDGE, typeID);
+}
 
 
 /****************************************************************************/

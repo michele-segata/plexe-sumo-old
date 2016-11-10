@@ -22,6 +22,7 @@ from __future__ import absolute_import
 import sys
 import os
 import itertools
+import random
 from optparse import OptionParser
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from sumolib.output import parse
@@ -29,7 +30,7 @@ from sumolib.net import readNet
 from sumolib.miscutils import Colorgen
 
 
-def parse_args():
+def parse_args(args):
     USAGE = "Usage: " + sys.argv[0] + " <netfile> <routefile> [options]"
     optParser = OptionParser()
     optParser.add_option("-o", "--outfile", help="name of output file")
@@ -43,7 +44,9 @@ def parse_args():
         "-l", "--layer", default=100, help="layer for generated polygons")
     optParser.add_option("--geo", action="store_true",
                          default=False, help="write polgyons with geo-coordinates")
-    options, args = optParser.parse_args()
+    optParser.add_option("--blur", type="float",
+                         default=0, help="maximum random disturbance to route geometry")
+    options, args = optParser.parse_args(args=args)
     try:
         options.net, options.routefile = args
         options.colorgen = Colorgen(
@@ -55,9 +58,16 @@ def parse_args():
     return options
 
 
-def generate_poly(net, id, color, layer, geo, edges, outf):
+def randomize_pos(pos, blur):
+    return tuple([val + random.uniform(-blur, blur) for val in pos])
+
+
+def generate_poly(net, id, color, layer, geo, edges, blur, outf):
     shape = list(itertools.chain(*list(net.getEdge(e).getLane(0).getShape()
                                        for e in edges)))
+    if blur > 0:
+        shape = [randomize_pos(pos, blur) for pos in shape]
+
     geoFlag = ""
     if geo:
         shape = [net.convertXY2LonLat(*pos) for pos in shape]
@@ -67,15 +77,16 @@ def generate_poly(net, id, color, layer, geo, edges, outf):
         id, color, layer, shapeString, geoFlag))
 
 
-def main():
-    options = parse_args()
+def main(args):
+    options = parse_args(args)
     net = readNet(options.net)
     with open(options.outfile, 'w') as outf:
         outf.write('<polygons>\n')
         for vehicle in parse(options.routefile, 'vehicle'):
             generate_poly(net, vehicle.id, options.colorgen(),
-                          options.layer, options.geo, vehicle.route[0].edges.split(), outf)
+                          options.layer, options.geo,
+                          vehicle.route[0].edges.split(), options.blur, outf)
         outf.write('</polygons>\n')
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])

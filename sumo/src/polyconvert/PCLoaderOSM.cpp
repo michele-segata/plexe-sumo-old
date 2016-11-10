@@ -115,6 +115,9 @@ PCLoaderOSM::loadIfSet(OptionsCont& oc, PCPolyContainer& toFill,
         }
         PROGRESS_BEGIN_MESSAGE("Parsing nodes from osm-file '" + *file + "'");
         if (!XMLSubSys::runParser(nodesHandler, *file)) {
+            for (std::map<long long int, PCOSMNode*>::const_iterator i = nodes.begin(); i != nodes.end(); ++i) {
+                delete(*i).second;
+            }
             throw ProcessError();
         }
         PROGRESS_DONE_MESSAGE();
@@ -241,14 +244,14 @@ PCLoaderOSM::addPolygon(const PCOSMEdge* edge, const PositionVector& vec, const 
         const bool closedShape = vec.front() == vec.back();
         const std::string idSuffix = (index == 0 ? "" : "#" + toString(index));
         const std::string id = def.prefix + (useName && edge->name != "" ? edge->name : toString(edge->id)) + idSuffix;
-        Polygon* poly = new Polygon(
+        SUMO::Polygon* poly = new SUMO::Polygon(
             StringUtils::escapeXML(id),
             StringUtils::escapeXML(OptionsCont::getOptions().getBool("osm.keep-full-type") ? fullType : def.id),
             def.color, vec, def.allowFill && closedShape, (SUMOReal)def.layer);
         if (withAttributes) {
             poly->addParameter(edge->myAttributes);
         }
-        if (!toFill.insert(id, poly, def.layer, ignorePruning)) {
+        if (!toFill.add(poly, ignorePruning)) {
             return index;
         } else {
             return index + 1;
@@ -271,7 +274,7 @@ PCLoaderOSM::addPOI(const PCOSMNode* node, const Position& pos, const PCTypeMap:
         if (withAttributes) {
             poi->addParameter(node->myAttributes);
         }
-        if (!toFill.insert(id, poi, def.layer, ignorePruning)) {
+        if (!toFill.add(poi, ignorePruning)) {
             return index;
         } else {
             return index + 1;

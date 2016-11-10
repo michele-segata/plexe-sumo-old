@@ -1,4 +1,4 @@
-SUMO netgenerate Version svn
+SUMO netgenerate Version dev-SVN-r20635
  Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de
 Road network generator for the microscopic road traffic simulation SUMO.
 
@@ -31,6 +31,8 @@ Grid Network Options:
   --grid.attach-length FLOAT           The length of streets attached at the
                                          boundary;
                                          0 means no streets are attached
+  --grid.alphanumerical-ids            The Ids of generated nodes use letters
+                                         for the X axis
 
 Spider Network Options:
   -s, --spider                         Forces NETGEN to build a spider-net-like
@@ -151,6 +153,9 @@ Unregulated Nodes Options:
 
 Processing Options:
   --no-internal-links                  Omits internal links
+  --numerical-ids                      Remaps alphanumerical IDs of nodes and
+                                         edges to ensure that all IDs are
+                                         integers
   --no-turnarounds                     Disables building turnarounds
   --no-turnarounds.tls                 Disables building turnarounds at
                                          tls-controlled junctions
@@ -160,6 +165,8 @@ Processing Options:
   --offset.y FLOAT                     Adds FLOAT to net y-positions
   --flip-y-axis                        Flips the y-coordinate along zero
   --roundabouts.guess                  Enable roundabout-guessing
+  --opposites.guess                    Enable guessing of opposite direction
+                                         lanes usable for overtaking
   --lefthand                           Assumes left-hand traffic on the network
   --edges.join                         Merges edges which connect the same
                                          nodes and are close to each other
@@ -198,6 +205,7 @@ Processing Options:
 
 Building Defaults Options:
   -L, --default.lanenumber INT         The default number of lanes in an edge
+  --default.lanewidth FLOAT            The default width of lanes
   -S, --default.speed FLOAT            The default speed on an edge (in m/s)
   -P, --default.priority INT           The default priority of an edge
   --default.sidewalk-width FLOAT       The default width of added sidewalks

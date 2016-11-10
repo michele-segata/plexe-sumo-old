@@ -51,8 +51,8 @@
 #include <guisim/GUILane.h>
 #endif
 
-MSCACCLaneChanger::MSCACCLaneChanger(const std::vector<MSLane*>* lanes, bool allowSwap) :
-    MSLaneChanger(lanes, allowSwap) {
+MSCACCLaneChanger::MSCACCLaneChanger(const std::vector<MSLane*>* lanes, bool allowChanging, bool allowSwap) :
+    MSLaneChanger(lanes, allowChanging, allowSwap) {
 }
 
 MSCACCLaneChanger::~MSCACCLaneChanger() {
@@ -311,8 +311,8 @@ bool MSCACCLaneChanger::change() {
                         vehicle->enterLaneAtLaneChange(target->lane);
                         prohibitor->enterLaneAtLaneChange(myCandi->lane);
                         // mark lane change
-                        vehicle->getLaneChangeModel().changed(direction);
-                        prohibitor->getLaneChangeModel().changed(-direction);
+                        vehicle->getLaneChangeModel().startLaneChangeManeuver(myCandi->lane, target->lane, direction);
+                        prohibitor->getLaneChangeModel().startLaneChangeManeuver(myCandi->lane, target->lane, -direction);
                         (myCandi)->dens += prohibitor->getVehicleType().getLengthWithGap();
                         (target)->dens += vehicle->getVehicleType().getLengthWithGap();
                         return true;

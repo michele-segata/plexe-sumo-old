@@ -15,3 +15,9 @@ by-type
 # keep edge ids from input file
 input-file
 input-file_postload
+
+# Only keep edges with the given vclass
+by-vclass
+
+# Only keep edges with the given vclass. (from plain xml)
+by-vclass2

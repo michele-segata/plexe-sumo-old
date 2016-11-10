@@ -113,7 +113,7 @@ NBNode::ApproachingDivider::ApproachingDivider(
     // lanes that will be connected from walkingAreas and forbidden lanes)
     // if the lane is targeted by an explicitly set connection we need
     // to make it available anyway
-    for (int i = 0; i < (int)currentOutgoing->getNumLanes(); ++i) {
+    for (int i = 0; i < currentOutgoing->getNumLanes(); ++i) {
         if ((currentOutgoing->getPermissions(i) == SVC_PEDESTRIAN
                 || isForbidden(currentOutgoing->getPermissions(i)))
                 && approachedLanes.count(i) == 0) {
@@ -557,10 +557,10 @@ NBNode::computeSmoothShape(const PositionVector& begShape,
 
 PositionVector
 NBNode::computeInternalLaneShape(NBEdge* fromE, const NBEdge::Connection& con, int numPoints) const {
-    if (con.fromLane >= (int) fromE->getNumLanes()) {
+    if (con.fromLane >= fromE->getNumLanes()) {
         throw ProcessError("Connection '" + fromE->getID() + "_" + toString(con.fromLane) + "->" + con.toEdge->getID() + "_" + toString(con.toLane) + "' starts at a non-existant lane.");
     }
-    if (con.toLane >= (int) con.toEdge->getNumLanes()) {
+    if (con.toLane >= con.toEdge->getNumLanes()) {
         throw ProcessError("Connection '" + fromE->getID() + "_" + toString(con.fromLane) + "->" + con.toEdge->getID() + "_" + toString(con.toLane) + "' targets a non-existant lane.");
     }
     PositionVector ret;
@@ -724,8 +724,8 @@ NBNode::computeNodeShape(SUMOReal mismatchThreshold) {
             tmp.push_back_noDoublePos(tmp[0]); // need closed shape
             if (mismatchThreshold >= 0
                     && !tmp.around(myPosition)
-                    && tmp.distance(myPosition) > mismatchThreshold) {
-                WRITE_WARNING("Shape for junction '" + myID + "' has distance " + toString(tmp.distance(myPosition)) + " to its given position");
+                    && tmp.distance2D(myPosition) > mismatchThreshold) {
+                WRITE_WARNING("Shape for junction '" + myID + "' has distance " + toString(tmp.distance2D(myPosition)) + " to its given position");
             }
         }
     } catch (InvalidArgument&) {
@@ -755,7 +755,7 @@ NBNode::computeLanes2Lanes() {
                 && in->getNumLanes() - inOffset == out->getNumLanes() - outOffset - 1
                 && in != out
                 && in->isConnectedTo(out)) {
-            for (int i = inOffset; i < (int) in->getNumLanes(); ++i) {
+            for (int i = inOffset; i < in->getNumLanes(); ++i) {
                 in->setConnection(i, out, i - inOffset + outOffset + 1, NBEdge::L2L_COMPUTED);
             }
             in->setConnection(inOffset, out, outOffset, NBEdge::L2L_COMPUTED);
@@ -789,13 +789,13 @@ NBNode::computeLanes2Lanes() {
                 std::swap(in1, in2);
                 std::swap(in1Offset, in2Offset);
             }
-            in1->addLane2LaneConnections(in1Offset, out, outOffset, in1->getNumLanes() - in1Offset, NBEdge::L2L_VALIDATED, true, true);
-            in2->addLane2LaneConnections(in2Offset, out, in1->getNumLanes() + outOffset - in1Offset, in2->getNumLanes() - in2Offset, NBEdge::L2L_VALIDATED, true, true);
+            in1->addLane2LaneConnections(in1Offset, out, outOffset, in1->getNumLanes() - in1Offset, NBEdge::L2L_VALIDATED, true);
+            in2->addLane2LaneConnections(in2Offset, out, in1->getNumLanes() + outOffset - in1Offset, in2->getNumLanes() - in2Offset, NBEdge::L2L_VALIDATED, true);
             return;
         }
     }
     // special case c):
-    //  one in, two out, the incoming has the same number of lanes as the sum of the outgoing
+    //  one in, two out, the incoming has the same number of lanes or only 1 lane less than the sum of the outgoing lanes
     //  --> highway off-ramp
     if (myIncomingEdges.size() == 1 && myOutgoingEdges.size() == 2) {
         NBEdge* in = myIncomingEdges[0];
@@ -804,19 +804,23 @@ NBNode::computeLanes2Lanes() {
         const int inOffset = MAX2(0, in->getFirstNonPedestrianLaneIndex(FORWARD, true));
         int out1Offset = MAX2(0, out1->getFirstNonPedestrianLaneIndex(FORWARD, true));
         int out2Offset = MAX2(0, out2->getFirstNonPedestrianLaneIndex(FORWARD, true));
-        if (in->getNumLanes() - inOffset == out2->getNumLanes() + out1->getNumLanes() - out1Offset - out2Offset
+        const int deltaLaneSum = (out2->getNumLanes() + out1->getNumLanes() - out1Offset - out2Offset) - (in->getNumLanes() - inOffset);
+        if ((deltaLaneSum == 0 || (deltaLaneSum == 1 && in->getPermissionVariants(inOffset, in->getNumLanes()).size() == 1))
                 && (in->getStep() <= NBEdge::LANES2EDGES)
                 && in != out1
                 && in != out2
                 && in->isConnectedTo(out1)
-                && in->isConnectedTo(out2)) {
+                && in->isConnectedTo(out2)
+                && !in->isTurningDirectionAt(out1)
+                && !in->isTurningDirectionAt(out2)
+           ) {
             // for internal: check which one is the rightmost
             if (NBContHelper::relative_outgoing_edge_sorter(in)(out2, out1)) {
                 std::swap(out1, out2);
                 std::swap(out1Offset, out2Offset);
             }
-            in->addLane2LaneConnections(inOffset, out1, out1Offset, out1->getNumLanes() - out1Offset, NBEdge::L2L_VALIDATED, true, true);
-            in->addLane2LaneConnections(out1->getNumLanes() + inOffset - out1Offset, out2, out2Offset, out2->getNumLanes() - out2Offset, NBEdge::L2L_VALIDATED, false, true);
+            in->addLane2LaneConnections(inOffset, out1, out1Offset, out1->getNumLanes() - out1Offset, NBEdge::L2L_VALIDATED, true);
+            in->addLane2LaneConnections(out1->getNumLanes() + inOffset - out1Offset - deltaLaneSum, out2, out2Offset, out2->getNumLanes() - out2Offset, NBEdge::L2L_VALIDATED, false);
             return;
         }
     }
@@ -836,8 +840,8 @@ NBNode::computeLanes2Lanes() {
                 && in->getNumLanes() - inOffset == out->getNumLanes() - outOffset + 1
                 && in != out
                 && in->isConnectedTo(out)) {
-            for (int i = inOffset; i < (int) in->getNumLanes(); ++i) {
-                in->setConnection(i, out, MIN2(outOffset + i, ((int)out->getNumLanes() - 1)), NBEdge::L2L_COMPUTED, true);
+            for (int i = inOffset; i < in->getNumLanes(); ++i) {
+                in->setConnection(i, out, MIN2(outOffset + i, out->getNumLanes() - 1), NBEdge::L2L_COMPUTED, true);
             }
             return;
         }
@@ -858,7 +862,7 @@ NBNode::computeLanes2Lanes() {
                 && in->getNumLanes() - inOffset == out->getNumLanes() - outOffset
                 && in != out
                 && in->isConnectedTo(out)) {
-            for (int i = inOffset; i < (int) in->getNumLanes(); ++i) {
+            for (int i = inOffset; i < in->getNumLanes(); ++i) {
                 in->setConnection(i, out, i - inOffset + outOffset, NBEdge::L2L_COMPUTED);
             }
             //std::cout << " special case f at node=" << getID() << " inOffset=" << inOffset << " outOffset=" << outOffset << "\n";
@@ -902,9 +906,9 @@ NBNode::computeLanes2Lanes() {
                 if (unsatisfied != 0) {
                     //std::cout << " unsatisfied modes from edge=" << incoming->getID() << " toEdge=" << currentOutgoing->getID() << " deadModes=" << getVehicleClassNames(unsatisfied) << "\n";
                     int fromLane = 0;
-                    while (unsatisfied != 0 && fromLane < (int)incoming->getNumLanes()) {
+                    while (unsatisfied != 0 && fromLane < incoming->getNumLanes()) {
                         if ((incoming->getPermissions(fromLane) & unsatisfied) != 0) {
-                            for (int toLane = 0; toLane < (int)currentOutgoing->getNumLanes(); ++toLane) {
+                            for (int toLane = 0; toLane < currentOutgoing->getNumLanes(); ++toLane) {
                                 const SVCPermissions satisfied = incoming->getPermissions(fromLane) & currentOutgoing->getPermissions(toLane) & unsatisfied;
                                 if (satisfied != 0) {
                                     incoming->setConnection((unsigned int)fromLane, currentOutgoing, toLane, NBEdge::L2L_COMPUTED);
@@ -2497,8 +2501,8 @@ NBNode::getCenter() const {
     **/
     PositionVector tmp = myPoly;
     tmp.closePolygon();
-    //std::cout << getID() << " around=" << tmp.around(myPosition) << " dist=" << tmp.distance(myPosition) << "\n";
-    if (tmp.size() < 3 || tmp.around(myPosition) || tmp.distance(myPosition) < POSITION_EPS) {
+    //std::cout << getID() << " around=" << tmp.around(myPosition) << " dist=" << tmp.distance2D(myPosition) << "\n";
+    if (tmp.size() < 3 || tmp.around(myPosition) || tmp.distance2D(myPosition) < POSITION_EPS) {
         return myPosition;
     } else {
         return myPoly.getPolygonCenter();

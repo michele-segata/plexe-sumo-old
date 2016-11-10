@@ -1,4 +1,4 @@
-SUMO netconvert Version svn
+SUMO netconvert Version dev-SVN-r20818
  Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de
 Road network importer / builder for the road traffic simulation SUMO.
 
@@ -206,6 +206,9 @@ Processing Options:
   --opendrive.import-all-lanes         Imports all lane types
   --opendrive.ignore-widths            Whether lane widths shall be ignored.
   --no-internal-links                  Omits internal links
+  --numerical-ids                      Remaps alphanumerical IDs of nodes and
+                                         edges to ensure that all IDs are
+                                         integers
   --dismiss-vclasses                   Removes vehicle class restrictions from
                                          imported edges
   --no-turnarounds                     Disables building turnarounds
@@ -241,6 +244,8 @@ Processing Options:
   --offset.y FLOAT                     Adds FLOAT to net y-positions
   --flip-y-axis                        Flips the y-coordinate along zero
   --roundabouts.guess                  Enable roundabout-guessing
+  --opposites.guess                    Enable guessing of opposite direction
+                                         lanes usable for overtaking
   --lefthand                           Assumes left-hand traffic on the network
   --edges.join                         Merges edges which connect the same
                                          nodes and are close to each other
@@ -254,6 +259,8 @@ Processing Options:
   --speed.offset FLOAT                 Modifies all edge speeds by adding FLOAT
   --speed.factor FLOAT                 Modifies all edge speeds by multiplying
                                          by FLOAT
+  --speed.minimum FLOAT                Modifies all edge speeds to at least
+                                         FLOAT
   --junctions.corner-detail INT        Generate INT intermediate points to
                                          smooth out intersection corners
   --junctions.internal-link-detail INT  Generate INT intermediate points to
@@ -284,6 +291,7 @@ Processing Options:
 
 Building Defaults Options:
   -L, --default.lanenumber INT         The default number of lanes in an edge
+  --default.lanewidth FLOAT            The default width of lanes
   -S, --default.speed FLOAT            The default speed on an edge (in m/s)
   -P, --default.priority INT           The default priority of an edge
   --default.sidewalk-width FLOAT       The default width of added sidewalks

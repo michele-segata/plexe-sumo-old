@@ -106,7 +106,7 @@ struct GUIVisualizationSizeSettings {
     }
 
     /// @brief return the drawing size including exaggeration and constantSize values
-    SUMOReal getExaggeration(const GUIVisualizationSettings& s) const;
+    SUMOReal getExaggeration(const GUIVisualizationSettings& s, SUMOReal factor = 20) const;
 };
 
 
@@ -277,6 +277,9 @@ public:
 
     /// @brief the current NETEDIT mode (temporary)
     int editMode;
+
+    /// @brief the current NETEDIT additional mode (temporary)
+    int editAdditionalMode;
 
     /// @brief the current selection scaling in NETEDIT (temporary)
     SUMOReal selectionScale;

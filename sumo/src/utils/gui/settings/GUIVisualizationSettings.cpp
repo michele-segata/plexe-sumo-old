@@ -189,7 +189,7 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     scheme.addColor(RGBColor::MAGENTA, (SUMOReal)200);
     scheme.setAllowsNegativeValues(true);
     laneColorer.addScheme(scheme);
-    scheme = GUIColorScheme("by height at segment start", RGBColor::RED);
+    scheme = GUIColorScheme("by height at geometry-segment start", RGBColor::RED);
     scheme.addColor(RGBColor::BLUE, (SUMOReal) - 10);
     scheme.addColor(RGBColor::YELLOW, (SUMOReal)50);
     scheme.addColor(RGBColor::GREEN, (SUMOReal)100);
@@ -203,7 +203,7 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     scheme.addColor(RGBColor::BLUE, (SUMOReal) - .3);
     scheme.setAllowsNegativeValues(true);
     laneColorer.addScheme(scheme);
-    scheme = GUIColorScheme("by segment inclination", RGBColor::GREY);
+    scheme = GUIColorScheme("by geometry-segment inclination", RGBColor::GREY);
     scheme.addColor(RGBColor::YELLOW, (SUMOReal) .1);
     scheme.addColor(RGBColor::RED, (SUMOReal) .3);
     scheme.addColor(RGBColor::GREEN, (SUMOReal) - .1);
@@ -513,7 +513,7 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     scheme.addColor(RGBColor::BLUE, (SUMOReal)(120 / 3.6));
     scheme.addColor(RGBColor::MAGENTA, (SUMOReal)(150 / 3.6));
     edgeColorer.addScheme(scheme);
-    scheme = GUIColorScheme("by current occupancy (streetwise)", RGBColor::BLUE);
+    scheme = GUIColorScheme("by current occupancy (streetwise, brutto)", RGBColor::BLUE);
     scheme.addColor(RGBColor::RED, (SUMOReal)0.95);
     edgeColorer.addScheme(scheme);
     scheme = GUIColorScheme("by current speed (streetwise)", RGBColor::RED);
@@ -533,6 +533,40 @@ GUIVisualizationSettings::GUIVisualizationSettings()
     scheme.addColor(RGBColor::BLUE, (SUMOReal)(1));
     scheme.addColor(RGBColor::MAGENTA, (SUMOReal)(1.25));
     edgeColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by routing device assumed speed", RGBColor::RED);
+    scheme.addColor(RGBColor::YELLOW, (SUMOReal)(30 / 3.6));
+    scheme.addColor(RGBColor::GREEN, (SUMOReal)(55 / 3.6));
+    scheme.addColor(RGBColor::CYAN, (SUMOReal)(80 / 3.6));
+    scheme.addColor(RGBColor::BLUE, (SUMOReal)(120 / 3.6));
+    scheme.addColor(RGBColor::MAGENTA, (SUMOReal)(150 / 3.6));
+    edgeColorer.addScheme(scheme);
+    edgeColorer.addScheme(GUIColorScheme("by angle", RGBColor::YELLOW, "", true));
+    scheme = GUIColorScheme("by segments (alternating)", RGBColor::BLUE, "odd", true);
+    scheme.addColor(RGBColor::RED, 1, "even");
+    edgeColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by jammed state (segmentwise)", RGBColor::GREEN, "free", true);
+    scheme.addColor(RGBColor::RED, 1, "jammed");
+    edgeColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by current occupancy (segmentwise, brutto)", RGBColor::BLUE);
+    scheme.addColor(RGBColor::RED, (SUMOReal)0.95);
+    edgeColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by current speed (segmentwise)", RGBColor::RED);
+    scheme.addColor(RGBColor::YELLOW, (SUMOReal)(30 / 3.6));
+    scheme.addColor(RGBColor::GREEN, (SUMOReal)(55 / 3.6));
+    scheme.addColor(RGBColor::CYAN, (SUMOReal)(80 / 3.6));
+    scheme.addColor(RGBColor::BLUE, (SUMOReal)(120 / 3.6));
+    scheme.addColor(RGBColor::MAGENTA, (SUMOReal)(150 / 3.6));
+    edgeColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by current flow (segmentwise)", RGBColor::BLUE);
+    scheme.addColor(RGBColor::RED, (SUMOReal)5000);
+    edgeColorer.addScheme(scheme);
+    scheme = GUIColorScheme("by relative speed (segmentwise)", RGBColor::RED);
+    scheme.addColor(RGBColor::YELLOW, (SUMOReal)(0.25));
+    scheme.addColor(RGBColor::GREEN, (SUMOReal)(0.5));
+    scheme.addColor(RGBColor::CYAN, (SUMOReal)(0.75));
+    scheme.addColor(RGBColor::BLUE, (SUMOReal)(1));
+    scheme.addColor(RGBColor::MAGENTA, (SUMOReal)(1.25));
+    edgeColorer.addScheme(scheme);
 
 
     /// add edge scaling schemes
@@ -544,7 +578,7 @@ GUIVisualizationSettings::GUIVisualizationSettings()
         scheme = GUIScaleScheme("by allowed speed (streetwise)", 0);
         scheme.addColor(10, (SUMOReal)(150.0 / 3.6));
         edgeScaler.addScheme(scheme);
-        scheme = GUIScaleScheme("by current occupancy (streetwise)", 0);
+        scheme = GUIScaleScheme("by current occupancy (streetwise, brutto)", 0);
         scheme.addColor(10, (SUMOReal)0.95);
         edgeScaler.addScheme(scheme);
         scheme = GUIScaleScheme("by current speed (streetwise)", 0);
@@ -675,7 +709,7 @@ GUIVisualizationSettings::save(OutputDevice& dev) const {
     drawLinkTLIndex.print(dev, "drawLinkTLIndex");
     dev.lf();
     dev << "                  ";
-    drawLinkTLIndex.print(dev, "drawLinkJunctionIndex");
+    drawLinkJunctionIndex.print(dev, "drawLinkJunctionIndex");
     dev.lf();
     dev << "                  ";
     junctionName.print(dev, "junctionName");
@@ -889,9 +923,9 @@ GUIVisualizationSettings::operator==(const GUIVisualizationSettings& v2) {
 
 
 SUMOReal
-GUIVisualizationSizeSettings::getExaggeration(const GUIVisualizationSettings& s) const {
+GUIVisualizationSizeSettings::getExaggeration(const GUIVisualizationSettings& s, SUMOReal factor) const {
     /// @note should look normal-sized at zoom 1000
-    return (constantSize && !s.drawForSelecting) ? MAX2((SUMOReal)exaggeration, exaggeration * 20 / s.scale) : exaggeration;
+    return (constantSize && !s.drawForSelecting) ? MAX2((SUMOReal)exaggeration, exaggeration * factor / s.scale) : exaggeration;
 }
 
 /****************************************************************************/

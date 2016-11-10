@@ -126,6 +126,9 @@ GUILoadThread::run() {
                 myFile = oc.getString("net-file");
                 myLoadNet = true;
             }
+            myEventQue.add(new GUIEvent_Message("Loading '" + myFile + "'."));
+            myEventThrow.signal();
+            myParent->addRecentFile(FXPath::absolute(myFile.c_str()), myLoadNet);
         }
         myTitle = myFile;
         // within gui-based applications, nothing is reported to the console
@@ -139,12 +142,13 @@ GUILoadThread::run() {
             oc.set("verbose", "true");
         }
         MsgHandler::initOutputOptions();
-        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
-        GUIGlobals::gRunAfterLoad = oc.getBool("start");
-        GUIGlobals::gQuitOnEnd = oc.getBool("quit-on-end");
         if (!MSFrame::checkOptions()) {
             throw ProcessError();
         }
+        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
+        GUIGlobals::gRunAfterLoad = oc.getBool("start");
+        GUIGlobals::gQuitOnEnd = oc.getBool("quit-on-end");
+        GUIGlobals::gDemoAutoReload = oc.getBool("demo");
     } catch (ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());

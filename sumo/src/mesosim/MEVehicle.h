@@ -68,6 +68,12 @@ public:
     SUMOReal getPositionOnLane() const;
 
 
+    /** @brief Get the vehicle's position relative to the given lane
+     *  @return The back position of the vehicle (in m from the given lane's begin)
+     */
+    SUMOReal getBackPositionOnLane(const MSLane* lane) const;
+
+
     /** @brief Returns the vehicle's direction in degrees
      * @return The vehicle's current angle
      */
@@ -281,6 +287,9 @@ public:
     SUMOReal getBlockTimeSeconds() const {
         return STEPS2TIME(getBlockTime());
     }
+
+    /// @brief Returns the delay that is accrued due to option --meso-tls-penalty
+    SUMOReal getCurrentTLSPenaltySeconds() const;
 
 
     /// Replaces the current route by the given one

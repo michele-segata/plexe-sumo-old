@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(sumo, 0.26.0)
+AC_INIT(sumo, 0.27.0)
 AC_CONFIG_SRCDIR(src/sumo_main.cpp)
 AC_CANONICAL_SYSTEM
 
@@ -31,6 +31,14 @@ if test x$enable_profiling = xyes; then
     ac_enabled="$ac_enabled Profiling"
 else
     ac_disabled="$ac_disabled Profiling"
+fi
+
+AC_ARG_ENABLE([coverage], [AS_HELP_STRING([--enable-coverage],[enable compilation of gcov coverage code [default=no].])])
+if test x$enable_coverage = xyes; then
+    CXXFLAGS="-fprofile-arcs -ftest-coverage $CXXFLAGS -O0"
+    ac_enabled="$ac_enabled Coverage"
+else
+    ac_disabled="$ac_disabled Coverage"
 fi
 
 

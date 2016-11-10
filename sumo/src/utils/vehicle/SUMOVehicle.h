@@ -36,6 +36,7 @@
 #include <vector>
 #include <typeinfo>
 #include <utils/common/SUMOTime.h>
+#include <utils/common/Named.h>
 #include <utils/vehicle/SUMOAbstractRouter.h>
 #include <utils/vehicle/SUMOVehicleParameter.h>
 #include <utils/iodevices/OutputDevice.h>
@@ -65,6 +66,8 @@ typedef std::vector<const MSEdge*> ConstMSEdgeVector;
  */
 class SUMOVehicle {
 public:
+    typedef Named::NamedLikeComparatorIdLess<SUMOVehicle> ComparatorIdLess;
+
     /// @brief Destructor
     virtual ~SUMOVehicle() {}
 
@@ -77,6 +80,17 @@ public:
      * @return The position of the vehicle (in m from the lane's begin)
      */
     virtual SUMOReal getPositionOnLane() const = 0;
+
+    /** @brief Get the vehicle's back position along the given lane
+     * @return The position of the vehicle (in m from the given lane's begin)
+     */
+    virtual SUMOReal getBackPositionOnLane(const MSLane* lane) const = 0;
+
+    /** @brief Get the vehicle's lateral position on the lane
+     * @return The lateral position of the vehicle (in m relative to the
+     * centerline of the lane)
+     */
+    virtual SUMOReal getLateralPositionOnLane() const = 0;
 
     /** @brief Get the vehicle's angle
      * @return The angle of the vehicle (in degree)
@@ -127,10 +141,20 @@ public:
      * @param[in] nSuccs The number of edge to look forward
      * @return The nSuccs'th following edge in the vehicle's route
      */
-    virtual const MSEdge* succEdge(unsigned int nSuccs) const = 0;
+    virtual const MSEdge* succEdge(int nSuccs) const = 0;
 
-    /// Replaces the current route by the given edges
-    virtual bool replaceRouteEdges(ConstMSEdgeVector& edges, bool onInit = false) = 0;
+    /** @brief Replaces the current route by the given edges
+     *
+     * It is possible that the new route is not accepted, if a) it does not
+     *  contain the vehicle's current edge, or b) something fails on insertion
+     *  into the routes container (see in-line comments).
+     *
+     * @param[in] edges The new list of edges to pass
+     * @param[in] onInit Whether the vehicle starts with this route
+     * @param[in] check Whether the route should be checked for validity
+     * @return Whether the new route was accepted
+     */
+    virtual bool replaceRouteEdges(ConstMSEdgeVector& edges, bool onInit = false, bool check = false) = 0;
 
     /// Replaces the current route by the given one
     virtual bool replaceRoute(const MSRoute* route, bool onInit = false, int offset = 0) = 0;
@@ -146,11 +170,12 @@ public:
      */
     virtual void reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle>& router, const bool onInit = false, const bool withTaz = false) = 0;
 
-    /** @brief Validates the current route
+    /** @brief Validates the current or given route
      * @param[out] msg Description why the route is not valid (if it is the case)
+     * @param[in] route The route to check (or 0 if the current route shall be checked)
      * @return Whether the vehicle's current route is valid
      */
-    virtual bool hasValidRoute(std::string& msg) const = 0;
+    virtual bool hasValidRoute(std::string& msg, const MSRoute* route = 0) const = 0;
 
 
     /** @brief Returns an iterator pointing to the current edge in this vehicles route
@@ -192,10 +217,21 @@ public:
      */
     virtual bool isOnRoad() const = 0;
 
+    /** @brief Returns the information whether the front of the vehhicle is on the given lane
+     * @return Whether the vehicle's front is on that lane
+     */
+    virtual bool isFrontOnLane(const MSLane*) const = 0;
+
     /** @brief Returns the information whether the vehicle is parked
      * @return Whether the vehicle is parked
      */
     virtual bool isParking() const = 0;
+
+    /** @brief Returns the information whether the vehicle is fully controlled
+     * via TraCI
+     * @return Whether the vehicle is remote-controlled
+     */
+    virtual bool isRemoteControlled() const = 0;
 
     /** @brief Returns this vehicle's real departure time
      * @return This vehicle's real departure time

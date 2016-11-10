@@ -44,9 +44,11 @@
 #include "MSJunction.h"
 #include "MSLane.h"
 #include "MSCACCLaneChanger.h"
+#include "MSLaneChangerSublane.h"
 #include "MSGlobals.h"
 #include "MSNet.h"
 #include "MSVehicle.h"
+#include "MSLeaderInfo.h"
 #include "MSContainer.h"
 #include "MSEdgeWeightsStorage.h"
 #include <microsim/devices/MSDevice_Routing.h>
@@ -82,6 +84,7 @@ MSEdge::MSEdge(const std::string& id, int numericalID,
     myStreetName(streetName),
     myEdgeType(edgeType),
     myPriority(priority),
+    myWidth(0),
     myLength(-1.),
     myEmptyTraveltime(-1.),
     myAmDelayed(false),
@@ -109,19 +112,53 @@ MSEdge::initialize(const std::vector<MSLane*>* lanes) {
     myLanes = lanes;
     if (!lanes->empty()) {
         recalcCache();
-        if (myLanes->size() > 1) {
-            myLaneChanger = new MSCACCLaneChanger(myLanes, OptionsCont::getOptions().getBool("lanechange.allow-swap"));
-        }
     }
     if (myFunction == EDGEFUNCTION_DISTRICT) {
         myCombinedPermissions = SVCAll;
+    }
+    for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
+        myWidth += (*i)->getWidth();
+    }
+    if (MSGlobals::gLateralResolution > 0 || MSGlobals::gLaneChangeDuration > 0) {
+        SUMOReal widthBefore = 0;
+        for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
+            (*i)->setRightSideOnEdge(widthBefore, (int)mySublaneSides.size());
+            MSLeaderInfo ahead(*i);
+            for (int j = 0; j < ahead.numSublanes(); ++j) {
+                mySublaneSides.push_back(widthBefore + j * MSGlobals::gLateralResolution);
+            }
+            widthBefore += (*i)->getWidth();
+        }
     }
 }
 
 
 void MSEdge::recalcCache() {
+    if (myLanes->empty()) {
+        return;
+    }
     myLength = myLanes->front()->getLength();
     myEmptyTraveltime = myLength / MAX2(getSpeedLimit(), NUMERICAL_EPS);
+
+    if (MSGlobals::gMesoTLSPenalty > 0) {
+        // add tls penalties to the minimum travel time
+        SUMOTime minPenalty = -1;
+        for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
+            MSLane* l = *i;
+            const MSLinkCont& lc = l->getLinkCont();
+            for (MSLinkCont::const_iterator j = lc.begin(); j != lc.end(); ++j) {
+                MSLink* link = *j;
+                if (minPenalty == -1) {
+                    minPenalty = link->getMesoTLSPenalty();
+                } else {
+                    minPenalty = MIN2(minPenalty, link->getMesoTLSPenalty());
+                }
+            }
+        }
+        if (minPenalty > 0) {
+            myEmptyTraveltime += STEPS2TIME(minPenalty);
+        }
+    }
 }
 
 
@@ -132,6 +169,7 @@ MSEdge::closeBuilding() {
         myAllowed[0]->push_back(*i);
         const MSLinkCont& lc = (*i)->getLinkCont();
         for (MSLinkCont::const_iterator j = lc.begin(); j != lc.end(); ++j) {
+            (*j)->initParallelLinks();
             MSLane* toL = (*j)->getLane();
             if (toL != 0) {
                 MSEdge& to = toL->getEdge();
@@ -165,6 +203,48 @@ MSEdge::closeBuilding() {
     if (MSGlobals::gUseMesoSim && !myLanes->empty()) {
         MSGlobals::gMesoNet->buildSegmentsFor(*this, OptionsCont::getOptions());
     }
+}
+
+
+void
+MSEdge::buildLaneChanger() {
+    if (!myLanes->empty()) {
+        const bool allowSwap = OptionsCont::getOptions().getBool("lanechange.allow-swap");
+        const bool allowChanging = allowsLaneChanging();
+        if (MSGlobals::gLateralResolution > 0) {
+            // may always initiate sublane-change
+            myLaneChanger = new MSLaneChangerSublane(myLanes, allowChanging, allowSwap);
+        } else {
+            if (MSGlobals::gLaneChangeDuration > 0) {
+                myLaneChanger = new MSCACCLaneChanger(myLanes, allowChanging, allowSwap);
+            } else if (myLanes->size() > 1 || canChangeToOpposite()) {
+                myLaneChanger = new MSCACCLaneChanger(myLanes, allowChanging, allowSwap);
+            }
+        }
+    }
+}
+
+
+bool
+MSEdge::allowsLaneChanging() {
+    if (myFunction == EDGEFUNCTION_INTERNAL) {
+        // allow changing only if all links leading to this internal lane have priority
+        // or they are controlled by a traffic light
+        for (std::vector<MSLane*>::const_iterator it = myLanes->begin(); it != myLanes->end(); ++it) {
+            MSLane* pred = (*it)->getLogicalPredecessorLane();
+            MSLink* link = MSLinkContHelper::getConnectingLink(*pred, **it);
+            assert(link != 0);
+            LinkState state = link->getState();
+            if (state == LINKSTATE_MINOR
+                    || state == LINKSTATE_EQUAL
+                    || state == LINKSTATE_STOP
+                    || state == LINKSTATE_ALLWAY_STOP
+                    || state == LINKSTATE_DEADEND) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 
@@ -539,20 +619,30 @@ MSEdge::getInternalFollowingEdge(const MSEdge* followerAfterInternal) const {
 
 
 SUMOReal
-MSEdge::getMesoMeanSpeed() const {
+MSEdge::getMeanSpeed() const {
     SUMOReal v = 0;
     SUMOReal no = 0;
-    for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this); segment != 0; segment = segment->getNextSegment()) {
-        SUMOReal vehNo = (SUMOReal) segment->getCarNumber();
-        v += vehNo * segment->getMeanSpeed();
-        no += vehNo;
-    }
-    if (no == 0) {
-        return getSpeedLimit();
+    if (MSGlobals::gUseMesoSim) {
+        for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this); segment != 0; segment = segment->getNextSegment()) {
+            const SUMOReal vehNo = (SUMOReal) segment->getCarNumber();
+            v += vehNo * segment->getMeanSpeed();
+            no += vehNo;
+        }
+        if (no == 0) {
+            return getLength() / myEmptyTraveltime; // may include tls-penalty
+        }
+    } else {
+        for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
+            const SUMOReal vehNo = (SUMOReal)(*i)->getVehicleNumber();
+            v += vehNo * (*i)->getMeanSpeed();
+            no += vehNo;
+        }
+        if (no == 0) {
+            return getSpeedLimit();
+        }
     }
     return v / no;
 }
-
 
 
 SUMOReal
@@ -561,17 +651,15 @@ MSEdge::getCurrentTravelTime(SUMOReal minSpeed) const {
     if (!myAmDelayed) {
         return myEmptyTraveltime;
     }
-    SUMOReal v = 0;
-    if (MSGlobals::gUseMesoSim) {
-        v = getMesoMeanSpeed();
-    } else {
-        for (std::vector<MSLane*>::const_iterator i = myLanes->begin(); i != myLanes->end(); ++i) {
-            v += (*i)->getMeanSpeed();
-        }
-        v /= (SUMOReal) myLanes->size();
-    }
-    return getLength() / MAX2(minSpeed, v);
+    return getLength() / MAX2(minSpeed, getMeanSpeed());
 }
+
+
+SUMOReal
+MSEdge::getRoutingSpeed() const {
+    return MSDevice_Routing::getAssumedSpeed(this);
+}
+
 
 
 bool
@@ -757,6 +845,11 @@ MSEdge::getSuccessors(SUMOVehicleClass vClass) const {
     return i->second;
 }
 
+
+bool
+MSEdge::canChangeToOpposite() {
+    return !myLanes->empty() && myLanes->back()->getOpposite() != 0;
+}
 
 /****************************************************************************/
 

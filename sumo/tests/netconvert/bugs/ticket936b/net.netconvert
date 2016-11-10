@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Fri Nov 27 14:41:44 2015 by SUMO netconvert Version dev-SVN-r19444I
+<!-- generated on Thu Jun 16 10:38:56 2016 by SUMO netconvert Version dev-SVN-r20975
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
@@ -9,10 +9,6 @@
         <node-files value="input_plain.nod.xml"/>
         <edge-files value="input_plain.edg.xml"/>
     </input>
-
-    <output>
-        <output-file value="net.net.xml"/>
-    </output>
 
     <processing>
         <no-internal-links value="true"/>
@@ -26,7 +22,7 @@
 </configuration>
 -->
 
-<net version="0.25" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+<net version="0.27" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
 
     <location netOffset="26.66,-2.78" convBoundary="0.00,0.00,200.00,50.00" origBoundary="0.00,0.00,2415.53,1274.55" projParameter="!"/>
 
@@ -52,8 +48,8 @@
     <junction id="gneJ2" type="unregulated" x="200.00" y="10.00" incLanes="main2_0 main2_1" intLanes="" shape="200.00,3.45 200.00,9.95"/>
     <junction id="gneJ3" type="unregulated" x="200.00" y="50.00" incLanes="ramp_0" intLanes="" shape="202.70,48.20 200.04,49.97"/>
 
-    <connection from="main1" to="ramp" fromLane="0" toLane="0" pass="1" dir="s" state="M"/>
-    <connection from="main1" to="main2" fromLane="1" toLane="0" pass="1" dir="s" state="M"/>
-    <connection from="main1" to="main2" fromLane="2" toLane="1" pass="1" dir="s" state="M"/>
+    <connection from="main1" to="ramp" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="main1" to="main2" fromLane="1" toLane="0" dir="s" state="M"/>
+    <connection from="main1" to="main2" fromLane="2" toLane="1" dir="s" state="M"/>
 
 </net>

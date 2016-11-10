@@ -103,7 +103,9 @@ public:
 
     void dependentBuild();
 
-    void setStatusBarText(const std::string&);
+    void setStatusBarText(const std::string& text);
+
+    void addRecentFile(const FX::FXString& f, const bool isNet);
 
     FXGLCanvas* getBuildGLCanvas() const;
     SUMOTime getCurrentSimTime() const;
@@ -232,6 +234,9 @@ public:
     /// @brief Called on menu commands from the Locator menu
     long onCmdLocate(FXObject*, FXSelector, void*);
 
+    /// @brief Called on commands from the statistic buttons
+    long onCmdShowStats(FXObject*, FXSelector, void*);
+
     /// @brief Called on an event from the loading thread
     long onLoadThreadEvent(FXObject*, FXSelector, void*);
 
@@ -319,6 +324,9 @@ protected:
                 *myLocatorMenu, *myControlMenu,
                 *myWindowsMenu, *myHelpMenu;
 
+    /// Buttons showing and running values and triggering statistic windows
+    std::vector<FXButton*> myStatButtons;
+
     /// A window to display messages, warnings and error in
     GUIMessageWindow* myMessageWindow;
 
@@ -385,10 +393,12 @@ protected:
     /// @name game related things
     /// {
     RandomDistributor<std::string> myJamSounds;
+    RandomDistributor<std::string> myCollisionSounds;
     /// @brief waiting time after which vehicles trigger jam sounds
     SUMOReal myJamSoundTime;
     /// @brief A random number generator used to choose a gaming sound
     static MTRand myGamingRNG;
+    unsigned int myPreviousCollisionNumber;
 
     /// performance indicators
     FXEX::FXLCDLabel* myWaitingTimeLabel;

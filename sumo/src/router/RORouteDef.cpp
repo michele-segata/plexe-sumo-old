@@ -213,16 +213,12 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
         if (oldEdges.back()->prohibits(&veh)) {
             // option repair.to is in effect
             const std::string& backID = oldEdges.back()->getID();
-            for (ConstROEdgeVector::reverse_iterator i = oldEdges.rbegin(); i != oldEdges.rend();) {
-                if ((*i)->prohibits(&veh)) {
-                    ++i;
-                    oldEdges.erase(i.base());
-                } else {
-                    WRITE_MESSAGE("Changing invalid destination edge '" + backID
-                                  + "' to edge '" + (*i)->getID() + "' for vehicle '" + veh.getID() + "'.");
-                    break;
-                }
+            // oldEdges cannot get empty here, otherwise we would have left the stage when checking "from"
+            while (oldEdges.back()->prohibits(&veh)) {
+                oldEdges.pop_back();
             }
+            WRITE_MESSAGE("Changing invalid destination edge '" + backID
+                          + "' to edge '" + oldEdges.back()->getID() + "' for vehicle '" + veh.getID() + "'.");
         }
         if (mandatory.size() < 2 || oldEdges.back() != mandatory.back()) {
             mandatory.push_back(oldEdges.back());
@@ -244,7 +240,7 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
         const ConstROEdgeVector& targets = mandatory.size() > oldEdges.size() ? mandatory : oldEdges;
         newEdges.push_back(*(targets.begin()));
         ConstROEdgeVector::iterator nextMandatory = mandatory.begin() + 1;
-        size_t lastMandatory = 0;
+        int lastMandatory = 0;
         for (ConstROEdgeVector::const_iterator i = targets.begin() + 1;
                 i != targets.end() && nextMandatory != mandatory.end(); ++i) {
             if ((*(i - 1))->isConnectedTo(*i, &veh)) {
@@ -263,7 +259,7 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
                     // we would then need to decide whether we have found a good
                     // tradeoff between faithfulness to the input data and detour-length
                     ConstROEdgeVector edges;
-                    if (last == newEdges[lastMandatory] || !router.compute(newEdges[lastMandatory], *nextMandatory, &veh, begin, edges)) {
+                    if (lastMandatory >= (int)newEdges.size() || last == newEdges[lastMandatory] || !router.compute(newEdges[lastMandatory], *nextMandatory, &veh, begin, edges)) {
                         mh->inform("Mandatory edge '" + (*i)->getID() + "' not reachable by vehicle '" + veh.getID() + "'.");
                         return false;
                     }
@@ -276,7 +272,7 @@ RORouteDef::repairCurrentRoute(SUMOAbstractRouter<ROEdge, ROVehicle>& router,
             }
             if (*i == *nextMandatory) {
                 nextMandatory++;
-                lastMandatory = newEdges.size() - 1;
+                lastMandatory = (int)newEdges.size() - 1;
             }
         }
     }

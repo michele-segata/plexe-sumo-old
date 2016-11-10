@@ -127,9 +127,12 @@ NLBuilder::build() {
     // check whether the loaded net agrees with the simulation options
 #ifdef HAVE_INTERNAL_LANES
     if (myOptions.getBool("no-internal-links") && myXMLHandler.haveSeenInternalEdge()) {
-        WRITE_WARNING("Network contains internal links but option --no-internal-links is set. Vehicles will 'jump' across junctions and thus underestimate route lenghts and travel times");
+        WRITE_WARNING("Network contains internal links but option --no-internal-links is set. Vehicles will 'jump' across junctions and thus underestimate route lengths and travel times.");
     }
 #endif
+    if (myOptions.getString("lanechange.duration") != "0" && myXMLHandler.haveSeenNeighs()) {
+        throw ProcessError("Network contains explicit neigh lanes which do not work together with option --lanechange.duration.");
+    }
     buildNet();
     // load the previous state if wished
     if (myOptions.isSet("load-state")) {
@@ -141,11 +144,11 @@ NLBuilder::build() {
         if (myOptions.isDefault("begin")) {
             myOptions.set("begin", time2string(h.getTime()));
         }
-        if (h.getTime() != string2time(myOptions.getString("begin"))) {
-            WRITE_WARNING("State was written at a different time " + time2string(h.getTime()) + " than the begin time " + myOptions.getString("begin") + "!");
-        }
         if (MsgHandler::getErrorInstance()->wasInformed()) {
             return false;
+        }
+        if (h.getTime() != string2time(myOptions.getString("begin"))) {
+            WRITE_WARNING("State was written at a different time " + time2string(h.getTime()) + " than the begin time " + myOptions.getString("begin") + "!");
         }
         PROGRESS_TIME_MESSAGE(before);
     }
@@ -198,6 +201,10 @@ NLBuilder::build() {
             return false;
         }
     }
+    // optionally switch off traffic lights
+    if (myOptions.getBool("tls.all-off")) {
+        myNet.getTLSControl().switchOffAll();
+    }
     WRITE_MESSAGE("Loading done.");
     return true;
 }
@@ -234,6 +241,7 @@ NLBuilder::buildNet() {
         }
         myNet.closeBuilding(edges, junctions, routeLoaders, tlc, stateDumpTimes, stateDumpFiles,
                             myXMLHandler.haveSeenInternalEdge(),
+                            myXMLHandler.haveSeenNeighs(),
                             myXMLHandler.lefthand(),
                             myXMLHandler.networkVersion());
     } catch (IOError& e) {

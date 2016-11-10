@@ -4,7 +4,7 @@
 /// @date    Jul 2003
 /// @version $Id$
 ///
-// A class dividing the network in rectangular cells
+// A class to manage icons of SUMO
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
@@ -39,19 +39,30 @@
 // ===========================================================================
 class GUIIconSubSys {
 public:
+    /// @brief Initiate GUIIconSubSys
+    /// @param[in] a FOX Toolkit APP
     static void init(FXApp* a);
+
+    /// @brief returns a icon previously defined in the enum GUIIcon
+    /// @param[in] a FOX Toolkit APP
     static FXIcon* getIcon(GUIIcon which);
+
+    /// @brief close GUIIconSubSys
     static void close();
+
 private:
+    /// @brief constructor
+    /// @note is private because is called by the static function init(FXApp* a)
     GUIIconSubSys(FXApp* a);
+
+    /// @brief destructor
     ~GUIIconSubSys();
 
-private:
+    /// @brief instance of GUIIconSubSys
     static GUIIconSubSys* myInstance;
 
-private:
+    /// @brief vector with the icons
     FXIcon* myIcons[ICON_MAX];
-
 };
 
 

@@ -21,6 +21,13 @@ attach
 
 # no internal lanes
 nointernal
+alphanumerical-ids
+
+# Copy of alphanumerical-ids
+numerical_ids
+
+# set alternative defaults
+defaults
 
 # Tests processing of errors in input
 errors

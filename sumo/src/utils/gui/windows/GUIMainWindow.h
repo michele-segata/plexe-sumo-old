@@ -45,6 +45,7 @@
 // class declarations
 // ===========================================================================
 class GUIEvent;
+class GUISUMOAbstractView;
 
 
 // ===========================================================================
@@ -110,6 +111,9 @@ public:
         UNUSED_PARAMETER(event);
     }
 
+    /** @brief get the active view or 0 */
+    GUISUMOAbstractView* getActiveView() const;
+
 protected:
     std::vector<FXMDIChild*> mySubWindows;
     std::vector<FXMainWindow*> myTrackerWindows;
@@ -128,7 +132,6 @@ protected:
     /// Labels for the current cartesian and geo-coordinate
     FXLabel* myCartesianCoordinate, *myGeoCoordinate;
     FXHorizontalFrame* myCartesianFrame, *myGeoFrame;
-
 
     /// The gl-visual used
     FXGLVisual* myGLVisual;

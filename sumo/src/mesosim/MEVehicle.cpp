@@ -75,6 +75,12 @@ MEVehicle::MEVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
 
 
 SUMOReal
+MEVehicle::getBackPositionOnLane(const MSLane* /* lane */) const {
+    return getPositionOnLane() - getVehicleType().getLength();
+}
+
+
+SUMOReal
 MEVehicle::getPositionOnLane() const {
 // the following interpolation causes problems with arrivals and calibrators
 //    const SUMOReal fracOnSegment = MIN2(SUMOReal(1), STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep() - myLastEntryTime) / STEPS2TIME(myEventTime - myLastEntryTime));
@@ -254,6 +260,16 @@ MEVehicle::getStopEdges() const {
 bool
 MEVehicle::mayProceed() const {
     return mySegment == 0 || mySegment->isOpen(this);
+}
+
+
+SUMOReal
+MEVehicle::getCurrentTLSPenaltySeconds() const {
+    if (mySegment == 0) {
+        return 0;
+    } else {
+        return STEPS2TIME(mySegment->getTLSPenalty(this));
+    }
 }
 
 

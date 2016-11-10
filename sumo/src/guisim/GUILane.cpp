@@ -36,6 +36,7 @@
 #include <utils/geom/GeomHelper.h>
 #include <utils/geom/Position.h>
 #include <microsim/logging/FunctionBinding.h>
+#include <utils/options/OptionsCont.h>
 #include <utils/common/MsgHandler.h>
 #include <utils/common/StdDefs.h>
 #include <utils/geom/GeomHelper.h>
@@ -52,6 +53,8 @@
 #include <microsim/MSNet.h>
 #include <microsim/MSEdgeWeightsStorage.h>
 #include <microsim/devices/MSDevice_Routing.h>
+#include <mesosim/MELoop.h>
+#include <mesosim/MESegment.h>
 #include "GUILane.h"
 #include "GUIEdge.h"
 #include "GUIVehicle.h"
@@ -77,6 +80,11 @@ GUILane::GUILane(const std::string& id, SUMOReal maxSpeed, SUMOReal length,
     MSLane(id, maxSpeed, length, edge, numericalID, shape, width, permissions, index),
     GUIGlObject(GLO_LANE, id),
     myAmClosed(false) {
+    if (MSGlobals::gUseMesoSim) {
+        myShape = splitAtSegments(shape);
+        assert(fabs(myShape.length() - shape.length()) < POSITION_EPS);
+        assert(myShapeSegments.size() == myShape.size());
+    }
     myShapeRotations.reserve(myShape.size() - 1);
     myShapeLengths.reserve(myShape.size() - 1);
     myShapeColors.reserve(myShape.size() - 1);
@@ -103,11 +111,11 @@ GUILane::~GUILane() {
 
 // ------ Vehicle insertion ------
 void
-GUILane::incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed,
+GUILane::incorporateVehicle(MSVehicle* veh, SUMOReal pos, SUMOReal speed, SUMOReal posLat,
                             const MSLane::VehCont::iterator& at,
                             MSMoveReminder::Notification notification) {
     AbstractMutex::ScopedLocker locker(myLock);
-    MSLane::incorporateVehicle(veh, pos, speed, at, notification);
+    MSLane::incorporateVehicle(veh, pos, speed, posLat, at, notification);
 }
 
 
@@ -164,6 +172,20 @@ void
 GUILane::detectCollisions(SUMOTime timestep, const std::string& stage) {
     AbstractMutex::ScopedLocker locker(myLock);
     MSLane::detectCollisions(timestep, stage);
+}
+
+
+SUMOReal
+GUILane::setPartialOccupation(MSVehicle* v) {
+    AbstractMutex::ScopedLocker locker(myLock);
+    return MSLane::setPartialOccupation(v);
+}
+
+
+void
+GUILane::resetPartialOccupation(MSVehicle* v) {
+    AbstractMutex::ScopedLocker locker(myLock);
+    MSLane::resetPartialOccupation(v);
 }
 
 
@@ -441,6 +463,16 @@ GUILane::drawGL(const GUIVisualizationSettings& s) const {
     // set lane color
     if (!MSGlobals::gUseMesoSim) {
         setColor(s);
+    } else {
+        myShapeColors.clear();
+        const std::vector<RGBColor>& segmentColors = static_cast<const GUIEdge*>(myEdge)->getSegmentColors();
+        if (segmentColors.size() > 0) {
+            // apply segment specific shape colors
+            //std::cout << getID() << " shape=" << myShape << " shapeSegs=" << toString(myShapeSegments) << "\n";
+            for (int ii = 0; ii < (int)myShape.size() - 1; ++ii) {
+                myShapeColors.push_back(segmentColors[myShapeSegments[ii]]);
+            }
+        }
     }
     // recognize full transparency and simply don't draw
     GLfloat color[4];
@@ -515,6 +547,14 @@ GUILane::drawGL(const GUIVisualizationSettings& s) const {
                 glPushMatrix();
                 glTranslated(0, 0, GLO_JUNCTION); // must draw on top of junction shape
                 glTranslated(0, 0, .5);
+                if (MSGlobals::gLateralResolution > 0) {
+                    // draw sublane-borders
+                    // XXX make configurable
+                    GLHelper::setColor(GLHelper::getColor().changedBrightness(51));
+                    for (SUMOReal offset = -myHalfLaneWidth; offset < myHalfLaneWidth; offset += MSGlobals::gLateralResolution) {
+                        GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, 0.01, 0, offset);
+                    }
+                }
                 drawLinkRules(s, *net);
                 if (s.showLinkDecals && !drawAsRailway(s) && !drawAsWaterway(s) && myPermissions != SVC_PEDESTRIAN) {
                     drawArrows();
@@ -684,7 +724,7 @@ GUILane::getPopUpMenu(GUIMainWindow& app,
 GUIParameterTableWindow*
 GUILane::getParameterWindow(GUIMainWindow& app,
                             GUISUMOAbstractView&) {
-    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this, 11);
+    GUIParameterTableWindow* ret = new GUIParameterTableWindow(app, *this, 14);
     // add items
     ret->mkItem("maxspeed [m/s]", false, getSpeedLimit());
     ret->mkItem("length [m]", false, myLength);
@@ -692,7 +732,9 @@ GUILane::getParameterWindow(GUIMainWindow& app,
     ret->mkItem("street name", false, myEdge->getStreetName());
     ret->mkItem("stored traveltime [s]", true, new FunctionBinding<GUILane, SUMOReal>(this, &GUILane::getStoredEdgeTravelTime));
     ret->mkItem("loaded weight", true, new FunctionBinding<GUILane, SUMOReal>(this, &GUILane::getLoadedEdgeWeight));
-    ret->mkItem("occupancy [%]", true, new FunctionBinding<GUILane, SUMOReal>(this, &GUILane::getBruttoOccupancy, 100.));
+    ret->mkItem("routing speed [m/s]", true, new FunctionBinding<MSEdge, SUMOReal>(myEdge, &MSEdge::getRoutingSpeed));
+    ret->mkItem("brutto occupancy [%]", true, new FunctionBinding<GUILane, SUMOReal>(this, &GUILane::getBruttoOccupancy, 100.));
+    ret->mkItem("netto occupancy [%]", true, new FunctionBinding<GUILane, SUMOReal>(this, &GUILane::getNettoOccupancy, 100.));
     ret->mkItem("edge type", false, myEdge->getEdgeType());
     ret->mkItem("priority", false, myEdge->getPriority());
     ret->mkItem("allowed vehicle class", false, getVehicleClassNames(myPermissions));
@@ -770,7 +812,7 @@ GUILane::getLoadedEdgeWeight() const {
     if (!ews.knowsEffort(myEdge)) {
         return -1;
     } else {
-        SUMOReal value(0);
+        SUMOReal value(-1);
         ews.retrieveExistingEffort(myEdge, STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep()), value);
         return value;
     }
@@ -914,7 +956,7 @@ GUILane::getColorValue(size_t activeScheme) const {
         }
         case 27: {
             // color by routing device assumed speed
-            return MSDevice_Routing::getAssumedSpeed(&getEdge());
+            return myEdge->getRoutingSpeed();
         }
         case 28:
             return getElectricityConsumption() / myLength;
@@ -1028,6 +1070,32 @@ GUILane::closeTraffic(bool rebuildAllowed) {
     if (rebuildAllowed) {
         getEdge().rebuildAllowedLanes();
     }
+}
+
+
+PositionVector
+GUILane::splitAtSegments(const PositionVector& shape) {
+    assert(MSGlobals::gUseMesoSim);
+    int no = MELoop::numSegmentsFor(myLength, OptionsCont::getOptions().getFloat("meso-edgelength"));
+    const SUMOReal slength = myLength / no;
+    PositionVector result = shape;
+    SUMOReal offset = 0;
+    for (int i = 0; i < no; ++i) {
+        offset += slength;
+        Position pos = shape.positionAtOffset(offset);
+        int index = result.indexOfClosest(pos);
+        if (pos.distanceTo(result[index]) > POSITION_EPS) {
+            index = result.insertAtClosest(pos);
+        }
+        while ((int)myShapeSegments.size() < index) {
+            myShapeSegments.push_back(i);
+        }
+        //std::cout << "splitAtSegments " << getID() << " no=" << no << " i=" << i << " offset=" << offset << " index=" << index << " segs=" << toString(myShapeSegments) << " resultSize=" << result.size() << " result=" << toString(result) << "\n";
+    }
+    while ((int)myShapeSegments.size() < result.size()) {
+        myShapeSegments.push_back(no - 1);
+    }
+    return result;
 }
 
 /****************************************************************************/

@@ -45,6 +45,9 @@
 #include <microsim/MSGlobals.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSVehicle.h>
+#include <microsim/MSEdgeControl.h>
+#include <microsim/MSInsertionControl.h>
+#include <microsim/MSTransportableControl.h>
 
 #include "GUISUMOViewParent.h"
 #include "GUILoadThread.h"
@@ -126,6 +129,10 @@ FXDEFMAP(GUIApplicationWindow) GUIApplicationWindowMap[] = {
     FXMAPFUNC(SEL_COMMAND,  MID_DELAY_TOOGLE,       GUIApplicationWindow::onCmdDelayToggle),
     FXMAPFUNC(SEL_COMMAND,  MID_CLEARMESSAGEWINDOW, GUIApplicationWindow::onCmdClearMsgWindow),
 
+    FXMAPFUNC(SEL_COMMAND,  MID_SHOWNETSTATS,       GUIApplicationWindow::onCmdShowStats),
+    FXMAPFUNC(SEL_COMMAND,  MID_SHOWVEHSTATS,       GUIApplicationWindow::onCmdShowStats),
+    FXMAPFUNC(SEL_COMMAND,  MID_SHOWPERSONSTATS,    GUIApplicationWindow::onCmdShowStats),
+
     FXMAPFUNC(SEL_UPDATE,   MID_OPEN_CONFIG,       GUIApplicationWindow::onUpdOpen),
     FXMAPFUNC(SEL_UPDATE,   MID_OPEN_NETWORK,      GUIApplicationWindow::onUpdOpen),
     FXMAPFUNC(SEL_UPDATE,   MID_OPEN_NETWORK,      GUIApplicationWindow::onUpdOpen),
@@ -196,6 +203,7 @@ GUIApplicationWindow::GUIApplicationWindow(FXApp* a,
       myHaveNotifiedAboutSimEnd(false),
       // game specific
       myJamSoundTime(60),
+      myPreviousCollisionNumber(0),
       myWaitingTime(0),
       myTimeLoss(0) {
     GUIIconSubSys::init(a);
@@ -237,6 +245,11 @@ GUIApplicationWindow::dependentBuild() {
             new FXHorizontalFrame(myStatusbar, LAYOUT_FIX_WIDTH | LAYOUT_FILL_Y | LAYOUT_RIGHT | FRAME_SUNKEN,
                                   0, 0, 20, 0, 0, 0, 0, 0, 0, 0);
         myCartesianCoordinate = new FXLabel(myCartesianFrame, "N/A\t\tNetwork coordinate", 0, LAYOUT_CENTER_Y);
+        myStatButtons.push_back(new FXButton(myStatusbar, "-", GUIIconSubSys::getIcon(ICON_GREENVEHICLE), this, MID_SHOWVEHSTATS));
+        myStatButtons.push_back(new FXButton(myStatusbar, "-", GUIIconSubSys::getIcon(ICON_GREENPERSON), this, MID_SHOWPERSONSTATS));
+        myStatButtons.back()->hide();
+        myStatButtons.push_back(new FXButton(myStatusbar, "-", GUIIconSubSys::getIcon(ICON_GREENEDGE), this, MID_SHOWVEHSTATS));
+        myStatButtons.back()->hide();
     }
 
     // make the window a mdi-window
@@ -481,7 +494,7 @@ GUIApplicationWindow::fillMenuBar() {
                       GUIIconSubSys::getIcon(ICON_LOCATEPOLY), this, MID_LOCATEPOLY);
     new FXMenuSeparator(myLocatorMenu);
     new FXMenuCheck(myLocatorMenu,
-                    "Show Internal Structures\t\tShow internal junctions and streets in locator Dialog.",
+                    "Show Internal Structures\t\tShow internal junctions and streets in locator dialog.",
                     this, MID_LISTINTERNAL);
     // build control menu
     myControlMenu = new FXMenuPane(this);
@@ -829,7 +842,6 @@ GUIApplicationWindow::onCmdOpenShapes(FXObject*, FXSelector, void*) {
     return 1;
 }
 
-
 long
 GUIApplicationWindow::onCmdReload(FXObject*, FXSelector, void*) {
     getApp()->beginWaitCursor();
@@ -1019,6 +1031,17 @@ GUIApplicationWindow::onCmdLocate(FXObject*, FXSelector sel, void*) {
     return 1;
 }
 
+
+long
+GUIApplicationWindow::onCmdShowStats(FXObject*, FXSelector, void*) {
+    if (myMDIClient->numChildren() > 0) {
+        GUISUMOViewParent* w = dynamic_cast<GUISUMOViewParent*>(myMDIClient->getActiveChild());
+        GUINet::getGUIInstance()->getParameterWindow(*this, *w->getView());
+    }
+    return 1;
+}
+
+
 long
 GUIApplicationWindow::onCmdAppSettings(FXObject*, FXSelector, void*) {
     GUIDialog_AppSettings* d = new GUIDialog_AppSettings(this);
@@ -1187,6 +1210,7 @@ GUIApplicationWindow::eventOccured() {
             case EVENT_MESSAGE_OCCURED:
             case EVENT_WARNING_OCCURED:
             case EVENT_ERROR_OCCURED:
+            case EVENT_STATUS_OCCURED:
                 handleEvent_Message(e);
                 break;
             case EVENT_SIMULATION_ENDED:
@@ -1260,6 +1284,7 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
                         myRunThread->getBreakpointLock().unlock();
                     }
                     myJamSounds = settings.getEventDistribution("jam");
+                    myCollisionSounds = settings.getEventDistribution("collision");
                     if (settings.getJamSoundTime() > 0) {
                         myJamSoundTime = settings.getJamSoundTime();
                     }
@@ -1276,6 +1301,9 @@ GUIApplicationWindow::handleEvent_SimulationLoaded(GUIEvent* e) {
             }
             // set simulation step begin information
             myLCDLabel->setText("-------------");
+            for (std::vector<FXButton*>::const_iterator it = myStatButtons.begin(); it != myStatButtons.end(); ++it) {
+                (*it)->setText("-");
+            }
         }
     }
     getApp()->endWaitCursor();
@@ -1291,6 +1319,30 @@ void
 GUIApplicationWindow::handleEvent_SimulationStep(GUIEvent*) {
     updateChildren();
     updateTimeLCD(myRunThread->getNet().getCurrentTimeStep());
+    const unsigned int running = myRunThread->getNet().getVehicleControl().getRunningVehicleNo();
+    const unsigned int backlog = myRunThread->getNet().getInsertionControl().getWaitingVehicleNo();
+    if (backlog > running) {
+        if (myStatButtons.front()->getIcon() == GUIIconSubSys::getIcon(ICON_GREENVEHICLE)) {
+            myStatButtons.front()->setIcon(GUIIconSubSys::getIcon(ICON_YELLOWVEHICLE));
+        }
+    } else {
+        if (myStatButtons.front()->getIcon() == GUIIconSubSys::getIcon(ICON_YELLOWVEHICLE)) {
+            myStatButtons.front()->setIcon(GUIIconSubSys::getIcon(ICON_GREENVEHICLE));
+        }
+    }
+    myStatButtons.front()->setText(toString(running).c_str());
+    if (myRunThread->getNet().hasPersons()) {
+        if (!myStatButtons[1]->shown()) {
+            myStatButtons[1]->show();
+        }
+        myStatButtons[1]->setText(toString(myRunThread->getNet().getPersonControl().getRunningNumber()).c_str());
+    }
+    if (myRunThread->getNet().hasContainers()) {
+        if (!myStatButtons[2]->shown()) {
+            myStatButtons[2]->show();
+        }
+        myStatButtons[2]->setText(toString(myRunThread->getNet().getContainerControl().getRunningNumber()).c_str());
+    }
     if (myAmGaming) {
         checkGamingEvents();
     }
@@ -1304,7 +1356,11 @@ GUIApplicationWindow::handleEvent_SimulationStep(GUIEvent*) {
 void
 GUIApplicationWindow::handleEvent_Message(GUIEvent* e) {
     GUIEvent_Message* ec = static_cast<GUIEvent_Message*>(e);
-    myMessageWindow->appendMsg(ec->getOwnType(), ec->getMsg());
+    if (ec->getOwnType() == EVENT_STATUS_OCCURED) {
+        setStatusBarText(ec->getMsg());
+    } else {
+        myMessageWindow->appendMsg(ec->getOwnType(), ec->getMsg());
+    }
 }
 
 
@@ -1315,6 +1371,8 @@ GUIApplicationWindow::handleEvent_SimulationEnded(GUIEvent* e) {
     if (GUIGlobals::gQuitOnEnd) {
         closeAllWindows();
         getApp()->exit(ec->getReason() == MSNet::SIMSTATE_ERROR_IN_SIM);
+    } else if (GUIGlobals::gDemoAutoReload) {
+        onCmdReload(0, 0, 0);
     } else if (!myHaveNotifiedAboutSimEnd) {
         // build the text
         const std::string text = "Simulation ended at time: " + time2string(ec->getTimeStep()) +
@@ -1361,6 +1419,17 @@ GUIApplicationWindow::checkGamingEvents() {
                     break;
                 }
             }
+        }
+    }
+    if (myCollisionSounds.getOverallProb() > 0) {
+        unsigned int collisions = MSNet::getInstance()->getVehicleControl().getCollisionCount();
+        if (myPreviousCollisionNumber != collisions) {
+            const std::string cmd = myCollisionSounds.get(&myGamingRNG);
+            if (cmd != "") {
+                // yay! fun with dangerous commands... Never use this over the internet
+                SysUtils::runHiddenCommand(cmd);
+            }
+            myPreviousCollisionNumber = collisions;
         }
     }
 #endif
@@ -1431,6 +1500,12 @@ void
 GUIApplicationWindow::closeAllWindows() {
     myTrackerLock.lock();
     myLCDLabel->setText("-------------");
+    for (std::vector<FXButton*>::const_iterator it = myStatButtons.begin(); it != myStatButtons.end(); ++it) {
+        (*it)->setText("-");
+        if (it != myStatButtons.begin()) {
+            (*it)->hide();
+        }
+    }
     // remove trackers and other external windows
     size_t i;
     for (i = 0; i < mySubWindows.size(); ++i) {
@@ -1487,6 +1562,16 @@ void
 GUIApplicationWindow::setStatusBarText(const std::string& text) {
     myStatusbar->getStatusLine()->setText(text.c_str());
     myStatusbar->getStatusLine()->setNormalText(text.c_str());
+}
+
+
+void
+GUIApplicationWindow::addRecentFile(const FX::FXString& f, const bool isNet) {
+    if (isNet) {
+        myRecentNets.appendFile(f);
+    } else {
+        myRecentConfigs.appendFile(f);
+    }
 }
 
 

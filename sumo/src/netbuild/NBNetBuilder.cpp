@@ -75,7 +75,7 @@ NBNetBuilder::~NBNetBuilder() {}
 void
 NBNetBuilder::applyOptions(OptionsCont& oc) {
     // apply options to type control
-    myTypeCont.setDefaults(oc.getInt("default.lanenumber"), oc.getFloat("default.speed"), oc.getInt("default.priority"));
+    myTypeCont.setDefaults(oc.getInt("default.lanenumber"), oc.getFloat("default.lanewidth"), oc.getFloat("default.speed"), oc.getInt("default.priority"));
     // apply options to edge control
     myEdgeCont.applyOptions(oc);
     // apply options to traffic light logics control
@@ -168,7 +168,7 @@ NBNetBuilder::compute(OptionsCont& oc,
         PROGRESS_BEGIN_MESSAGE("Removing empty nodes" + std::string(removeGeometryNodes ? " and geometry nodes" : ""));
         // removeUnwishedNodes needs turnDirections. @todo: try to call this less often
         NBTurningDirectionsComputer::computeTurnDirections(myNodeCont, false);
-        no = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myJoinedEdges, myTLLCont, removeGeometryNodes);
+        no = myNodeCont.removeUnwishedNodes(myDistrictCont, myEdgeCont, myTLLCont, removeGeometryNodes);
         PROGRESS_TIME_MESSAGE(before);
         WRITE_MESSAGE("   " + toString(no) + " nodes removed.");
     }
@@ -200,9 +200,13 @@ NBNetBuilder::compute(OptionsCont& oc,
     if (removeElements && oc.getBool("edges.join")) {
         before = SysUtils::getCurrentMillis();
         PROGRESS_BEGIN_MESSAGE("Joining similar edges");
-        myJoinedEdges.init(myEdgeCont);
         myNodeCont.joinSimilarEdges(myDistrictCont, myEdgeCont, myTLLCont);
         PROGRESS_TIME_MESSAGE(before);
+    }
+    if (oc.getBool("opposites.guess")) {
+        PROGRESS_BEGIN_MESSAGE("guessing opposite direction edges");
+        myEdgeCont.guessOpposites();
+        PROGRESS_DONE_MESSAGE();
     }
     //
     if (oc.exists("geometry.split") && oc.getBool("geometry.split")) {
@@ -237,6 +241,16 @@ NBNetBuilder::compute(OptionsCont& oc,
 
     // check whether any not previously setable connections may be set now
     myEdgeCont.recheckPostProcessConnections();
+
+    // remap ids if wished
+    if (oc.getBool("numerical-ids")) {
+        int numChangedEdges = myEdgeCont.mapToNumericalIDs();
+        int numChangedNodes = myNodeCont.mapToNumericalIDs();
+        if (numChangedEdges + numChangedNodes > 0) {
+            WRITE_MESSAGE("Remapped " + toString(numChangedEdges) + " edge IDs and " + toString(numChangedNodes) + " node IDs.");
+        }
+    }
+
     //
     if (oc.exists("geometry.max-angle")) {
         myEdgeCont.checkGeometries(
@@ -274,11 +288,12 @@ NBNetBuilder::compute(OptionsCont& oc,
     if (oc.exists("speed.offset")) {
         const SUMOReal speedOffset = oc.getFloat("speed.offset");
         const SUMOReal speedFactor = oc.getFloat("speed.factor");
-        if (speedOffset != 0 || speedFactor != 1) {
+        if (speedOffset != 0 || speedFactor != 1 || oc.isSet("speed.minimum")) {
+            const SUMOReal speedMin = oc.isSet("speed.minimum") ? oc.getFloat("speed.minimum") : -std::numeric_limits<SUMOReal>::infinity();
             before = SysUtils::getCurrentMillis();
             PROGRESS_BEGIN_MESSAGE("Applying speed modifications");
             for (std::map<std::string, NBEdge*>::const_iterator i = myEdgeCont.begin(); i != myEdgeCont.end(); ++i) {
-                (*i).second->setSpeed(-1, (*i).second->getSpeed() * speedFactor + speedOffset);
+                (*i).second->setSpeed(-1, MAX2((*i).second->getSpeed() * speedFactor + speedOffset, speedMin));
             }
             PROGRESS_TIME_MESSAGE(before);
         }

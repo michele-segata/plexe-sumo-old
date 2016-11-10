@@ -136,8 +136,10 @@ public:
         SUMOReal endOffset;
         /// @brief This lane's width
         SUMOReal width;
-        /// @brief An original ID, if given (@todo: is only seldom used, should be stored somewhere else, probably)
+        /// @brief An original ID, if given
         std::string origID;
+        /// @brief An opposite lane ID, if given
+        std::string oppositeID;
 
     };
 
@@ -342,8 +344,8 @@ public:
     /** @brief Returns the number of lanes
      * @returns This edge's number of lanes
      */
-    unsigned int getNumLanes() const {
-        return (unsigned int) myLanes.size();
+    int getNumLanes() const {
+        return (int)myLanes.size();
     }
 
 
@@ -372,6 +374,7 @@ public:
 
 
     /** @brief Returns the angle at the start of the edge
+     * (relative to the node shape center)
      * The angle is computed in computeAngle()
      * @return This edge's start angle
      */
@@ -381,12 +384,29 @@ public:
 
 
     /** @brief Returns the angle at the end of the edge
+     * (relative to the node shape center)
      * The angle is computed in computeAngle()
      * @return This edge's end angle
      */
     inline SUMOReal getEndAngle() const {
         return myEndAngle;
     }
+
+    /** @brief Returns the angle at the start of the edge
+     * (only using edge shape)
+     * @return This edge's start angle
+     */
+    SUMOReal getShapeStartAngle() const;
+
+
+    /** @brief Returns the angle at the end of the edge
+     * (only using edge shape)
+     * The angle is computed in computeAngle()
+     * @return This edge's end angle
+     */
+    SUMOReal getShapeEndAngle() const;
+
+
 
 
     /// @brief get the angle as measure from the start to the end of this edge
@@ -510,6 +530,9 @@ public:
      */
     int getFirstNonPedestrianLaneIndex(int direction, bool exclusive = false) const;
     NBEdge::Lane getFirstNonPedestrianLane(int direction) const;
+
+    /// @brief return all permission variants within the specified lane range [iStart, iEnd[
+    std::set<SVCPermissions> getPermissionVariants(int iStart, int iEnd) const;
 
     /// @brief return the angle for computing pedestrian crossings at the given node
     SUMOReal getCrossingAngle(NBNode* node);
@@ -728,7 +751,7 @@ public:
      * @return The connections from the given lane
      * @see NBEdge::Connection
      */
-    std::vector<Connection> getConnectionsFromLane(unsigned int lane) const;
+    std::vector<Connection> getConnectionsFromLane(int lane) const;
 
     /** @brief Returns the specified connection
      * This method goes through "myConnections" and returns the specified one
@@ -920,11 +943,11 @@ public:
     /// @brief whether lanes differ in speed
     bool hasLaneSpecificSpeed() const;
 
-    /// @brief whether lanes differ in offset
-    bool hasLaneSpecificEndOffset() const;
-
     /// @brief whether lanes differ in width
     bool hasLaneSpecificWidth() const;
+
+    /// @brief whether lanes differ in offset
+    bool hasLaneSpecificEndOffset() const;
 
     /// computes the edge (step1: computation of approached edges)
     bool computeEdge2Edges(bool noLeftMovers);
@@ -1156,7 +1179,7 @@ private:
     public:
         /// constructor
         MainDirections(const EdgeVector& outgoing,
-                       NBEdge* parent, NBNode* to);
+                       NBEdge* parent, NBNode* to, int indexOfStraightest);
 
         /// destructor
         ~MainDirections();
@@ -1208,15 +1231,18 @@ private:
     /** divides the lanes on the outgoing edges */
     void divideOnEdges(const EdgeVector* outgoing);
     void divideSelectedLanesOnEdges(const EdgeVector* outgoing, const std::vector<int>& availableLanes,
-                                    const std::vector<unsigned int>* priorities);
+                                    const std::vector<int>* priorities);
+
+    /// @brief add some straight connections
+    void addStraightConnections(const EdgeVector* outgoing, const std::vector<int>& availableLanes, const std::vector<int>* priorities);
 
     /** recomputes the edge priorities and manipulates them for a distribution
         of lanes on edges which is more like in real-life */
-    std::vector<unsigned int>* prepareEdgePriorities(
+    std::vector<int>* prepareEdgePriorities(
         const EdgeVector* outgoing);
 
     /** computes the sum of the given list's entries (sic!) */
-    static unsigned int computePrioritySum(const std::vector<unsigned int>& priorities);
+    static int computePrioritySum(const std::vector<int>& priorities);
 
 
     /// @name Setting and getting connections
@@ -1434,20 +1460,51 @@ public:
     class connections_finder {
     public:
         /// constructor
-        connections_finder(int fromLane, NBEdge* const edge2find, int lane2find) : myFromLane(fromLane), myEdge2Find(edge2find), myLane2Find(lane2find) { }
+        connections_finder(int fromLane, NBEdge* const edge2find, int lane2find, bool invertEdge2find = false) :
+            myFromLane(fromLane), myEdge2Find(edge2find), myLane2Find(lane2find), myInvertEdge2find(invertEdge2find) { }
 
         bool operator()(const Connection& c) const {
-            return c.fromLane == myFromLane && c.toEdge == myEdge2Find && c.toLane == myLane2Find;
+            return ((c.fromLane == myFromLane || myFromLane == -1)
+                    && ((!myInvertEdge2find && c.toEdge == myEdge2Find) || (myInvertEdge2find && c.toEdge != myEdge2Find))
+                    && (c.toLane == myLane2Find || myLane2Find == -1));
         }
 
     private:
         int myFromLane;
         NBEdge* const myEdge2Find;
         int myLane2Find;
+        bool myInvertEdge2find;
 
     private:
         /// @brief invalidated assignment operator
         connections_finder& operator=(const connections_finder& s);
+
+    };
+
+
+    /**
+     * @class connections_conflict_finder
+     */
+    class connections_conflict_finder {
+    public:
+        /// constructor
+        connections_conflict_finder(int fromLane, NBEdge* const edge2find, bool checkRight) :
+            myFromLane(fromLane), myEdge2Find(edge2find), myCheckRight(checkRight) { }
+
+        bool operator()(const Connection& c) const {
+            return (((myCheckRight && c.fromLane < myFromLane) || (!myCheckRight && c.fromLane > myFromLane))
+                    && c.fromLane >= 0 // already assigned
+                    && c.toEdge == myEdge2Find);
+        }
+
+    private:
+        int myFromLane;
+        NBEdge* const myEdge2Find;
+        bool myCheckRight;
+
+    private:
+        /// @brief invalidated assignment operator
+        connections_conflict_finder& operator=(const connections_conflict_finder& s);
 
     };
 

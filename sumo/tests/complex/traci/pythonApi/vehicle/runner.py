@@ -73,6 +73,7 @@ def check(vehID):
     print("NOx", traci.vehicle.getNOxEmission(vehID))
     print("fuel", traci.vehicle.getFuelConsumption(vehID))
     print("noise", traci.vehicle.getNoiseEmission(vehID))
+    print("Elec", traci.vehicle.getElectricityConsumption(vehID))
     print("traveltime", traci.vehicle.getAdaptedTraveltime(vehID, 0, "1o"))
     print("effort", traci.vehicle.getEffort(vehID, 0, "1o"))
     print("route valid", traci.vehicle.isRouteValid(vehID))
@@ -90,6 +91,7 @@ def check(vehID):
     print("shape", traci.vehicle.getShapeClass(vehID))
     print("MinGap", traci.vehicle.getMinGap(vehID))
     print("width", traci.vehicle.getWidth(vehID))
+    print("person number", traci.vehicle.getPersonNumber(vehID))
     print("waiting time", traci.vehicle.getWaitingTime(vehID))
     print("driving dist", traci.vehicle.getDrivingDistance(vehID, "4fi", 2.))
     print(
@@ -136,7 +138,7 @@ except traci.TraCIException:
     print("recovering from exception after asking for unknown vehicle")
 traci.vehicle.add("1", "horizontal")
 traci.vehicle.setStop(
-    "1", "2fi", pos=50.0, laneIndex=0, duration=2000, flags=1)
+    "1", "2fi", pos=50.0, laneIndex=0, duration=1000, flags=1)
 check("1")
 traci.vehicle.changeTarget("1", "4fi")
 print("routeID", traci.vehicle.getRouteID(vehID))
@@ -150,8 +152,11 @@ for i in range(6):
         traci.vehicle.resume("1")
     print(traci.vehicle.getSubscriptionResults(vehID))
 check("2")
+print("nextTLS", traci.vehicle.getNextTLS("2"))
 traci.vehicle.setSpeedMode(vehID, 0)  # disable all checks
 traci.vehicle.setSpeed(vehID, 20)
+print("speedmode", traci.vehicle.getSpeedMode(vehID))
+print("slope", traci.vehicle.getSlope(vehID))
 print("leader", traci.vehicle.getLeader("2"))
 traci.vehicle.subscribeLeader("2")
 for i in range(6):
@@ -172,8 +177,9 @@ print("step", step())
 print(traci.vehicle.getSubscriptionResults(vehID))
 print("step", step())
 print(traci.vehicle.getSubscriptionResults(vehID))
-print("speed before moveToVTD", traci.vehicle.getSpeed(vehID))
-traci.vehicle.moveToVTD(vehID, "1o", 0, 482.49, 501.31, 0)
+print("speed before moveToXY", traci.vehicle.getSpeed(vehID))
+traci.vehicle.moveToVTD(vehID, "1o", 0, 482.49, 501.31,
+                        0)  # test deprecated method name
 print("step", step())
 print("speed after moveToVTD", traci.vehicle.getSpeed(vehID))
 print(traci.vehicle.getSubscriptionResults(vehID))
@@ -285,6 +291,14 @@ traci.vehicle.moveTo(tele, "1o_0", 40)
 for i in range(3):
     checkOffRoad(tele)
     print("step", step())
+# moveToXY to off-route edge
+moved = "movedVeh"
+traci.vehicle.add(moved, "vertical")
+print("step", step())
+traci.vehicle.moveToXY(moved, "dummy", 0, 448.99, 491.19, 90, 0)
+print("step", step())
+check(moved)
 
 # done
 traci.close()
+sumoProcess.wait()

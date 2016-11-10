@@ -45,6 +45,9 @@
         <!-- The length of streets attached at the boundary; 0 means no streets are attached -->
         <grid.attach-length value="0" synonymes="attach-length" type="FLOAT"/>
 
+        <!-- The Ids of generated nodes use letters for the X axis -->
+        <grid.alphanumerical-ids value="false" type="BOOL"/>
+
     </grid_network>
 
     <spider_network>
@@ -237,6 +240,9 @@
         <!-- Omits internal links -->
         <no-internal-links value="false" type="BOOL"/>
 
+        <!-- Remaps alphanumerical IDs of nodes and edges to ensure that all IDs are integers -->
+        <numerical-ids value="false" type="BOOL"/>
+
         <!-- Disables building turnarounds -->
         <no-turnarounds value="false" type="BOOL"/>
 
@@ -260,6 +266,9 @@
 
         <!-- Enable roundabout-guessing -->
         <roundabouts.guess value="false" synonymes="guess-roundabouts" type="BOOL"/>
+
+        <!-- Enable guessing of opposite direction lanes usable for overtaking -->
+        <opposites.guess value="false" type="BOOL"/>
 
         <!-- Assumes left-hand traffic on the network -->
         <lefthand value="false" type="BOOL"/>
@@ -311,6 +320,9 @@
     <building_defaults>
         <!-- The default number of lanes in an edge -->
         <default.lanenumber value="1" synonymes="L lanenumber" type="INT"/>
+
+        <!-- The default width of lanes -->
+        <default.lanewidth value="-1" synonymes="lanewidth" type="FLOAT"/>
 
         <!-- The default speed on an edge (in m/s) -->
         <default.speed value="13.9" synonymes="S speed" type="FLOAT"/>

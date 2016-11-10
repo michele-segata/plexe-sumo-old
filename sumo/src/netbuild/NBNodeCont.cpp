@@ -46,6 +46,8 @@
 #include <utils/common/StringTokenizer.h>
 #include <utils/common/StdDefs.h>
 #include <utils/common/ToString.h>
+#include <utils/common/TplConvert.h>
+#include <utils/common/IDSupplier.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/iodevices/OutputDevice.h>
@@ -53,7 +55,6 @@
 #include "NBDistrict.h"
 #include "NBEdgeCont.h"
 #include "NBTrafficLightLogicCont.h"
-#include "NBJoinedEdgesMap.h"
 #include "NBOwnTLDef.h"
 #include "NBNodeCont.h"
 
@@ -317,7 +318,7 @@ NBNodeCont::removeIsolatedRoads(NBDistrictCont& dc, NBEdgeCont& ec, NBTrafficLig
 
 unsigned int
 NBNodeCont::removeUnwishedNodes(NBDistrictCont& dc, NBEdgeCont& ec,
-                                NBJoinedEdgesMap& je, NBTrafficLightLogicCont& tlc,
+                                NBTrafficLightLogicCont& tlc,
                                 bool removeGeometryNodes) {
     // load edges that shall not be modified
     std::set<std::string> edges2keep;
@@ -372,7 +373,6 @@ NBNodeCont::removeUnwishedNodes(NBDistrictCont& dc, NBEdgeCont& ec,
             begin->append(continuation);
             continuation->getToNode()->replaceIncoming(continuation, begin, 0);
             tlc.replaceRemoved(continuation, -1, begin, -1);
-            je.appended(begin->getID(), continuation->getID());
             ec.extract(dc, continuation, true);
         }
         toRemove.push_back(current);
@@ -1218,6 +1218,27 @@ NBNodeCont::discardTrafficLights(NBTrafficLightLogicCont& tlc, bool geometryLike
             node->reinit(node->getPosition(), NODETYPE_UNKNOWN);
         }
     }
+}
+
+
+int
+NBNodeCont::mapToNumericalIDs() {
+    IDSupplier idSupplier("", getAllNames());
+    std::vector<NBNode*> toChange;
+    for (NodeCont::iterator it = myNodes.begin(); it != myNodes.end(); it++) {
+        try {
+            TplConvert::_str2int(it->first);
+        } catch (NumberFormatException&) {
+            toChange.push_back(it->second);
+        }
+    }
+    for (std::vector<NBNode*>::iterator it = toChange.begin(); it != toChange.end(); ++it) {
+        NBNode* node = *it;
+        myNodes.erase(node->getID());
+        node->setID(idSupplier.getNext());
+        myNodes[node->getID()] = node;
+    }
+    return (int)toChange.size();
 }
 
 /****************************************************************************/

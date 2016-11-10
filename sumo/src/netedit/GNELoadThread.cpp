@@ -61,16 +61,12 @@
 // ===========================================================================
 // member method definitions
 // ===========================================================================
-GNELoadThread::GNELoadThread(FXApp* app, MFXInterThreadEventClient* mw,
-                             MFXEventQue<GUIEvent*>& eq, FXEX::FXThreadEvent& ev)
-    : FXSingleEventThread(app, mw), myParent(mw), myEventQue(eq),
-      myEventThrow(ev) {
-    myErrorRetriever = new MsgRetrievingFunction<GNELoadThread>(this,
-            &GNELoadThread::retrieveMessage, MsgHandler::MT_ERROR);
-    myMessageRetriever = new MsgRetrievingFunction<GNELoadThread>(this,
-            &GNELoadThread::retrieveMessage, MsgHandler::MT_MESSAGE);
-    myWarningRetriever = new MsgRetrievingFunction<GNELoadThread>(this,
-            &GNELoadThread::retrieveMessage, MsgHandler::MT_WARNING);
+GNELoadThread::GNELoadThread(FXApp* app, MFXInterThreadEventClient* mw, MFXEventQue<GUIEvent*>& eq, FXEX::FXThreadEvent& ev) :
+    FXSingleEventThread(app, mw), myParent(mw), myEventQue(eq),
+    myEventThrow(ev) {
+    myErrorRetriever = new MsgRetrievingFunction<GNELoadThread>(this, &GNELoadThread::retrieveMessage, MsgHandler::MT_ERROR);
+    myMessageRetriever = new MsgRetrievingFunction<GNELoadThread>(this, &GNELoadThread::retrieveMessage, MsgHandler::MT_MESSAGE);
+    myWarningRetriever = new MsgRetrievingFunction<GNELoadThread>(this, &GNELoadThread::retrieveMessage, MsgHandler::MT_WARNING);
     MsgHandler::getErrorInstance()->addRetriever(myErrorRetriever);
 }
 
@@ -84,26 +80,17 @@ GNELoadThread::~GNELoadThread() {
 
 FXint
 GNELoadThread::run() {
-    GNENet* net = 0;
-    OptionsCont& oc = OptionsCont::getOptions();
-
-    // within gui-based applications, nothing is reported to the console
-    /*
-    MsgHandler::getErrorInstance()->report2cout(false);
-    MsgHandler::getErrorInstance()->report2cerr(false);
-    MsgHandler::getWarningInstance()->report2cout(false);
-    MsgHandler::getWarningInstance()->report2cerr(false);
-    MsgHandler::getMessageInstance()->report2cout(false);
-    MsgHandler::getMessageInstance()->report2cerr(false);
-    */
     // register message callbacks
     MsgHandler::getMessageInstance()->addRetriever(myMessageRetriever);
     MsgHandler::getErrorInstance()->addRetriever(myErrorRetriever);
     MsgHandler::getWarningInstance()->addRetriever(myWarningRetriever);
 
+    GNENet* net = 0;
+
     // try to load the given configuration
-    if (!myOptionsReady && !initOptions()) {
-        // the options are not valid
+    OptionsCont& oc = OptionsCont::getOptions();
+    oc.clear();
+    if (!initOptions()) {
         submitEndAndCleanup(net);
         return 0;
     }
@@ -128,6 +115,7 @@ GNELoadThread::run() {
     }
     // this netbuilder instance becomes the responsibility of the GNENet
     NBNetBuilder* netBuilder = new NBNetBuilder();
+
     netBuilder->applyOptions(oc);
 
     if (myNewNet) {
@@ -137,8 +125,9 @@ GNELoadThread::run() {
         NILoader nl(*netBuilder);
         try {
             nl.load(oc);
+
             if (!myLoadNet) {
-                WRITE_MESSAGE("Performing initial computatation ...\n");
+                WRITE_MESSAGE("Performing initial computation ...\n");
                 // perform one-time processing (i.e. edge removal)
                 netBuilder->compute(oc);
                 // @todo remove one-time processing options!
@@ -213,8 +202,10 @@ GNELoadThread::fillOptions(OptionsCont& oc) {
 
     oc.doRegister("disable-textures", 'T', new Option_Bool(false)); // !!!
     oc.addDescription("disable-textures", "Visualisation", "");
+
     oc.doRegister("gui-settings-file", new Option_FileName());
     oc.addDescription("gui-settings-file", "Visualisation", "Load visualisation settings from FILE");
+
     oc.doRegister("registry-viewport", new Option_Bool(false));
     oc.addDescription("registry-viewport", "Visualisation", "Load current viewport from registry");
 
@@ -238,13 +229,14 @@ bool
 GNELoadThread::initOptions() {
     OptionsCont& oc = OptionsCont::getOptions();
     fillOptions(oc);
-    if (myLoadNet) {
-        oc.set("sumo-net-file", myFile);
-    } else {
-        oc.set("configuration-file", myFile);
+    if (myFile != "") {
+        if (myLoadNet) {
+            oc.set("sumo-net-file", myFile);
+        } else {
+            oc.set("configuration-file", myFile);
+        }
     }
     setDefaultOptions(oc);
-    OptionsIO::setArgs(0, 0);
     try {
         OptionsIO::getOptions();
         if (!oc.isSet("output-file")) {
@@ -265,6 +257,9 @@ void
 GNELoadThread::loadConfigOrNet(const std::string& file, bool isNet, bool optionsReady, bool newNet) {
     myFile = file;
     myLoadNet = isNet;
+    if (myFile != "") {
+        OptionsIO::setArgs(0, 0);
+    }
     myOptionsReady = optionsReady;
     myNewNet = newNet;
     start();

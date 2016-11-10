@@ -129,6 +129,9 @@
         <!-- Save bluetooth visibilities into FILE (in conjunction with device.btreceiver and device.btsender) -->
         <bt-output value="" type="FILE"/>
 
+        <!-- Record lane changes and their motivations for all vehicles into FILE -->
+        <lanechange-output value="" type="FILE"/>
+
         <!-- Use INT[] as times at which a network state written -->
         <save-state.times value="" type="INT[]"/>
 
@@ -153,6 +156,9 @@
     </time>
 
     <processing>
+        <!-- Defines the resolution in m when handling lateral positioning within a lane (with -1 all vehicles drive at the center of their lane -->
+        <lateral-resolution value="-1" type="FLOAT"/>
+
         <!-- Load routes for the next number of seconds ahead -->
         <route-steps value="200" synonymes="s" type="TIME"/>
 
@@ -162,11 +168,17 @@
         <!-- Ignore vehicles which block the junction after they have been standing for SECONDS (-1 means never ignore) -->
         <ignore-junction-blocker value="-1" type="TIME"/>
 
+        <!-- Do not check whether routes are connected -->
+        <ignore-route-errors value="false" type="BOOL"/>
+
         <!-- Do not check whether accidents occur -->
         <ignore-accidents value="false" type="BOOL"/>
 
-        <!-- Do not check whether routes are connected -->
-        <ignore-route-errors value="false" type="BOOL"/>
+        <!-- How to deal with collisions: [none,warn,teleport,remove] -->
+        <collision.action value="teleport" type="STR"/>
+
+        <!-- Enables collisions checks on junctions -->
+        <collision.check-junctions value="false" type="BOOL"/>
 
         <!-- Delay vehicle insertion to stay within the given maximum number -->
         <max-num-vehicles value="-1" type="INT"/>
@@ -204,6 +216,9 @@
         <!-- Whether overtaking on the right on motorways is permitted -->
         <lanechange.overtake-right value="false" type="BOOL"/>
 
+        <!-- Switches off all traffic lights. -->
+        <tls.all-off value="false" type="BOOL"/>
+
         <!-- Select among pedestrian models [&apos;nonInteracting&apos;, &apos;striping&apos;] -->
         <pedestrian.model value="striping" type="STR"/>
 
@@ -240,8 +255,11 @@
         <!-- The rerouting period before depart -->
         <device.rerouting.pre-period value="1" synonymes="device.routing.pre-period" type="TIME"/>
 
-        <!-- The weight of prior edge weights -->
+        <!-- The weight of prior edge weights for exponential moving average -->
         <device.rerouting.adaptation-weight value="0.5" synonymes="device.routing.adaptation-weight" type="FLOAT"/>
+
+        <!-- The number of steps for moving average weight of prior edge weights -->
+        <device.rerouting.adaptation-steps value="0" synonymes="device.routing.adaptation-steps" type="INT"/>
 
         <!-- The interval for updating the edge weights -->
         <device.rerouting.adaptation-interval value="1" synonymes="device.routing.adaptation-interval" type="TIME"/>
@@ -390,17 +408,17 @@
         <!-- Length of an edge segment in mesoscopic simulation -->
         <meso-edgelength value="98" type="FLOAT"/>
 
-        <!-- Factor for calculating the free-free headway time -->
-        <meso-tauff value="1.4" type="TIME"/>
+        <!-- Factor for calculating the net free-free headway time -->
+        <meso-tauff value="1.13" type="TIME"/>
 
-        <!-- Factor for calculating the free-jam headway time -->
-        <meso-taufj value="1.4" type="TIME"/>
+        <!-- Factor for calculating the net free-jam headway time -->
+        <meso-taufj value="1.13" type="TIME"/>
 
         <!-- Factor for calculating the jam-free headway time -->
         <meso-taujf value="2" type="TIME"/>
 
         <!-- Factor for calculating the jam-jam headway time -->
-        <meso-taujj value="2" type="TIME"/>
+        <meso-taujj value="1.4" type="TIME"/>
 
         <!-- Minimum percentage of occupied space to consider a segment jammed. A negative argument causes thresholds to be computed based on edge speed and tauff (default) -->
         <meso-jam-threshold value="-1" type="FLOAT"/>
@@ -446,6 +464,9 @@
 
         <!-- Start the simulation after loading -->
         <start value="false" synonymes="S" type="BOOL"/>
+
+        <!-- Restart the simulation after ending (demo mode) -->
+        <demo value="false" synonymes="D" type="BOOL"/>
 
         <!-- Do not load background pictures -->
         <disable-textures value="false" synonymes="T" type="BOOL"/>

@@ -110,14 +110,14 @@ def build(args=None, bindir=None):
 
     subprocess.call(netconvertOpts)
     # write config
-    subprocess.call(
-        netconvertOpts + ["--save-configuration", basename + ".netccfg"])
+    subprocess.call(netconvertOpts +
+                    ["--save-configuration", basename + ".netccfg"])
     if options.typemap:
         polyconvertOpts += ["-n", netfile, "-o", basename + '.poly.xml']
         subprocess.call(polyconvertOpts)
         # write config
-        subprocess.call(
-            polyconvertOpts + ["--save-configuration", basename + ".polycfg"])
+        subprocess.call(polyconvertOpts +
+                        ["--save-configuration", basename + ".polycfg"])
 
 
 if __name__ == "__main__":

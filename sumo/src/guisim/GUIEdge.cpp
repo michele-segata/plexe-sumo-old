@@ -191,9 +191,10 @@ GUIEdge::getParameterWindow(GUIMainWindow& app,
     // add edge items
     ret->mkItem("length [m]", false, (*myLanes)[0]->getLength());
     ret->mkItem("allowed speed [m/s]", false, getAllowedSpeed());
-    ret->mkItem("occupancy [%]", true, new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getBruttoOccupancy, 100.));
-    ret->mkItem("mean vehicle speed [m/s]", true, new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getMesoMeanSpeed));
+    ret->mkItem("brutto occupancy [%]", true, new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getBruttoOccupancy, 100.));
+    ret->mkItem("mean vehicle speed [m/s]", true, new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getMeanSpeed));
     ret->mkItem("flow [veh/h/lane]", true, new FunctionBinding<GUIEdge, SUMOReal>(this, &GUIEdge::getFlow));
+    ret->mkItem("routing speed [m/s]", true, new FunctionBinding<MSEdge, SUMOReal>(this, &MSEdge::getRoutingSpeed));
     ret->mkItem("#vehicles", true, new CastingFunctionBinding<GUIEdge, SUMOReal, unsigned int>(this, &GUIEdge::getVehicleNo));
     ret->mkItem("vehicle ids", false, getVehicleIDs());
     // add segment items
@@ -201,8 +202,8 @@ GUIEdge::getParameterWindow(GUIMainWindow& app,
     ret->mkItem("segment index", false, segment->getIndex());
     ret->mkItem("segment length [m]", false, segment->getLength());
     ret->mkItem("segment allowed speed [m/s]", false, segment->getEdge().getSpeedLimit());
-    ret->mkItem("segment jam threshold [%]", false, segment->getRelativeJamThreshold());
-    ret->mkItem("segment occupancy [%]", true, new FunctionBinding<MESegment, SUMOReal>(segment, &MESegment::getRelativeOccupancy));
+    ret->mkItem("segment jam threshold [%]", false, segment->getRelativeJamThreshold() * 100);
+    ret->mkItem("segment brutto occupancy [%]", true, new FunctionBinding<MESegment, SUMOReal>(segment, &MESegment::getRelativeOccupancy, 100));
     ret->mkItem("segment mean vehicle speed [m/s]", true, new FunctionBinding<MESegment, SUMOReal>(segment, &MESegment::getMeanSpeed));
     ret->mkItem("segment flow [veh/h/lane]", true, new FunctionBinding<MESegment, SUMOReal>(segment, &MESegment::getFlow));
     ret->mkItem("segment #vehicles", true, new CastingFunctionBinding<MESegment, SUMOReal, size_t>(segment, &MESegment::getCarNumber));
@@ -332,8 +333,7 @@ GUIEdge::drawMesoVehicles(const GUIVisualizationSettings& s) const {
                         }
                         const Position p = l->geometryPositionAtOffset(vehiclePosition);
                         const SUMOReal angle = l->getShape().rotationAtOffset(l->interpolateLanePosToGeometryPos(vehiclePosition));
-                        veh->setPositionAndAngle(p, angle);
-                        veh->drawGL(s);
+                        veh->drawOnPos(s, p, angle);
                         vehiclePosition -= vehLength;
                     }
                 }
@@ -400,13 +400,79 @@ GUIEdge::getAllowedSpeed() const {
 
 SUMOReal
 GUIEdge::getRelativeSpeed() const {
-    return getMesoMeanSpeed() / getAllowedSpeed();
+    return getMeanSpeed() / getAllowedSpeed();
 }
 
 
 void
 GUIEdge::setColor(const GUIVisualizationSettings& s) const {
-    GLHelper::setColor(s.edgeColorer.getScheme().getColor(getColorValue(s.edgeColorer.getActive())));
+    const GUIColorer& c = s.edgeColorer;
+    if (!setFunctionalColor(c.getActive()) && !setMultiColor(c)) {
+        GLHelper::setColor(c.getScheme().getColor(getColorValue(c.getActive())));
+    }
+}
+
+
+bool
+GUIEdge::setFunctionalColor(size_t activeScheme) const {
+    switch (activeScheme) {
+        case 9: {
+            const PositionVector& shape = getLanes()[0]->getShape();
+            SUMOReal hue = GeomHelper::naviDegree(shape.beginEndAngle()); // [0-360]
+            GLHelper::setColor(RGBColor::fromHSV(hue, 1., 1.));
+            return true;
+        }
+        default:
+            return false;
+    }
+}
+
+
+bool
+GUIEdge::setMultiColor(const GUIColorer& c) const {
+    const size_t activeScheme = c.getActive();
+    mySegmentColors.clear();
+    switch (activeScheme) {
+        case 10: // alternating segments
+            for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this);
+                    segment != 0; segment = segment->getNextSegment()) {
+                mySegmentColors.push_back(c.getScheme().getColor(segment->getIndex() % 2));
+            }
+            //std::cout << getID() << " scheme=" << c.getScheme().getName() << " schemeCols=" << c.getScheme().getColors().size() << " thresh=" << toString(c.getScheme().getThresholds()) << " segmentColors=" << mySegmentColors.size() << " [0]=" << mySegmentColors[0] << " [1]=" << mySegmentColors[1] <<  "\n";
+            return true;
+        case 11: // by segment jammed state
+            for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this);
+                    segment != 0; segment = segment->getNextSegment()) {
+                mySegmentColors.push_back(c.getScheme().getColor(segment->free() ? 0 : 1));
+            }
+            return true;
+        case 12: // by segment occupancy
+            for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this);
+                    segment != 0; segment = segment->getNextSegment()) {
+                mySegmentColors.push_back(c.getScheme().getColor(segment->getRelativeOccupancy()));
+            }
+            return true;
+        case 13: // by segment speed
+            for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this);
+                    segment != 0; segment = segment->getNextSegment()) {
+                mySegmentColors.push_back(c.getScheme().getColor(segment->getMeanSpeed()));
+            }
+            return true;
+        case 14: // by segment flow
+            for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this);
+                    segment != 0; segment = segment->getNextSegment()) {
+                mySegmentColors.push_back(c.getScheme().getColor(3600 * segment->getCarNumber() * segment->getMeanSpeed() / segment->getLength()));
+            }
+            return true;
+        case 15: // by segment relative speed
+            for (MESegment* segment = MSGlobals::gMesoNet->getSegmentForEdge(*this);
+                    segment != 0; segment = segment->getNextSegment()) {
+                mySegmentColors.push_back(c.getScheme().getColor(segment->getMeanSpeed() / getAllowedSpeed()));
+            }
+            return true;
+        default:
+            return false;
+    }
 }
 
 
@@ -422,11 +488,13 @@ GUIEdge::getColorValue(size_t activeScheme) const {
         case 4:
             return getBruttoOccupancy();
         case 5:
-            return getMesoMeanSpeed();
+            return getMeanSpeed();
         case 6:
             return getFlow();
         case 7:
             return getRelativeSpeed();
+        case 8:
+            return getRoutingSpeed();
     }
     return 0;
 }
@@ -442,7 +510,7 @@ GUIEdge::getScaleValue(size_t activeScheme) const {
         case 3:
             return getBruttoOccupancy();
         case 4:
-            return getMesoMeanSpeed();
+            return getMeanSpeed();
         case 5:
             return getFlow();
         case 6:

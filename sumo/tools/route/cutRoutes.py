@@ -23,7 +23,6 @@ from __future__ import print_function
 
 import os
 import sys
-PY3 = sys.version_info > (3,)
 import codecs
 from optparse import OptionParser
 from collections import defaultdict
@@ -85,7 +84,8 @@ extrapolated based on edge-lengths and maximum speeds multiplied with --speed-fa
     return options
 
 
-def cut_routes(areaEdges, orig_net, options, busStopEdges=None):
+def cut_routes(aEdges, orig_net, options, busStopEdges=None):
+    areaEdges = set(aEdges)
     num_vehicles = 0
     num_returned = 0
     missingEdgeOccurences = defaultdict(lambda: 0)

@@ -52,6 +52,7 @@ print("PMx", traci.edge.getPMxEmission(edgeID))
 print("NOx", traci.edge.getNOxEmission(edgeID))
 print("Fuel", traci.edge.getFuelConsumption(edgeID))
 print("Noise", traci.edge.getNoiseEmission(edgeID))
+print("Elec", traci.edge.getElectricityConsumption(edgeID))
 print("meanSpeed", traci.edge.getLastStepMeanSpeed(edgeID))
 print("occupancy", traci.edge.getLastStepOccupancy(edgeID))
 print("lastLength", traci.edge.getLastStepLength(edgeID))
@@ -80,4 +81,12 @@ for step in range(3, 6):
     print("step", step)
     traci.simulationStep()
     print(traci.edge.getSubscriptionResults(edgeID))
+for step in range(10):
+    traci.simulationStep()
+    print("3si count=%s meanSpeed=%s travelTime=%s" % (
+        traci.edge.getLastStepVehicleNumber("3si"),
+        traci.edge.getLastStepMeanSpeed("3si"),
+        traci.edge.getTraveltime("3si")))
+
 traci.close()
+sumoProcess.wait()

@@ -20,6 +20,8 @@ detector:detector.xml
 tls_state:tls_state.xml
 vehroutes:vehroutes.xml
 tripinfos:tripinfos.xml
+fcd:fcd.xml
+lanechanges:lanechanges.xml
 
 [run_dependent_text]
 testclient_out:Date
@@ -29,6 +31,8 @@ detector:<!--{[->]}-->
 vehroutes:<!--{[->]}-->
 tripinfos:<!--{[->]}-->
 net_state:<!--{[->]}-->
+fcd:<!--{[->]}-->
+lanechanges:<!--{[->]}-->
 simstate:<!--{[->]}-->
 simstate:<snapshot version="[^"]*"{REPLACE <snapshot version="<version>"}
 output:port

@@ -60,8 +60,8 @@ MSVehicleTransfer::add(const SUMOTime t, MSVehicle* veh) {
     if (veh->isParking()) {
         veh->getLaneChangeModel().endLaneChangeManeuver(MSMoveReminder::NOTIFICATION_PARKING);
         MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_STARTING_PARKING);
-        myParkingVehicles[veh->getLane()].insert(veh); // initialized to empty set on first use
         veh->onRemovalFromNet(MSMoveReminder::NOTIFICATION_PARKING);
+        myParkingVehicles[veh->getLane()].insert(veh); // initialized to empty set on first use
     } else {
         veh->getLaneChangeModel().endLaneChangeManeuver(MSMoveReminder::NOTIFICATION_TELEPORT);
         MSNet::getInstance()->informVehicleStateListener(veh, MSNet::VEHICLE_STATE_STARTING_TELEPORT);
@@ -87,6 +87,9 @@ MSVehicleTransfer::remove(MSVehicle* veh) {
             myVehicles.erase(i);
             break;
         }
+    }
+    if (veh->getLane() != 0) {
+        myParkingVehicles[veh->getLane()].erase(veh);
     }
 }
 
@@ -120,7 +123,7 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) {
 
         if (desc.myParking) {
             // handle parking vehicles
-            if (l->isInsertionSuccess(desc.myVeh, 0, desc.myVeh->getPositionOnLane(), false, MSMoveReminder::NOTIFICATION_PARKING)) {
+            if (l->isInsertionSuccess(desc.myVeh, 0, desc.myVeh->getPositionOnLane(), desc.myVeh->getLateralPositionOnLane(), false, MSMoveReminder::NOTIFICATION_PARKING)) {
                 MSNet::getInstance()->informVehicleStateListener(desc.myVeh, MSNet::VEHICLE_STATE_ENDING_PARKING);
                 myParkingVehicles[oldLane].erase(desc.myVeh);
                 i = myVehicles.erase(i);

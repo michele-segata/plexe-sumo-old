@@ -51,6 +51,8 @@ output:visible boundary
 output:uncheck:
 output:@@[^@]*@@
 output:data\\{REPLACE data/}
+output:Could not connect to TraCI server
+output:Retrying in
 net:<!--{[->]}-->
 vehroutes:<!--{[->]}-->
 tripinfo:<!--{[->]}-->
@@ -74,7 +76,6 @@ results:0.00101
 tripinfo:0.0101
 
 [batch_extra_version]
-gcc4:perf
 gcc4_64:perf
 msvc12Win32:perf
 msvc12x64:perf

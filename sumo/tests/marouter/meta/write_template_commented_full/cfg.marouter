@@ -48,6 +48,9 @@
         <!-- The travel time influence of prior intervals -->
         <weight-adaption value="0" type="FLOAT"/>
 
+        <!-- Parameter key(s) defining source (and sink) taz -->
+        <taz-param value="" type="STR"/>
+
     </input>
 
     <output>
@@ -56,6 +59,9 @@
 
         <!-- Write flow definitions with route distributions to FILE -->
         <output-file value="" synonymes="o output" type="FILE"/>
+
+        <!-- Write used vehicle types into separate FILE -->
+        <vtype-output value="" type="FILE"/>
 
         <!-- Does not save vtype information -->
         <ignore-vehicle-type value="false" synonymes="no-vtype" type="BOOL"/>

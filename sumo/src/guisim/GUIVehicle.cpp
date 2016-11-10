@@ -47,6 +47,7 @@
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/div/GLObjectValuePassConnector.h>
 #include <utils/gui/div/GUIGlobalSelection.h>
+#include <microsim/MSGlobals.h>
 #include <microsim/MSVehicle.h>
 #include <microsim/MSJunction.h>
 #include <microsim/MSLane.h>
@@ -69,6 +70,7 @@
 #include <foreign/nvwa/debug_new.h>
 #endif // CHECK_MEMORY_LEAKS
 
+//#define DRAW_BOUNDING_BOX
 
 // ===========================================================================
 // FOX callback mapping
@@ -104,8 +106,14 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
         new GUIParameterTableWindow(app, *this, 44);
     // add items
     ret->mkItem("lane [id]", false, myLane->getID());
+    if (MSGlobals::gLaneChangeDuration > 0 || MSGlobals::gLateralResolution > 0) {
+        const MSLane* shadowLane = getLaneChangeModel().getShadowLane();
+        ret->mkItem("shadow lane [id]", false, shadowLane == 0 ? "" : shadowLane->getID());
+    }
     ret->mkItem("position [m]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getPositionOnLane));
+    ret->mkItem("lateral offset [m]", true,
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getLateralPositionOnLane));
     ret->mkItem("speed [m/s]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getSpeed));
     ret->mkItem("speed [km/h]", true,
@@ -117,7 +125,7 @@ GUIVehicle::getParameterWindow(GUIMainWindow& app,
     ret->mkItem("radar distance [m]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getRadarDistance));
     ret->mkItem("angle [degree]", true,
-                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIVehicle::getNaviDegree));
+                new FunctionBinding<GUIVehicle, SUMOReal>(this, &GUIBaseVehicle::getNaviDegree));
     ret->mkItem("slope [degree]", true,
                 new FunctionBinding<GUIVehicle, SUMOReal>(this, &MSVehicle::getSlope));
     if (getChosenSpeedFactor() != 1) {
@@ -191,6 +199,7 @@ GUIVehicle::getTypeParameterWindow(GUIMainWindow& app,
     ret->mkItem("Type Information:", false, "");
     ret->mkItem("type [id]", false, myType->getID());
     ret->mkItem("length", false, myType->getLength());
+    ret->mkItem("width", false, myType->getWidth());
     ret->mkItem("minGap", false, myType->getMinGap());
     ret->mkItem("vehicle class", false, SumoVehicleClassStrings.getString(myType->getVehicleClass()));
     ret->mkItem("emission class", false, PollutantsInterface::getName(myType->getEmissionClass()));
@@ -233,6 +242,21 @@ GUIVehicle::drawAction_drawPersonsAndContainers(const GUIVisualizationSettings& 
             container->drawGL(s);
         }
     }
+#ifdef DRAW_BOUNDING_BOX
+    glPushName(getGlID());
+    glPushMatrix();
+    glTranslated(0, 0, getType());
+    PositionVector boundingBox = getBoundingBox();
+    boundingBox.push_back(boundingBox.front());
+    PositionVector smallBB = getBoundingPoly();
+    glColor3d(0, .8, 0);
+    GLHelper::drawLine(boundingBox);
+    glColor3d(0.5, .8, 0);
+    GLHelper::drawLine(smallBB);
+    //GLHelper::drawBoxLines(getBoundingBox(), 0.5);
+    glPopMatrix();
+    glPopName();
+#endif
 }
 
 
@@ -325,18 +349,23 @@ GUIVehicle::drawAction_drawVehicleBlinker(SUMOReal length) const {
 
 
 inline void
-GUIVehicle::drawAction_drawVehicleBrakeLight(SUMOReal length) const {
+GUIVehicle::drawAction_drawVehicleBrakeLight(SUMOReal length, bool onlyOne) const {
     if (!signalSet(MSVehicle::VEH_SIGNAL_BRAKELIGHT)) {
         return;
     }
     glColor3f(1.f, .2f, 0);
     glPushMatrix();
-    glTranslated(-getVehicleType().getWidth() * 0.5, length, -0.1);
-    GLHelper::drawFilledCircle(.5, 6);
-    glPopMatrix();
-    glPushMatrix();
-    glTranslated(getVehicleType().getWidth() * 0.5, length, -0.1);
-    GLHelper::drawFilledCircle(.5, 6);
+    if (onlyOne) {
+        glTranslated(0, length, -0.1);
+        GLHelper::drawFilledCircle(.5, 6);
+    } else {
+        glTranslated(-getVehicleType().getWidth() * 0.5, length, -0.1);
+        GLHelper::drawFilledCircle(.5, 6);
+        glPopMatrix();
+        glPushMatrix();
+        glTranslated(getVehicleType().getWidth() * 0.5, length, -0.1);
+        GLHelper::drawFilledCircle(.5, 6);
+    }
     glPopMatrix();
 }
 
@@ -565,12 +594,6 @@ GUIVehicle::drawAction_drawRailCarriages(const GUIVisualizationSettings& s, SUMO
 }
 
 
-SUMOReal
-GUIVehicle::getNaviDegree() const {
-    return GeomHelper::naviDegree(getAngle());
-}
-
-
 int
 GUIVehicle::getNumPassengers() const {
     if (myPersonDevice != 0) {
@@ -637,7 +660,18 @@ GUIVehicle::selectBlockingFoes() const {
         std::vector<const SUMOVehicle*> blockingFoes;
         std::vector<const MSPerson*> blockingPersons;
         dpi.myLink->opened(dpi.myArrivalTime, dpi.myArrivalSpeed, dpi.getLeaveSpeed(), getVehicleType().getLength(),
-                           getImpatience(), getCarFollowModel().getMaxDecel(), getWaitingTime(), &blockingFoes);
+                           getImpatience(), getCarFollowModel().getMaxDecel(), getWaitingTime(), getLateralPositionOnLane(), &blockingFoes);
+        if (getLaneChangeModel().getShadowLane() != 0) {
+            MSLink* parallelLink = dpi.myLink->getParallelLink(getLaneChangeModel().getShadowDirection());
+            if (parallelLink != 0) {
+                const SUMOReal shadowLatPos = getLateralPositionOnLane() - getLaneChangeModel().getShadowDirection() * 0.5 * (
+                                                  myLane->getWidth() + getLaneChangeModel().getShadowLane()->getWidth());
+                parallelLink->opened(dpi.myArrivalTime, dpi.myArrivalSpeed, dpi.getLeaveSpeed(),
+                                     getVehicleType().getLength(), getImpatience(),
+                                     getCarFollowModel().getMaxDecel(),
+                                     getWaitingTime(), shadowLatPos, &blockingFoes);
+            }
+        }
         for (std::vector<const SUMOVehicle*>::const_iterator it = blockingFoes.begin(); it != blockingFoes.end(); ++it) {
             gSelected.select(static_cast<const GUIVehicle*>(*it)->getGlID());
         }
@@ -662,6 +696,21 @@ GUIVehicle::selectBlockingFoes() const {
         }
 #endif
         dist += dpi.myLink->getViaLaneOrLane()->getLength();
+    }
+}
+
+
+void
+GUIVehicle::drawOutsideNetwork(bool add) const {
+    GUIMainWindow* mw = GUIMainWindow::getInstance();
+    GUISUMOAbstractView* view = mw->getActiveView();
+    if (view != 0) {
+        std::cout << SIMTIME << " drawOutsideNetwork veh=" << getID() << " add=" << add << "\n";
+        if (add) {
+            view->addAdditionalGLVisualisation(this);
+        } else {
+            view->removeAdditionalGLVisualisation(this);
+        }
     }
 }
 

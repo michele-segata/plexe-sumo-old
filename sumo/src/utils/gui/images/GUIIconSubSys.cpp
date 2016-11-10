@@ -62,6 +62,13 @@
 #include "locate_poi.xpm"
 #include "locate_poly.xpm"
 
+#include "green_edge.xpm"
+#include "yellow_edge.xpm"
+#include "green_vehicle.xpm"
+#include "yellow_vehicle.xpm"
+#include "green_person.xpm"
+#include "yellow_person.xpm"
+
 #include "colorwheel.xpm"
 #include "savedb.xpm"
 #include "removedb.xpm"
@@ -111,6 +118,9 @@
 #include "undo.xpm"
 #include "redo.xpm"
 #include "netedit.xpm"
+#include "lock.xpm"
+#include "add.xpm"
+#include "remove.xpm"
 
 #include "cut.xpm"
 #include "ext.xpm"
@@ -131,12 +141,13 @@ static const char* empty_xpm[] = {
 // ===========================================================================
 // static member variable definitions
 // ===========================================================================
-GUIIconSubSys* GUIIconSubSys::myInstance = 0;
 
+GUIIconSubSys* GUIIconSubSys::myInstance = 0;
 
 // ===========================================================================
 // member definitions
 // ===========================================================================
+
 GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     // build icons
     myIcons[ICON_APP] = new FXXPMIcon(a, document_xpm);
@@ -144,6 +155,7 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     myIcons[ICON_OPEN_CONFIG] = new FXXPMIcon(a, fileopen_xpm);
     myIcons[ICON_OPEN_NET] = new FXXPMIcon(a, netopen_xpm);
     myIcons[ICON_OPEN_SHAPES] = new FXXPMIcon(a, shapeopen_xpm);
+    myIcons[ICON_OPEN_ADDITIONALS] = new FXXPMIcon(a, shapeopen_xpm);
     myIcons[ICON_RELOAD] = new FXXPMIcon(a, reload_xpm);
     myIcons[ICON_SAVE] = new FXXPMIcon(a, filesave_xpm);
     myIcons[ICON_CLOSE] = 0;//new FXXPMIcon(a, close);
@@ -173,6 +185,13 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     myIcons[ICON_LOCATEADD] = new FXXPMIcon(a, locate_add_xpm);
     myIcons[ICON_LOCATEPOI] = new FXXPMIcon(a, locate_poi_xpm);
     myIcons[ICON_LOCATEPOLY] = new FXXPMIcon(a, locate_poly_xpm);
+
+    myIcons[ICON_GREENEDGE] = new FXXPMIcon(a, green_edge_xpm);
+    myIcons[ICON_GREENVEHICLE] = new FXXPMIcon(a, green_vehicle_xpm);
+    myIcons[ICON_GREENPERSON] = new FXXPMIcon(a, green_person_xpm);
+    myIcons[ICON_YELLOWEDGE] = new FXXPMIcon(a, yellow_edge_xpm);
+    myIcons[ICON_YELLOWVEHICLE] = new FXXPMIcon(a, yellow_vehicle_xpm);
+    myIcons[ICON_YELLOWPERSON] = new FXXPMIcon(a, yellow_person_xpm);
 
     myIcons[ICON_COLORWHEEL] = new FXXPMIcon(a, colorwheel_xpm);
     myIcons[ICON_SAVEDB] = new FXXPMIcon(a, savedb_xpm);
@@ -217,6 +236,9 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     myIcons[ICON_UNDO]    = new FXXPMIcon(a, undo_xpm);
     myIcons[ICON_REDO]    = new FXXPMIcon(a, redo_xpm);
     myIcons[ICON_NETEDIT] = new FXXPMIcon(a, netedit_xpm);
+    myIcons[ICON_LOCK]    = new FXXPMIcon(a, lock_xpm);
+    myIcons[ICON_ADD]     = new FXXPMIcon(a, add_xpm);
+    myIcons[ICON_REMOVE]  = new FXXPMIcon(a, remove_xpm);
 
     myIcons[ICON_EXT]    = new FXXPMIcon(a, ext_xpm);
     myIcons[ICON_CUT_SWELL]    = new FXXPMIcon(a, cut_xpm);
@@ -255,7 +277,6 @@ GUIIconSubSys::close() {
     delete myInstance;
     myInstance = 0;
 }
-
 
 
 /****************************************************************************/
