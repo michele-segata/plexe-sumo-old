@@ -95,8 +95,8 @@ GNENet::GNENet(NBNetBuilder* netBuilder) :
     GUIGlObject(GLO_NETWORK, ""),
     myUpdateTarget(0),
     myNetBuilder(netBuilder),
-    myEdges(),
     myJunctions(),
+    myEdges(),
     myEdgeIDSupplier("gneE", netBuilder->getEdgeCont().getAllNames()),
     myJunctionIDSupplier("gneJ", netBuilder->getNodeCont().getAllNames()),
     myShapeContainer(myGrid),
@@ -417,7 +417,7 @@ GNENet::splitEdge(GNEEdge* edge, const Position& pos, GNEUndoList* undoList, GNE
     int posBase = 0;
     std::string baseName = edge->getMicrosimID();
     if (edge->wasSplit()) {
-        size_t sep_index = baseName.rfind('.');
+        const std::string::size_type sep_index = baseName.rfind('.');
         if (sep_index != std::string::npos) { // edge may have been renamed in between
             std::string posString = baseName.substr(sep_index + 1);
             try {
@@ -1047,7 +1047,7 @@ GNENet::insertAdditional(GNEAdditional* additional, bool hardFail) {
     // Check if additional element exists before insertion
     if (myAdditionals.find(std::pair<std::string, SumoXMLTag>(additional->getID(), additional->getTag())) != myAdditionals.end()) {
         // Throw exception only if hardFail is enabled
-        if(hardFail) {
+        if (hardFail) {
             throw ProcessError("additional element with ID='" + additional->getID() + "' already exist");
         }
     } else {
@@ -1200,7 +1200,6 @@ GNENet::deleteSingleJunction(GNEJunction* junction) {
 
 void
 GNENet::deleteSingleEdge(GNEEdge* edge) {
-
     myGrid.removeAdditionalGLObject(edge);
     myEdges.erase(edge->getMicrosimID());
     myNetBuilder->getEdgeCont().extract(
@@ -1244,7 +1243,7 @@ GNENet::computeAndUpdate(OptionsCont& oc) {
     myNetBuilder->compute(oc, liveExplicitTurnarounds, false);
     // update precomputed lane geometries
     for (GNEEdges::const_iterator it = myEdges.begin(); it != myEdges.end(); it++) {
-        it->second->updateLaneGeometriesAndAdditionals();
+        it->second->updateLaneGeometries();
     }
     for (GNEJunctions::const_iterator it = myJunctions.begin(); it != myJunctions.end(); it++) {
         it->second->setLogicValid(true);

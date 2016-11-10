@@ -132,8 +132,8 @@ public:
     }
 
 
-    size_t size() const {
-        return myString2T.size();
+    int size() const {
+        return (int)myString2T.size();
     }
 
 

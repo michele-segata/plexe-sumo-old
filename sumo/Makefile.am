@@ -41,6 +41,7 @@ man:
 	rm -rf docs/man
 	mkdir docs/man
 	help2man -N -n "A microscopic road traffic simulation" bin/sumo > docs/man/sumo.1
+	help2man -N -n "GUI version of the simulation SUMO" bin/sumo-gui > docs/man/sumo-gui.1
 	help2man -N -n "Builds vehicle routes for SUMO using detector values" bin/dfrouter > docs/man/dfrouter.1
 	help2man -N -n "Shortest path router and DUE computer for the microscopic road traffic simulation SUMO" bin/duarouter > docs/man/duarouter.1
 	help2man -N -n "Router for the microscopic road traffic simulation SUMO based on junction turning ratios" bin/jtrrouter > docs/man/jtrrouter.1
@@ -64,7 +65,7 @@ dist-hook:
 	    rm -rf $(abs_distdir)/tests ; \
 	    tools/extractTest.py -i -f tests/examples.txt -o $(abs_distdir)/docs ; \
 	    find build -regex ".*\.\(vcxproj\|vcxproj\.filters\|props\|sln\|spec\)" -print0 | xargs -0 cp --parents --target-directory $(abs_distdir) ; \
-	    find data -regex ".*\.\(xsd\|xml\|csv\|veh\)" -print0 | xargs -0 cp --parents --target-directory $(abs_distdir) ; \
+	    find data -regex ".*\.\(xsd\|xml\|csv\|veh\|obj\|mtl\)" -print0 | xargs -0 cp --parents --target-directory $(abs_distdir) ; \
 	    ( svn export --force tools $(distdir)/tools && cd $(distdir) && find tools -type f -print0 > ../tools_filelist; true ) ; \
 	    xargs -0 cp --parents --target-directory $(abs_distdir) < tools_filelist ; \
 	    find $(abs_distdir)/tools -name  "*.jar" | xargs rm ; \

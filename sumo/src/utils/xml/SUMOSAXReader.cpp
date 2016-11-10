@@ -143,7 +143,7 @@ SUMOSAXReader::parseFirst(std::string systemID) {
         elems.clear();
         *myBinaryInput >> elems;
         // !!! check edges here
-        std::vector< std::vector<unsigned int> > followers;
+        std::vector< std::vector<int> > followers;
         *myBinaryInput >> followers;
         // !!! check followers here
         return parseNext();

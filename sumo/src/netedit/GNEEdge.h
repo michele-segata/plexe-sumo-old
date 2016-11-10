@@ -61,10 +61,10 @@ public:
     /// @brief Definition of the lane's positions vector
     typedef std::vector<GNELane*> LaneVector;
 
-    /// @brief Definition of the additionals list
+    /// @brief Definition of the additionals vector
     typedef std::vector<GNEAdditional*> AdditionalVector;
 
-    /// @brief Definition of the additionalSets list
+    /// @brief Definition of the additionalSets vector
     typedef std::vector<GNEAdditionalSet*> AdditionalSetVector;
 
     /**@brief Constructor.
@@ -194,7 +194,7 @@ public:
      * let the lanes recompute their precomputed geometry information
      * (needed after computing junction shapes)
      */
-    void updateLaneGeometriesAndAdditionals();
+    void updateLaneGeometries();
 
     /// @brief copy edge attributes from tpl
     void copyTemplate(GNEEdge* tpl, GNEUndoList* undolist);
@@ -255,10 +255,10 @@ protected:
     /// @brief modification status of the connections
     std::string myConnectionStatus;
 
-    /// @brief list with the additonals vinculated with this edge
+    /// @brief vector with the additonals vinculated with this edge
     AdditionalVector myAdditionals;
 
-    /// @brief list with the additonalSets vinculated with this edge
+    /// @brief vector with the additonalSets vinculated with this edge
     AdditionalSetVector myAdditionalSets;
 
 private:
@@ -277,7 +277,7 @@ private:
      * with this number are restored. If none are found the attributes for the
      * leftmost lane are copied
      */
-    void setNumLanes(unsigned int numLanes, GNEUndoList* undoList);
+    void setNumLanes(int numLanes, GNEUndoList* undoList);
 
     /// @brief@brief increase number of lanes by one use the given attributes and restore the GNELane
     void addLane(GNELane* lane, const NBEdge::Lane& laneAttrs);
@@ -286,10 +286,10 @@ private:
     void removeLane(GNELane* lane);
 
     /// @brief adds a connection
-    void addConnection(unsigned int fromLane, const std::string& toEdgeID, unsigned int toLane, bool mayPass);
+    void addConnection(int fromLane, const std::string& toEdgeID, int toLane, bool mayPass);
 
     /// @brief removes a connection
-    void removeConnection(unsigned int fromLane, const std::string& toEdgeID, unsigned int toLane);
+    void removeConnection(int fromLane, const std::string& toEdgeID, int toLane);
 };
 
 

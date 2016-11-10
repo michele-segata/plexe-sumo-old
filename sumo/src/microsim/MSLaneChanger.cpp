@@ -610,7 +610,7 @@ MSLaneChanger::checkChange(
         const SUMOReal space2change = avgSpeed * STEPS2TIME(MSGlobals::gLaneChangeDuration);
         // for finding turns it doesn't matter whether we look along the current lane or the target lane
         const std::vector<MSLane*>& bestLaneConts = vehicle->getBestLanesContinuation();
-        unsigned int view = 1;
+        int view = 1;
         MSLane* nextLane = vehicle->getLane();
         MSLinkCont::const_iterator link = MSLane::succLinkSec(*vehicle, view, *nextLane, bestLaneConts);
         while (!nextLane->isLinkEnd(link) && seen <= space2change) {
@@ -681,8 +681,10 @@ MSLaneChanger::checkChange(
         }
     }
 #ifndef NO_TRACI
-    // let TraCI influence the wish to change lanes and the security to take
+#ifdef DEBUG_CHECK_CHANGE
     const int oldstate = state;
+#endif
+    // let TraCI influence the wish to change lanes and the security to take
     state = vehicle->influenceChangeDecision(state);
 #endif
 #ifdef DEBUG_CHECK_CHANGE

@@ -49,7 +49,7 @@ public:
     /** @brief Constructor
      * @exception IOError Should not be thrown by this implementation
      */
-    OutputDevice_String(const bool binary = false, const unsigned int defaultIndentation = 0);
+    OutputDevice_String(const bool binary = false, const int defaultIndentation = 0);
 
 
     /// @brief Destructor
@@ -59,7 +59,7 @@ public:
     /** @brief Returns the current content as a string
      * @return The content as string
      */
-    std::string getString();
+    std::string getString() const;
 
 protected:
     /// @name Methods that override/implement OutputDevice-methods

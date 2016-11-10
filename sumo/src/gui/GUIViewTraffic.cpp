@@ -97,7 +97,7 @@ GUIViewTraffic::GUIViewTraffic(
     GUINet& net, FXGLVisual* glVis,
     FXGLCanvas* share) :
     GUISUMOAbstractView(p, app, parent, net.getVisualisationSpeedUp(), glVis, share),
-    myTrackedID(-1)
+    myTrackedID(GUIGlObject::INVALID_ID)
 #ifdef HAVE_FFMPEG
     , myCurrentVideo(0)
 #endif
@@ -249,11 +249,11 @@ GUIViewTraffic::startTrack(int id) {
 
 void
 GUIViewTraffic::stopTrack() {
-    myTrackedID = -1;
+    myTrackedID = GUIGlObject::INVALID_ID;
 }
 
 
-int
+GUIGlID
 GUIViewTraffic::getTrackedID() const {
     return myTrackedID;
 }
@@ -285,7 +285,7 @@ GUIViewTraffic::onGamingClick(Position pos) {
         const std::vector<MSTrafficLightLogic*> logics = vars.getAllLogics();
         if (logics.size() > 1) {
             MSSimpleTrafficLightLogic* l = (MSSimpleTrafficLightLogic*) logics[0];
-            for (unsigned int i = 0; i < logics.size() - 1; ++i) {
+            for (int i = 0; i < (int)logics.size() - 1; ++i) {
                 if (minTll->getProgramID() == logics[i]->getProgramID()) {
                     l = (MSSimpleTrafficLightLogic*) logics[i + 1];
                     tlsControl.switchTo(minTll->getID(), l->getProgramID());
@@ -310,7 +310,7 @@ GUIViewTraffic::getCurrentTimeStep() const {
 GUILane*
 GUIViewTraffic::getLaneUnderCursor() {
     if (makeCurrent()) {
-        unsigned int id = getObjectUnderCursor();
+        int id = getObjectUnderCursor();
         if (id != 0) {
             GUIGlObject* o = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
             if (o != 0) {

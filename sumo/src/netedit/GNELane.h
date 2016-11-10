@@ -62,7 +62,6 @@ public:
     /// @brief Definition of the additionalSets vector
     typedef std::vector<GNEAdditionalSet*> AdditionalSetVector;
 
-
     /**@brief Constructor
      * @param[in] idStorage The storage of gl-ids to get the one for this lane representation from
      * @param[in] the edge this lane belongs to
@@ -126,15 +125,15 @@ public:
     /// @brief returns the vector with the shape lengths
     const std::vector<SUMOReal>& getShapeLengths() const;
 
-    /// @brief returns the boundry (including lanes)
-    Boundary getBoundary() const;
-
     /// @brief update pre-computed geometry information
     //  @note: must be called when geometry changes (i.e. junction moved)
     void updateGeometry();
 
+    /// @brief returns the boundry (including lanes)
+    Boundary getBoundary() const;
+
     /// @brief returns the index of the lane
-    unsigned int getIndex() const;
+    int getIndex() const;
 
     /// @nrief returns the current speed of lane
     SUMOReal getSpeed() const;
@@ -142,7 +141,7 @@ public:
     /* @brief method for setting the index of the lane
      * @param[in] index The new index of lane
      */
-    void setIndex(unsigned int index);
+    void setIndex(int index);
 
     /// @brief returns the parameteric length of the lane
     /// @note is the same as their Edge parent
@@ -280,10 +279,10 @@ private:
     void drawLane2LaneConnections() const;
 
     /// @brief return value for lane coloring according to the given scheme
-    SUMOReal getColorValue(size_t activeScheme) const;
+    SUMOReal getColorValue(int activeScheme) const;
 
     /// @brief sets the color according to the current scheme index and some lane function
-    bool setFunctionalColor(size_t activeScheme) const;
+    bool setFunctionalColor(int activeScheme) const;
 
     /// @brief sets multiple colors according to the current scheme index and some lane function
     bool setMultiColor(const GUIColorer& c) const;
@@ -297,6 +296,9 @@ private:
     /// @brief draw crossties for railroads
     /// @todo: XXX This duplicates the code of GUILane::drawCrossties and needs to be
     void drawCrossties(SUMOReal length, SUMOReal spacing, SUMOReal halfWidth) const;
+
+    /// @brief direction indicators for lanes
+    void drawDirectionIndicators() const;
 };
 
 

@@ -275,8 +275,9 @@ private:
     FXCheckButton* myLaneScaleInterpolation;
 
     FXCheckButton* myShowLaneBorders, *myShowLaneDecals, *myShowRails,
-                   *myHideMacroConnectors;
+                   *myHideMacroConnectors, *myShowLaneDirection, *myShowSublanes;
     FXRealSpinDial* myLaneWidthUpscaleDialer;
+    FXRealSpinDial* myLaneMinWidthDialer;
 
     FXComboBox* myVehicleColorMode, *myVehicleShapeDetail;
     FXVerticalFrame* myVehicleColorSettingFrame;
@@ -321,7 +322,7 @@ private:
                *myVehicleNamePanel, *myPersonNamePanel, *myContainerNamePanel,
                *myAddNamePanel, *myPOINamePanel, *myPolyNamePanel, *myPOITypePanel, *myPolyTypePanel;
 
-    SizePanel* myVehicleSizePanel, *myPersonSizePanel, *myContainerSizePanel, *myPOISizePanel, *myPolySizePanel, *myAddSizePanel;
+    SizePanel* myVehicleSizePanel, *myPersonSizePanel, *myContainerSizePanel, *myPOISizePanel, *myPolySizePanel, *myAddSizePanel, *myJunctionSizePanel;
 
 
     // load/save-menu

@@ -80,6 +80,13 @@ main(int argc, char** argv) {
     try {
         // initialise subsystems
         XMLSubSys::init();
+        MSFrame::fillOptions();
+        OptionsIO::setArgs(argc, argv);
+        OptionsIO::getOptions(true);
+        if (oc.processMetaOptions(false)) {
+            SystemFrame::close();
+            return 0;
+        }
         // Make application
         FXApp application("SUMO GUISimulation", "DLR");
         // Open display
@@ -99,7 +106,6 @@ main(int argc, char** argv) {
         application.create();
         // Load configuration given on command line
         if (argc > 1) {
-            OptionsIO::setArgs(argc, argv);
             window->loadOnStartup();
         }
         // Run

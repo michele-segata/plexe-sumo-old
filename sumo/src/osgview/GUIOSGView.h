@@ -152,7 +152,10 @@ public:
     void showViewportEditor();
 
     /// applies the given viewport settings
-    void setViewport(const Position& lookFrom, const Position& lookAt);
+    void setViewportFromTo(const Position& lookFrom, const Position& lookAt);
+
+    ///@brief copy the viewport to the given view
+    void copyViewportTo(GUISUMOAbstractView* view);
 
     /** @brief Starts vehicle tracking
      * @param[in] id The glID of the vehicle to track
@@ -168,7 +171,7 @@ public:
     /** @brief Returns the id of the tracked vehicle (-1 if none)
      * @return The glID of the vehicle to track
      */
-    int getTrackedID() const;
+    GUIGlID getTrackedID() const;
 
     bool setColorScheme(const std::string& name);
 

@@ -88,6 +88,7 @@ class GNENet : public GUIGlObject {
     /// @brief declare friend class
     friend class GNEChange_Junction;
     friend class GNEChange_Edge;
+    friend class GNEChange_Connection;
 
 public:
     /// @brief color of selection
@@ -419,7 +420,7 @@ public:
      */
     int getNumberOfAdditionals(SumoXMLTag type = SUMO_TAG_NOTHING);
 
-private:
+protected:
     /// @brief the rtree which contains all GUIGlObjects (so named for historical reasons)
     SUMORTree myGrid;
 
@@ -431,16 +432,16 @@ private:
 
     /// @name internal GNE components
     /// @{
-    typedef std::map<std::string, GNEEdge*> GNEEdges;
     typedef std::map<std::string, GNEJunction*> GNEJunctions;
+    typedef std::map<std::string, GNEEdge*> GNEEdges;
     typedef std::map<std::pair<std::string, SumoXMLTag>, GNEAdditional*> GNEAdditionals;
     // @}
 
-    /// @brief map with the name and pointer to edges of net
-    GNEEdges myEdges;
-
     /// @brief map with the name and pointer to junctions of net
     GNEJunctions myJunctions;
+
+    /// @brief map with the name and pointer to edges of net
+    GNEEdges myEdges;
 
     /// @brief map with the name and pointer to additional elements of net
     GNEAdditionals myAdditionals;
@@ -472,6 +473,8 @@ private:
 
     /// @brief inserts a single edge into the net and into the underlying netbuild-container
     void insertEdge(GNEEdge* edge);
+
+
 
     /// @brief registers a junction with GNENet containers
     GNEJunction* registerJunction(GNEJunction* junction);

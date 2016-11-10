@@ -392,7 +392,7 @@ GNEViewNet::onLeftBtnPress(FXObject* obj, FXSelector sel, void* data) {
     setFocus();
     // interpret object under curser
     if (makeCurrent()) {
-        unsigned int id = getObjectUnderCursor();
+        int id = getObjectUnderCursor();
         GUIGlObject* pointed = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
         GUIGlObjectStorage::gIDStorage.unblockObject(id);
         GNEJunction* pointed_junction = 0;
@@ -455,7 +455,7 @@ GNEViewNet::onLeftBtnPress(FXObject* obj, FXSelector sel, void* data) {
                             if (newEdge) {
                                 if (myAutoCreateOppositeEdge->getCheck()) {
                                     myNet->createEdge(
-                                        pointed_junction, myCreateEdgeSource, myViewParent->getInspectorFrame()->getEdgeTemplate(), myUndoList);
+                                        pointed_junction, myCreateEdgeSource, myViewParent->getInspectorFrame()->getEdgeTemplate(), myUndoList, "-" + newEdge->getNBEdge()->getID());
                                 }
                                 myCreateEdgeSource->unMarkAsCreateEdgeSource();
                                 if (myUndoList->hasCommandGroup()) {
@@ -688,7 +688,7 @@ GNEViewNet::onDoubleClicked(FXObject*, FXSelector, void*) {
         setFocus();
         // interpret object under curser
         if (makeCurrent()) {
-            unsigned int id = getObjectUnderCursor();
+            int id = getObjectUnderCursor();
             GUIGlObject* pointed = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
             GUIGlObjectStorage::gIDStorage.unblockObject(id);
             // If there are a pointed element an is an additional
@@ -869,7 +869,7 @@ GNEJunction*
 GNEViewNet::getJunctionAtCursorPosition(Position& /* pos */) {
     GNEJunction* junction = 0;
     if (makeCurrent()) {
-        unsigned int id = getObjectAtPosition(myPopupSpot);
+        int id = getObjectAtPosition(myPopupSpot);
         GUIGlObject* pointed = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
         GUIGlObjectStorage::gIDStorage.unblockObject(id);
         if (pointed) {
@@ -892,7 +892,7 @@ GNEEdge*
 GNEViewNet::getEdgeAtCursorPosition(Position& /* pos */) {
     GNEEdge* edge = 0;
     if (makeCurrent()) {
-        unsigned int id = getObjectAtPosition(myPopupSpot);
+        int id = getObjectAtPosition(myPopupSpot);
         GUIGlObject* pointed = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
         GUIGlObjectStorage::gIDStorage.unblockObject(id);
         if (pointed) {
@@ -916,7 +916,7 @@ GNELane*
 GNEViewNet::getLaneAtCurserPosition(Position& /* pos */) {
     GNELane* lane = 0;
     if (makeCurrent()) {
-        unsigned int id = getObjectAtPosition(myPopupSpot);
+        int id = getObjectAtPosition(myPopupSpot);
         GUIGlObject* pointed = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
         GUIGlObjectStorage::gIDStorage.unblockObject(id);
         if (pointed) {
@@ -1143,7 +1143,6 @@ GNEViewNet::setEditMode(EditMode mode) {
     } else {
         myPreviousEditMode = myEditMode;
         myEditMode = mode;
-        myVisualizationSettings->laneColorer.setActive(0); //default
         switch (mode) {
             case GNE_MODE_CONNECT:
             case GNE_MODE_TLS:

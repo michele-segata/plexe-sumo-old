@@ -810,7 +810,7 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
             GUISettingsHandler settings(ec->mySettingsFile);
             std::string settingsName = settings.addSettings(view);
             view->addDecals(settings.getDecals());
-            settings.setViewport(view);
+            settings.applyViewport(view);
             settings.setSnapshots(view);
         }
         // set network name on the caption
@@ -820,7 +820,7 @@ GNEApplicationWindow::handleEvent_NetworkLoaded(GUIEvent* e) {
         if (ec->myViewportFromRegistry) {
             Position off, p;
             off.set(getApp()->reg().readIntEntry("viewport", "x"), getApp()->reg().readIntEntry("viewport", "y"), getApp()->reg().readIntEntry("viewport", "z"));
-            getView()->setViewport(off, p);
+            getView()->setViewportFromTo(off, p);
         }
     }
     getApp()->endWaitCursor();
@@ -904,11 +904,10 @@ void
 GNEApplicationWindow::closeAllWindows() {
     myTrackerLock.lock();
     // remove trackers and other external windows
-    size_t i;
-    for (i = 0; i < mySubWindows.size(); ++i) {
+    for (int i = 0; i < (int)mySubWindows.size(); ++i) {
         mySubWindows[i]->destroy();
     }
-    for (i = 0; i < myTrackerWindows.size(); ++i) {
+    for (int i = 0; i < (int)myTrackerWindows.size(); ++i) {
         myTrackerWindows[i]->destroy();
     }
     // reset the caption
@@ -1260,7 +1259,7 @@ Position
 GNEApplicationWindow::GNEShapeHandler::getLanePos(const std::string& poiID, const std::string& laneID, SUMOReal lanePos) {
     std::string edgeID = laneID;
     int lane = 0;
-    size_t underscore = laneID.rfind('_');
+    const std::string::size_type underscore = laneID.rfind('_');
 
     if (underscore != std::string::npos) {
         edgeID = laneID.substr(0, underscore);

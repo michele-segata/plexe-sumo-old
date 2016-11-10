@@ -126,9 +126,9 @@ NIVissimNodeDef::dict_assignConnectionsToNodes() {
 */
 
 
-size_t
+int
 NIVissimNodeDef::dictSize() {
-    return myDict.size();
+    return (int)myDict.size();
 }
 
 

@@ -40,7 +40,7 @@
 // ===========================================================================
 // method definitions
 // ===========================================================================
-OutputDevice_String::OutputDevice_String(const bool binary, const unsigned int defaultIndentation)
+OutputDevice_String::OutputDevice_String(const bool binary, const int defaultIndentation)
     : OutputDevice(binary, defaultIndentation) {
     setPrecision();
     myStream << std::setiosflags(std::ios::fixed);
@@ -52,7 +52,7 @@ OutputDevice_String::~OutputDevice_String() {
 
 
 std::string
-OutputDevice_String::getString() {
+OutputDevice_String::getString() const {
     return myStream.str();
 }
 

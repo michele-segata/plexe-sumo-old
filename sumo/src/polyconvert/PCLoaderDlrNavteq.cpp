@@ -208,9 +208,9 @@ PCLoaderDlrNavteq::loadPolyFile(const std::string& file,
         std::string type = values[2];
         std::string name = values[3];
         PositionVector vec;
-        size_t index = 4;
+        int index = 4;
         // now collect the positions
-        while (values.size() > index) {
+        while ((int)values.size() > index) {
             std::string xpos = values[index];
             std::string ypos = values[index + 1];
             index += 2;

@@ -234,6 +234,7 @@ GNELane::drawLane2LaneConnections() const {
     glPopMatrix();
 }
 
+
 void
 GNELane::drawGL(const GUIVisualizationSettings& s) const {
     glPushMatrix();
@@ -243,9 +244,11 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
     const bool selected = gSelected.isSelected(getType(), getGlID());
     if (mySpecialColor != 0) {
         GLHelper::setColor(*mySpecialColor);
-    } else if (selected) {
+    } else if (selected && s.laneColorer.getActive() != 1) {
+        // override with special colors (unless the color scheme is based on selection)
         GLHelper::setColor(GNENet::selectedLaneColor);
-    } else if (selectedEdge) {
+    } else if (selectedEdge && s.laneColorer.getActive() != 1) {
+        // override with special colors (unless the color scheme is based on selection)
         GLHelper::setColor(GNENet::selectionColor);
     } else {
         const GUIColorer& c = s.laneColorer;
@@ -256,9 +259,20 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
 
     // draw lane
     // check whether it is not too small
+
+
     const SUMOReal selectionScale = selected || selectedEdge ? s.selectionScale : 1;
-    const SUMOReal exaggeration = selectionScale * s.laneWidthExaggeration; // * s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
-    if (s.scale * exaggeration < 1.) {
+    SUMOReal exaggeration = selectionScale * s.laneWidthExaggeration; // * s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
+    // XXX apply usefull scale values
+    //exaggeration *= s.laneScaler.getScheme().getColor(getScaleValue(s.laneScaler.getActive()));
+
+    // recognize full transparency and simply don't draw
+    GLfloat color[4];
+    glGetFloatv(GL_CURRENT_COLOR, color);
+    if (color[3] == 0 || s.scale * exaggeration < s.laneMinSize) {
+        glPopMatrix();
+    } else if (s.scale * exaggeration < 1.) {
+        // draw as lines
         if (myShapeColors.size() > 0) {
             GLHelper::drawLine(getShape(), myShapeColors);
         } else {
@@ -298,6 +312,9 @@ GNELane::drawGL(const GUIVisualizationSettings& s) const {
         // draw ROWs only if target junction has a valid logic)
         if (myParentEdge.getDest()->isLogicValid() && s.scale > 3) {
             drawArrows();
+        }
+        if (s.showLaneDirection) {
+            drawDirectionIndicators();
         }
     }
 
@@ -421,6 +438,11 @@ GNELane::getParameterWindow(GUIMainWindow& app, GUISUMOAbstractView&) {
     return ret;
 }
 
+Boundary
+GNELane::getBoundary() const {
+    return myParentEdge.getNBEdge()->getLaneStruct(myIndex).shape.getBoxBoundary();
+}
+
 
 Boundary
 GNELane::getCenteringBoundary() const {
@@ -446,13 +468,6 @@ const std::vector<SUMOReal>&
 GNELane::getShapeLengths() const {
     return myShapeLengths;
 }
-
-
-Boundary
-GNELane::getBoundary() const {
-    return myParentEdge.getNBEdge()->getLaneStruct(myIndex).shape.getBoxBoundary();
-}
-
 
 void
 GNELane::updateGeometry() {
@@ -481,13 +496,13 @@ GNELane::updateGeometry() {
     }
 }
 
-unsigned int
+int
 GNELane::getIndex() const {
     return myIndex;
 }
 
 void
-GNELane::setIndex(unsigned int index) {
+GNELane::setIndex(int index) {
     myIndex = index;
     setMicrosimID(myParentEdge.getNBEdge()->getLaneID(index));
 }
@@ -687,7 +702,7 @@ GNELane::setAttribute(SumoXMLAttr key, const std::string& value) {
 
 
 bool
-GNELane::setFunctionalColor(size_t activeScheme) const {
+GNELane::setFunctionalColor(int activeScheme) const {
     switch (activeScheme) {
         case 6: {
             SUMOReal hue = GeomHelper::naviDegree(getShape().beginEndAngle()); // [0-360]
@@ -702,7 +717,7 @@ GNELane::setFunctionalColor(size_t activeScheme) const {
 
 bool
 GNELane::setMultiColor(const GUIColorer& c) const {
-    const size_t activeScheme = c.getActive();
+    const int activeScheme = c.getActive();
     myShapeColors.clear();
     switch (activeScheme) {
         case 9: // color by height at segment start
@@ -723,7 +738,7 @@ GNELane::setMultiColor(const GUIColorer& c) const {
 
 
 SUMOReal
-GNELane::getColorValue(size_t activeScheme) const {
+GNELane::getColorValue(int activeScheme) const {
     const SVCPermissions myPermissions = myParentEdge.getNBEdge()->getPermissions(myIndex);
     switch (activeScheme) {
         case 0:
@@ -810,6 +825,32 @@ GNELane::drawCrossties(SUMOReal length, SUMOReal spacing, SUMOReal halfWidth) co
 }
 
 
+void
+GNELane::drawDirectionIndicators() const {
+    const SUMOReal width = myParentEdge.getNBEdge()->getLaneWidth(myIndex);
+    glColor3d(0.3, 0.3, 0.3);
+    glPushMatrix();
+    glTranslated(0, 0, GLO_JUNCTION + 0.1);
+    int e = (int) getShape().size() - 1;
+    for (int i = 0; i < e; ++i) {
+        glPushMatrix();
+        glTranslated(getShape()[i].x(), getShape()[i].y(), 0.1);
+        glRotated(myShapeRotations[i], 0, 0, 1);
+        for (SUMOReal t = 0; t < myShapeLengths[i]; t += width) {
+            const SUMOReal length = MIN2(width * (SUMOReal)0.5, myShapeLengths[i] - t);
+            glBegin(GL_TRIANGLES);
+            glVertex2d(0, -t - length);
+            glVertex2d(-width * 0.25, -t);
+            glVertex2d(+width * 0.25, -t);
+            glEnd();
+        }
+        glPopMatrix();
+    }
+    glPopMatrix();
+}
+
+
+
 const std::string&
 GNELane::getParentName() const {
     return myParentEdge.getMicrosimID();
@@ -824,9 +865,11 @@ GNELane::onDefault(FXObject* obj, FXSelector sel, void* data) {
     return 1;
 }
 
+
 GNEEdge&
 GNELane::getParentEdge() {
     return myParentEdge;
-};
+}
+
 
 /****************************************************************************/

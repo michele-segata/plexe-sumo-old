@@ -272,8 +272,8 @@ public:
      */
     bool willPass(const MSEdge* const edge) const;
 
-    unsigned int getRoutePosition() const;
-    void resetRoutePosition(unsigned int index);
+    int getRoutePosition() const;
+    void resetRoutePosition(int index);
 
     /** @brief Returns the vehicle's internal edge travel times/efforts container
      *
@@ -836,7 +836,7 @@ public:
     /// @}
 
     bool knowsEdgeTest(MSEdge& edge) const;
-    unsigned int getLaneIndex() const;
+    int getLaneIndex() const;
 
     /**
      * Compute distance that will be covered, if the vehicle moves to a given position on its route,
@@ -955,12 +955,12 @@ public:
     /** @brief Returns the number of persons
      * @return The number of passengers on-board
      */
-    unsigned int getPersonNumber() const;
+    int getPersonNumber() const;
 
     /** @brief Returns the number of containers
      * @return The number of contaiers on-board
      */
-    unsigned int getContainerNumber() const;
+    int getContainerNumber() const;
 
     /// @name Access to bool signals
     /// @{
@@ -1154,7 +1154,7 @@ public:
         /** @brief Sets a new lane timeline
          * @param[in] laneTimeLine The time line of lanes to use
          */
-        void setLaneTimeLine(const std::vector<std::pair<SUMOTime, unsigned int> >& laneTimeLine);
+        void setLaneTimeLine(const std::vector<std::pair<SUMOTime, int> >& laneTimeLine);
 
         /// @brief return the current speed mode
         int getSpeedMode() const;
@@ -1179,7 +1179,7 @@ public:
          * @param[in] state The LaneChangeAction flags as computed by the laneChangeModel
          * @return The new LaneChangeAction flags to use
          */
-        int influenceChangeDecision(const SUMOTime currentTime, const MSEdge& currentEdge, const unsigned int currentLaneIndex, int state);
+        int influenceChangeDecision(const SUMOTime currentTime, const MSEdge& currentEdge, const int currentLaneIndex, int state);
 
 
         /** @brief Return the remaining number of seconds of the current
@@ -1271,7 +1271,7 @@ public:
         std::vector<std::pair<SUMOTime, SUMOReal> > mySpeedTimeLine;
 
         /// @brief The lane usage time line to apply
-        std::vector<std::pair<SUMOTime, unsigned int> > myLaneTimeLine;
+        std::vector<std::pair<SUMOTime, int> > myLaneTimeLine;
 
         /// @brief The velocity before influence
         SUMOReal myOriginalSpeed;

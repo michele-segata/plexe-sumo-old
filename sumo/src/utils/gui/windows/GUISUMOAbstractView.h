@@ -108,7 +108,10 @@ public:
     void centerTo(const Boundary& bound);
 
     ///@brief applies the given viewport settings
-    virtual void setViewport(const Position& lookFrom, const Position& lookAt);
+    virtual void setViewportFromTo(const Position& lookFrom, const Position& lookAt);
+
+    ///@brief copy the viewport to the given view
+    virtual void copyViewportTo(GUISUMOAbstractView* view);
 
     ///@brief meter-to-pixels conversion method
     SUMOReal m2p(SUMOReal meter) const;
@@ -236,7 +239,7 @@ public:
     virtual void stopTrack();
 
     ///@brief get tracked id
-    virtual int getTrackedID() const;
+    virtual GUIGlID getTrackedID() const;
 
     ///@brief on gaming click
     virtual void onGamingClick(Position /*pos*/);
@@ -357,7 +360,7 @@ protected:
     std::vector<GUIGlID> getObjectsInBoundary(const Boundary& bound);
 
     ///@brief invokes the tooltip for the given object
-    void showToolTipFor(unsigned int id);
+    void showToolTipFor(const GUIGlID id);
 
 protected:
     ///@brief check whether we can read image data or position with gdal

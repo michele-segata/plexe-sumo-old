@@ -23,15 +23,6 @@
 #ifndef OptionsCont_h
 #define OptionsCont_h
 // ===========================================================================
-// compiler pragmas
-// ===========================================================================
-#ifdef _MSC_VER
-#pragma warning(disable: 4786)
-#pragma warning(disable: 4503)
-#endif
-
-
-// ===========================================================================
 // included modules
 // ===========================================================================
 #ifdef _MSC_VER
@@ -709,7 +700,7 @@ private:
      * @todo Describe parameter
      */
     void splitLines(std::ostream& os, std::string what,
-                    size_t offset, size_t nextOffset);
+                    int offset, int nextOffset);
 
 
 private:

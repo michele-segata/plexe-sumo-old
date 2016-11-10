@@ -19,8 +19,8 @@
 //   (at your option) any later version.
 //
 /****************************************************************************/
-
-#pragma once
+#ifndef MSSOTLTrafficLightLogic_H
+#define MSSOTLTrafficLightLogic_H
 
 // ===========================================================================
 // included modules
@@ -63,7 +63,7 @@ public:
      */
     MSSOTLHiLevelTrafficLightLogic(MSTLLogicControl& tlcontrol,
                                    const std::string& id, const std::string& subid, const Phases& phases,
-                                   unsigned int step, SUMOTime delay,
+                                   int step, SUMOTime delay,
                                    const std::map<std::string, std::string>& parameters);
 
     /**
@@ -79,7 +79,7 @@ public:
      */
     MSSOTLHiLevelTrafficLightLogic(MSTLLogicControl& tlcontrol,
                                    const std::string& id, const std::string& subid, const Phases& phases,
-                                   unsigned int step, SUMOTime delay,
+                                   int step, SUMOTime delay,
                                    const std::map<std::string, std::string>& parameters,
                                    MSSOTLSensors* sensors);
     ~MSSOTLHiLevelTrafficLightLogic();
@@ -124,3 +124,5 @@ private:
     MSSOTLPolicy* currentPolicy;
 
 };
+
+#endif

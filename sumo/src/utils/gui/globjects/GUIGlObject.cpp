@@ -75,6 +75,7 @@ StringBijection<GUIGlObjectType>::Entry GUIGlObject::GUIGlObjectTypeNamesInitial
 
 
 StringBijection<GUIGlObjectType> GUIGlObject::TypeNames(GUIGlObjectTypeNamesInitializer, GLO_MAX);
+const GUIGlID GUIGlObject::INVALID_ID = 0;
 
 // ===========================================================================
 // method definitions
@@ -155,7 +156,7 @@ void
 GUIGlObject::drawGLAdditional(GUISUMOAbstractView* const parent, const GUIVisualizationSettings& s) const {
     UNUSED_PARAMETER(&s);
     UNUSED_PARAMETER(parent);
-};
+}
 
 #ifdef HAVE_OSG
 
