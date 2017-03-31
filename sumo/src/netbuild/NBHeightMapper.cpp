@@ -297,7 +297,8 @@ NBHeightMapper::loadTiff(const std::string& file) {
         return 0;
     }
     const int picSize = xSize * ySize;
-    myRaster = (int16_t*)CPLMalloc(sizeof(int16_t) * picSize);
+    assert(sizeof(double) == 8);
+    myRaster = (double*)CPLMalloc(sizeof(double) * picSize);
     for (int i = 1; i <= poDataset->GetRasterCount(); i++) {
         GDALRasterBand* poBand = poDataset->GetRasterBand(i);
         if (poBand->GetColorInterpretation() != GCI_GrayIndex) {
@@ -305,13 +306,8 @@ NBHeightMapper::loadTiff(const std::string& file) {
             clearData();
             break;
         }
-        if (poBand->GetRasterDataType() != GDT_Int16) {
-            WRITE_ERROR("Unknown data type in " + file + ".");
-            clearData();
-            break;
-        }
         assert(xSize == poBand->GetXSize() && ySize == poBand->GetYSize());
-        if (poBand->RasterIO(GF_Read, 0, 0, xSize, ySize, myRaster, xSize, ySize, GDT_Int16, 0, 0) == CE_Failure) {
+        if (poBand->RasterIO(GF_Read, 0, 0, xSize, ySize, myRaster, xSize, ySize, GDT_Float64, 0, 0) == CE_Failure) {
             WRITE_ERROR("Failure in reading " + file + ".");
             clearData();
             break;

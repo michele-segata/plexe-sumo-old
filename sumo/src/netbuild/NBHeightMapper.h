@@ -141,7 +141,7 @@ private:
     TRIANGLE_RTREE_QUAL myRTree;
 
     /// @brief raster height information in m
-    int16_t* myRaster;
+    double* myRaster;
 
     /// @brief dimensions of one pixel in raster data
     Position mySizeOfPixel;
