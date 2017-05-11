@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Tue May 31 12:55:28 2016 by SUMO Version dev-SVN-r20823
+<!-- generated on Fri Jan  6 15:59:24 2017 by SUMO Version dev-SVN-r22484
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
@@ -31,9 +31,9 @@
 </configuration>
 -->
 
-<detector>
-    <interval begin="0.00" end="900.00" id="end2_0" sampledSeconds="1372.68" density="15.77" occupancy="4.73" waitingTime="0.00" speed="33.93" departed="0" arrived="480" entered="483" left="0"/>
-    <interval begin="900.00" end="1800.00" id="end2_0" sampledSeconds="3041.26" density="34.94" occupancy="10.48" waitingTime="0.00" speed="18.69" departed="131" arrived="579" entered="466" left="0"/>
-    <interval begin="1800.00" end="2700.00" id="end2_0" sampledSeconds="1674.24" density="19.23" occupancy="5.77" waitingTime="0.00" speed="29.14" departed="0" arrived="514" entered="494" left="0"/>
-    <interval begin="2700.00" end="3095.00" id="end2_0" sampledSeconds="655.19" density="17.15" occupancy="5.14" waitingTime="0.00" speed="33.47" departed="0" arrived="227" entered="226" left="0"/>
+<detector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/det_e1meso_file.xsd">
+    <interval begin="0.00" end="900.00" id="end2_0" sampledSeconds="1883.12" density="21.63" occupancy="6.49" waitingTime="0.00" speed="28.72" departed="0" arrived="558" entered="561" left="0"/>
+    <interval begin="900.00" end="1800.00" id="end2_0" sampledSeconds="1922.21" density="22.08" occupancy="6.62" waitingTime="0.00" speed="29.85" departed="0" arrived="594" entered="592" left="0"/>
+    <interval begin="1800.00" end="2700.00" id="end2_0" sampledSeconds="1806.66" density="20.75" occupancy="6.23" waitingTime="0.00" speed="29.34" departed="0" arrived="547" entered="549" left="0"/>
+    <interval begin="2700.00" end="2854.00" id="end2_0" sampledSeconds="333.00" density="22.36" occupancy="6.71" waitingTime="0.00" speed="28.96" departed="0" arrived="101" entered="98" left="0"/>
 </detector>

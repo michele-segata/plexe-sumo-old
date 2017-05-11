@@ -1,5 +1,5 @@
-SUMO duarouter Version svn
- Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de
+SUMO duarouter Version dev-SVN-r22898
+ Copyright (C) 2001-2017 DLR and contributors; http://sumo.dlr.de
 Shortest path router and DUE computer for the microscopic road traffic
   simulation SUMO.
 
@@ -32,6 +32,10 @@ Output Options:
   --output-prefix STR              Prefix which is applied to all output files.
                                      The special string 'TIME' is replaced by
                                      the current time.
+  --precision INT                  Defines the number of digits after the comma
+                                     for floating point output
+  --precision.geo INT              Defines the number of digits after the comma
+                                     for lon,lat output
   -o, --output-file FILE           Write generated routes to FILE
   --vtype-output FILE              Write used vehicle types into separate FILE
   --exit-times                     Write exit times (weights) for each edge
@@ -80,6 +84,8 @@ Processing Options:
   --logit.gamma FLOAT              Use FLOAT as logit's gamma
   --logit.theta FLOAT              Use FLOAT as logit's theta (negative values
                                      mean auto-estimation)
+  --persontrip.walkfactor FLOAT    Use FLOAT as a factor on pedestrian maximum
+                                     speed during intermodal routing
 
 Defaults Options:
   --departlane STR                 Assigns a default depart lane

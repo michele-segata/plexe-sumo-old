@@ -8,7 +8,7 @@
 // Writes the state of the tls to a file (in each second)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,7 +47,7 @@ Command_SaveTLSState::Command_SaveTLSState(const MSTLLogicControl::TLSLogicVaria
         OutputDevice& od)
     : myOutputDevice(od), myLogics(logics) {
     MSNet::getInstance()->getEndOfTimestepEvents()->addEvent(this, 0, MSEventControl::ADAPT_AFTER_EXECUTION);
-    myOutputDevice.writeXMLHeader("tls-states");
+    myOutputDevice.writeXMLHeader("tls-states", "tlsstate_file.xsd");
 }
 
 

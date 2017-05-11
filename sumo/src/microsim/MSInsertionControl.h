@@ -10,7 +10,7 @@
 // Inserts vehicles into the network when their departure time is reached
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -215,7 +215,7 @@ private:
     SUMOTime myMaxDepartDelay;
 
     /// @brief Whether an edge on which a vehicle could not depart should be ignored in the same step
-    bool myCheckEdgesOnce;
+    bool myEagerInsertionCheck;
 
     /// @brief Storage for maximum vehicle number
     int myMaxVehicleNumber;

@@ -9,7 +9,7 @@
 // A container for traffic light definitions and built programs
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -170,6 +170,9 @@ NBTrafficLightLogicCont::computeLogics(OptionsCont& oc) {
 
 bool
 NBTrafficLightLogicCont::computeSingleLogic(OptionsCont& oc, NBTrafficLightDefinition* def) {
+    if (def->getNodes().size() == 0) {
+        return false;
+    }
     const std::string& id = def->getID();
     const std::string& programID = def->getProgramID();
     // build program
@@ -293,6 +296,7 @@ NBTrafficLightLogicCont::setTLControllingInformation(const NBEdgeCont& ec, const
             NBOwnTLDef dummy(n->getID(), n, 0, TLTYPE_STATIC);
             dummy.setParticipantsInformation();
             dummy.setTLControllingInformation();
+            n->setCrossingTLIndices(dummy.getID(), (int)dummy.getControlledLinks().size());
             n->removeTrafficLight(&dummy);
         }
     }

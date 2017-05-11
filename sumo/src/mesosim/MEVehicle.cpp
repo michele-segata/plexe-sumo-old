@@ -7,7 +7,7 @@
 // A vehicle from the mesoscopic point of view
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -177,7 +177,8 @@ MEVehicle::isParking() const {
 
 
 bool
-MEVehicle::replaceRoute(const MSRoute* newRoute, bool onInit, int offset) {
+MEVehicle::replaceRoute(const MSRoute* newRoute, bool onInit, int offset, bool addStops) {
+    UNUSED_PARAMETER(addStops); // @todo recheck!
     const ConstMSEdgeVector& edges = newRoute->getEdges();
     // assert the vehicle may continue (must not be "teleported" or whatever to another position)
     if (!onInit && !newRoute->contains(*myCurrEdge)) {
@@ -265,11 +266,11 @@ MEVehicle::mayProceed() const {
 
 
 SUMOReal
-MEVehicle::getCurrentTLSPenaltySeconds() const {
+MEVehicle::getCurrentLinkPenaltySeconds() const {
     if (mySegment == 0) {
         return 0;
     } else {
-        return STEPS2TIME(mySegment->getTLSPenalty(this));
+        return STEPS2TIME(mySegment->getLinkPenalty(this));
     }
 }
 

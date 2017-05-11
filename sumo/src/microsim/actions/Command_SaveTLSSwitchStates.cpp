@@ -8,7 +8,7 @@
 // Writes the switch times of a tls into a file when the tls switches
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -47,7 +47,7 @@ Command_SaveTLSSwitchStates::Command_SaveTLSSwitchStates(const MSTLLogicControl:
         OutputDevice& od)
     : myOutputDevice(od), myLogics(logics) {
     MSNet::getInstance()->getEndOfTimestepEvents()->addEvent(this, 0, MSEventControl::ADAPT_AFTER_EXECUTION);
-    myOutputDevice.writeXMLHeader("tls-switch-states");
+    myOutputDevice.writeXMLHeader("tls-states", "tlsstate_file.xsd");
 }
 
 

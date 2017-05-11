@@ -1,5 +1,5 @@
-SUMO od2trips Version svn
- Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de
+SUMO od2trips Version dev-SVN-r22796
+ Copyright (C) 2001-2017 DLR and contributors; http://sumo.dlr.de
 Importer of O/D-matrices for the road traffic simulation SUMO.
 
 Usage: od2trips [OPTION]*
@@ -23,8 +23,14 @@ Output Options:
   --output-prefix STR              Prefix which is applied to all output files.
                                      The special string 'TIME' is replaced by
                                      the current time.
+  --precision INT                  Defines the number of digits after the comma
+                                     for floating point output
+  --precision.geo INT              Defines the number of digits after the comma
+                                     for lon,lat output
   -o, --output-file FILE           Writes trip definitions into FILE
   --flow-output FILE               Writes flow definitions into FILE
+  --flow-output.probability        Writes probabilistic flow instead of evenly
+                                     spaced flow
   --ignore-vehicle-type            Does not save vtype information
 
 Time Options:

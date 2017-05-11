@@ -10,7 +10,7 @@
 // The main window of the SUMO-gui.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -177,6 +177,12 @@ public:
 
     /// @brief Toggle listing of internal structures
     long onCmdListInternal(FXObject*, FXSelector, void*);
+
+    /// @brief Toggle listing of parking vehicles
+    long onCmdListParking(FXObject*, FXSelector, void*);
+
+    /// @brief Toggle listing of teleporting vehicles
+    long onCmdListTeleporting(FXObject*, FXSelector, void*);
 
     /// @brief Shows the about dialog
     long onCmdAbout(FXObject*, FXSelector, void*);

@@ -1,0 +1,23 @@
+# create crossing
+create
+
+# delete crossing
+delete
+
+# delete crossing, undo, but not redo (net must be the same as original)
+delete_noredo
+
+# delete junction, undo, but not redo (net must be the same as original)
+delete_junction
+
+# delete junction with TLS
+delete_TLS
+
+# load small net with crossings
+load_small
+
+# load big net with crossigns
+load_big
+
+#inspect crossing
+inspect

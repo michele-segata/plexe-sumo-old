@@ -11,7 +11,7 @@
 // A class that stores and controls tls and switching of their programs
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -102,7 +102,7 @@ public:
 
         /** @brief Verifies traffic lights loaded from the network
          *
-         * Comparse the phase state sizes of each phase with the accoring tls' number
+         * Compare the phase state sizes of each phase with the according tls' number
          *  of controlled links.
          * @return Whether all tls programs are valid
          */

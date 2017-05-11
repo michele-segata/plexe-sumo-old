@@ -13,7 +13,7 @@ Some paths especially for the names of the texttest output dirs are
 hard coded into this script.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@ import shutil
 import datetime
 import sys
 
+import runSikulixServer
 import status
 import wix
 
@@ -106,6 +107,9 @@ def runTests(options, env, svnrev, debugSuffix=""):
                         stdout=log, stderr=subprocess.STDOUT, shell=True)
         subprocess.call([ttBin, "-a", "sumo.gui"] + fullOpt, env=env,
                         stdout=log, stderr=subprocess.STDOUT, shell=True)
+        # Check if sikulixServer is already opened
+        # if runSikulixServer.checkStatus() == False :
+        #    runSikulixServer.startSikulixServer()
         subprocess.call([ttBin, "-a", "netedit.gui"] + fullOpt, env=env,
                         stdout=log, stderr=subprocess.STDOUT, shell=True)
     subprocess.call([ttBin, "-b", env["FILEPREFIX"], "-coll"], env=env,

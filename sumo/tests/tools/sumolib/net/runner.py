@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 @file    runner.py
-@author  Jakob Erdmann Krajzewicz
+@author  Jakob Erdmann
 @version $Id$
 
 This script tests sumolib functions
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -24,6 +24,14 @@ import sys
 sys.path.append(os.path.join(os.environ['SUMO_HOME'], 'tools'))
 import sumolib.net
 
-net = sumolib.net.readNet(sys.argv[1])
+net = sumolib.net.readNet(sys.argv[1], withInternal=True)
 lane = net.getLane("SC_0")
+
+
 print(map(str, lane.getOutgoing()))
+
+internal_edge = net.getEdge(":C_0")
+internal_lane = net.getLane(":C_0_0")
+assert internal_edge.getFunction() == 'internal'
+assert internal_edge.isInternal()
+assert internal_lane.isInternal()

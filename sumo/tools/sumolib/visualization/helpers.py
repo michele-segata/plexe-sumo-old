@@ -9,7 +9,7 @@
 Helper methods for plotting
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2013-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2013-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -188,7 +188,7 @@ def plotNet(net, colors, widths, options):
     for e in net._edges:
         gx = []
         gy = []
-        for s in e._shape:
+        for s in e.getShape():
             gx.append(s[0])
             gy.append(s[1])
         if e._id in colors:

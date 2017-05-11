@@ -1,5 +1,5 @@
-SUMO netgenerate Version dev-SVN-r21738
- Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de
+SUMO netgenerate Version dev-SVN-r22796
+ Copyright (C) 2001-2017 DLR and contributors; http://sumo.dlr.de
 Road network generator for the microscopic road traffic simulation SUMO.
 
 Usage: netgenerate [OPTION]*
@@ -73,6 +73,10 @@ Output Options:
   --output-prefix STR                  Prefix which is applied to all output
                                          files. The special string 'TIME' is
                                          replaced by the current time.
+  --precision INT                      Defines the number of digits after the
+                                         comma for floating point output
+  --precision.geo INT                  Defines the number of digits after the
+                                         comma for lon,lat output
   -o, --output-file FILE               The generated net will be written to
                                          FILE
   --plain-output-prefix FILE           Prefix of files to write plain xml
@@ -88,11 +92,16 @@ Output Options:
                                          FILE using OpenDRIVE format
   --dlr-navteq-output FILE             The generated net will be written to
                                          dlr-navteq files with the given PREFIX
+  --dlr-navteq.precision INT           The network coordinates are written with
+                                         the specified level of output precision
   --output.street-names                Street names will be included in the
                                          output (if available)
   --output.original-names              Writes original names, if given, as
                                          parameter
   --street-sign-output FILE            Writes street signs as POIs to FILE
+  --opendrive-output.straight-threshold FLOAT  Builds parameterized curves
+                                         whenever the angular change  between
+                                         straight segments exceeds FLOAT degrees
 
 TLS Building Options:
   --tls.set STR                        Interprets STR as list of junctions to
@@ -129,10 +138,14 @@ Edge Removal Options:
   --keep-edges.min-speed FLOAT         Only keep edges with speed in
                                          meters/second > FLOAT
   --remove-edges.explicit STR          Remove edges in STR
-  --keep-edges.explicit STR            Only keep edges in STR
+  --keep-edges.explicit STR            Only keep edges in STR or those which
+                                         are kept due to other keep-edges or
+                                         remove-edges options
   --keep-edges.input-file FILE         Only keep edges in FILE (Each id on a
                                          single line. Selection files from
-                                         SUMO-GUI are also supported)
+                                         SUMO-GUI are also supported) or those
+                                         which are kept due to other keep-edges
+                                         or remove-edges options
   --remove-edges.input-file FILE       Remove edges in FILE. (Each id on a
                                          single line. Selection files from
                                          SUMO-GUI are also supported)
@@ -157,6 +170,9 @@ Processing Options:
   --numerical-ids                      Remaps alphanumerical IDs of nodes and
                                          edges to ensure that all IDs are
                                          integers
+  --reserved-ids FILE                  Ensures that generated ids do not
+                                         included any of the typed IDs from FILE
+                                         (SUMO-GUI selection file format)
   --no-turnarounds                     Disables building turnarounds
   --no-turnarounds.tls                 Disables building turnarounds at
                                          tls-controlled junctions

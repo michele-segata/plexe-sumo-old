@@ -10,7 +10,7 @@
 // Some mathematical helper methods
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -53,21 +53,23 @@ class Position;
  */
 class NBHelpers {
 public:
-    /** computes the relative angle between the two angles */
+    /// @brief computes the relative angle between the two angles
     static SUMOReal relAngle(SUMOReal angle1, SUMOReal angle2);
 
-    ///@brief ensure that reverse relAngles (>=179.999) always count as turnarounds (-180)
+    /// @brief ensure that reverse relAngles (>=179.999) always count as turnarounds (-180)
     static SUMOReal normRelAngle(SUMOReal angle1, SUMOReal angle2);
 
-    /** converts the numerical id to its "normal" string representation */
+    /// @brief converts the numerical id to its "normal" string representation
     static std::string normalIDRepresentation(const std::string& id);
 
-    /** returns the distance between both nodes */
+    /// @brief returns the distance between both nodes
     static SUMOReal distance(NBNode* node1, NBNode* node2);
 
-    /// @brief Add edge ids defined in file (either ID or edge::ID per line) into the given set
+    /// @brief Add edge ids defined in file (either ID or edge:ID per line) into the given set
     static void loadEdgesFromFile(const std::string& file, std::set<std::string>& into);
 
+    /// @brief Add prefixed ids defined in file
+    static void loadPrefixedIDsFomFile(const std::string& file, const std::string prefix,  std::set<std::string>& into);
 };
 
 

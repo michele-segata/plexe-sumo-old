@@ -8,7 +8,7 @@
 Checks svn property settings for all files.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2010-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2010-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -29,7 +29,8 @@ _SOURCE_EXT = [".h", ".cpp", ".py", ".pl", ".java", ".am"]
 _TESTDATA_EXT = [".xml", ".prog", ".csv",
                  ".complex", ".dfrouter", ".duarouter", ".jtrrouter", ".marouter",
                  ".astar", ".chrouter", ".internal", ".tcl", ".txt",
-                 ".netconvert", ".netgen", ".od2trips", ".polyconvert", ".sumo",
+                 ".netconvert", ".netedit", ".netgen",
+                 ".od2trips", ".polyconvert", ".sumo",
                  ".meso", ".tools", ".traci", ".activitygen",
                  ".scenario", ".tapasVEU",
                  ".sumocfg", ".netccfg", ".netgcfg"]

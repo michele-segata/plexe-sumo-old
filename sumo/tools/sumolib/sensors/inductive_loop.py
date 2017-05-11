@@ -10,7 +10,7 @@ Library for reading and storing Inductive Loop detector representations and
  measurements.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2010-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2010-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@ from xml.sax import handler, parse
 
 class InductiveLoop:
 
-    def __init__(self, id, lane, pos, frequency, file, friendlyPos=True):
+    def __init__(self, id, lane, pos, frequency=60, file="NUL", friendlyPos=True):
         self.id = id
         self.lane = lane
         self.pos = pos

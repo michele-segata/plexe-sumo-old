@@ -1,51 +1,32 @@
-# Import libraries
+# import common functions for netedit tests
 import os
 import sys
-import subprocess
 
-#** Common parameters **#
-Settings.MoveMouseDelay = 0.1
-Settings.DelayBeforeDrop = 0.1
-Settings.DelayAfterDrag = 0.1
-# SUMO Folder
-SUMOFolder = os.environ.get('SUMO_HOME', '.')
-# Current environment
-currentEnvironmentFile = open(
-    SUMOFolder + "/tests/netedit/currentEnvironment.tmp", "r")
-# Get path to netEdit app
-neteditApp = currentEnvironmentFile.readline().replace("\n", "")
-# Get SandBox folder
-textTestSandBox = currentEnvironmentFile.readline().replace("\n", "")
-# Get resources depending of the current Operating system
-currentOS = currentEnvironmentFile.readline().replace("\n", "")
-netEditResources = SUMOFolder + "/tests/netedit/imageResources/" + currentOS + "/"
-currentEnvironmentFile.close()
-#****#
+testRoot = os.path.join(os.environ.get('SUMO_HOME', '.'), 'tests')
+neteditTestRoot = os.path.join(
+    os.environ.get('TEXTTEST_HOME', testRoot), 'netedit')
+sys.path.append(neteditTestRoot)
+import neteditTestFunctions as netedit
 
 # Open netedit
-netEditProcess = subprocess.Popen([neteditApp,
-                                   '--window-size', '800,600',
-                                   '--new',
-                                   '-o', textTestSandBox + "/net.net.xml"],
-                                  env=os.environ, stdout=sys.stdout, stderr=sys.stderr)
+neteditProcess, match = netedit.setupAndStart(neteditTestRoot, True)
 
-# Wait to netedit
-try:
-    match = wait(netEditResources + "neteditToolbar.png", 20)
-except:
-    netEditProcess.kill()
-    sys.exit("Killed netedit process. 'neteditToolbar.png' not found")
-
-# focusa
-click(match.getTarget().offset(0, -20))
+# Focus netedit window
+netedit.leftClick(match, 0, -105)
 
 # Change to create mode
 type("e")
 
 # Create two nodes
-click(match.getTarget().offset(-200, 300))
-click(match.getTarget().offset(200, 300))
+netedit.leftClick(match, 100, 300)
+netedit.leftClick(match, 500, 300)
 
-# save network and quit
-type("s", Key.CTRL)
-type("q", Key.CTRL)
+# Check undo and redo
+netedit.undo(match, 1)
+netedit.redo(match, 1)
+
+# save newtork
+netedit.saveNetwork()
+
+# quit netedit
+netedit.quit(neteditProcess, False, False)

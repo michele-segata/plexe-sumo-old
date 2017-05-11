@@ -11,7 +11,7 @@
 // A single child window which contains a view of the simulation area
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -208,7 +208,8 @@ GUISUMOViewParent::onCmdLocate(FXObject*, FXSelector sel, void*) {
             if (MSGlobals::gUseMesoSim) {
                 static_cast<GUIMEVehicleControl*>(static_cast<GUINet*>(MSNet::getInstance())->getGUIMEVehicleControl())->insertVehicleIDs(ids);
             } else {
-                static_cast<GUIVehicleControl&>(MSNet::getInstance()->getVehicleControl()).insertVehicleIDs(ids);
+                static_cast<GUIVehicleControl&>(MSNet::getInstance()->getVehicleControl()).insertVehicleIDs(
+                    ids, myParent->listParking(), myParent->listTeleporting());
             }
             icon = ICON_LOCATEVEHICLE;
             title = "Vehicle Chooser";

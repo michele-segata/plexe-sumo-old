@@ -11,7 +11,7 @@
 // Something on a lane to be noticed about vehicle movement
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2003-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2003-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -110,7 +110,9 @@ public:
         /// @brief The vehicle got vaporized
         NOTIFICATION_VAPORIZED,
         /// @brief The vehicle was teleported out of the net
-        NOTIFICATION_TELEPORT_ARRIVED
+        NOTIFICATION_TELEPORT_ARRIVED,
+        /// @brief The vehicle needs another parking area
+        NOTIFICATION_PARKING_REROUTE
     };
 
 

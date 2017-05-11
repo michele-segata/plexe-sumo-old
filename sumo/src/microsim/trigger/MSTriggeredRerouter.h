@@ -3,13 +3,14 @@
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
+/// @author  Mirco Sturari
 /// @date    Mon, 25 July 2005
 /// @version $Id$
 ///
 // Reroutes vehicles passing an edge
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -92,6 +93,8 @@ public:
      * Describes the rerouting definitions valid for an interval
      */
     struct RerouteInterval {
+        /// unique ID for this interval
+        long id;
         /// The begin time these definitions are valid
         SUMOTime begin;
         /// The end time these definitions are valid
@@ -108,8 +111,8 @@ public:
         RandomDistributor<const MSRoute*> routeProbs;
         /// The permissions to use
         SVCPermissions permissions;
-        /// unique ID for this interval
-        long id;
+        /// The distributions of new parking areas to use as destinations
+        RandomDistributor<MSParkingArea*> parkProbs;
     };
 
     /** @brief Tries to reroute the vehicle
@@ -175,6 +178,10 @@ public:
     /// Returns the rerouting probability given by the user
     SUMOReal getUserProbability() const;
 
+    SUMOReal getWeight(SUMOVehicle& veh, const std::string param, const SUMOReal defaultWeight) const;
+
+    MSParkingArea* rerouteParkingZone(const MSTriggeredRerouter::RerouteInterval* rerouteDef, SUMOVehicle& veh) const;
+
 protected:
     /// @name inherited from GenericSAXHandler
     //@{
@@ -220,6 +227,8 @@ protected:
     std::vector<MSLane*> myCurrentClosedLanes;
     /// List of permissions for closed edges
     SVCPermissions myCurrentPermissions;
+    /// new destinations with probabilities
+    RandomDistributor<MSParkingArea*> myCurrentParkProb;
     /// new destinations with probabilities
     RandomDistributor<MSEdge*> myCurrentEdgeProb;
     /// new routes with probabilities

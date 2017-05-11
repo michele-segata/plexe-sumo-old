@@ -7,7 +7,7 @@
 // A change to the network selection
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -48,11 +48,12 @@ FXIMPLEMENT_ABSTRACT(GNEChange_Selection, GNEChange, NULL, 0)
 // ===========================================================================
 
 
-// Constructor for changing selection
+/// @brief constructor for changing selection
 GNEChange_Selection::GNEChange_Selection(GNENet* net, const std::set<GUIGlID>& selected, const std::set<GUIGlID>& deselected, bool forward):
     GNEChange(net, forward),
     mySelectedIDs(selected),
     myDeselectedIDs(deselected) {
+    assert(myNet);
 }
 
 
@@ -60,7 +61,8 @@ GNEChange_Selection::~GNEChange_Selection() {
 }
 
 
-void GNEChange_Selection::undo() {
+void
+GNEChange_Selection::undo() {
     if (myForward) {
         for (std::set<GUIGlID>::const_iterator it = mySelectedIDs.begin(); it != mySelectedIDs.end(); it++) {
             if (GUIGlObjectStorage::gIDStorage.getObjectBlocking(*it)) {
@@ -88,7 +90,8 @@ void GNEChange_Selection::undo() {
 }
 
 
-void GNEChange_Selection::redo() {
+void
+GNEChange_Selection::redo() {
     if (myForward) {
         for (std::set<GUIGlID>::const_iterator it = mySelectedIDs.begin(); it != mySelectedIDs.end(); it++) {
             if (GUIGlObjectStorage::gIDStorage.getObjectBlocking(*it)) {
@@ -116,7 +119,8 @@ void GNEChange_Selection::redo() {
 }
 
 
-FXString GNEChange_Selection::undoName() const {
+FXString
+GNEChange_Selection::undoName() const {
     if (myForward) {
         return ("Undo change selection");
     } else {
@@ -125,7 +129,8 @@ FXString GNEChange_Selection::undoName() const {
 }
 
 
-FXString GNEChange_Selection::redoName() const {
+FXString
+GNEChange_Selection::redoName() const {
     if (myForward) {
         return ("Redo change selection");
     } else {

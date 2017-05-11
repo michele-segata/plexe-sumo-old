@@ -9,7 +9,7 @@
 // Importer for networks stored in ITSUMO format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2011-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2011-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -239,7 +239,7 @@ NIImporter_ITSUMO::Handler::myEndElement(int element) {
                 SUMOReal x = TplConvert::_2SUMOReal(myParameter["x"].c_str());
                 SUMOReal y = TplConvert::_2SUMOReal(myParameter["y"].c_str());
                 Position pos(x, y);
-                if (!NBNetBuilder::transformCoordinates(pos)) {
+                if (!NBNetBuilder::transformCoordinate(pos)) {
                     WRITE_ERROR("Unable to project coordinates for node '" + id + "'.");
                 }
                 NBNode* node = new NBNode(id, pos);

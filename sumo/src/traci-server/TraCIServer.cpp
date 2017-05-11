@@ -16,7 +16,7 @@
 /// TraCI server used to control sumo by a remote TraCI client (e.g., ns2)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2007-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -424,11 +424,11 @@ TraCIServer::dispatchCommand() {
                     myTargetTime += DELTA_T;
                 }
                 if (myAmEmbedded) {
-                    MSNet::getInstance()->simulationStep();
-                    postProcessSimulationStep2();
                     for (std::map<MSNet::VehicleState, std::vector<std::string> >::iterator i = myInstance->myVehicleStateChanges.begin(); i != myInstance->myVehicleStateChanges.end(); ++i) {
                         (*i).second.clear();
                     }
+                    MSNet::getInstance()->simulationStep();
+                    postProcessSimulationStep2();
                 }
                 return commandId;
             }

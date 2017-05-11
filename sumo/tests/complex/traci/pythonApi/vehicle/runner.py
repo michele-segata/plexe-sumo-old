@@ -10,7 +10,7 @@
 
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -99,12 +99,15 @@ def check(vehID):
     print("driving dist", traci.vehicle.getDrivingDistance(vehID, "4fi", 2.))
     print(
         "driving dist 2D", traci.vehicle.getDrivingDistance2D(vehID, 100., 100.))
+    print("line", traci.vehicle.getLine(vehID))
+    print("via", traci.vehicle.getVia(vehID))
 
 
 def checkOffRoad(vehID):
     print(("veh", vehID,
            "speed", traci.vehicle.getSpeed(vehID),
            "pos", traci.vehicle.getPosition(vehID),
+           "pos3d", traci.vehicle.getPosition3D(vehID),
            "angle", traci.vehicle.getAngle(vehID),
            "road", traci.vehicle.getRoadID(vehID),
            "lane", traci.vehicle.getLaneID(vehID),
@@ -133,6 +136,8 @@ traci.vehicle.setMinGap(vehID, 1.1)
 traci.vehicle.setWidth(vehID, 1.1)
 traci.vehicle.setHeight(vehID, 1.6)
 traci.vehicle.setColor(vehID, (255, 0, 0, 255))
+traci.vehicle.setLine(vehID, "S46")
+traci.vehicle.setVia(vehID, ["3o", "4o"])
 traci.vehicle.setAdaptedTraveltime(vehID, 0, 1000, "1o", 55)
 traci.vehicle.setStop(
     vehID, "2fi", pos=50.0, laneIndex=0, duration=2000, flags=1)
@@ -247,8 +252,9 @@ for i in range(14):
 # test for adding a trip
 traci.route.add("trip", ["3si"])
 traci.vehicle.add("triptest", "trip")
+traci.vehicle.setVia("triptest", ["2o"])
 traci.vehicle.changeTarget("triptest", "4si")
-print(traci.vehicle.getRoute("triptest"))
+print("triptest route:", traci.vehicle.getRoute("triptest"))
 # test returned values of parking vehicle
 parkingVeh = "parking"
 traci.vehicle.add(parkingVeh, "horizontal")
@@ -316,7 +322,13 @@ for i in range(5):
     print("step", step())
     print("failVeh pos=%s edges=%s" % (traci.vehicle.getLanePosition("failVeh"),
                                        traci.vehicle.getRoute("failVeh")))
-
+# add vehicle and reroute by travel time
+traci.vehicle.add("rerouteTT", "horizontal")
+traci.vehicle.rerouteTraveltime("rerouteTT")
+# reroute again but travel times should only be updated once
+traci.vehicle.rerouteTraveltime("rerouteTT")
+print("step", step())
+print(traci.vehicle.getSubscriptionResults(vehID))
 # done
 traci.close()
 sumoProcess.wait()

@@ -10,7 +10,7 @@
 // The gui-version of the MSInductLoop, together with the according
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -59,7 +59,7 @@ public:
      * @param[in] id Unique id
      * @param[in] lane Lane where detector woks on
      * @param[in] position Position of the detector within the lane
-     * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
+     * @param[in] vTypes which vehicle types are considered
      */
     GUIInductLoop(const std::string& id, MSLane* const lane, SUMOReal position, const std::string& vTypes);
 

@@ -12,7 +12,7 @@
 // Definitions of elements and attributes known by SUMO
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2017 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -76,6 +76,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "trainStop",                  SUMO_TAG_TRAIN_STOP },
     { "access",                     SUMO_TAG_ACCESS },
     { "containerStop",              SUMO_TAG_CONTAINER_STOP },
+    { "parkingArea",                SUMO_TAG_PARKING_AREA },
+    { "space",                      SUMO_TAG_PARKING_SPACE },
     { "chargingStation",            SUMO_TAG_CHARGING_STATION },
     { "vTypeProbe",                 SUMO_TAG_VTYPEPROBE },
     { "routeProbe",                 SUMO_TAG_ROUTEPROBE },
@@ -88,6 +90,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "taz",                        SUMO_TAG_TAZ },
     { "tazSource",                  SUMO_TAG_TAZSOURCE },
     { "tazSink",                    SUMO_TAG_TAZSINK },
+    { "trafficLight",               SUMO_TAG_TRAFFIC_LIGHT },
     { "tlLogic",                    SUMO_TAG_TLLOGIC },
     { "phase",                      SUMO_TAG_PHASE },
     { "trip",                       SUMO_TAG_TRIP },
@@ -109,6 +112,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "closingReroute",             SUMO_TAG_CLOSING_REROUTE },
     { "closingLaneReroute",         SUMO_TAG_CLOSING_LANE_REROUTE },
     { "routeProbReroute",           SUMO_TAG_ROUTE_PROB_REROUTE },
+    { "parkingAreaReroute",         SUMO_TAG_PARKING_ZONE_REROUTE },
     { "polygonType",                SUMO_TAG_POLYTYPE },
     { "connection",                 SUMO_TAG_CONNECTION },
     { "prohibition",                SUMO_TAG_PROHIBITION },
@@ -157,6 +161,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "colorScheme",                SUMO_TAG_COLORSCHEME },
     { "scalingScheme",              SUMO_TAG_SCALINGSCHEME },
     { "entry",                      SUMO_TAG_ENTRY },
+    { "vehicleTransfer",            SUMO_TAG_VEHICLETRANSFER },
     // Cars
     { "carFollowing-IDM",           SUMO_TAG_CF_IDM },
     { "carFollowing-IDMM",          SUMO_TAG_CF_IDMM },
@@ -223,8 +228,10 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "sidewalkWidth",          SUMO_ATTR_SIDEWALKWIDTH },
     { "bikeLaneWidth",          SUMO_ATTR_BIKELANEWIDTH },
     { "remove",                 SUMO_ATTR_REMOVE },
-    // Lenght
     { "length",                 SUMO_ATTR_LENGTH },
+    // Split
+    { "idBefore",               SUMO_ATTR_ID_BEFORE },
+    { "idAfter",                SUMO_ATTR_ID_AFTER },
     // Positions
     { "x",                      SUMO_ATTR_X },
     { "y",                      SUMO_ATTR_Y },
@@ -315,6 +322,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "personNumber",           SUMO_ATTR_PERSON_NUMBER },
     { "containerNumber",        SUMO_ATTR_CONTAINER_NUMBER },
     { "modes",                  SUMO_ATTR_MODES },
+    { "walkFactor",             SUMO_ATTR_WALKFACTOR },
 
     { "function",               SUMO_ATTR_FUNCTION },
     { "pos",                    SUMO_ATTR_POSITION },
@@ -379,6 +387,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "pass",                   SUMO_ATTR_PASS },
     { "busStop",                SUMO_ATTR_BUS_STOP },
     { "containerStop",          SUMO_ATTR_CONTAINER_STOP },
+    { "parkingArea",            SUMO_ATTR_PARKING_AREA },
+    { "roadsideCapacity",       SUMO_ATTR_ROADSIDE_CAPACITY },
     { "chargingStation",        SUMO_ATTR_CHARGING_STATION},
     { "line",                   SUMO_ATTR_LINE },
     { "lines",                  SUMO_ATTR_LINES },
@@ -506,15 +516,18 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "uniformRandomTraffic",   AGEN_ATTR_UNI_RAND_TRAFFIC },
     { "departureVariation",     AGEN_ATTR_DEP_VARIATION },
 
-    { "targetLanes",            SUMO_ATTR_TARGETLANE },
-    { "crossing",               SUMO_ATTR_CROSSING },
-
     // netEdit
     { "modificationStatusNotForPrinting",   GNE_ATTR_MODIFICATION_STATUS },
     { "shapeStartNotForPrinting",           GNE_ATTR_SHAPE_START },
     { "shapeEndNotForPrinting",             GNE_ATTR_SHAPE_END },
     { "blockMovement",                      GNE_ATTR_BLOCK_MOVEMENT },
     { "parentOfAdditional",                 GNE_ATTR_PARENT },
+
+    { "targetLanes", SUMO_ATTR_TARGETLANE },
+    { "crossing", SUMO_ATTR_CROSSING },
+
+    { "xmlns:xsi", SUMO_ATTR_XMLNS },
+    { "xsi:noNamespaceSchemaLocation", SUMO_ATTR_SCHEMA_LOCATION },
 
     // Other
     { "",                       SUMO_ATTR_NOTHING } //< must be the last one

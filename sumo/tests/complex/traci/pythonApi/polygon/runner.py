@@ -9,7 +9,7 @@
 
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -42,6 +42,7 @@ polygonID = "0"
 print("adding", polygonID)
 traci.polygon.add(
     polygonID, ((1, 1), (1, 10), (10, 10)), (1, 2, 3, 4), True, "test")
+traci.polygon.setFilled(polygonID, False)
 
 print("polygons", traci.polygon.getIDList())
 print("polygon count", traci.polygon.getIDCount())
@@ -49,6 +50,7 @@ print("examining", polygonID)
 print("shape", traci.polygon.getShape(polygonID))
 print("type", traci.polygon.getType(polygonID))
 print("color", traci.polygon.getColor(polygonID))
+print("filled", traci.polygon.getFilled(polygonID))
 
 traci.polygon.subscribe(polygonID)
 print(traci.polygon.getSubscriptionResults(polygonID))

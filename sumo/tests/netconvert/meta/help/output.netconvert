@@ -1,5 +1,5 @@
-SUMO netconvert Version dev-SVN-r21738
- Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de
+SUMO netconvert Version dev-SVN-r22796
+ Copyright (C) 2001-2017 DLR and contributors; http://sumo.dlr.de
 Road network importer / builder for the road traffic simulation SUMO.
 
 Usage: netconvert [OPTION]*
@@ -38,6 +38,10 @@ Output Options:
   --output-prefix STR                  Prefix which is applied to all output
                                          files. The special string 'TIME' is
                                          replaced by the current time.
+  --precision INT                      Defines the number of digits after the
+                                         comma for floating point output
+  --precision.geo INT                  Defines the number of digits after the
+                                         comma for lon,lat output
   -o, --output-file FILE               The generated net will be written to
                                          FILE
   --plain-output-prefix FILE           Prefix of files to write plain xml
@@ -53,11 +57,16 @@ Output Options:
                                          FILE using OpenDRIVE format
   --dlr-navteq-output FILE             The generated net will be written to
                                          dlr-navteq files with the given PREFIX
+  --dlr-navteq.precision INT           The network coordinates are written with
+                                         the specified level of output precision
   --output.street-names                Street names will be included in the
                                          output (if available)
   --output.original-names              Writes original names, if given, as
                                          parameter
   --street-sign-output FILE            Writes street signs as POIs to FILE
+  --opendrive-output.straight-threshold FLOAT  Builds parameterized curves
+                                         whenever the angular change  between
+                                         straight segments exceeds FLOAT degrees
 
 Projection Options:
   --simple-projection                  Uses a simple method for projection
@@ -134,10 +143,14 @@ Edge Removal Options:
   --keep-edges.min-speed FLOAT         Only keep edges with speed in
                                          meters/second > FLOAT
   --remove-edges.explicit STR          Remove edges in STR
-  --keep-edges.explicit STR            Only keep edges in STR
+  --keep-edges.explicit STR            Only keep edges in STR or those which
+                                         are kept due to other keep-edges or
+                                         remove-edges options
   --keep-edges.input-file FILE         Only keep edges in FILE (Each id on a
                                          single line. Selection files from
-                                         SUMO-GUI are also supported)
+                                         SUMO-GUI are also supported) or those
+                                         which are kept due to other keep-edges
+                                         or remove-edges options
   --remove-edges.input-file FILE       Remove edges in FILE. (Each id on a
                                          single line. Selection files from
                                          SUMO-GUI are also supported)
@@ -173,6 +186,9 @@ Processing Options:
   --lanes-from-capacity.norm FLOAT     The factor for flow to no. lanes
                                          conversion
   --speed-in-kmh                       vmax is parsed as given in km/h (some)
+  --construction-date STR              Use YYYY-MM-DD date to determine the
+                                         readiness of features under
+                                         construction
   --plain.extend-edge-shape            If edge shapes do not end at the node
                                          positions, extend them
   --matsim.keep-length                 The edge lengths given in the
@@ -207,12 +223,21 @@ Processing Options:
   --osm.layer-elevation FLOAT          Reconstruct (relative) elevation based
                                          on layer data. Each layer is raised by
                                          FLOAT m
+  --osm.layer-elevation.max-grade FLOAT  Maximum grade threshold in % at 50km/h
+                                         when reconstrucing elevation based on
+                                         layer data. The value is scaled
+                                         according to road speed.
+  --osm.oneway-spread-right            Whether one-way roads should be spread
+                                         to the side instead of centered
   --opendrive.import-all-lanes         Imports all lane types
   --opendrive.ignore-widths            Whether lane widths shall be ignored.
   --no-internal-links                  Omits internal links
   --numerical-ids                      Remaps alphanumerical IDs of nodes and
                                          edges to ensure that all IDs are
                                          integers
+  --reserved-ids FILE                  Ensures that generated ids do not
+                                         included any of the typed IDs from FILE
+                                         (SUMO-GUI selection file format)
   --dismiss-vclasses                   Removes vehicle class restrictions from
                                          imported edges
   --no-turnarounds                     Disables building turnarounds
@@ -243,6 +268,15 @@ Processing Options:
   --geometry.junction-mismatch-threshold FLOAT  Warn if the junction shape is
                                          to far away from the original node
                                          position
+  --geometry.check-overlap FLOAT       Warn if edges overlap by more than the
+                                         given threshold value
+  --geometry.check-overlap.vertical-threshold FLOAT  Ignore overlapping edges
+                                         if they are separated vertically by the
+                                         given threshold.
+  --geometry.max-grade FLOAT           Warn about edge geometries with a grade
+                                         in % above FLOAT. The threshold applies
+                                         to roads with a speed limit of 50km/h
+                                         and is scaled according to road speed.
   --offset.disable-normalization       Turn off normalizing node positions
   --offset.x FLOAT                     Adds FLOAT to net x-positions
   --offset.y FLOAT                     Adds FLOAT to net y-positions

@@ -118,6 +118,9 @@
     <ClCompile Include="..\..\..\src\microsim\MSLeaderInfo.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\microsim\MSParkingArea.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\microsim\MSCACCLaneChanger.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
@@ -232,6 +235,9 @@
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSLeaderInfo.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\microsim\MSParkingArea.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\microsim\MSCACCLaneChanger.h">

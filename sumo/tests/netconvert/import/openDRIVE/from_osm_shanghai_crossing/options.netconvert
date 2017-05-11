@@ -7,5 +7,8 @@
 --roundabouts.guess
 --junctions.join false
 --osm.layer-elevation 6
+--osm.oneway-spread-right
 --junctions.scurve-stretch 0.8
 --verbose
+--geometry.check-overlap 3
+--geometry.check-overlap.vertical-threshold 2

@@ -10,7 +10,7 @@
 // A vehicle as used by router
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -186,12 +186,7 @@ ROVehicle::saveAsXML(OutputDevice& os, OutputDevice* const typeos, bool asAltern
     for (std::vector<SUMOVehicleParameter::Stop>::const_iterator stop = myParameter.stops.begin(); stop != myParameter.stops.end(); ++stop) {
         stop->write(os);
     }
-    for (std::map<std::string, std::string>::const_iterator j = myParameter.getMap().begin(); j != myParameter.getMap().end(); ++j) {
-        os.openTag(SUMO_TAG_PARAM);
-        os.writeAttr(SUMO_ATTR_KEY, (*j).first);
-        os.writeAttr(SUMO_ATTR_VALUE, (*j).second);
-        os.closeTag();
-    }
+    myParameter.writeParams(os);
     os.closeTag();
 }
 

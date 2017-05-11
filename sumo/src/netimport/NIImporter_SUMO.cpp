@@ -9,7 +9,7 @@
 // Importer for networks stored in SUMO format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -532,7 +532,7 @@ NIImporter_SUMO::addJunction(const SUMOSAXAttributes& attrs) {
         WRITE_WARNING("Unknown node type for junction '" + id + "'.");
     }
     Position pos = readPosition(attrs, id, ok);
-    NBNetBuilder::transformCoordinates(pos, true, myLocation);
+    NBNetBuilder::transformCoordinate(pos, true, myLocation);
     NBNode* node = new NBNode(id, pos, type);
     if (!myNodeCont.insert(node)) {
         WRITE_ERROR("Problems on adding junction '" + id + "'.");

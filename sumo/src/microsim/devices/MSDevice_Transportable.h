@@ -11,7 +11,7 @@
 // A device which is used to keep track of persons and containers riding with a vehicle
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -112,6 +112,13 @@ public:
      * @param[in] transportable The passenger / container to add.
      */
     void addTransportable(MSTransportable* transportable);
+
+
+    /** @brief Remove a passenger (TraCI)
+     *
+     * @param[in] transportable The passenger / container to remove.
+     */
+    void removeTransportable(MSTransportable* transportable);
 
 
     /** @brief Return the number of passengers / containers

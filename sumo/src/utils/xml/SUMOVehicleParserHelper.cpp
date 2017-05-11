@@ -12,7 +12,7 @@
 // Helper methods for parsing vehicle attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2008-2017 DLR (http://www.dlr.de/) and contributors
 // Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)
 /****************************************************************************/
 //
@@ -174,7 +174,8 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
             if (ret->repetitionEnd == SUMOTime_MAX) {
                 ret->repetitionNumber = std::numeric_limits<int>::max();
             } else {
-                ret->repetitionNumber = MAX2(1, (int)(((SUMOReal)(ret->repetitionEnd - ret->depart)) / ret->repetitionOffset + 0.5));
+                const SUMOReal repLength = (SUMOReal)(ret->repetitionEnd - ret->depart);
+                ret->repetitionNumber = (int)ceil(repLength / ret->repetitionOffset);
             }
         }
     }

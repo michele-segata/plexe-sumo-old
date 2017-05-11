@@ -7,6 +7,10 @@ save_at_interval
 # the input is taken from test save2/state2.sumo
 load
 
+# the input is taken from test save2/state2.sumo
+# 1 vehicle is removed while loading
+load_remove
+
 # the input is taken from test save2/state.sumo
 load_late_insertion
 
@@ -15,3 +19,15 @@ load_and_save
 
 # save state for a network with internal links
 save_with_internal_links
+
+# save a parking vehicle
+save_parking
+
+# the input is taken from test save/save_parking/state.sumo
+load_parking
+
+# save a stopped vehicle
+save_stopped
+
+# the input is taken from test save/save_stopped/state.sumo
+load_stopped

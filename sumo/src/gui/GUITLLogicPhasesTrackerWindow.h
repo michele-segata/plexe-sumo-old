@@ -9,7 +9,7 @@
 // A window displaying the phase diagram of a tl-logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -37,7 +37,14 @@
 #include <bitset>
 #include <utility>
 #include <fx.h>
+// fx3d includes windows.h so we need to guard against macro pollution
+#ifdef WIN32
+#define NOMINMAX
+#endif
 #include <fx3d.h>
+#ifdef WIN32
+#undef NOMINMAX
+#endif
 #include <microsim/traffic_lights/MSSimpleTrafficLightLogic.h>
 #include <microsim/traffic_lights/MSTLLogicControl.h>
 #include <utils/common/ValueRetriever.h>

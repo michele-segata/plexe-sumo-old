@@ -9,7 +9,7 @@
 // static methods for processing the coordinates conversion for the current net
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -455,7 +455,7 @@ GeoConvHelper::writeLocation(OutputDevice& into) {
     into.writeAttr(SUMO_ATTR_NET_OFFSET, myFinal.getOffsetBase());
     into.writeAttr(SUMO_ATTR_CONV_BOUNDARY, myFinal.getConvBoundary());
     if (myFinal.usingGeoProjection()) {
-        into.setPrecision(GEO_OUTPUT_ACCURACY);
+        into.setPrecision(gPrecisionGeo);
     }
     into.writeAttr(SUMO_ATTR_ORIG_BOUNDARY, myFinal.getOrigBoundary());
     if (myFinal.usingGeoProjection()) {

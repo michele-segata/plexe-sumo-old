@@ -8,6 +8,8 @@ copy_test_path:net2.net.xml
 copy_test_path:input_additional.add.xml
 copy_test_path:three_split.net.xml
 copy_test_path:input_net.net.xml
+copy_test_path:input_edges.edg.xml
+copy_test_path:input_nodes.nod.xml
 copy_test_path:input_trips.trips.xml
 copy_test_path:input_routes.rou.xml
 copy_test_path:input_routes2.rou.xml
@@ -21,6 +23,7 @@ copy_test_path:lsa_def.csv
 copy_test_path:lsa_def2.csv
 copy_test_path:vehroutes.xml
 copy_test_path:tripinfos.xml
+copy_test_path:tripinfos2.xml
 copy_test_path:input_flows.txt
 copy_test_path:map.txt
 copy_test_path:routes.rou.alt.xml
@@ -160,6 +163,7 @@ image:href="[^"]*"{REPLACE href="ReplacedTransientHREF"}
 net:0.0101
 image:0.001
 osmbatch:0.001
+osmtrips:0.0101
 
 [unordered_text]
 errors:ERROR:SCHEMA

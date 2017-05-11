@@ -9,7 +9,7 @@
 //
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2006-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2006-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -45,8 +45,7 @@
 FXint
 FXLinkLabel::fxexecute(FXString link) {
 #ifdef WIN32
-    FXString quoted = FXPath::enquote(link);
-    return (int)ShellExecute(NULL, "open", quoted.text(), NULL, NULL, SW_SHOW) > 32;
+    return (int)ShellExecute(NULL, "open", link.text(), NULL, NULL, SW_SHOWNORMAL) > 32;
 #else
     FXString ext = FXPath::extension(link);
     FXString list;

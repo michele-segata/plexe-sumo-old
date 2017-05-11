@@ -78,6 +78,12 @@
         <!-- Prefix which is applied to all output files. The special string &apos;TIME&apos; is replaced by the current time. -->
         <output-prefix value="" type="STR"/>
 
+        <!-- Defines the number of digits after the comma for floating point output -->
+        <precision value="2" type="INT"/>
+
+        <!-- Defines the number of digits after the comma for lon,lat output -->
+        <precision.geo value="6" type="INT"/>
+
         <!-- The generated net will be written to FILE -->
         <output-file value="" synonymes="o output sumo-output" type="FILE"/>
 
@@ -99,6 +105,9 @@
         <!-- The generated net will be written to dlr-navteq files with the given PREFIX -->
         <dlr-navteq-output value="" type="FILE"/>
 
+        <!-- The network coordinates are written with the specified level of output precision -->
+        <dlr-navteq.precision value="2" type="INT"/>
+
         <!-- Street names will be included in the output (if available) -->
         <output.street-names value="false" type="BOOL"/>
 
@@ -107,6 +116,9 @@
 
         <!-- Writes street signs as POIs to FILE -->
         <street-sign-output value="" type="FILE"/>
+
+        <!-- Builds parameterized curves whenever the angular change  between straight segments exceeds FLOAT degrees -->
+        <opendrive-output.straight-threshold value="1e-08" type="FLOAT"/>
 
     </output>
 
@@ -234,10 +246,10 @@
         <!-- Remove edges in STR -->
         <remove-edges.explicit value="" synonymes="remove-edges" type="STR"/>
 
-        <!-- Only keep edges in STR -->
+        <!-- Only keep edges in STR or those which are kept due to other keep-edges or remove-edges options -->
         <keep-edges.explicit value="" synonymes="keep-edges" type="STR"/>
 
-        <!-- Only keep edges in FILE (Each id on a single line. Selection files from SUMO-GUI are also supported) -->
+        <!-- Only keep edges in FILE (Each id on a single line. Selection files from SUMO-GUI are also supported) or those which are kept due to other keep-edges or remove-edges options -->
         <keep-edges.input-file value="" type="FILE"/>
 
         <!-- Remove edges in FILE. (Each id on a single line. Selection files from SUMO-GUI are also supported) -->
@@ -299,6 +311,9 @@
 
         <!-- vmax is parsed as given in km/h (some) -->
         <speed-in-kmh value="false" type="BOOL"/>
+
+        <!-- Use YYYY-MM-DD date to determine the readiness of features under construction -->
+        <construction-date value="" type="STR"/>
 
         <!-- If edge shapes do not end at the node positions, extend them -->
         <plain.extend-edge-shape value="false" synonymes="xml.keep-shape" type="BOOL"/>
@@ -375,6 +390,12 @@
         <!-- Reconstruct (relative) elevation based on layer data. Each layer is raised by FLOAT m -->
         <osm.layer-elevation value="0" type="FLOAT"/>
 
+        <!-- Maximum grade threshold in % at 50km/h when reconstrucing elevation based on layer data. The value is scaled according to road speed. -->
+        <osm.layer-elevation.max-grade value="10" type="FLOAT"/>
+
+        <!-- Whether one-way roads should be spread to the side instead of centered -->
+        <osm.oneway-spread-right value="false" type="BOOL"/>
+
         <!-- Imports all lane types -->
         <opendrive.import-all-lanes value="false" type="BOOL"/>
 
@@ -386,6 +407,9 @@
 
         <!-- Remaps alphanumerical IDs of nodes and edges to ensure that all IDs are integers -->
         <numerical-ids value="false" type="BOOL"/>
+
+        <!-- Ensures that generated ids do not included any of the typed IDs from FILE (SUMO-GUI selection file format) -->
+        <reserved-ids value="" type="FILE"/>
 
         <!-- Removes vehicle class restrictions from imported edges -->
         <dismiss-vclasses value="false" type="BOOL"/>
@@ -428,6 +452,15 @@
 
         <!-- Warn if the junction shape is to far away from the original node position -->
         <geometry.junction-mismatch-threshold value="20" type="FLOAT"/>
+
+        <!-- Warn if edges overlap by more than the given threshold value -->
+        <geometry.check-overlap value="0" type="FLOAT"/>
+
+        <!-- Ignore overlapping edges if they are separated vertically by the given threshold. -->
+        <geometry.check-overlap.vertical-threshold value="4" type="FLOAT"/>
+
+        <!-- Warn about edge geometries with a grade in % above FLOAT. The threshold applies to roads with a speed limit of 50km/h and is scaled according to road speed. -->
+        <geometry.max-grade value="10" type="FLOAT"/>
 
         <!-- Turn off normalizing node positions -->
         <offset.disable-normalization value="false" synonymes="disable-normalize-node-positions" type="BOOL"/>

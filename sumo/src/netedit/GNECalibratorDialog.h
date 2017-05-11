@@ -6,8 +6,8 @@
 ///
 /// Dialog for edit calibrators
 /****************************************************************************/
-// SUMO, Simulation of Urban MObility; see http://sumo-sim.org/
-// Copyright (C) 2001-2013 DLR (http://www.dlr.de/) and contributors
+// SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -46,10 +46,10 @@ class GNECalibratorDialog : public GNEAdditionalDialog {
     FXDECLARE(GNECalibratorDialog)
 
 public:
-    // Constructor
+    /// @brief constructor
     GNECalibratorDialog(GNECalibrator* calibratorParent);
 
-    // destructor
+    /// @brief destructor
     ~GNECalibratorDialog();
 
     /// @name FOX-callbacks
@@ -79,7 +79,7 @@ protected:
     GNECalibrator* myCalibratorParent;
 
     /// @brief Map with the temporal FlowValues
-    std::map<std::string, GNECalibrator::CalibratorFlow> myFlowValues;
+    std::vector<GNECalibrator::GNECalibratorFlow*> myFlowValues;
 
     /// @brief Table with the data
     FXTable* myDataList;

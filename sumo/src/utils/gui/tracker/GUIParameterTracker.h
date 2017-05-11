@@ -9,7 +9,7 @@
 // A window which displays the time line of one (or more) value(s)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -34,7 +34,14 @@
 
 #include <vector>
 #include <fx.h>
+// fx3d includes windows.h so we need to guard against macro pollution
+#ifdef WIN32
+#define NOMINMAX
+#endif
 #include <fx3d.h>
+#ifdef WIN32
+#undef NOMINMAX
+#endif
 #include <utils/gui/globjects/GUIGlObject.h>
 #include <utils/gui/div/GLObjectValuePassConnector.h>
 #include "TrackerValueDesc.h"

@@ -9,7 +9,7 @@
 // An instantaneous induction loop
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2011-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2011-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -146,7 +146,7 @@ MSInstantInductLoop::notifyLeave(SUMOVehicle& veh, SUMOReal /* lastPos */, MSMov
 
 void
 MSInstantInductLoop::writeXMLDetectorProlog(OutputDevice& dev) const {
-    dev.writeXMLHeader("instantE1");
+    dev.writeXMLHeader("instantE1", "instant_e1_file.xsd");
 }
 
 

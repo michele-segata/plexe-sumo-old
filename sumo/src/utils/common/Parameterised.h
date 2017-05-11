@@ -10,7 +10,7 @@
 // A super class for objects with additional parameters
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -36,6 +36,10 @@
 #include <map>
 #include <string>
 
+// ===========================================================================
+// class declarations
+// ===========================================================================
+class OutputDevice;
 
 // ===========================================================================
 // class definitions
@@ -107,6 +111,8 @@ public:
     const std::map<std::string, std::string>& getMap() const {
         return myMap;
     }
+
+    void writeParams(OutputDevice& out) const;
 
 
 private:

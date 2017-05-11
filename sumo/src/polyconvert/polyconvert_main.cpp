@@ -11,7 +11,7 @@
 // Main for POLYCONVERT
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2005-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2005-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -151,9 +151,12 @@ fillOptions() {
 
 
     // output
-    oc.doRegister("output-file", 'o', new Option_FileName("polygons.xml"));
+    oc.doRegister("output-file", 'o', new Option_FileName());
     oc.addSynonyme("output-file", "output");
     oc.addDescription("output-file", "Output", "Write generated polygons/pois to FILE");
+
+    oc.doRegister("dlr-tdp-output", new Option_FileName());
+    oc.addDescription("dlr-tdp-output", "Output", "Write generated polygons/pois to a dlr-tdp file with the given prefix");
 
 
     // prunning options
@@ -328,6 +331,7 @@ main(int argc, char** argv) {
             }
             delete reader;
         }
+        SystemFrame::checkOptions();
         // read in the data
         PCLoaderXML::loadIfSet(oc, toFill, tm); // SUMO-XML
         PCLoaderOSM::loadIfSet(oc, toFill, tm); // OSM-XML
@@ -339,7 +343,21 @@ main(int argc, char** argv) {
         if (MsgHandler::getErrorInstance()->wasInformed() && !oc.getBool("ignore-errors")) {
             throw ProcessError();
         }
-        toFill.save(oc.getString("output-file"), oc.getBool("proj.plain-geo"));
+        // output
+        if (!oc.isSet("output-file") && !oc.isSet("dlr-tdp-output")) {
+            std::string out = "polygons.xml";
+            if (oc.isSet("configuration-file")) {
+                out = FileHelpers::getConfigurationRelative(oc.getString("configuration-file"), out);
+            }
+            oc.setDefault("output-file", out);
+        }
+        if (oc.isSet("output-file")) {
+            toFill.save(oc.getString("output-file"), oc.getBool("proj.plain-geo"));
+        }
+        if (oc.isSet("dlr-tdp-output")) {
+            toFill.saveDlrTDP(oc.getString("dlr-tdp-output"));
+        }
+
     } catch (const ProcessError& e) {
         if (std::string(e.what()) != std::string("Process Error") && std::string(e.what()) != std::string("")) {
             WRITE_ERROR(e.what());

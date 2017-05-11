@@ -7,7 +7,7 @@
 // A change to the network selection
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -51,6 +51,7 @@ class GNEChange_Selection : public GNEChange {
 
 public:
     /**@brief Constructor for modifying selection
+     * @param[in] net net in which apply selection chagnes
      * @param[in] selected The ids to select
      * @param[in] deselected The ids to deselect
      * @param[in] forward Whether to select or deselect the selected ids

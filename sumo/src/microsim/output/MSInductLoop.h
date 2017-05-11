@@ -11,7 +11,7 @@
 // An unextended detector measuring at a fixed position on a fixed lane.
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2004-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2004-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -79,7 +79,7 @@ public:
      * @param[in] id Unique id
      * @param[in] lane Lane where detector woks on
      * @param[in] position Position of the detector within the lane
-     * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
+     * @param[in] vTypes which vehicle types are considered
      */
     MSInductLoop(const std::string& id, MSLane* const lane,
                  SUMOReal positionInMeters,

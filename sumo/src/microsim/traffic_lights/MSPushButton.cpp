@@ -7,7 +7,7 @@
 // The class for a PushButton
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright 2001-2009 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2010-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -131,8 +131,8 @@ void getWalking(const std::vector<MSEdge*>& edges, std::vector< MSEdge*>& walkin
 ///@brief Get the walking areas adjacent to the crossing
 const std::vector<MSEdge*> getWalkingAreas(const MSEdge* crossing) {
     std::vector<MSEdge*> walkingEdges;
-    getWalking(crossing->getOutgoingEdges(), walkingEdges);
-    getWalking(crossing->getIncomingEdges(), walkingEdges);
+    getWalking(crossing->getSuccessors(), walkingEdges);
+    getWalking(crossing->getPredecessors(), walkingEdges);
     return walkingEdges;
 
 }

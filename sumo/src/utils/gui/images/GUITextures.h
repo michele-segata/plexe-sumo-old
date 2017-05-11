@@ -7,7 +7,7 @@
 // An enumeration of gifs used by the gui applications
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -58,8 +58,8 @@ enum GUITexture {
     GNETEXTURE_TLS,
     GNETEXTURE_VAPORIZER,
     GNETEXTURE_VAPORIZERSELECTED,
-    GNETEXTURE_VARIABLESPEEDSIGNAL,
-    GNETEXTURE_VARIABLESPEEDSIGNALSELECTED,
+    GNETEXTURE_VARIABLESPEEDSIGN,
+    GNETEXTURE_VARIABLESPEEDSIGNSELECTED,
     GNETEXTURE_LANEBIKE,
     GNETEXTURE_LANEBUS,
     GNETEXTURE_LANEPEDESTRIAN,

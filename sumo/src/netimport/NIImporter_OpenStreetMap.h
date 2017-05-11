@@ -10,7 +10,7 @@
 // Importer for networks stored in OpenStreetMap format
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -37,6 +37,7 @@
 #include <map>
 #include <utils/xml/SUMOSAXHandler.h>
 #include <utils/common/UtilExceptions.h>
+#include <utils/common/Parameterised.h>
 
 
 // ===========================================================================
@@ -118,7 +119,7 @@ protected:
 
     /** @brief An internal definition of a loaded edge
      */
-    struct Edge {
+    struct Edge : public Parameterised {
 
         Edge(long long int _id) :
             id(_id), myNoLanes(-1), myNoLanesForward(0), myMaxSpeed(MAXSPEED_UNGIVEN),
@@ -235,8 +236,8 @@ private:
     /// @brief reconstruct elevation from layer info
     void reconstructLayerElevation(SUMOReal layerElevation, NBNetBuilder& nb);
 
-    /// @brief collect neighboring nodes with their road distance
-    std::map<NBNode*, SUMOReal> getNeighboringNodes(NBNode* node, SUMOReal maxDist);
+    /// @brief collect neighboring nodes with their road distance and maximum between-speed. Search does not continue beyond knownElevation-nodes
+    std::map<NBNode*, std::pair<SUMOReal, SUMOReal> > getNeighboringNodes(NBNode* node, SUMOReal maxDist, const std::set<NBNode*>& knownElevation);
 
 protected:
     static const SUMOReal MAXSPEED_UNGIVEN;

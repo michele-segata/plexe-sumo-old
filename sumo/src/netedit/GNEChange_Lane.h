@@ -7,7 +7,7 @@
 // A network change in which a single lane is created or deleted
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -41,7 +41,6 @@
 class GNEEdge;
 class GNELane;
 class GNEAdditional;
-class GNEAdditionalSet;
 
 // ===========================================================================
 // class definitions
@@ -95,7 +94,7 @@ private:
     std::vector<GNEAdditional*> myAdditionalChilds;
 
     /// @brief we need to preserve the list of additional sets in which this lane is a child
-    std::vector<GNEAdditionalSet*> myAdditionalSetParents;
+    std::vector<GNEAdditional*> myAdditionalParents;
 };
 
 #endif

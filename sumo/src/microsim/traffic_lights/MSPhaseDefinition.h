@@ -11,7 +11,7 @@
 // The definition of a single phase of a tls logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -112,6 +112,7 @@ private:
         this->duration = durationArg;
         this->minDuration = minDurationArg < 0 ? durationArg : minDurationArg;
         this->maxDuration = (maxDurationArg < 0 || maxDurationArg < minDurationArg) ? durationArg : maxDurationArg;
+        // assert(this->minDuration <= this->maxDuration); // not ensured by the previous lines
         this->state = stateArg;
         this->myLastSwitch = string2time(OptionsCont::getOptions().getString("begin")); // SUMOTime-option
         //For SOTL phases

@@ -7,7 +7,7 @@
 // An induction loop for mesoscopic simulation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -74,7 +74,7 @@ public:
      * @see MSDetectorFileOutput::writeXMLDetectorProlog
      */
     void writeXMLDetectorProlog(OutputDevice& dev) const {
-        dev.writeXMLHeader("detector");
+        dev.writeXMLHeader("detector", "det_e1meso_file.xsd");
     }
 
 

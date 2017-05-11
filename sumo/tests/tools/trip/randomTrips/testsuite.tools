@@ -35,8 +35,16 @@ no_valid_intermediate_edges
 no_valid_intermediate_edges_fail
 pedestrians
 
+# generate random persontrips
+persontrips
+
 # use binomially distributed arrivals
 binomial
 
 # generate validated trips
 validate
+validate_intermediate
+
+# setting non-positive period should fail
+period_positive
+all_fringe_network

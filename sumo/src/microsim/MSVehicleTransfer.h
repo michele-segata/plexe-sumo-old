@@ -10,7 +10,7 @@
 // This class also serves as container for parking vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2003-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2003-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -111,6 +111,12 @@ public:
 
     /// @brief return parking vehicles on the given lane
     const std::set<const MSVehicle*>& getParkingVehicles(const MSLane* lane) const;
+
+    /** @brief Saves the current state into the given stream */
+    void saveState(OutputDevice& out) const;
+
+    /** @brief Loads one transfer vehicle state from the given descriptionn */
+    void loadState(const SUMOSAXAttributes& attrs, const SUMOTime offset, MSVehicleControl& vc);
 
     /** @brief Returns the instance of this object
      * @return The singleton instance

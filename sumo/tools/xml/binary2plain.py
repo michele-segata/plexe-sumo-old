@@ -8,7 +8,7 @@
 Converter between SUMO's binary XML and plain XML
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2012-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -160,7 +160,7 @@ def typedValueStr(content):
 
 out = sys.stdout
 content = open(sys.argv[1], 'rb')
-read(content, "BBB")  # type, sbx version, type
+_, version, _ = read(content, "BBB")  # type, sbx version, type
 readString(content)  # sumo version
 read(content, "B")  # type
 elements = readStringList(content)
@@ -182,8 +182,11 @@ while True:
         if startOpen:
             out.write(">\n")
         out.write("    " * len(stack))
-        stack.append(readByte(content))
-        out.write("<" + elements[stack[-1]])
+        tag = readByte(content)
+        if version > 1:
+            tag += 256 * readByte(content)
+        stack.append(tag)
+        out.write("<" + elements[tag])
         startOpen = True
     elif typ == XML_TAG_END:
         if startOpen:
@@ -193,11 +196,15 @@ while True:
         else:
             out.write("    " * (len(stack) - 1))
             out.write("</%s>\n" % elements[stack.pop()])
-        readByte(content)
+        if version == 1:
+            readByte(content)
         if len(stack) == 0:
             break
     elif typ == XML_ATTRIBUTE:
+        attr = readByte(content)
+        if version > 1:
+            attr += 256 * readByte(content)
         out.write(' %s="%s"' %
-                  (attributes[readByte(content)], typedValueStr(content)))
+                  (attributes[attr], typedValueStr(content)))
     else:
         print("Unknown type %s" % typ, file=sys.stderr)

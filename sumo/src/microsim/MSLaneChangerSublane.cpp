@@ -7,7 +7,7 @@
 // Performs sub-lane changing of vehicles
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -200,7 +200,12 @@ MSLaneChangerSublane::startChangeSublane(MSVehicle* vehicle, ChangerIt& from, SU
     // this part of the angle comes from the orientation of our current lane
     SUMOReal laneAngle = vehicle->getLane()->getShape().rotationAtOffset(vehicle->getLane()->interpolateLanePosToGeometryPos(vehicle->getPositionOnLane())) ;
     // this part of the angle comes from the vehicle's lateral movement
-    SUMOReal changeAngle = atan2(latDist, SPEED2DIST(vehicle->getSpeed()));
+    SUMOReal changeAngle = 0;
+    // avoid flicker
+    if (fabs(latDist) > NUMERICAL_EPS) {
+        // avoid extreme angles by using vehicle length as a proxy for turning radius
+        changeAngle = atan2(latDist, SPEED2DIST(MAX2(vehicle->getVehicleType().getLength(), vehicle->getSpeed())));
+    }
     vehicle->setAngle(laneAngle + changeAngle);
 
     return changedToNewLane;

@@ -8,7 +8,7 @@
 // The container following model for tranship (prototype)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2014-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2014-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -19,7 +19,7 @@
 //
 /****************************************************************************/
 #ifndef MSCModel_NonInteracting_h
-#define	MSCModel_NonInteracting_h
+#define MSCModel_NonInteracting_h
 
 // ===========================================================================
 // included modules
@@ -133,5 +133,5 @@ private:
 };
 
 
-#endif	/* MSCModel_NonInteracting_h */
+#endif /* MSCModel_NonInteracting_h */
 

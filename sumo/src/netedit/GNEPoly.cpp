@@ -8,7 +8,7 @@
 // GUIPolygon and NLHandler)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -75,7 +75,7 @@ GNEPoly::GNEPoly(GNENet* net, GNEJunction* junction, const std::string& id, cons
                  const RGBColor& color, SUMOReal layer,
                  SUMOReal angle, const std::string& imgFile) :
     GUIPolygon(id, type, color, shape, fill, layer, angle, imgFile),
-    GNEAttributeCarrier(SUMO_TAG_POLY),
+    GNEAttributeCarrier(SUMO_TAG_POLY, ICON_LOCATEPOLY),
     myNet(net),
     myJunction(junction) {
 }

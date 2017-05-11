@@ -9,7 +9,7 @@
 // Some static methods for string processing
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -164,11 +164,14 @@ StringUtils::endsWith(const std::string& str, const std::string suffix) {
 
 
 std::string
-StringUtils::escapeXML(const std::string& orig) {
+StringUtils::escapeXML(const std::string& orig, const bool maskDoubleHyphen) {
     std::string result = replace(orig, "&", "&amp;");
     result = replace(result, ">", "&gt;");
     result = replace(result, "<", "&lt;");
     result = replace(result, "\"", "&quot;");
+    if (maskDoubleHyphen) {
+        result = replace(result, "--", "&#45;&#45;");
+    }
     for (char invalid = '\1'; invalid < ' '; invalid++) {
         result = replace(result, std::string(1, invalid).c_str(), "");
     }

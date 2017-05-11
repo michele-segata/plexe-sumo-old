@@ -9,7 +9,7 @@
 // A virtual class that allows to steer the visual output in dependence to
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -145,7 +145,7 @@ public:
      *
      * @param[in] change The horizontal change in canvas size in pixels
      */
-    virtual void changeCanvassLeft(int change) = 0;
+    virtual void changeCanvasSizeLeft(int change) = 0;
 
     /// @brief get viewport
     Boundary getViewport(bool fixRatio = true);

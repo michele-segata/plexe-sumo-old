@@ -11,7 +11,7 @@
 // The parent class for traffic light logics
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -68,16 +68,16 @@ public:
     /// @brief Definition of a list of phases, being the junction logic
     typedef std::vector<MSPhaseDefinition*> Phases;
 
-    /// @brief Definition of the list of links that participate in this tl-light
+    /// @brief Definition of the list of links that are subjected to this tls
     typedef std::vector<MSLink*> LinkVector;
 
     /// @brief Definition of a list that holds lists of links that do have the same attribute
     typedef std::vector<LinkVector> LinkVectorVector;
 
-    /// @brief Definition of the list of links that participate in this tl-light
+    /// @brief Definition of the list of arrival lanes subjected to this tls
     typedef std::vector<MSLane*> LaneVector;
 
-    /// @brief Definition of a list that holds lists of links that do have the same attribute
+    /// @brief Definition of a list that holds lists of lanes that do have the same attribute
     typedef std::vector<LaneVector> LaneVectorVector;
     /// @}
 

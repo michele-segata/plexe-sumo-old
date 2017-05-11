@@ -10,7 +10,7 @@
 // Some static variables for faster access
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2003-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2003-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -102,6 +102,9 @@ public:
 
     /** scaling factor for macroscopic time penalty when passing tls controlled intersection */
     static SUMOReal gMesoTLSPenalty;
+
+    /** penalty time for passing a minor link */
+    static SUMOTime gMesoMinorPenalty;
 
     /// mesoscopic simulation infrastructure
     static MELoop* gMesoNet;

@@ -9,7 +9,7 @@
 // Encapsulated Xerces-SAX-attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -42,6 +42,7 @@
 #include <utils/geom/Boundary.h>
 #include <utils/geom/PositionVector.h>
 #include "SUMOSAXAttributesImpl_Xerces.h"
+#include "SUMOSAXAttributesImpl_Cached.h"
 
 #ifdef CHECK_MEMORY_LEAKS
 #include <foreign/nvwa/debug_new.h>
@@ -279,6 +280,15 @@ SUMOSAXAttributesImpl_Xerces::serialize(std::ostream& os) const {
     }
 }
 
+
+SUMOSAXAttributes*
+SUMOSAXAttributesImpl_Xerces::clone() const {
+    std::map<std::string, std::string> attrs;
+    for (int i = 0; i < (int)myAttrs.getLength(); ++i) {
+        attrs[TplConvert::_2str(myAttrs.getLocalName(i))] = TplConvert::_2str(myAttrs.getValue(i));
+    }
+    return new SUMOSAXAttributesImpl_Cached(attrs, myPredefinedTagsMML, getObjectType());
+}
 
 /****************************************************************************/
 

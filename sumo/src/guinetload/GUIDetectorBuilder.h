@@ -8,7 +8,7 @@
 // Builds detectors for guisim
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -78,7 +78,7 @@ public:
      * @param[in] id The id the detector shall have
      * @param[in] lane The lane the detector is placed at
      * @param[in] pos The position on the lane the detector is placed at
-     * @param[in] splitByType Whether additional information split by vehicle classes shall be generated
+     * @param[in] vTypes which vehicle types are considered
      * @param[in] show Whether to show the detector in the gui if available
      */
     virtual MSDetectorFileOutput* createInductLoop(const std::string& id,

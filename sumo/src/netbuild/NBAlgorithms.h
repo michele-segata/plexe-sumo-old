@@ -8,7 +8,7 @@
 // Algorithms for network computation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2012-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2012-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -32,14 +32,14 @@
 #endif
 
 #include <map>
-
+#include "NBEdgeCont.h"
+#include "NBNodeCont.h"
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
 class NBEdge;
-class NBNodeCont;
-class NBTypeCont;
+class NBNode;
 
 // ===========================================================================
 // class definitions
@@ -144,7 +144,6 @@ public:
         crossing_by_junction_angle_sorter& operator=(const crossing_by_junction_angle_sorter& s);
 
     };
-private:
     /** @brief Assures correct order for same-angle opposite-direction edges
      * @param[in] n The currently processed node
      * @param[in] i1 Pointer to first edge

@@ -11,7 +11,7 @@ Reads two networks (source, dest) and tries to produce the minimal plain-xml inp
 which can be loaded with netconvert alongside source to create dest
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2011-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2011-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -91,6 +91,11 @@ ATTRIBUTE_NAMES = {
 DEFAULT_VALUES = defaultdict(lambda: "")
 DEFAULT_VALUES['width'] = "-1"
 DEFAULT_VALUES['offset'] = "0"
+DEFAULT_VALUES['spreadType'] = "right"
+DEFAULT_VALUES['customShape'] = "false"
+DEFAULT_VALUES['keepClear'] = "true"
+DEFAULT_VALUES['contPos'] = "-1"
+DEFAULT_VALUES['visibility'] = "-1"
 RESET = 0
 
 

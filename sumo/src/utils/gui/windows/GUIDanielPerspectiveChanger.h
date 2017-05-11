@@ -9,7 +9,7 @@
 // A class that allows to steer the visual output in dependence to
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -109,7 +109,7 @@ public:
      *
      * @param[in] change The horizontal change in canvas size in pixels
      */
-    void changeCanvassLeft(int change);
+    void changeCanvasSizeLeft(int change);
 
     /* @brief avoid unwanted flicker
      * @param[in] delay The minimum time delay in nanoseconds after

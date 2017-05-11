@@ -9,7 +9,7 @@
 // A device which collects info on the vehicle trip
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2009-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2009-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -115,11 +115,9 @@ public:
     /// @}
 
 
-    /** @brief Called on writing tripinfo output
+    /** @brief Called on writing vehroutes output
      *
-     * @param[in] os The stream to write the information into
      * @exception IOError not yet implemented
-     * @see MSDevice::tripInfoOutput
      */
     void generateOutput() const;
 
@@ -148,6 +146,14 @@ private:
      * @param[in] index The index of the route to write (-1 writes the current route)
      */
     void writeXMLRoute(OutputDevice& os, int index = -1) const;
+
+
+    /** @brief Called on writing vehroutes output
+    *
+    * @param[in] hasArrived whether the vehicle has valid arrival information
+    * @exception IOError not yet implemented
+    */
+    void writeOutput(const bool hasArrived) const;
 
 
     /** @brief Called on route change

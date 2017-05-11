@@ -7,7 +7,7 @@
 // The "About" - dialog for NETEDIT, (adapted from GUIDialog_AboutSUMO)
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -50,14 +50,10 @@ public:
     /// @brief Destructor
     ~GNEDialog_About();
 
-    /// @brief Creates the widget (and the icons)
+    /// @brief Creates the widget
     void create();
 
-
 private:
-    /// @brief Icons for the widget
-    FXIcon* myDLRIcon;
-
     /// @brief Font for the widget
     FXFont* myHeadlineFont;
 };

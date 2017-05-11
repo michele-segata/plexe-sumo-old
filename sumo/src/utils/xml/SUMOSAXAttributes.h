@@ -9,7 +9,7 @@
 // Encapsulated SAX-Attributes
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2007-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2007-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -377,6 +377,9 @@ public:
 
 
     friend std::ostream& operator<<(std::ostream& os, const SUMOSAXAttributes& src);
+
+    /// @brief return a new deep-copy attributes object
+    virtual SUMOSAXAttributes* clone() const = 0;
 
     /** @brief The encoding of parsed strings */
     static const std::string ENCODING;

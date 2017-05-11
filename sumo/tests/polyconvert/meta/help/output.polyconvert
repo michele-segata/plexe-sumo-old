@@ -1,5 +1,5 @@
-SUMO polyconvert Version dev-SVN-r20783
- Copyright (C) 2001-2016 DLR and contributors; http://sumo.dlr.de
+SUMO polyconvert Version dev-SVN-r22796
+ Copyright (C) 2001-2017 DLR and contributors; http://sumo.dlr.de
 Importer of polygons and POIs for the road traffic simulation SUMO.
 
 Usage: polyconvert [OPTION]*
@@ -43,7 +43,13 @@ Output Options:
   --output-prefix STR              Prefix which is applied to all output files.
                                      The special string 'TIME' is replaced by
                                      the current time.
+  --precision INT                  Defines the number of digits after the comma
+                                     for floating point output
+  --precision.geo INT              Defines the number of digits after the comma
+                                     for lon,lat output
   -o, --output-file FILE           Write generated polygons/pois to FILE
+  --dlr-tdp-output FILE            Write generated polygons/pois to a dlr-tdp
+                                     file with the given prefix
 
 Projection Options:
   --simple-projection              Uses a simple method for projection

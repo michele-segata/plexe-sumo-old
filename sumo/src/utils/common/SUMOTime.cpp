@@ -9,7 +9,7 @@
 // Variables, methods, and tools for internal time representation
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -31,6 +31,7 @@
 #include <sstream>
 #include "SUMOTime.h"
 #include "TplConvert.h"
+#include "StdDefs.h"
 
 
 // ===========================================================================
@@ -60,7 +61,7 @@ time2string(SUMOTime t) {
     // 123456 -> "12.34"
     std::ostringstream oss;
     oss.setf(oss.fixed);
-    oss.precision(OUTPUT_ACCURACY);
+    oss.precision(gPrecision);
     oss << STEPS2TIME(t);
     return oss.str();
 }

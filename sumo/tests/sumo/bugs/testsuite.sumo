@@ -215,3 +215,13 @@ ticket2543
 # StopSpeed returns a too low value for the euler update in case of insertion
 ticket2574
 ticket1845
+
+# Copy of ticket1845
+ticket2670
+
+# Two flows inserted on neighboring lanes should be inserted synchronously (lane allowances are used to prevent lane changes for the first flow which would obscure the effect)
+ticket2740
+
+ticket2823
+# Two flows inserted on neighboring lanes should be inserted synchronously (lane allowances are used to prevent lane changes for the first flow which would obscure the effect)
+ticket2834

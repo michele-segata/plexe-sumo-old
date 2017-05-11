@@ -8,7 +8,7 @@
 // A rail signal logic
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2002-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2002-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -219,7 +219,7 @@ protected:
     std::map<MSLane*, std::vector<MSLink*> > myLinksToLane;
 
     /// A map that maps a link from the junction to its vector of lanes leading from a previous signal to this link
-    std::map<MSLink*, std::vector<MSLane*> > myAfferentBlocks;
+    std::map<MSLink*, std::vector<const MSLane*> > myAfferentBlocks;
 
     /// A map that maps an outgoing lane from the junction to its vector of lanes leading to the next signal
     std::map<MSLane*, std::vector<const MSLane*> > mySucceedingBlocks;

@@ -7,7 +7,7 @@
 // APIs for getting/setting person values via TraCI
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -78,7 +78,7 @@ public:
     static bool getPosition(const std::string& id, Position& p);
 
 private:
-    //static MSVehicleType& getSingularType(MSPerson* const person);
+    static MSVehicleType& getSingularType(MSTransportable* const t);
 
 private:
     /// @brief invalidated copy constructor

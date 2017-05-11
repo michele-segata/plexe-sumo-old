@@ -8,7 +8,7 @@
 Wrapper script for running gui tests with SikuliX and TextTest.
 
 SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-Copyright (C) 2008-2016 DLR (http://www.dlr.de/) and contributors
+Copyright (C) 2008-2017 DLR (http://www.dlr.de/) and contributors
 
 This file is part of SUMO.
 SUMO is free software; you can redistribute it and/or modify
@@ -19,19 +19,15 @@ the Free Software Foundation; either version 3 of the License, or
 import socket
 import os
 import sys
-import platform
 
 # get enviroment values
 SUMOFolder = os.environ.get('SUMO_HOME', '.')
-neteditApp = os.environ.get('NETEDIT_BINARY', '.')
+neteditApp = os.environ.get('NETEDIT_BINARY', 'netedit')
 textTestSandBox = os.environ.get('TEXTTEST_SANDBOX', '.')
-
-# Get current operating system
-currentOS = platform.system()
 
 # Write enviroment variables in currentEnvironment.tmp
 file = open(SUMOFolder + "/tests/netedit/currentEnvironment.tmp", "w")
-file.write(neteditApp + "\n" + textTestSandBox + "\n" + currentOS)
+file.write(neteditApp + "\n" + textTestSandBox)
 file.close()
 
 # Check status of sikulix Server
@@ -42,7 +38,7 @@ try:
     statusReceived = statusSocket.recv(1024)
     statusSocket.close()
     # If status of server contains "200 OK", Sikulix server is ready, in other
-    # case is ocupped
+    # case is ocuppied
     if "200 OK" not in statusReceived:
         sys.exit("Sikulix server not ready")
 except:
@@ -67,8 +63,7 @@ scriptSocket.send("GET /scripts/" + textTestSandBox + " HTTP/1.1\n\n")
 scriptReceived = (scriptSocket.recv(1024))
 scriptSocket.close()
 if "200 OK" not in scriptReceived:
-    sys.exit("Error adding script folder '" + SUMOFolder + +
-             "/tests/netedit/" + sys.argv[1] + "'")
+    sys.exit("Error adding script folder '" + textTestSandBox + "'")
 
 # RUN
 runSocket = socket.socket()

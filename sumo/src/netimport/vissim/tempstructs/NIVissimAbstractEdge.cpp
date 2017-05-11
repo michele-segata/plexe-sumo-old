@@ -9,7 +9,7 @@
 // -------------------
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -53,7 +53,7 @@ NIVissimAbstractEdge::NIVissimAbstractEdge(int id,
     // convert/publicate geometry
     for (PositionVector::const_iterator i = geom.begin(); i != geom.end(); ++i) {
         Position p = *i;
-        if (!NBNetBuilder::transformCoordinates(p)) {
+        if (!NBNetBuilder::transformCoordinate(p)) {
             WRITE_WARNING("Unable to project coordinates for edge '" + toString(id) + "'.");
         }
         myGeom.push_back_noDoublePos(p);

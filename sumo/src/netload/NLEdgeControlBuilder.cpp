@@ -9,7 +9,7 @@
 // Interface for building edges
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
-// Copyright (C) 2001-2016 DLR (http://www.dlr.de/) and contributors
+// Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
 /****************************************************************************/
 //
 //   This file is part of SUMO.
@@ -121,10 +121,10 @@ NLEdgeControlBuilder::build() {
         for (MSEdgeVector::iterator i1 = myEdges.begin(); i1 != myEdges.end(); i1++) {
             MSEdge* edge = *i1;
             if (edge->isInternal()) {
-                if (edge->getNumSuccessors() != 1 || edge->getIncomingEdges().size() != 1) {
+                if (edge->getNumSuccessors() != 1 || edge->getNumPredecessors() != 1) {
                     throw ProcessError("Internal edge '" + edge->getID() + "' is not properly connected (probably a manually modified net.xml).");
                 }
-                if (edge->getSuccessors()[0]->isRoundabout() || edge->getIncomingEdges()[0]->isRoundabout()) {
+                if (edge->getSuccessors()[0]->isRoundabout() || edge->getPredecessors()[0]->isRoundabout()) {
                     edge->markAsRoundabout();
                 }
             }

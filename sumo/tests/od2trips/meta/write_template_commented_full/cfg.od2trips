@@ -36,11 +36,20 @@
         <!-- Prefix which is applied to all output files. The special string &apos;TIME&apos; is replaced by the current time. -->
         <output-prefix value="" type="STR"/>
 
+        <!-- Defines the number of digits after the comma for floating point output -->
+        <precision value="2" type="INT"/>
+
+        <!-- Defines the number of digits after the comma for lon,lat output -->
+        <precision.geo value="6" type="INT"/>
+
         <!-- Writes trip definitions into FILE -->
         <output-file value="" synonymes="o output" type="FILE"/>
 
         <!-- Writes flow definitions into FILE -->
         <flow-output value="" type="FILE"/>
+
+        <!-- Writes probabilistic flow instead of evenly spaced flow -->
+        <flow-output.probability value="false" type="BOOL"/>
 
         <!-- Does not save vtype information -->
         <ignore-vehicle-type value="false" synonymes="no-vtype" type="BOOL"/>
