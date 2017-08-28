@@ -31,6 +31,10 @@
 
 #ifdef HAVE_OSG
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4127) // do not warn about constant conditional expression
+#endif
 #include <osg/Version>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgGA/TrackballManipulator>
@@ -49,6 +53,10 @@
 #include <osg/ShadeModel>
 #include <osg/Light>
 #include <osg/LightSource>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #include <microsim/MSNet.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSLane.h>
@@ -67,10 +75,6 @@
 #include "GUIOSGBoundingBoxCalculator.h"
 #include "GUIOSGView.h"
 #include "GUIOSGBuilder.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -109,7 +113,7 @@ GUIOSGBuilder::buildOSGScene(osg::Node* const tlg, osg::Node* const tly, osg::No
         for (MSTrafficLightLogic::LaneVectorVector::const_iterator j = lanes.begin(); j != lanes.end(); ++j, ++idx) {
             const MSLane* const lane = (*j)[0];
             const Position pos = lane->getShape().back();
-            const SUMOReal angle =  osg::DegreesToRadians(lane->getShape().rotationDegreeAtOffset(-1.) + 90.);
+            const double angle =  osg::DegreesToRadians(lane->getShape().rotationDegreeAtOffset(-1.) + 90.);
             d.centerZ = pos.z() + 4.;
             if (lane == lastLane) {
                 d.centerX += 1.2 * sin(angle);
@@ -119,10 +123,10 @@ GUIOSGBuilder::buildOSGScene(osg::Node* const tlg, osg::Node* const tly, osg::No
                 d.centerY = pos.y() - 1.5 * cos(angle);
             }
             osg::Switch* switchNode = new osg::Switch();
-            switchNode->addChild(getTrafficLight(d, tlg, osg::Vec4(0.1, 0.5, 0.1, 1.0), .25), false);
-            switchNode->addChild(getTrafficLight(d, tly, osg::Vec4(0.5, 0.5, 0.1, 1.0), .25), false);
-            switchNode->addChild(getTrafficLight(d, tlr, osg::Vec4(0.5, 0.1, 0.1, 1.0), .25), false);
-            switchNode->addChild(getTrafficLight(d, tlu, osg::Vec4(0.8, 0.4, 0.0, 1.0), .25), false);
+            switchNode->addChild(getTrafficLight(d, tlg, osg::Vec4d(0.1, 0.5, 0.1, 1.0), .25), false);
+            switchNode->addChild(getTrafficLight(d, tly, osg::Vec4d(0.5, 0.5, 0.1, 1.0), .25), false);
+            switchNode->addChild(getTrafficLight(d, tlr, osg::Vec4d(0.5, 0.1, 0.1, 1.0), .25), false);
+            switchNode->addChild(getTrafficLight(d, tlu, osg::Vec4d(0.8, 0.4, 0.0, 1.0), .25), false);
             root->addChild(switchNode);
             const MSLink* const l = vars.getActive()->getLinksAt(idx)[0];
             vars.addSwitchCommand(new GUIOSGView::Command_TLSChange(l, switchNode));
@@ -150,8 +154,8 @@ GUIOSGBuilder::buildLight(const GUISUMOAbstractView::Decal& d, osg::Group& addTo
 
     osg::PositionAttitudeTransform* lightTransform = new osg::PositionAttitudeTransform();
     lightTransform->addChild(lightSource);
-    lightTransform->setPosition(osg::Vec3(d.centerX, d.centerY, d.centerZ));
-    lightTransform->setScale(osg::Vec3(0.1, 0.1, 0.1));
+    lightTransform->setPosition(osg::Vec3d(d.centerX, d.centerY, d.centerZ));
+    lightTransform->setScale(osg::Vec3d(0.1, 0.1, 0.1));
     addTo.addChild(lightTransform);
 }
 
@@ -168,7 +172,7 @@ GUIOSGBuilder::buildOSGEdgeGeometry(const MSEdge& edge,
         osg::Geometry* geom = new osg::Geometry();
         geode->addDrawable(geom);
         addTo.addChild(geode);
-        osg::Vec3Array* osg_coords = new osg::Vec3Array(shape.size() * 2);
+        osg::Vec3dArray* osg_coords = new osg::Vec3dArray((int)shape.size() * 2);
         geom->setVertexArray(osg_coords);
         PositionVector rshape = shape;
         rshape.move2side(SUMO_const_halfLaneWidth);
@@ -197,7 +201,7 @@ GUIOSGBuilder::buildOSGEdgeGeometry(const MSEdge& edge,
         geom->setColorArray(osg_colors);
         geom->setColorBinding(osg::Geometry::BIND_OVERALL);
 #endif
-        geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POLYGON, 0, shape.size() * 2));
+        geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POLYGON, 0, (int)shape.size() * 2));
 
         osg::ref_ptr<osg::StateSet> ss = geode->getOrCreateStateSet();
         ss->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
@@ -220,12 +224,12 @@ GUIOSGBuilder::buildOSGJunctionGeometry(GUIJunctionWrapper& junction,
     osg::Geometry* geom = new osg::Geometry();
     geode->addDrawable(geom);
     addTo.addChild(geode);
-    osg::Vec3Array* osg_coords = new osg::Vec3Array(shape.size());
+    osg::Vec3dArray* osg_coords = new osg::Vec3dArray((int)shape.size());
     geom->setVertexArray(osg_coords);
     for (int k = 0; k < (int)shape.size(); ++k) {
         (*osg_coords)[k].set(shape[k].x(), shape[k].y(), shape[k].z());
     }
-    osg::Vec3Array* osg_normals = new osg::Vec3Array(1);
+    osg::Vec3dArray* osg_normals = new osg::Vec3dArray(1);
     (*osg_normals)[0] = osg::Vec3(0, 0, 1);
 #if OSG_MIN_VERSION_REQUIRED(3,2,0)
     geom->setNormalArray(osg_normals, osg::Array::BIND_PER_PRIMITIVE_SET);
@@ -241,7 +245,7 @@ GUIOSGBuilder::buildOSGJunctionGeometry(GUIJunctionWrapper& junction,
     geom->setColorArray(osg_colors);
     geom->setColorBinding(osg::Geometry::BIND_OVERALL);
 #endif
-    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POLYGON, 0, shape.size()));
+    geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POLYGON, 0, (int)shape.size()));
 
     osg::ref_ptr<osg::StateSet> ss = geode->getOrCreateStateSet();
     ss->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
@@ -270,23 +274,23 @@ GUIOSGBuilder::buildDecal(const GUISUMOAbstractView::Decal& d, osg::Group& addTo
     pLoadedModel->accept(bboxCalc);
     const osg::BoundingBox& bbox = bboxCalc.getBoundingBox();
     WRITE_MESSAGE("Loaded decal '" + d.filename + "' with bounding box " + toString(Position(bbox.xMin(), bbox.yMin(), bbox.zMin())) + " " + toString(Position(bbox.xMax(), bbox.yMax(), bbox.zMax())) + ".");
-    SUMOReal xScale = d.width > 0 ? d.width / (bbox.xMax() - bbox.xMin()) : 1.;
-    SUMOReal yScale = d.height > 0 ? d.height / (bbox.yMax() - bbox.yMin()) : 1.;
-    const SUMOReal zScale = d.altitude > 0 ? d.altitude / (bbox.zMax() - bbox.zMin()) : 1.;
+    double xScale = d.width > 0 ? d.width / (bbox.xMax() - bbox.xMin()) : 1.;
+    double yScale = d.height > 0 ? d.height / (bbox.yMax() - bbox.yMin()) : 1.;
+    const double zScale = d.altitude > 0 ? d.altitude / (bbox.zMax() - bbox.zMin()) : 1.;
     if (d.width < 0 && d.height < 0 && d.altitude > 0) {
         xScale = yScale = zScale;
     }
-    base->setScale(osg::Vec3(xScale, yScale, zScale));
-    base->setPosition(osg::Vec3(d.centerX, d.centerY, d.centerZ));
-    base->setAttitude(osg::Quat(osg::DegreesToRadians(d.roll), osg::Vec3(1, 0, 0),
-                                osg::DegreesToRadians(d.tilt), osg::Vec3(0, 1, 0),
-                                osg::DegreesToRadians(d.rot), osg::Vec3(0, 0, 1)));
+    base->setScale(osg::Vec3d(xScale, yScale, zScale));
+    base->setPosition(osg::Vec3d(d.centerX, d.centerY, d.centerZ));
+    base->setAttitude(osg::Quat(osg::DegreesToRadians(d.roll), osg::Vec3d(1, 0, 0),
+                                osg::DegreesToRadians(d.tilt), osg::Vec3d(0, 1, 0),
+                                osg::DegreesToRadians(d.rot), osg::Vec3d(0, 0, 1)));
     addTo.addChild(base);
 }
 
 
 osg::PositionAttitudeTransform*
-GUIOSGBuilder::getTrafficLight(const GUISUMOAbstractView::Decal& d, osg::Node* tl, const osg::Vec4& color, const SUMOReal size) {
+GUIOSGBuilder::getTrafficLight(const GUISUMOAbstractView::Decal& d, osg::Node* tl, const osg::Vec4& color, const double size) {
     osg::PositionAttitudeTransform* ret = new osg::PositionAttitudeTransform();
     if (tl != 0) {
         osg::PositionAttitudeTransform* base = new osg::PositionAttitudeTransform();
@@ -294,22 +298,22 @@ GUIOSGBuilder::getTrafficLight(const GUISUMOAbstractView::Decal& d, osg::Node* t
         GUIOSGBoundingBoxCalculator bboxCalc;
         tl->accept(bboxCalc);
         const osg::BoundingBox& bbox = bboxCalc.getBoundingBox();
-        SUMOReal xScale = d.width > 0 ? d.width / (bbox.xMax() - bbox.xMin()) : 1.;
-        SUMOReal yScale = d.height > 0 ? d.height / (bbox.yMax() - bbox.yMin()) : 1.;
-        const SUMOReal zScale = d.altitude > 0 ? d.altitude / (bbox.zMax() - bbox.zMin()) : 1.;
+        double xScale = d.width > 0 ? d.width / (bbox.xMax() - bbox.xMin()) : 1.;
+        double yScale = d.height > 0 ? d.height / (bbox.yMax() - bbox.yMin()) : 1.;
+        const double zScale = d.altitude > 0 ? d.altitude / (bbox.zMax() - bbox.zMin()) : 1.;
         if (d.width < 0 && d.height < 0 && d.altitude > 0) {
             xScale = yScale = zScale;
         }
-        base->setScale(osg::Vec3(xScale, yScale, zScale));
-        base->setPosition(osg::Vec3(d.centerX, d.centerY, d.centerZ));
+        base->setScale(osg::Vec3d(xScale, yScale, zScale));
+        base->setPosition(osg::Vec3d(d.centerX, d.centerY, d.centerZ));
         base->setAttitude(osg::Quat(osg::DegreesToRadians(d.roll), osg::Vec3(1, 0, 0),
                                     osg::DegreesToRadians(d.tilt), osg::Vec3(0, 1, 0),
                                     osg::DegreesToRadians(d.rot), osg::Vec3(0, 0, 1)));
         ret->addChild(base);
     }
     osg::Geode* geode = new osg::Geode();
-    osg::Vec3 center(d.centerX, d.centerY, d.centerZ);
-    osg::ShapeDrawable* shape = new osg::ShapeDrawable(new osg::Sphere(center, size));
+    osg::Vec3d center(d.centerX, d.centerY, d.centerZ);
+    osg::ShapeDrawable* shape = new osg::ShapeDrawable(new osg::Sphere(center, (float)size));
     geode->addDrawable(shape);
     osg::ref_ptr<osg::StateSet> ss = shape->getOrCreateStateSet();
     ss->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
@@ -318,7 +322,7 @@ GUIOSGBuilder::getTrafficLight(const GUISUMOAbstractView::Decal& d, osg::Node* t
     ellipse->addChild(geode);
     ellipse->setPivotPoint(center);
     ellipse->setPosition(center);
-    ellipse->setScale(osg::Vec3(4., 4., 2.5 * d.altitude + 1.1));
+    ellipse->setScale(osg::Vec3d(4., 4., 2.5 * d.altitude + 1.1));
     shape->setColor(color);
     ret->addChild(ellipse);
     return ret;
@@ -337,7 +341,7 @@ GUIOSGView::OSGMovable
 GUIOSGBuilder::buildMovable(const MSVehicleType& type) {
     GUIOSGView::OSGMovable m;
     m.pos = new osg::PositionAttitudeTransform();
-    SUMOReal enlarge = 0.;
+    double enlarge = 0.;
     const std::string& osgFile = type.getOSGFile();
     if (myCars.find(osgFile) == myCars.end()) {
         myCars[osgFile] = osgDB::readNodeFile(osgFile);
@@ -352,17 +356,17 @@ GUIOSGBuilder::buildMovable(const MSVehicleType& type) {
         const osg::BoundingBox& bbox = bboxCalc.getBoundingBox();
         osg::PositionAttitudeTransform* base = new osg::PositionAttitudeTransform();
         base->addChild(carNode);
-        base->setPivotPoint(osg::Vec3((bbox.xMin() + bbox.xMax()) / 2., bbox.yMin(), bbox.zMin()));
-        base->setScale(osg::Vec3(type.getWidth() / (bbox.xMax() - bbox.xMin()),
-                                 type.getLength() / (bbox.yMax() - bbox.yMin()),
-                                 type.getHeight() / (bbox.zMax() - bbox.zMin())));
+        base->setPivotPoint(osg::Vec3d((bbox.xMin() + bbox.xMax()) / 2., bbox.yMin(), bbox.zMin()));
+        base->setScale(osg::Vec3d(type.getWidth() / (bbox.xMax() - bbox.xMin()),
+                                  type.getLength() / (bbox.yMax() - bbox.yMin()),
+                                  type.getHeight() / (bbox.zMax() - bbox.zMin())));
         m.pos->addChild(base);
         enlarge = type.getMinGap() / 2.;
     }
     m.lights = new osg::Switch();
-    for (SUMOReal offset = -0.3; offset < 0.5; offset += 0.6) {
+    for (double offset = -0.3; offset < 0.5; offset += 0.6) {
         osg::Geode* geode = new osg::Geode();
-        osg::ShapeDrawable* right = new osg::ShapeDrawable(new osg::Sphere(osg::Vec3(offset, (type.getLength() - .9) / 2., (type.getHeight() - .5) / 2.), .1f));
+        osg::ShapeDrawable* right = new osg::ShapeDrawable(new osg::Sphere(osg::Vec3d(offset, (type.getLength() - .9) / 2., (type.getHeight() - .5) / 2.), .1f));
         geode->addDrawable(right);
         setShapeState(right);
         right->setColor(osg::Vec4(1.f, .5f, 0.f, .8f));
@@ -381,8 +385,8 @@ GUIOSGBuilder::buildMovable(const MSVehicleType& type) {
 
     osg::Geode* geode = new osg::Geode();
     osg::CompositeShape* comp = new osg::CompositeShape();
-    comp->addChild(new osg::Sphere(osg::Vec3(-0.3, (type.getLength() + .8) / 2., (type.getHeight() - .5) / 2.), .1f));
-    comp->addChild(new osg::Sphere(osg::Vec3(0.3, (type.getLength() + .8) / 2., (type.getHeight() - .5) / 2.), .1f));
+    comp->addChild(new osg::Sphere(osg::Vec3d(-0.3, (type.getLength() + .8) / 2., (type.getHeight() - .5) / 2.), .1f));
+    comp->addChild(new osg::Sphere(osg::Vec3d(0.3, (type.getLength() + .8) / 2., (type.getHeight() - .5) / 2.), .1f));
     osg::ShapeDrawable* brake = new osg::ShapeDrawable(comp);
     brake->setColor(osg::Vec4(1.f, 0.f, 0.f, .8f));
     geode->addDrawable(brake);
@@ -390,7 +394,7 @@ GUIOSGBuilder::buildMovable(const MSVehicleType& type) {
     m.lights->addChild(geode);
 
     geode = new osg::Geode();
-    osg::Vec3 center(0, type.getLength() / 2., type.getHeight() / 2.);
+    osg::Vec3d center(0, type.getLength() / 2., type.getHeight() / 2.);
     m.geom = new osg::ShapeDrawable(new osg::Sphere(center, .5f));
     geode->addDrawable(m.geom);
     setShapeState(m.geom);
@@ -399,7 +403,7 @@ GUIOSGBuilder::buildMovable(const MSVehicleType& type) {
     ellipse->addChild(m.lights);
     ellipse->setPivotPoint(center);
     ellipse->setPosition(center);
-    ellipse->setScale(osg::Vec3(type.getWidth() + enlarge, type.getLength() + enlarge, type.getHeight() + enlarge));
+    ellipse->setScale(osg::Vec3d(type.getWidth() + enlarge, type.getLength() + enlarge, type.getHeight() + enlarge));
     m.pos->addChild(ellipse);
     return m;
 }

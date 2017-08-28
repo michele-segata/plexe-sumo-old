@@ -24,6 +24,9 @@ errors
 # test tlLogic type "actuated"
 actuated
 
+# TLS actuation based on the individual vehicle's time losses
+delay_based
+
 # test dynamics when the node type was set to "traffic_light_unregulated"
 traffic_light_unregulated
 
@@ -32,3 +35,6 @@ rail_signal
 
 # load another offset value for an existing traffic light
 offset_only
+
+# load another offset value for a non existing traffic light
+offset_unknown

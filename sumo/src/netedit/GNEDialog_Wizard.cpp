@@ -28,10 +28,6 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_VERSION_H
-#include <version.h>
-#endif
-
 #include <utils/foxtools/FXLinkLabel.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/gui/images/GUIIconSubSys.h>
@@ -39,10 +35,6 @@
 #include <utils/common/ToString.h>
 #include <utils/gui/div/GUIDesigns.h>
 #include "GNEDialog_Wizard.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================

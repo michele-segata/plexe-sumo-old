@@ -70,10 +70,6 @@
 #include <utils/gui/div/GLHelper.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 /* -------------------------------------------------------------------------
  * GUIViewTraffic - FOX callback mapping
  * ----------------------------------------------------------------------- */
@@ -119,7 +115,7 @@ GUIViewTraffic::buildViewToolBars(GUIGlChildWindow& v) {
                 v.getColoringSchemesCombo().setCurrentItem(v.getColoringSchemesCombo().getNumItems() - 1);
             }
         }
-        v.getColoringSchemesCombo().setNumVisible(5);
+        v.getColoringSchemesCombo().setNumVisible(MAX2(5, (int)names.size() + 1));
     }
     // for junctions
     new FXButton(v.getLocatorPopup(),
@@ -260,7 +256,7 @@ GUIViewTraffic::onGamingClick(Position pos) {
     MSTLLogicControl& tlsControl = MSNet::getInstance()->getTLSControl();
     const std::vector<MSTrafficLightLogic*>& logics = tlsControl.getAllLogics();
     MSTrafficLightLogic* minTll = 0;
-    SUMOReal minDist = std::numeric_limits<SUMOReal>::infinity();
+    double minDist = std::numeric_limits<double>::infinity();
     for (std::vector<MSTrafficLightLogic*>::const_iterator i = logics.begin(); i != logics.end(); ++i) {
         // get the logic
         MSTrafficLightLogic* tll = (*i);

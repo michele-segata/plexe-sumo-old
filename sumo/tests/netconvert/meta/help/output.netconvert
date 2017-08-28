@@ -1,4 +1,4 @@
-SUMO netconvert Version dev-SVN-r22796
+SUMO netconvert Version dev-SVN-r23600
  Copyright (C) 2001-2017 DLR and contributors; http://sumo.dlr.de
 Road network importer / builder for the road traffic simulation SUMO.
 
@@ -64,6 +64,7 @@ Output Options:
   --output.original-names              Writes original names, if given, as
                                          parameter
   --street-sign-output FILE            Writes street signs as POIs to FILE
+  --ptstop-output FILE                 Writes public transport stops to FILE
   --opendrive-output.straight-threshold FLOAT  Builds parameterized curves
                                          whenever the angular change  between
                                          straight segments exceeds FLOAT degrees
@@ -229,8 +230,16 @@ Processing Options:
                                          according to road speed.
   --osm.oneway-spread-right            Whether one-way roads should be spread
                                          to the side instead of centered
+  --osm.stop-output.length FLOAT       The default length of a bus/train stop
+                                         in FLOAT m
   --opendrive.import-all-lanes         Imports all lane types
   --opendrive.ignore-widths            Whether lane widths shall be ignored.
+  --opendrive.curve-resolution FLOAT   The geometry resolution in m when
+                                         importing curved geometries as line
+                                         segments.
+  --opendrive.advance-stopline FLOAT   Allow stop lines to be built beyond the
+                                         start of the junction if the geometries
+                                         allow so
   --no-internal-links                  Omits internal links
   --numerical-ids                      Remaps alphanumerical IDs of nodes and
                                          edges to ensure that all IDs are

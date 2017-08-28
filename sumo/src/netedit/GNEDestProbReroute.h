@@ -51,7 +51,7 @@ class GNERerouterInterval;
 class GNEDestProbReroute {
 public:
     /// @brief constructor
-    GNEDestProbReroute(GNERerouterInterval& rerouterIntervalParent, GNEEdge* newEdgeDestination, SUMOReal probability);
+    GNEDestProbReroute(GNERerouterInterval& rerouterIntervalParent, GNEEdge* newEdgeDestination, double probability);
 
     /// @brief destructor
     ~GNEDestProbReroute();
@@ -63,10 +63,10 @@ public:
     void setNewDestination(GNEEdge* edge);
 
     /// @brief get probability
-    SUMOReal getProbability() const;
+    double getProbability() const;
 
     /// @brief set probability, if new probability is valid
-    bool setProbability(SUMOReal probability);
+    bool setProbability(double probability);
 
     /// @brief get tag
     SumoXMLTag getTag() const;
@@ -75,7 +75,7 @@ public:
     const GNERerouterInterval& getRerouterIntervalParent() const;
 
     /// @brief overload operator ==
-    bool operator==(const GNEDestProbReroute& destProbReroute);
+    bool operator==(const GNEDestProbReroute& destProbReroute) const;
 
 protected:
     /// @brief reference to rerouter interval parent
@@ -85,7 +85,7 @@ protected:
     GNEEdge* myNewEdgeDestination;
 
     /// @brief probability with which a vehicle will use the given edge as destination
-    SUMOReal myProbability;
+    double myProbability;
 
     /// @brief XML Tag of destiny probability reroute
     SumoXMLTag myTag;

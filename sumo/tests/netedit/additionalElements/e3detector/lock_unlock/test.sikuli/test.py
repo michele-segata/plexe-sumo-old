@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+"""
+@file    test.py
+@author  Pablo Alvarez Lopez
+@date    2016-11-25
+@version $Id$
+
+python script used by sikulix for testing netedit
+
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
+Copyright (C) 2009-2017 DLR/TS, Germany
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+"""
 # import common functions for netedit tests
 import os
 import sys
@@ -12,25 +30,22 @@ import neteditTestFunctions as netedit
 neteditProcess, match = netedit.setupAndStart(neteditTestRoot, False)
 
 # apply zoom
-netedit.zoomIn(match.getTarget().offset(325, 200), 10)
+netedit.setZoom("25", "0", "25")
 
-# Change to create additional
+# go to additional mode
 netedit.additionalMode()
 
-# obtain match for comboboxAdditional
-comboboxAdditional = netedit.getComboBoxAdditional(match)
-
 # select E3
-netedit.changeAdditional(comboboxAdditional, 8)
+netedit.changeAdditional("e3Detector")
 
 # create E3
 netedit.leftClick(match, 250, 250)
 
 # select entry detector
-netedit.changeAdditional(comboboxAdditional, -4)
+netedit.changeAdditional("detEntry")
 
 # Create Entry detector E3 (for saving)
-netedit.selectChild(comboboxAdditional, 4, 1)
+netedit.selectAdditionalChild(4, 0)
 netedit.leftClick(match, 400, 250)
 
 # change to move mode
@@ -39,17 +54,14 @@ netedit.moveMode()
 # move E3 to up
 netedit.moveElement(match, 120, 250, 120, 50)
 
-# Change to inspect mode
+# go to inspect mode
 netedit.inspectMode()
 
 # inspect E3
 netedit.leftClick(match, 250, 100)
 
-# obtain parameters reference
-parametersReference = netedit.getParametersReference(match)
-
 # block additional
-netedit.changeBlockAdditional(comboboxAdditional, 7)
+netedit.modifyBoolAttribute(7)
 
 # change to move mode
 netedit.moveMode()
@@ -57,17 +69,14 @@ netedit.moveMode()
 # try to move E3 to right (must be blocked)
 netedit.moveElement(match, 120, 50, 300, 50)
 
-# Change to inspect mode
+# go to inspect mode
 netedit.inspectMode()
 
 # inspect E3
 netedit.leftClick(match, 250, 100)
 
-# obtain parameters reference
-parametersReference = netedit.getParametersReference(match)
-
 # unblock additional
-netedit.changeBlockAdditional(comboboxAdditional, 7)
+netedit.modifyBoolAttribute(7)
 
 # change to move mode
 netedit.moveMode()
@@ -86,4 +95,4 @@ netedit.saveAdditionals()
 netedit.saveNetwork()
 
 # quit netedit
-netedit.quit(neteditProcess, False, False)
+netedit.quit(neteditProcess)

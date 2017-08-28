@@ -44,6 +44,7 @@
 #include "GUIGlobals.h"
 #include <microsim/MSVehicleControl.h>
 #include <utils/options/OptionsCont.h>
+#include <utils/options/OptionsIO.h>
 #include <utils/common/SysUtils.h>
 #include <utils/common/MsgRetrievingFunction.h>
 #include <utils/common/MsgHandler.h>
@@ -52,11 +53,8 @@
 
 #ifndef NO_TRACI
 #include <traci-server/TraCIServer.h>
+#include <traci-server/lib/TraCI.h>
 #endif
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -66,7 +64,7 @@ GUIRunThread::GUIRunThread(FXApp* app, MFXInterThreadEventClient* parent,
                            FXRealSpinDial& simDelay, MFXEventQue<GUIEvent*>& eq,
                            FXEX::FXThreadEvent& ev)
     : FXSingleEventThread(app, parent),
-      myNet(0), myHalting(true), myQuit(false), mySimulationInProgress(false), myOk(true),
+      myNet(0), myHalting(true), myQuit(false), mySimulationInProgress(false), myOk(true), myHaveSignaledEnd(false),
       mySimDelay(simDelay), myEventQue(eq), myEventThrow(ev) {
     myErrorRetriever = new MsgRetrievingFunction<GUIRunThread>(this, &GUIRunThread::retrieveMessage, MsgHandler::MT_ERROR);
     myMessageRetriever = new MsgRetrievingFunction<GUIRunThread>(this, &GUIRunThread::retrieveMessage, MsgHandler::MT_MESSAGE);
@@ -190,20 +188,27 @@ GUIRunThread::makeStep() {
         e = 0;
         MSNet::SimulationState state = myNet->simulationState(mySimEndTime);
 #ifndef NO_TRACI
-        if (state != MSNet::SIMSTATE_RUNNING) {
+        if (state == MSNet::SIMSTATE_LOADING) {
+            OptionsIO::setArgs(TraCI::getLoadArgs());
+            TraCI::getLoadArgs().clear();
+        } else if (state != MSNet::SIMSTATE_RUNNING) {
             if (OptionsCont::getOptions().getInt("remote-port") != 0 && !TraCIServer::wasClosed()) {
                 state = MSNet::SIMSTATE_RUNNING;
             }
         }
 #endif
         switch (state) {
+            case MSNet::SIMSTATE_LOADING:
             case MSNet::SIMSTATE_END_STEP_REACHED:
             case MSNet::SIMSTATE_NO_FURTHER_VEHICLES:
             case MSNet::SIMSTATE_CONNECTION_CLOSED:
-            case MSNet::SIMSTATE_TOO_MANY_VEHICLES:
-                WRITE_MESSAGE("Simulation ended at time: " + time2string(myNet->getCurrentTimeStep()));
-                WRITE_MESSAGE("Reason: " + MSNet::getStateMessage(state));
-                e = new GUIEvent_SimulationEnded(state, myNet->getCurrentTimeStep() - DELTA_T);
+            case MSNet::SIMSTATE_TOO_MANY_TELEPORTS:
+                if (!myHaveSignaledEnd || state != MSNet::SIMSTATE_END_STEP_REACHED) {
+                    WRITE_MESSAGE("Simulation ended at time: " + time2string(myNet->getCurrentTimeStep()));
+                    WRITE_MESSAGE("Reason: " + MSNet::getStateMessage(state));
+                    e = new GUIEvent_SimulationEnded(state, myNet->getCurrentTimeStep() - DELTA_T);
+                    myHaveSignaledEnd = true;
+                }
                 break;
             default:
                 break;

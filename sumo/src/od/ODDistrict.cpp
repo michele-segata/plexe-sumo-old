@@ -39,10 +39,6 @@
 #include "ODDistrict.h"
 
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -55,14 +51,14 @@ ODDistrict::~ODDistrict() {}
 
 
 void
-ODDistrict::addSource(const std::string& id, SUMOReal weight) {
-    mySources.add(weight, id);
+ODDistrict::addSource(const std::string& id, double weight) {
+    mySources.add(id, weight);
 }
 
 
 void
-ODDistrict::addSink(const std::string& id, SUMOReal weight) {
-    mySinks.add(weight, id);
+ODDistrict::addSink(const std::string& id, double weight) {
+    mySinks.add(id, weight);
 }
 
 

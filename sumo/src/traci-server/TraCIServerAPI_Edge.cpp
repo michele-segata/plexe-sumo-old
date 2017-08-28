@@ -47,10 +47,6 @@
 #include <microsim/MSEdgeWeightsStorage.h>
 #include <utils/emissions/HelpersHarmonoise.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -102,7 +98,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                     return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "The message must contain the time definition.", outputStorage);
                 }
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                SUMOReal value;
+                double value;
                 if (!MSNet::getInstance()->getWeightsStorage().retrieveExistingTravelTime(e, time, value)) {
                     tempMsg.writeDouble(-1);
                 } else {
@@ -117,7 +113,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                     return server.writeErrorStatusCmd(CMD_GET_EDGE_VARIABLE, "The message must contain the time definition.", outputStorage);
                 }
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                SUMOReal value;
+                double value;
                 if (!MSNet::getInstance()->getWeightsStorage().retrieveExistingEffort(e, time, value)) {
                     tempMsg.writeDouble(-1);
                 } else {
@@ -130,7 +126,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 tempMsg.writeDouble(e->getCurrentTravelTime());
                 break;
             case VAR_WAITING_TIME: {
-                SUMOReal wtime = 0;
+                double wtime = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     wtime += (*i)->getWaitingSeconds();
@@ -141,7 +137,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             break;
             case LAST_STEP_PERSON_ID_LIST: {
                 std::vector<std::string> personIDs;
-                std::vector<MSTransportable*> persons = e->getSortedPersons(MSNet::getInstance()->getCurrentTimeStep());
+                std::vector<MSTransportable*> persons = e->getSortedPersons(MSNet::getInstance()->getCurrentTimeStep(), true);
                 for (std::vector<MSTransportable*>::iterator it = persons.begin(); it != persons.end(); ++it) {
                     personIDs.push_back((*it)->getID());
                 }
@@ -164,7 +160,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case VAR_CO2EMISSION: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     sum += (*i)->getCO2Emissions();
@@ -174,7 +170,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case VAR_COEMISSION: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     sum += (*i)->getCOEmissions();
@@ -184,7 +180,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case VAR_HCEMISSION: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     sum += (*i)->getHCEmissions();
@@ -194,7 +190,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case VAR_PMXEMISSION: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     sum += (*i)->getPMxEmissions();
@@ -204,7 +200,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case VAR_NOXEMISSION: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     sum += (*i)->getNOxEmissions();
@@ -214,7 +210,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case VAR_FUELCONSUMPTION: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     sum += (*i)->getFuelConsumption();
@@ -224,10 +220,10 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case VAR_NOISEEMISSION: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
-                    sum += (SUMOReal) pow(10., ((*i)->getHarmonoise_NoiseEmissions() / 10.));
+                    sum += (double) pow(10., ((*i)->getHarmonoise_NoiseEmissions() / 10.));
                 }
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
                 if (sum != 0) {
@@ -238,7 +234,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case VAR_ELECTRICITYCONSUMPTION: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     sum += (*i)->getElectricityConsumption();
@@ -263,13 +259,13 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case LAST_STEP_OCCUPANCY: {
-                SUMOReal sum = 0;
+                double sum = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
                     sum += (*i)->getNettoOccupancy();
                 }
                 tempMsg.writeUnsignedByte(TYPE_DOUBLE);
-                tempMsg.writeDouble(sum / (SUMOReal) lanes.size());
+                tempMsg.writeDouble(sum / (double) lanes.size());
             }
             break;
             case LAST_STEP_VEHICLE_HALTING_NUMBER: {
@@ -289,7 +285,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
             }
             break;
             case LAST_STEP_LENGTH: {
-                SUMOReal lengthSum = 0;
+                double lengthSum = 0;
                 int noVehicles = 0;
                 const std::vector<MSLane*>& lanes = e->getLanes();
                 for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
@@ -304,7 +300,7 @@ TraCIServerAPI_Edge::processGet(TraCIServer& server, tcpip::Storage& inputStorag
                 if (noVehicles == 0) {
                     tempMsg.writeDouble(0);
                 } else {
-                    tempMsg.writeDouble(lengthSum / (SUMOReal) noVehicles);
+                    tempMsg.writeDouble(lengthSum / (double) noVehicles);
                 }
             }
             break;
@@ -398,7 +394,7 @@ TraCIServerAPI_Edge::processSet(TraCIServer& server, tcpip::Storage& inputStorag
                 if (!server.readTypeCheckingDouble(inputStorage, value)) {
                     return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "The variable must be the value given as double", outputStorage);
                 }
-                MSNet::getInstance()->getWeightsStorage().addTravelTime(e, SUMOReal(0), SUMOReal(SUMOTime_MAX), value);
+                MSNet::getInstance()->getWeightsStorage().addTravelTime(e, 0., double(SUMOTime_MAX), value);
             } else {
                 return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Setting travel time requires either begin time, end time, and value, or only value as parameter.", outputStorage);
             }
@@ -430,7 +426,7 @@ TraCIServerAPI_Edge::processSet(TraCIServer& server, tcpip::Storage& inputStorag
                 if (!server.readTypeCheckingDouble(inputStorage, value)) {
                     return server.writeErrorStatusCmd(CMD_SET_EDGE_VARIABLE, "The variable must be the value given as double", outputStorage);
                 }
-                MSNet::getInstance()->getWeightsStorage().addEffort(e, SUMOReal(0), SUMOReal(SUMOTime_MAX), value);
+                MSNet::getInstance()->getWeightsStorage().addEffort(e, 0., double(SUMOTime_MAX), value);
             } else {
                 return server.writeErrorStatusCmd(CMD_SET_VEHICLE_VARIABLE, "Setting effort requires either begin time, end time, and value, or only value as parameter.", outputStorage);
             }

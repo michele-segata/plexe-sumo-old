@@ -37,16 +37,10 @@
 #include "TraCIConstants.h"
 #include <microsim/MSNet.h>
 #include <microsim/MSJunction.h>
-#include <microsim/MSNoLogicJunction.h>
-#include <microsim/MSLogicJunction.h>
 #include <microsim/MSJunctionControl.h>
 #include <microsim/MSNet.h>
-#include <microsim/MSLane.h>
 #include "TraCIServerAPI_Junction.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include "lib/TraCI_Junction.h"
 
 
 // ===========================================================================
@@ -59,7 +53,7 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
     int variable = inputStorage.readUnsignedByte();
     std::string id = inputStorage.readString();
     // check variable
-    if (variable != ID_LIST && variable != VAR_POSITION && variable != ID_COUNT && variable != VAR_SHAPE && variable != TL_CONTROLLED_LANES) {
+    if (variable != ID_LIST && variable != VAR_POSITION && variable != ID_COUNT && variable != VAR_SHAPE) {
         return server.writeErrorStatusCmd(CMD_GET_JUNCTION_VARIABLE, "Get Junction Variable: unsupported variable " + toHex(variable, 2) + " specified", outputStorage);
     }
     // begin response building
@@ -68,63 +62,50 @@ TraCIServerAPI_Junction::processGet(TraCIServer& server, tcpip::Storage& inputSt
     tempMsg.writeUnsignedByte(RESPONSE_GET_JUNCTION_VARIABLE);
     tempMsg.writeUnsignedByte(variable);
     tempMsg.writeString(id);
-    if (variable == ID_LIST) {
-        std::vector<std::string> ids;
-        MSNet::getInstance()->getJunctionControl().insertIDs(ids);
-        tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
-        tempMsg.writeStringList(ids);
-    } else if (variable == ID_COUNT) {
-        std::vector<std::string> ids;
-        MSNet::getInstance()->getJunctionControl().insertIDs(ids);
-        tempMsg.writeUnsignedByte(TYPE_INTEGER);
-        tempMsg.writeInt((int) ids.size());
-    } else {
-        MSJunction* j = MSNet::getInstance()->getJunctionControl().get(id);
-        if (j == 0) {
-            return server.writeErrorStatusCmd(CMD_GET_JUNCTION_VARIABLE, "Junction '" + id + "' is not known", outputStorage);
-        }
+
+    try {
         switch (variable) {
             case ID_LIST:
+                tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
+                tempMsg.writeStringList(TraCI_Junction::getIDList());
                 break;
-            case VAR_POSITION:
+            case ID_COUNT:
+                tempMsg.writeUnsignedByte(TYPE_INTEGER);
+                tempMsg.writeInt(TraCI_Junction::getIDCount());
+                break;
+            case VAR_POSITION: {
                 tempMsg.writeUnsignedByte(POSITION_2D);
-                tempMsg.writeDouble(j->getPosition().x());
-                tempMsg.writeDouble(j->getPosition().y());
+                TraCIPosition p = TraCI_Junction::getPosition(id);
+                tempMsg.writeDouble(p.x);
+                tempMsg.writeDouble(p.y);
                 break;
-            case VAR_SHAPE:
+            }
+            case VAR_SHAPE: {
                 tempMsg.writeUnsignedByte(TYPE_POLYGON);
-                tempMsg.writeUnsignedByte(MIN2(255, (int)j->getShape().size()));
-                for (int iPoint = 0; iPoint < MIN2(255, (int)j->getShape().size()); ++iPoint) {
-                    tempMsg.writeDouble(j->getShape()[iPoint].x());
-                    tempMsg.writeDouble(j->getShape()[iPoint].y());
+                const TraCIPositionVector shp = TraCI_Junction::getShape(id);
+                tempMsg.writeUnsignedByte(MIN2(255, (int) shp.size()));
+                for (int iPoint = 0; iPoint < MIN2(255, (int) shp.size()); ++iPoint) {
+                    tempMsg.writeDouble(shp[iPoint].x);
+                    tempMsg.writeDouble(shp[iPoint].y);
                 }
                 break;
-            case TL_CONTROLLED_LANES:
-                {
-                    std::vector<MSLane*> lanes;
-                    if (dynamic_cast<MSNoLogicJunction*>(j)) lanes = dynamic_cast<MSNoLogicJunction*>(j)->getIncomingLanes();
-                    if (dynamic_cast<MSLogicJunction*>(j)) lanes = dynamic_cast<MSLogicJunction*>(j)->getIncomingLanes();
-                    tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
-                    std::vector<std::string> laneIDs;
-                    for (std::vector<MSLane*>::const_iterator i = lanes.begin(); i != lanes.end(); ++i) {
-                        laneIDs.push_back((*i)->getID());
-                    }
-                    tempMsg.writeStringList(laneIDs);
-                }
-                break;
-
+            }
             default:
                 break;
+
         }
+    } catch (TraCIException& e) {
+        return server.writeErrorStatusCmd(CMD_GET_JUNCTION_VARIABLE, e.what(), outputStorage);
     }
     server.writeStatusCmd(CMD_GET_JUNCTION_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
+
     return true;
 }
 
 bool
 TraCIServerAPI_Junction::getPosition(const std::string& id, Position& p) {
-    MSJunction* j = MSNet::getInstance()->getJunctionControl().get(id);
+    MSJunction* j = TraCI_Junction::getJunction(id);
     if (j == 0) {
         return false;
     }

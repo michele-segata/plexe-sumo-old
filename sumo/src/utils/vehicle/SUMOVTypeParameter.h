@@ -29,7 +29,9 @@
 #ifdef _MSC_VER
 #include <windows_config.h>
 #else
+
 #include <config.h>
+
 #endif
 
 #include <string>
@@ -38,11 +40,13 @@
 #include <utils/common/RGBColor.h>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/SUMOVehicleClass.h>
+#include <utils/distribution/Distribution_Parameterized.h>
 
 // ===========================================================================
 // class declarations
 // ===========================================================================
 class OutputDevice;
+
 class OptionsCont;
 
 
@@ -50,29 +54,28 @@ class OptionsCont;
 // value definitions
 // ===========================================================================
 const int VTYPEPARS_LENGTH_SET = 1;
-const int VTYPEPARS_MINGAP_SET = 2;
-const int VTYPEPARS_MAXSPEED_SET = 2 << 2;
-const int VTYPEPARS_PROBABILITY_SET = 2 << 3;
-const int VTYPEPARS_SPEEDFACTOR_SET = 2 << 4;
-const int VTYPEPARS_SPEEDDEVIATION_SET = 2 << 5;
-const int VTYPEPARS_EMISSIONCLASS_SET = 2 << 6;
-const int VTYPEPARS_COLOR_SET = 2 << 7;
-const int VTYPEPARS_VEHICLECLASS_SET = 2 << 8;
-const int VTYPEPARS_WIDTH_SET = 2 << 9;
-const int VTYPEPARS_HEIGHT_SET = 2 << 10;
-const int VTYPEPARS_SHAPE_SET = 2 << 11;
-const int VTYPEPARS_OSGFILE_SET = 2 << 12;
-const int VTYPEPARS_IMGFILE_SET = 2 << 13;
-const int VTYPEPARS_IMPATIENCE_SET = 2 << 14;
-const int VTYPEPARS_LANE_CHANGE_MODEL_SET = 2 << 15;
-const int VTYPEPARS_PERSON_CAPACITY = 2 << 16;
-const int VTYPEPARS_BOARDING_DURATION = 2 << 17;
-const int VTYPEPARS_CONTAINER_CAPACITY = 2 << 18;
-const int VTYPEPARS_LOADING_DURATION = 2 << 19;
-const int VTYPEPARS_CAR_FOLLOW_MODEL = 2 << 20;
-const int VTYPEPARS_MAXSPEED_LAT_SET = 2 << 21;
-const int VTYPEPARS_LATALIGNMENT_SET = 2 << 22;
-const int VTYPEPARS_MINGAP_LAT_SET = 2 << 23;
+const int VTYPEPARS_MINGAP_SET = 1 << 1;
+const int VTYPEPARS_MAXSPEED_SET = 1 << 2;
+const int VTYPEPARS_PROBABILITY_SET = 1 << 3;
+const int VTYPEPARS_SPEEDFACTOR_SET = 1 << 4;
+const int VTYPEPARS_EMISSIONCLASS_SET = 1 << 5;
+const int VTYPEPARS_COLOR_SET = 1 << 6;
+const int VTYPEPARS_VEHICLECLASS_SET = 1 << 7;
+const int VTYPEPARS_WIDTH_SET = 1 << 8;
+const int VTYPEPARS_HEIGHT_SET = 1 << 9;
+const int VTYPEPARS_SHAPE_SET = 1 << 10;
+const int VTYPEPARS_OSGFILE_SET = 1 << 11;
+const int VTYPEPARS_IMGFILE_SET = 1 << 12;
+const int VTYPEPARS_IMPATIENCE_SET = 1 << 13;
+const int VTYPEPARS_LANE_CHANGE_MODEL_SET = 1 << 14;
+const int VTYPEPARS_PERSON_CAPACITY = 1 << 15;
+const int VTYPEPARS_BOARDING_DURATION = 1 << 16;
+const int VTYPEPARS_CONTAINER_CAPACITY = 1 << 17;
+const int VTYPEPARS_LOADING_DURATION = 1 << 18;
+const int VTYPEPARS_CAR_FOLLOW_MODEL = 1 << 19;
+const int VTYPEPARS_MAXSPEED_LAT_SET = 1 << 20;
+const int VTYPEPARS_LATALIGNMENT_SET = 1 << 21;
+const int VTYPEPARS_MINGAP_LAT_SET = 1 << 22;
 
 
 // ===========================================================================
@@ -117,31 +120,36 @@ public:
      * @param[in] defaultValue The value to return if the given map does not contain the named variable
      * @return The named value from the map or the default if it does not exist there
      */
-    SUMOReal getCFParam(const SumoXMLAttr attr, const SUMOReal defaultValue) const;
+    double getCFParam(const SumoXMLAttr attr, const double defaultValue) const;
+
+    /** @brief Returns the named value from the map, or the default if it is not contained there
+    * @param[in] attr The corresponding xml attribute
+    * @param[in] defaultValue The value to return if the given map does not contain the named variable
+    * @return The named value from the map or the default if it does not exist there
+    */
+    std::string getCFParamString(const SumoXMLAttr attr, const std::string defaultValue) const;
 
     /** @brief Returns the named value from the map, or the default if it is not contained there
      * @param[in] attr The corresponding xml attribute
      * @param[in] defaultValue The value to return if the given map does not contain the named variable
      * @return The named value from the map or the default if it does not exist there
      */
-    SUMOReal getLCParam(const SumoXMLAttr attr, const SUMOReal defaultValue) const;
+    double getLCParam(const SumoXMLAttr attr, const double defaultValue) const;
 
 
     /// @brief The vehicle type's id
     std::string id;
 
     /// @brief The physical vehicle length
-    SUMOReal length;
+    double length;
     /// @brief This class' free space in front of the vehicle itself
-    SUMOReal minGap;
+    double minGap;
     /// @brief The vehicle type's maximum speed [m/s]
-    SUMOReal maxSpeed;
+    double maxSpeed;
     /// @brief The probability when being added to a distribution without an explicit probability
-    SUMOReal defaultProbability;
+    double defaultProbability;
     /// @brief The factor by which the maximum speed may deviate from the allowed max speed on the street
-    SUMOReal speedFactor;
-    /// @brief The standard deviation for speed variations
-    SUMOReal speedDev;
+    Distribution_Parameterized speedFactor;
     /// @brief The emission class of this vehicle
     SUMOEmissionClass emissionClass;
     /// @brief The color
@@ -149,7 +157,7 @@ public:
     /// @brief The vehicle's class
     SUMOVehicleClass vehicleClass;
     /// @brief The vehicle's impatience (willingness to obstruct others)
-    SUMOReal impatience;
+    double impatience;
     /// @brief The person capacity of the vehicle
     int personCapacity;
     /// @brief The container capacity of the vehicle
@@ -163,10 +171,10 @@ public:
     /// @{
 
     /// @brief This class' width
-    SUMOReal width;
+    double width;
 
     /// @brief This class' height
-    SUMOReal height;
+    double height;
 
     /// @brief This class' shape
     SUMOVehicleShape shape;
@@ -183,7 +191,7 @@ public:
     SumoXMLTag cfModel;
 
     /// @brief sub-model parameters
-    typedef std::map<SumoXMLAttr, SUMOReal> SubParams;
+    typedef std::map<SumoXMLAttr, std::string> SubParams;
     /// @brief Car-following parameter
     SubParams cfParameter;
     /// @brief Lane-changing parameter
@@ -193,11 +201,11 @@ public:
     LaneChangeModel lcModel;
 
     /// @brief The vehicle type's maximum lateral speed [m/s]
-    SUMOReal maxSpeedLat;
+    double maxSpeedLat;
     /// @brief The vehicles desired lateral alignment
     LateralAlignment latAlignment;
     /// @brief The vehicle type's minimum lateral gap [m]
-    SUMOReal minGapLat;
+    double minGapLat;
 
     /// @brief Information for the router which parameter were set
     int setParameter;
@@ -214,21 +222,28 @@ public:
      * @param[in] vc the vehicle class
      * @return the acceleration in m/s^2
      */
-    static SUMOReal getDefaultAccel(const SUMOVehicleClass vc = SVC_IGNORING);
+    static double getDefaultAccel(const SUMOVehicleClass vc = SVC_IGNORING);
 
     /** @brief Returns the default deceleration for the given vehicle class
      * This needs to be a function because the actual value is stored in the car following model
      * @param[in] vc the vehicle class
      * @return the deceleration in m/s^2
      */
-    static SUMOReal getDefaultDecel(const SUMOVehicleClass vc = SVC_IGNORING);
+    static double getDefaultDecel(const SUMOVehicleClass vc = SVC_IGNORING);
+
+    /** @brief Returns the default emergency deceleration for the given vehicle class
+     * This needs to be a function because the actual value is stored in the car following model
+     * @param[in] vc the vehicle class
+     * @return the deceleration in m/s^2
+     */
+    static double getDefaultEmergencyDecel(const SUMOVehicleClass vc = SVC_IGNORING);
 
     /** @brief Returns the default driver's imperfection (sigma or epsilon in Krauss' model) for the given vehicle class
      * This needs to be a function because the actual value is stored in the car following model
      * @param[in] vc the vehicle class
      * @return the imperfection as a value between 0 and 1
      */
-    static SUMOReal getDefaultImperfection(const SUMOVehicleClass vc = SVC_IGNORING);
+    static double getDefaultImperfection(const SUMOVehicleClass vc = SVC_IGNORING);
 
     /// @brief return the default parameters, this is a function due to the http://www.parashift.com/c++-faq/static-init-order.html
     static const SUMOVTypeParameter& getDefault();

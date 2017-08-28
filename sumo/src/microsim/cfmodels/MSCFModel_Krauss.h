@@ -48,10 +48,13 @@ public:
     /** @brief Constructor
      * @param[in] accel The maximum acceleration
      * @param[in] decel The maximum deceleration
+     * @param[in] emergencyDecel The maximum emergency deceleration
+     * @param[in] apparentDecel The deceleration as expected by others
      * @param[in] dawdle The driver imperfection
      * @param[in] headwayTime The driver's reaction time
      */
-    MSCFModel_Krauss(const MSVehicleType* vtype, SUMOReal accel, SUMOReal decel, SUMOReal dawdle, SUMOReal headwayTime);
+    MSCFModel_Krauss(const MSVehicleType* vtype, double accel, double decel,
+                     double emergencyDecel, double apparentDecel, double dawdle, double headwayTime);
 
 
     /// @brief Destructor
@@ -68,7 +71,7 @@ public:
      * @return EGO's safe speed for approaching a non-moving obstacle
      * @todo generic Interface, models can call for the values they need
      */
-    SUMOReal stopSpeed(const MSVehicle* const veh, const SUMOReal speed, SUMOReal gap2pred) const;
+    double stopSpeed(const MSVehicle* const veh, const double speed, double gap2pred) const;
 
 
     /** @brief Computes the vehicle's safe speed (no dawdling)
@@ -79,7 +82,7 @@ public:
      * @param[in] predSpeed The speed of LEADER
      * @return EGO's safe speed
      */
-    SUMOReal followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const;
+    double followSpeed(const MSVehicle* const veh, double speed, double gap2pred, double predSpeed, double predMaxDecel) const;
 
 
     /** @brief Returns the model's name
@@ -99,13 +102,13 @@ public:
     MSCFModel* duplicate(const MSVehicleType* vtype) const;
 
 
-private:
+protected:
 
     /** @brief Applies driver imperfection (dawdling / sigma)
      * @param[in] speed The speed with no dawdling
      * @return The speed after dawdling
      */
-    SUMOReal dawdle(SUMOReal speed) const;
+    double dawdle(double speed) const;
 
 };
 

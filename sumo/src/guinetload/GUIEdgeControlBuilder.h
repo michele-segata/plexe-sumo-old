@@ -82,10 +82,10 @@ public:
      * @see MSLane
      */
     virtual MSLane* addLane(const std::string& id,
-                            SUMOReal maxSpeed, SUMOReal length,
-                            const PositionVector& shape, SUMOReal width,
+                            double maxSpeed, double length,
+                            const PositionVector& shape, double width,
                             SVCPermissions permissions,
-                            int index);
+                            int index, bool isRampAccel);
 
 
 

@@ -4,6 +4,7 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
+/// @author  Laura Bieker
 /// @author  Michele Segata
 /// @date    2006-01-24
 /// @version $Id$
@@ -108,7 +109,11 @@ enum SUMOVehicleShape {
     /// @brief render as a arbitrary ship
     SVS_SHIP,
     /// @brief render as an emergency vehicle
-    SVS_EMERGENCY
+    SVS_EMERGENCY,
+    /// @brief render as a fire brigade
+    SVS_FIREBRIGADE,
+    /// @brief render as a police car
+    SVS_POLICE
 };
 
 
@@ -210,12 +215,14 @@ extern StringBijection<SUMOVehicleClass> SumoVehicleClassStrings;
 extern std::set<std::string> deprecatedVehicleClassesSeen;
 extern StringBijection<SUMOVehicleShape> SumoVehicleShapeStrings;
 
-/* @brief bitset where each bit declares whether a certain SVC may use this edge/lane
- */
+/// @brief bitset where each bit declares whether a certain SVC may use this edge/lane
 typedef int SVCPermissions;
-extern const SVCPermissions SVCAll; // everything allowed
-extern const SVCPermissions SVC_UNSPECIFIED; // permissions not specified
 
+/// @brief all VClasses are allowed
+extern const SVCPermissions SVCAll;
+
+/// @brief permissions not specified
+extern const SVCPermissions SVC_UNSPECIFIED;
 
 /**
  * @enum SUMOEmissionClass
@@ -234,17 +241,16 @@ typedef int SUMOEmissionClass;
 // ---------------------------------------------------------------------------
 /** @brief Returns the ids of the given classes, divided using a ' '
  * @param[in] the permissions to encode
+ * @param[in] expand whether 'all' should be used
  * @return The string representation of these classes
  */
-extern std::string getVehicleClassNames(SVCPermissions permissions);
-
+extern std::string getVehicleClassNames(SVCPermissions permissions, bool expand = false);
 
 /** @brief Returns the ids of the given classes, divided using a ' '
  * @param[in] the permissions to encode
  * @return The string representation of these classes as a vector
  */
 extern std::vector<std::string> getVehicleClassNamesList(SVCPermissions permissions);
-
 
 /** @brief Returns the class id of the abstract class given by its name
  * @param[in] name The name of the abstract vehicle class
@@ -268,9 +274,7 @@ extern int getVehicleClassCompoundID(const std::string& name);
  */
 extern SVCPermissions parseVehicleClasses(const std::string& allowedS);
 
-
-/** @brief Checks whether the given string contains only known vehicle classes
- */
+/// @brief Checks whether the given string contains only known vehicle classes
 extern bool canParseVehicleClasses(const std::string& classes);
 
 /** @brief Encodes the given vector of allowed and disallowed classes into a bitset
@@ -279,13 +283,11 @@ extern bool canParseVehicleClasses(const std::string& classes);
  */
 extern SVCPermissions parseVehicleClasses(const std::string& allowedS, const std::string& disallowedS);
 
-
 /** @brief Encodes the given vector of allowed classs into a bitset
  * Unlike the methods which parse a string it gives immediately a warning output on deprecated vehicle classes.
  * @param[in] classesS The names vector to parse
  */
 extern SVCPermissions parseVehicleClasses(const std::vector<std::string>& allowedS);
-
 
 /// @brief writes allowed disallowed attributes if needed;
 extern void writePermissions(OutputDevice& into, SVCPermissions permissions);
@@ -302,13 +304,14 @@ extern void writePreferences(OutputDevice& into, SVCPermissions preferred);
  */
 extern std::string getVehicleShapeName(SUMOVehicleShape id);
 
-
 /** @brief Returns the class id of the shape class given by its name
  * @param[in] name The name of the shape class
  * @return The internal representation of this class
  */
 extern SUMOVehicleShape getVehicleShapeID(const std::string& name);
 
+/// @brief Checks whether the given string contains only known vehicle shape
+extern bool canParseVehicleShape(const std::string& shape);
 
 /** @brief Returns whether an edge with the given permission is a railway edge
  * @param[in] permissions The permissions of the edge
@@ -334,11 +337,11 @@ extern bool isForbidden(SVCPermissions permissions);
 extern const std::string DEFAULT_VTYPE_ID;
 extern const std::string DEFAULT_PEDTYPE_ID;
 
-extern const SUMOReal DEFAULT_VEH_PROB; // !!! does this belong here?
+extern const double DEFAULT_VEH_PROB; // !!! does this belong here?
 
-extern const SUMOReal DEFAULT_PEDESTRIAN_SPEED;
+extern const double DEFAULT_PEDESTRIAN_SPEED;
 
-extern const SUMOReal DEFAULT_CONTAINER_TRANSHIP_SPEED;
+extern const double DEFAULT_CONTAINER_TRANSHIP_SPEED;
 
 #endif
 

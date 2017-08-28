@@ -51,18 +51,17 @@
 #include "GNELane.h"
 #include "GNEAdditional.h"
 #include "GNEConnection.h"
+#include "GNERouteProbe.h"
+#include "GNEVaporizer.h"
+#include "GNERerouter.h"
 
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 
 // ===========================================================================
 // static
 // ===========================================================================
-const SUMOReal GNEEdge::SNAP_RADIUS = SUMO_const_halfLaneWidth;
+const double GNEEdge::SNAP_RADIUS = SUMO_const_halfLaneWidth;
 
 // ===========================================================================
 // members methods
@@ -84,18 +83,22 @@ GNEEdge::GNEEdge(NBEdge& nbe, GNENet* net, bool wasSplit, bool loaded):
         myLanes.push_back(new GNELane(*this, i));
         myLanes.back()->incRef("GNEEdge::GNEEdge");
     }
+    // update Lane geometries
+    for (LaneVector::iterator i = myLanes.begin(); i != myLanes.end(); i++) {
+        (*i)->updateGeometry();
+    }
 }
 
 
 GNEEdge::~GNEEdge() {
-    // Delete edges
+    // Delete references to this eddge in lanes
     for (LaneVector::iterator i = myLanes.begin(); i != myLanes.end(); ++i) {
         (*i)->decRef("GNEEdge::~GNEEdge");
         if ((*i)->unreferenced()) {
             delete *i;
         }
     }
-    // delete connections
+    // delete references to this eddge in connections
     for (ConnectionVector::const_iterator i = myGNEConnections.begin(); i != myGNEConnections.end(); ++i) {
         (*i)->decRef("GNEEdge::~GNEEdge");
         if ((*i)->unreferenced()) {
@@ -199,7 +202,7 @@ GNEEdge::drawGL(const GUIVisualizationSettings& s) const {
                 Position pos = geom[i];
                 glPushMatrix();
                 glTranslated(pos.x(), pos.y(), GLO_JUNCTION - 0.01);
-                GLHelper:: drawFilledCircle(SNAP_RADIUS, 32);
+                GLHelper:: drawFilledCircle(SNAP_RADIUS * MIN2((double)1, s.laneWidthExaggeration), 32);
                 glPopMatrix();
             }
             glPopName();
@@ -212,10 +215,10 @@ GNEEdge::drawGL(const GUIVisualizationSettings& s) const {
         glPushName(getGlID());
         GNELane* lane1 = myLanes[0];
         GNELane* lane2 = myLanes[myLanes.size() - 1];
-        Position p = lane1->getShape().positionAtOffset(lane1->getShape().length() / (SUMOReal) 2.);
-        p.add(lane2->getShape().positionAtOffset(lane2->getShape().length() / (SUMOReal) 2.));
+        Position p = lane1->getShape().positionAtOffset(lane1->getShape().length() / (double) 2.);
+        p.add(lane2->getShape().positionAtOffset(lane2->getShape().length() / (double) 2.));
         p.mul(.5);
-        SUMOReal angle = lane1->getShape().rotationDegreeAtOffset(lane1->getShape().length() / (SUMOReal) 2.);
+        double angle = lane1->getShape().rotationDegreeAtOffset(lane1->getShape().length() / (double) 2.);
         angle += 90;
         if (angle > 90 && angle < 270) {
             angle -= 180;
@@ -293,12 +296,12 @@ GNEEdge::changeGeometry(PositionVector& geom, const std::string& id, const Posit
         throw ProcessError("Invalid geometry size in " + toString(SUMO_TAG_EDGE) + " with ID='" + id + "'");
     } else {
         int index = geom.indexOfClosest(oldPos);
-        const SUMOReal nearestOffset = geom.nearest_offset_to_point2D(oldPos, true);
+        const double nearestOffset = geom.nearest_offset_to_point2D(oldPos, true);
         if (nearestOffset != GeomHelper::INVALID_OFFSET
                 && (moveEndPoints || (nearestOffset >= SNAP_RADIUS
                                       && nearestOffset <= geom.length2D() - SNAP_RADIUS))) {
             const Position nearest = geom.positionAtOffset2D(nearestOffset);
-            const SUMOReal distance = geom[index].distanceTo2D(nearest);
+            const double distance = geom[index].distanceTo2D(nearest);
             if (distance < SNAP_RADIUS) { //move existing
                 if (moveEndPoints || (index != 0 && index != (int)geom.size() - 1)) {
                     const bool closed = geom.isClosed();
@@ -413,6 +416,32 @@ GNEEdge::remakeIncomingGNEConnections() {
 void
 GNEEdge::remakeGNEConnections() {
     // @note: this method may only be called once the whole network is initialized
+
+    // first check that there are the same number of NBLanes as GNELanes
+    while (myLanes.size() < myNBEdge.getLanes().size()) {
+        GNELane* lane = new GNELane(*this, (int)myLanes.size());
+        const NBEdge::Lane& laneAttrs = myNBEdge.getLanes().at(myLanes.size());
+        myLanes.push_back(lane);
+        lane->incRef("GNEEdge::addLane");
+        // we copy all attributes except shape since this is recomputed from edge shape
+        myNBEdge.setSpeed(lane->getIndex(), myNBEdge.getSpeed());
+        myNBEdge.setPermissions(laneAttrs.permissions, lane->getIndex());
+        myNBEdge.setPreferredVehicleClass(laneAttrs.preferred, lane->getIndex());
+        myNBEdge.setEndOffset(lane->getIndex(), laneAttrs.endOffset);
+        myNBEdge.setLaneWidth(lane->getIndex(), laneAttrs.width);
+        // update indices
+        for (int i = 0; i < (int)myLanes.size(); ++i) {
+            myLanes[i]->setIndex(i);
+        }
+        lane->updateGeometry();
+        // Remake connections for this edge and all edges that target this lane
+        remakeGNEConnections();
+        remakeIncomingGNEConnections();
+        // Update element
+        myNet->refreshElement(this);
+        updateGeometry();
+    }
+
     // Create connections (but reuse existing objects)
     std::vector<NBEdge::Connection>& myConnections = myNBEdge.getConnections();
     ConnectionVector newCons;
@@ -421,7 +450,6 @@ GNEEdge::remakeGNEConnections() {
         newCons.push_back(retrieveConnection(con.fromLane, con.toEdge, con.toLane));
         newCons.back()->incRef("GNEEdge::GNEEdge");
         newCons.back()->updateLinkState();
-        //std::cout << " remakeGNEConnection " << newCons.back()->getNBConnection() << "\n";
     }
     clearGNEConnections();
     myGNEConnections = newCons;
@@ -440,6 +468,42 @@ GNEEdge::clearGNEConnections() {
         }
     }
     myGNEConnections.clear();
+}
+
+
+int
+GNEEdge::getRouteProbeRelativePosition(GNERouteProbe* routeProbe) const {
+    AdditionalVector routeProbes;
+    for (AdditionalVector::const_iterator i = myAdditionals.begin(); i != myAdditionals.end(); i++) {
+        if ((*i)->getTag() == routeProbe->getTag()) {
+            routeProbes.push_back(*i);
+        }
+    }
+    // return index of routeProbe in routeProbes vector
+    AdditionalVector::const_iterator it = std::find(routeProbes.begin(), routeProbes.end(), routeProbe);
+    if (it == routeProbes.end()) {
+        return -1;
+    } else {
+        return (int)(it - routeProbes.begin());
+    }
+}
+
+
+int
+GNEEdge::getVaporizerRelativePosition(GNEVaporizer* vaporizer) const {
+    AdditionalVector vaporizers;
+    for (AdditionalVector::const_iterator i = myAdditionals.begin(); i != myAdditionals.end(); i++) {
+        if ((*i)->getTag() == vaporizer->getTag()) {
+            vaporizers.push_back(*i);
+        }
+    }
+    // return index of routeProbe in routeProbes vector
+    AdditionalVector::const_iterator it = std::find(vaporizers.begin(), vaporizers.end(), vaporizer);
+    if (it == vaporizers.end()) {
+        return -1;
+    } else {
+        return (int)(it - vaporizers.begin());
+    }
 }
 
 
@@ -518,16 +582,14 @@ GNEEdge::getAttribute(SumoXMLAttr key) const {
             return myNBEdge.getStreetName();
         case SUMO_ATTR_ALLOW:
             // return all allowed classes (may differ from the written attributes)
-            return (getVehicleClassNames(myNBEdge.getPermissions()) +
-                    (myNBEdge.hasLaneSpecificPermissions() ? " (combined!)" : ""));
+            return (getVehicleClassNames(myNBEdge.getPermissions()) + (myNBEdge.hasLaneSpecificPermissions() ? " (combined!)" : ""));
         case SUMO_ATTR_DISALLOW: {
             // return classes disallowed on at least one lane (may differ from the written attributes)
             SVCPermissions combinedDissallowed = 0;
             for (int i = 0; i < (int)myNBEdge.getNumLanes(); ++i) {
                 combinedDissallowed |= ~myNBEdge.getPermissions(i);
             }
-            return (getVehicleClassNames(combinedDissallowed) +
-                    (myNBEdge.hasLaneSpecificPermissions() ? " (combined!)" : ""));
+            return (getVehicleClassNames(combinedDissallowed) + (myNBEdge.hasLaneSpecificPermissions() ? " (combined!)" : ""));
         }
         case SUMO_ATTR_SPEED:
             if (myNBEdge.hasLaneSpecificSpeed()) {
@@ -552,9 +614,17 @@ GNEEdge::getAttribute(SumoXMLAttr key) const {
         case GNE_ATTR_MODIFICATION_STATUS:
             return myConnectionStatus;
         case GNE_ATTR_SHAPE_START:
-            return toString(myNBEdge.getGeometry()[0]);
+            if (myNBEdge.getGeometry()[0] == myGNEJunctionSource->getPosition()) {
+                return "";
+            } else {
+                return toString(myNBEdge.getGeometry()[0]);
+            }
         case GNE_ATTR_SHAPE_END:
-            return toString(myNBEdge.getGeometry()[-1]);
+            if (myNBEdge.getGeometry()[-1] == myGNEJunctionDestiny->getPosition()) {
+                return "";
+            } else {
+                return toString(myNBEdge.getGeometry()[-1]);
+            }
         default:
             throw InvalidArgument(toString(getTag()) + " doesn't have an attribute of type '" + toString(key) + "'");
     }
@@ -570,7 +640,7 @@ GNEEdge::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList* un
         case SUMO_ATTR_ALLOW:
         case SUMO_ATTR_DISALLOW: {
             undoList->p_begin("change " + toString(getTag()) + " attribute");
-            const std::string origValue = getAttribute(key); // will have intermediate value of "lane specific"
+            const std::string origValue = myLanes.at(0)->getAttribute(key); // will have intermediate value of "lane specific"
             // lane specific attributes need to be changed via lanes to allow undo
             for (LaneVector::iterator it = myLanes.begin(); it != myLanes.end(); it++) {
                 (*it)->setAttribute(key, value, undoList);
@@ -648,7 +718,7 @@ GNEEdge::isValid(SumoXMLAttr key, const std::string& value) {
             return isValidID(value) && myNet->retrieveJunction(value, false) != 0 && value != myGNEJunctionSource->getMicrosimID();
             break;
         case SUMO_ATTR_SPEED:
-            return isPositive<SUMOReal>(value);
+            return isPositive<double>(value);
             break;
         case SUMO_ATTR_NUMLANES:
             return isPositive<int>(value);
@@ -657,7 +727,7 @@ GNEEdge::isValid(SumoXMLAttr key, const std::string& value) {
             return canParse<int>(value);
             break;
         case SUMO_ATTR_LENGTH:
-            return canParse<SUMOReal>(value) && (isPositive<SUMOReal>(value) || parse<SUMOReal>(value) == NBEdge::UNSPECIFIED_LOADED_LENGTH);
+            return canParse<double>(value) && (isPositive<double>(value) || parse<double>(value) == NBEdge::UNSPECIFIED_LOADED_LENGTH);
             break;
         case SUMO_ATTR_ALLOW:
         case SUMO_ATTR_DISALLOW:
@@ -682,12 +752,22 @@ GNEEdge::isValid(SumoXMLAttr key, const std::string& value) {
             if (value == "default") {
                 return true;
             } else {
-                return canParse<SUMOReal>(value) && (isPositive<SUMOReal>(value) || parse<SUMOReal>(value) == NBEdge::UNSPECIFIED_WIDTH);
+                return canParse<double>(value) && (isPositive<double>(value) || parse<double>(value) == NBEdge::UNSPECIFIED_WIDTH);
             }
             break;
         case SUMO_ATTR_ENDOFFSET:
-            return canParse<SUMOReal>(value);
+            return canParse<double>(value);
             break;
+        case GNE_ATTR_SHAPE_START: {
+            bool ok;
+            return value == "" || GeomConvHelper::parseShapeReporting(value, "user-supplied position", 0, ok, false).size() == 1;
+            break;
+        }
+        case GNE_ATTR_SHAPE_END: {
+            bool ok;
+            return value == "" || GeomConvHelper::parseShapeReporting(value, "user-supplied position", 0, ok, false).size() == 1;
+            break;
+        }
         default:
             throw InvalidArgument(toString(getTag()) + " doesn't have an attribute of type '" + toString(key) + "'");
     }
@@ -734,7 +814,7 @@ GNEEdge::setAttribute(SumoXMLAttr key, const std::string& value) {
             myNBEdge.myPriority = parse<int>(value);
             break;
         case SUMO_ATTR_LENGTH:
-            myNBEdge.setLoadedLength(parse<SUMOReal>(value));
+            myNBEdge.setLoadedLength(parse<double>(value));
             break;
         case SUMO_ATTR_TYPE:
             myNBEdge.myType = value;
@@ -751,17 +831,17 @@ GNEEdge::setAttribute(SumoXMLAttr key, const std::string& value) {
             myNBEdge.setStreetName(value);
             break;
         case SUMO_ATTR_SPEED:
-            myNBEdge.setSpeed(-1, parse<SUMOReal>(value));
+            myNBEdge.setSpeed(-1, parse<double>(value));
             break;
         case SUMO_ATTR_WIDTH:
             if (value == "default") {
                 myNBEdge.setLaneWidth(-1, NBEdge::UNSPECIFIED_WIDTH);
             } else {
-                myNBEdge.setLaneWidth(-1, parse<SUMOReal>(value));
+                myNBEdge.setLaneWidth(-1, parse<double>(value));
             }
             break;
         case SUMO_ATTR_ENDOFFSET:
-            myNBEdge.setEndOffset(-1, parse<SUMOReal>(value));
+            myNBEdge.setEndOffset(-1, parse<double>(value));
             break;
         case SUMO_ATTR_ALLOW:
             break;  // no edge value
@@ -777,16 +857,26 @@ GNEEdge::setAttribute(SumoXMLAttr key, const std::string& value) {
             }
             break;
         case GNE_ATTR_SHAPE_START: {
+            // get geometry of NBEdge, remove FIRST element with the new value (or with the Junction Source position) and set it back to edge
             PositionVector geom = myNBEdge.getGeometry();
             geom.erase(geom.begin());
-            geom.push_front_noDoublePos(GeomConvHelper::parseShapeReporting(value, "netedit-given", 0, ok, false)[0]);
+            if (value == "") {
+                geom.push_front_noDoublePos(myGNEJunctionSource->getPosition());
+            } else {
+                geom.push_front_noDoublePos(GeomConvHelper::parseShapeReporting(value, "netedit-given", 0, ok, false)[0]);
+            }
             setGeometry(geom, false);
             break;
         }
         case GNE_ATTR_SHAPE_END: {
+            // get geometry of NBEdge, remove LAST element with the new value (or with the Junction Destiny position) and set it back to edge
             PositionVector geom = myNBEdge.getGeometry();
             geom.pop_back();
-            geom.push_back_noDoublePos(GeomConvHelper::parseShapeReporting(value, "netedit-given", 0, ok, false)[0]);
+            if (value == "") {
+                geom.push_back_noDoublePos(myGNEJunctionDestiny->getPosition());
+            } else {
+                geom.push_back_noDoublePos(GeomConvHelper::parseShapeReporting(value, "netedit-given", 0, ok, false)[0]);
+            }
             setGeometry(geom, false);
             break;
         }
@@ -945,9 +1035,11 @@ void
 GNEEdge::addAdditionalChild(GNEAdditional* additional) {
     // First check that additional wasn't already inserted
     if (std::find(myAdditionals.begin(), myAdditionals.end(), additional) != myAdditionals.end()) {
-        throw ProcessError(toString(additional->getTag()) + "  with ID='" + additional->getID() + "' was already inserted in " + toString(getTag()) + " with ID='" + getID() + "'");
+        throw ProcessError(toString(additional->getTag()) + " with ID='" + additional->getID() + "' was already inserted in " + toString(getTag()) + " with ID='" + getID() + "'");
     } else {
         myAdditionals.push_back(additional);
+        // update geometry is needed for stacked additionals (routeProbes and Vaporicers)
+        updateGeometry();
     }
 }
 
@@ -957,9 +1049,11 @@ GNEEdge::removeAdditionalChild(GNEAdditional* additional) {
     // First check that additional was already inserted
     AdditionalVector::iterator it = std::find(myAdditionals.begin(), myAdditionals.end(), additional);
     if (it == myAdditionals.end()) {
-        throw ProcessError(toString(additional->getTag()) + "  with ID='" + additional->getID() + "' doesn't exist in " + toString(getTag()) + " with ID='" + getID() + "'");
+        throw ProcessError(toString(additional->getTag()) + " with ID='" + additional->getID() + "' doesn't exist in " + toString(getTag()) + " with ID='" + getID() + "'");
     } else {
         myAdditionals.erase(it);
+        // update geometry is needed for stacked additionals (routeProbes and Vaporicers)
+        updateGeometry();
     }
 }
 
@@ -967,6 +1061,39 @@ GNEEdge::removeAdditionalChild(GNEAdditional* additional) {
 const std::vector<GNEAdditional*>&
 GNEEdge::getAdditionalChilds() const {
     return myAdditionals;
+}
+
+
+void
+GNEEdge::addGNERerouter(GNERerouter* rerouter) {
+    if (std::find(myReroutes.begin(), myReroutes.end(), rerouter) == myReroutes.end()) {
+        myReroutes.push_back(rerouter);
+    } else {
+        throw ProcessError(toString(rerouter->getTag()) + " '" + rerouter->getID() + "' was previously inserted");
+    }
+}
+
+
+void
+GNEEdge::removeGNERerouter(GNERerouter* rerouter) {
+    std::vector<GNERerouter*>::iterator it = std::find(myReroutes.begin(), myReroutes.end(), rerouter);
+    if (it != myReroutes.end()) {
+        myReroutes.erase(it);
+    } else {
+        throw ProcessError(toString(rerouter->getTag()) + " '" + rerouter->getID() + "' wasn't previously inserted");
+    }
+}
+
+
+const std::vector<GNERerouter*>&
+GNEEdge::getGNERerouters() const {
+    return myReroutes;
+}
+
+
+int
+GNEEdge::getNumberOfGNERerouters() const {
+    return (int)myReroutes.size();
 }
 
 

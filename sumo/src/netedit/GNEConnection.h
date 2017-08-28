@@ -88,6 +88,9 @@ public:
     /// @brief get LinkState
     LinkState getLinkState() const;
 
+    /// @brief update internal ID of Connection
+    void updateID();
+
     /// @brief recompute cached myLinkState
     void updateLinkState();
 
@@ -166,10 +169,10 @@ protected:
     /// @name computed only once (for performance) in updateGeometry()
     /// @{
     /// @brief The rotations of the shape parts
-    std::vector<SUMOReal> myShapeRotations;
+    std::vector<double> myShapeRotations;
 
     /// @brief The lengths of the shape parts
-    std::vector<SUMOReal> myShapeLengths;
+    std::vector<double> myShapeLengths;
     /// @}
 
     /// @brief Linkstate. @note cached because after 'undo' the connection needs to be drawn while the node logic (NBRequest) has not been recomputed

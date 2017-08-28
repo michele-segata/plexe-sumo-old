@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+"""
+@file    test.py
+@author  Pablo Alvarez Lopez
+@date    2016-11-25
+@version $Id$
+
+python script used by sikulix for testing netedit
+
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
+Copyright (C) 2009-2017 DLR/TS, Germany
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+"""
 # import common functions for netedit tests
 import os
 import sys
@@ -15,50 +33,47 @@ neteditProcess, match = netedit.setupAndStart(neteditTestRoot, False)
 netedit.rebuildNetwork()
 
 # zoom in central node
-netedit.zoomIn(match.getTarget().offset(325, 225), 10)
+netedit.setZoom("50", "50", "50")
 
-# set inspect mode
-type("i")
+# go to inspect mode
+netedit.inspectMode()
 
 # inspect first crossing
-click(match.getTarget().offset(250, 225))
-
-# obtain parameters reference
-parametersReference = netedit.getParametersReference(match)
+netedit.leftClick(match, 250, 225)
 
 # try to change ID (cannot be possible)
-netedit.modifyAttribute(parametersReference, 0, "dummyID")
+netedit.modifyAttribute(0, "dummyID")
 
 # Change Edges adding a new edge
-netedit.modifyAttribute(parametersReference, 1, "3 7 1")
+netedit.modifyAttribute(1, "3 7 1")
 
 # rebuild network
 netedit.rebuildNetwork()
 
 # Change Edges with the same edges as another crossing (Duplicate
 # crossings aren't allow)
-netedit.modifyAttribute(parametersReference, 1, "4 8")
+netedit.modifyAttribute(1, "4 8")
 
 # rebuild network
 netedit.rebuildNetwork()
 
 # Change Edges to a single edge
-netedit.modifyAttribute(parametersReference, 1, "3")
+netedit.modifyAttribute(1, "3")
 
 # rebuild network
 netedit.rebuildNetwork()
 
 # Change priority
-netedit.modifyBoolAttribute(parametersReference, 2)
+netedit.modifyBoolAttribute(2)
 
 # Change width with a non valid value 1
-netedit.modifyAttribute(parametersReference, 3, "dummyWidth")
+netedit.modifyAttribute(3, "dummyWidth")
 
 # Change width with a non valid value 2
-netedit.modifyAttribute(parametersReference, 3, "-3")
+netedit.modifyAttribute(3, "-3")
 
 # Change width with a valid value
-netedit.modifyAttribute(parametersReference, 3, "4")
+netedit.modifyAttribute(3, "4")
 
 # rebuild network
 netedit.rebuildNetwork()
@@ -76,4 +91,4 @@ netedit.redo(match, 3)
 netedit.saveNetwork()
 
 # quit netedit
-netedit.quit(neteditProcess, False, False)
+netedit.quit(neteditProcess)

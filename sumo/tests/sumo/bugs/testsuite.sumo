@@ -74,6 +74,9 @@ ticket651
 # testing route length in tripinfos and vehroute output with rerouting
 ticket676
 
+# testing router in network without internal edges
+ticket676_no_internal
+
 # test junction deadlock
 ticket699
 ticket720
@@ -221,7 +224,10 @@ ticket2670
 
 # Two flows inserted on neighboring lanes should be inserted synchronously (lane allowances are used to prevent lane changes for the first flow which would obscure the effect)
 ticket2740
-
 ticket2823
+
 # Two flows inserted on neighboring lanes should be inserted synchronously (lane allowances are used to prevent lane changes for the first flow which would obscure the effect)
 ticket2834
+ticket2995
+ticket2996
+ticket2996b

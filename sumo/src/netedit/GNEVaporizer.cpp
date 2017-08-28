@@ -57,16 +57,13 @@
 #include "GNENet.h"
 #include "GNEChange_Attribute.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 
-GNEVaporizer::GNEVaporizer(const std::string& id, GNEViewNet* viewNet, GNEEdge* edge, SUMOReal startTime, SUMOReal end) :
-    GNEAdditional(id, viewNet, Position(), SUMO_TAG_VAPORIZER, ICON_VAPORIZER),
+GNEVaporizer::GNEVaporizer(GNEViewNet* viewNet, GNEEdge* edge, double startTime, double end) :
+    GNEAdditional(viewNet->getNet()->generateVaporizerID(), viewNet, Position(), SUMO_TAG_VAPORIZER, ICON_VAPORIZER),
     myStartTime(startTime),
     myEnd(end) {
     // This additional belongs to a edge
@@ -93,11 +90,17 @@ GNEVaporizer::updateGeometry() {
     // clear Shape
     myShape.clear();
 
+    // obtain relative position of vaporizer in edge
+    myRelativePosition = 2 * myEdge->getVaporizerRelativePosition(this);
+
     // get lanes of edge
     GNELane* firstLane = myEdge->getLanes().at(0);
 
+    // Save number of lanes
+    myNumberOfLanes = int(myEdge->getLanes().size());
+
     // Get shape of lane parent
-    myShape.push_back(firstLane->getShape().positionAtOffset(3));
+    myShape.push_back(firstLane->getShape().positionAtOffset(5));
 
     // Obtain first position
     Position f = myShape[0] - Position(1, 0);
@@ -112,7 +115,7 @@ GNEVaporizer::updateGeometry() {
     myBlockIconPosition = myShape.getLineCenter();
 
     // Set offset of the block icon
-    myBlockIconOffset = Position(1.1, -3.06);
+    myBlockIconOffset = Position(1.1, (-3.06) - myRelativePosition);
 
     // Set block icon rotation, and using their rotation for logo
     setBlockIconRotation(firstLane);
@@ -133,13 +136,13 @@ GNEVaporizer::getPositionInView() const {
 
 
 void
-GNEVaporizer::moveAdditionalGeometry(SUMOReal, SUMOReal) {
+GNEVaporizer::moveAdditionalGeometry(double, double) {
     // This additional cannot be moved
 }
 
 
 void
-GNEVaporizer::commmitAdditionalGeometryMoved(SUMOReal, SUMOReal, GNEUndoList*) {
+GNEVaporizer::commmitAdditionalGeometryMoved(double, double, GNEUndoList*) {
     // This additional cannot be moved
 }
 
@@ -148,7 +151,6 @@ void
 GNEVaporizer::writeAdditional(OutputDevice& device) const {
     // Write parameters
     device.openTag(getTag());
-    device.writeAttr(SUMO_ATTR_ID, getID());
     device.writeAttr(SUMO_ATTR_EDGE, myEdge->getID());
     device.writeAttr(SUMO_ATTR_STARTTIME, myStartTime);
     device.writeAttr(SUMO_ATTR_END, myEnd);
@@ -157,26 +159,26 @@ GNEVaporizer::writeAdditional(OutputDevice& device) const {
 }
 
 
-SUMOReal
+double
 GNEVaporizer::getStartTime() const {
     return myStartTime;
 }
 
 
-SUMOReal
+double
 GNEVaporizer::getEnd() const {
     return myEnd;
 }
 
 
 void
-GNEVaporizer::setStartTime(SUMOReal startTime) {
+GNEVaporizer::setStartTime(double startTime) {
     myStartTime = startTime;
 }
 
 
 void
-GNEVaporizer::setEndTime(SUMOReal end) {
+GNEVaporizer::setEndTime(double end) {
     myEnd = end;
 }
 
@@ -191,12 +193,9 @@ void
 GNEVaporizer::drawGL(const GUIVisualizationSettings& s) const {
     // get values
     glPushName(getGlID());
+    double width = (double) 2.0 * s.scale;
     glLineWidth(1.0);
-
-    // Declare auxiliar values
-    const SUMOReal exaggeration = s.addSize.getExaggeration(s);
-    int numberOfLanes = int(myEdge->getLanes().size());
-    SUMOReal width = (SUMOReal) 2.0 * s.scale;
+    const double exaggeration = s.addSize.getExaggeration(s);
 
     // draw shape
     glColor3ub(120, 216, 0);
@@ -209,8 +208,8 @@ GNEVaporizer::drawGL(const GUIVisualizationSettings& s) const {
     glBegin(GL_QUADS);
     glVertex2d(0,  0.25);
     glVertex2d(0, -0.25);
-    glVertex2d((numberOfLanes * 3.3), -0.25);
-    glVertex2d((numberOfLanes * 3.3),  0.25);
+    glVertex2d((myNumberOfLanes * 3.3), -0.25);
+    glVertex2d((myNumberOfLanes * 3.3),  0.25);
     glEnd();
     glTranslated(0, 0, .01);
     glBegin(GL_LINES);
@@ -224,7 +223,7 @@ GNEVaporizer::drawGL(const GUIVisualizationSettings& s) const {
         glColor3d(1, 1, 1);
         glBegin(GL_LINES);
         glVertex2d(0, 0);
-        glVertex2d(0, (numberOfLanes * 3.3));
+        glVertex2d(0, (myNumberOfLanes * 3.3));
         glEnd();
     }
 
@@ -235,7 +234,7 @@ GNEVaporizer::drawGL(const GUIVisualizationSettings& s) const {
     glPushMatrix();
     glTranslated(myShape[0].x(), myShape[0].y(), getType());
     glRotated(myShapeRotations[0], 0, 0, 1);
-    glTranslated(-2.56, - 1.6, 0);
+    glTranslated((-2.56) - myRelativePosition, (-1.6), 0);
     glColor3d(1, 1, 1);
     glRotated(-90, 0, 0, 1);
 
@@ -313,9 +312,27 @@ GNEVaporizer::isValid(SumoXMLAttr key, const std::string& value) {
                 return false;
             }
         case SUMO_ATTR_STARTTIME:
-            return canParse<SUMOReal>(value);
+            if (canParse<double>(value) && (parse<double>(value) >= 0)) {
+                double startTime = parse<double>(value);
+                if (startTime <= myEnd) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         case SUMO_ATTR_END:
-            return canParse<SUMOReal>(value);
+            if (canParse<double>(value) && (parse<double>(value) >= 0)) {
+                double end = parse<double>(value);
+                if (myStartTime <= end) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         default:
             throw InvalidArgument(toString(getTag()) + " doesn't have an attribute of type '" + toString(key) + "'");
     }
@@ -332,10 +349,10 @@ GNEVaporizer::setAttribute(SumoXMLAttr key, const std::string& value) {
             changeEdge(value);
             break;
         case SUMO_ATTR_STARTTIME:
-            myStartTime = parse<SUMOReal>(value);
+            myStartTime = parse<double>(value);
             break;
         case SUMO_ATTR_END:
-            myEnd = parse<SUMOReal>(value);
+            myEnd = parse<double>(value);
             break;
         default:
             throw InvalidArgument(toString(getTag()) + " doesn't have an attribute of type '" + toString(key) + "'");

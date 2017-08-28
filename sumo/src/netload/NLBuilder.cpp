@@ -30,43 +30,47 @@
 #include <config.h>
 #endif
 
-#include "NLBuilder.h"
-#include <microsim/MSNet.h>
-#include <microsim/MSEdgeControl.h>
-#include <microsim/MSGlobals.h>
 #include <iostream>
 #include <vector>
-#include <xercesc/parsers/SAXParser.hpp>
-#include <xercesc/sax2/SAX2XMLReader.hpp>
 #include <string>
 #include <map>
+
+#include <utils/common/MsgHandler.h>
+#include <utils/common/StringTokenizer.h>
+#include <utils/common/SystemFrame.h>
+#include <utils/iodevices/BinaryInputDevice.h>
+#include <utils/options/Option.h>
+#include <utils/options/OptionsCont.h>
+#include <utils/options/OptionsIO.h>
+#include <utils/common/TplConvert.h>
+#include <utils/common/FileHelpers.h>
+#include <utils/common/SysUtils.h>
+#include <utils/common/ToString.h>
+#include <utils/xml/SUMORouteLoaderControl.h>
+#include <utils/xml/SUMORouteLoader.h>
+#include <utils/xml/XMLSubSys.h>
+#include <mesosim/MEVehicleControl.h>
+#include <microsim/MSVehicleControl.h>
+#include <microsim/MSVehicleTransfer.h>
+#include <microsim/MSNet.h>
+#include <microsim/devices/MSDevice.h>
+#include <microsim/MSEdgeControl.h>
+#include <microsim/MSGlobals.h>
+#include <microsim/output/MSDetectorControl.h>
+#include <microsim/MSFrame.h>
+#include <microsim/MSEdgeWeightsStorage.h>
+#include <microsim/MSStateHandler.h>
+
 #include "NLHandler.h"
 #include "NLEdgeControlBuilder.h"
 #include "NLJunctionControlBuilder.h"
 #include "NLDetectorBuilder.h"
 #include "NLTriggerBuilder.h"
-#include <microsim/MSVehicleControl.h>
-#include <microsim/MSVehicleTransfer.h>
-#include <utils/xml/SUMORouteLoaderControl.h>
-#include <utils/xml/SUMORouteLoader.h>
-#include <utils/common/MsgHandler.h>
-#include <utils/common/StringTokenizer.h>
-#include <utils/options/Option.h>
-#include <utils/options/OptionsCont.h>
-#include <utils/common/TplConvert.h>
-#include <utils/common/FileHelpers.h>
-#include <utils/common/SysUtils.h>
-#include <utils/common/ToString.h>
-#include <utils/xml/XMLSubSys.h>
-#include <microsim/output/MSDetectorControl.h>
-#include <microsim/MSFrame.h>
-#include <microsim/MSEdgeWeightsStorage.h>
-#include <microsim/MSStateHandler.h>
-#include <utils/iodevices/BinaryInputDevice.h>
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include "NLBuilder.h"
 
+#ifndef NO_TRACI
+#include <traci-server/TraCIServer.h>
+#endif
 
 // ===========================================================================
 // method definitions
@@ -76,7 +80,7 @@
 // ---------------------------------------------------------------------------
 void
 NLBuilder::EdgeFloatTimeLineRetriever_EdgeEffort::addEdgeWeight(const std::string& id,
-        SUMOReal value, SUMOReal begTime, SUMOReal endTime) const {
+        double value, double begTime, double endTime) const {
     MSEdge* edge = MSEdge::dictionary(id);
     if (edge != 0) {
         myNet.getWeightsStorage().addEffort(edge, begTime, endTime, value);
@@ -91,7 +95,7 @@ NLBuilder::EdgeFloatTimeLineRetriever_EdgeEffort::addEdgeWeight(const std::strin
 // ---------------------------------------------------------------------------
 void
 NLBuilder::EdgeFloatTimeLineRetriever_EdgeTravelTime::addEdgeWeight(const std::string& id,
-        SUMOReal value, SUMOReal begTime, SUMOReal endTime) const {
+        double value, double begTime, double endTime) const {
     MSEdge* edge = MSEdge::dictionary(id);
     if (edge != 0) {
         myNet.getWeightsStorage().addTravelTime(edge, begTime, endTime, value);
@@ -125,33 +129,17 @@ NLBuilder::build() {
         return false;
     }
     // check whether the loaded net agrees with the simulation options
-#ifdef HAVE_INTERNAL_LANES
     if (myOptions.getBool("no-internal-links") && myXMLHandler.haveSeenInternalEdge()) {
         WRITE_WARNING("Network contains internal links but option --no-internal-links is set. Vehicles will 'jump' across junctions and thus underestimate route lengths and travel times.");
     }
-#endif
     if (myOptions.getString("lanechange.duration") != "0" && myXMLHandler.haveSeenNeighs()) {
         throw ProcessError("Network contains explicit neigh lanes which do not work together with option --lanechange.duration.");
     }
     buildNet();
-    // load the previous state if wished
-    if (myOptions.isSet("load-state")) {
-        long before = SysUtils::getCurrentMillis();
-        const std::string& f = myOptions.getString("load-state");
-        PROGRESS_BEGIN_MESSAGE("Loading state from '" + f + "'");
-        MSStateHandler h(f, string2time(OptionsCont::getOptions().getString("load-state.offset")));
-        XMLSubSys::runParser(h, f);
-        if (myOptions.isDefault("begin")) {
-            myOptions.set("begin", time2string(h.getTime()));
-        }
-        if (MsgHandler::getErrorInstance()->wasInformed()) {
-            return false;
-        }
-        if (h.getTime() != string2time(myOptions.getString("begin"))) {
-            WRITE_WARNING("State was written at a different time " + time2string(h.getTime()) + " than the begin time " + myOptions.getString("begin") + "!");
-        }
-        PROGRESS_TIME_MESSAGE(before);
-    }
+    // @note on loading order constraints:
+    // - additional-files before route-files and state-files due to referencing
+    // - weight-files before additional-files since the latter might contain trips which depend on the weights
+
     // load weights if wished
     if (myOptions.isSet("weight-files")) {
         if (!myOptions.isUsableFileList("weight-files")) {
@@ -184,12 +172,6 @@ NLBuilder::build() {
             }
         }
     }
-    // load routes
-    if (myOptions.isSet("route-files") && string2time(myOptions.getString("route-steps")) <= 0) {
-        if (!load("route-files")) {
-            return false;
-        }
-    }
     // load additional net elements (sources, detectors, ...)
     if (myOptions.isSet("additional-files")) {
         if (!load("additional-files")) {
@@ -200,6 +182,33 @@ NLBuilder::build() {
         if (!ShapeHandler::loadFiles(myOptions.getStringVector("additional-files"), sh)) {
             return false;
         }
+        if (myXMLHandler.haveSeenAdditionalSpeedRestrictions()) {
+            myNet.getEdgeControl().setAdditionalRestrictions();
+        }
+    }
+    // load the previous state if wished
+    if (myOptions.isSet("load-state")) {
+        long before = SysUtils::getCurrentMillis();
+        const std::string& f = myOptions.getString("load-state");
+        PROGRESS_BEGIN_MESSAGE("Loading state from '" + f + "'");
+        MSStateHandler h(f, string2time(myOptions.getString("load-state.offset")));
+        XMLSubSys::runParser(h, f);
+        if (myOptions.isDefault("begin")) {
+            myOptions.set("begin", time2string(h.getTime()));
+        }
+        if (MsgHandler::getErrorInstance()->wasInformed()) {
+            return false;
+        }
+        if (h.getTime() != string2time(myOptions.getString("begin"))) {
+            WRITE_WARNING("State was written at a different time " + time2string(h.getTime()) + " than the begin time " + myOptions.getString("begin") + "!");
+        }
+        PROGRESS_TIME_MESSAGE(before);
+    }
+    // load routes
+    if (myOptions.isSet("route-files") && string2time(myOptions.getString("route-steps")) <= 0) {
+        if (!load("route-files")) {
+            return false;
+        }
     }
     // optionally switch off traffic lights
     if (myOptions.getBool("tls.all-off")) {
@@ -207,6 +216,59 @@ NLBuilder::build() {
     }
     WRITE_MESSAGE("Loading done.");
     return true;
+}
+
+
+int
+NLBuilder::loadAndRun() {
+    MSNet::SimulationState state = MSNet::SIMSTATE_LOADING;
+    while (state == MSNet::SIMSTATE_LOADING) {
+        OptionsCont& oc = OptionsCont::getOptions();
+        oc.clear();
+        MSFrame::fillOptions();
+        OptionsIO::getOptions();
+        if (oc.processMetaOptions(OptionsIO::getArgC() < 2)) {
+            SystemFrame::close();
+            return 0;
+        }
+        XMLSubSys::setValidation(oc.getString("xml-validation"), oc.getString("xml-validation.net"));
+        if (!MSFrame::checkOptions()) {
+            throw ProcessError();
+        }
+        MsgHandler::initOutputOptions();
+        RandHelper::initRandGlobal();
+        RandHelper::initRandGlobal(MSRouteHandler::getParsingRNG());
+        RandHelper::initRandGlobal(MSDevice::getEquipmentRNG());
+        MSFrame::setMSGlobals(oc);
+        MSVehicleControl* vc = 0;
+        if (MSGlobals::gUseMesoSim) {
+            vc = new MEVehicleControl();
+        } else {
+            vc = new MSVehicleControl();
+        }
+        MSNet* net = new MSNet(vc, new MSEventControl(), new MSEventControl(), new MSEventControl());
+#ifndef NO_TRACI
+        // need to init TraCI-Server before loading routes to catch VEHICLE_STATE_BUILT
+        TraCIServer::openSocket(std::map<int, TraCIServer::CmdExecutor>());
+#endif
+
+        NLEdgeControlBuilder eb;
+        NLDetectorBuilder db(*net);
+        NLJunctionControlBuilder jb(*net, db);
+        NLTriggerBuilder tb;
+        NLHandler handler("", *net, db, tb, eb, jb);
+        tb.setHandler(&handler);
+        NLBuilder builder(oc, *net, eb, jb, db, handler);
+        if (builder.build()) {
+            state = net->simulate(string2time(oc.getString("begin")), string2time(oc.getString("end")));
+            delete net;
+        } else {
+            MsgHandler::getErrorInstance()->inform("Quitting (on error).", false);
+            delete net;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 
@@ -263,10 +325,10 @@ NLBuilder::buildNet() {
 
 bool
 NLBuilder::load(const std::string& mmlWhat, const bool isNet) {
-    if (!OptionsCont::getOptions().isUsableFileList(mmlWhat)) {
+    if (!myOptions.isUsableFileList(mmlWhat)) {
         return false;
     }
-    std::vector<std::string> files = OptionsCont::getOptions().getStringVector(mmlWhat);
+    std::vector<std::string> files = myOptions.getStringVector(mmlWhat);
     for (std::vector<std::string>::const_iterator fileIt = files.begin(); fileIt != files.end(); ++fileIt) {
         PROGRESS_BEGIN_MESSAGE("Loading " + mmlWhat + " from '" + *fileIt + "'");
         long before = SysUtils::getCurrentMillis();

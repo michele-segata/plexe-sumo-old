@@ -31,6 +31,7 @@
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/images/GUIIconSubSys.h>
 #include <utils/gui/div/GUIDesigns.h>
+#include <utils/common/MsgHandler.h>
 
 #include "GNERerouterIntervalDialog.h"
 #include "GNERerouterDialog.h"
@@ -46,9 +47,6 @@
 #include "GNEViewNet.h"
 #include "GNENet.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 // ===========================================================================
 // FOX callback mapping
@@ -67,8 +65,7 @@ FXDEFMAP(GNERerouterIntervalDialog) GNERerouterIntervalDialogMap[] = {
     FXMAPFUNC(SEL_CHANGED,  MID_GNE_REROUTEDIALOG_TABLE_CLOSINGREROUTE,     GNERerouterIntervalDialog::onCmdEditClosingReroute),
     FXMAPFUNC(SEL_CHANGED,  MID_GNE_REROUTEDIALOG_TABLE_DESTPROBREROUTE,    GNERerouterIntervalDialog::onCmdEditDestProbReroute),
     FXMAPFUNC(SEL_CHANGED,  MID_GNE_REROUTEDIALOG_TABLE_ROUTEPROBREROUTE,   GNERerouterIntervalDialog::onCmdEditRouteProbReroute),
-    FXMAPFUNC(SEL_COMMAND,  MID_GNE_REROUTEDIALOG_CHANGESTART,              GNERerouterIntervalDialog::onCmdChangeBegin),
-    FXMAPFUNC(SEL_COMMAND,  MID_GNE_REROUTEDIALOG_CHANGEEND,                GNERerouterIntervalDialog::onCmdChangeEnd),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_REROUTEDIALOG_EDIT_INTERVAL,            GNERerouterIntervalDialog::onCmdChangeBeginEnd),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_MODE_ADDITIONALDIALOG_ACCEPT,           GNERerouterIntervalDialog::onCmdAccept),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_MODE_ADDITIONALDIALOG_CANCEL,           GNERerouterIntervalDialog::onCmdCancel),
     FXMAPFUNC(SEL_COMMAND,  MID_GNE_MODE_ADDITIONALDIALOG_RESET,            GNERerouterIntervalDialog::onCmdReset),
@@ -102,13 +99,13 @@ GNERerouterIntervalDialog::GNERerouterIntervalDialog(GNERerouterDialog* rerouter
     // create horizontal frame for begin and end label
     FXHorizontalFrame* beginEndElementsLeft = new FXHorizontalFrame(columnLeft, GUIDesignAuxiliarHorizontalFrame);
     new FXLabel(beginEndElementsLeft, (toString(SUMO_ATTR_BEGIN) + " and " + toString(SUMO_ATTR_END) + " of " + toString(rerouterInterval.getTag())).c_str(), 0, GUIDesignLabelLeftThick);
-    myCheckLabel = new FXLabel(beginEndElementsLeft, "", 0, GUIDesignLabelOnlyIcon);
+    myCheckLabel = new FXLabel(beginEndElementsLeft, "", 0, GUIDesignLabelIcon32x32Thicked);
 
     // create horizontal frame for begin and end text fields
     FXHorizontalFrame* beginEndElementsRight = new FXHorizontalFrame(columnRight, GUIDesignAuxiliarHorizontalFrame);
-    myBeginTextField = new FXTextField(beginEndElementsRight, GUIDesignTextFieldNCol, this, MID_GNE_REROUTEDIALOG_CHANGESTART, GUIDesignTextFieldReal);
+    myBeginTextField = new FXTextField(beginEndElementsRight, GUIDesignTextFieldNCol, this, MID_GNE_REROUTEDIALOG_EDIT_INTERVAL, GUIDesignTextFieldReal);
     myBeginTextField->setText(toString(myRerouterInterval->getBegin()).c_str());
-    myEndTextField = new FXTextField(beginEndElementsRight, GUIDesignTextFieldNCol, this, MID_GNE_REROUTEDIALOG_CHANGEEND, GUIDesignTextFieldReal);
+    myEndTextField = new FXTextField(beginEndElementsRight, GUIDesignTextFieldNCol, this, MID_GNE_REROUTEDIALOG_EDIT_INTERVAL, GUIDesignTextFieldReal);
     myEndTextField->setText(toString(myRerouterInterval->getEnd()).c_str());
 
     // set interval flag depending if interval exists
@@ -170,40 +167,96 @@ GNERerouterIntervalDialog::~GNERerouterIntervalDialog() {
 long
 GNERerouterIntervalDialog::onCmdAccept(FXObject*, FXSelector, void*) {
     if (myBeginEndValid == false) {
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+        }
+        // open warning Box
         FXMessageBox::warning(getApp(), MBOX_OK,
                               ("Error updating " + toString(myRerouterInterval->getTag()) + " of " + toString(myRerouterInterval->getRerouterParent()->getTag())).c_str(), "%s",
                               (toString(myRerouterInterval->getRerouterParent()->getTag()) + "'s " + toString(myRerouterInterval->getTag()) +
                                " cannot be updated because " + toString(myRerouterInterval->getTag()) + " defined by " + toString(SUMO_ATTR_BEGIN) + " and " + toString(SUMO_ATTR_END) + " is invalid.").c_str());
+
+
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+        }
         return 0;
     } else if (myCopyOfClosingLaneReroutes.empty() && myCopyOfClosingReroutes.empty() && myCopyOfDestProbReroutes.empty() && myCopyOfRouteProbReroutes.empty()) {
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+        }
+        // open warning Box
         FXMessageBox::warning(getApp(), MBOX_OK,
                               ("Error updating " + toString(myRerouterInterval->getTag()) + " of " + toString(myRerouterInterval->getRerouterParent()->getTag())).c_str(), "%s",
                               (toString(myRerouterInterval->getRerouterParent()->getTag()) + "'s " + toString(myRerouterInterval->getTag()) +
                                " cannot be updated because at least one " + toString(myRerouterInterval->getTag()) + "'s element must be defined.").c_str());
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+        }
         return 0;
     } else if (myClosingLaneReroutesValid == false) {
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+        }
+        // open warning Box
         FXMessageBox::warning(getApp(), MBOX_OK,
                               ("Error updating " + toString(myRerouterInterval->getTag()) + " of " + toString(myRerouterInterval->getRerouterParent()->getTag())).c_str(), "%s",
                               (toString(myRerouterInterval->getRerouterParent()->getTag()) + "'s " + toString(myRerouterInterval->getTag()) +
                                " cannot be updated because there are invalid " + toString(SUMO_TAG_CLOSING_LANE_REROUTE) + "s.").c_str());
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+        }
         return 0;
     } else if (myClosingReroutesValid == false) {
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+        }
+        // open warning Box
         FXMessageBox::warning(getApp(), MBOX_OK,
                               ("Error updating " + toString(myRerouterInterval->getTag()) + " of " + toString(myRerouterInterval->getRerouterParent()->getTag())).c_str(), "%s",
                               (toString(myRerouterInterval->getRerouterParent()->getTag()) + "'s " + toString(myRerouterInterval->getTag()) +
                                " cannot be updated because there are invalid " + toString(SUMO_TAG_CLOSING_REROUTE) + "s.").c_str());
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+        }
         return 0;
     } else if (myDestProbReroutesValid == false) {
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+        }
+        // open warning Box
         FXMessageBox::warning(getApp(), MBOX_OK,
                               ("Error updating " + toString(myRerouterInterval->getTag()) + " of " + toString(myRerouterInterval->getRerouterParent()->getTag())).c_str(), "%s",
                               (toString(myRerouterInterval->getRerouterParent()->getTag()) + "'s " + toString(myRerouterInterval->getTag()) +
                                " cannot be updated because there are invalid " + toString(SUMO_TAG_DEST_PROB_REROUTE) + "s.").c_str());
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+        }
         return 0;
     } else if (myRouteProbReroutesValid == false) {
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+        }
+        // open warning Box
         FXMessageBox::warning(getApp(), MBOX_OK,
                               ("Error updating " + toString(myRerouterInterval->getTag()) + " of " + toString(myRerouterInterval->getRerouterParent()->getTag())).c_str(), "%s",
                               (toString(myRerouterInterval->getRerouterParent()->getTag()) + "'s " + toString(myRerouterInterval->getTag()) +
                                " cannot be updated because there are invalid " + toString(SUMO_TAG_ROUTE_PROB_REROUTE) + "s.").c_str());
+        // write warning if netedit is running in testing mode
+        if (myRerouterDialogParent->getRerouterParent()->getViewNet()->isTestingModeEnabled() == true) {
+            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+        }
         return 0;
     } else {
         // set new values of rerouter interval
@@ -211,8 +264,8 @@ GNERerouterIntervalDialog::onCmdAccept(FXObject*, FXSelector, void*) {
         myRerouterInterval->setClosingReroutes(myCopyOfClosingReroutes);
         myRerouterInterval->setDestProbReroutes(myCopyOfDestProbReroutes);
         myRerouterInterval->setRouteProbReroutes(myCopyOfRouteProbReroutes);
-        myRerouterInterval->setBegin(GNEAttributeCarrier::parse<SUMOReal>(myBeginTextField->getText().text()));
-        myRerouterInterval->setEnd(GNEAttributeCarrier::parse<SUMOReal>(myEndTextField->getText().text()));
+        myRerouterInterval->setBegin(GNEAttributeCarrier::parse<double>(myBeginTextField->getText().text()));
+        myRerouterInterval->setEnd(GNEAttributeCarrier::parse<double>(myEndTextField->getText().text()));
 
         // Stop Modal
         getApp()->stopModal(this, TRUE);
@@ -407,10 +460,10 @@ GNERerouterIntervalDialog::onCmdEditDestProbReroute(FXObject*, FXSelector, void*
     // iterate over table and check that all parameters are correct
     for (int i = 0; i < myDestProbRerouteList->getNumRows(); i++) {
         GNEEdge* edge = myRerouterInterval->getRerouterParent()->getViewNet()->getNet()->retrieveEdge(myDestProbRerouteList->getItem(i, 0)->getText().text(), false);
-        SUMOReal probability = -1;
+        double probability = -1;
         // try to parse probability
-        if (GNEAttributeCarrier::canParse<SUMOReal>(myDestProbRerouteList->getItem(i, 1)->getText().text())) {
-            probability = GNEAttributeCarrier::parse<SUMOReal>(myDestProbRerouteList->getItem(i, 1)->getText().text());
+        if (GNEAttributeCarrier::canParse<double>(myDestProbRerouteList->getItem(i, 1)->getText().text())) {
+            probability = GNEAttributeCarrier::parse<double>(myDestProbRerouteList->getItem(i, 1)->getText().text());
         }
         // check if values are valid
         if (edge == NULL) {
@@ -437,11 +490,11 @@ GNERerouterIntervalDialog::onCmdEditRouteProbReroute(FXObject*, FXSelector, void
     myRouteProbReroutesValid = true;
     // iterate over table and check that all parameters are correct
     for (int i = 0; i < myRouteProbRerouteList->getNumRows(); i++) {
-        SUMOReal probability = -1;
+        double probability = -1;
         std::string route = myRouteProbRerouteList->getItem(i, 0)->getText().text();
         // try to parse probability
-        if (GNEAttributeCarrier::canParse<SUMOReal>(myRouteProbRerouteList->getItem(i, 1)->getText().text())) {
-            probability = GNEAttributeCarrier::parse<SUMOReal>(myRouteProbRerouteList->getItem(i, 1)->getText().text());
+        if (GNEAttributeCarrier::canParse<double>(myRouteProbRerouteList->getItem(i, 1)->getText().text())) {
+            probability = GNEAttributeCarrier::parse<double>(myRouteProbRerouteList->getItem(i, 1)->getText().text());
         }
         // check if values are valid
         if (route.empty()) {
@@ -464,24 +517,22 @@ GNERerouterIntervalDialog::onCmdEditRouteProbReroute(FXObject*, FXSelector, void
 
 
 long
-GNERerouterIntervalDialog::onCmdChangeBegin(FXObject*, FXSelector, void*) {
-    if (GNEAttributeCarrier::canParse<SUMOReal>(myBeginTextField->getText().text()) &&
-            myRerouterDialogParent->checkInterval(GNEAttributeCarrier::parse<SUMOReal>(myBeginTextField->getText().text()), myRerouterInterval->getEnd())) {
-        myBeginEndValid = true;
-        myCheckLabel->setIcon(GUIIconSubSys::getIcon(ICON_CORRECT));
-        return 1;
+GNERerouterIntervalDialog::onCmdChangeBeginEnd(FXObject*, FXSelector, void*) {
+    double newBegin;
+    double newEnd;
+    // check if interval is valid
+    if (GNEAttributeCarrier::canParse<double>(myBeginTextField->getText().text()) == false) {
+        return false;
     } else {
-        myBeginEndValid = false;
-        myCheckLabel->setIcon(GUIIconSubSys::getIcon(ICON_ERROR));
-        return 0;
+        newBegin = GNEAttributeCarrier::parse<double>(myBeginTextField->getText().text());
     }
-}
-
-
-long
-GNERerouterIntervalDialog::onCmdChangeEnd(FXObject*, FXSelector, void*) {
-    if (GNEAttributeCarrier::canParse<SUMOReal>(myEndTextField->getText().text()) &&
-            myRerouterDialogParent->checkInterval(myRerouterInterval->getBegin(), GNEAttributeCarrier::parse<SUMOReal>(myEndTextField->getText().text()))) {
+    if (GNEAttributeCarrier::canParse<double>(myEndTextField->getText().text()) == false) {
+        return false;
+    } else {
+        newEnd = GNEAttributeCarrier::parse<double>(myEndTextField->getText().text());
+    }
+    // check if new begin provoke an overlapping
+    if (myRerouterDialogParent->checkModifyInterval(*myRerouterInterval, newBegin, newEnd) == true) {
         myBeginEndValid = true;
         myCheckLabel->setIcon(GUIIconSubSys::getIcon(ICON_CORRECT));
         return 1;

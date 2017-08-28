@@ -15,17 +15,17 @@ converted in subsequent steps.
 
 For each of the pages to convert, the HTML-representation of the
 page is downloaded and stripped from wiki-header/footer, first.
-Then, the image-links are extracted from the HTML page and stored 
+Then, the image-links are extracted from the HTML page and stored
 temporarily, the links themselves are patched to point to local pages/images
 (if the page behind the link exists).
-The page is saved into options.mirror/<PAGE_PATH>. 
+The page is saved into options.mirror/<PAGE_PATH>.
 
-After parsing all pages, the images are downloaded and stored into 
+After parsing all pages, the images are downloaded and stored into
 options.mirror/images.
 
 After downloading all data, the title page is extracted and the content
 included in this page is extracted. This content is embedded into "index.html"
-between the <!-- nav begins --> / <!-- nav ends --> markers. 
+between the <!-- nav begins --> / <!-- nav ends --> markers.
 All pages downloaded earlier are loaded, and embedded into the index.html
 between the <!-- content begins --> / <!-- content ends --> markers. Then,
 the page is saved into options.output/<PAGE_PATH>. All images are copied
@@ -42,7 +42,10 @@ the Free Software Foundation; either version 3 of the License, or
 """
 from __future__ import absolute_import
 from __future__ import print_function
-import urllib
+try:
+    from urllib import urlopen
+except ImportError:
+    from urllib.request import urlopen
 import os
 import sys
 import shutil
@@ -178,23 +181,23 @@ for p in pages:
         for i in pi:
             images.add(i)
     name = name + ".html"
-    fd = open(os.path.join(options.mirror, name), "w")
-    fd.write(c)
+    fd = open(os.path.join(options.mirror, name), "wb")
+    fd.write(c.encode("utf8"))
     fd.close()
 
 imageFiles = []
 for i in images:
     print("Fetching image %s" % i)
     if i.find(":") >= 0:
-        f = urllib.urlopen("http://sumo.dlr.de%s" % i)
+        f = urlopen("http://sumo.dlr.de%s" % i)
         c = f.read()
         b = c.find("<div class=\"fullImageLink\" id=\"file\">")
         b = c.find("href=", b) + 6
         e = c.find("\"", b + 1)
-        f = urllib.urlopen("http://sumo.dlr.de/%s" % c[b:e])
+        f = urlopen("http://sumo.dlr.de/%s" % c[b:e])
         i = i[i.find(":") + 1:]
     else:
-        f = urllib.urlopen("http://sumo.dlr.de/%s" % i)
+        f = urlopen("http://sumo.dlr.de/%s" % i)
         i = i[i.rfind("/") + 1:]
     if i.find("px-") >= 0:
         i = i[:i.find('-') + 1]
@@ -281,8 +284,8 @@ for p in pages:
         datetime.datetime.now(), name, name)
     name = name + ".html"
     t = os.path.join(options.output, name)
-    fd = open(os.path.join(options.mirror, name))
-    c = fd.read()
+    fd = open(os.path.join(options.mirror, name), 'rb')
+    c = fd.read().decode("utf8")
     if options.version:
         fromStr += " for SUMO %s" % options.version
     c = c.replace(
@@ -316,8 +319,8 @@ for p in pages:
         os.makedirs(os.path.split(t)[0])
     except:
         pass
-    fd = open(t, "w")
-    fd.write(cc)
+    fd = open(t, "wb")
+    fd.write(cc.encode("utf8"))
     fd.close()
 for i in imageFiles:
     shutil.copy(

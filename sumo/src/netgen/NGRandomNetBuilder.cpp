@@ -37,50 +37,16 @@
 #include <utils/geom/GeomHelper.h>
 #include <utils/common/RandHelper.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
 // ---------------------------------------------------------------------------
-// TNeighbourDistribution-definitions
-// ---------------------------------------------------------------------------
-void
-TNeighbourDistribution::add(int NumNeighbours, SUMOReal ratio) {
-    myNeighbours[NumNeighbours] = ratio;
-}
-
-
-int
-TNeighbourDistribution::num() {
-    SUMOReal sum = 0, RandValue;
-    std::map<int, SUMOReal>::iterator i;
-    // total sum of ratios
-    for (i = myNeighbours.begin(); i != myNeighbours.end(); ++i) {
-        sum += (*i).second;
-    }
-    // RandValue = [0,sum]
-    RandValue = RandHelper::rand(sum);
-    // find selected item
-    i = myNeighbours.begin();
-    sum = (*i).second;
-    while ((i != myNeighbours.end()) && (sum < RandValue)) {
-        ++i;
-        sum += (*i).second;
-    }
-    return (*i).first;
-}
-
-
-// ---------------------------------------------------------------------------
 // NGRandomNetBuilder-definitions
 // ---------------------------------------------------------------------------
-NGRandomNetBuilder::NGRandomNetBuilder(NGNet& net, SUMOReal minAngle, SUMOReal minDistance,
-                                       SUMOReal maxDistance, SUMOReal connectivity,
-                                       int numTries, const TNeighbourDistribution& neighborDist)
+NGRandomNetBuilder::NGRandomNetBuilder(NGNet& net, double minAngle, double minDistance,
+                                       double maxDistance, double connectivity,
+                                       int numTries, const RandomDistributor<int>& neighborDist)
     : myNet(net), myMinLinkAngle(minAngle), myMinDistance(minDistance),
       myMaxDistance(maxDistance), myConnectivity(connectivity), myNumTries(numTries),
       myNeighbourDistribution(neighborDist) {
@@ -146,7 +112,7 @@ NGRandomNetBuilder::canConnect(NGNode* baseNode, NGNode* newNode) {
 
     // check for range between Basenode and Newnode
     if (connectable) {
-        SUMOReal dist = n.length();
+        double dist = n.length();
         if ((dist < myMinDistance) || (dist > myMaxDistance)) {
             connectable = false;
         }
@@ -175,10 +141,10 @@ NGRandomNetBuilder::canConnect(NGNode* baseNode, NGNode* newNode) {
             }
             // check NewNode-To-Links distance only, if NewNode isn't part of link
             if (connectable && (newNode != start) && (newNode != end)) {
-                const SUMOReal offset = GeomHelper::nearest_offset_on_line_to_point2D(p1, p2, n[1]);
+                const double offset = GeomHelper::nearest_offset_on_line_to_point2D(p1, p2, n[1]);
                 if (offset != GeomHelper::INVALID_OFFSET) {
                     const Position p = PositionVector(p1, p2).positionAtOffset2D(offset);
-                    const SUMOReal dist = p.distanceTo2D(n[1]);
+                    const double dist = p.distanceTo2D(n[1]);
                     if (dist < myMinDistance) {
                         connectable = false;
                     }
@@ -198,8 +164,8 @@ NGRandomNetBuilder::findPossibleOuterNodes(NGNode* node) {
     for (ni = myOuterNodes.begin(); ni != myOuterNodes.end(); ++ni) {
         NGNode* on = *ni;
         if (!node->connected(on)) {
-            if ((node->getMaxNeighbours() > node->LinkList.size()) &&
-                    ((on)->getMaxNeighbours() > (on)->LinkList.size())) {
+            if ((node->getMaxNeighbours() > (int)node->LinkList.size()) &&
+                    (on->getMaxNeighbours() > (int)on->LinkList.size())) {
                 if (canConnect(node, on)) {
                     myConNodes.push_back(on);
                 }
@@ -212,14 +178,14 @@ NGRandomNetBuilder::findPossibleOuterNodes(NGNode* node) {
 bool
 NGRandomNetBuilder::createNewNode(NGNode* baseNode) {
     // calculate position of new node based on BaseNode
-    SUMOReal dist = RandHelper::rand(myMinDistance, myMaxDistance);
-    SUMOReal angle = RandHelper::rand((SUMOReal)(2 * M_PI));
-    SUMOReal x = baseNode->getPosition().x() + dist * cos(angle);
-    SUMOReal y = baseNode->getPosition().y() + dist * sin(angle);
+    double dist = RandHelper::rand(myMinDistance, myMaxDistance);
+    double angle = RandHelper::rand((double)(2 * M_PI));
+    double x = baseNode->getPosition().x() + dist * cos(angle);
+    double y = baseNode->getPosition().y() + dist * sin(angle);
     NGNode* newNode = new NGNode(myNet.getNextFreeID());
     newNode->setX(x);
     newNode->setY(y);
-    newNode->setMaxNeighbours((SUMOReal) myNeighbourDistribution.num());
+    newNode->setMaxNeighbours(myNeighbourDistribution.get());
     NGEdge* newLink = new NGEdge(myNet.getNextFreeID(), baseNode, newNode);
     if (canConnect(baseNode, newNode)) {
         // add node
@@ -229,7 +195,7 @@ NGRandomNetBuilder::createNewNode(NGNode* baseNode) {
         myNet.add(newLink);
         myOuterLinks.push_back(newLink);
         // check basenode for being outer node
-        if (baseNode->LinkList.size() >= baseNode->getMaxNeighbours()) {
+        if ((int)baseNode->LinkList.size() >= baseNode->getMaxNeighbours()) {
             removeOuterNode(baseNode);
         }
         return true;
@@ -270,10 +236,10 @@ NGRandomNetBuilder::createNet(int numNodes) {
                 myNet.add(newLink);
                 myOuterLinks.push_back(newLink);
                 // check nodes for being outer node
-                if (outerNode->LinkList.size() >= outerNode->getMaxNeighbours()) {
+                if ((int)outerNode->LinkList.size() >= outerNode->getMaxNeighbours()) {
                     removeOuterNode(outerNode);
                 }
-                if (myConNodes.back()->LinkList.size() >= myConNodes.back()->getMaxNeighbours()) {
+                if ((int)myConNodes.back()->LinkList.size() >= myConNodes.back()->getMaxNeighbours()) {
                     removeOuterNode(myConNodes.back());
                 }
                 created = true;
@@ -287,7 +253,7 @@ NGRandomNetBuilder::createNet(int numNodes) {
                 count++;
             } while ((count <= myNumTries) && !created);
             if (!created) {
-                outerNode->setMaxNeighbours((SUMOReal) outerNode->LinkList.size());
+                outerNode->setMaxNeighbours((int)outerNode->LinkList.size());
                 myOuterNodes.remove(outerNode);
             }
         }

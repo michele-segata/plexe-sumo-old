@@ -23,23 +23,24 @@ from . import constants as tc
 from .domain import Domain
 from .storage import Storage
 
-_RETURN_VALUE_FUNC = {tc.JAM_LENGTH_METERS:         Storage.readDouble,
-                      tc.JAM_LENGTH_VEHICLE:        Storage.readInt,
-                      tc.LAST_STEP_MEAN_SPEED:      Storage.readDouble,
-                      tc.VAR_POSITION:              Storage.readDouble,
-                      tc.VAR_LENGTH:                Storage.readDouble,
-                      tc.VAR_LANE_ID:               Storage.readString,
+_RETURN_VALUE_FUNC = {tc.JAM_LENGTH_METERS: Storage.readDouble,
+                      tc.JAM_LENGTH_VEHICLE: Storage.readInt,
+                      tc.LAST_STEP_MEAN_SPEED: Storage.readDouble,
+                      tc.VAR_POSITION: Storage.readDouble,
+                      tc.VAR_LENGTH: Storage.readDouble,
+                      tc.VAR_LANE_ID: Storage.readString,
                       tc.LAST_STEP_VEHICLE_ID_LIST: Storage.readStringList,
-                      tc.LAST_STEP_VEHICLE_NUMBER:  Storage.readInt,
-                      tc.LAST_STEP_OCCUPANCY:       Storage.readDouble}
+                      tc.LAST_STEP_VEHICLE_NUMBER: Storage.readInt,
+                      tc.LAST_STEP_OCCUPANCY: Storage.readDouble,
+                      tc.LAST_STEP_VEHICLE_HALTING_NUMBER: Storage.readInt}
 
 
 class LaneAreaDomain(Domain):
 
     def __init__(self, name="lanearea", deprecatedFor=None):
-        Domain.__init__(self, name, tc.CMD_GET_AREAL_DETECTOR_VARIABLE, None,
-                        tc.CMD_SUBSCRIBE_AREAL_DETECTOR_VARIABLE, tc.RESPONSE_SUBSCRIBE_AREAL_DETECTOR_VARIABLE,
-                        tc.CMD_SUBSCRIBE_AREAL_DETECTOR_CONTEXT, tc.RESPONSE_SUBSCRIBE_AREAL_DETECTOR_CONTEXT,
+        Domain.__init__(self, name, tc.CMD_GET_LANEAREA_VARIABLE, None,
+                        tc.CMD_SUBSCRIBE_LANEAREA_VARIABLE, tc.RESPONSE_SUBSCRIBE_LANEAREA_VARIABLE,
+                        tc.CMD_SUBSCRIBE_LANEAREA_CONTEXT, tc.RESPONSE_SUBSCRIBE_LANEAREA_CONTEXT,
                         _RETURN_VALUE_FUNC, deprecatedFor)
 
     def getJamLengthVehicle(self, detID):
@@ -52,7 +53,7 @@ class LaneAreaDomain(Domain):
     def getJamLengthMeters(self, detID):
         """getJamLengthMeters(string) -> double
 
-        Returns the jam length in meters within the last simulation step. 
+        Returns the jam length in meters within the last simulation step.
         """
         return self._getUniversal(tc.JAM_LENGTH_METERS, detID)
 
@@ -104,6 +105,13 @@ class LaneAreaDomain(Domain):
         Returns the number of vehicles that were on the named detector within the last simulation step.
         """
         return self._getUniversal(tc.LAST_STEP_VEHICLE_NUMBER, detID)
+
+    def getLastStepHaltingNumber(self, detID):
+        """getLastStepHaltingNumber(string) -> integer
+
+        Returns the number of vehicles which were halting during the last time step.
+        """
+        return self._getUniversal(tc.LAST_STEP_VEHICLE_HALTING_NUMBER, detID)
 
 
 LaneAreaDomain()

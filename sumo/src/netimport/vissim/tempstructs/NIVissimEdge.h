@@ -46,9 +46,8 @@
 // class declarations
 // ===========================================================================
 class NBNode;
-class NIVissimDistrictConnection;
-class NBDistribution;
 class NBDistrictCont;
+class NIVissimDistrictConnection;
 
 
 // ===========================================================================
@@ -63,8 +62,8 @@ class NIVissimEdge
 public:
     /// Constructor
     NIVissimEdge(int id, const std::string& name,
-                 const std::string& type, int noLanes, SUMOReal zuschlag1,
-                 SUMOReal zuschlag2, SUMOReal length,
+                 const std::string& type, int noLanes, double zuschlag1,
+                 double zuschlag2, double length,
                  const PositionVector& geom,
                  const NIVissimClosedLanesVector& clv);
 
@@ -91,9 +90,9 @@ public:
     Position getEnd2D() const;
 
     /// Returns the length of the node
-    SUMOReal getLength() const;
+    double getLength() const;
 
-    void checkDistrictConnectionExistanceAt(SUMOReal pos);
+    void checkDistrictConnectionExistanceAt(double pos);
 
     void mergedInto(NIVissimConnectionCluster* old,
                     NIVissimConnectionCluster* act);
@@ -124,8 +123,8 @@ public:
     /** @brief Adds the described item to the dictionary
         Builds the edge first */
     static bool dictionary(int id, const std::string& name,
-                           const std::string& type, int noLanes, SUMOReal zuschlag1,
-                           SUMOReal zuschlag2, SUMOReal length,
+                           const std::string& type, int noLanes, double zuschlag1,
+                           double zuschlag2, double length,
                            const PositionVector& geom,
                            const NIVissimClosedLanesVector& clv);
 
@@ -147,9 +146,9 @@ public:
 
     /// Builds NBEdges from the VissimEdges within the dictionary
     static void dict_buildNBEdges(NBDistrictCont& dc, NBNodeCont& nc,
-                                  NBEdgeCont& ec, SUMOReal offset);
+                                  NBEdgeCont& ec, double offset);
 
-    static void dict_propagateSpeeds(/* NBDistribution &dc */);
+    static void dict_propagateSpeeds();
 
     static void dict_checkEdges2Join();
 
@@ -179,7 +178,7 @@ private:
      * @exception ProcessError If one of the built nodes or edges could not be added to the according container
      */
     void buildNBEdge(NBDistrictCont& dc, NBNodeCont& nc,
-                     NBEdgeCont& ec, SUMOReal sameNodesOffset);
+                     NBEdgeCont& ec, double sameNodesOffset);
 
     /// Returns the origin node
     std::pair<NIVissimConnectionCluster*, NBNode*>
@@ -191,19 +190,19 @@ private:
 
     /// Tries to resolve the problem that the same node has been returned as origin and destination node
     std::pair<NBNode*, NBNode*> resolveSameNode(NBNodeCont& nc,
-            SUMOReal offset, NBNode* prevFrom, NBNode* prevTo);
+            double offset, NBNode* prevFrom, NBNode* prevTo);
 
-//    SUMOReal recheckSpeedPatches();
+//    double recheckSpeedPatches();
 
     std::vector<NIVissimConnection*> getOutgoingConnected(int lane) const;
 
-    void propagateSpeed(/* NBDistribution &dc */SUMOReal speed, std::vector<int> forLanes);
+    void propagateSpeed(double speed, std::vector<int> forLanes);
 
 
-    void setDistrictSpeed(/* NBDistribution &dc */);
-    SUMOReal getRealSpeed(/* NBDistribution &dc */int distNo);
-    void checkUnconnectedLaneSpeeds(/* NBDistribution &dc */);
-    void propagateOwn(/* NBDistribution &dc */);
+    void setDistrictSpeed();
+    double getRealSpeed(int distNo);
+    void checkUnconnectedLaneSpeeds();
+    void propagateOwn();
 
 
 
@@ -266,7 +265,7 @@ private:
     int myNoLanes;
 
     /// Additional load values for this edge
-    SUMOReal myZuschlag1, myZuschlag2;
+    double myZuschlag1, myZuschlag2;
 
     /// List of lanes closed on this edge
     NIVissimClosedLanesVector myClosedLanes;
@@ -280,11 +279,11 @@ private:
     /// List of connections outgoing from this edge
     std::vector<int> myOutgoingConnections;
 
-    std::vector<SUMOReal> myDistrictConnections;
+    std::vector<double> myDistrictConnections;
 
     std::vector<int> myPatchedSpeeds;
 
-    std::vector<SUMOReal> myLaneSpeeds;
+    std::vector<double> myLaneSpeeds;
 
     std::vector<NIVissimEdge*> myToTreatAsSame;
 

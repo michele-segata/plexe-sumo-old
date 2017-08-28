@@ -40,15 +40,11 @@
 #include "ROHelper.h"
 #include <utils/iodevices/OutputDevice.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
-RORoute::RORoute(const std::string& id, SUMOReal costs, SUMOReal prop,
+RORoute::RORoute(const std::string& id, double costs, double prop,
                  const ConstROEdgeVector& route,
                  const RGBColor* const color,
                  const std::vector<SUMOVehicleParameter::Stop>& stops)
@@ -74,13 +70,13 @@ RORoute::~RORoute() {
 
 
 void
-RORoute::setCosts(SUMOReal costs) {
+RORoute::setCosts(double costs) {
     myCosts = costs;
 }
 
 
 void
-RORoute::setProbability(SUMOReal prob) {
+RORoute::setProbability(double prob) {
     myProbability = prob;
 }
 
@@ -91,7 +87,7 @@ RORoute::recheckForLoops() {
 }
 
 void
-RORoute::addProbability(SUMOReal prob) {
+RORoute::addProbability(double prob) {
     myProbability += prob;
 }
 
@@ -124,7 +120,7 @@ RORoute::writeXMLDefinition(OutputDevice& dev, const ROVehicle* const veh,
     }
     if (withExitTimes) {
         std::string exitTimes;
-        SUMOReal time = STEPS2TIME(veh->getDepartureTime());
+        double time = STEPS2TIME(veh->getDepartureTime());
         for (ConstROEdgeVector::const_iterator i = myRoute.begin(); i != myRoute.end(); ++i) {
             if (i != myRoute.begin()) {
                 exitTimes += " ";

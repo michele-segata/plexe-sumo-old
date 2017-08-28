@@ -41,10 +41,6 @@
 
 #include "MSVTypeProbe.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -53,7 +49,7 @@ MSVTypeProbe::MSVTypeProbe(const std::string& id,
                            const std::string& vType,
                            OutputDevice& od, SUMOTime frequency)
     : Named(id), myVType(vType), myOutputDevice(od), myFrequency(frequency) {
-    MSNet::getInstance()->getEndOfTimestepEvents()->addEvent(this, 0, MSEventControl::ADAPT_AFTER_EXECUTION);
+    MSNet::getInstance()->getEndOfTimestepEvents()->addEvent(this);
     myOutputDevice.writeXMLHeader("vehicle-type-probes", "vtypeprobe_file.xsd");
 }
 

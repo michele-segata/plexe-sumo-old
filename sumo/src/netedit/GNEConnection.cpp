@@ -55,10 +55,6 @@
 #include "GNEViewNet.h"
 #include "GNEInternalLane.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 
 // ===========================================================================
@@ -110,8 +106,8 @@ GNEConnection::updateGeometry() {
                       laneShapeFrom,
                       laneShapeTo,
                       NUM_POINTS, getEdgeFrom()->getNBEdge()->getTurnDestination() == nbCon.toEdge,
-                      (SUMOReal) 5. * (SUMOReal) getEdgeFrom()->getNBEdge()->getNumLanes(),
-                      (SUMOReal) 5. * (SUMOReal) nbCon.toEdge->getNumLanes());
+                      (double) 5. * (double) getEdgeFrom()->getNBEdge()->getNumLanes(),
+                      (double) 5. * (double) nbCon.toEdge->getNumLanes());
 
     } else {
         myShape.clear();
@@ -119,7 +115,7 @@ GNEConnection::updateGeometry() {
         myShape.push_back(laneShapeTo.positionAtOffset(1));
     }
 
-    // Obtain lenghts and shape rotations
+    // Obtain lengths and shape rotations
     int segments = (int) myShape.size() - 1;
     if (segments >= 0) {
         myShapeRotations.reserve(segments);
@@ -128,7 +124,7 @@ GNEConnection::updateGeometry() {
             const Position& f = myShape[i];
             const Position& s = myShape[i + 1];
             myShapeLengths.push_back(f.distanceTo2D(s));
-            myShapeRotations.push_back((SUMOReal) atan2((s.x() - f.x()), (f.y() - s.y())) * (SUMOReal) 180.0 / (SUMOReal) PI);
+            myShapeRotations.push_back((double) atan2((s.x() - f.x()), (f.y() - s.y())) * (double) 180.0 / (double) PI);
         }
     }
 }
@@ -187,6 +183,12 @@ GNEConnection::getNBConnection() const {
     return NBConnection(getEdgeFrom()->getNBEdge(), getFromLaneIndex(),
                         getEdgeTo()->getNBEdge(), getToLaneIndex(),
                         (int)getNBEdgeConnection().tlLinkNo);
+}
+
+
+void
+GNEConnection::updateID() {
+    setMicrosimID(myFromLane->getMicrosimID() + " -> " + myToLane->getMicrosimID());
 }
 
 
@@ -307,7 +309,7 @@ GNEConnection::getAttribute(SumoXMLAttr key) const {
         case SUMO_ATTR_CONTPOS:
             return toString(nbCon.contPos);
         case SUMO_ATTR_UNCONTROLLED:
-            return toString(!getEdgeFrom()->getNBEdge()->mayBeTLSControlled(nbCon.fromLane, nbCon.toEdge, nbCon.toLane));
+            return toString(nbCon.uncontrolled);
         case SUMO_ATTR_VISIBILITY_DISTANCE:
             return toString(nbCon.visibility);
         default:
@@ -351,12 +353,11 @@ GNEConnection::isValid(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_KEEP_CLEAR:
             return canParse<bool>(value);
         case SUMO_ATTR_CONTPOS:
-            return canParse<SUMOReal>(value);
+            return canParse<double>(value);
         case SUMO_ATTR_UNCONTROLLED:
-            return false; // XXX see #2599
-        //return canParse<bool>(value);
+            return canParse<bool>(value);
         case SUMO_ATTR_VISIBILITY_DISTANCE:
-            return isPositive<SUMOReal>(value);
+            return isPositive<double>(value);
         default:
             throw InvalidArgument(toString(getTag()) + " doesn't have an attribute of type '" + toString(key) + "'");
     }
@@ -373,16 +374,14 @@ GNEConnection::setAttribute(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_KEEP_CLEAR:
             nbCon.keepClear = parse<bool>(value);
             break;
-        /*
         case SUMO_ATTR_UNCONTROLLED:
-        // XXX see @2599
-        break;
-        */
+            nbCon.uncontrolled = parse<bool>(value);
+            break;
         case SUMO_ATTR_CONTPOS:
-            nbCon.contPos = parse<SUMOReal>(value);
+            nbCon.contPos = parse<double>(value);
             break;
         case SUMO_ATTR_VISIBILITY_DISTANCE:
-            nbCon.visibility = parse<SUMOReal>(value);
+            nbCon.visibility = parse<double>(value);
             break;
         default:
             throw InvalidArgument(toString(getTag()) + " doesn't have an attribute of type '" + toString(key) + "'");

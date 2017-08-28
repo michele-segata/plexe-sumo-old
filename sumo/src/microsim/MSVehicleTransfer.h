@@ -42,9 +42,11 @@
 // ===========================================================================
 // class declarations
 // ===========================================================================
-class MSVehicle;
 class MSEdge;
 class MSLane;
+class MSVehicle;
+class MSVehicleControl;
+class SUMOSAXAttributes;
 
 
 // ===========================================================================
@@ -53,7 +55,7 @@ class MSLane;
 /**
  * @class MSVehicleTransfer
  * This object (each simulation owns exactly one) is responsible for the
- *  transfer of vehicles that got stocked within the network due to grid locks.
+ *  transfer of vehicles that got stuck within the network due to grid locks.
  *  It also manages vehicles that are removed from the network because of stops
  *  with the parking attribute.
  *
@@ -124,7 +126,7 @@ public:
     static MSVehicleTransfer* getInstance();
 
     /// @brief The minimum speed while teleporting
-    static const SUMOReal TeleportMinSpeed;
+    static const double TeleportMinSpeed;
 
 private:
     /// @brief Constructor

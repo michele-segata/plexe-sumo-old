@@ -32,10 +32,6 @@
 #include <map>
 #include "NIVissimEdgePosMap.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 NIVissimEdgePosMap::NIVissimEdgePosMap() {}
 
@@ -44,15 +40,15 @@ NIVissimEdgePosMap::~NIVissimEdgePosMap() {}
 
 
 void
-NIVissimEdgePosMap::add(int edgeid, SUMOReal pos) {
+NIVissimEdgePosMap::add(int edgeid, double pos) {
     add(edgeid, pos, pos);
 }
 
 
 void
-NIVissimEdgePosMap::add(int edgeid, SUMOReal from, SUMOReal to) {
+NIVissimEdgePosMap::add(int edgeid, double from, double to) {
     if (from > to) {
-        SUMOReal tmp = from;
+        double tmp = from;
         from = to;
         to = tmp;
     }
@@ -60,8 +56,8 @@ NIVissimEdgePosMap::add(int edgeid, SUMOReal from, SUMOReal to) {
     if (i == myCont.end()) {
         myCont[edgeid] = Range(from, to);
     } else {
-        SUMOReal pfrom = (*i).second.first;
-        SUMOReal pto = (*i).second.second;
+        double pfrom = (*i).second.first;
+        double pto = (*i).second.second;
         if (pfrom < from) {
             from = pfrom;
         }

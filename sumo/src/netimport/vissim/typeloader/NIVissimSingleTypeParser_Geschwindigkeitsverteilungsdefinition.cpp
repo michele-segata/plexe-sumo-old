@@ -34,14 +34,10 @@
 #include <utils/geom/PositionVector.h>
 #include <utils/common/TplConvert.h>
 #include <utils/common/ToString.h>
-#include <netbuild/NBDistribution.h>
 #include <utils/distribution/Distribution_Points.h>
+#include <utils/distribution/DistributionCont.h>
 #include "../NIImporter_Vissim.h"
 #include "NIVissimSingleTypeParser_Geschwindigkeitsverteilungsdefinition.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -60,7 +56,7 @@ NIVissimSingleTypeParser_Geschwindigkeitsverteilungsdefinition::parse(std::istre
     std::string id;
     from >> id;
     // list of points
-    PositionVector points;
+    Distribution_Points* points = new Distribution_Points(id);
     std::string tag;
     do {
         tag = readEndSecure(from);
@@ -69,14 +65,13 @@ NIVissimSingleTypeParser_Geschwindigkeitsverteilungsdefinition::parse(std::istre
             tag = readEndSecure(from);
         }
         if (tag != "DATAEND") {
-            SUMOReal p1 = TplConvert::_2SUMOReal(tag.c_str());
+            const double p1 = TplConvert::_2double(tag.c_str());
             from >> tag;
-            SUMOReal p2 = TplConvert::_2SUMOReal(tag.c_str());
-            points.push_back(Position(p1, p2));
+            const double p2 = TplConvert::_2double(tag.c_str());
+            points->add(p1, p2);
         }
     } while (tag != "DATAEND");
-    NBDistribution::dictionary("speed",
-                               id, new Distribution_Points(id, points));
+    DistributionCont::dictionary("speed", id, points);
     return true;
 }
 

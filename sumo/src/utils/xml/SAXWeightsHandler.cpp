@@ -39,10 +39,6 @@
 #include <utils/xml/SUMOSAXHandler.h>
 #include "SAXWeightsHandler.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -90,8 +86,8 @@ void SAXWeightsHandler::myStartElement(int element,
     switch (element) {
         case SUMO_TAG_INTERVAL: {
             bool ok = true;
-            myCurrentTimeBeg = attrs.get<SUMOReal>(SUMO_ATTR_BEGIN, 0, ok);
-            myCurrentTimeEnd = attrs.get<SUMOReal>(SUMO_ATTR_END, 0, ok);
+            myCurrentTimeBeg = attrs.get<double>(SUMO_ATTR_BEGIN, 0, ok);
+            myCurrentTimeEnd = attrs.get<double>(SUMO_ATTR_END, 0, ok);
         }
         break;
         case SUMO_TAG_EDGE: {
@@ -156,7 +152,7 @@ SAXWeightsHandler::myEndElement(int element) {
         for (i = myDefinitions.begin(); i != myDefinitions.end(); ++i) {
             if ((*i)->myHadAttribute) {
                 (*i)->myDestination.addEdgeWeight(myCurrentEdgeID,
-                                                  (*i)->myAggValue / (SUMOReal)(*i)->myNoLanes,
+                                                  (*i)->myAggValue / (double)(*i)->myNoLanes,
                                                   myCurrentTimeBeg, myCurrentTimeEnd);
             }
         }

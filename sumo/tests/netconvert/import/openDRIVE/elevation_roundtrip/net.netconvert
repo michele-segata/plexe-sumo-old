@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Mon Jan 30 17:13:43 2017 by SUMO netconvert Version dev-SVN-r22777
+<!-- generated on Tue Apr 25 15:04:13 2017 by SUMO netconvert Version dev-SVN-r24052
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
@@ -31,7 +31,7 @@
 </configuration>
 -->
 
-<net version="0.27" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+<net version="0.27" rectangularLaneCut="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
 
     <location netOffset="0.00,0.00" convBoundary="60.33,-2.78,201.08,125.81" origBoundary="60.33,-2.78,201.08,125.81" projParameter="!"/>
 
@@ -58,12 +58,12 @@
     <type id="tram" priority="2" speed="13.89" allow="tram" width="3.65"/>
 
     <edge id="-1.0.00" from="1" to="2" priority="1" type="driving" shape="60.33,-1.43,-10.00 61.93,121.82 62.39,123.34 63.70,124.27 65.89,124.59 199.04,125.81,10.00">
-        <lane id="-1.0.00_0" index="0" disallow="tram rail_urban rail rail_electric pedestrian ship" speed="13.89" length="259.99" width="3.20" shape="61.98,-1.45,-10.00 63.58,121.57 63.80,122.32 64.33,122.69 66.02,122.94 199.06,124.16,10.00">
+        <lane id="-1.0.00_0" index="0" disallow="tram rail_urban rail rail_electric pedestrian ship" speed="13.89" length="259.98" width="3.20" shape="61.98,-1.45,-10.00 63.58,121.57,-0.51 63.80,122.32,-0.45 64.33,122.69,-0.40 66.02,122.94,-0.27 199.06,124.16,10.00">
             <param key="origId" value="1_-1"/>
         </lane>
     </edge>
     <edge id="-2.0.00" from="3" to="4" priority="1" type="driving" shape="100.05,0.00,10.00 100.05,93.00 100.24,95.13,-0.21 100.82,96.86,-0.32 101.79,98.21,-0.35 103.14,99.18,-0.32 104.87,99.76,-0.21 106.99,99.95,-0.00 200.00,99.95,10.00">
-        <lane id="-2.0.00_0" index="0" disallow="tram rail_urban rail rail_electric pedestrian ship" speed="13.89" length="195.75" width="3.20" shape="101.70,0.00,10.00 101.70,92.93 101.87,94.79,-0.21 102.31,96.11,-0.32 102.97,97.03,-0.35 103.89,97.69,-0.32 105.21,98.13,-0.21 107.07,98.30,-0.00 200.00,98.30,10.00">
+        <lane id="-2.0.00_0" index="0" disallow="tram rail_urban rail rail_electric pedestrian ship" speed="13.89" length="194.64" width="3.20" shape="101.70,0.00,10.00 101.70,92.93,10.00 101.87,94.79,10.00 102.31,96.11,10.00 102.97,97.03,10.00 103.89,97.69,10.00 105.21,98.13,10.00 107.07,98.30,10.00 200.00,98.30,10.00">
             <param key="origId" value="2_-1"/>
         </lane>
     </edge>
@@ -78,13 +78,13 @@
         </lane>
     </edge>
 
-    <junction id="1" type="unregulated" x="60.33" y="-1.43" z="-10.00" incLanes="" intLanes="" shape="60.38,-1.43,-10.00 63.58,-1.47,-10.00"/>
-    <junction id="2" type="unregulated" x="199.04" y="125.81" z="10.00" incLanes="-1.0.00_0" intLanes="" shape="199.07,122.56,10.00 199.04,125.76,10.00"/>
-    <junction id="3" type="unregulated" x="100.05" y="0.00" z="10.00" incLanes="" intLanes="" shape="100.10,0.00,10.00 103.30,0.00,10.00"/>
-    <junction id="4" type="unregulated" x="200.00" y="99.95" z="10.00" incLanes="-2.0.00_0" intLanes="" shape="200.00,96.70,10.00 200.00,99.90,10.00"/>
-    <junction id="5" type="unregulated" x="139.10" y="-1.97" incLanes="" intLanes="" shape="139.15,-1.97 142.35,-2.04"/>
-    <junction id="6" type="unregulated" x="200.46" y="73.40" incLanes="-3.0.00_0" intLanes="" shape="200.47,70.15 200.46,73.35"/>
-    <junction id="7" type="unregulated" x="176.77" y="-2.78" incLanes="" intLanes="" shape="176.78,-2.74 177.86,0.28"/>
-    <junction id="8" type="unregulated" x="201.08" y="45.82" incLanes="-4.0.00_0" intLanes="" shape="199.74,42.86 201.06,45.78"/>
+    <junction id="1" type="dead_end" x="60.33" y="-1.43" z="-10.00" incLanes="" intLanes="" shape="60.38,-1.43,-10.00 63.58,-1.47,-10.00"/>
+    <junction id="2" type="dead_end" x="199.04" y="125.81" z="10.00" incLanes="-1.0.00_0" intLanes="" shape="199.07,122.56,10.00 199.04,125.76,10.00"/>
+    <junction id="3" type="dead_end" x="100.05" y="0.00" z="10.00" incLanes="" intLanes="" shape="100.10,0.00,10.00 103.30,0.00,10.00"/>
+    <junction id="4" type="dead_end" x="200.00" y="99.95" z="10.00" incLanes="-2.0.00_0" intLanes="" shape="200.00,96.70,10.00 200.00,99.90,10.00"/>
+    <junction id="5" type="dead_end" x="139.10" y="-1.97" incLanes="" intLanes="" shape="139.15,-1.97 142.35,-2.04"/>
+    <junction id="6" type="dead_end" x="200.46" y="73.40" incLanes="-3.0.00_0" intLanes="" shape="200.47,70.15 200.46,73.35"/>
+    <junction id="7" type="dead_end" x="176.77" y="-2.78" incLanes="" intLanes="" shape="176.78,-2.74 177.86,0.28"/>
+    <junction id="8" type="dead_end" x="201.08" y="45.82" incLanes="-4.0.00_0" intLanes="" shape="199.74,42.86 201.06,45.78"/>
 
 </net>

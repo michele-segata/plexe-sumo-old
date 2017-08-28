@@ -67,27 +67,24 @@ public:
      */
     MSNoLogicJunction(const std::string& id, SumoXMLNodeType type, const Position& position,
                       const PositionVector& shape,
-                      std::vector<MSLane*> incoming
-#ifdef HAVE_INTERNAL_LANES
-                      , std::vector<MSLane*> internal
-#endif
-                     );
+                      std::vector<MSLane*> incoming,
+                      std::vector<MSLane*> internal);
 
     /** Initialises the junction after the net was completely loaded */
     void postloadInit();
 
-    std::vector<MSLane*> getIncomingLanes() {
-        return myIncomingLanes;
+    /** @brief Returns all internal lanes on the junction
+     */
+    virtual const std::vector<MSLane*>& getInternalLanes() const {
+        return myInternalLanes;
     }
 
 private:
     /** Lanes incoming to the junction */
     std::vector<MSLane*> myIncomingLanes;
 
-#ifdef HAVE_INTERNAL_LANES
     /** The junctions internal lanes */
     std::vector<MSLane*> myInternalLanes;
-#endif
 
 private:
     /// @brief Invalidated copy constructor.

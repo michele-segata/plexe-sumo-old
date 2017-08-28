@@ -35,10 +35,6 @@
 #include "utils/options/OptionsCont.h"
 #include "PCTypeMap.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -59,7 +55,7 @@ PCTypeMap::~PCTypeMap() {}
 bool
 PCTypeMap::add(const std::string& id, const std::string& newid,
                const std::string& color, const std::string& prefix,
-               SUMOReal layer, bool discard, bool allowFill) {
+               double layer, bool discard, bool allowFill) {
     if (has(id)) {
         return false;
     }

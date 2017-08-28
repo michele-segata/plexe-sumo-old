@@ -61,6 +61,7 @@
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/gui/settings/GUICompleteSchemeStorage.h>
 #include <utils/gui/globjects/GLIncludes.h>
+#include <utils/gui/settings/GUIVisualizationSettings.h>
 
 #include "GUISUMOAbstractView.h"
 #include "GUIMainWindow.h"
@@ -69,12 +70,15 @@
 #include "GUIDialog_EditViewport.h"
 
 #ifdef HAVE_GDAL
-#include <gdal_priv.h>
+#if __GNUC__ > 3
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #endif
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include <gdal_priv.h>
+#if __GNUC__ > 3
+#pragma GCC diagnostic pop
+#endif
+#endif
 
 
 // ===========================================================================
@@ -109,8 +113,7 @@ FXIMPLEMENT_ABSTRACT(GUISUMOAbstractView, FXGLCanvas, GUISUMOAbstractViewMap, AR
  * GUISUMOAbstractView - methods
  * ----------------------------------------------------------------------- */
 GUISUMOAbstractView::GUISUMOAbstractView(FXComposite* p, GUIMainWindow& app, GUIGlChildWindow* parent, const SUMORTree& grid, FXGLVisual* glVis, FXGLCanvas* share) :
-    FXGLCanvas(p, glVis, share, p, MID_GLCANVAS,
-               LAYOUT_SIDE_TOP | LAYOUT_FILL_X | LAYOUT_FILL_Y, 0, 0, 0, 0),
+    FXGLCanvas(p, glVis, share, p, MID_GLCANVAS, LAYOUT_SIDE_TOP | LAYOUT_FILL_X | LAYOUT_FILL_Y, 0, 0, 0, 0),
     myApp(&app),
     myParent(parent),
     myGrid(&((SUMORTree&)grid)),
@@ -181,11 +184,24 @@ GUISUMOAbstractView::getPositionInformation() const {
 
 
 Position
+GUISUMOAbstractView::snapToActiveGrid(const Position& pos) const {
+    Position result = pos;
+    if (myVisualizationSettings->showGrid) {
+        const double xRest = std::fmod(pos.x(), myVisualizationSettings->gridXSize) + (pos.x() < 0 ? myVisualizationSettings->gridXSize : 0);
+        const double yRest = std::fmod(pos.y(), myVisualizationSettings->gridYSize) + (pos.y() < 0 ? myVisualizationSettings->gridYSize : 0);
+        result.setx(pos.x() - xRest + (xRest < myVisualizationSettings->gridXSize * 0.5 ? 0 : myVisualizationSettings->gridXSize));
+        result.sety(pos.y() - yRest + (yRest < myVisualizationSettings->gridYSize * 0.5 ? 0 : myVisualizationSettings->gridYSize));
+    }
+    return result;
+}
+
+
+Position
 GUISUMOAbstractView::screenPos2NetPos(int x, int y) const {
     Boundary bound = myChanger->getViewport();
-    SUMOReal xNet = bound.xmin() + bound.getWidth() * x / getWidth();
+    double xNet = bound.xmin() + bound.getWidth() * x / getWidth();
     // cursor origin is in the top-left corner
-    SUMOReal yNet = bound.ymin() + bound.getHeight() * (getHeight() - y) / getHeight();
+    double yNet = bound.ymin() + bound.getHeight() * (getHeight() - y) / getHeight();
     return Position(xNet, yNet);
 }
 
@@ -295,14 +311,14 @@ GUISUMOAbstractView::getObjectUnderCursor() {
 
 GUIGlID
 GUISUMOAbstractView::getObjectAtPosition(Position pos) {
-    const SUMOReal SENSITIVITY = 0.1; // meters
+    const double SENSITIVITY = 0.1; // meters
     Boundary selection;
     selection.add(pos);
     selection.grow(SENSITIVITY);
     const std::vector<GUIGlID> ids = getObjectsInBoundary(selection);
     // Interpret results
     int idMax = 0;
-    SUMOReal maxLayer = -std::numeric_limits<SUMOReal>::max();
+    double maxLayer = -std::numeric_limits<double>::max();
     for (std::vector<GUIGlID>::const_iterator it = ids.begin(); it != ids.end(); it++) {
         GUIGlID id = *it;
         GUIGlObject* o = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
@@ -315,7 +331,7 @@ GUISUMOAbstractView::getObjectAtPosition(Position pos) {
         //std::cout << "point selection hit " << o->getMicrosimID() << "\n";
         GUIGlObjectType type = o->getType();
         if (type != 0) {
-            SUMOReal layer = (SUMOReal)type;
+            double layer = (double)type;
             // determine an "abstract" layer for shapes
             //  this "layer" resembles the layer of the shape
             //  taking into account the stac of other objects
@@ -339,7 +355,7 @@ GUISUMOAbstractView::getObjectAtPosition(Position pos) {
 
 
 std::vector<GUIGlID>
-GUISUMOAbstractView::getObjectsAtPosition(Position pos, SUMOReal radius) {
+GUISUMOAbstractView::getObjectsAtPosition(Position pos, double radius) {
     Boundary selection;
     selection.add(pos);
     selection.grow(radius);
@@ -421,33 +437,43 @@ GUISUMOAbstractView::showToolTipFor(const GUIGlID id) {
 
 void
 GUISUMOAbstractView::paintGLGrid() {
-    glEnable(GL_DEPTH_TEST);
-    glLineWidth(1);
-
-    SUMOReal xmin = myGrid->xmin();
-    SUMOReal ymin = myGrid->ymin();
-    SUMOReal ypos = ymin;
-    SUMOReal xpos = xmin;
-    SUMOReal xend = myGrid->xmax();
-    SUMOReal yend = myGrid->ymax();
-
-    glTranslated(0, 0, .55);
-    glColor3d(0.5, 0.5, 0.5);
-    // draw horizontal lines
-    glBegin(GL_LINES);
-    for (; ypos < yend;) {
-        glVertex2d(xmin, ypos);
-        glVertex2d(xend, ypos);
-        ypos += myVisualizationSettings->gridYSize;
+    // obtain minimum grid
+    double minimumSizeGrid = (myVisualizationSettings->gridXSize < myVisualizationSettings->gridYSize) ? myVisualizationSettings->gridXSize : myVisualizationSettings->gridYSize;
+    // Check if the distance is enought to draw grid
+    if (myVisualizationSettings->scale * myVisualizationSettings->addSize.getExaggeration(*myVisualizationSettings) >= (25 / minimumSizeGrid)) {
+        glEnable(GL_DEPTH_TEST);
+        glLineWidth(1);
+        // get multiplication values (2 is the marging)
+        int multXmin = (int)(myChanger->getViewport().xmin() / myVisualizationSettings->gridXSize) - 2;
+        int multYmin = (int)(myChanger->getViewport().ymin() / myVisualizationSettings->gridYSize) - 2;
+        int multXmax = (int)(myChanger->getViewport().xmax() / myVisualizationSettings->gridXSize) + 2;
+        int multYmax = (int)(myChanger->getViewport().ymax() / myVisualizationSettings->gridYSize) + 2;
+        // obtain references
+        double xmin = myVisualizationSettings->gridXSize * multXmin;
+        double ymin = myVisualizationSettings->gridYSize * multYmin;
+        double xmax = myVisualizationSettings->gridXSize * multXmax;
+        double ymax = myVisualizationSettings->gridYSize * multYmax;
+        double xpos = xmin;
+        double ypos = ymin;
+        // move drawing matrix
+        glTranslated(0, 0, .55);
+        glColor3d(0.5, 0.5, 0.5);
+        // draw horizontal lines
+        glBegin(GL_LINES);
+        while (ypos <= ymax) {
+            glVertex2d(xmin, ypos);
+            glVertex2d(xmax, ypos);
+            ypos += myVisualizationSettings->gridYSize;
+        }
+        // draw vertical lines
+        while (xpos <= xmax) {
+            glVertex2d(xpos, ymin);
+            glVertex2d(xpos, ymax);
+            xpos += myVisualizationSettings->gridXSize;
+        }
+        glEnd();
+        glTranslated(0, 0, -.55);
     }
-    // draw vertical lines
-    for (; xpos < xend;) {
-        glVertex2d(xpos, ymin);
-        glVertex2d(xpos, yend);
-        xpos += myVisualizationSettings->gridXSize;
-    }
-    glEnd();
-    glTranslated(0, 0, -.55);
 }
 
 
@@ -457,14 +483,14 @@ GUISUMOAbstractView::displayLegend() {
     int length = 1;
     const std::string text("10000000000");
     int noDigits = 1;
-    int pixelSize = (int) m2p((SUMOReal) length);
+    int pixelSize = (int) m2p((double) length);
     while (pixelSize <= 20) {
         length *= 10;
         noDigits++;
         if (noDigits > (int)text.length()) {
             return;
         }
-        pixelSize = (int) m2p((SUMOReal) length);
+        pixelSize = (int) m2p((double) length);
     }
     glLineWidth(1.0);
 
@@ -481,7 +507,7 @@ GUISUMOAbstractView::displayLegend() {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 
-    SUMOReal len = (SUMOReal) pixelSize / (SUMOReal)(getWidth() - 1) * (SUMOReal) 2.0;
+    double len = (double) pixelSize / (double)(getWidth() - 1) * (double) 2.0;
     glColor3d(0, 0, 0);
     double o = double(15) / double(getHeight());
     double o2 = o + o;
@@ -498,15 +524,15 @@ GUISUMOAbstractView::displayLegend() {
     glVertex2d(-.98 + len, -1. + o2);
     glEnd();
 
-    SUMOReal w = SUMOReal(35) / SUMOReal(getWidth());
-    SUMOReal h = SUMOReal(35) / SUMOReal(getHeight());
-    pfSetPosition(SUMOReal(-0.99), SUMOReal(1. - o2 - oo));
+    double w = double(35) / double(getWidth());
+    double h = double(35) / double(getHeight());
+    pfSetPosition(double(-0.99), double(1. - o2 - oo));
     pfSetScaleXY(w, h);
     glRotated(180, 1, 0, 0);
     pfDrawString("0m");
     glRotated(-180, 1, 0, 0);
 
-    pfSetPosition(SUMOReal(-.99 + len), SUMOReal(1. - o2 - oo));
+    pfSetPosition(double(-.99 + len), double(1. - o2 - oo));
     glRotated(180, 1, 0, 0);
     pfDrawString((text.substr(0, noDigits) + "m").c_str());
     glRotated(-180, 1, 0, 0);
@@ -519,14 +545,14 @@ GUISUMOAbstractView::displayLegend() {
 }
 
 
-SUMOReal
-GUISUMOAbstractView::m2p(SUMOReal meter) const {
+double
+GUISUMOAbstractView::m2p(double meter) const {
     return  meter * getWidth() / myChanger->getViewport().getWidth();
 }
 
 
-SUMOReal
-GUISUMOAbstractView::p2m(SUMOReal pixel) const {
+double
+GUISUMOAbstractView::p2m(double pixel) const {
     return pixel * myChanger->getViewport().getWidth() / getWidth();
 }
 
@@ -538,7 +564,7 @@ GUISUMOAbstractView::recenterView() {
 
 
 void
-GUISUMOAbstractView::centerTo(GUIGlID id, bool applyZoom, SUMOReal zoomDist) {
+GUISUMOAbstractView::centerTo(GUIGlID id, bool applyZoom, double zoomDist) {
     GUIGlObject* o = GUIGlObjectStorage::gIDStorage.getObjectBlocking(id);
     if (o != 0 && dynamic_cast<GUIGlObject*>(o) != 0) {
         if (applyZoom && zoomDist < 0) {
@@ -584,14 +610,13 @@ GUISUMOAbstractView::makeCurrent() {
     return ret;
 }
 
-#ifndef _MSC_VER
+
 FXbool
 GUISUMOAbstractView::makeNonCurrent() {
     sem_post(&myCanvasSemaphore);
     FXbool ret = FXGLCanvas::makeNonCurrent();
     return ret;
 }
-#endif
 
 
 long
@@ -990,8 +1015,7 @@ GUISUMOAbstractView::showViewschemeEditor() {
 GUIDialog_EditViewport*
 GUISUMOAbstractView::getViewportEditor() {
     if (myViewportChooser == 0) {
-        myViewportChooser =
-            new GUIDialog_EditViewport(this, "Edit Viewport...", 0, 0);
+        myViewportChooser = new GUIDialog_EditViewport(this, "Edit Viewport", 0, 0);
         myViewportChooser->create();
     }
     myViewportChooser->setValues(myChanger->getZoom(), myChanger->getXPos(), myChanger->getYPos());
@@ -1053,13 +1077,13 @@ GUISUMOAbstractView::remove(GUIDialog_ViewSettings*) {
 }
 
 
-SUMOReal
+double
 GUISUMOAbstractView::getGridWidth() const {
     return myGrid->getWidth();
 }
 
 
-SUMOReal
+double
 GUISUMOAbstractView::getGridHeight() const {
     return myGrid->getHeight();
 }
@@ -1204,8 +1228,8 @@ GUISUMOAbstractView::drawDecals() {
         }
         glRotated(d.rot, 0, 0, 1);
         glColor3d(1, 1, 1);
-        SUMOReal halfWidth = d.width / 2.;
-        SUMOReal halfHeight = d.height / 2.;
+        double halfWidth = d.width / 2.;
+        double halfHeight = d.height / 2.;
         if (d.screenRelative) {
             halfWidth = p2m(halfWidth);
             halfHeight = p2m(halfHeight);
@@ -1233,9 +1257,6 @@ GUISUMOAbstractView::addAdditionalGLVisualisation(const GUIGlObject* const which
 
 bool
 GUISUMOAbstractView::removeAdditionalGLVisualisation(const GUIGlObject* const which) {
-    if (getTrackedID() == which->getGlID()) {
-        stopTrack();
-    }
     if (myAdditionallyDrawn.find(which) == myAdditionallyDrawn.end()) {
         return false;
     }
@@ -1271,21 +1292,21 @@ GUISUMOAbstractView::applyGLTransform(bool fixRatio) {
     glOrtho(0, getWidth(), 0, getHeight(), -GLO_MAX - 1, GLO_MAX + 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    SUMOReal scaleX = (SUMOReal)getWidth() / bound.getWidth();
-    SUMOReal scaleY = (SUMOReal)getHeight() / bound.getHeight();
+    double scaleX = (double)getWidth() / bound.getWidth();
+    double scaleY = (double)getHeight() / bound.getHeight();
     glScaled(scaleX, scaleY, 1);
     glTranslated(-bound.xmin(), -bound.ymin(), 0);
 }
 
 
-SUMOReal
+double
 GUISUMOAbstractView::getDelay() const {
     return myApp->getDelay();
 }
 
 
 void
-GUISUMOAbstractView::setDelay(SUMOReal delay) {
+GUISUMOAbstractView::setDelay(double delay) {
     myApp->setDelay(delay);
 }
 

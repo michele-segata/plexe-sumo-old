@@ -32,15 +32,10 @@
 #include "MSLinkCont.h"
 #include "MSLane.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
-#ifdef HAVE_INTERNAL_LANES
 const MSEdge*
 MSLinkContHelper::getInternalFollowingEdge(const MSLane* fromLane,
         const MSEdge* followerAfterInternal) {
@@ -77,7 +72,6 @@ MSLinkContHelper::getInternalFollowingLane(const MSLane* fromLane,
     }
     return 0;
 }
-#endif
 
 
 MSLink*

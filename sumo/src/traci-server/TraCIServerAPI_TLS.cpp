@@ -40,10 +40,6 @@
 #include <microsim/traffic_lights/MSSimpleTrafficLightLogic.h>
 #include "TraCIServerAPI_TLS.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -181,11 +177,7 @@ TraCIServerAPI_TLS::processGet(TraCIServer& server, tcpip::Storage& inputStorage
                         // approached non-internal lane (if any)
                         def.push_back(link->getLane() != 0 ? link->getLane()->getID() : "");
                         // approached "via", internal lane (if any)
-#ifdef HAVE_INTERNAL_LANES
                         def.push_back(link->getViaLane() != 0 ? link->getViaLane()->getID() : "");
-#else
-                        def.push_back("");
-#endif
                         tempContent.writeUnsignedByte(TYPE_STRINGLIST);
                         tempContent.writeStringList(def);
                         ++cnt;

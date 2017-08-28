@@ -34,6 +34,7 @@
 #include <config.h>
 #endif
 
+#include <iostream>
 #include <map>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/StdDefs.h>
@@ -84,7 +85,7 @@ public:
 
     /** @brief Returns the lane the reminder works on.
      *
-     * @return The lane the reminder works on.
+     * @return The lane the reminder is anchored on.
      */
     const MSLane* getLane() const {
         return myLane;
@@ -99,8 +100,10 @@ public:
         NOTIFICATION_JUNCTION,
         /// @brief The vehicle changes the segment (meso only)
         NOTIFICATION_SEGMENT,
-        /// @brief The vehicle changes lanes (micro only) XXX: What if a vehicle changes lanes and passes a junction simultaneously?
+        /// @brief The vehicle changes lanes (micro only)
         NOTIFICATION_LANE_CHANGE,
+        /* All notifications below must result in the vehicle not being on the net
+         * (onLeaveLane sets amOnNet=false if reason>=NOTIFICATION_TELEPORT) */
         /// @brief The vehicle is being teleported
         NOTIFICATION_TELEPORT,
         /// @brief The vehicle starts or ends parking
@@ -129,9 +132,10 @@ public:
      * @return True if vehicle enters the reminder.
      * @see Notification
      */
-    virtual bool notifyEnter(SUMOVehicle& veh, Notification reason) {
+    virtual bool notifyEnter(SUMOVehicle& veh, Notification reason, const MSLane* enteredLane) {
         UNUSED_PARAMETER(reason);
         UNUSED_PARAMETER(&veh);
+        UNUSED_PARAMETER(&enteredLane);
         return true;
     }
 
@@ -150,9 +154,9 @@ public:
      * @return True if vehicle hasn't passed the reminder completely.
      */
     virtual bool notifyMove(SUMOVehicle& veh,
-                            SUMOReal oldPos,
-                            SUMOReal newPos,
-                            SUMOReal newSpeed) {
+                            double oldPos,
+                            double newPos,
+                            double newSpeed) {
         UNUSED_PARAMETER(oldPos);
         UNUSED_PARAMETER(newPos);
         UNUSED_PARAMETER(newSpeed);
@@ -174,17 +178,17 @@ public:
      *
      * @return True if the reminder wants to receive further info.
      */
-    virtual bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos,
-                             Notification reason) {
-        UNUSED_PARAMETER(reason);
-        UNUSED_PARAMETER(lastPos);
+    virtual bool notifyLeave(SUMOVehicle& veh, double lastPos, Notification reason, const MSLane* enteredLane = 0) {
         UNUSED_PARAMETER(&veh);
+        UNUSED_PARAMETER(lastPos);
+        UNUSED_PARAMETER(reason);
+        UNUSED_PARAMETER(enteredLane);
         return true;
     }
 
 
     // TODO: Documentation
-    void updateDetector(SUMOVehicle& veh, SUMOReal entryPos, SUMOReal leavePos,
+    void updateDetector(SUMOVehicle& veh, double entryPos, double leavePos,
                         SUMOTime entryTime, SUMOTime currentTime, SUMOTime leaveTime,
                         bool cleanUp);
 
@@ -205,12 +209,12 @@ public:
      * @param[in] travelledDistanceVehicleOnLane distance travelled while front was on the lane.
      */
     virtual void notifyMoveInternal(const SUMOVehicle& veh,
-                                    const SUMOReal frontOnLane,
-                                    const SUMOReal timeOnLane,
-                                    const SUMOReal meanSpeedFrontOnLane,
-                                    const SUMOReal meanSpeedVehicleOnLane,
-                                    const SUMOReal travelledDistanceFrontOnLane,
-                                    const SUMOReal travelledDistanceVehicleOnLane) {
+                                    const double frontOnLane,
+                                    const double timeOnLane,
+                                    const double meanSpeedFrontOnLane,
+                                    const double meanSpeedVehicleOnLane,
+                                    const double travelledDistanceFrontOnLane,
+                                    const double travelledDistanceVehicleOnLane) {
         UNUSED_PARAMETER(travelledDistanceFrontOnLane);
         UNUSED_PARAMETER(travelledDistanceVehicleOnLane);
         UNUSED_PARAMETER(meanSpeedVehicleOnLane);
@@ -239,7 +243,7 @@ protected:
     std::string myDescription;
 
 private:
-    std::map<SUMOVehicle*, std::pair<SUMOTime, SUMOReal> > myLastVehicleUpdateValues;
+    std::map<SUMOVehicle*, std::pair<SUMOTime, double> > myLastVehicleUpdateValues;
 
 
 private:

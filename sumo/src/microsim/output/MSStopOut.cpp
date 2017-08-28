@@ -34,10 +34,6 @@
 #include "MSStopOut.h"
 
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ---------------------------------------------------------------------------
 // static initialisation methods
 // ---------------------------------------------------------------------------
@@ -101,6 +97,7 @@ MSStopOut::stopEnded(const SUMOVehicle* veh, const MSVehicle::Stop& stop) {
     StopInfo& si = myStopped[veh];
     myDevice.openTag("stopinfo");
     myDevice.writeAttr(SUMO_ATTR_ID, veh->getID());
+    myDevice.writeAttr(SUMO_ATTR_TYPE, veh->getVehicleType().getID());
     myDevice.writeAttr(SUMO_ATTR_LANE, stop.lane->getID());
     myDevice.writeAttr(SUMO_ATTR_POSITION, veh->getPositionOnLane());
     myDevice.writeAttr(SUMO_ATTR_PARKING, stop.parking);

@@ -100,7 +100,7 @@ public:
      *
      * @return The maximum neighbour number of the node
      */
-    SUMOReal getMaxNeighbours() {
+    int getMaxNeighbours() {
         return myMaxNeighbours;
     }
 
@@ -109,7 +109,7 @@ public:
      *
      * @param[in] value The new maximum neighbour number of the node
      */
-    void setMaxNeighbours(SUMOReal value) {
+    void setMaxNeighbours(int value) {
         myMaxNeighbours = value;
     }
 
@@ -118,7 +118,7 @@ public:
      *
      * @param[in] value The new x-position of this node
      */
-    void setX(SUMOReal x) {
+    void setX(double x) {
         myPosition.set(x, myPosition.y());
     }
 
@@ -127,7 +127,7 @@ public:
      *
      * @param[in] value The new y-position of this node
      */
-    void setY(SUMOReal y) {
+    void setY(double y) {
         myPosition.set(myPosition.x(), y);
     }
 
@@ -201,7 +201,7 @@ private:
     Position myPosition;
 
     /// @brief The maximum number of neighbours
-    SUMOReal myMaxNeighbours;
+    int myMaxNeighbours;
 
     /// @brief Information whether this is the center of a cpider-net
     bool myAmCenter;

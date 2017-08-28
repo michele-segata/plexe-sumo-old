@@ -45,8 +45,8 @@ class MSLane;
 // ===========================================================================
 // types definitions
 // ===========================================================================
-typedef std::pair<const MSVehicle*, SUMOReal> CLeaderDist;
-typedef std::pair<MSVehicle*, SUMOReal> LeaderDist;
+typedef std::pair<const MSVehicle*, double> CLeaderDist;
+typedef std::pair<MSVehicle*, double> LeaderDist;
 
 // ===========================================================================
 // class definitions
@@ -57,7 +57,7 @@ typedef std::pair<MSVehicle*, SUMOReal> LeaderDist;
 class MSLeaderInfo {
 public:
     /// Constructor
-    MSLeaderInfo(const MSLane* lane, const MSVehicle* ego = 0, SUMOReal latOffset = 0);
+    MSLeaderInfo(const MSLane* lane, const MSVehicle* ego = 0, double latOffset = 0);
 
     /// Destructor
     virtual ~MSLeaderInfo();
@@ -68,17 +68,26 @@ public:
      * @param[in] latOffset The lateral offset that must be added to the position of veh
      * @return The number of free sublanes
      */
-    virtual int addLeader(const MSVehicle* veh, bool beyond, SUMOReal latOffset = 0);
+    virtual int addLeader(const MSVehicle* veh, bool beyond, double latOffset = 0);
 
     /// @brief discard all information
     virtual void clear();
 
-    /* @brief adds this vehicle as a leader in the appropriate sublanes
+    /* @brief returns sublanes occupied by veh
      * @param[in] veh The vehicle to check
+     * @param[in] latOffset The offset value to add to the vehicle position
      * @param[out] rightmost The rightmost sublane occupied by veh
      * @param[out] leftmost The rightmost sublane occupied by veh
      */
-    void getSubLanes(const MSVehicle* veh, SUMOReal latOffset, int& rightmost, int& leftmost) const;
+    void getSubLanes(const MSVehicle* veh, double latOffset, int& rightmost, int& leftmost) const;
+
+    /* @brief returns the sublane boundaries of the ith sublane
+     * @param[in] sublane The sublane to check
+     * @param[in] latOffset The offset value to add to the result
+     * @param[out] rightSide The right border of the given sublane
+     * @param[out] leftSide The left border of the given sublane
+     */
+    void getSublaneBorders(int sublane, double latOffset, double& rightSide, double& leftSide) const;
 
     /// @brief return the vehicle for the given sublane
     const MSVehicle* operator[](int sublane) const;
@@ -105,7 +114,7 @@ protected:
 
     /// @brief the width of the lane to which this instance applies
     // @note: not const to simplify assignment
-    SUMOReal myWidth;
+    double myWidth;
 
     std::vector<const MSVehicle*> myVehicles;
 
@@ -127,7 +136,10 @@ protected:
 class MSLeaderDistanceInfo : public MSLeaderInfo {
 public:
     /// Constructor
-    MSLeaderDistanceInfo(const MSLane* lane, const MSVehicle* ego, SUMOReal latOffset);
+    MSLeaderDistanceInfo(const MSLane* lane, const MSVehicle* ego, double latOffset);
+
+    /// @brief Construct for the non-sublane-case
+    MSLeaderDistanceInfo(const CLeaderDist& cLeaderDist, const MSLane* dummy);
 
     /// Destructor
     virtual ~MSLeaderDistanceInfo();
@@ -140,9 +152,9 @@ public:
      * @param[in] sublane The single sublane to which this leader shall be checked (-1 means: check for all)
      * @return The number of free sublanes
      */
-    virtual int addLeader(const MSVehicle* veh, SUMOReal gap, SUMOReal latOffset = 0, int sublane = -1);
+    virtual int addLeader(const MSVehicle* veh, double gap, double latOffset = 0, int sublane = -1);
 
-    virtual int addLeader(const MSVehicle* veh, bool beyond, SUMOReal latOffset = 0) {
+    virtual int addLeader(const MSVehicle* veh, bool beyond, double latOffset = 0) {
         UNUSED_PARAMETER(veh);
         UNUSED_PARAMETER(beyond);
         UNUSED_PARAMETER(latOffset);
@@ -160,7 +172,7 @@ public:
 
 protected:
 
-    std::vector<SUMOReal> myDistances;
+    std::vector<double> myDistances;
 
 };
 
@@ -171,7 +183,7 @@ protected:
 class MSCriticalFollowerDistanceInfo : public MSLeaderDistanceInfo {
 public:
     /// Constructor
-    MSCriticalFollowerDistanceInfo(const MSLane* lane, const MSVehicle* ego, SUMOReal latOffset);
+    MSCriticalFollowerDistanceInfo(const MSLane* lane, const MSVehicle* ego, double latOffset);
 
     /// Destructor
     virtual ~MSCriticalFollowerDistanceInfo();
@@ -184,9 +196,9 @@ public:
      * @param[in] sublane The single sublane to which this leader shall be checked (-1 means: check for all)
      * @return The number of free sublanes
      */
-    int addFollower(const MSVehicle* veh, const MSVehicle* ego, SUMOReal gap, SUMOReal latOffset = 0, int sublane = -1);
+    int addFollower(const MSVehicle* veh, const MSVehicle* ego, double gap, double latOffset = 0, int sublane = -1);
 
-    virtual int addLeader(const MSVehicle* veh, SUMOReal gap, SUMOReal latOffset = 0, int sublane = -1) {
+    virtual int addLeader(const MSVehicle* veh, double gap, double latOffset = 0, int sublane = -1) {
         UNUSED_PARAMETER(veh);
         UNUSED_PARAMETER(gap);
         UNUSED_PARAMETER(latOffset);
@@ -194,7 +206,7 @@ public:
         throw ProcessError("Method not supported");
     }
 
-    virtual int addLeader(const MSVehicle* veh, bool beyond, SUMOReal latOffset = 0) {
+    virtual int addLeader(const MSVehicle* veh, bool beyond, double latOffset = 0) {
         UNUSED_PARAMETER(veh);
         UNUSED_PARAMETER(beyond);
         UNUSED_PARAMETER(latOffset);
@@ -210,7 +222,7 @@ public:
 protected:
 
     // @brief the differences between requriedGap and actual gap for each of the followers
-    std::vector<SUMOReal> myMissingGaps;
+    std::vector<double> myMissingGaps;
 
 };
 

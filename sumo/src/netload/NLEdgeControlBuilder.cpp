@@ -46,10 +46,6 @@
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -82,10 +78,10 @@ NLEdgeControlBuilder::beginEdgeParsing(
 
 MSLane*
 NLEdgeControlBuilder::addLane(const std::string& id,
-                              SUMOReal maxSpeed, SUMOReal length,
-                              const PositionVector& shape, SUMOReal width,
-                              SVCPermissions permissions, int index) {
-    MSLane* lane = new MSLane(id, maxSpeed, length, myActiveEdge, myCurrentNumericalLaneID++, shape, width, permissions, index);
+                              double maxSpeed, double length,
+                              const PositionVector& shape, double width,
+                              SVCPermissions permissions, int index, bool isRampAccel) {
+    MSLane* lane = new MSLane(id, maxSpeed, length, myActiveEdge, myCurrentNumericalLaneID++, shape, width, permissions, index, isRampAccel);
     myLaneStorage->push_back(lane);
     return lane;
 }

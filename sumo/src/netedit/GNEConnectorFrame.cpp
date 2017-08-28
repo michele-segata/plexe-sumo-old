@@ -28,10 +28,6 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_VERSION_H
-#include <version.h>
-#endif
-
 #include <iostream>
 #include <utils/foxtools/fxexdefs.h>
 #include <utils/foxtools/MFXUtils.h>
@@ -55,10 +51,6 @@
 #include "GNEInternalLane.h"
 #include "GNEEdge.h"
 #include "GNEJunction.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================

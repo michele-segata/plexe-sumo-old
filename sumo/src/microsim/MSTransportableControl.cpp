@@ -42,10 +42,6 @@
 #include <utils/iodevices/OutputDevice.h>
 #include <utils/options/OptionsCont.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -112,7 +108,11 @@ MSTransportableControl::erase(MSTransportable* transportable) {
 void
 MSTransportableControl::setWaitEnd(const SUMOTime time, MSTransportable* transportable) {
     const SUMOTime step = time % DELTA_T == 0 ? time : (time / DELTA_T + 1) * DELTA_T;
-    myWaitingUntil[step].push_back(transportable);
+    // avoid double registration
+    const TransportableVector& transportables = myWaiting4Departure[step];
+    if (std::find(transportables.begin(), transportables.end(), transportable) == transportables.end()) {
+        myWaitingUntil[step].push_back(transportable);
+    }
 }
 
 

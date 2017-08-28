@@ -36,11 +36,8 @@
 #include <microsim/MSRoute.h>
 #include <microsim/MSEdge.h>
 #include "TraCIConstants.h"
+#include "lib/TraCI_Route.h"
 #include "TraCIServerAPI_Route.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -63,28 +60,19 @@ TraCIServerAPI_Route::processGet(TraCIServer& server, tcpip::Storage& inputStora
     tempMsg.writeUnsignedByte(variable);
     tempMsg.writeString(id);
     // process request
-    if (variable == ID_LIST) {
-        std::vector<std::string> ids;
-        MSRoute::insertIDs(ids);
-        tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
-        tempMsg.writeStringList(ids);
-    } else if (variable == ID_COUNT) {
-        std::vector<std::string> ids;
-        MSRoute::insertIDs(ids);
-        tempMsg.writeUnsignedByte(TYPE_INTEGER);
-        tempMsg.writeInt((int) ids.size());
-    } else {
-        const MSRoute* r = MSRoute::dictionary(id);
-        if (r == 0) {
-            return server.writeErrorStatusCmd(CMD_GET_ROUTE_VARIABLE, "Route '" + id + "' is not known", outputStorage);
-        }
+    try {
         switch (variable) {
+            case ID_LIST:
+                tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
+                tempMsg.writeStringList(TraCI_Route::getIDList());
+                break;
+            case ID_COUNT:
+                tempMsg.writeUnsignedByte(TYPE_INTEGER);
+                tempMsg.writeInt(TraCI_Route::getIDCount());
+                break;
             case VAR_EDGES:
                 tempMsg.writeUnsignedByte(TYPE_STRINGLIST);
-                tempMsg.writeInt(r->size());
-                for (MSRouteIterator i = r->begin(); i != r->end(); ++i) {
-                    tempMsg.writeString((*i)->getID());
-                }
+                tempMsg.writeStringList(TraCI_Route::getEdges(id));
                 break;
             case VAR_PARAMETER: {
                 std::string paramName = "";
@@ -92,12 +80,14 @@ TraCIServerAPI_Route::processGet(TraCIServer& server, tcpip::Storage& inputStora
                     return server.writeErrorStatusCmd(CMD_GET_ROUTE_VARIABLE, "Retrieval of a parameter requires its name.", outputStorage);
                 }
                 tempMsg.writeUnsignedByte(TYPE_STRING);
-                tempMsg.writeString(r->getParameter(paramName, ""));
+                tempMsg.writeString(TraCI_Route::getParameter(id, paramName));
+                break;
             }
-            break;
             default:
                 break;
         }
+    } catch (TraCIException& e) {
+        return server.writeErrorStatusCmd(CMD_GET_ROUTE_VARIABLE, e.what(), outputStorage);
     }
     server.writeStatusCmd(CMD_GET_ROUTE_VARIABLE, RTYPE_OK, "", outputStorage);
     server.writeResponseWithLength(outputStorage, tempMsg);
@@ -116,54 +106,40 @@ TraCIServerAPI_Route::processSet(TraCIServer& server, tcpip::Storage& inputStora
     }
     // id
     std::string id = inputStorage.readString();
-    const MSRoute* r = 0;
-    if (variable != ADD) {
-        r = MSRoute::dictionary(id);
-        if (r == 0) {
-            return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "Route '" + id + "' is not known", outputStorage);
-        }
-    }
-    // process
-    switch (variable) {
-        case ADD: {
-            std::vector<std::string> edgeIDs;
-            if (!server.readTypeCheckingStringList(inputStorage, edgeIDs)) {
-                return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "A string list is needed for adding a new route.", outputStorage);
-            }
-            //read itemNo
-            ConstMSEdgeVector edges;
-            for (std::vector<std::string>::const_iterator i = edgeIDs.begin(); i != edgeIDs.end(); ++i) {
-                MSEdge* edge = MSEdge::dictionary(*i);
-                if (edge == 0) {
-                    return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "Unknown edge '" + *i + "' in route.", outputStorage);
+
+    try {
+        // process
+        switch (variable) {
+            case ADD: {
+                std::vector<std::string> edgeIDs;
+                if (!server.readTypeCheckingStringList(inputStorage, edgeIDs)) {
+                    return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "A string list is needed for adding a new route.", outputStorage);
                 }
-                edges.push_back(edge);
+                TraCI_Route::add(id, edgeIDs);
             }
-            const std::vector<SUMOVehicleParameter::Stop> stops;
-            if (!MSRoute::dictionary(id, new MSRoute(id, edges, true, 0, stops))) {
-                return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "Could not add route.", outputStorage);
-            }
-        }
-        break;
-        case VAR_PARAMETER: {
-            if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
-                return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "A compound object is needed for setting a parameter.", outputStorage);
-            }
-            //readt itemNo
-            inputStorage.readInt();
-            std::string name;
-            if (!server.readTypeCheckingString(inputStorage, name)) {
-                return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "The name of the parameter must be given as a string.", outputStorage);
-            }
-            std::string value;
-            if (!server.readTypeCheckingString(inputStorage, value)) {
-                return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "The value of the parameter must be given as a string.", outputStorage);
-            }
-            ((MSRoute*) r)->addParameter(name, value);
-        }
-        break;
-        default:
             break;
+            case VAR_PARAMETER: {
+                if (inputStorage.readUnsignedByte() != TYPE_COMPOUND) {
+                    return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "A compound object is needed for setting a parameter.", outputStorage);
+                }
+                //read itemNo
+                inputStorage.readInt();
+                std::string name;
+                if (!server.readTypeCheckingString(inputStorage, name)) {
+                    return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "The name of the parameter must be given as a string.", outputStorage);
+                }
+                std::string value;
+                if (!server.readTypeCheckingString(inputStorage, value)) {
+                    return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, "The value of the parameter must be given as a string.", outputStorage);
+                }
+                TraCI_Route::setParameter(id, name, value);
+            }
+            break;
+            default:
+                break;
+        }
+    } catch (TraCIException& e) {
+        return server.writeErrorStatusCmd(CMD_SET_ROUTE_VARIABLE, e.what(), outputStorage);
     }
     server.writeStatusCmd(CMD_SET_ROUTE_VARIABLE, RTYPE_OK, warning, outputStorage);
     return true;

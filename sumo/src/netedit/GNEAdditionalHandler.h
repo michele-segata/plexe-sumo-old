@@ -51,6 +51,7 @@ class GNEJunction;
 class GNEEdge;
 class GNELane;
 class GNEDetectorE3;
+class GNECalibrator;
 
 // ===========================================================================
 // class definitions
@@ -162,6 +163,18 @@ public:
      */
     void parseAndBuildRouteProbe(const SUMOSAXAttributes& attrs, const SumoXMLTag& tag);
 
+    /**@brief Parses route values of Calibrators
+     * @param[in] attrs SAX-attributes which define the routes
+     * @param[in] tag of the additional
+     */
+    void parseCalibratorRoute(const SUMOSAXAttributes& attrs, const SumoXMLTag& tag);
+
+    /**@brief Parses vehicle type values of Calibrators
+     * @param[in] attrs SAX-attributes which define the vehicle types
+     * @param[in] tag of the additional
+     */
+    void parseCalibratorVehicleType(const SUMOSAXAttributes& attrs, const SumoXMLTag& tag);
+
     /**@brief Parses flow values of Calibrators
      * @param[in] attrs SAX-attributes which define the flows
      * @param[in] tag of the additional
@@ -197,7 +210,7 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the bus stop can not be added to the net (is duplicate)
      */
-    static bool buildBusStop(GNEViewNet* viewNet, const std::string& id, GNELane* lane, SUMOReal startPos, SUMOReal endPos, const std::vector<std::string>& lines);
+    static bool buildBusStop(GNEViewNet* viewNet, const std::string& id, GNELane* lane, double startPos, double endPos, const std::vector<std::string>& lines);
 
     /**@brief Builds a container stop
      * @param[in] viewNet viewNet in which element will be inserted
@@ -209,7 +222,7 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the container stop can not be added to the net (is duplicate)
      */
-    static bool buildContainerStop(GNEViewNet* viewNet, const std::string& id, GNELane* lane, SUMOReal startPos, SUMOReal endPos, const std::vector<std::string>& lines);
+    static bool buildContainerStop(GNEViewNet* viewNet, const std::string& id, GNELane* lane, double startPos, double endPos, const std::vector<std::string>& lines);
 
     /**@brief Builds a charging Station
      * @param[in] viewNet viewNet in which element will be inserted
@@ -224,7 +237,7 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the charging Station can not be added to the net (is duplicate)
      */
-    static bool buildChargingStation(GNEViewNet* viewNet, const std::string& id, GNELane* lane, SUMOReal startPos, SUMOReal endPos, SUMOReal chargingPower, SUMOReal efficiency, bool chargeInTransit, SUMOReal chargeDelay);
+    static bool buildChargingStation(GNEViewNet* viewNet, const std::string& id, GNELane* lane, double startPos, double endPos, double chargingPower, double efficiency, bool chargeInTransit, double chargeDelay);
 
     /**@brief Builds a induction loop detector (E1)
      * @param[in] viewNet viewNet in which element will be inserted
@@ -237,7 +250,7 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the detector can not be added to the net (is duplicate)
      */
-    static bool buildDetectorE1(GNEViewNet* viewNet, const std::string& id, GNELane* lane, SUMOReal pos, SUMOReal freq, const std::string& filename, bool splitByType);
+    static bool buildDetectorE1(GNEViewNet* viewNet, const std::string& id, GNELane* lane, double pos, double freq, const std::string& filename, bool splitByType);
 
     /**@brief Builds a lane Area Detector (E2)
      * @param[in] viewNet viewNet in which element will be inserted
@@ -254,8 +267,8 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the detector can not be added to the net (is duplicate)
      */
-    static bool buildDetectorE2(GNEViewNet* viewNet, const std::string& id, GNELane* lane, SUMOReal pos, SUMOReal length, SUMOReal freq, const std::string& filename,
-                                bool cont, const SUMOReal timeThreshold, SUMOReal speedThreshold, SUMOReal jamThreshold);
+    static bool buildDetectorE2(GNEViewNet* viewNet, const std::string& id, GNELane* lane, double pos, double length, double freq, const std::string& filename,
+                                bool cont, const double timeThreshold, double speedThreshold, double jamThreshold);
 
     /**@brief Builds a multi entry exit detector (E3)
      * @param[in] viewNet viewNet in which element will be inserted
@@ -268,7 +281,7 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the detector can not be added to the net (is duplicate)
      */
-    static bool buildDetectorE3(GNEViewNet* viewNet, const std::string& id, Position pos, SUMOReal freq, const std::string& filename, const SUMOReal timeThreshold, SUMOReal speedThreshold);
+    static bool buildDetectorE3(GNEViewNet* viewNet, const std::string& id, Position pos, double freq, const std::string& filename, const double timeThreshold, double speedThreshold);
 
     /**@brief Builds a entry detector (E3)
      * @param[in] viewNet viewNet in which element will be inserted
@@ -278,7 +291,7 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the entry detector can not be added to the net (invalid parent or lane)
      */
-    static bool buildDetectorEntry(GNEViewNet* viewNet, GNEDetectorE3* E3Parent, GNELane* lane, SUMOReal pos);
+    static bool buildDetectorEntry(GNEViewNet* viewNet, GNEDetectorE3* E3Parent, GNELane* lane, double pos);
 
     /**@brief Builds a exit detector (E3)
      * @param[in] viewNet viewNet in which element will be inserted
@@ -288,21 +301,25 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the exit detector can not be added to the net (invalid parent or lane
      */
-    static bool buildDetectorExit(GNEViewNet* viewNet, GNEDetectorE3* E3Parent, GNELane* lane, SUMOReal pos);
+    static bool buildDetectorExit(GNEViewNet* viewNet, GNEDetectorE3* E3Parent, GNELane* lane, double pos);
 
     /**@brief builds a microscopic calibrator
      * @param[in] viewNet viewNet in which element will be inserted
      * @param[in] id The id of the calibrator
-     * @param[in] edge The edge the calibrator is placed at
+     * @param[in] lane The lane the calibrator is placed at
      * @param[in] pos The position on the edge the calibrator lies at
      * @param[in] outfile te file in which write results
-     * @param[in] flowValues flow of calibrator
+     * @param[in] calibratorRoutes routes of calibrator
+     * @param[in] calibratorFlows flows of calibrator
+     * @param[in] calibratorVehicleTypes vehicleTypes of calibrator
      * @return true if was sucesfully created, false in other case
      * @todo Is the position correct/needed
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the entry detector can not be added to the net (is duplicate)
      */
-    static bool buildCalibrator(GNEViewNet* viewNet, const std::string& id, GNEEdge* edge, SUMOReal pos, const std::string& outfile, SUMOReal freq, const std::vector<GNECalibrator::GNECalibratorFlow*>& flowValues);
+    static bool buildCalibrator(GNEViewNet* viewNet, const std::string& id, GNELane* lane, double pos, const std::string& outfile, double freq,
+                                const std::vector<GNECalibratorRoute>& calibratorRoutes, const std::vector<GNECalibratorFlow>& calibratorFlows,
+                                const std::vector<GNECalibratorVehicleType>& calibratorVehicleTypes);
 
     /**@brief builds a rerouter
      * @param[in] viewNet viewNet in which element will be inserted
@@ -313,7 +330,7 @@ public:
      * @param[in] file The file to read the reroute definitions from
      * @return true if was sucesfully created, false in other case
      */
-    static bool buildRerouter(GNEViewNet* viewNet, const std::string& id, Position pos, const std::vector<GNEEdge*>& edges, SUMOReal prob, const std::string& file, bool off);
+    static bool buildRerouter(GNEViewNet* viewNet, const std::string& id, Position pos, const std::vector<GNEEdge*>& edges, double prob, const std::string& file, bool off);
 
     /**@brief builds a Route probe
      * @param[in] viewNet viewNet in which element will be inserted
@@ -325,29 +342,28 @@ public:
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the entry detector can not be added to the net (is duplicate)
      */
-    static bool buildRouteProbe(GNEViewNet* viewNet, const std::string& id, GNEEdge* edge, SUMOReal freq, const std::string& file, SUMOReal begin);
+    static bool buildRouteProbe(GNEViewNet* viewNet, const std::string& id, GNEEdge* edge, double freq, const std::string& file, double begin);
 
     /**@brief Builds a VariableSpeedSign (lane speed trigger)
      * @param[in] viewNet viewNet in which element will be inserted
      * @param[in] id The id of the lane speed trigger
      * @param[in] destLanes List of lanes affected by this speed trigger
      * @param[in] file Name of the file to read the speeds to set from
-     * @param[in] VSSValues Step and speed values of variable speed signal
+     * @param[in] steps Step and speed values of variable speed signal
      * @return true if was sucesfully created, false in other case
      * @exception InvalidArgument If the entry detector can not be added to the net (is duplicate)
      */
-    static bool buildVariableSpeedSign(GNEViewNet* viewNet, const std::string& id, Position pos, const std::vector<GNELane*>& destLanes, const std::string& file, const std::map<SUMOReal, SUMOReal>& VSSValues);
+    static bool buildVariableSpeedSign(GNEViewNet* viewNet, const std::string& id, Position pos, const std::vector<GNELane*>& destLanes, const std::string& file, const std::vector<GNEVariableSpeedSignStep>& steps);
 
     /**@brief Builds a vaporizer (lane speed trigger)
      * @param[in] viewNet viewNet in which element will be inserted
-     * @param[in] id The id of the lane speed trigger
      * @param[in] edge edge in which tis vaporizer is placed
      * @param[in] startTime time in which this vaporizer start
      * @param[in] end time in which this vaporizer ends
      * @return true if was sucesfully created, false in other case
      * @exception ProcessError If the XML definition file is errornous
      */
-    static bool buildVaporizer(GNEViewNet* viewNet, const std::string& id, GNEEdge* edge, SUMOReal startTime, SUMOReal end);
+    static bool buildVaporizer(GNEViewNet* viewNet, GNEEdge* edge, double startTime, double end);
 
     /**@brief Helper method to obtain the filename
      * @param[in] attrs The attributes to obtain the file name from
@@ -365,17 +381,17 @@ public:
      * @return The position on the lane
      * @exception InvalidArgument If the position is beyond the lane
      */
-    SUMOReal getPosition(const SUMOSAXAttributes& attrs, GNELane& lane, const std::string& tt, const std::string& tid);
+    double getPosition(const SUMOSAXAttributes& attrs, GNELane& lane, const std::string& tt, const std::string& tid);
 
     /**@brief check if the position of an stoppingPlace over a lane is valid
     * @param[in] startPos Start position of stoppingPlace
     * @param[in] endPos End position of stoppingPlace
-    * @param[in] laneLength Lenght of the lane
+    * @param[in] laneLength Length of the lane
     * @param[in] minLength Min length of the stoppingPlace
     * @param[in] friendlyPos Attribute of stoppingPlace
     * @return true if the stoppingPlace position is valid, false in otherweise
     */
-    bool checkStopPos(SUMOReal& startPos, SUMOReal& endPos, const SUMOReal laneLength, const SUMOReal minLength, const bool friendlyPos);
+    bool checkStopPos(double& startPos, double& endPos, const double laneLength, const double minLength, const bool friendlyPos);
 
     /**@brief reset last Tag and clear non-valid Additionals (For example, created E3 withouts Entry/Exit childs)
      * @note must be called after a XML parsing
@@ -389,14 +405,24 @@ protected:
     /// @brief Pointer to the last inserted E3
     GNEDetectorE3* myE3Parent;
 
+    /// @brief Pointer to the last inserted Calibrator
+    GNECalibrator* myCalibratorParent;
+
+    /// @brief Pointer to the last inserted variableSpeedSign
+    GNEVariableSpeedSign* myVariableSpeedSignParent;
+
     /// @brief pointer to rerouterInterval in which insert GNEClosingReroute, GNEDestProbReroute, etc.
     GNERerouterInterval* rerouterIntervalToInsertValues;
 
     /// @brief last used Tag
     SumoXMLTag myLastTag;
 
+    /// @brief vector in wich save calibratorVehicleTypes during loading calibrators
+    std::vector<GNECalibratorVehicleType> myLoadingCalibratorVehicleTypes;
+
     /// @brief used to check hierarchy of aditionals with parents and childs (for example, E3)
     bool checkAdditionalParent(SumoXMLTag currentTag);
+
 
 private:
     /// @brief get parsed attribute of XML and show warnings if there are problems
@@ -405,6 +431,9 @@ private:
 
     /// @brief get special attribute friendly position, used in stopping places
     bool getFriendlyPosition(const SUMOSAXAttributes& attrs, const char* objectid);
+
+    /// @brief get a error message, if configuration of flow distribution is invalid
+    GNECalibratorFlow::TypeOfFlow getTypeOfFlowDistribution(std::string flowID, double vehsPerHour, double period, double probability);
 };
 
 

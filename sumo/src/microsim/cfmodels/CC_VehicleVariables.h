@@ -121,52 +121,52 @@ public:
     /// @brief last time ego data has been updated
     SUMOTime egoDataLastUpdate;
     /// @brief current vehicle speed
-    SUMOReal egoSpeed;
+    double egoSpeed;
     /// @brief current vehicle acceleration
-    SUMOReal egoAcceleration;
+    double egoAcceleration;
     /// @brief vehicle speed at previous timestep
-    SUMOReal egoPreviousSpeed;
+    double egoPreviousSpeed;
     /// @brief acceleration as computed by the controller, to be sent to other vehicles
-    SUMOReal controllerAcceleration;
+    double controllerAcceleration;
     /// @brief acceleration as computed by the controller when followSpeed is invoked
-    SUMOReal followControllerAcceleration;
+    double followControllerAcceleration;
     /// @brief acceleration as computed by the controller when freeSpeed is invoked
-    SUMOReal freeControllerAcceleration;
+    double freeControllerAcceleration;
 
     /// @brief last time front vehicle data (speed and acceleration) has been updated
     SUMOTime frontDataLastUpdate;
     /// @brief current front vehicle speed
-    SUMOReal frontSpeed;
+    double frontSpeed;
     /// @brief current front vehicle acceleration (used by CACC)
-    SUMOReal frontAcceleration;
+    double frontAcceleration;
     /// @brief current front vehicle position
     Position frontPosition;
     /// @brief when front vehicle data has been readed from GPS
-    SUMOReal frontDataReadTime;
+    double frontDataReadTime;
     /// @did we receive at least one packet?
     bool frontInitialized;
     /// @brief last timestep at which front vehicle data (distance) has been updated
     SUMOTime radarLastUpdate;
     /// @brief current front vehicle distance as provided by the radar
-    SUMOReal radarFrontDistance;
+    double radarFrontDistance;
     /// @brief current front vehicle speed as provided by the radar
-    SUMOReal radarFrontSpeed;
+    double radarFrontSpeed;
 
     /// @brief headway time for ACC
-    SUMOReal accHeadwayTime;
+    double accHeadwayTime;
     /// @brief fixed spacing for CACC
-    SUMOReal caccSpacing;
+    double caccSpacing;
 
     /// @brief last time leader vehicle data has been updated
     SUMOTime leaderDataLastUpdate;
     /// @brief platoon's leader speed (used by CACC)
-    SUMOReal leaderSpeed;
+    double leaderSpeed;
     /// @brief platoon's leader acceleration (used by CACC)
-    SUMOReal leaderAcceleration;
+    double leaderAcceleration;
     /// @brief platoon's leader position
     Position leaderPosition;
     /// @brief when leader data has been readed from GPS
-    SUMOReal leaderDataReadTime;
+    double leaderDataReadTime;
     /// @did we receive at least one packet?
     bool leaderInitialized;
     bool caccInitialized;
@@ -198,7 +198,7 @@ public:
     bool crashed;
 
     /// @brief CC desired speed
-    SUMOReal ccDesiredSpeed;
+    double ccDesiredSpeed;
     /// @brief currently active controller
     enum Plexe::ACTIVE_CONTROLLER activeController;
 

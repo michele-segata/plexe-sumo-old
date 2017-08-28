@@ -49,10 +49,11 @@ public:
     /** @brief Constructor
      * @param[in] accel The maximum acceleration
      * @param[in] decel The maximum deceleration
+     * @param[in] emergencyDecel The maximum emergency deceleration
      * @param[in] dawdle The driver imperfection
      * @param[in] headwayTime The driver's reaction time
      */
-    MSCFModel_KraussPS(const MSVehicleType* vtype, SUMOReal accel, SUMOReal decel, SUMOReal dawdle, SUMOReal headwayTime);
+    MSCFModel_KraussPS(const MSVehicleType* vtype, double accel, double decel, double emergencyDecel, double dawdle, double headwayTime);
 
 
     /// @brief Destructor
@@ -74,7 +75,7 @@ public:
      * @param[in] speed The vehicle itself, for obtaining other values
      * @return The maximum possible speed for the next step
      */
-    SUMOReal maxNextSpeed(SUMOReal speed, const MSVehicle* const veh) const;
+    double maxNextSpeed(double speed, const MSVehicle* const veh) const;
 
 
     /** @brief Returns the model's name

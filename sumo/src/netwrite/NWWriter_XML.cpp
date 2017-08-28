@@ -45,10 +45,6 @@
 #include "NWWriter_SUMO.h"
 #include "NWWriter_XML.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 
 // ===========================================================================
@@ -73,6 +69,9 @@ NWWriter_XML::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     }
     if (oc.isSet("street-sign-output")) {
         writeStreetSigns(oc, nb.getEdgeCont());
+    }
+    if (oc.exists("ptstop-output") && oc.isSet("ptstop-output")) {
+        writePTStops(oc, nb.getPTStopCont());
     }
 }
 
@@ -248,6 +247,9 @@ NWWriter_XML::writeEdgesAndConnections(const OptionsCont& oc, NBNodeCont& nc, NB
                 if (e->hasLaneSpecificSpeed()) {
                     edevice.writeAttr(SUMO_ATTR_SPEED, lane.speed);
                 }
+                if (lane.accelRamp) {
+                    edevice.writeAttr(SUMO_ATTR_ACCELERATION, lane.accelRamp);
+                }
                 if (lane.oppositeID != "") {
                     edevice.openTag(SUMO_TAG_NEIGH);
                     edevice.writeAttr(SUMO_ATTR_LANE, lane.oppositeID);
@@ -258,7 +260,6 @@ NWWriter_XML::writeEdgesAndConnections(const OptionsCont& oc, NBNodeCont& nc, NB
         }
         edevice.closeTag();
         // write this edge's connections to the connections-files
-        e->sortOutgoingConnectionsByIndex();
         const std::vector<NBEdge::Connection> connections = e->getConnections();
         for (std::vector<NBEdge::Connection>::const_iterator c = connections.begin(); c != connections.end(); ++c) {
             NWWriter_SUMO::writeConnection(cdevice, *e, *c, false, NWWriter_SUMO::PLAIN);
@@ -367,6 +368,18 @@ NWWriter_XML::writeStreetSigns(const OptionsCont& oc, NBEdgeCont& ec) {
     }
     device.close();
 }
+void
+NWWriter_XML::writePTStops(const OptionsCont& oc, NBPTStopCont& sc) {
+    OutputDevice& device = OutputDevice::getDevice(oc.getString("ptstop-output"));
+    device.writeXMLHeader("additional", "additional_file.xsd");
+    for (std::map<std::string, NBPTStop*>::const_iterator i = sc.begin(); i != sc.end(); ++i) {
+        i->second->write(device);
+    }
+    device.close();
+}
+
+
+/****************************************************************************/
 
 
 /****************************************************************************/

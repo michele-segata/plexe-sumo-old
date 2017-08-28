@@ -37,13 +37,27 @@ strategic_stay_and_speedgain2
 # a vehicle urgently needs to change lanes and pushes a blocker by using a lower minGapLat
 push_for_merge
 
+# a vehicle urgently needs to change lanes and pushes a blocker by using a lower minGapLat. The blocker is constraint by a neighboring vehicle to the left and equalizes left and right lateral gaps
+push_for_merge_equalize_gaps
+
 # a vehicle urgently needs to change lanes but is configured to refrain from pushing 
 # 
 nopush_for_merge
 
+# a vehicle urgently needs to change lanes but is configured to refrain from pushing. nevertheless it undercuts the lateral gap
+# 
+nopushy_encroach
+
 # a vehicle urgently needs to change lanes but is configured to refrain from pushing. Instead it becomes impatient and forces braking in a (potentially) unsafe maneuver
 # 
 nopush_for_merge_impatience
+
+# test whether cooperative changing works fluidly
+cooperative_change
+
+# a vehicle cannot drive when partly off the road 
+# 
+stay_on_road
 
 # test angles during lane-changing
 angles

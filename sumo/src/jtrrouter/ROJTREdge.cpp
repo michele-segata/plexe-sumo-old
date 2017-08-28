@@ -36,11 +36,7 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/common/RandHelper.h>
 #include "ROJTREdge.h"
-#include <utils/common/RandomDistributor.h>
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include <utils/distribution/RandomDistributor.h>
 
 
 // ===========================================================================
@@ -62,14 +58,14 @@ ROJTREdge::addSuccessor(ROEdge* s, std::string) {
     ROEdge::addSuccessor(s);
     ROJTREdge* js = static_cast<ROJTREdge*>(s);
     if (myFollowingDefs.find(js) == myFollowingDefs.end()) {
-        myFollowingDefs[js] = new ValueTimeLine<SUMOReal>();
+        myFollowingDefs[js] = new ValueTimeLine<double>();
     }
 }
 
 
 void
-ROJTREdge::addFollowerProbability(ROJTREdge* follower, SUMOReal begTime,
-                                  SUMOReal endTime, SUMOReal probability) {
+ROJTREdge::addFollowerProbability(ROJTREdge* follower, double begTime,
+                                  double endTime, double probability) {
     FollowerUsageCont::iterator i = myFollowingDefs.find(follower);
     if (i == myFollowingDefs.end()) {
         WRITE_ERROR("The edges '" + getID() + "' and '" + follower->getID() + "' are not connected.");
@@ -80,7 +76,7 @@ ROJTREdge::addFollowerProbability(ROJTREdge* follower, SUMOReal begTime,
 
 
 ROJTREdge*
-ROJTREdge::chooseNext(const ROVehicle* const veh, SUMOReal time, const std::set<const ROEdge*>& avoid) const {
+ROJTREdge::chooseNext(const ROVehicle* const veh, double time, const std::set<const ROEdge*>& avoid) const {
     // if no usable follower exist, return 0
     //  their probabilities are not yet regarded
     if (myFollowingEdges.size() == 0 || (veh != 0 && allFollowersProhibit(veh))) {
@@ -92,7 +88,7 @@ ROJTREdge::chooseNext(const ROVehicle* const veh, SUMOReal time, const std::set<
     for (FollowerUsageCont::const_iterator i = myFollowingDefs.begin(); i != myFollowingDefs.end(); ++i) {
         if (avoid.count(i->first) == 0) {
             if ((veh == 0 || !(*i).first->prohibits(veh)) && (*i).second->describesTime(time)) {
-                dist.add((*i).second->getValue(time), (*i).first);
+                dist.add((*i).first, (*i).second->getValue(time));
             }
         }
     }
@@ -101,7 +97,7 @@ ROJTREdge::chooseNext(const ROVehicle* const veh, SUMOReal time, const std::set<
         for (int i = 0; i < (int)myParsedTurnings.size(); ++i) {
             if (avoid.count(myFollowingEdges[i]) == 0) {
                 if (veh == 0 || !myFollowingEdges[i]->prohibits(veh)) {
-                    dist.add(myParsedTurnings[i], static_cast<ROJTREdge*>(myFollowingEdges[i]));
+                    dist.add(static_cast<ROJTREdge*>(myFollowingEdges[i]), myParsedTurnings[i]);
                 }
             }
         }
@@ -116,22 +112,22 @@ ROJTREdge::chooseNext(const ROVehicle* const veh, SUMOReal time, const std::set<
 
 
 void
-ROJTREdge::setTurnDefaults(const std::vector<SUMOReal>& defs) {
+ROJTREdge::setTurnDefaults(const std::vector<double>& defs) {
     // I hope, we'll find a less ridiculous solution for this
-    std::vector<SUMOReal> tmp(defs.size()*myFollowingEdges.size(), 0);
+    std::vector<double> tmp(defs.size()*myFollowingEdges.size(), 0);
     // store in less common multiple
     for (int i = 0; i < (int)defs.size(); ++i) {
         for (int j = 0; j < (int)myFollowingEdges.size(); ++j) {
-            tmp[i * myFollowingEdges.size() + j] = (SUMOReal)(defs[i] / 100.0 / (myFollowingEdges.size()));
+            tmp[i * myFollowingEdges.size() + j] = (double)(defs[i] / 100.0 / (myFollowingEdges.size()));
         }
     }
     // parse from less common multiple
     for (int i = 0; i < (int)myFollowingEdges.size(); ++i) {
-        SUMOReal value = 0;
+        double value = 0;
         for (int j = 0; j < (int)defs.size(); ++j) {
             value += tmp[i * defs.size() + j];
         }
-        myParsedTurnings.push_back((SUMOReal) value);
+        myParsedTurnings.push_back((double) value);
     }
 }
 

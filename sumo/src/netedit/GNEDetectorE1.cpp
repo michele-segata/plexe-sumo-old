@@ -54,15 +54,12 @@
 #include "GNENet.h"
 #include "GNEChange_Attribute.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 
-GNEDetectorE1::GNEDetectorE1(const std::string& id, GNELane* lane, GNEViewNet* viewNet, SUMOReal pos, SUMOReal freq, const std::string& filename, bool splitByType) :
+GNEDetectorE1::GNEDetectorE1(const std::string& id, GNELane* lane, GNEViewNet* viewNet, double pos, double freq, const std::string& filename, bool splitByType) :
     GNEDetector(id, viewNet, SUMO_TAG_E1DETECTOR, ICON_E1, lane, pos, freq, filename),
     mySplitByType(splitByType) {
     // Update geometry;
@@ -87,7 +84,7 @@ GNEDetectorE1::updateGeometry() {
     myShape.clear();
 
     // Get shape of lane parent
-    myShape.push_back(myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLenght(myPosition.x())));
+    myShape.push_back(myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLength(myPosition.x())));
 
     // Obtain first position
     Position f = myShape[0] - Position(1, 0);
@@ -96,7 +93,7 @@ GNEDetectorE1::updateGeometry() {
     Position s = myShape[0] + Position(1, 0);
 
     // Save rotation (angle) of the vector constructed by points f and s
-    myShapeRotations.push_back(myLane->getShape().rotationDegreeAtOffset(myLane->getPositionRelativeToParametricLenght(myPosition.x())) * -1);
+    myShapeRotations.push_back(myLane->getShape().rotationDegreeAtOffset(myLane->getPositionRelativeToParametricLength(myPosition.x())) * -1);
 
     // Set offset of logo
     myDetectorLogoOffset = Position(1, 0);
@@ -117,7 +114,7 @@ GNEDetectorE1::updateGeometry() {
 
 Position
 GNEDetectorE1::getPositionInView() const {
-    return myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLenght(myPosition.x()));
+    return myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLength(myPosition.x()));
 }
 
 
@@ -145,9 +142,9 @@ void
 GNEDetectorE1::drawGL(const GUIVisualizationSettings& s) const {
     // get values
     glPushName(getGlID());
-    SUMOReal width = (SUMOReal) 2.0 * s.scale;
+    double width = (double) 2.0 * s.scale;
     glLineWidth(1.0);
-    const SUMOReal exaggeration = s.addSize.getExaggeration(s);
+    const double exaggeration = s.addSize.getExaggeration(s);
 
     // draw shape
     glColor3d(1, 1, 0);
@@ -271,11 +268,11 @@ GNEDetectorE1::isValid(SumoXMLAttr key, const std::string& value) {
                 return false;
             }
         case SUMO_ATTR_POSITION:
-            return (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 0 && parse<SUMOReal>(value) <= (myLane->getLaneParametricLenght()));
+            return (canParse<double>(value) && parse<double>(value) >= 0 && parse<double>(value) <= (myLane->getLaneParametricLength()));
         case SUMO_ATTR_FREQUENCY:
-            return (canParse<SUMOReal>(value) && parse<SUMOReal>(value) > 0);
+            return (canParse<double>(value) && parse<double>(value) >= 0);
         case SUMO_ATTR_FILE:
-            return isValidFileValue(value);
+            return isValidFilename(value);
         case SUMO_ATTR_SPLIT_VTYPE:
             return canParse<bool>(value);
         case GNE_ATTR_BLOCK_MOVEMENT:
@@ -299,12 +296,12 @@ GNEDetectorE1::setAttribute(SumoXMLAttr key, const std::string& value) {
             changeLane(value);
             break;
         case SUMO_ATTR_POSITION:
-            myPosition = Position(parse<SUMOReal>(value), 0);
+            myPosition = Position(parse<double>(value), 0);
             updateGeometry();
             getViewNet()->update();
             break;
         case SUMO_ATTR_FREQUENCY:
-            myFreq = parse<SUMOReal>(value);
+            myFreq = parse<double>(value);
             break;
         case SUMO_ATTR_FILE:
             myFilename = value;

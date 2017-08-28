@@ -11,6 +11,8 @@ copy_test_path:elmar_nodes_unsplitted.txt
 copy_test_path:elmar_traffic_signals.txt
 copy_test_path:elmar_links_timerestrictions.txt
 copy_test_path:elmar_names.txt
+copy_test_path:elmar_prohibited_manoeuvres.txt
+copy_test_path:elmar_connected_lanes.txt
 copy_test_path:visum.net
 copy_test_path:vissim.inp
 copy_test_path:input_net.net.xml
@@ -25,6 +27,7 @@ copy_test_path:input_plain.tll.xml
 copy_test_path:heightmap.tif
 copy_test_path:edge_ids.txt
 copy_test_path:data
+copy_test_path:additional.xml
 
 [collate_file]
 net:net.net.xml
@@ -44,9 +47,11 @@ elmar_names:elmar_output_names.txt
 elmar_prohibited_manoeuvres:elmar_output_prohibited_manoeuvres.txt
 elmar_connected_lanes:elmar_output_connected_lanes.txt
 pois:pois.add.xml
+additional:additional.xml
 
 [run_dependent_text]
 plain_nodes:<!--{[->]}-->
+additional:<!--{[->]}-->
 plain_edges:<!--{[->]}-->
 plain_connections:<!--{[->]}-->
 plain_tllogic:<!--{[->]}-->

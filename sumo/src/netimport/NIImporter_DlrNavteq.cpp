@@ -55,15 +55,12 @@
 #include "NIImporter_DlrNavteq.h"
 
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ---------------------------------------------------------------------------
 // static members
 // ---------------------------------------------------------------------------
 const int NIImporter_DlrNavteq::GEO_SCALE = 5;
 const int NIImporter_DlrNavteq::EdgesHandler::MISSING_COLUMN = std::numeric_limits<int>::max();
+const std::string NIImporter_DlrNavteq::UNDEFINED("-1");
 
 // ===========================================================================
 // method definitions
@@ -77,6 +74,8 @@ NIImporter_DlrNavteq::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     if (!oc.isSet("dlr-navteq-prefix")) {
         return;
     }
+    time_t csTime;
+    time(&csTime);
     // parse file(s)
     LineReader lr;
     // load nodes
@@ -125,12 +124,28 @@ NIImporter_DlrNavteq::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         PROGRESS_DONE_MESSAGE();
     }
 
+    // load prohibited manoeuvres if given
+    file = oc.getString("dlr-navteq-prefix") + "_prohibited_manoeuvres.txt";
+    if (lr.setFile(file)) {
+        PROGRESS_BEGIN_MESSAGE("Loading prohibited manoeuvres");
+        ProhibitionHandler handler6(nb.getEdgeCont(), file, csTime);
+        lr.readAll(handler6);
+        PROGRESS_DONE_MESSAGE();
+    }
+
+    // load connected lanes if given
+    file = oc.getString("dlr-navteq-prefix") + "_connected_lanes.txt";
+    if (lr.setFile(file)) {
+        PROGRESS_BEGIN_MESSAGE("Loading connected lanes");
+        ConnectedLanesHandler handler7(nb.getEdgeCont());
+        lr.readAll(handler7);
+        PROGRESS_DONE_MESSAGE();
+    }
+
     // load time restrictions if given
     file = oc.getString("dlr-navteq-prefix") + "_links_timerestrictions.txt";
     if (lr.setFile(file)) {
         PROGRESS_BEGIN_MESSAGE("Loading time restrictions");
-        time_t csTime;
-        time(&csTime);
         if (!oc.isDefault("construction-date")) {
             csTime = readDate(oc.getString("construction-date"));
         }
@@ -138,6 +153,27 @@ NIImporter_DlrNavteq::loadNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
         lr.readAll(handler5);
         handler5.printSummary();
         PROGRESS_DONE_MESSAGE();
+    }
+}
+
+double
+NIImporter_DlrNavteq::readVersion(const std::string& line, const std::string& file) {
+    assert(line[0] == '#');
+    const std::string marker = "extraction version: v";
+    const std::string lowerCase = StringUtils::to_lower_case(line);
+    if (lowerCase.find(marker) == std::string::npos) {
+        return -1;
+    }
+    const int vStart = (int)(lowerCase.find(marker) + marker.size());
+    const int vEnd = (int)line.find(" ", vStart);
+    try {
+        const double version = TplConvert::_2double(line.substr(vStart, vEnd - vStart).c_str());
+        if (version < 0) {
+            throw ProcessError("Invalid version number '" + toString(version) + "' in file '" + file + "'.");
+        }
+        return version;
+    } catch (NumberFormatException&) {
+        throw ProcessError("Non-numerical value '" + line.substr(vStart, vEnd - vStart) + "' for version string in file '" + file + "'.");
     }
 }
 
@@ -242,18 +278,9 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
         if (!myColumns.empty()) {
             return true;
         }
-        const std::string marker = "extraction version: v";
-        const std::string lowerCase = StringUtils::to_lower_case(result);
-        if (lowerCase.find(marker) == std::string::npos) {
-            return true;
-        }
-        const int vStart = (int)(lowerCase.find(marker) + marker.size());
-        const int vEnd = (int)result.find(" ", vStart);
-        try {
-            myVersion = TplConvert::_2SUMOReal(result.substr(vStart, vEnd - vStart).c_str());
-            if (myVersion < 0) {
-                throw ProcessError("Invalid version number '" + toString(myVersion) + "' in file '" + myFile + "'.");
-            }
+        const double version = readVersion(result, myFile);
+        if (version > 0) {
+            myVersion = version;
             // init columns
             const int NUM_COLUMNS = 25; // @note arrays must match this size!
             const int MC = MISSING_COLUMN;
@@ -267,8 +294,6 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
                 const int columns[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
                 myColumns = std::vector<int>(columns, columns + NUM_COLUMNS);
             }
-        } catch (NumberFormatException&) {
-            throw ProcessError("Non-numerical value '" + result.substr(vStart, vEnd - vStart) + "' for version string in file '" + myFile + "'.");
         }
         return true;
     }
@@ -321,7 +346,7 @@ NIImporter_DlrNavteq::EdgesHandler::report(const std::string& result) {
         throw ProcessError("The to-node '" + toID + "' of link '" + id + "' could not be found");
     }
     // speed
-    SUMOReal speed;
+    double speed;
     try {
         speed = TplConvert::_2int(getColumn(st, SPEED_RESTRICTION, "-1").c_str()) / 3.6;
     } catch (NumberFormatException) {
@@ -675,5 +700,131 @@ NIImporter_DlrNavteq::readDate(const std::string& yyyymmdd) {
     return now;
 }
 
+// ---------------------------------------------------------------------------
+// definitions of NIImporter_DlrNavteq::ProhibitionHandler-methods
+// ---------------------------------------------------------------------------
+NIImporter_DlrNavteq::ProhibitionHandler::ProhibitionHandler(
+    NBEdgeCont& ec, const std::string& file, time_t constructionTime) :
+    myEdgeCont(ec),
+    myFile(file),
+    myVersion(0),
+    myConstructionTime(constructionTime) {
+}
+
+
+NIImporter_DlrNavteq::ProhibitionHandler::~ProhibitionHandler() {}
+
+
+bool
+NIImporter_DlrNavteq::ProhibitionHandler::report(const std::string& result) {
+// # NAME_ID    Name
+    if (result[0] == '#') {
+        if (myVersion == 0) {
+            const double version = readVersion(result, myFile);
+            if (version > 0) {
+                myVersion = version;
+            }
+        }
+        return true;
+    }
+    StringTokenizer st(result, StringTokenizer::TAB);
+    if (st.size() == 1) {
+        return true; // one line with the number of data containing lines in it (also starts with a comment # since ersion 6.5)
+    }
+    if (myVersion >= 6) {
+        assert(st.size() >= 7);
+        const std::string id = st.next();
+        const std::string permanent = st.next();
+        const std::string validityPeriod = st.next();
+        const std::string throughTraffic = st.next();
+        const std::string vehicleType = st.next();
+        if (validityPeriod != UNDEFINED) {
+            WRITE_WARNING("Ignoring temporary prohibited manoeuvre (" + validityPeriod + ")");
+            return true;
+        }
+    }
+    const std::string startEdge = st.next();
+    const std::string endEdge = st.get(st.size() - 1);
+
+    NBEdge* from = myEdgeCont.retrieve(startEdge);
+    if (from == 0) {
+        WRITE_WARNING("Ignoring prohibition from unknown start edge '" + startEdge + "'");
+        return true;
+    }
+    NBEdge* to = myEdgeCont.retrieve(endEdge);
+    if (to == 0) {
+        WRITE_WARNING("Ignoring prohibition from unknown end edge '" + endEdge + "'");
+        return true;
+    }
+    from->removeFromConnections(to, -1, -1, true);
+    return true;
+}
+
+
+// ---------------------------------------------------------------------------
+// definitions of NIImporter_DlrNavteq::ConnectedLanesHandler-methods
+// ---------------------------------------------------------------------------
+NIImporter_DlrNavteq::ConnectedLanesHandler::ConnectedLanesHandler(
+    NBEdgeCont& ec) :
+    myEdgeCont(ec) {
+}
+
+
+NIImporter_DlrNavteq::ConnectedLanesHandler::~ConnectedLanesHandler() {}
+
+
+bool
+NIImporter_DlrNavteq::ConnectedLanesHandler::report(const std::string& result) {
+    if (result[0] == '#') {
+        return true;
+    }
+    StringTokenizer st(result, StringTokenizer::TAB);
+    if (st.size() == 1) {
+        return true; // one line with the number of data containing lines in it (also starts with a comment # since ersion 6.5)
+    }
+    assert(st.size() >= 7);
+    const std::string nodeID = st.next();
+    const std::string vehicleType = st.next();
+    const std::string fromLaneS = st.next();
+    const std::string toLaneS = st.next();
+    const std::string throughTraffic = st.next();
+    const std::string startEdge = st.next();
+    const std::string endEdge = st.get(st.size() - 1);
+
+    NBEdge* from = myEdgeCont.retrieve(startEdge);
+    if (from == 0) {
+        WRITE_WARNING("Ignoring prohibition from unknown start edge '" + startEdge + "'");
+        return true;
+    }
+    NBEdge* to = myEdgeCont.retrieve(endEdge);
+    if (to == 0) {
+        WRITE_WARNING("Ignoring prohibition from unknown end edge '" + endEdge + "'");
+        return true;
+    }
+    int fromLane = TplConvert::_2int(fromLaneS.c_str()) - 1; // one based
+    if (fromLane < 0 || fromLane >= from->getNumLanes()) {
+        WRITE_WARNING("Ignoring invalid lane index '" + fromLaneS + "' in connection from edge '" + startEdge + "' with " + toString(from->getNumLanes()) + " lanes");
+        return true;
+    }
+    int toLane = TplConvert::_2int(toLaneS.c_str()) - 1; // one based
+    if (toLane < 0 || toLane >= to->getNumLanes()) {
+        WRITE_WARNING("Ignoring invalid lane index '" + toLaneS + "' in connection to edge '" + endEdge + "' with " + toString(to->getNumLanes()) + " lanes");
+        return true;
+    }
+    if (!from->addLane2LaneConnection(fromLane, to, toLane, NBEdge::L2L_USER, true)) {
+        if (OptionsCont::getOptions().getBool("show-errors.connections-first-try")) {
+            WRITE_WARNING("Could not set loaded connection from '" + from->getLaneID(fromLane) + "' to '" + to->getLaneID(toLane) + "'.");
+        }
+        // set as to be re-applied after network processing
+        // if this connection runs across a node cluster it may not be possible to set this
+        const bool warnOnly = st.size() > 7;
+        myEdgeCont.addPostProcessConnection(from->getID(), fromLane, to->getID(), toLane, false, true,
+                                            NBEdge::UNSPECIFIED_CONTPOS, NBEdge::UNSPECIFIED_VISIBILITY_DISTANCE, warnOnly);
+    }
+    // ensure that connections for other lanes are guessed if not specified
+    from->declareConnectionsAsLoaded(NBEdge::INIT);
+    from->getLaneStruct(fromLane).connectionsDone = true;
+    return true;
+}
 
 /****************************************************************************/

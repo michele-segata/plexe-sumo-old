@@ -79,7 +79,6 @@ public:
     static void generateOutputForUnfinished();
 
 
-
 public:
     /// @brief Destructor.
     ~MSDevice_Vehroutes();
@@ -97,7 +96,7 @@ public:
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason);
+    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason, const MSLane* enteredLane = 0);
 
 
     /** @brief Saves exit times if needed
@@ -111,8 +110,13 @@ public:
      *
      * @return True, if exit times are to be collected.
      */
-    bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos, Notification reason);
+    bool notifyLeave(SUMOVehicle& veh, double lastPos, Notification reason, const MSLane* enteredLane = 0);
     /// @}
+
+    /// @brief return the name for this type of device
+    const std::string deviceName() const {
+        return "vehroute";
+    }
 
 
     /** @brief Called on writing vehroutes output
@@ -129,6 +133,18 @@ public:
      */
     const MSRoute* getRoute(int index) const;
 
+
+    /** @brief Saves the state of the device
+    *
+    * @param[in] out The OutputDevice to write the information into
+    */
+    void saveState(OutputDevice& out) const;
+
+    /** @brief Loads the state of the device from the given description
+    *
+    * @param[in] attrs XML attributes describing the current state
+    */
+    void loadState(const SUMOSAXAttributes& attrs);
 
 
 private:
@@ -260,6 +276,17 @@ private:
     /// @brief The last edge the exit time was saved for
     const MSEdge* myLastSavedAt;
 
+    /// @brief The lane the vehicle departed at
+    int myDepartLane;
+
+    /// @brief The lane the vehicle departed at
+    double myDepartPos;
+
+    /// @brief The speed on departure
+    double myDepartSpeed;
+
+    /// @brief The lateral depart position
+    double myDepartPosLat;
 
 private:
     /// @brief Invalidated copy constructor.

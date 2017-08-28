@@ -32,9 +32,6 @@
 #include "GNEClosingReroute.h"
 #include "GNEEdge.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 // ===========================================================================
 // member method definitions
@@ -102,7 +99,7 @@ GNEClosingReroute::getRerouterIntervalParent() const {
 
 
 bool
-GNEClosingReroute::operator==(const GNEClosingReroute& closingReroute) {
+GNEClosingReroute::operator==(const GNEClosingReroute& closingReroute) const {
     if ((myRerouterIntervalParent == closingReroute.myRerouterIntervalParent) &&
             (myClosedEdge == closingReroute.myClosedEdge) &&
             (myAllowedVehicles == closingReroute.myAllowedVehicles) &&

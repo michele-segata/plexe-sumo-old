@@ -57,10 +57,6 @@
 #include <utils/shapes/Shape.h>
 #include <utils/gui/globjects/GUIGlObject.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -80,6 +76,7 @@ NLHandler::NLHandler(const std::string& file, MSNet& net,
     myLastParameterised(0),
     myHaveSeenInternalEdge(false),
     myHaveSeenNeighs(false),
+    myHaveSeenAdditionalSpeedRestrictions(false),
     myLefthand(false),
     myNetworkVersion(0),
     myNetIsLoaded(false) {
@@ -97,7 +94,7 @@ NLHandler::myStartElement(int element,
             case SUMO_TAG_NET: {
                 bool ok;
                 myLefthand = attrs.getOpt<bool>(SUMO_ATTR_LEFTHAND, 0, ok, false);
-                myNetworkVersion = attrs.get<SUMOReal>(SUMO_ATTR_VERSION, 0, ok, false);
+                myNetworkVersion = attrs.get<double>(SUMO_ATTR_VERSION, 0, ok, false);
                 break;
             }
             case SUMO_TAG_EDGE:
@@ -223,9 +220,12 @@ NLHandler::myStartElement(int element,
             case SUMO_TAG_RESTRICTION: {
                 bool ok = true;
                 const SUMOVehicleClass svc = getVehicleClassID(attrs.get<std::string>(SUMO_ATTR_VCLASS, myCurrentTypeID.c_str(), ok));
-                const SUMOReal speed = attrs.get<SUMOReal>(SUMO_ATTR_SPEED, myCurrentTypeID.c_str(), ok);
+                const double speed = attrs.get<double>(SUMO_ATTR_SPEED, myCurrentTypeID.c_str(), ok);
                 if (ok) {
                     myNet.addRestriction(myCurrentTypeID, svc, speed);
+                }
+                if (myNetIsLoaded) {
+                    myHaveSeenAdditionalSpeedRestrictions = true;
                 }
                 break;
             }
@@ -259,10 +259,12 @@ NLHandler::myEndElement(int element) {
             }
             break;
         case SUMO_TAG_TLLOGIC:
-            try {
-                myJunctionControlBuilder.closeTrafficLightLogic(getFileName());
-            } catch (InvalidArgument& e) {
-                WRITE_ERROR(e.what());
+            if (!myCurrentIsBroken) {
+                try {
+                    myJunctionControlBuilder.closeTrafficLightLogic(getFileName());
+                } catch (InvalidArgument& e) {
+                    WRITE_ERROR(e.what());
+                }
             }
             myAmInTLLogicMode = false;
             break;
@@ -324,7 +326,7 @@ NLHandler::beginEdgeParsing(const SUMOSAXAttributes& attrs) {
         myJunctionGraph[id] = std::make_pair(
                                   attrs.get<std::string>(SUMO_ATTR_FROM, 0, ok),
                                   attrs.get<std::string>(SUMO_ATTR_TO, 0, ok));
-    } else {
+    } else if (id[0] == ':') {
         // must be an internal edge
         std::string junctionID = SUMOXMLDefinitions::getJunctionIDFromInternalEdge(id);
         myJunctionGraph[id] = std::make_pair(junctionID, junctionID);
@@ -420,13 +422,14 @@ NLHandler::addLane(const SUMOSAXAttributes& attrs) {
         myCurrentIsBroken = true;
         return;
     }
-    const SUMOReal maxSpeed = attrs.get<SUMOReal>(SUMO_ATTR_SPEED, id.c_str(), ok);
-    const SUMOReal length = attrs.get<SUMOReal>(SUMO_ATTR_LENGTH, id.c_str(), ok);
+    const double maxSpeed = attrs.get<double>(SUMO_ATTR_SPEED, id.c_str(), ok);
+    const double length = attrs.get<double>(SUMO_ATTR_LENGTH, id.c_str(), ok);
     const std::string allow = attrs.getOpt<std::string>(SUMO_ATTR_ALLOW, id.c_str(), ok, "", false);
     const std::string disallow = attrs.getOpt<std::string>(SUMO_ATTR_DISALLOW, id.c_str(), ok, "");
-    const SUMOReal width = attrs.getOpt<SUMOReal>(SUMO_ATTR_WIDTH, id.c_str(), ok, SUMO_const_laneWidth);
+    const double width = attrs.getOpt<double>(SUMO_ATTR_WIDTH, id.c_str(), ok, SUMO_const_laneWidth);
     const PositionVector shape = attrs.get<PositionVector>(SUMO_ATTR_SHAPE, id.c_str(), ok);
     const int index = attrs.get<int>(SUMO_ATTR_INDEX, id.c_str(), ok);
+    const bool isRampAccel = attrs.getOpt<bool>(SUMO_ATTR_ACCELERATION, id.c_str(), ok, false);
     if (shape.size() < 2) {
         WRITE_ERROR("Shape of lane '" + id + "' is broken.\n Can not build according edge.");
         myCurrentIsBroken = true;
@@ -439,7 +442,7 @@ NLHandler::addLane(const SUMOSAXAttributes& attrs) {
     myCurrentIsBroken |= !ok;
     if (!myCurrentIsBroken) {
         try {
-            MSLane* lane = myEdgeControlBuilder.addLane(id, maxSpeed, length, shape, width, permissions, index);
+            MSLane* lane = myEdgeControlBuilder.addLane(id, maxSpeed, length, shape, width, permissions, index, isRampAccel);
             // insert the lane into the lane-dictionary, checking
             if (!MSLane::dictionary(id, lane)) {
                 delete lane;
@@ -473,8 +476,8 @@ NLHandler::openJunction(const SUMOSAXAttributes& attrs) {
             shape.closePolygon();
         }
     }
-    SUMOReal x = attrs.get<SUMOReal>(SUMO_ATTR_X, id.c_str(), ok);
-    SUMOReal y = attrs.get<SUMOReal>(SUMO_ATTR_Y, id.c_str(), ok);
+    double x = attrs.get<double>(SUMO_ATTR_X, id.c_str(), ok);
+    double y = attrs.get<double>(SUMO_ATTR_Y, id.c_str(), ok);
     bool typeOK = true;
     SumoXMLNodeType type = attrs.getNodeType(typeOK);
     if (!typeOK) {
@@ -487,11 +490,9 @@ NLHandler::openJunction(const SUMOSAXAttributes& attrs) {
     parseLanes(id, attrs.getStringSecure(SUMO_ATTR_INCLANES, ""), incomingLanes, ok);
     // internal lanes
     std::vector<MSLane*> internalLanes;
-#ifdef HAVE_INTERNAL_LANES
     if (MSGlobals::gUsingInternalLanes) {
         parseLanes(id, attrs.getStringSecure(SUMO_ATTR_INTLANES, ""), internalLanes, ok);
     }
-#endif
     if (!ok) {
         myCurrentIsBroken = true;
     } else {
@@ -618,9 +619,7 @@ NLHandler::addRequest(const SUMOSAXAttributes& attrs) {
     bool ok = true;
     int request = attrs.get<int>(SUMO_ATTR_INDEX, 0, ok);
     bool cont = false;
-#ifdef HAVE_INTERNAL_LANES
     cont = attrs.getOpt<bool>(SUMO_ATTR_CONT, 0, ok, false);
-#endif
     std::string response = attrs.get<std::string>(SUMO_ATTR_RESPONSE, 0, ok);
     std::string foes = attrs.get<std::string>(SUMO_ATTR_FOES, 0, ok);
     if (!ok) {
@@ -653,6 +652,7 @@ NLHandler::initJunctionLogic(const SUMOSAXAttributes& attrs) {
 
 void
 NLHandler::initTrafficLightLogic(const SUMOSAXAttributes& attrs) {
+    myCurrentIsBroken = false;
     myAmInTLLogicMode = true;
     bool ok = true;
     std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
@@ -660,9 +660,13 @@ NLHandler::initTrafficLightLogic(const SUMOSAXAttributes& attrs) {
     TrafficLightType type = TLTYPE_STATIC;
     std::string typeS;
     if (myJunctionControlBuilder.getTLLogicControlToUse().get(id, programID) == 0) {
-        // SUMO_ATTR_TYPE is not needed when only modifying the offst of an
+        // SUMO_ATTR_TYPE is not needed when only modifying the offset of an
         // existing program
-        typeS = attrs.get<std::string>(SUMO_ATTR_TYPE, 0, ok);
+        typeS = attrs.get<std::string>(SUMO_ATTR_TYPE, id.c_str(), ok);
+        if (!ok) {
+            myCurrentIsBroken = true;
+            return;
+        }
         if (SUMOXMLDefinitions::TrafficLightTypes.hasString(typeS)) {
             type = SUMOXMLDefinitions::TrafficLightTypes.get(typeS);
         } else {
@@ -670,8 +674,9 @@ NLHandler::initTrafficLightLogic(const SUMOSAXAttributes& attrs) {
         }
     }
     //
-    SUMOTime offset = attrs.getOptSUMOTimeReporting(SUMO_ATTR_OFFSET, id.c_str(), ok, 0);
+    const SUMOTime offset = attrs.getOptSUMOTimeReporting(SUMO_ATTR_OFFSET, id.c_str(), ok, 0);
     if (!ok) {
+        myCurrentIsBroken = true;
         return;
     }
     myJunctionControlBuilder.initTrafficLightLogic(id, programID, type, offset);
@@ -778,7 +783,7 @@ NLHandler::addE1Detector(const SUMOSAXAttributes& attrs) {
         return;
     }
     const SUMOTime frequency = attrs.getSUMOTimeReporting(SUMO_ATTR_FREQUENCY, id.c_str(), ok);
-    const SUMOReal position = attrs.get<SUMOReal>(SUMO_ATTR_POSITION, id.c_str(), ok);
+    const double position = attrs.get<double>(SUMO_ATTR_POSITION, id.c_str(), ok);
     const bool friendlyPos = attrs.getOpt<bool>(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
     const std::string vTypes = attrs.getOpt<std::string>(SUMO_ATTR_VTYPES, id.c_str(), ok, "");
     const std::string lane = attrs.get<std::string>(SUMO_ATTR_LANE, id.c_str(), ok);
@@ -806,7 +811,7 @@ NLHandler::addInstantE1Detector(const SUMOSAXAttributes& attrs) {
     if (!ok) {
         return;
     }
-    const SUMOReal position = attrs.get<SUMOReal>(SUMO_ATTR_POSITION, id.c_str(), ok);
+    const double position = attrs.get<double>(SUMO_ATTR_POSITION, id.c_str(), ok);
     const bool friendlyPos = attrs.getOpt<bool>(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
     const std::string lane = attrs.get<std::string>(SUMO_ATTR_LANE, id.c_str(), ok);
     const std::string file = attrs.get<std::string>(SUMO_ATTR_FILE, id.c_str(), ok);
@@ -870,55 +875,186 @@ NLHandler::addRouteProbeDetector(const SUMOSAXAttributes& attrs) {
 
 void
 NLHandler::addE2Detector(const SUMOSAXAttributes& attrs) {
-    // check whether this is a detector connected to a tls an optionally to a link
+
+    // check whether this is a detector connected to a tls and optionally to a link
     bool ok = true;
     const std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
-    const std::string lsaid = attrs.getOpt<std::string>(SUMO_ATTR_TLID, id.c_str(), ok, "<invalid>");
-    const std::string toLane = attrs.getOpt<std::string>(SUMO_ATTR_TO, id.c_str(), ok, "<invalid>");
+    const std::string lsaid = attrs.getOpt<std::string>(SUMO_ATTR_TLID, id.c_str(), ok, "");
+    const std::string toLane = attrs.getOpt<std::string>(SUMO_ATTR_TO, id.c_str(), ok, "");
     const SUMOTime haltingTimeThreshold = attrs.getOptSUMOTimeReporting(SUMO_ATTR_HALTING_TIME_THRESHOLD, id.c_str(), ok, TIME2STEPS(1));
-    const SUMOReal haltingSpeedThreshold = attrs.getOpt<SUMOReal>(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, 5.0f / 3.6f);
-    const SUMOReal jamDistThreshold = attrs.getOpt<SUMOReal>(SUMO_ATTR_JAM_DIST_THRESHOLD, id.c_str(), ok, 10.0f);
-    const SUMOReal position = attrs.get<SUMOReal>(SUMO_ATTR_POSITION, id.c_str(), ok);
-    const SUMOReal length = attrs.get<SUMOReal>(SUMO_ATTR_LENGTH, id.c_str(), ok);
+    const double haltingSpeedThreshold = attrs.getOpt<double>(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, 5.0f / 3.6f);
+    const double jamDistThreshold = attrs.getOpt<double>(SUMO_ATTR_JAM_DIST_THRESHOLD, id.c_str(), ok, 10.0f);
+    double position = attrs.getOpt<double>(SUMO_ATTR_POSITION, id.c_str(), ok, std::numeric_limits<double>::max());
+    const double length = attrs.getOpt<double>(SUMO_ATTR_LENGTH, id.c_str(), ok, std::numeric_limits<double>::max());
     const bool friendlyPos = attrs.getOpt<bool>(SUMO_ATTR_FRIENDLY_POS, id.c_str(), ok, false);
-    const bool cont = attrs.getOpt<bool>(SUMO_ATTR_CONT, id.c_str(), ok, false);
-    const std::string lane = attrs.get<std::string>(SUMO_ATTR_LANE, id.c_str(), ok);
+    //    const bool showDetector = attrs.getOpt<bool>(SUMO_ATTR_SHOW_DETECTOR, id.c_str(), ok, true);
+    // TODO: introduce show-detector attribute
+    const bool showDetector = true;
+    const std::string contStr = attrs.getOpt<std::string>(SUMO_ATTR_CONT, id.c_str(), ok, "");
+    if (contStr != "") {
+        WRITE_WARNING("Ignoring deprecated argument 'cont' for E2 detector '" + id + "'");
+    }
+    std::string lane = attrs.getOpt<std::string>(SUMO_ATTR_LANE, id.c_str(), ok, "");
     const std::string file = attrs.get<std::string>(SUMO_ATTR_FILE, id.c_str(), ok);
     const std::string vTypes = attrs.getOpt<std::string>(SUMO_ATTR_VTYPES, id.c_str(), ok, "");
+
+    double endPosition = attrs.getOpt<double>(SUMO_ATTR_ENDPOS, id.c_str(), ok, std::numeric_limits<double>::max());
+    const std::string lanes = attrs.getOpt<std::string>(SUMO_ATTR_LANES, id.c_str(), ok, ""); // lanes has priority to lane
     if (!ok) {
         return;
     }
-    try {
-        if (lsaid != "<invalid>") {
-            if (toLane == "<invalid>") {
-                myDetectorBuilder.buildE2Detector(id, lane, position, length, cont,
-                                                  myJunctionControlBuilder.getTLLogic(lsaid),
-                                                  FileHelpers::checkForRelativity(file, getFileName()),
-                                                  haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold,
-                                                  friendlyPos, vTypes);
-            } else {
-                myDetectorBuilder.buildE2Detector(id, lane, position, length, cont,
-                                                  myJunctionControlBuilder.getTLLogic(lsaid), toLane,
-                                                  FileHelpers::checkForRelativity(file, getFileName()),
-                                                  haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold,
-                                                  friendlyPos, vTypes);
+
+    bool lanesGiven = lanes != "";
+    bool laneGiven = lane != "";
+    if (!(lanesGiven || laneGiven)) {
+        // in absence of any lane-specification assume specification by id
+        WRITE_WARNING("Trying to specify detector's lane by the given id since the argument 'lane' is missing.")
+        lane = id;
+        laneGiven = true;
+    }
+    bool lengthGiven = length != std::numeric_limits<double>::max();
+    bool posGiven = position != std::numeric_limits<double>::max();
+    bool endPosGiven = endPosition != std::numeric_limits<double>::max();
+    bool lsaGiven = lsaid != "";
+    bool toLaneGiven = toLane != "";
+
+    MSLane* clane = 0;
+    std::vector<MSLane*> clanes;
+    if (lanesGiven) {
+        // If lanes is given, endPos and startPos are required. lane, endLane and length are ignored
+        std::string seps = " ,\t\n";
+        StringTokenizer st = StringTokenizer(lanes, seps, true);
+//        std::cout << "Parsing lanes..." << std::endl;
+        while (st.hasNext()) {
+            std::string nextLaneID = st.next();
+//            std::cout << "Next: " << nextLaneID << std::endl;
+            if (nextLaneID.find_first_of(seps) != nextLaneID.npos) {
+                continue;
+            }
+            clane = myDetectorBuilder.getLaneChecking(nextLaneID, SUMO_TAG_E2DETECTOR, id);
+            clanes.push_back(clane);
+        }
+        if (clanes.size() == 0) {
+            throw InvalidArgument("Malformed argument 'lanes' for E2Detector '" + id + "'.\nSpecify 'lanes' as a sequence of lane-IDs seperated by whitespace or comma (',')");
+        }
+        if (laneGiven) {
+            WRITE_WARNING("Ignoring argument 'lane' for E2Detector '" + id + "' since argument 'lanes' was given.\n"
+                          "Usage combinations for positional specification: [lane, pos, length], [endLane/lane, endPos, length], or [lanes, pos, endPos]");
+        }
+        if (lengthGiven) {
+            WRITE_WARNING("Ignoring argument 'length' for E2Detector '" + id + "' since argument 'lanes' was given.\n"
+                          "Usage combinations for positional specification: [lane, pos, length], [lane, endPos, length], or [lanes, pos, endPos]");
+        }
+        if (!posGiven) {
+            // assuming start pos == lane start
+            position = 0;
+            WRITE_WARNING("Missing argument 'pos' for E2Detector '" + id + "'. Assuming detector start == lane start of lane '" + clanes[0]->getID() + "'.");
+        }
+        if (!endPosGiven) {
+            // assuming end pos == lane end
+            endPosition = clanes[clanes.size() - 1]->getLength();
+            WRITE_WARNING("Missing argument 'endPos' for E2Detector '" + id + "'. Assuming detector end == lane end of lane '" + clanes[clanes.size() - 1]->getID() + "'.");
+        }
+
+    } else {
+        if (!laneGiven) {
+            std::stringstream ss;
+            ss << "Missing argument 'lane' for E2Detector '" << id << "'."
+               << "\nUsage combinations for positional specification: [lane, pos, length], [lane, endPos, length], or [lanes, pos, endPos]";
+            throw InvalidArgument(ss.str());
+        }
+        clane = myDetectorBuilder.getLaneChecking(lane, SUMO_TAG_E2DETECTOR, id);
+
+        if (posGiven) {
+            // start pos is given
+            if (endPosGiven && lengthGiven) {
+                std::stringstream ss;
+                ss << "Ignoring argument 'endPos' for E2Detector '" << id << "' since argument 'pos' was given."
+                   << "\nUsage combinations for positional specification: [lane, pos, length], [lane, endPos, length], or [lanes, pos, endPos]";
+                WRITE_WARNING(ss.str());
+                endPosition = std::numeric_limits<double>::max();
+            }
+            if (!lengthGiven && !endPosGiven) {
+                std::stringstream ss;
+                ss << "Missing arguments 'length'/'endPos' for E2Detector '" << id << "'. Assuming detector end == lane end of lane '" << lane << "'.";
+                WRITE_WARNING(ss.str());
+                endPosition = clane->getLength();
+            }
+        } else if (endPosGiven) {
+            // endPos is given, pos is not given
+            if (!lengthGiven) {
+                std::stringstream ss;
+                ss << "Missing arguments 'length'/'pos' for E2Detector '" << id << "'. Assuming detector start == lane start of lane '" << lane << "'.";
+                WRITE_WARNING(ss.str());
             }
         } else {
-            bool ok = true;
-            SUMOTime frequency = attrs.getSUMOTimeReporting(SUMO_ATTR_FREQUENCY, id.c_str(), ok);
-            if (!ok) {
-                return;
+            std::stringstream ss;
+            if (lengthGiven && fabs(length - clane->getLength()) > NUMERICAL_EPS) {
+                ss << "Incomplete positional specification for E2Detector '" << id << "'."
+                   << "\nUsage combinations for positional specification: [lane, pos, length], [lane, endPos, length], or [lanes, pos, endPos]";
+                throw InvalidArgument(ss.str());
             }
-            myDetectorBuilder.buildE2Detector(id, lane, position, length, cont, frequency,
-                                              FileHelpers::checkForRelativity(file, getFileName()),
-                                              haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold,
-                                              friendlyPos, vTypes);
+            endPosition = clane->getLength();
+            position = 0;
+            ss << "Missing arguments 'pos'/'endPos' for E2Detector '" << id << "'. Assuming that the detector covers the whole lane '" << lane << "'.";
+            WRITE_WARNING(ss.str());
         }
-    } catch (InvalidArgument& e) {
-        WRITE_ERROR(e.what());
+    }
+
+    // Frequency
+
+    SUMOTime frequency;
+    if (!lsaGiven) {
+        frequency = attrs.getSUMOTimeReporting(SUMO_ATTR_FREQUENCY, id.c_str(), ok);
+        if (!ok) {
+            return;
+        }
+    } else {
+        frequency = attrs.getSUMOTimeReporting(SUMO_ATTR_FREQUENCY, id.c_str(), ok, false);
+    }
+
+    // TLS
+    MSTLLogicControl::TLSLogicVariants* tlls = 0;
+    if (lsaGiven) {
+        tlls = &myJunctionControlBuilder.getTLLogic(lsaid);
+        if (tlls->getActive() == 0) {
+            throw InvalidArgument("The detector '" + id + "' refers to an unknown lsa '" + lsaid + "'.");
+        }
+        if (frequency != -1) {
+            WRITE_WARNING("Ignoring argument 'frequency' for E2Detector '" + id + "' since argument 'tl' was given.");
+            frequency = -1;
+        }
+    }
+
+    // Link
+    MSLane* cToLane = 0;
+    if (toLaneGiven) {
+        cToLane = myDetectorBuilder.getLaneChecking(toLane, SUMO_TAG_E2DETECTOR, id);
+    }
+
+    // File
+    std::string filename;
+    try {
+        filename = FileHelpers::checkForRelativity(file, getFileName());
     } catch (IOError& e) {
         WRITE_ERROR(e.what());
     }
+
+    // Build detector
+    if (lanesGiven) {
+        // specification by a lane sequence
+        myDetectorBuilder.buildE2Detector(id, clanes, position, endPosition, filename, frequency,
+                                          haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold,
+                                          vTypes, friendlyPos, showDetector,
+                                          tlls, cToLane);
+    } else {
+        // specification by start or end lane
+        myDetectorBuilder.buildE2Detector(id, clane, position, endPosition, length, filename, frequency,
+                                          haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold,
+                                          vTypes, friendlyPos, showDetector,
+                                          tlls, cToLane);
+    }
+
 }
 
 
@@ -928,7 +1064,7 @@ NLHandler::beginE3Detector(const SUMOSAXAttributes& attrs) {
     std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
     const SUMOTime frequency = attrs.getSUMOTimeReporting(SUMO_ATTR_FREQUENCY, id.c_str(), ok);
     const SUMOTime haltingTimeThreshold = attrs.getOptSUMOTimeReporting(SUMO_ATTR_HALTING_TIME_THRESHOLD, id.c_str(), ok, TIME2STEPS(1));
-    const SUMOReal haltingSpeedThreshold = attrs.getOpt<SUMOReal>(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, 5.0f / 3.6f);
+    const double haltingSpeedThreshold = attrs.getOpt<double>(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, 5.0f / 3.6f);
     const std::string file = attrs.get<std::string>(SUMO_ATTR_FILE, id.c_str(), ok);
     const std::string vTypes = attrs.getOpt<std::string>(SUMO_ATTR_VTYPES, id.c_str(), ok, "");
     if (!ok) {
@@ -949,7 +1085,7 @@ NLHandler::beginE3Detector(const SUMOSAXAttributes& attrs) {
 void
 NLHandler::addE3Entry(const SUMOSAXAttributes& attrs) {
     bool ok = true;
-    const SUMOReal position = attrs.get<SUMOReal>(SUMO_ATTR_POSITION, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
+    const double position = attrs.get<double>(SUMO_ATTR_POSITION, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
     const bool friendlyPos = attrs.getOpt<bool>(SUMO_ATTR_FRIENDLY_POS, myDetectorBuilder.getCurrentE3ID().c_str(), ok, false);
     const std::string lane = attrs.get<std::string>(SUMO_ATTR_LANE, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
     if (!ok) {
@@ -962,7 +1098,7 @@ NLHandler::addE3Entry(const SUMOSAXAttributes& attrs) {
 void
 NLHandler::addE3Exit(const SUMOSAXAttributes& attrs) {
     bool ok = true;
-    const SUMOReal position = attrs.get<SUMOReal>(SUMO_ATTR_POSITION, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
+    const double position = attrs.get<double>(SUMO_ATTR_POSITION, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
     const bool friendlyPos = attrs.getOpt<bool>(SUMO_ATTR_FRIENDLY_POS, myDetectorBuilder.getCurrentE3ID().c_str(), ok, false);
     const std::string lane = attrs.get<std::string>(SUMO_ATTR_LANE, myDetectorBuilder.getCurrentE3ID().c_str(), ok);
     if (!ok) {
@@ -976,9 +1112,9 @@ void
 NLHandler::addEdgeLaneMeanData(const SUMOSAXAttributes& attrs, int objecttype) {
     bool ok = true;
     std::string id = attrs.get<std::string>(SUMO_ATTR_ID, 0, ok);
-    const SUMOReal maxTravelTime = attrs.getOpt<SUMOReal>(SUMO_ATTR_MAX_TRAVELTIME, id.c_str(), ok, 100000);
-    const SUMOReal minSamples = attrs.getOpt<SUMOReal>(SUMO_ATTR_MIN_SAMPLES, id.c_str(), ok, 0);
-    const SUMOReal haltingSpeedThreshold = attrs.getOpt<SUMOReal>(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, POSITION_EPS);
+    const double maxTravelTime = attrs.getOpt<double>(SUMO_ATTR_MAX_TRAVELTIME, id.c_str(), ok, 100000);
+    const double minSamples = attrs.getOpt<double>(SUMO_ATTR_MIN_SAMPLES, id.c_str(), ok, 0);
+    const double haltingSpeedThreshold = attrs.getOpt<double>(SUMO_ATTR_HALTING_SPEED_THRESHOLD, id.c_str(), ok, POSITION_EPS);
     const std::string excludeEmpty = attrs.getOpt<std::string>(SUMO_ATTR_EXCLUDE_EMPTY, id.c_str(), ok, "false");
     const bool withInternal = attrs.getOpt<bool>(SUMO_ATTR_WITH_INTERNAL, id.c_str(), ok, false);
     const bool trackVehicles = attrs.getOpt<bool>(SUMO_ATTR_TRACK_VEHICLES, id.c_str(), ok, false);
@@ -1020,15 +1156,13 @@ NLHandler::addConnection(const SUMOSAXAttributes& attrs) {
         bool ok = true;
         const std::string toID = attrs.get<std::string>(SUMO_ATTR_TO, 0, ok);
         const int fromLaneIdx = attrs.get<int>(SUMO_ATTR_FROM_LANE, 0, ok);
-        const SUMOReal foeVisibilityDistance = attrs.getOpt<SUMOReal>(SUMO_ATTR_VISIBILITY_DISTANCE, 0, ok, 4.5);
+        const double foeVisibilityDistance = attrs.getOpt<double>(SUMO_ATTR_VISIBILITY_DISTANCE, 0, ok, 4.5);
         const int toLaneIdx = attrs.get<int>(SUMO_ATTR_TO_LANE, 0, ok);
         LinkDirection dir = parseLinkDir(attrs.get<std::string>(SUMO_ATTR_DIR, 0, ok));
         LinkState state = parseLinkState(attrs.get<std::string>(SUMO_ATTR_STATE, 0, ok));
         bool keepClear = attrs.getOpt<bool>(SUMO_ATTR_KEEP_CLEAR, 0, ok, true);
         std::string tlID = attrs.getOpt<std::string>(SUMO_ATTR_TLID, 0, ok, "");
-#ifdef HAVE_INTERNAL_LANES
         std::string viaID = attrs.getOpt<std::string>(SUMO_ATTR_VIA, 0, ok, "");
-#endif
 
         MSEdge* from = MSEdge::dictionary(fromID);
         if (from == 0) {
@@ -1067,10 +1201,9 @@ NLHandler::addConnection(const SUMOSAXAttributes& attrs) {
                 return;
             }
         }
-        SUMOReal length = fromLane->getShape()[-1].distanceTo(toLane->getShape()[0]);
+        double length = fromLane->getShape()[-1].distanceTo(toLane->getShape()[0]);
 
         // build the link
-#ifdef HAVE_INTERNAL_LANES
         MSLane* via = 0;
         if (viaID != "" && MSGlobals::gUsingInternalLanes) {
             via = MSLane::dictionary(viaID);
@@ -1087,10 +1220,6 @@ NLHandler::addConnection(const SUMOSAXAttributes& attrs) {
         } else {
             toLane->addIncomingLane(fromLane, link);
         }
-#else
-        link = new MSLink(fromLane, toLane, dir, state, length, foeVisibilityDistance, keepClear, logic, tlLinkIdx);
-        toLane->addIncomingLane(fromLane, link);
-#endif
         toLane->addApproachingLane(fromLane, myNetworkVersion < 0.25);
 
         // if a traffic light is responsible for it, inform the traffic light
@@ -1271,7 +1400,7 @@ NLHandler::closeWAUT() {
 
 
 Position
-NLShapeHandler::getLanePos(const std::string& poiID, const std::string& laneID, SUMOReal lanePos) {
+NLShapeHandler::getLanePos(const std::string& poiID, const std::string& laneID, double lanePos) {
     MSLane* lane = MSLane::dictionary(laneID);
     if (lane == 0) {
         WRITE_ERROR("Lane '" + laneID + "' to place poi '" + poiID + "' on is not known.");

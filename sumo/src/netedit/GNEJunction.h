@@ -108,6 +108,12 @@ public:
     /// @brief Return net build node
     NBNode* getNBNode() const;
 
+    /// @brief Return current position
+    Position getPosition() const;
+
+    /// @brief return GNEJunction neighbours
+    std::vector<GNEJunction*> getJunctionNeighbours() const;
+
     /// @brief add incoming GNEEdge
     void addIncomingGNEEdge(GNEEdge* edge);
 
@@ -143,6 +149,9 @@ public:
 
     /// @brief Update the boundary of the junction
     void updateGeometry();
+
+    /// @brief recompute neighbors junctions
+    void recomputeNeighborsJunctions();
 
     /**@brief reposition the node at pos and informs the edges
      * @param[in] pos The new position
@@ -233,7 +242,7 @@ private:
     Position myOrigPos;
 
     /// @brief The maximum size (in either x-, or y-dimension) for determining whether to draw or not
-    SUMOReal myMaxSize;
+    double myMaxSize;
 
     /// @brief The represented junction's boundary
     Boundary myBoundary;
@@ -274,7 +283,7 @@ private:
     void setColor(const GUIVisualizationSettings& s, bool bubble) const;
 
     /// @brief determines color value
-    SUMOReal getColorValue(const GUIVisualizationSettings& s, bool bubble) const;
+    double getColorValue(const GUIVisualizationSettings& s, bool bubble) const;
 
     /// @brief adds a traffic light
     void addTrafficLight(NBTrafficLightDefinition* tlDef, bool forceInsert);

@@ -47,10 +47,6 @@
 #include "ROHelper.h"
 #include "RONet.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -69,7 +65,7 @@ ROPerson::~ROPerson() {
 
 void
 ROPerson::addTrip(const ROEdge* const from, const ROEdge* const to, const SVCPermissions modeSet,
-                  const std::string& vTypes, const SUMOReal departPos, const SUMOReal arrivalPos, const std::string& busStop, SUMOReal walkFactor) {
+                  const std::string& vTypes, const double departPos, const double arrivalPos, const std::string& busStop, double walkFactor) {
     PersonTrip* trip = new PersonTrip(from, to, modeSet, departPos, arrivalPos, busStop, walkFactor);
     RONet* net = RONet::getInstance();
     SUMOVehicleParameter pars;
@@ -104,7 +100,7 @@ ROPerson::addRide(const ROEdge* const from, const ROEdge* const to, const std::s
 
 
 void
-ROPerson::addWalk(const ConstROEdgeVector& edges, const SUMOReal duration, const SUMOReal speed, const SUMOReal departPos, const SUMOReal arrivalPos, const std::string& busStop) {
+ROPerson::addWalk(const ConstROEdgeVector& edges, const double duration, const double speed, const double departPos, const double arrivalPos, const std::string& busStop) {
     if (myPlan.empty() || myPlan.back()->isStop()) {
         myPlan.push_back(new PersonTrip());
     }
@@ -145,10 +141,10 @@ ROPerson::Walk::saveAsXML(OutputDevice& os) const {
         os.writeAttr(SUMO_ATTR_SPEED, v);
     }
     os.writeAttr(SUMO_ATTR_EDGES, edges);
-    if (dep != std::numeric_limits<SUMOReal>::infinity()) {
+    if (dep != std::numeric_limits<double>::infinity()) {
         os.writeAttr(SUMO_ATTR_DEPARTPOS, dep);
     }
-    if (arr != std::numeric_limits<SUMOReal>::infinity()) {
+    if (arr != std::numeric_limits<double>::infinity()) {
         os.writeAttr(SUMO_ATTR_ARRIVALPOS, arr);
     }
     if (destStop != "") {

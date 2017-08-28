@@ -97,6 +97,8 @@ public:
      * @brief Possible states of a simulation - running or stopped with different reasons
      */
     enum SimulationState {
+        /// @brief The simulation is loading
+        SIMSTATE_LOADING,
         /// @brief The simulation is running
         SIMSTATE_RUNNING,
         /// @brief The final simulation step has been performed
@@ -107,8 +109,8 @@ public:
         SIMSTATE_CONNECTION_CLOSED,
         /// @brief An error occured during the simulation step
         SIMSTATE_ERROR_IN_SIM,
-        /// @brief The simulation contains too many vehicles (@deprecated)
-        SIMSTATE_TOO_MANY_VEHICLES
+        /// @brief The simulation had too many teleports
+        SIMSTATE_TOO_MANY_TELEPORTS
     };
 
     //typedef PedestrianRouterDijkstra<MSEdge, MSLane> MSPedestrianRouterDijkstra;
@@ -166,7 +168,7 @@ public:
                        SUMORouteLoaderControl* routeLoaders, MSTLLogicControl* tlc,
                        std::vector<SUMOTime> stateDumpTimes, std::vector<std::string> stateDumpFiles,
                        bool hasInternalLinks, bool hasNeighs, bool lefthand,
-                       SUMOReal version);
+                       double version);
 
 
     /** @brief Returns whether the network has specific vehicle class permissions
@@ -188,7 +190,7 @@ public:
      * @param[in] svc The vehicle class the restriction refers to
      * @param[in] speed The restricted speed
      */
-    void addRestriction(const std::string& id, const SUMOVehicleClass svc, const SUMOReal speed);
+    void addRestriction(const std::string& id, const SUMOVehicleClass svc, const double speed);
 
 
     /** @brief Returns the restrictions for an edge type
@@ -196,7 +198,7 @@ public:
      * @param[in] id The id of the type
      * @return The mapping of vehicle classes to maximum speeds
      */
-    const std::map<SUMOVehicleClass, SUMOReal>* getRestrictions(const std::string& id) const;
+    const std::map<SUMOVehicleClass, double>* getRestrictions(const std::string& id) const;
 
 
     /** @brief Clears all dictionaries
@@ -212,7 +214,7 @@ public:
      * @todo Recheck return value
      * @todo What exceptions may occure?
      */
-    int simulate(SUMOTime start, SUMOTime stop);
+    SimulationState simulate(SUMOTime start, SUMOTime stop);
 
 
     /** @brief Performs a single simulation step
@@ -469,7 +471,7 @@ public:
      * @param[in] pos the position of the bus stop to return.
      * @return The bus stop id on the location, or "" if no such stop exists
      */
-    std::string getBusStopID(const MSLane* lane, const SUMOReal pos) const;
+    std::string getBusStopID(const MSLane* lane, const double pos) const;
     /// @}
 
 
@@ -500,7 +502,7 @@ public:
      * @param[in] pos the position of the container stop to return.
      * @return The container stop id on the location, or "" if no such stop exists
      */
-    std::string getContainerStopID(const MSLane* lane, const SUMOReal pos) const;
+    std::string getContainerStopID(const MSLane* lane, const double pos) const;
     /// @}
 
     /// @name Insertion and retrieval of parking areas
@@ -530,8 +532,11 @@ public:
      * @param[in] pos the position of the parking area to return.
      * @return The parking area id on the location, or "" if no such stop exists
      */
-    std::string getParkingAreaID(const MSLane* lane, const SUMOReal pos) const;
+    std::string getParkingAreaID(const MSLane* lane, const double pos) const;
     /// @}
+
+    /// @name Insertion and retrieval of charging stations
+    /// @{
 
     /** @brief Adds a chargingg station
      *
@@ -557,7 +562,10 @@ public:
      * @param[in] pos the position of the bus stop to return.
      * @return The charging station id on the location, or "" if no such stop exists
      */
-    std::string getChargingStationID(const MSLane* lane, const SUMOReal pos) const;
+    std::string getChargingStationID(const MSLane* lane, const double pos) const;
+
+    /// @brief write charging station output
+    void writeChargingStationOutput() const;
     /// @}
 
 
@@ -638,7 +646,7 @@ public:
      * @return The travel time for an edge
      * @see DijkstraRouterTT_ByProxi
      */
-    static SUMOReal getTravelTime(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t);
+    static double getTravelTime(const MSEdge* const e, const SUMOVehicle* const v, double t);
 
 
     /** @brief Returns the effort to pass an edge
@@ -648,7 +656,7 @@ public:
      * @return The effort (abstract) for an edge
      * @see DijkstraRouterTT_ByProxi
      */
-    static SUMOReal getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t);
+    static double getEffort(const MSEdge* const e, const SUMOVehicle* const v, double t);
 
 
     /* @brief get the router, initialize on first use
@@ -687,7 +695,7 @@ public:
     }
 
     /// @brief return the network version
-    SUMOReal version() const {
+    double version() const {
         return myVersion;
     }
 
@@ -704,6 +712,9 @@ protected:
 
     /// @brief Current time step.
     SUMOTime myStep;
+
+    /// @brief Maximum number of teleports.
+    int myMaxTeleports;
 
 
 
@@ -781,7 +792,7 @@ protected:
     bool myHavePermissions;
 
     /// @brief The vehicle class specific speed restrictions
-    std::map<std::string, std::map<SUMOVehicleClass, SUMOReal> > myRestrictions;
+    std::map<std::string, std::map<SUMOVehicleClass, double> > myRestrictions;
 
     /// @brief Whether the network contains internal links/lanes/edges
     bool myHasInternalLinks;
@@ -796,7 +807,7 @@ protected:
     bool myLefthand;
 
     /// @brief the network version
-    SUMOReal myVersion;
+    double myVersion;
 
     /// @brief Dictionary of bus stops
     NamedObjectCont<MSStoppingPlace*> myBusStopDict;

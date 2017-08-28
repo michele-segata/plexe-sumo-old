@@ -46,6 +46,7 @@
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/xml/SUMOSAXHandler.h>
+#include <utils/common/MsgHandler.h>
 
 #include "GNEContainerStop.h"
 #include "GNELane.h"
@@ -56,15 +57,11 @@
 #include "GNEChange_Attribute.h"
 #include "GNEViewNet.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // method definitions
 // ===========================================================================
 
-GNEContainerStop::GNEContainerStop(const std::string& id, GNELane* lane, GNEViewNet* viewNet, SUMOReal startPos, SUMOReal endPos, const std::vector<std::string>& lines) :
+GNEContainerStop::GNEContainerStop(const std::string& id, GNELane* lane, GNEViewNet* viewNet, double startPos, double endPos, const std::vector<std::string>& lines) :
     GNEStoppingPlace(id, viewNet, SUMO_TAG_CONTAINER_STOP, ICON_CONTAINERSTOP, lane, startPos, endPos),
     myLines(lines) {
     // When a new additional element is created, updateGeometry() must be called
@@ -89,7 +86,7 @@ GNEContainerStop::updateGeometry() {
     myShapeLengths.clear();
 
     // Get value of option "lefthand"
-    SUMOReal offsetSign = OptionsCont::getOptions().getBool("lefthand") ? -1 : 1;
+    double offsetSign = OptionsCont::getOptions().getBool("lefthand") ? -1 : 1;
 
     // Get shape of lane parent
     myShape = myLane->getShape();
@@ -98,7 +95,7 @@ GNEContainerStop::updateGeometry() {
     myShape.move2side(1.65 * offsetSign);
 
     // Cut shape using as delimitators from start position and end position
-    myShape = myShape.getSubpart(myLane->getPositionRelativeToParametricLenght(myStartPos), myLane->getPositionRelativeToParametricLenght(myEndPos));
+    myShape = myShape.getSubpart(myLane->getPositionRelativeToParametricLength(myStartPos), myLane->getPositionRelativeToParametricLength(myEndPos));
 
     // Get number of parts of the shape
     int numberOfSegments = (int) myShape.size() - 1;
@@ -123,7 +120,7 @@ GNEContainerStop::updateGeometry() {
             myShapeLengths.push_back(f.distanceTo(s));
 
             // Save rotation (angle) of the vector constructed by points f and s
-            myShapeRotations.push_back((SUMOReal) atan2((s.x() - f.x()), (f.y() - s.y())) * (SUMOReal) 180.0 / (SUMOReal) PI);
+            myShapeRotations.push_back((double) atan2((s.x() - f.x()), (f.y() - s.y())) * (double) 180.0 / (double) PI);
         }
     }
 
@@ -191,9 +188,9 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
     }
 
     // Obtain exaggeration of the draw
-    const SUMOReal exaggeration = s.addSize.getExaggeration(s);
+    const double exaggeration = s.addSize.getExaggeration(s);
 
-    // Draw the area using shape, shapeRotations, shapeLenghts and value of exaggeration
+    // Draw the area using shape, shapeRotations, shapeLengths and value of exaggeration
     GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, exaggeration);
 
     // Check if the distance is enought to draw details
@@ -203,7 +200,7 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
         glPushMatrix();
 
         // Obtain rotation of the sing depeding of the option "lefthand"
-        SUMOReal rotSign = OptionsCont::getOptions().getBool("lefthand");
+        double rotSign = OptionsCont::getOptions().getBool("lefthand");
 
         // Set color of the lines
         if (isAdditionalSelected()) {
@@ -248,10 +245,10 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
         // Start drawing sign traslating matrix to signal position
         glTranslated(mySignPos.x(), mySignPos.y(), 0);
 
-        // Define nº points (for efficiency)
+        // Define number of points (for efficiency)
         int noPoints = 9;
 
-        // If the scale * exaggeration is more than 25, recalculate nº points
+        // If the scale * exaggeration is more than 25, recalculate number of points
         if (s.scale * exaggeration > 25) {
             noPoints = MIN2((int)(9.0 + (s.scale * exaggeration) / 10.0), 36);
         }
@@ -260,7 +257,7 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
         glScaled(exaggeration, exaggeration, 1);
 
         // Draw green circle
-        GLHelper::drawFilledCircle((SUMOReal) 1.1, noPoints);
+        GLHelper::drawFilledCircle((double) 1.1, noPoints);
 
         // Traslate to front
         glTranslated(0, 0, .1);
@@ -273,7 +270,7 @@ GNEContainerStop::drawGL(const GUIVisualizationSettings& s) const {
         }
 
         // draw another circle in the same position, but a little bit more small
-        GLHelper::drawFilledCircle((SUMOReal) 0.9, noPoints);
+        GLHelper::drawFilledCircle((double) 0.9, noPoints);
 
         // If the scale * exageration is equal or more than 4.5, draw H
         if (s.scale * exaggeration >= 4.5) {
@@ -360,19 +357,33 @@ GNEContainerStop::isValid(SumoXMLAttr key, const std::string& value) {
                 return false;
             }
         case SUMO_ATTR_STARTPOS:
-            return (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 0 && parse<SUMOReal>(value) < (myEndPos - 1));
+            return (canParse<double>(value) && parse<double>(value) >= 0 && parse<double>(value) < (myEndPos - 1));
         case SUMO_ATTR_ENDPOS: {
-            if (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 1 && parse<SUMOReal>(value) > myStartPos) {
+            if (canParse<double>(value) && parse<double>(value) >= 1 && parse<double>(value) > myStartPos) {
                 // If extension is larger than Lane
-                if (parse<SUMOReal>(value) > myLane->getLaneParametricLenght()) {
-                    // Ask user if want to assign the lenght of lane as endPosition
+                if (parse<double>(value) > myLane->getLaneParametricLength()) {
+                    // write warning if netedit is running in testing mode
+                    if (myViewNet->isTestingModeEnabled() == true) {
+                        WRITE_WARNING("Opening FXMessageBox of type 'question'");
+                    }
+                    // Ask user if want to assign the length of lane as endPosition
                     FXuint answer = FXMessageBox::question(getViewNet()->getApp(), MBOX_YES_NO,
                                                            (toString(SUMO_ATTR_ENDPOS) + " exceeds the size of the " + toString(SUMO_TAG_LANE)).c_str(), "%s",
                                                            (toString(SUMO_ATTR_ENDPOS) + " exceeds the size of the " + toString(SUMO_TAG_LANE) +
-                                                            ". Do you want to assign the lenght of the " + toString(SUMO_TAG_LANE) + " as " + toString(SUMO_ATTR_ENDPOS) + "?").c_str());
+                                                            ". Do you want to assign the length of the " + toString(SUMO_TAG_LANE) + " as " + toString(SUMO_ATTR_ENDPOS) + "?").c_str());
                     if (answer == 1) { //1:yes, 2:no, 4:esc
+                        // write warning if netedit is running in testing mode
+                        if (myViewNet->isTestingModeEnabled() == true) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'question' with 'Yes'");
+                        }
                         return true;
                     } else {
+                        // write warning if netedit is running in testing mode
+                        if ((answer == 2) && (myViewNet->isTestingModeEnabled() == true)) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'question' with 'No'");
+                        } else if ((answer == 4) && (myViewNet->isTestingModeEnabled() == true)) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'question' with 'ESC'");
+                        }
                         return false;
                     }
                 } else {
@@ -383,7 +394,7 @@ GNEContainerStop::isValid(SumoXMLAttr key, const std::string& value) {
             }
         }
         case SUMO_ATTR_LINES:
-            return isValidStringVector(value);
+            return canParse<std::vector<std::string> >(value);
         case GNE_ATTR_BLOCK_MOVEMENT:
             return canParse<bool>(value);
         default:
@@ -405,22 +416,21 @@ GNEContainerStop::setAttribute(SumoXMLAttr key, const std::string& value) {
             changeLane(value);
             break;
         case SUMO_ATTR_STARTPOS:
-            myStartPos = parse<SUMOReal>(value);
+            myStartPos = parse<double>(value);
             updateGeometry();
             getViewNet()->update();
             break;
         case SUMO_ATTR_ENDPOS:
-            if (parse<SUMOReal>(value) > myLane->getLaneParametricLenght()) {
-                myEndPos = myLane->getLaneParametricLenght();
+            if (parse<double>(value) > myLane->getLaneParametricLength()) {
+                myEndPos = myLane->getLaneParametricLength();
             } else {
-                myEndPos = parse<SUMOReal>(value);
+                myEndPos = parse<double>(value);
             }
             updateGeometry();
             getViewNet()->update();
             break;
         case SUMO_ATTR_LINES:
-            myLines.clear();
-            SUMOSAXAttributes::parseStringVector(value, myLines);
+            myLines = GNEAttributeCarrier::parse<std::vector<std::string> >(value);
             getViewNet()->update();
             break;
         case GNE_ATTR_BLOCK_MOVEMENT:

@@ -42,14 +42,10 @@
 #include <utils/iodevices/OutputDevice.h>
 
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
-
 // ===========================================================================
 // static members
 // ===========================================================================
+
 StringBijection<SUMOVehicleClass>::Entry sumoVehicleClassStringInitializer[] = {
     {"ignoring",          SVC_IGNORING},
     {"private",           SVC_PRIVATE},
@@ -92,6 +88,7 @@ StringBijection<SUMOVehicleClass>::Entry sumoVehicleClassStringInitializer[] = {
 StringBijection<SUMOVehicleClass> SumoVehicleClassStrings(
     sumoVehicleClassStringInitializer, SVC_CUSTOM2, false);
 
+
 std::set<std::string> deprecatedVehicleClassesSeen;
 
 
@@ -129,6 +126,8 @@ StringBijection<SUMOVehicleShape>::Entry sumoVehicleShapeStringInitializer[] = {
     {"ant",                   SVS_ANT},
     {"ship",                  SVS_SHIP},
     {"emergency",             SVS_EMERGENCY},
+    {"firebrigade",           SVS_FIREBRIGADE},
+    {"police",                SVS_POLICE},
     {"",                      SVS_UNKNOWN}
 };
 
@@ -152,8 +151,8 @@ const SVCPermissions SVC_UNSPECIFIED = -1;
 // ------------ Conversion of SUMOVehicleClass
 
 std::string
-getVehicleClassNames(SVCPermissions permissions) {
-    if (permissions == SVCAll) {
+getVehicleClassNames(SVCPermissions permissions, bool expand) {
+    if (permissions == SVCAll && !expand) {
         return "all";
     }
     return joinToString(getVehicleClassNamesList(permissions), ' ');
@@ -308,6 +307,11 @@ getVehicleShapeID(const std::string& name) {
 }
 
 
+bool canParseVehicleShape(const std::string& shape) {
+    return SumoVehicleShapeStrings.hasString(shape);
+}
+
+
 std::string
 getVehicleShapeName(SUMOVehicleShape id) {
     return SumoVehicleShapeStrings.getString(id);
@@ -332,11 +336,11 @@ bool isForbidden(SVCPermissions permissions) {
 const std::string DEFAULT_VTYPE_ID("DEFAULT_VEHTYPE");
 const std::string DEFAULT_PEDTYPE_ID("DEFAULT_PEDTYPE");
 
-const SUMOReal DEFAULT_VEH_PROB(1.);
+const double DEFAULT_VEH_PROB(1.);
 
-const SUMOReal DEFAULT_PEDESTRIAN_SPEED(5. / 3.6);
+const double DEFAULT_PEDESTRIAN_SPEED(5. / 3.6);
 
-const SUMOReal DEFAULT_CONTAINER_TRANSHIP_SPEED(5. / 3.6);
+const double DEFAULT_CONTAINER_TRANSHIP_SPEED(5. / 3.6);
 
 /****************************************************************************/
 

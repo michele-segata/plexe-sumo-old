@@ -53,13 +53,10 @@
 #include <utils/common/UtilExceptions.h>
 #include <utils/common/RandHelper.h>
 #include <utils/common/ToString.h>
+#include <utils/distribution/RandomDistributor.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/xml/XMLSubSys.h>
 #include <utils/iodevices/OutputDevice.h>
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -141,9 +138,9 @@ buildNetwork(NBNetBuilder& nb) {
         // get options
         int xNo = oc.getInt("grid.x-number");
         int yNo = oc.getInt("grid.y-number");
-        SUMOReal xLength = oc.getFloat("grid.x-length");
-        SUMOReal yLength = oc.getFloat("grid.y-length");
-        SUMOReal attachLength = oc.getFloat("grid.attach-length");
+        double xLength = oc.getFloat("grid.x-length");
+        double yLength = oc.getFloat("grid.y-length");
+        double attachLength = oc.getFloat("grid.attach-length");
         if (oc.isDefault("grid.x-number") && !oc.isDefault("grid.number")) {
             xNo = oc.getInt("grid.number");
         }
@@ -185,7 +182,7 @@ buildNetwork(NBNetBuilder& nb) {
         return net;
     }
     // random net
-    TNeighbourDistribution neighborDist;
+    RandomDistributor<int> neighborDist;
     neighborDist.add(1, oc.getFloat("rand.neighbor-dist1"));
     neighborDist.add(2, oc.getFloat("rand.neighbor-dist2"));
     neighborDist.add(3, oc.getFloat("rand.neighbor-dist3"));

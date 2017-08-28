@@ -39,10 +39,6 @@
 #include "../tempstructs/NIVissimTL.h"
 #include "NIVissimSingleTypeParser_Signalgeberdefinition.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -101,7 +97,7 @@ NIVissimSingleTypeParser_Signalgeberdefinition::parse(std::istream& from) {
     from >> laneno;
 
     from >> tag;
-    SUMOReal position;
+    double position;
     from >> position;
     //
     while (tag != "fahrzeugklassen") {

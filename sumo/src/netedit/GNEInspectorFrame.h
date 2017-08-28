@@ -53,18 +53,18 @@ class GNEInspectorFrame : public GNEFrame {
 public:
 
     // ===========================================================================
-    // class AttrInput
+    // class AttributeInput
     // ===========================================================================
 
-    class AttrInput : public FXMatrix  {
+    class AttributeInput : public FXHorizontalFrame  {
         /// @brief FOX-declaration
-        FXDECLARE(GNEInspectorFrame::AttrInput)
+        FXDECLARE(GNEInspectorFrame::AttributeInput)
 
     public:
         /// @brief constructor
-        AttrInput(FXComposite* parent, GNEInspectorFrame* inspectorFrameParent);
+        AttributeInput(FXComposite* parent, GNEInspectorFrame* inspectorFrameParent);
 
-        /// @brief show attribute
+        /// @brief show attribute of ac
         void showAttribute(SumoXMLTag tag, SumoXMLAttr attr, const std::string& value);
 
         /// @brief show attribute
@@ -80,11 +80,11 @@ public:
         long onCmdSetAttribute(FXObject*, FXSelector, void*);
 
         /// @brief open model dialog for more comfortable attribute editing
-        long onCmdOpenAttributeEditor(FXObject*, FXSelector, void*);
+        long onCmdOpenAllowDisallowEditor(FXObject*, FXSelector, void*);
 
     protected:
         /// @brief FOX needs this
-        AttrInput() {}
+        AttributeInput() {}
 
     private:
         /// @brief pointer to GNEInspectorFrame parent
@@ -102,11 +102,8 @@ public:
         /// @brief textField to modify the value of int attributes
         FXTextField* myTextFieldInt;
 
-        /// @brief textField to modify the value of real attributes
+        /// @brief textField to modify the value of real/Time attributes
         FXTextField* myTextFieldReal;
-
-        /// @rief SpinDial to modify the value of time attributes
-        FXSpinner* myTimeSpinDial;
 
         /// @brief textField to modify the value of string attributes
         FXTextField* myTextFieldStrings;
@@ -115,7 +112,7 @@ public:
         FXComboBox* myChoicesCombo;
 
         /// @brief pointer to menu check
-        FXMenuCheck* myCheckBox;
+        FXCheckButton* myBoolCheckButton;
 
         /// @brief pointer to buttonCombinableChoices
         FXButton* myButtonCombinableChoices;
@@ -125,54 +122,6 @@ public:
 
         /// @brief set hide as private function
         void hide();
-    };
-
-    // ===========================================================================
-    // class AttrEditor
-    // ===========================================================================
-
-    class AttrEditor : public FXDialogBox {
-        /// @brief FOX-declaration
-        FXDECLARE(GNEInspectorFrame::AttrEditor)
-
-    public:
-        /// @brief constructor
-        AttrEditor(AttrInput* attrInputParent, FXTextField* textFieldAttr);
-
-        /// @brief destructor
-        ~AttrEditor();
-
-        /// @brief call when user press button reset
-        long onCmdReset(FXObject*, FXSelector, void*);
-
-    protected:
-        /// @brief FOX needs this
-        AttrEditor() {}
-
-    private:
-        /// @brief Pointer to AttrInput parent
-        AttrInput* myAttrInputParent;
-
-        // @brief Pointer to TexField in which write attribute
-        FXTextField* myTextFieldAttr;
-
-        // @brief Matrix in that CheckBoxs will be inserted
-        FXMatrix* myCheckBoxMatrix;
-
-        /// @brief vector of Menuchecks
-        std::vector<FXMenuCheck*> myVectorOfCheckBox;
-
-        /// @brief frame for the buttons
-        FXHorizontalFrame* frameButtons;
-
-        /// @brief Button Accept
-        FXButton* myAcceptButton;
-
-        /// @brief Button Cancel
-        FXButton* myCancelButton;
-
-        /// @brief Button Reset
-        FXButton* myResetButton;
     };
 
 public:
@@ -254,7 +203,7 @@ private:
     FXGroupBox* myGroupBoxForAttributes;
 
     /// @brief list of Attribute inputs
-    std::vector<GNEInspectorFrame::AttrInput*> vectorOfAttrInput;
+    std::vector<GNEInspectorFrame::AttributeInput*> myVectorOfAttributeInputs;
 
     /// @brief back Button
     FXButton* myBackButton;
@@ -274,8 +223,11 @@ private:
     /// @brief GropuBox for editor attributes
     FXGroupBox* myGroupBoxForEditor;
 
+    /// @brief Label for Check blocked
+    FXLabel* myCheckBlockedLabel;
+
     /// @brief pointer to menu check block
-    FXMenuCheck* myCheckBlocked;
+    FXCheckButton* myCheckBlocked;
 
     /// @brief pointer to additional element
     GNEAdditional* myAdditional;
@@ -302,7 +254,7 @@ private:
     std::map<FXTreeItem*, GNEAttributeCarrier*> myTreeItemToACMap;
 
     /// @brief set used to save tree items without AC assigned (for example, Incoming/Outcoming connections)
-    std::set<FXTreeItem*> myTreeItesmWithoutAC;
+    std::set<FXTreeItem*> myTreeItemsWithoutAC;
 
     /// @brief pointer to current right clicked Attribute Carrier
     GNEAttributeCarrier* myRightClickedAC;

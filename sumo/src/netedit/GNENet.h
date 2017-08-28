@@ -56,6 +56,7 @@
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
 #include "GNEDetectorE3.h"
+#include "GNECalibrator.h"
 
 
 // ===========================================================================
@@ -215,7 +216,6 @@ public:
      */
     void duplicateLane(GNELane* lane, GNEUndoList* undoList);
 
-
     /**@brief transform lane to restricted lane
      * @param[in] vclass vehicle class to restrict
      * @param[in] lane The lane to be transformed
@@ -356,6 +356,9 @@ public:
     /// @note only non removed additional will be refresh
     void refreshAdditional(GNEAdditional* additional);
 
+    /// @brief generate an ID for vaporizers
+    std::string generateVaporizerID() const;
+
     /// @brief updates the map and reserves new id
     void renameEdge(GNEEdge* edge, const std::string& newID);
 
@@ -381,6 +384,12 @@ public:
 
     /// @brief recompute the network and update lane geometries
     void computeAndUpdate(OptionsCont& oc);
+
+    /// @brief check if additional are saved
+    bool isAdditionalsSaved() const;
+
+    /// @brief set manually the flag of additionals
+    void setAdditionalSaved(bool value);
 
     /* @brief trigger full netbuild computation
      * param[in] window The window to inform about delay
@@ -456,6 +465,11 @@ public:
      */
     GNEAdditional* retrieveAdditional(const std::string& idl, bool hardFail = true) const;
 
+    /**@brief return all additionals
+     * @param[in] onlySelected Whether to return only selected additionals
+     * */
+    std::vector<GNEAdditional*> retrieveAdditionals(bool onlySelected = false);
+
     /**@brief Returns the named additional
      * @param[in] type tag with the type of additional
      * @param[in] id The id of the additional to return.
@@ -469,19 +483,37 @@ public:
      * @param[in] pos the position of the additional to return.
      * @return The additional id on the location, or "" if don't exists
      */
-    std::string getAdditionalID(SumoXMLTag type, const GNELane* lane, const SUMOReal pos) const;
+    std::string getAdditionalID(SumoXMLTag type, const GNELane* lane, const double pos) const;
 
     /**@brief get vector with additionals
      * @param[in] type type of additional to get. SUMO_TAG_NOTHING will get all additionals
      * @return vector with pointers to additionals.
      */
-    std::vector<GNEAdditional*> getAdditionals(SumoXMLTag type = SUMO_TAG_NOTHING);
+    std::vector<GNEAdditional*> getAdditionals(SumoXMLTag type = SUMO_TAG_NOTHING) const;
 
     /**@brief Returns the number of additionals of the net
      * @param[in] type type of additional to count. SUMO_TAG_NOTHING will count all additionals
      * @return Number of additionals of the net
      */
-    int getNumberOfAdditionals(SumoXMLTag type = SUMO_TAG_NOTHING);
+    int getNumberOfAdditionals(SumoXMLTag type = SUMO_TAG_NOTHING) const;
+
+    /// @brief Returns a reference to a calibrator route finding in all calibrators of net
+    const GNECalibratorRoute& getGNECalibratorRoute(const std::string& calibratorRouteID) const;
+
+    /// @brief Returns a reference to a calibrator vehicle type finding in all calibrators of net
+    const GNECalibratorVehicleType& getGNECalibratorVehicleType(const std::string& calibratorVehicleTypeID) const;
+
+    /// @brief Returns a reference to a calibrator flow finding in all calibrators of net
+    const GNECalibratorFlow& getGNECalibratorFlow(const std::string& calibratorFlowID) const;
+
+    /// @brief Check if exist a route with these ID
+    bool routeExists(const std::string& routeID) const;
+
+    /// @brief Check if exist a vehicle type with these ID
+    bool vehicleTypeExists(const std::string& vehicleTypeID) const;
+
+    /// @brief Check if exist a flow with these ID
+    bool flowExists(const std::string& flowID) const;
 
 protected:
     /// @brief the rtree which contains all GUIGlObjects (so named for historical reasons)
@@ -523,6 +555,9 @@ protected:
 
     /// @brief whether the net needs recomputation
     bool myNeedRecompute;
+
+    /// @brief Flag to check if additionals must be saved
+    bool myAdditionalsSaved;
 
 private:
     /// @brief Initialises the detector wrappers
@@ -567,7 +602,7 @@ private:
     Boundary myZBoundary;
 
     /// @brief marker for whether the z-boundary is initialized
-    static const SUMOReal Z_INITIALIZED;
+    static const double Z_INITIALIZED;
 };
 
 #endif

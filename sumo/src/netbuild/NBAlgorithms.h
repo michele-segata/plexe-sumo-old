@@ -75,7 +75,7 @@ private:
     struct Combination {
         NBEdge* from;
         NBEdge* to;
-        SUMOReal angle;
+        double angle;
     };
 
 
@@ -166,22 +166,22 @@ public:
 
     protected:
         /// @brief Converts the angle of the edge if it is an incoming edge
-        SUMOReal getConvAngle(NBEdge* e) const {
-            SUMOReal angle = e->getAngleAtNode(myNode);
+        double getConvAngle(NBEdge* e) const {
+            double angle = e->getAngleAtNode(myNode);
             if (angle < 0.) {
                 angle = 360. + angle;
             }
             // convert angle if the edge is an outgoing edge
             if (e->getFromNode() == myNode) {
-                angle += (SUMOReal) 180.;
-                if (angle >= (SUMOReal) 360.) {
-                    angle -= (SUMOReal) 360.;
+                angle += (double) 180.;
+                if (angle >= (double) 360.) {
+                    angle -= (double) 360.;
                 }
             }
             if (angle < 0.1 || angle > 359.9) {
-                angle = (SUMOReal) 0.;
+                angle = (double) 0.;
             }
-            assert(angle >= (SUMOReal)0 && angle < (SUMOReal)360);
+            assert(angle >= 0 && angle < (double)360);
             return angle;
         }
 
@@ -208,6 +208,10 @@ public:
      */
     static void computeNodeTypes(NBNodeCont& nc);
 
+    /** @brief Computes a single node type
+     * @param[in] node the single node to compute node type
+     */
+    static void computeSingleNodeType(NBNode* node);
 };
 
 
@@ -224,6 +228,11 @@ public:
      * @param[in] nc The container of nodes to loop along
      */
     static void computeEdgePriorities(NBNodeCont& nc);
+
+    /** @brief Computes edge priorities within a single node
+     * @param[in] node the single node
+     */
+    static void computeEdgePrioritiesSingleNode(NBNode* node);
 
 private:
     /** @brief Sets the priorites in case of a priority junction

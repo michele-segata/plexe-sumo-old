@@ -32,45 +32,14 @@
 #include <config.h>
 #endif
 
-#include "NGNet.h"
 #include <map>
+#include <utils/distribution/RandomDistributor.h>
+#include "NGNet.h"
 
 
 // ===========================================================================
 // class definitions
 // ===========================================================================
-/**
- * @class TNeighbourDistribution
- * @todo Check whether this can be replaced by RandomDistributor
- */
-class TNeighbourDistribution {
-public:
-    /**
-     * @brief adds a neighbour item to list
-     *
-     * If NumNeighbours is already existing, the old ratio is overwritten
-     *
-     * @param[in] numNeighbours The number of neighbors this item shall describe
-     * @param[in] ratio The probability of this number of neighbors
-     */
-    void add(int numNeighbours, SUMOReal ratio);
-
-
-    /**
-     * @brief Get random number of neighbours
-     *
-     * @return A random number of neighbors
-     */
-    int num();
-
-
-private:
-    /// @brief A map from neighbor number to their probabilities
-    std::map<int, SUMOReal> myNeighbours;
-
-};
-
-
 /**
  * @class NGRandomNetBuilder
  * @brief A class that builds random network using an algorithm by Markus Hartinger.
@@ -89,8 +58,8 @@ public:
      * @param[in] numTries ?
      * @todo check meanings of connectivity/numTries
      */
-    NGRandomNetBuilder(NGNet& net, SUMOReal minAngle, SUMOReal minDistance, SUMOReal maxDistance, SUMOReal connectivity,
-                       int numTries, const TNeighbourDistribution& neighborDist);
+    NGRandomNetBuilder(NGNet& net, double minAngle, double minDistance, double maxDistance, double connectivity,
+                       int numTries, const RandomDistributor<int>& neighborDist);
 
 
 
@@ -168,16 +137,16 @@ private:
     //@{
 
     /// @brief Minimum angle allowed between two links
-    SUMOReal myMinLinkAngle;
+    double myMinLinkAngle;
 
     /// @brief Minimum distance allowed between two nodes
-    SUMOReal myMinDistance;
+    double myMinDistance;
 
     /// @brief Maximum distance allowed between two nodes
-    SUMOReal myMaxDistance;
+    double myMaxDistance;
 
     /// @brief Probability of connecting to a existing node if possible
-    SUMOReal myConnectivity;
+    double myConnectivity;
     //@}
 
 
@@ -187,8 +156,8 @@ private:
     /// @brief Number of nodes to be created
     int myNumNodes;
 
-    /// @brief The distrubtion of number of neighbours
-    TNeighbourDistribution myNeighbourDistribution;
+    /// @brief The distribution of number of neighbours
+    RandomDistributor<int> myNeighbourDistribution;
 
 private:
     /// @brief Invalidated copy constructor.

@@ -69,9 +69,7 @@ public:
     MSRightOfWayJunction(const std::string& id, SumoXMLNodeType type, const Position& position,
                          const PositionVector& shape,
                          std::vector<MSLane*> incoming,
-#ifdef HAVE_INTERNAL_LANES
                          std::vector<MSLane*> internal,
-#endif
                          MSJunctionLogic* logic);
 
     /// Destructor.
@@ -96,6 +94,7 @@ protected:
     /** the type of the junction (its logic) */
     MSJunctionLogic* myLogic;
 
+    // TODO: Documentation
     std::map<const MSLink*, std::vector<MSLink*> > myLinkFoeLinks;
     std::map<const MSLink*, std::vector<MSLane*> > myLinkFoeInternalLanes;
 

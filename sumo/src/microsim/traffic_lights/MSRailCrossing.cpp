@@ -41,10 +41,6 @@
 #include "MSPhaseDefinition.h"
 #include "MSTLLogicControl.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -111,12 +107,10 @@ MSRailCrossing::updateCurrentPhase() {
                 stayRedUntil = MAX2(stayRedUntil, avi.leavingTime);
             }
         }
-#ifdef HAVE_INTERNAL_LANES
         if ((*it_link)->getViaLane() != 0 && (*it_link)->getViaLane()->getVehicleNumberWithPartials() > 0) {
             // do not open if there is still a train on the crossing
             stayRedUntil = MAX2(stayRedUntil, now + DELTA_T);
         }
-#endif
     }
     //if (getID() == "cluster_1088529493_1260626727") std::cout << SIMTIME << " stayRedUntil=" << stayRedUntil;
     const SUMOTime wait = stayRedUntil - now;

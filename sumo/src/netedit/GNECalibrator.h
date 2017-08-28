@@ -31,6 +31,9 @@
 #endif
 
 #include "GNEAdditional.h"
+#include "GNECalibratorRoute.h"
+#include "GNECalibratorFlow.h"
+#include "GNECalibratorVehicleType.h"
 
 // ===========================================================================
 // class declaration
@@ -43,259 +46,34 @@ class GNERouteProbe;
 // ===========================================================================
 /**
  * @class GNECalibrator
- * ------------
+ * class for represent Calibratos in netedit
  */
 class GNECalibrator : public GNEAdditional {
 public:
 
-    /// @brief calibrator flow
-    class GNECalibratorFlow {
-
-    public:
-        /// @briefdefault constructor
-        GNECalibratorFlow(GNECalibrator* calibratorParent, std::string type, std::string route);
-
-        /// @brief parameter constructor
-        GNECalibratorFlow(GNECalibrator* calibratorParent, std::string type, std::string route, std::string color, std::string departLane, std::string departPos,
-                          std::string departSpeed, std::string arrivalLane, std::string arrivalPos, std::string arrivalSpeed,
-                          std::string line, int personNumber, int containerNumber, SUMOReal begin, SUMOReal end,
-                          SUMOReal vehsPerHour, SUMOReal period, SUMOReal probability, int number);
-
-        /// @brief destructor
-        ~GNECalibratorFlow();
-
-        /// @brief get pointer to calibrator parent
-        GNECalibrator* getCalibratorParent() const;
-
-        /// @brief get type of vehicle
-        const std::string& getType() const;
-
-        /// @brief get route in which this flow is used
-        const std::string& getRoute() const;
-
-        /// @brief get color of flow
-        const std::string& getColor() const;
-
-        /// @brief get depart lane
-        const std::string& getDepartLane() const;
-
-        /// @brief get depart position
-        const std::string& getDepartPos() const;
-
-        /// @brief get arrival speed
-        const std::string& getDepartSpeed() const;
-
-        /// @brief get arrival lane
-        const std::string& getArrivalLane() const;
-
-        /// @brief get arrival position
-        const std::string& getArrivalPos() const;
-
-        /// @brief get arrival speed
-        const std::string& getArrivalSpeed() const;
-
-        /// @brief get line of busStop/containerStop
-        const std::string& getLine() const;
-
-        /// @brief get number of persons
-        int getPersonNumber() const;
-
-        /// @brief get number of containers
-        int getContainerNumber() const;
-
-        /// @brief get begin time step
-        SUMOReal getBegin() const;
-
-        /// @brief get end time step
-        SUMOReal getEnd() const;
-
-        /// @brief get vehicles per hour
-        SUMOReal getVehsPerHour() const;
-
-        /// @brief get period of vehicle
-        SUMOReal getPeriod() const;
-
-        /// @brief get probability of vehicle
-        SUMOReal getProbability() const;
-
-        /// @brief get number of vehicles
-        int getNumber() const;
-
-        /**@brief set type of vehicle
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setType(std::string type);
-
-        /**@brief set route in which this flow is used
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setRoute(std::string route);
-
-        /**@brief set color of flow
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setColor(std::string color);
-
-        /**@brief set depart lane
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setDepartLane(std::string departLane);
-
-        /**@brief set depart position
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setDepartPos(std::string departPos);
-
-        /**@brief set depart speed
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setDepartSpeed(std::string departSpeed);
-
-        /**@brief set arrival lane
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setArrivalLane(std::string arrivalLane);
-
-        /**@brief set arrival position
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setArrivalPos(std::string arrivalPos);
-
-        /**@brief set arrival speed
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setArrivalSpeed(std::string arrivalSpeed);
-
-        /**@brief set line of busStop/containerStop
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setLine(std::string line);
-
-        /**@brief set number of persons
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setPersonNumber(int personNumber);
-
-        /**@brief set number of container
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setContainerNumber(int containerNumber);
-
-        /**@brief set begin step
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setBegin(SUMOReal begin);
-
-        /**@brief set end step
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setEnd(SUMOReal end);
-
-        /**@brief set vehicles per hour
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setVehsPerHour(SUMOReal vehsPerHour);
-
-        /**@brief set period of vehicles
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setPeriod(SUMOReal period);
-
-        /**@brief set probability of vehicle
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setProbability(SUMOReal probability);
-
-        /**@brief set number of vehicles
-         * @return true if was sucesfully set, or false if value isn't valid
-         */
-        bool setNumber(int number);
-
-    private:
-        /// @brief pointer to calibrator parent
-        GNECalibrator* myCalibratorParent;
-
-        /// @brief type of flow
-        std::string myType;
-
-        /// @brief route in which this flow is used
-        std::string myRoute;
-
-        /// @brief color of flow
-        std::string myColor;
-
-        /// @brief depart lane
-        std::string myDepartLane;
-
-        /// @brief depart position
-        std::string myDepartPos;
-
-        /// @brief depart speed
-        std::string myDepartSpeed;
-
-        /// @brief arrival lane
-        std::string myArrivalLane;
-
-        /// @brief arrival pos
-        std::string myArrivalPos;
-
-        /// @brief arrival speed
-        std::string myArrivalSpeed;
-
-        /// @brief line of bus/container stop
-        std::string myLine;
-
-        /// @brief number of person
-        int myPersonNumber;
-
-        /// @brief number of container
-        int myContainerNumber;
-
-        /// @brief time step begin
-        SUMOReal myBegin;
-
-        /// @brief time step end
-        SUMOReal myEnd;
-
-        /// @brief vehicles per hour
-        SUMOReal myVehsPerHour;
-
-        /// @brief period
-        SUMOReal myPeriod;
-
-        /// @brief probability
-        SUMOReal myProbability;
-
-        /// @brief number of vehicle
-        int myNumber;
-
-        /// @brief Invalidated copy constructor.
-        GNECalibratorFlow(const GNECalibratorFlow&);
-
-        /// @brief Invalidated assignment operator.
-        GNECalibratorFlow& operator=(const GNECalibratorFlow&);
-    };
-
     /**@brief Constructor
      * @param[in] id The storage of gl-ids to get the one for this lane representation from
-     * @param[in] edge Lane of this StoppingPlace belongs
+     * @param[in] lane Lane of this calibrator belongs
      * @param[in] viewNet pointer to GNEViewNet of this additional element belongs
      * @param[in] pos position of the calibrator on the edge (Currently not used)
      * @param[in] frequency the aggregation interval in which to calibrate the flows
      * @param[in] output The output file for writing calibrator information
-     * @param[in] flowValues values with the flow of calibrator
+     * @param[in] calibratorRoutes vector with the calibratorRoutes of calibrator
+     * @param[in] calibratorFlows vector with the calibratorFlows of calibrator
+     * @param[in] calibratorVehicleTypes vector with the CalibratorVehicleType of calibrator
      */
-    GNECalibrator(const std::string& id, GNEEdge* edge, GNEViewNet* viewNet, SUMOReal pos, SUMOReal frequency,
-                  const std::string& output, const std::vector<GNECalibrator::GNECalibratorFlow*>& flowValues);
+    GNECalibrator(const std::string& id, GNELane* lane, GNEViewNet* viewNet, double pos, double frequency, const std::string& output,
+                  const std::vector<GNECalibratorRoute>& calibratorRoutes, const std::vector<GNECalibratorFlow>& calibratorFlows,
+                  const std::vector<GNECalibratorVehicleType>& calibratorVehicleTypes);
 
     /// @brief Destructor
     ~GNECalibrator();
 
     /// @brief change the position of the calibrator geometry
-    void moveAdditionalGeometry(SUMOReal, SUMOReal);
+    void moveAdditionalGeometry(double, double);
 
     /// @brief updated geometry changes in the attributes of additional
-    void commmitAdditionalGeometryMoved(SUMOReal, SUMOReal, GNEUndoList*);
+    void commmitAdditionalGeometryMoved(double, double, GNEUndoList*);
 
     /// @brief update pre-computed geometry information
     /// @note: must be called when geometry c6hanges (i.e. lane moved)
@@ -312,17 +90,65 @@ public:
      */
     void writeAdditional(OutputDevice& device) const;
 
-    /// @brief get Calbratorflow values
-    std::vector<GNECalibrator::GNECalibratorFlow*> getFlowValues() const;
+    /// @brief add calibrator vehicleType
+    void addCalibratorVehicleType(const GNECalibratorVehicleType& vehicleType);
 
-    /// @brief set Calbratorflow values
-    void setFlowValues(std::vector<GNECalibrator::GNECalibratorFlow*> calibratorFlowValues);
+    /// @brief add calibrator flow
+    void addCalibratorFlow(const GNECalibratorFlow& flow);
 
-    /// @brief insert a new flow
-    void insertFlow(GNECalibratorFlow* flow);
+    /// @brief add calibrator route
+    void addCalibratorRoute(const GNECalibratorRoute& route);
 
-    /// @brief remove a existent flow
-    void removeFlow(GNECalibratorFlow* flow);
+    /// @brief get calibrator vehicleTypes
+    const std::vector<GNECalibratorVehicleType>& getCalibratorVehicleTypes() const;
+
+    /// @brief get calibrator flows
+    const std::vector<GNECalibratorFlow>& getCalibratorFlows() const;
+
+    /// @brief get calibrator routes
+    const std::vector<GNECalibratorRoute>& getCalibratorRoutes() const;
+
+    /// @brief set calibrator vehicleTypes values
+    void setCalibratorVehicleTypes(const std::vector<GNECalibratorVehicleType>& calibratorVehicleType);
+
+    /// @brief set calibrator flow values
+    void setCalibratorFlows(const std::vector<GNECalibratorFlow>& calibratorFlows);
+
+    /// @brief set calibrator route values
+    void setCalibratorRoutes(const std::vector<GNECalibratorRoute>& calibratorRoutes);
+
+    /// @brief generate a vehicleType ID
+    std::string generateVehicleTypeID() const;
+
+    /// @brief generate a flow ID
+    std::string generateFlowID() const;
+
+    /// @brief generate a route ID
+    std::string generateRouteID() const;
+
+    /// @brief check if a vehicelType with ID = vehicleTypeID exists
+    bool vehicleTypeExists(std::string vehicleTypeID) const;
+
+    /// @brief check if a flow with ID = flowID exists
+    bool flowExists(std::string flowID) const;
+
+    /// @brief check if a route with ID = routeID exists
+    bool routeExists(std::string routeID) const;
+
+    /**@brief get reference to calibrator vehicle type
+     * @throw ivalid argument if calibrator doesn't exist
+     */
+    const GNECalibratorVehicleType& getCalibratorVehicleType(const std::string& vehicleTypeID);
+
+    /**@brief get reference to calibrator flow
+     * @throw ivalid argument if calibrator doesn't exist
+     */
+    const GNECalibratorFlow& getCalibratorFlow(const std::string& flowID);
+
+    /**@brief get reference calibrator route
+     * @throw ivalid argument if calibrator doesn't exist
+     */
+    const GNECalibratorRoute& getCalibratorRoute(const std::string& routeID);
 
     /// @name inherited from GUIGlObject
     /// @{
@@ -362,16 +188,22 @@ public:
 
 protected:
     /// @brief Frequency of calibrator
-    SUMOReal myFrequency;
+    double myFrequency;
 
     /// @brief output of calibrator
     std::string myOutput;
 
-    /// @brief pointer to RouteProbe
+    /// @brief pointer to current RouteProbe
     GNERouteProbe* myRouteProbe;
 
-    /// @brief Calbratorflow values
-    std::vector<GNECalibratorFlow*> myFlowValues;
+    /// @brief calibrator route values
+    std::vector<GNECalibratorRoute> myCalibratorRoutes;
+
+    /// @brief calibrator flow values
+    std::vector<GNECalibratorFlow> myCalibratorFlows;
+
+    /// @brief calibrator vehicleType values
+    std::vector<GNECalibratorVehicleType> myCalibratorVehicleTypes;
 
 private:
     /// @brief set attribute after validation

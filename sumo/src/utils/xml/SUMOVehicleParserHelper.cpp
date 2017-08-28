@@ -43,10 +43,6 @@
 #include <utils/options/OptionsCont.h>
 #include "SUMOVehicleParserHelper.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static members
@@ -111,7 +107,7 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
     }
     if (attrs.hasAttribute(SUMO_ATTR_VEHSPERHOUR)) {
         ret->setParameter |= VEHPARS_PERIODFREQ_SET;
-        const SUMOReal vph = attrs.get<SUMOReal>(SUMO_ATTR_VEHSPERHOUR, id.c_str(), ok);
+        const double vph = attrs.get<double>(SUMO_ATTR_VEHSPERHOUR, id.c_str(), ok);
         if (ok && vph <= 0) {
             delete ret;
             throw ProcessError("Invalid repetition rate in the definition of flow '" + id + "'.");
@@ -121,7 +117,7 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
         }
     }
     if (attrs.hasAttribute(SUMO_ATTR_PROB)) {
-        ret->repetitionProbability = attrs.get<SUMOReal>(SUMO_ATTR_PROB, id.c_str(), ok);
+        ret->repetitionProbability = attrs.get<double>(SUMO_ATTR_PROB, id.c_str(), ok);
         if (ok && (ret->repetitionProbability <= 0 || ret->repetitionProbability > 1)) {
             delete ret;
             throw ProcessError("Invalid repetition probability in the definition of flow '" + id + "'.");
@@ -174,7 +170,7 @@ SUMOVehicleParserHelper::parseFlowAttributes(const SUMOSAXAttributes& attrs, con
             if (ret->repetitionEnd == SUMOTime_MAX) {
                 ret->repetitionNumber = std::numeric_limits<int>::max();
             } else {
-                const SUMOReal repLength = (SUMOReal)(ret->repetitionEnd - ret->depart);
+                const double repLength = (double)(ret->repetitionEnd - ret->depart);
                 ret->repetitionNumber = (int)ceil(repLength / ret->repetitionOffset);
             }
         }
@@ -352,24 +348,24 @@ SUMOVehicleParserHelper::beginVTypeParsing(const SUMOSAXAttributes& attrs, const
         vtype->setParameter |= VTYPEPARS_VEHICLECLASS_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_LENGTH)) {
-        vtype->length = attrs.get<SUMOReal>(SUMO_ATTR_LENGTH, vtype->id.c_str(), ok);
+        vtype->length = attrs.get<double>(SUMO_ATTR_LENGTH, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_LENGTH_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_MINGAP)) {
-        vtype->minGap = attrs.get<SUMOReal>(SUMO_ATTR_MINGAP, vtype->id.c_str(), ok);
+        vtype->minGap = attrs.get<double>(SUMO_ATTR_MINGAP, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_MINGAP_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_MAXSPEED)) {
-        vtype->maxSpeed = attrs.get<SUMOReal>(SUMO_ATTR_MAXSPEED, vtype->id.c_str(), ok);
+        vtype->maxSpeed = attrs.get<double>(SUMO_ATTR_MAXSPEED, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_MAXSPEED_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_SPEEDFACTOR)) {
-        vtype->speedFactor = attrs.get<SUMOReal>(SUMO_ATTR_SPEEDFACTOR, vtype->id.c_str(), ok);
+        vtype->speedFactor = Distribution_Parameterized(attrs.get<std::string>(SUMO_ATTR_SPEEDFACTOR, vtype->id.c_str(), ok));
         vtype->setParameter |= VTYPEPARS_SPEEDFACTOR_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_SPEEDDEV)) {
-        vtype->speedDev = attrs.get<SUMOReal>(SUMO_ATTR_SPEEDDEV, vtype->id.c_str(), ok);
-        vtype->setParameter |= VTYPEPARS_SPEEDDEVIATION_SET;
+        vtype->speedFactor.getParameter()[1] = attrs.get<double>(SUMO_ATTR_SPEEDDEV, vtype->id.c_str(), ok);
+        vtype->setParameter |= VTYPEPARS_SPEEDFACTOR_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_EMISSIONCLASS)) {
         vtype->emissionClass = parseEmissionClass(attrs, vtype->id);
@@ -377,18 +373,18 @@ SUMOVehicleParserHelper::beginVTypeParsing(const SUMOSAXAttributes& attrs, const
     }
     if (attrs.hasAttribute(SUMO_ATTR_IMPATIENCE)) {
         if (attrs.get<std::string>(SUMO_ATTR_IMPATIENCE, vtype->id.c_str(), ok) == "off") {
-            vtype->impatience = -std::numeric_limits<SUMOReal>::max();
+            vtype->impatience = -std::numeric_limits<double>::max();
         } else {
-            vtype->impatience = attrs.get<SUMOReal>(SUMO_ATTR_IMPATIENCE, vtype->id.c_str(), ok);
+            vtype->impatience = attrs.get<double>(SUMO_ATTR_IMPATIENCE, vtype->id.c_str(), ok);
         }
         vtype->setParameter |= VTYPEPARS_IMPATIENCE_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_WIDTH)) {
-        vtype->width = attrs.get<SUMOReal>(SUMO_ATTR_WIDTH, vtype->id.c_str(), ok);
+        vtype->width = attrs.get<double>(SUMO_ATTR_WIDTH, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_WIDTH_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_HEIGHT)) {
-        vtype->height = attrs.get<SUMOReal>(SUMO_ATTR_HEIGHT, vtype->id.c_str(), ok);
+        vtype->height = attrs.get<double>(SUMO_ATTR_HEIGHT, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_HEIGHT_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_GUISHAPE)) {
@@ -413,17 +409,18 @@ SUMOVehicleParserHelper::beginVTypeParsing(const SUMOSAXAttributes& attrs, const
         vtype->color = RGBColor::YELLOW;
     }
     if (attrs.hasAttribute(SUMO_ATTR_PROB)) {
-        vtype->defaultProbability = attrs.get<SUMOReal>(SUMO_ATTR_PROB, vtype->id.c_str(), ok);
+        vtype->defaultProbability = attrs.get<double>(SUMO_ATTR_PROB, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_PROBABILITY_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_LANE_CHANGE_MODEL)) {
+        vtype->setParameter |= VTYPEPARS_LANE_CHANGE_MODEL_SET;
         std::string lcmS = attrs.get<std::string>(SUMO_ATTR_LANE_CHANGE_MODEL, vtype->id.c_str(), ok);
         if (lcmS == "JE2013") {
             WRITE_WARNING("Lane change model 'JE2013' is deprecated. Using default model instead.");
             lcmS = "default";
         }
         if (SUMOXMLDefinitions::LaneChangeModels.hasString(lcmS)) {
-            vtype->lcModel = SUMOXMLDefinitions::LaneChangeModels.get("default");
+            vtype->lcModel = SUMOXMLDefinitions::LaneChangeModels.get(lcmS);
         } else {
             WRITE_ERROR("Unknown lane change model '" + lcmS + "' when parsing vtype '" + vtype->id + "'");
             throw ProcessError();
@@ -456,11 +453,11 @@ SUMOVehicleParserHelper::beginVTypeParsing(const SUMOSAXAttributes& attrs, const
         vtype->setParameter |= VTYPEPARS_LOADING_DURATION;
     }
     if (attrs.hasAttribute(SUMO_ATTR_MAXSPEED_LAT)) {
-        vtype->maxSpeedLat = attrs.get<SUMOReal>(SUMO_ATTR_MAXSPEED_LAT, vtype->id.c_str(), ok);
+        vtype->maxSpeedLat = attrs.get<double>(SUMO_ATTR_MAXSPEED_LAT, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_MAXSPEED_LAT_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_MINGAP_LAT)) {
-        vtype->minGapLat = attrs.get<SUMOReal>(SUMO_ATTR_MINGAP_LAT, vtype->id.c_str(), ok);
+        vtype->minGapLat = attrs.get<double>(SUMO_ATTR_MINGAP_LAT, vtype->id.c_str(), ok);
         vtype->setParameter |= VTYPEPARS_MINGAP_LAT_SET;
     }
     if (attrs.hasAttribute(SUMO_ATTR_LATALIGNMENT)) {
@@ -510,8 +507,8 @@ SUMOVehicleParserHelper::parseVTypeEmbedded(SUMOVTypeParameter& into,
     bool ok = true;
     for (std::set<SumoXMLAttr>::const_iterator it = cf_it->second.begin(); it != cf_it->second.end(); it++) {
         if (attrs.hasAttribute(*it)) {
-            into.cfParameter[*it] = attrs.get<SUMOReal>(*it, into.id.c_str(), ok);
-            if (*it == SUMO_ATTR_TAU && TIME2STEPS(into.cfParameter[*it]) < DELTA_T) {
+            into.cfParameter[*it] = attrs.get<std::string>(*it, into.id.c_str(), ok);
+            if (*it == SUMO_ATTR_TAU && string2time(into.cfParameter[*it]) < DELTA_T) {
                 WRITE_WARNING("Value of tau=" + toString(into.cfParameter[*it])
                               + " in car following model '" + toString(into.cfModel) + "' lower than simulation step size may cause collisions");
             }
@@ -530,15 +527,25 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         std::set<SumoXMLAttr> krausParams;
         krausParams.insert(SUMO_ATTR_ACCEL);
         krausParams.insert(SUMO_ATTR_DECEL);
+        krausParams.insert(SUMO_ATTR_APPARENTDECEL);
+        krausParams.insert(SUMO_ATTR_EMERGENCYDECEL);
         krausParams.insert(SUMO_ATTR_SIGMA);
         krausParams.insert(SUMO_ATTR_TAU);
         allowedCFModelAttrs[SUMO_TAG_CF_KRAUSS] = krausParams;
         allowedCFModelAttrs[SUMO_TAG_CF_KRAUSS_ORIG1] = krausParams;
         allowedCFModelAttrs[SUMO_TAG_CF_KRAUSS_PLUS_SLOPE] = krausParams;
 
+        allowedCFModelAttrs[SUMO_TAG_CF_KRAUSSX] = krausParams;
+        allowedCFModelAttrs[SUMO_TAG_CF_KRAUSSX].insert(SUMO_ATTR_TMP1);
+        allowedCFModelAttrs[SUMO_TAG_CF_KRAUSSX].insert(SUMO_ATTR_TMP2);
+        allowedCFModelAttrs[SUMO_TAG_CF_KRAUSSX].insert(SUMO_ATTR_TMP3);
+        allowedCFModelAttrs[SUMO_TAG_CF_KRAUSSX].insert(SUMO_ATTR_TMP4);
+        allowedCFModelAttrs[SUMO_TAG_CF_KRAUSSX].insert(SUMO_ATTR_TMP5);
+
         std::set<SumoXMLAttr> smartSKParams;
         smartSKParams.insert(SUMO_ATTR_ACCEL);
         smartSKParams.insert(SUMO_ATTR_DECEL);
+        smartSKParams.insert(SUMO_ATTR_EMERGENCYDECEL);
         smartSKParams.insert(SUMO_ATTR_SIGMA);
         smartSKParams.insert(SUMO_ATTR_TAU);
         smartSKParams.insert(SUMO_ATTR_TMP1);
@@ -551,6 +558,7 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         std::set<SumoXMLAttr> daniel1Params;
         daniel1Params.insert(SUMO_ATTR_ACCEL);
         daniel1Params.insert(SUMO_ATTR_DECEL);
+        daniel1Params.insert(SUMO_ATTR_EMERGENCYDECEL);
         daniel1Params.insert(SUMO_ATTR_SIGMA);
         daniel1Params.insert(SUMO_ATTR_TAU);
         daniel1Params.insert(SUMO_ATTR_TMP1);
@@ -563,6 +571,7 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         std::set<SumoXMLAttr> pwagParams;
         pwagParams.insert(SUMO_ATTR_ACCEL);
         pwagParams.insert(SUMO_ATTR_DECEL);
+        pwagParams.insert(SUMO_ATTR_EMERGENCYDECEL);
         pwagParams.insert(SUMO_ATTR_SIGMA);
         pwagParams.insert(SUMO_ATTR_TAU);
         pwagParams.insert(SUMO_ATTR_CF_PWAGNER2009_TAULAST);
@@ -572,6 +581,7 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         std::set<SumoXMLAttr> idmParams;
         idmParams.insert(SUMO_ATTR_ACCEL);
         idmParams.insert(SUMO_ATTR_DECEL);
+        idmParams.insert(SUMO_ATTR_EMERGENCYDECEL);
         idmParams.insert(SUMO_ATTR_TAU);
         idmParams.insert(SUMO_ATTR_CF_IDM_DELTA);
         idmParams.insert(SUMO_ATTR_CF_IDM_STEPPING);
@@ -580,6 +590,7 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         std::set<SumoXMLAttr> idmmParams;
         idmmParams.insert(SUMO_ATTR_ACCEL);
         idmmParams.insert(SUMO_ATTR_DECEL);
+        idmmParams.insert(SUMO_ATTR_EMERGENCYDECEL);
         idmmParams.insert(SUMO_ATTR_TAU);
         idmmParams.insert(SUMO_ATTR_CF_IDMM_ADAPT_FACTOR);
         idmmParams.insert(SUMO_ATTR_CF_IDMM_ADAPT_TIME);
@@ -589,6 +600,7 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         std::set<SumoXMLAttr> bkernerParams;
         bkernerParams.insert(SUMO_ATTR_ACCEL);
         bkernerParams.insert(SUMO_ATTR_DECEL);
+        bkernerParams.insert(SUMO_ATTR_EMERGENCYDECEL);
         bkernerParams.insert(SUMO_ATTR_TAU);
         bkernerParams.insert(SUMO_ATTR_K);
         bkernerParams.insert(SUMO_ATTR_CF_KERNER_PHI);
@@ -597,9 +609,14 @@ SUMOVehicleParserHelper::getAllowedCFModelAttrs() {
         std::set<SumoXMLAttr> wiedemannParams;
         wiedemannParams.insert(SUMO_ATTR_ACCEL);
         wiedemannParams.insert(SUMO_ATTR_DECEL);
+        wiedemannParams.insert(SUMO_ATTR_EMERGENCYDECEL);
         wiedemannParams.insert(SUMO_ATTR_CF_WIEDEMANN_SECURITY);
         wiedemannParams.insert(SUMO_ATTR_CF_WIEDEMANN_ESTIMATION);
         allowedCFModelAttrs[SUMO_TAG_CF_WIEDEMANN] = wiedemannParams;
+
+        std::set<SumoXMLAttr> railParamms;
+        railParamms.insert(SUMO_ATTR_TRAIN_TYPE);
+        allowedCFModelAttrs[SUMO_TAG_CF_RAIL] = railParamms;
 
         std::set<SumoXMLAttr> ccParams;
         ccParams.insert(SUMO_ATTR_ACCEL);
@@ -630,6 +647,7 @@ SUMOVehicleParserHelper::parseLCParams(SUMOVTypeParameter& into, LaneChangeModel
         lc2013Params.insert(SUMO_ATTR_LCA_COOPERATIVE_PARAM);
         lc2013Params.insert(SUMO_ATTR_LCA_SPEEDGAIN_PARAM);
         lc2013Params.insert(SUMO_ATTR_LCA_KEEPRIGHT_PARAM);
+        lc2013Params.insert(SUMO_ATTR_LCA_EXPERIMENTAL1);
         allowedLCModelAttrs[LCM_LC2013] = lc2013Params;
 
         std::set<SumoXMLAttr> sl2015Params = lc2013Params;
@@ -649,7 +667,7 @@ SUMOVehicleParserHelper::parseLCParams(SUMOVTypeParameter& into, LaneChangeModel
     std::set<SumoXMLAttr> allowed = allowedLCModelAttrs[model];
     for (std::set<SumoXMLAttr>::const_iterator it = allowed.begin(); it != allowed.end(); it++) {
         if (attrs.hasAttribute(*it)) {
-            into.lcParameter[*it] = attrs.get<SUMOReal>(*it, into.id.c_str(), ok);
+            into.lcParameter[*it] = attrs.get<std::string>(*it, into.id.c_str(), ok);
         }
     }
     if (!ok) {

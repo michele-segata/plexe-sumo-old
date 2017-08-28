@@ -43,10 +43,6 @@
 #include "StringTokenizer.h"
 #include "MsgHandler.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -160,8 +156,8 @@ FileHelpers::writeInt(std::ostream& strm, int value) {
 
 
 std::ostream&
-FileHelpers::writeFloat(std::ostream& strm, SUMOReal value) {
-    strm.write((char*) &value, sizeof(SUMOReal));
+FileHelpers::writeFloat(std::ostream& strm, double value) {
+    strm.write((char*) &value, sizeof(double));
     return strm;
 }
 

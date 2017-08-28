@@ -45,7 +45,7 @@
 #include <utils/gui/windows/GUIMainWindow.h>
 #include <utils/common/ValueRetriever.h>
 #include <utils/common/ValueSource.h>
-#include <utils/common/RandomDistributor.h>
+#include <utils/distribution/RandomDistributor.h>
 #include "GUISUMOViewParent.h"
 
 
@@ -261,13 +261,13 @@ public:
     /** @brief Returns the simulation delay
      * @return delay in milliseconds
      */
-    virtual SUMOReal getDelay() const {
+    virtual double getDelay() const {
         return mySimDelayTarget->getValue();
     }
 
     /** @brief Sets the delay of the parent application
      */
-    virtual void setDelay(SUMOReal delay) {
+    virtual void setDelay(double delay) {
         mySimDelayTarget->setValue(delay);
     }
 
@@ -401,7 +401,7 @@ protected:
     RandomDistributor<std::string> myJamSounds;
     RandomDistributor<std::string> myCollisionSounds;
     /// @brief waiting time after which vehicles trigger jam sounds
-    SUMOReal myJamSoundTime;
+    double myJamSoundTime;
     /// @brief A random number generator used to choose a gaming sound
     static MTRand myGamingRNG;
     int myPreviousCollisionNumber;

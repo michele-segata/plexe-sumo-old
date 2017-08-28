@@ -136,14 +136,19 @@
     <ClCompile Include="..\..\..\src\netedit\GNECalibratorFlowDialog.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNECalibratorRoute.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNECalibratorRouteDialog.cpp" />
+    <ClCompile Include="..\..\..\src\netedit\GNECalibratorVehicleType.cpp" />
+    <ClCompile Include="..\..\..\src\netedit\GNECalibratorVehicleTypeDialog.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_Attribute.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_Additional.cpp" />
+    <ClCompile Include="..\..\..\src\netedit\GNEChange_CalibratorItem.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_Connection.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_Crossing.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_Edge.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_Junction.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_Lane.cpp" />
+    <ClCompile Include="..\..\..\src\netedit\GNEChange_POI.cpp" />
+    <ClCompile Include="..\..\..\src\netedit\GNEChange_RerouterInterval.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_Selection.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChange_TLS.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEChargingStation.cpp" />
@@ -190,6 +195,7 @@
     <ClCompile Include="..\..\..\src\netedit\GNEVaporizer.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEVariableSpeedSign.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEVariableSpeedSignDialog.cpp" />
+    <ClCompile Include="..\..\..\src\netedit\GNEVariableSpeedSignStep.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEViewNet.cpp" />
     <ClCompile Include="..\..\..\src\netedit\GNEViewParent.cpp" />
     <ClCompile Include="..\..\..\src\netedit\netedit_main.cpp" />
@@ -211,14 +217,19 @@
     <ClInclude Include="..\..\..\src\netedit\GNECalibratorFlowDialog.h" />
     <ClInclude Include="..\..\..\src\netedit\GNECalibratorRoute.h" />
     <ClInclude Include="..\..\..\src\netedit\GNECalibratorRouteDialog.h" />
+    <ClInclude Include="..\..\..\src\netedit\GNECalibratorVehicleType.h" />
+    <ClInclude Include="..\..\..\src\netedit\GNECalibratorVehicleTypeDialog.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_Attribute.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_Additional.h" />
+    <ClInclude Include="..\..\..\src\netedit\GNEChange_CalibratorItem.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_Connection.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_Crossing.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_Edge.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_Junction.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_Lane.h" />
+    <ClInclude Include="..\..\..\src\netedit\GNEChange_POI.h" />
+    <ClInclude Include="..\..\..\src\netedit\GNEChange_RerouterInterval.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_Selection.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChange_TLS.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEChargingStation.h" />
@@ -267,6 +278,7 @@
     <ClInclude Include="..\..\..\src\netedit\GNEVaporizer.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEVariableSpeedSign.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEVariableSpeedSignDialog.h" />
+    <ClInclude Include="..\..\..\src\netedit\GNEVariableSpeedSignStep.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEViewNet.h" />
     <ClInclude Include="..\..\..\src\netedit\GNEViewParent.h" />
   </ItemGroup>
@@ -285,9 +297,6 @@
     </ProjectReference>
     <ProjectReference Include="..\zz_foreign_gl2ps\zz_foreign_gl2ps.vcxproj">
       <Project>{272d2367-13fe-45c2-84ad-8480861db43e}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\zz_foreign_nvwa\zz_foreign_nvwa.vcxproj">
-      <Project>{fc5b65e0-a0b1-40d7-8687-c2fc79e3da47}</Project>
     </ProjectReference>
     <ProjectReference Include="..\zz_foreign_polyfonts\zz_foreign_polyfonts.vcxproj">
       <Project>{306768a4-b73e-4b81-9ec0-b4836efe0504}</Project>

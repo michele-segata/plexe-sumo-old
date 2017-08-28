@@ -47,6 +47,8 @@
 class OutputDevice;
 class SUMOVehicle;
 class OptionsCont;
+class SUMOSAXAttributes;
+class MTRand;
 
 
 // ===========================================================================
@@ -86,6 +88,12 @@ public:
      */
     static void buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& into);
 
+    static MTRand* getEquipmentRNG() {
+        return &myEquipmentRNG;
+    }
+
+    /// @brief return the name for this type of device
+    virtual const std::string deviceName() const = 0;
 
 
 public:
@@ -121,13 +129,36 @@ public:
      * The device should use the openTag / closeTag methods of the OutputDevice
      *  for correct indentation.
      *
-     * @param[in] os The stream to write the information into
      * @exception IOError not yet implemented
      */
     virtual void generateOutput() const {
     }
 
+    /** @brief Saves the state of the device
+     *
+     * The default implementation writes a warning and does nothing.
+     * @param[in] out The OutputDevice to write the information into
+     */
+    virtual void saveState(OutputDevice& out) const;
 
+
+    /** @brief Loads the state of the device from the given description
+     *
+     * The default implementation does nothing.
+     * @param[in] attrs XML attributes describing the current state
+     */
+    virtual void loadState(const SUMOSAXAttributes& attrs);
+
+    /// @brief try to retrieve the given parameter from this device. Throw exception for unsupported key
+    virtual std::string getParameter(const std::string& key) const {
+        throw InvalidArgument("Parameter '" + key + "' is not supported for device of type '" + deviceName() + "'");
+    }
+
+    /// @brief try to set the given parameter for this device. Throw exception for unsupported key
+    virtual void setParameter(const std::string& key, const std::string& value) {
+        UNUSED_PARAMETER(value);
+        throw InvalidArgument("Setting parameter '" + key + "' is not supported for device of type '" + deviceName() + "'");
+    }
 
 protected:
     /// @name Helper methods for device assignment
@@ -151,17 +182,16 @@ protected:
     static bool equippedByDefaultAssignmentOptions(const OptionsCont& oc, const std::string& deviceName, SUMOVehicle& v);
     /// @}
 
-
-
 protected:
     /// @brief The vehicle that stores the device
     SUMOVehicle& myHolder;
 
-
-
 private:
     /// @brief vehicles which explicitly carry a device, sorted by device, first
     static std::map<std::string, std::set<std::string> > myExplicitIDs;
+
+    /// @brief A random number generator used to choose from vtype/route distributions and computing the speed factors
+    static MTRand myEquipmentRNG;
 
 
 private:

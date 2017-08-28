@@ -40,10 +40,6 @@
 #include "NBEdge.h"
 #include "NBAlgorithms_Ramps.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static members
@@ -58,9 +54,9 @@ const std::string NBRampsComputer::ADDED_ON_RAMP_EDGE("-AddedOnRampEdge");
 // ---------------------------------------------------------------------------
 void
 NBRampsComputer::computeRamps(NBNetBuilder& nb, OptionsCont& oc) {
-    SUMOReal minHighwaySpeed = oc.getFloat("ramps.min-highway-speed");
-    SUMOReal maxRampSpeed = oc.getFloat("ramps.max-ramp-speed");
-    SUMOReal rampLength = oc.getFloat("ramps.ramp-length");
+    double minHighwaySpeed = oc.getFloat("ramps.min-highway-speed");
+    double maxRampSpeed = oc.getFloat("ramps.max-ramp-speed");
+    double rampLength = oc.getFloat("ramps.ramp-length");
     bool dontSplit = oc.getBool("ramps.no-split");
     std::set<NBEdge*> incremented;
     // check whether on-off ramps shall be guessed
@@ -133,7 +129,7 @@ NBRampsComputer::computeRamps(NBNetBuilder& nb, OptionsCont& oc) {
 
 
 bool
-NBRampsComputer::mayNeedOnRamp(NBNode* cur, SUMOReal minHighwaySpeed, SUMOReal maxRampSpeed, const std::set<std::string>& noramps) {
+NBRampsComputer::mayNeedOnRamp(NBNode* cur, double minHighwaySpeed, double maxRampSpeed, const std::set<std::string>& noramps) {
     if (cur->getOutgoingEdges().size() != 1 || cur->getIncomingEdges().size() != 2) {
         return false;
     }
@@ -145,7 +141,7 @@ NBRampsComputer::mayNeedOnRamp(NBNode* cur, SUMOReal minHighwaySpeed, SUMOReal m
 
 
 bool
-NBRampsComputer::mayNeedOffRamp(NBNode* cur, SUMOReal minHighwaySpeed, SUMOReal maxRampSpeed, const std::set<std::string>& noramps) {
+NBRampsComputer::mayNeedOffRamp(NBNode* cur, double minHighwaySpeed, double maxRampSpeed, const std::set<std::string>& noramps) {
     if (cur->getIncomingEdges().size() != 1 || cur->getOutgoingEdges().size() != 2) {
         return false;
     }
@@ -157,7 +153,7 @@ NBRampsComputer::mayNeedOffRamp(NBNode* cur, SUMOReal minHighwaySpeed, SUMOReal 
 
 
 void
-NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDistrictCont& dc, SUMOReal rampLength, bool dontSplit) {
+NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDistrictCont& dc, double rampLength, bool dontSplit) {
     NBEdge* potHighway, *potRamp, *cont;
     getOnRampEdges(cur, &potHighway, &potRamp, &cont);
     // compute the number of lanes to append
@@ -168,7 +164,7 @@ NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDist
     NBEdge* curr = cont;
     std::set<NBEdge*> incremented;
     if (toAdd > 0 && find(incremented.begin(), incremented.end(), cont) == incremented.end()) {
-        SUMOReal currLength = 0;
+        double currLength = 0;
         while (curr != 0 && currLength + curr->getGeometry().length() - POSITION_EPS < rampLength) {
             if (find(incremented.begin(), incremented.end(), curr) == incremented.end()) {
                 curr->incLaneNo(toAdd);
@@ -179,6 +175,10 @@ NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDist
                 moveRampRight(curr, toAdd);
                 currLength += curr->getGeometry().length(); // !!! loaded length?
                 last = curr;
+                // mark acceleration lanes
+                for (int i = 0; i < curr->getNumLanes() - potHighway->getNumLanes(); ++i) {
+                    curr->setAcceleration(i, true);
+                }
             }
             NBNode* nextN = curr->getToNode();
             if (nextN->getOutgoingEdges().size() == 1) {
@@ -220,10 +220,19 @@ NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDist
             if (wasFirst) {
                 first = curr;
             }
+            // mark acceleration lanes
+            for (int i = 0; i < curr->getNumLanes() - potHighway->getNumLanes(); ++i) {
+                curr->setAcceleration(i, true);
+            }
         }
         if (curr == cont && dontSplit) {
             WRITE_WARNING("Could not build on-ramp for edge '"  + curr->getID() + "' due to option '--ramps.no-split'");
             return;
+        }
+    } else {
+        // mark acceleration lanes
+        for (int i = 0; i < firstLaneNumber - potHighway->getNumLanes(); ++i) {
+            cont->setAcceleration(i, true);
         }
     }
     // set connections from ramp/highway to added ramp
@@ -242,11 +251,12 @@ NBRampsComputer::buildOnRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDist
     p.pop_back();
     p.push_back(first->getLaneShape(0)[0]);
     potRamp->setGeometry(p);
+
 }
 
 
 void
-NBRampsComputer::buildOffRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDistrictCont& dc, SUMOReal rampLength, bool dontSplit) {
+NBRampsComputer::buildOffRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDistrictCont& dc, double rampLength, bool dontSplit) {
     NBEdge* potHighway, *potRamp, *prev;
     getOffRampEdges(cur, &potHighway, &potRamp, &prev);
     // compute the number of lanes to append
@@ -257,7 +267,7 @@ NBRampsComputer::buildOffRamp(NBNode* cur, NBNodeCont& nc, NBEdgeCont& ec, NBDis
     NBEdge* curr = prev;
     std::set<NBEdge*> incremented;
     if (toAdd > 0 && find(incremented.begin(), incremented.end(), prev) == incremented.end()) {
-        SUMOReal currLength = 0;
+        double currLength = 0;
         while (curr != 0 && currLength + curr->getGeometry().length() - POSITION_EPS < rampLength) {
             if (find(incremented.begin(), incremented.end(), curr) == incremented.end()) {
                 curr->incLaneNo(toAdd);
@@ -342,8 +352,8 @@ NBRampsComputer::moveRampRight(NBEdge* ramp, int addedLanes) {
     }
     try {
         PositionVector g = ramp->getGeometry();
-        const SUMOReal offset = (0.5 * addedLanes *
-                                 (ramp->getLaneWidth() == NBEdge::UNSPECIFIED_WIDTH ? SUMO_const_laneWidth : ramp->getLaneWidth()));
+        const double offset = (0.5 * addedLanes *
+                               (ramp->getLaneWidth() == NBEdge::UNSPECIFIED_WIDTH ? SUMO_const_laneWidth : ramp->getLaneWidth()));
         g.move2side(offset);
         ramp->setGeometry(g);
     } catch (InvalidArgument&) {
@@ -394,10 +404,7 @@ NBRampsComputer::getOnRampEdges(NBNode* n, NBEdge** potHighway, NBEdge** potRamp
     }
     */
     // heuristic: ramp comes from right
-    const std::vector<NBEdge*>& edges2 = n->getEdges();
-    std::vector<NBEdge*>::const_iterator i = std::find(edges2.begin(), edges2.end(), *other);
-    NBContHelper::nextCW(edges2, i);
-    if ((*i) == *potHighway) {
+    if (NBContHelper::relative_incoming_edge_sorter(*other)(*potRamp, *potHighway)) {
         std::swap(*potHighway, *potRamp);
     }
 }
@@ -427,12 +434,18 @@ NBRampsComputer::getOffRampEdges(NBNode* n, NBEdge** potHighway, NBEdge** potRam
     if ((*i) == *potRamp) {
         std::swap(*potHighway, *potRamp);
     }
+    // the following would be better but runs afoul of misleading angles when both edges
+    // have the same geometry start point but different references lanes are
+    // chosen for NBEdge::computeAngle()
+    //if (NBContHelper::relative_outgoing_edge_sorter(*other)(*potHighway, *potRamp)) {
+    //    std::swap(*potHighway, *potRamp);
+    //}
 }
 
 
 bool
 NBRampsComputer::fulfillsRampConstraints(
-    NBEdge* potHighway, NBEdge* potRamp, NBEdge* other, SUMOReal minHighwaySpeed, SUMOReal maxRampSpeed,
+    NBEdge* potHighway, NBEdge* potRamp, NBEdge* other, double minHighwaySpeed, double maxRampSpeed,
     const std::set<std::string>& noramps) {
     // check modes that are not appropriate for rampsdo not build ramps on rail edges
     if (hasWrongMode(potHighway) || hasWrongMode(potRamp) || hasWrongMode(other)) {
@@ -443,11 +456,11 @@ NBRampsComputer::fulfillsRampConstraints(
         return false;
     }
     // check whether a lane is missing
-    if (potHighway->getNumLanes() + potRamp->getNumLanes() <= other->getNumLanes()) {
+    if (potHighway->getNumLanes() + potRamp->getNumLanes() < other->getNumLanes()) {
         return false;
     }
     // is it really a highway?
-    SUMOReal maxSpeed = MAX3(potHighway->getSpeed(), other->getSpeed(), potRamp->getSpeed());
+    double maxSpeed = MAX3(potHighway->getSpeed(), other->getSpeed(), potRamp->getSpeed());
     if (maxSpeed < minHighwaySpeed) {
         return false;
     }
@@ -464,6 +477,16 @@ NBRampsComputer::fulfillsRampConstraints(
                 other->isTurningDirectionAt(potRamp)) {
             return false;
         }
+    }
+    // are the angles between highway and other / ramp and other more or less straight?
+    const NBNode* node = potHighway->getToNode() == potRamp->getToNode() ? potHighway->getToNode() : potHighway->getFromNode();
+    double angle = fabs(NBHelpers::relAngle(potHighway->getAngleAtNode(node), other->getAngleAtNode(node)));
+    if (angle >= 60) {
+        return false;
+    }
+    angle = fabs(NBHelpers::relAngle(potRamp->getAngleAtNode(node), other->getAngleAtNode(node)));
+    if (angle >= 60) {
+        return false;
     }
     /*
     if (potHighway->getSpeed() < minHighwaySpeed || other->getSpeed() < minHighwaySpeed) {

@@ -44,26 +44,22 @@
 #include <utils/common/TplConvert.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/xml/SUMOVehicleParserHelper.h>
-#include <utils/common/RandomDistributor.h>
+#include <utils/distribution/RandomDistributor.h>
 #include <utils/vehicle/SUMOVehicleParameter.h>
 #include "MELoop.h"
 #include "MESegment.h"
 #include "MEVehicle.h"
 #include "METriggeredCalibrator.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
 METriggeredCalibrator::METriggeredCalibrator(const std::string& id,
-        const MSEdge* const edge, const SUMOReal pos,
+        const MSEdge* const edge, const double pos,
         const std::string& aXMLFilename,
         const std::string& outputFilename,
-        const SUMOTime freq, const SUMOReal length,
+        const SUMOTime freq, const double length,
         const MSRouteProbe* probe)
     : MSCalibrator(id, edge, pos, aXMLFilename, outputFilename, freq, length, probe, false),
       mySegment(MSGlobals::gMesoNet->getSegmentForEdge(*edge, pos)) {
@@ -73,10 +69,6 @@ METriggeredCalibrator::METriggeredCalibrator(const std::string& id,
 
 
 METriggeredCalibrator::~METriggeredCalibrator() {
-    if (myCurrentStateInterval != myIntervals.end()) {
-        writeXMLOutput();
-        myCurrentStateInterval = myIntervals.end();
-    }
     mySegment->removeDetector(&myEdgeMeanData);
 }
 
@@ -108,7 +100,7 @@ METriggeredCalibrator::execute(SUMOTime currentTime) {
             // if not, reset adaptation values
             mySegment->getEdge().setMaxSpeed(myDefaultSpeed);
             MESegment* first = MSGlobals::gMesoNet->getSegmentForEdge(mySegment->getEdge());
-            const SUMOReal jamThresh = OptionsCont::getOptions().getFloat("meso-jam-threshold");
+            const double jamThresh = OptionsCont::getOptions().getFloat("meso-jam-threshold");
             while (first != 0) {
                 first->setSpeed(myDefaultSpeed, currentTime, jamThresh);
                 first = first->getNextSegment();
@@ -155,12 +147,12 @@ METriggeredCalibrator::execute(SUMOTime currentTime) {
         // flow calibration starts here ...
         // compute the number of vehicles that should have passed the calibrator within the time
         // rom begin of the interval
-        const SUMOReal totalHourFraction = STEPS2TIME(myCurrentStateInterval->end - myCurrentStateInterval->begin) / (SUMOReal) 3600.;
+        const double totalHourFraction = STEPS2TIME(myCurrentStateInterval->end - myCurrentStateInterval->begin) / (double) 3600.;
         const int totalWishedNum = (int)std::floor(myCurrentStateInterval->q * totalHourFraction + 0.5); // round to closest int
         int adaptedNum = passed() + myClearedInJam;
         if (!hadInvalidJam) {
             // only add vehicles if we do not have an invalid upstream jam to prevent spill-back
-            const SUMOReal hourFraction = STEPS2TIME(currentTime - myCurrentStateInterval->begin + DELTA_T) / (SUMOReal) 3600.;
+            const double hourFraction = STEPS2TIME(currentTime - myCurrentStateInterval->begin + DELTA_T) / (double) 3600.;
             const int wishedNum = (int)std::floor(myCurrentStateInterval->q * hourFraction + 0.5); // round to closest int
             // only the difference between inflow and aspiredFlow should be added, thus
             // we should not count vehicles vaporized from a jam here

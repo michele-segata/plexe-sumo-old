@@ -210,7 +210,7 @@ class Builder(object):
             batchFile = "build.bat"
             with open(batchFile, 'w') as f:
                 for opts in sorted(randomTripsCalls):
-                    f.write("python %s %s\n" %
+                    f.write("python \"%s\" %s\n" %
                             (randomTripsPath, " ".join(map(quoted_str, opts))))
 
     def parseTripOpts(self, vehicle, options):
@@ -318,7 +318,7 @@ class OSMImporterWebSocket(WebSocket):
 
     def report(self, message):
         print(message)
-        self.sendMessage(unicode("report " + message))
+        self.sendMessage(u"report " + message)
         # number of remaining steps
         self.steps -= 1
 
@@ -333,7 +333,7 @@ class OSMImporterWebSocket(WebSocket):
         builder.report = self.report
 
         self.steps = len(data["vehicles"]) + 4
-        self.sendMessage(unicode("steps " + str(self.steps)))
+        self.sendMessage(u"steps %s" % self.steps)
 
         try:
             builder.build()
@@ -346,7 +346,7 @@ class OSMImporterWebSocket(WebSocket):
                 data = builder.createZip()
                 builder.finalize()
 
-                self.sendMessage(unicode("zip " + data))
+                self.sendMessage(u"zip " + data)
         except:
             print(traceback.format_exc())
             # reset 'Generate Scenario' button

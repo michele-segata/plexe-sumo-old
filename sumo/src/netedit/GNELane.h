@@ -69,6 +69,18 @@ public:
     /// @brief Destructor
     ~GNELane();
 
+    /// @brief Returns underlying parent edge
+    GNEEdge& getParentEdge();
+
+    /// @brief returns a vector with the incoming GNEConnections of this lane
+    std::vector<GNEConnection*> getGNEIncomingConnections();
+
+    /// @brief returns a vector with the outgoing GNEConnections of this lane
+    std::vector<GNEConnection*> getGNEOutcomingConnections();
+
+    // update IDs of incoming connections of this lane
+    void updateConnectionIDs();
+
     /// @name inherited from GUIGlObject
     /// @{
     // @brief Returns the name of the parent object (if any)
@@ -96,15 +108,6 @@ public:
     /// @brief multiplexes message to two targets
     long onDefault(FXObject*, FXSelector, void*);
 
-    /// @brief Returns underlying parent edge
-    GNEEdge& getParentEdge();
-
-    /// @brief returns a vector with the incoming GNEConnections of this lane
-    std::vector<GNEConnection*> getGNEIncomingConnections();
-
-    /// @brief returns a vector with the outgoing GNEConnections of this lane
-    std::vector<GNEConnection*> getGNEOutcomingConnections();
-
     /**@brief Returns the boundary to which the view shall be centered in order to show the object
      *
      * @return The boundary the object is within
@@ -123,10 +126,10 @@ public:
     const PositionVector& getShape() const;
 
     /// @brief returns the vector with the shape rotations
-    const std::vector<SUMOReal>& getShapeRotations() const;
+    const std::vector<double>& getShapeRotations() const;
 
     /// @brief returns the vector with the shape lengths
-    const std::vector<SUMOReal>& getShapeLengths() const;
+    const std::vector<double>& getShapeLengths() const;
 
     /// @brief returns the boundry (including lanes)
     Boundary getBoundary() const;
@@ -139,7 +142,7 @@ public:
     int getIndex() const;
 
     /// @nrief returns the current speed of lane
-    SUMOReal getSpeed() const;
+    double getSpeed() const;
 
     /* @brief method for setting the index of the lane
      * @param[in] index The new index of lane
@@ -148,24 +151,24 @@ public:
 
     /// @brief returns the parameteric length of the lane
     /// @note is the same as their Edge parent
-    SUMOReal getLaneParametricLenght() const;
+    double getLaneParametricLength() const;
 
     /// @brief returns the length of the lane's shape
-    SUMOReal getLaneShapeLenght() const;
+    double getLaneShapeLength() const;
 
-    /* @brief returns the relative position of an element in the lane's shape depending of the parametric lenght
-     *        Examples: Lane with Parametric lenght = 100 and Shape lenght = 250. Position 50 returns 125, Position 80 returns 200
-     * @param[in] position to calculate their relative position in the lane's shape [0 < position < LaneParametricLenght()]
+    /* @brief returns the relative position of an element in the lane's shape depending of the parametric length
+     *        Examples: Lane with Parametric length = 100 and Shape length = 250. Position 50 returns 125, Position 80 returns 200
+     * @param[in] position to calculate their relative position in the lane's shape [0 < position < LaneParametricLength()]
      * @return the relative position in the lane's shape
      */
-    SUMOReal getPositionRelativeToParametricLenght(SUMOReal position) const;
+    double getPositionRelativeToParametricLength(double position) const;
 
-    /* @brief returns the relative position of an element in the lane's shape depending of the shape's lenght
-     *        Examples: Lane with Parametric lenght = 100 and Shape lenght = 250. Position = 100 returns 40, Position 220 returns 88
-     * @param[in] position to calculate their relative position in the lane's shape [0 < position < LaneShapeLenght]
+    /* @brief returns the relative position of an element in the lane's shape depending of the shape's length
+     *        Examples: Lane with Parametric length = 100 and Shape length = 250. Position = 100 returns 40, Position 220 returns 88
+     * @param[in] position to calculate their relative position in the lane's shape [0 < position < LaneShapeLength]
      * @return the relative position in the lane's shape
      */
-    SUMOReal getPositionRelativeToShapeLenght(SUMOReal position) const;
+    double getPositionRelativeToShapeLength(double position) const;
 
     /// @brief add additional child to this lane
     void addAdditionalChild(GNEAdditional* additional);
@@ -220,19 +223,19 @@ protected:
     /// @name computed only once (for performance) in updateGeometry()
     /// @{
     /// @brief The rotations of the shape parts
-    std::vector<SUMOReal> myShapeRotations;
+    std::vector<double> myShapeRotations;
 
     /// @brief The lengths of the shape parts
-    std::vector<SUMOReal> myShapeLengths;
+    std::vector<double> myShapeLengths;
 
     /// @brief Position of textures of restricted lanes
     std::vector<Position> myLaneRestrictedTexturePositions;
 
     /// @brief Rotations of textures of restricted lanes
-    std::vector<SUMOReal> myLaneRestrictedTextureRotations;
+    std::vector<double> myLaneRestrictedTextureRotations;
     /// @}
 
-    /// @brief list with the additonals vinculated with this lane
+    /// @brief list with the additionals vinculated with this lane
     AdditionalVector myAdditionals;
 
     /// @brief optional special color
@@ -255,13 +258,13 @@ private:
     GNELane& operator=(const GNELane&);
 
     /// @brief draw lane markings
-    void drawMarkings(const bool& selectedEdge, SUMOReal scale) const;
+    void drawMarkings(const bool& selectedEdge, double scale) const;
 
     /// @brief draw link Number
-    void drawLinkNo() const;
+    void drawLinkNo(const GUIVisualizationSettings& s) const;
 
     /// @brief draw TLS Link Number
-    void drawTLSLinkNo() const;
+    void drawTLSLinkNo(const GUIVisualizationSettings& s) const;
 
     /// @brief draw link rules
     void drawLinkRules() const;
@@ -273,7 +276,7 @@ private:
     void drawLane2LaneConnections() const;
 
     /// @brief return value for lane coloring according to the given scheme
-    SUMOReal getColorValue(int activeScheme) const;
+    double getColorValue(int activeScheme) const;
 
     /// @brief sets the color according to the current scheme index and some lane function
     bool setFunctionalColor(int activeScheme) const;
@@ -289,7 +292,7 @@ private:
 
     /// @brief draw crossties for railroads
     /// @todo: XXX This duplicates the code of GUILane::drawCrossties and needs to be
-    void drawCrossties(SUMOReal length, SUMOReal spacing, SUMOReal halfWidth) const;
+    void drawCrossties(double length, double spacing, double halfWidth) const;
 
     /// @brief direction indicators for lanes
     void drawDirectionIndicators() const;

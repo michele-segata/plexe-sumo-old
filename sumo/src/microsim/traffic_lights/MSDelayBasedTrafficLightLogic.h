@@ -46,6 +46,10 @@ class NLDetectorBuilder;
 /**
  * @class MSDelayBasedTrafficLightLogic
  * @brief An actuated traffic light logic based on time delay of approaching vehicles
+ * @todo Validate against the original algorithm's details.
+ * @note The current phase is not prolonged if the passing time of the next approaching vehicle
+ * is larger than the remaining greentime (in contrast to the original algorithm)
+ * @note The maximal green time can be exceeded if no vehicles are present on other approaches;
  */
 class MSDelayBasedTrafficLightLogic : public MSSimpleTrafficLightLogic {
 public:
@@ -98,7 +102,6 @@ protected:
     /// @name "actuated" algorithm methods
     /// @{
 
-
     /**
      * @brief Checks for approaching vehicles on the lanes associated with green signals
      *        and returns the minimal time to keep the green phase going.
@@ -111,9 +114,12 @@ protected:
     /**
      * @brief The returned, proposed prolongation for the green phase is oriented on the
      *        largest estimated passing time among the vehicles with waiting time.
+     * @param actDuration Duration of the current phase
+     * @param maxDuration Maximal duration of the current phase
+     * @param[in/out] othersEmpty Whether there are vehicles on another approach, which is not part of a green signal group for the current phase
      * @return The proposed prolongation time for the current phase
      */
-    SUMOTime proposeProlongation();
+    SUMOTime proposeProlongation(const SUMOTime actDuration, const SUMOTime maxDuration, bool& othersEmpty);
 
 protected:
     /// A map from lanes to the corresponding lane detectors
@@ -121,6 +127,14 @@ protected:
 
     /// Whether the detectors shall be shown in the GUI
     bool myShowDetectors;
+
+    /// Range of the connected detector, which provides the information on approaching vehicles
+    double myDetectionRange;
+
+    /// If a vehicle's timeloss is below myTimeLossThreshold, this is counted as insignificant,
+    /// since this may stem from dawdling, or driving only slightly slower than the maximal velocity on the lane.
+    // (Idea: this might be adapted to the detector-length and the vehicle's maximal speed)
+    double myTimeLossThreshold;
 
     /// The output file for generated detectors
     std::string myFile;

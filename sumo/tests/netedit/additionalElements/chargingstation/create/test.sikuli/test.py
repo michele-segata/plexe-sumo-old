@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+"""
+@file    test.py
+@author  Pablo Alvarez Lopez
+@date    2016-11-25
+@version $Id$
+
+python script used by sikulix for testing netedit
+
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
+Copyright (C) 2009-2017 DLR/TS, Germany
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+"""
 # import common functions for netedit tests
 import os
 import sys
@@ -11,56 +29,83 @@ import neteditTestFunctions as netedit
 # Open netedit
 neteditProcess, match = netedit.setupAndStart(neteditTestRoot, False)
 
-# Change to create additional
+# go to additional mode
 netedit.additionalMode()
 
-# obtain match for comboboxAdditional
-comboboxAdditional = netedit.getComboBoxAdditional(match)
-
 # select chargingStation
-netedit.changeAdditional(comboboxAdditional, 2)
+netedit.changeAdditional("chargingStation")
+
+# set invalid charging power
+netedit.modifyAdditionalDefaultValue(2, "-200")
+
+# try to create chargingStation in mode "reference left"
+netedit.leftClick(match, 250, 250)
+
+# set invalid charging
+netedit.modifyAdditionalDefaultValue(2, "12000")
 
 # create chargingStation in mode "reference left"
 netedit.leftClick(match, 250, 250)
 
 # change reference to right
-netedit.modifyStoppingPlaceReference(comboboxAdditional, 7, 1)
+netedit.modifyAdditionalDefaultValue(7, "reference right")
+
+# set invalid efficiency
+netedit.modifyAdditionalDefaultValue(3, "2")
+
+# try create chargingStation in mode "reference right"
+netedit.leftClick(match, 240, 250)
+
+# set valid efficiency
+netedit.modifyAdditionalDefaultValue(3, "0.3")
 
 # create chargingStation in mode "reference right"
 netedit.leftClick(match, 240, 250)
 
 # change reference to center
-netedit.modifyStoppingPlaceReference(comboboxAdditional, 7, 2)
+netedit.modifyAdditionalDefaultValue(7, "reference center")
+
+# Change change in transit
+netedit.modifyAdditionalDefaultBoolValue(4)
 
 # create chargingStation in mode "reference center"
 netedit.leftClick(match, 425, 250)
 
 # return to mode "reference left"
-netedit.modifyStoppingPlaceReference(comboboxAdditional, 7, 0)
+netedit.modifyAdditionalDefaultValue(7, "reference left")
 
 # Change length
-netedit.modifyStoppingPlaceLength(comboboxAdditional, 9, "30")
+netedit.modifyAdditionalDefaultValue(9, "30")
 
-# try to create a chargingStation in mode "reference left" (Warning)
+# try to create a chargingStation in mode "reference left" (error)
 netedit.leftClick(match, 500, 250)
 
 # change reference to right
-netedit.modifyStoppingPlaceReference(comboboxAdditional, 7, 1)
+netedit.modifyAdditionalDefaultValue(7, "reference right")
 
 # try chargingStation in mode "reference right" (Warning)
 netedit.leftClick(match, 110, 250)
 
 # enable force position
-netedit.modifyStoppingPlaceForcePosition(comboboxAdditional, 10)
+netedit.modifyAdditionalDefaultBoolValue(10)
 
 # change reference to "reference left"
-netedit.modifyStoppingPlaceReference(comboboxAdditional, 7, 0)
+netedit.modifyAdditionalDefaultValue(7, "reference left")
+
+# set invalid charge delay
+netedit.modifyAdditionalDefaultValue(5, "-5")
+
+# try to create a chargingStation in mode "reference left" forcing poisition
+netedit.leftClick(match, 500, 250)
+
+# valid charge delay
+netedit.modifyAdditionalDefaultValue(5, "7")
 
 # create a chargingStation in mode "reference left" forcing poisition
 netedit.leftClick(match, 500, 250)
 
 # change reference to "reference right"
-netedit.modifyStoppingPlaceReference(comboboxAdditional, 7, 1)
+netedit.modifyAdditionalDefaultValue(7, "reference right")
 
 # create a chargingStation in mode "reference right" forcing position
 netedit.leftClick(match, 110, 250)
@@ -76,4 +121,4 @@ netedit.saveAdditionals()
 netedit.saveNetwork()
 
 # quit netedit
-netedit.quit(neteditProcess, False, False)
+netedit.quit(neteditProcess)

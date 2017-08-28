@@ -41,10 +41,6 @@
 #include "NBNode.h"
 #include "NBAlgorithms.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -73,13 +69,13 @@ NBTurningDirectionsComputer::computeTurnDirectionsForNode(NBNode* node, bool war
         for (std::vector<NBEdge*>::const_iterator k = incoming.begin(); k != incoming.end(); ++k) {
             NBEdge* e = *k;
             // @todo: check whether NBHelpers::relAngle is properly defined and whether it should really be used, here
-            const SUMOReal signedAngle = NBHelpers::normRelAngle(e->getAngleAtNode(node), outedge->getAngleAtNode(node));
+            const double signedAngle = NBHelpers::normRelAngle(e->getAngleAtNode(node), outedge->getAngleAtNode(node));
             if (signedAngle > 0 && signedAngle < 177 && e->getGeometry().back().distanceTo2D(outedge->getGeometry().front()) < POSITION_EPS) {
                 // backwards curving edges can only be turnaround when there are
                 // non-default endpoints
                 continue;
             }
-            SUMOReal angle = fabs(signedAngle);
+            double angle = fabs(signedAngle);
             // std::cout << "incoming=" << e->getID() << " outgoing=" << outedge->getID() << " relAngle=" << NBHelpers::relAngle(e->getAngleAtNode(node), outedge->getAngleAtNode(node)) << "\n";
             if (e->getFromNode() == outedge->getToNode() && angle > 120) {
                 // they connect the same nodes; should be the turnaround direction
@@ -162,7 +158,7 @@ NBNodeTypeComputer::computeNodeTypes(NBNodeCont& nc) {
     for (std::map<std::string, NBNode*>::const_iterator i = nc.begin(); i != nc.end(); ++i) {
         NBNode* n = (*i).second;
         // the type may already be set from the data
-        if (n->myType != NODETYPE_UNKNOWN) {
+        if (n->myType != NODETYPE_UNKNOWN && n->myType != NODETYPE_DEAD_END) {
             continue;
         }
         // check whether the node is a waterway node. Set to unregulated by default
@@ -173,7 +169,7 @@ NBNodeTypeComputer::computeNodeTypes(NBNodeCont& nc) {
                 break;
             }
         }
-        if (waterway && n->myType == NODETYPE_UNKNOWN) {
+        if (waterway && (n->myType == NODETYPE_UNKNOWN || n->myType == NODETYPE_DEAD_END)) {
             n->myType = NODETYPE_NOJUNCTION;
             continue;
         }
@@ -198,11 +194,11 @@ NBNodeTypeComputer::computeNodeTypes(NBNodeCont& nc) {
                 }
                 // @todo check against a legal document
                 // @todo figure out when NODETYPE_PRIORITY_STOP is appropriate
-                const SUMOReal s1 = (*i)->getSpeed() * (SUMOReal) 3.6;
-                const SUMOReal s2 = (*j)->getSpeed() * (SUMOReal) 3.6;
+                const double s1 = (*i)->getSpeed() * (double) 3.6;
+                const double s2 = (*j)->getSpeed() * (double) 3.6;
                 const int p1 = (*i)->getPriority();
                 const int p2 = (*j)->getPriority();
-                if (fabs(s1 - s2) > (SUMOReal) 9.5 || MAX2(s1, s2) >= (SUMOReal) 49. || p1 != p2) {
+                if (fabs(s1 - s2) > (double) 9.5 || MAX2(s1, s2) >= (double) 49. || p1 != p2) {
                     type = NODETYPE_PRIORITY;
                     break;
                 }
@@ -213,6 +209,55 @@ NBNodeTypeComputer::computeNodeTypes(NBNodeCont& nc) {
     }
 }
 
+
+void
+NBNodeTypeComputer::computeSingleNodeType(NBNode* node) {
+    // the type may already be set from the data
+    if (node->myType != NODETYPE_UNKNOWN && node->myType != NODETYPE_DEAD_END) {
+    }
+    // check whether the node is a waterway node. Set to unregulated by default
+    bool waterway = true;
+    for (EdgeVector::const_iterator i = node->getEdges().begin(); i != node->getEdges().end(); ++i) {
+        if (!isWaterway((*i)->getPermissions())) {
+            waterway = false;
+            break;
+        }
+    }
+    if (waterway && (node->myType == NODETYPE_UNKNOWN || node->myType == NODETYPE_DEAD_END)) {
+        node->myType = NODETYPE_NOJUNCTION;
+    }
+
+    // check whether the junction is not a real junction
+    if (node->myIncomingEdges.size() == 1) {
+        node->myType = NODETYPE_PRIORITY;
+    }
+    // @todo "isSimpleContinuation" should be revalidated
+    if (node->isSimpleContinuation()) {
+        node->myType = NODETYPE_PRIORITY;
+    }
+    // determine the type
+    SumoXMLNodeType type = NODETYPE_RIGHT_BEFORE_LEFT;
+    for (EdgeVector::const_iterator i = node->myIncomingEdges.begin(); i != node->myIncomingEdges.end(); i++) {
+        for (EdgeVector::const_iterator j = i + 1; j != node->myIncomingEdges.end(); j++) {
+            // @todo "getOppositeIncoming" should probably be refactored into something the edge knows
+            if (node->getOppositeIncoming(*j) == *i && node->myIncomingEdges.size() > 2) {
+                continue;
+            }
+            // @todo check against a legal document
+            // @todo figure out when NODETYPE_PRIORITY_STOP is appropriate
+            const double s1 = (*i)->getSpeed() * (double) 3.6;
+            const double s2 = (*j)->getSpeed() * (double) 3.6;
+            const int p1 = (*i)->getPriority();
+            const int p2 = (*j)->getPriority();
+            if (fabs(s1 - s2) > (double) 9.5 || MAX2(s1, s2) >= (double) 49. || p1 != p2) {
+                type = NODETYPE_PRIORITY;
+                break;
+            }
+        }
+    }
+    // save type
+    node->myType = type;
+}
 
 // ---------------------------------------------------------------------------
 // NBEdgePriorityComputer
@@ -233,6 +278,22 @@ NBEdgePriorityComputer::computeEdgePriorities(NBNodeCont& nc) {
         if (n->myType != NODETYPE_RIGHT_BEFORE_LEFT) {
             setPriorityJunctionPriorities(*n);
         }
+    }
+}
+
+
+void
+NBEdgePriorityComputer::computeEdgePrioritiesSingleNode(NBNode* node) {
+    // preset all junction's edge priorities to zero
+    for (EdgeVector::iterator j = node->myAllEdges.begin(); j != node->myAllEdges.end(); ++j) {
+        (*j)->setJunctionPriority(node, NBEdge::MINOR_ROAD);
+    }
+    // check if the junction is not a real junction
+    if (node->myIncomingEdges.size() == 1 && node->myOutgoingEdges.size() == 1) {
+    }
+    // compute the priorities on junction when needed
+    if (node->getType() != NODETYPE_RIGHT_BEFORE_LEFT) {
+        setPriorityJunctionPriorities(*node);
     }
 }
 
@@ -316,24 +377,24 @@ NBEdgePriorityComputer::setPriorityJunctionPriorities(NBNode& n) {
     //  has the best continuation...
     // This means, when several incoming roads have the same priority,
     //  we want a (any) straight connection to be more priorised than a turning
-    SUMOReal bestAngle = 0;
+    double bestAngle = 0;
     NBEdge* bestFirst = 0;
     NBEdge* bestSecond = 0;
     bool hadBest = false;
     for (i = bestIncoming.begin(); i != bestIncoming.end(); ++i) {
         EdgeVector::iterator j;
         NBEdge* t1 = *i;
-        SUMOReal angle1 = t1->getAngleAtNode(&n) + 180;
+        double angle1 = t1->getAngleAtNode(&n) + 180;
         if (angle1 >= 360) {
             angle1 -= 360;
         }
         for (j = i + 1; j != bestIncoming.end(); ++j) {
             NBEdge* t2 = *j;
-            SUMOReal angle2 = t2->getAngleAtNode(&n) + 180;
+            double angle2 = t2->getAngleAtNode(&n) + 180;
             if (angle2 >= 360) {
                 angle2 -= 360;
             }
-            SUMOReal angle = GeomHelper::getMinAngleDiff(angle1, angle2);
+            double angle = GeomHelper::getMinAngleDiff(angle1, angle2);
             if (!hadBest || angle > bestAngle) {
                 bestAngle = angle;
                 bestFirst = *i;

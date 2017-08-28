@@ -38,10 +38,6 @@
 #include "SUMOXMLDefinitions.h"
 #include <utils/common/StringBijection.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // definitions
@@ -162,17 +158,20 @@ StringBijection<int>::Entry SUMOXMLDefinitions::tags[] = {
     { "scalingScheme",              SUMO_TAG_SCALINGSCHEME },
     { "entry",                      SUMO_TAG_ENTRY },
     { "vehicleTransfer",            SUMO_TAG_VEHICLETRANSFER },
+    { "device",                     SUMO_TAG_DEVICE },
     // Cars
     { "carFollowing-IDM",           SUMO_TAG_CF_IDM },
     { "carFollowing-IDMM",          SUMO_TAG_CF_IDMM },
     { "carFollowing-Krauss",        SUMO_TAG_CF_KRAUSS },
     { "carFollowing-KraussPS",      SUMO_TAG_CF_KRAUSS_PLUS_SLOPE },
     { "carFollowing-KraussOrig1",   SUMO_TAG_CF_KRAUSS_ORIG1 },
+    { "carFollowing-KraussX",       SUMO_TAG_CF_KRAUSSX },
     { "carFollowing-SmartSK",       SUMO_TAG_CF_SMART_SK },
     { "carFollowing-Daniel1",       SUMO_TAG_CF_DANIEL1 },
     { "carFollowing-PWagner2009",   SUMO_TAG_CF_PWAGNER2009 },
     { "carFollowing-BKerner",       SUMO_TAG_CF_BKERNER },
     { "carFollowing-Wiedemann",     SUMO_TAG_CF_WIEDEMANN },
+    { "carFollowing-Rail",          SUMO_TAG_CF_RAIL },
     { "carFollowing-CC",            SUMO_TAG_CF_CC },
     // Person
     { "person",                     SUMO_TAG_PERSON },
@@ -271,6 +270,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "minGapLat",              SUMO_ATTR_MINGAP_LAT },
     { "accel",                  SUMO_ATTR_ACCEL },
     { "decel",                  SUMO_ATTR_DECEL },
+    { "emergencyDecel",         SUMO_ATTR_EMERGENCYDECEL },
+    { "apparentDecel",          SUMO_ATTR_APPARENTDECEL },
     { "vClass",                 SUMO_ATTR_VCLASS },
     { "repno",                  SUMO_ATTR_REPNUMBER },
     { "speedFactor",            SUMO_ATTR_SPEEDFACTOR },
@@ -285,6 +286,36 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "efficiency",             SUMO_ATTR_EFFICIENCY },
     { "chargeInTransit",        SUMO_ATTR_CHARGEINTRANSIT },
     { "chargeDelay",            SUMO_ATTR_CHARGEDELAY},
+    // MSDevice_Battery
+    { "actualBatteryCapacity",  SUMO_ATTR_ACTUALBATTERYCAPACITY },
+    { "maximumBatteryCapacity", SUMO_ATTR_MAXIMUMBATTERYCAPACITY },
+    { "maximumPower",           SUMO_ATTR_MAXIMUMPOWER },
+    { "vehicleMass",            SUMO_ATTR_VEHICLEMASS },
+    { "frontSurfaceArea",       SUMO_ATTR_FRONTSURFACEAREA },
+    { "airDragCoefficient",     SUMO_ATTR_AIRDRAGCOEFFICIENT },
+    { "internalMomentOfInertia", SUMO_ATTR_INTERNALMOMENTOFINERTIA },
+    { "radialDragCoefficient",  SUMO_ATTR_RADIALDRAGCOEFFICIENT },
+    { "rollDragCoefficient",    SUMO_ATTR_ROLLDRAGCOEFFICIENT },
+    { "constantPowerIntake",    SUMO_ATTR_CONSTANTPOWERINTAKE },
+    { "propulsionEfficiency",   SUMO_ATTR_PROPULSIONEFFICIENCY },
+    { "recuperationEfficiency", SUMO_ATTR_RECUPERATIONEFFICIENCY },
+    { "stoppingTreshold",       SUMO_ATTR_STOPPINGTRESHOLD },
+    // MSBatteryExport
+    { "energyConsumed",         SUMO_ATTR_ENERGYCONSUMED },
+    { "chargingStationId",      SUMO_ATTR_CHARGINGSTATIONID },
+    { "energyCharged",          SUMO_ATTR_ENERGYCHARGED },
+    { "energyChargedInTransit", SUMO_ATTR_ENERGYCHARGEDINTRANSIT },
+    { "energyChargedStopped",   SUMO_ATTR_ENERGYCHARGEDSTOPPED },
+    { "posOnLane",              SUMO_ATTR_POSONLANE },
+    { "timeStopped",            SUMO_ATTR_TIMESTOPPED },
+    // ChargingStation output
+    { "chargingStatus",         SUMO_ATTR_CHARGING_STATUS },
+    { "totalEnergyCharged",     SUMO_ATTR_TOTALENERGYCHARGED },
+    { "chargingSteps",          SUMO_ATTR_CHARGINGSTEPS },
+    { "totalEnergyChargedIntoVehicle",  SUMO_ATTR_TOTALENERGYCHARGED_VEHICLE },
+    { "chargingBegin",          SUMO_ATTR_CHARGINGBEGIN },
+    { "chargingEnd",            SUMO_ATTR_CHARGINGEND },
+    { "partialCharge",          SUMO_ATTR_PARTIALCHARGE },
 
     { "sigma",                  SUMO_ATTR_SIGMA },
     { "tau",                    SUMO_ATTR_TAU },
@@ -294,6 +325,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "tmp4",                   SUMO_ATTR_TMP4 },
     { "tmp5",                   SUMO_ATTR_TMP5 },
 
+    { "trainType",               SUMO_ATTR_TRAIN_TYPE },
+
     { "lcStrategic",            SUMO_ATTR_LCA_STRATEGIC_PARAM },
     { "lcCooperative",          SUMO_ATTR_LCA_COOPERATIVE_PARAM },
     { "lcSpeedGain",            SUMO_ATTR_LCA_SPEEDGAIN_PARAM },
@@ -301,6 +334,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "lcSublane",              SUMO_ATTR_LCA_SUBLANE_PARAM },
     { "lcPushy",                SUMO_ATTR_LCA_PUSHY },
     { "lcAssertive",            SUMO_ATTR_LCA_ASSERTIVE },
+    { "lcExperimental1",        SUMO_ATTR_LCA_EXPERIMENTAL1 },
 
     { "last",                   SUMO_ATTR_LAST },
     { "cost",                   SUMO_ATTR_COST },
@@ -468,6 +502,7 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     { "version",                SUMO_ATTR_VERSION },
     { "junctionCornerDetail",   SUMO_ATTR_CORNERDETAIL },
     { "junctionLinkDetail",     SUMO_ATTR_LINKDETAIL },
+    { "rectangularLaneCut",     SUMO_ATTR_RECTANGULAR_LANE_CUT },
     { "lefthand",               SUMO_ATTR_LEFTHAND },
 
     { "actorConfig",            SUMO_ATTR_ACTORCONFIG },
@@ -518,8 +553,8 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
 
     // netEdit
     { "modificationStatusNotForPrinting",   GNE_ATTR_MODIFICATION_STATUS },
-    { "shapeStartNotForPrinting",           GNE_ATTR_SHAPE_START },
-    { "shapeEndNotForPrinting",             GNE_ATTR_SHAPE_END },
+    { "shapeStart",                         GNE_ATTR_SHAPE_START },
+    { "shapeEnd",                           GNE_ATTR_SHAPE_END },
     { "blockMovement",                      GNE_ATTR_BLOCK_MOVEMENT },
     { "parentOfAdditional",                 GNE_ATTR_PARENT },
 
@@ -532,6 +567,9 @@ StringBijection<int>::Entry SUMOXMLDefinitions::attrs[] = {
     // Other
     { "",                       SUMO_ATTR_NOTHING } //< must be the last one
 };
+
+
+const std::string SUMO_PARAM_ORIGID("origId");
 
 
 StringBijection<SumoXMLNodeType>::Entry SUMOXMLDefinitions::sumoNodeTypeValues[] = {
@@ -603,11 +641,11 @@ StringBijection<LinkDirection>::Entry SUMOXMLDefinitions::linkDirectionValues[] 
 };
 
 
-StringBijection<TrafficLightType>::Entry SUMOXMLDefinitions::trafficLightTypesVales[] = {
+StringBijection<TrafficLightType>::Entry SUMOXMLDefinitions::trafficLightTypesValues[] = {
     { "static",         TLTYPE_STATIC },
     { "rail",           TLTYPE_RAIL },
     { "actuated",       TLTYPE_ACTUATED },
-    { "delayBased",     TLTYPE_DELAYBASED },
+    { "delay_based",    TLTYPE_DELAYBASED },
     { "sotl_phase",     TLTYPE_SOTL_PHASE },
     { "sotl_platoon",   TLTYPE_SOTL_PLATOON },
     { "sotl_request",   TLTYPE_SOTL_REQUEST },
@@ -632,10 +670,12 @@ StringBijection<SumoXMLTag>::Entry SUMOXMLDefinitions::carFollowModelValues[] = 
     { "Krauss",      SUMO_TAG_CF_KRAUSS },
     { "KraussPS",    SUMO_TAG_CF_KRAUSS_PLUS_SLOPE },
     { "KraussOrig1", SUMO_TAG_CF_KRAUSS_ORIG1 },
+    { "KraussX",     SUMO_TAG_CF_KRAUSSX }, // experimental extensions to the Krauss model
     { "SmartSK",     SUMO_TAG_CF_SMART_SK },
     { "Daniel1",     SUMO_TAG_CF_DANIEL1 },
     { "PWagner2009", SUMO_TAG_CF_PWAGNER2009 },
     { "BKerner",     SUMO_TAG_CF_BKERNER },
+    { "Rail",        SUMO_TAG_CF_RAIL },
     { "Wiedemann",   SUMO_TAG_CF_WIEDEMANN }, //< must be the last one
     { "CC",          SUMO_TAG_CF_CC },
 };
@@ -685,7 +725,7 @@ StringBijection<LinkDirection> SUMOXMLDefinitions::LinkDirections(
     SUMOXMLDefinitions::linkDirectionValues, LINKDIR_NODIR);
 
 StringBijection<TrafficLightType> SUMOXMLDefinitions::TrafficLightTypes(
-    SUMOXMLDefinitions::trafficLightTypesVales, TLTYPE_INVALID);
+    SUMOXMLDefinitions::trafficLightTypesValues, TLTYPE_INVALID);
 
 StringBijection<LaneChangeModel> SUMOXMLDefinitions::LaneChangeModels(
     SUMOXMLDefinitions::laneChangeModelValues, LCM_DEFAULT);

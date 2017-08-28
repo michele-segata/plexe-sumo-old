@@ -72,13 +72,14 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSGlobals.h>
 #include <microsim/traffic_lights/MSTLLogicControl.h>
+#include "lib/TraCI.h"
 #include "TraCIConstants.h"
 #include "TraCIServer.h"
 #include "TraCIServerAPI_InductionLoop.h"
 #include "TraCIServerAPI_Junction.h"
 #include "TraCIServerAPI_Lane.h"
-#include "TraCIServerAPI_MeMeDetector.h"
-#include "TraCIServerAPI_ArealDetector.h"
+#include "TraCIServerAPI_MultiEntryExit.h"
+#include "TraCIServerAPI_LaneArea.h"
 #include "TraCIServerAPI_TLS.h"
 #include "TraCIServerAPI_Vehicle.h"
 #include "TraCIServerAPI_VehicleType.h"
@@ -88,10 +89,6 @@
 #include "TraCIServerAPI_Edge.h"
 #include "TraCIServerAPI_Simulation.h"
 #include "TraCIServerAPI_Person.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -120,8 +117,8 @@ TraCIServer::TraCIServer(const SUMOTime begin, const int port)
     MSNet::getInstance()->addVehicleStateListener(this);
 
     myExecutors[CMD_GET_INDUCTIONLOOP_VARIABLE] = &TraCIServerAPI_InductionLoop::processGet;
-    myExecutors[CMD_GET_AREAL_DETECTOR_VARIABLE] = &TraCIServerAPI_ArealDetector::processGet;
-    myExecutors[CMD_GET_MULTI_ENTRY_EXIT_DETECTOR_VARIABLE] = &TraCIServerAPI_MeMeDetector::processGet;
+    myExecutors[CMD_GET_LANEAREA_VARIABLE] = &TraCIServerAPI_LaneArea::processGet;
+    myExecutors[CMD_GET_MULTIENTRYEXIT_VARIABLE] = &TraCIServerAPI_MultiEntryExit::processGet;
 
     myExecutors[CMD_GET_TL_VARIABLE] = &TraCIServerAPI_TLS::processGet;
     myExecutors[CMD_SET_TL_VARIABLE] = &TraCIServerAPI_TLS::processSet;
@@ -170,15 +167,11 @@ TraCIServer::TraCIServer(const SUMOTime begin, const int port)
 
 
 TraCIServer::~TraCIServer() {
-    MSNet::getInstance()->removeVehicleStateListener(this);
     if (mySocket != NULL) {
         mySocket->close();
         delete mySocket;
     }
-    for (std::map<int, NamedRTree*>::const_iterator i = myObjects.begin(); i != myObjects.end(); ++i) {
-        delete(*i).second;
-    }
-    delete myLaneTree;
+    cleanup();
 }
 
 
@@ -220,7 +213,7 @@ TraCIServer::wasClosed() {
 
 
 void
-TraCIServer::setVTDControlled(MSVehicle* v, Position xyPos, MSLane* l, SUMOReal pos, SUMOReal posLat, SUMOReal angle,
+TraCIServer::setVTDControlled(MSVehicle* v, Position xyPos, MSLane* l, double pos, double posLat, double angle,
                               int edgeOffset, ConstMSEdgeVector route, SUMOTime t) {
     myVTDControlledVehicles[v->getID()] = v;
     v->getInfluencer().setVTDControlled(xyPos, l, pos, posLat, angle, edgeOffset, route, t);
@@ -263,7 +256,8 @@ TraCIServer::processCommandsUntilSimStep(SUMOTime step) {
         // Simulation should run until
         // 1. end time reached or
         // 2. got CMD_CLOSE or
-        // 3. Client closes socket connection
+        // 3. got CMD_LOAD or
+        // 4. Client closes socket connection
         if (myInstance->myDoingSimStep) {
             myInstance->postProcessSimulationStep2();
             myInstance->myDoingSimStep = false;
@@ -282,11 +276,14 @@ TraCIServer::processCommandsUntilSimStep(SUMOTime step) {
             while (myInstance->myInputStorage.valid_pos() && !myDoCloseConnection) {
                 // dispatch each command
                 int cmd = myInstance->dispatchCommand();
-                if (cmd == CMD_SIMSTEP2) {
+                if (cmd == CMD_SIMSTEP) {
                     myInstance->myDoingSimStep = true;
                     for (std::map<MSNet::VehicleState, std::vector<std::string> >::iterator i = myInstance->myVehicleStateChanges.begin(); i != myInstance->myVehicleStateChanges.end(); ++i) {
                         (*i).second.clear();
                     }
+                    return;
+                }
+                if (cmd == CMD_LOAD) {
                     return;
                 }
             }
@@ -307,6 +304,18 @@ TraCIServer::processCommandsUntilSimStep(SUMOTime step) {
     }
 }
 
+
+void
+TraCIServer::cleanup() {
+    mySubscriptions.clear();
+    for (std::map<int, NamedRTree*>::const_iterator i = myObjects.begin(); i != myObjects.end(); ++i) {
+        delete(*i).second;
+    }
+    myObjects.clear();
+    delete myLaneTree;
+    myLaneTree = 0;
+    myTargetTime = string2time(OptionsCont::getOptions().getString("begin"));
+}
 
 
 
@@ -415,7 +424,21 @@ TraCIServer::dispatchCommand() {
             case CMD_GETVERSION:
                 success = commandGetVersion();
                 break;
-            case CMD_SIMSTEP2: {
+            case CMD_LOAD: {
+                std::vector<std::string> args;
+                if (!readTypeCheckingStringList(myInputStorage, args)) {
+                    return writeErrorStatusCmd(CMD_LOAD, "A load command needs a list of string arguments.", myOutputStorage);
+                }
+                try {
+                    TraCI::load(args);
+                    success = true;
+                    writeStatusCmd(CMD_LOAD, RTYPE_OK, "");
+                } catch (TraCIException& e) {
+                    return writeErrorStatusCmd(CMD_LOAD, e.what(), myOutputStorage);
+                }
+                break;
+            }
+            case CMD_SIMSTEP: {
                 SUMOTime nextT = myInputStorage.readInt();
                 success = true;
                 if (nextT != 0) {
@@ -427,7 +450,9 @@ TraCIServer::dispatchCommand() {
                     for (std::map<MSNet::VehicleState, std::vector<std::string> >::iterator i = myInstance->myVehicleStateChanges.begin(); i != myInstance->myVehicleStateChanges.end(); ++i) {
                         (*i).second.clear();
                     }
-                    MSNet::getInstance()->simulationStep();
+                    while (MSNet::getInstance()->getCurrentTimeStep() < myTargetTime) {
+                        MSNet::getInstance()->simulationStep();
+                    }
                     postProcessSimulationStep2();
                 }
                 return commandId;
@@ -437,8 +462,8 @@ TraCIServer::dispatchCommand() {
                 success = true;
                 break;
             case CMD_SUBSCRIBE_INDUCTIONLOOP_VARIABLE:
-            case CMD_SUBSCRIBE_AREAL_DETECTOR_VARIABLE:
-            case CMD_SUBSCRIBE_MULTI_ENTRY_EXIT_DETECTOR_VARIABLE:
+            case CMD_SUBSCRIBE_LANEAREA_VARIABLE:
+            case CMD_SUBSCRIBE_MULTIENTRYEXIT_VARIABLE:
             case CMD_SUBSCRIBE_TL_VARIABLE:
             case CMD_SUBSCRIBE_LANE_VARIABLE:
             case CMD_SUBSCRIBE_VEHICLE_VARIABLE:
@@ -454,8 +479,8 @@ TraCIServer::dispatchCommand() {
                 success = addObjectVariableSubscription(commandId, false);
                 break;
             case CMD_SUBSCRIBE_INDUCTIONLOOP_CONTEXT:
-            case CMD_SUBSCRIBE_AREAL_DETECTOR_CONTEXT:
-            case CMD_SUBSCRIBE_MULTI_ENTRY_EXIT_DETECTOR_CONTEXT:
+            case CMD_SUBSCRIBE_LANEAREA_CONTEXT:
+            case CMD_SUBSCRIBE_MULTIENTRYEXIT_CONTEXT:
             case CMD_SUBSCRIBE_TL_CONTEXT:
             case CMD_SUBSCRIBE_LANE_CONTEXT:
             case CMD_SUBSCRIBE_VEHICLE_CONTEXT:
@@ -514,7 +539,7 @@ TraCIServer::commandGetVersion() {
 void
 TraCIServer::postProcessSimulationStep2() {
     SUMOTime t = MSNet::getInstance()->getCurrentTimeStep();
-    writeStatusCmd(CMD_SIMSTEP2, RTYPE_OK, "");
+    writeStatusCmd(CMD_SIMSTEP, RTYPE_OK, "");
     int noActive = 0;
     for (std::vector<Subscription>::iterator i = mySubscriptions.begin(); i != mySubscriptions.end();) {
         const Subscription& s = *i;
@@ -644,7 +669,7 @@ TraCIServer::findObjectShape(int domain, const std::string& id, PositionVector& 
                 return true;
             }
             break;
-        case CMD_SUBSCRIBE_MULTI_ENTRY_EXIT_DETECTOR_CONTEXT:
+        case CMD_SUBSCRIBE_MULTIENTRYEXIT_CONTEXT:
             break;
         case CMD_SUBSCRIBE_TL_CONTEXT:
             break;
@@ -702,7 +727,7 @@ TraCIServer::findObjectShape(int domain, const std::string& id, PositionVector& 
 }
 
 void
-TraCIServer::collectObjectsInRange(int domain, const PositionVector& shape, SUMOReal range, std::set<std::string>& into) {
+TraCIServer::collectObjectsInRange(int domain, const PositionVector& shape, double range, std::set<std::string>& into) {
     // build the look-up tree if not yet existing
     if (myObjects.find(domain) == myObjects.end()) {
         switch (domain) {
@@ -858,7 +883,7 @@ TraCIServer::addObjectVariableSubscription(const int commandId, const bool hasCo
     const SUMOTime endTime = myInputStorage.readInt();
     const std::string id = myInputStorage.readString();
     const int domain = hasContext ? myInputStorage.readUnsignedByte() : 0;
-    const SUMOReal range = hasContext ? myInputStorage.readDouble() : 0.;
+    const double range = hasContext ? myInputStorage.readDouble() : 0.;
     const int num = myInputStorage.readUnsignedByte();
     std::vector<int> variables;
     std::vector<std::vector<unsigned char> > parameters;
@@ -935,27 +960,26 @@ TraCIServer::readTypeCheckingStringList(tcpip::Storage& inputStorage, std::vecto
 
 
 bool
-TraCIServer::readTypeCheckingColor(tcpip::Storage& inputStorage, RGBColor& into) {
+TraCIServer::readTypeCheckingColor(tcpip::Storage& inputStorage, TraCIColor& into) {
     if (inputStorage.readUnsignedByte() != TYPE_COLOR) {
         return false;
     }
-    unsigned char r = static_cast<unsigned char>(inputStorage.readUnsignedByte());
-    unsigned char g = static_cast<unsigned char>(inputStorage.readUnsignedByte());
-    unsigned char b = static_cast<unsigned char>(inputStorage.readUnsignedByte());
-    unsigned char a = static_cast<unsigned char>(inputStorage.readUnsignedByte());
-    into.set(r, g, b, a);
+    into.r = static_cast<unsigned char>(inputStorage.readUnsignedByte());
+    into.g = static_cast<unsigned char>(inputStorage.readUnsignedByte());
+    into.b = static_cast<unsigned char>(inputStorage.readUnsignedByte());
+    into.a = static_cast<unsigned char>(inputStorage.readUnsignedByte());
     return true;
 }
 
 
 bool
-TraCIServer::readTypeCheckingPosition2D(tcpip::Storage& inputStorage, Position& into) {
+TraCIServer::readTypeCheckingPosition2D(tcpip::Storage& inputStorage, TraCIPosition& into) {
     if (inputStorage.readUnsignedByte() != POSITION_2D) {
         return false;
     }
-    SUMOReal x = inputStorage.readDouble();
-    SUMOReal y = inputStorage.readDouble();
-    into.set(x, y, 0);
+    into.x = inputStorage.readDouble();
+    into.y = inputStorage.readDouble();
+    into.z = 0;
     return true;
 }
 
@@ -965,10 +989,10 @@ TraCIServer::readTypeCheckingBoundary(tcpip::Storage& inputStorage, Boundary& in
     if (inputStorage.readUnsignedByte() != TYPE_BOUNDINGBOX) {
         return false;
     }
-    const SUMOReal xmin = inputStorage.readDouble();
-    const SUMOReal ymin = inputStorage.readDouble();
-    const SUMOReal xmax = inputStorage.readDouble();
-    const SUMOReal ymax = inputStorage.readDouble();
+    const double xmin = inputStorage.readDouble();
+    const double ymin = inputStorage.readDouble();
+    const double xmax = inputStorage.readDouble();
+    const double ymax = inputStorage.readDouble();
     into.set(xmin, ymin, xmax, ymax);
     return true;
 }
@@ -1003,8 +1027,8 @@ TraCIServer::readTypeCheckingPolygon(tcpip::Storage& inputStorage, PositionVecto
     int noEntries = inputStorage.readUnsignedByte();
     PositionVector shape;
     for (int i = 0; i < noEntries; ++i) {
-        SUMOReal x = inputStorage.readDouble();
-        SUMOReal y = inputStorage.readDouble();
+        double x = inputStorage.readDouble();
+        double y = inputStorage.readDouble();
         into.push_back(Position(x, y));
     }
     return true;

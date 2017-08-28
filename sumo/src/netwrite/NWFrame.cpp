@@ -46,10 +46,6 @@
 #include "NWWriter_OpenDrive.h"
 #include "NWWriter_DlrNavteq.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // static members
 // ===========================================================================
@@ -107,6 +103,11 @@ NWFrame::fillOptions(bool forNetgen) {
 
     oc.doRegister("street-sign-output", new Option_FileName());
     oc.addDescription("street-sign-output", "Output", "Writes street signs as POIs to FILE");
+
+    if (!forNetgen) {
+        oc.doRegister("ptstop-output", new Option_FileName());
+        oc.addDescription("ptstop-output", "Output", "Writes public transport stops to FILE");
+    }
 
     // register opendrive options
     oc.doRegister("opendrive-output.straight-threshold", new Option_Float(0.00000001)); // matching the angular output precision in NWWriter_OpenDrive

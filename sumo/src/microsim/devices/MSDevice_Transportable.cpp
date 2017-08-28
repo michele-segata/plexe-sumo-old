@@ -40,10 +40,6 @@
 #include <microsim/MSContainer.h>
 #include "MSDevice_Transportable.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -72,7 +68,7 @@ MSDevice_Transportable::~MSDevice_Transportable() {
 
 
 bool
-MSDevice_Transportable::notifyMove(SUMOVehicle& veh, SUMOReal /*oldPos*/, SUMOReal /*newPos*/, SUMOReal /*newSpeed*/) {
+MSDevice_Transportable::notifyMove(SUMOVehicle& veh, double /*oldPos*/, double /*newPos*/, double /*newSpeed*/) {
     if (myStopped) {
         if (!veh.isStopped()) {
             for (std::vector<MSTransportable*>::iterator i = myTransportables.begin(); i != myTransportables.end(); ++i) {
@@ -112,7 +108,7 @@ MSDevice_Transportable::notifyMove(SUMOVehicle& veh, SUMOReal /*oldPos*/, SUMORe
 
 
 bool
-MSDevice_Transportable::notifyEnter(SUMOVehicle& /*veh*/, MSMoveReminder::Notification reason) {
+MSDevice_Transportable::notifyEnter(SUMOVehicle& /*veh*/, MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
     if (reason == MSMoveReminder::NOTIFICATION_DEPARTED) {
         for (std::vector<MSTransportable*>::iterator i = myTransportables.begin(); i != myTransportables.end(); ++i) {
             (*i)->setDeparted(MSNet::getInstance()->getCurrentTimeStep());
@@ -123,8 +119,8 @@ MSDevice_Transportable::notifyEnter(SUMOVehicle& /*veh*/, MSMoveReminder::Notifi
 
 
 bool
-MSDevice_Transportable::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/,
-                                    MSMoveReminder::Notification reason) {
+MSDevice_Transportable::notifyLeave(SUMOVehicle& veh, double /*lastPos*/,
+                                    MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
     if (reason >= MSMoveReminder::NOTIFICATION_ARRIVED) {
         for (std::vector<MSTransportable*>::iterator i = myTransportables.begin(); i != myTransportables.end(); ++i) {
             MSTransportable* transportable = *i;
@@ -169,6 +165,19 @@ MSDevice_Transportable::removeTransportable(MSTransportable* transportable) {
             MSStopOut::getInstance()->loadedPersons(&myHolder, 1);
         }
     }
+}
+
+
+std::string
+MSDevice_Transportable::getParameter(const std::string& key) const {
+    if (key == "IDList") {
+        std::vector<std::string> ids;
+        for (std::vector<MSTransportable*>::const_iterator i = myTransportables.begin(); i != myTransportables.end(); ++i) {
+            ids.push_back((*i)->getID());
+        }
+        return toString(ids);
+    }
+    throw InvalidArgument("Parameter '" + key + "' is not supported for device of type '" + deviceName() + "'");
 }
 
 

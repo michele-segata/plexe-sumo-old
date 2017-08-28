@@ -55,10 +55,6 @@
 #include "GNEUndoList.h"
 #include "GNEViewNet.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
-
 
 // ===========================================================================
 // member method definitions
@@ -209,11 +205,11 @@ GNEAdditional::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
         GNELane* lane = myViewNet->getNet()->retrieveLane(getParentName(), false);
         if (lane) {
             // Show menu command inner position
-            const SUMOReal innerPos = myShape.nearest_offset_to_point2D(parent.getPositionInformation());
+            const double innerPos = myShape.nearest_offset_to_point2D(parent.getPositionInformation());
             new FXMenuCommand(ret, ("inner position: " + toString(innerPos)).c_str(), 0, 0, 0);
             // If shape isn't empty, show menu command lane position
             if (myShape.size() > 0) {
-                const SUMOReal lanePos = lane->getShape().nearest_offset_to_point2D(myShape[0]);
+                const double lanePos = lane->getShape().nearest_offset_to_point2D(myShape[0]);
                 new FXMenuCommand(ret, ("position over " + toString(SUMO_TAG_LANE) + ": " + toString(innerPos + lanePos)).c_str(), 0, 0, 0);
             }
         } else {
@@ -224,11 +220,11 @@ GNEAdditional::getPopUpMenu(GUIMainWindow& app, GUISUMOAbstractView& parent) {
         GNEEdge* edge = myViewNet->getNet()->retrieveEdge(getParentName(), false);
         if (edge) {
             // Show menu command inner position
-            const SUMOReal innerPos = myShape.nearest_offset_to_point2D(parent.getPositionInformation());
+            const double innerPos = myShape.nearest_offset_to_point2D(parent.getPositionInformation());
             new FXMenuCommand(ret, ("inner position: " + toString(innerPos)).c_str(), 0, 0, 0);
             // If shape isn't empty, show menu command edge position
             if (myShape.size() > 0) {
-                const SUMOReal edgePos = edge->getLanes().at(0)->getShape().nearest_offset_to_point2D(myShape[0]);
+                const double edgePos = edge->getLanes().at(0)->getShape().nearest_offset_to_point2D(myShape[0]);
                 new FXMenuCommand(ret, ("position over " + toString(SUMO_TAG_LANE) + ": " + toString(innerPos + edgePos)).c_str(), 0, 0, 0);
             }
         } else {
@@ -279,11 +275,11 @@ GNEAdditional::getCenteringBoundary() const {
 void
 GNEAdditional::setBlockIconRotation(GNELane* lane) {
     if (myShape.size() > 0 && myShape.length() != 0) {
-        // If lenght of the shape is distint to 0, Obtain rotation of center of shape
+        // If length of the shape is distint to 0, Obtain rotation of center of shape
         myBlockIconRotation = myShape.rotationDegreeAtOffset((myShape.length() / 2.)) - 90;
     } else if (lane != NULL) {
         // If additional is over a lane, set rotation in the position over lane
-        myBlockIconRotation = lane->getShape().rotationDegreeAtOffset(lane->getPositionRelativeToParametricLenght(myPosition.x())) - 90;
+        myBlockIconRotation = lane->getShape().rotationDegreeAtOffset(lane->getPositionRelativeToParametricLength(myPosition.x())) - 90;
     } else {
         // In other case, rotation is 0
         myBlockIconRotation = 0;
@@ -292,7 +288,7 @@ GNEAdditional::setBlockIconRotation(GNELane* lane) {
 
 
 void
-GNEAdditional::drawLockIcon(SUMOReal size) const {
+GNEAdditional::drawLockIcon(double size) const {
     if (myViewNet->showLockIcon()) {
         // Start pushing matrix
         glPushMatrix();
@@ -302,7 +298,7 @@ GNEAdditional::drawLockIcon(SUMOReal size) const {
         glColor3d(1, 1, 1);
         // Rotate depending of myBlockIconRotation
         glRotated(myBlockIconRotation, 0, 0, -1);
-        // Rotate 180º
+        // Rotate 180 degrees
         glRotated(180, 0, 0, 1);
         // Traslate depending of the offset
         glTranslated(myBlockIconOffset.x(), myBlockIconOffset.y(), 0);

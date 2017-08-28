@@ -115,7 +115,7 @@ public:
     /** @brief Get vehicle's length [m]
      * @return The length vehicles of this type have in m
      */
-    SUMOReal getLength() const {
+    double getLength() const {
         return myParameter.length;
     }
 
@@ -123,7 +123,7 @@ public:
     /** @brief Get vehicle's length including the minimum gap [m]
      * @return The length vehicles of this type have (including the minimum gap in m
      */
-    SUMOReal getLengthWithGap() const {
+    double getLengthWithGap() const {
         return myParameter.length + myParameter.minGap;
     }
 
@@ -131,14 +131,14 @@ public:
     /** @brief Get the free space in front of vehicles of this class
      * @return The place before the vehicle
      */
-    SUMOReal getMinGap() const {
+    double getMinGap() const {
         return myParameter.minGap;
     }
 
     /** @brief Get the minimum lateral gap that vehicles of this type maintain
      * @return The place before the vehicle
      */
-    SUMOReal getMinGapLat() const {
+    double getMinGapLat() const {
         return myParameter.minGapLat;
     }
 
@@ -167,7 +167,7 @@ public:
     /** @brief Get vehicle's maximum speed [m/s].
      * @return The maximum speed (in m/s) of vehicles of this class
      */
-    SUMOReal getMaxSpeed() const {
+    double getMaxSpeed() const {
         return myParameter.maxSpeed;
     }
 
@@ -175,13 +175,13 @@ public:
     /** @brief Computes and returns the speed deviation
      * @return A new, random speed deviation
      */
-    SUMOReal computeChosenSpeedDeviation(MTRand* rng, const SUMOReal minDevFactor = 0.2) const;
+    double computeChosenSpeedDeviation(MTRand* rng, const double minDev = -1.) const;
 
 
     /** @brief Get the default probability of this vehicle type
      * @return The probability to use this type
      */
-    SUMOReal getDefaultProbability() const {
+    double getDefaultProbability() const {
         return myParameter.defaultProbability;
     }
 
@@ -215,23 +215,15 @@ public:
     /** @brief Returns this type's speed factor
      * @return The speed factor of this type
      */
-    SUMOReal getSpeedFactor() const {
+    const Distribution_Parameterized& getSpeedFactor() const {
         return myParameter.speedFactor;
-    }
-
-
-    /** @brief Returns this type's speed deviation
-     * @return The speed deviation of this type
-     */
-    SUMOReal getSpeedDeviation() const {
-        return myParameter.speedDev;
     }
 
 
     /** @brief Returns this type's impatience
      * @return The impatience of this type
      */
-    SUMOReal getImpatience() const {
+    double getImpatience() const {
         return myParameter.impatience;
     }
     /// @}
@@ -244,14 +236,14 @@ public:
     /** @brief Get the width which vehicles of this class shall have when being drawn
      * @return The width of this type's vehicles
      */
-    SUMOReal getWidth() const {
+    double getWidth() const {
         return myParameter.width;
     }
 
     /** @brief Get the height which vehicles of this class shall have when being drawn
      * @return The height of this type's vehicles
      */
-    SUMOReal getHeight() const {
+    double getHeight() const {
         return myParameter.height;
     }
 
@@ -311,7 +303,7 @@ public:
     /** @brief Get vehicle's maximum lateral speed [m/s].
      * @return The maximum lateral speed (in m/s) of vehicles of this class
      */
-    SUMOReal getMaxSpeedLat() const {
+    double getMaxSpeedLat() const {
         return myParameter.maxSpeedLat;
     }
 
@@ -334,7 +326,7 @@ public:
      *
      * @param[in] length The new length of this type
      */
-    void setLength(const SUMOReal& length);
+    void setLength(const double& length);
 
 
     /** @brief Set a new value for this type's height
@@ -344,7 +336,7 @@ public:
      *
      * @param[in] height The new height of this type
      */
-    void setHeight(const SUMOReal& height);
+    void setHeight(const double& height);
 
 
     /** @brief Set a new value for this type's minimum gap
@@ -354,8 +346,17 @@ public:
      *
      * @param[in] minGap The new minimum gap of this type
      */
-    void setMinGap(const SUMOReal& minGap);
+    void setMinGap(const double& minGap);
 
+
+    /** @brief Set a new value for this type's minimum lataral gap
+     *
+     * If the given value<0 then the one from the original type will
+     *  be used.
+     *
+     * @param[in] minGapLat The new minimum lateral gap of this type
+     */
+    void setMinGapLat(const double& minGapLat);
 
     /** @brief Set a new value for this type's maximum speed
      *
@@ -364,8 +365,16 @@ public:
      *
      * @param[in] maxSpeed The new maximum speed of this type
      */
-    void setMaxSpeed(const SUMOReal& maxSpeed);
+    void setMaxSpeed(const double& maxSpeed);
 
+    /** @brief Set a new value for this type's maximum lateral speed
+     *
+     * If the given value<0 then the one from the original type will
+     *  be used.
+     *
+     * @param[in] maxSpeedLat The new maximum lateral speed of this type
+     */
+    void setMaxSpeedLat(const double& maxSpeedLat);
 
     /** @brief Set a new value for this type's vehicle class
      * @param[in] vclass The new vehicle class of this type
@@ -380,7 +389,7 @@ public:
      *
      * @param[in] prob The new default probability of this type
      */
-    void setDefaultProbability(const SUMOReal& prob);
+    void setDefaultProbability(const double& prob);
 
 
     /** @brief Set a new value for this type's speed factor
@@ -390,7 +399,7 @@ public:
      *
      * @param[in] factor The new speed factor of this type
      */
-    void setSpeedFactor(const SUMOReal& factor);
+    void setSpeedFactor(const double& factor);
 
 
     /** @brief Set a new value for this type's speed deviation
@@ -400,7 +409,7 @@ public:
      *
      * @param[in] dev The new speed deviation of this type
      */
-    void setSpeedDeviation(const SUMOReal& dev);
+    void setSpeedDeviation(const double& dev);
 
 
     /** @brief Set a new value for this type's emission class
@@ -422,7 +431,7 @@ public:
      *
      * @param[in] width The new width of this type
      */
-    void setWidth(const SUMOReal& width);
+    void setWidth(const double& width);
 
 
     /** @brief Set a new value for this type's shape
@@ -434,7 +443,11 @@ public:
     /** @brief Set a new value for this type's impatience
      * @param[in] impatience The new impatience of this type
      */
-    void setImpatience(const SUMOReal impatience);
+    void setImpatience(const double impatience);
+
+    /** @brief Set vehicle's preferred lateral alignment
+     */
+    void setPreferredLateralAlignment(LateralAlignment latAlignment);
     /// @}
 
 
@@ -455,7 +468,7 @@ public:
      * @param[in] from The vehicle type
      * @return The built vehicle type
      */
-    static MSVehicleType* build(const std::string& id, const MSVehicleType* from);
+    static MSVehicleType* buildSingularType(const std::string& id, const MSVehicleType* from);
     /// @}
 
 

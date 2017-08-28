@@ -6,10 +6,6 @@ if WITH_GUI
 GUI_APPS = netedit
 endif
 
-if CHECK_MEMORY_LEAKS
-MEM_LIBS  = ../foreign/nvwa/libnvwa.a
-endif
-
 if TRACI
 TRACI_LIBS = ../traci-server/libtraciserver.a
 endif
@@ -47,6 +43,9 @@ GNEChange_Attribute.h GNEChange_Attribute.cpp \
 GNEChange_TLS.h GNEChange_TLS.cpp \
 GNEChange_Selection.h GNEChange_Selection.cpp \
 GNEChange_Additional.h GNEChange_Additional.cpp \
+GNEChange_RerouterInterval.h GNEChange_RerouterInterval.cpp \
+GNEChange_CalibratorItem.h GNEChange_CalibratorItem.cpp \
+GNEChange_POI.h GNEChange_POI.cpp \
 GNEUndoList.h GNEUndoList.cpp \
 GNEAttributeCarrier.h GNEAttributeCarrier.cpp \
 GNEFrame.h GNEFrame.cpp \
@@ -76,11 +75,14 @@ GNERouteProbe.h GNERouteProbe.cpp \
 GNEVaporizer.h GNEVaporizer.cpp \
 GNECalibrator.h GNECalibrator.cpp \
 GNECalibratorFlow.h GNECalibratorFlow.cpp \
+GNECalibratorVehicleType.h GNECalibratorVehicleType.cpp \
 GNECalibratorRoute.h GNECalibratorRoute.cpp \
 GNECalibratorDialog.h GNECalibratorDialog.cpp \
 GNECalibratorFlowDialog.h GNECalibratorFlowDialog.cpp \
 GNECalibratorRouteDialog.h GNECalibratorRouteDialog.cpp \
+GNECalibratorVehicleTypeDialog.h GNECalibratorVehicleTypeDialog.cpp \
 GNEVariableSpeedSign.h GNEVariableSpeedSign.cpp \
+GNEVariableSpeedSignStep.h GNEVariableSpeedSignStep.cpp \
 GNEVariableSpeedSignDialog.h GNEVariableSpeedSignDialog.cpp \
 GNEClosingLaneReroute.h GNEClosingLaneReroute.cpp \
 GNEClosingReroute.h GNEClosingReroute.cpp \
@@ -117,7 +119,6 @@ netedit_LDADD = ../netimport/libnetimport.a \
 ../utils/importio/libimportio.a \
 ../utils/iodevices/libiodevices.a \
 ../foreign/tcpip/libtcpip.a \
-$(MEM_LIBS) \
 $(XERCES_LIBS) $(FFMPEG_LIBS) \
 $(FOX_LDFLAGS) $(XERCES_LDFLAGS) $(PROJ_LDFLAGS) $(GDAL_LDFLAGS) $(X_LDFLAGS)
 endif

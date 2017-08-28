@@ -55,15 +55,12 @@
 #include "GNENet.h"
 #include "GNEChange_Attribute.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 
-GNEDetectorEntry::GNEDetectorEntry(GNEViewNet* viewNet, GNEDetectorE3* parent, GNELane* lane, SUMOReal pos) :
+GNEDetectorEntry::GNEDetectorEntry(GNEViewNet* viewNet, GNEDetectorE3* parent, GNELane* lane, double pos) :
     GNEDetector(parent->generateEntryID(), viewNet, SUMO_TAG_DET_ENTRY, ICON_E3ENTRY, lane, pos, 0, ""),
     myE3Parent(parent) {
     // Update geometry
@@ -93,10 +90,10 @@ GNEDetectorEntry::updateGeometryByParent() {
     myShape.clear();
 
     // Get shape of lane parent
-    myShape.push_back(myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLenght(myPosition.x())));
+    myShape.push_back(myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLength(myPosition.x())));
 
     // Save rotation (angle) of the vector constructed by points f and s
-    myShapeRotations.push_back(myLane->getShape().rotationDegreeAtOffset(myLane->getPositionRelativeToParametricLenght(myPosition.x())) * -1);
+    myShapeRotations.push_back(myLane->getShape().rotationDegreeAtOffset(myLane->getPositionRelativeToParametricLength(myPosition.x())) * -1);
 
     // Set block icon position
     myBlockIconPosition = myShape.getLineCenter();
@@ -113,7 +110,7 @@ GNEDetectorEntry::updateGeometryByParent() {
 
 Position
 GNEDetectorEntry::getPositionInView() const {
-    return myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLenght(myPosition.x()));
+    return myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLength(myPosition.x()));
 }
 
 
@@ -144,7 +141,7 @@ GNEDetectorEntry::drawGL(const GUIVisualizationSettings& s) const {
     } else {
         glColor3d(myBaseColor.red(), myBaseColor.green(), myBaseColor.blue());
     }
-    const SUMOReal exaggeration = s.addSize.getExaggeration(s);
+    const double exaggeration = s.addSize.getExaggeration(s);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // Push poligon matrix
@@ -168,12 +165,12 @@ GNEDetectorEntry::drawGL(const GUIVisualizationSettings& s) const {
     // first Arrow
     glTranslated(1.5, 0, 0);
     GLHelper::drawBoxLine(Position(0, 4), 0, 2, .05);
-    GLHelper::drawTriangleAtEnd(Position(0, 4), Position(0, 1), (SUMOReal) 1, (SUMOReal) .25);
+    GLHelper::drawTriangleAtEnd(Position(0, 4), Position(0, 1), (double) 1, (double) .25);
 
     // second Arrow
     glTranslated(-3, 0, 0);
     GLHelper::drawBoxLine(Position(0, 4), 0, 2, .05);
-    GLHelper::drawTriangleAtEnd(Position(0, 4), Position(0, 1), (SUMOReal) 1, (SUMOReal) .25);
+    GLHelper::drawTriangleAtEnd(Position(0, 4), Position(0, 1), (double) 1, (double) .25);
 
     // Pop poligon matrix
     glPopMatrix();
@@ -249,7 +246,7 @@ GNEDetectorEntry::isValid(SumoXMLAttr key, const std::string& value) {
                 return false;
             }
         case SUMO_ATTR_POSITION:
-            return (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 0 && parse<SUMOReal>(value) <= (myLane->getLaneParametricLenght()));
+            return (canParse<double>(value) && (parse<double>(value) >= 0) && (parse<double>(value) <= (myLane->getLaneParametricLength())));
         case GNE_ATTR_BLOCK_MOVEMENT:
             return canParse<bool>(value);
         default:
@@ -267,7 +264,7 @@ GNEDetectorEntry::setAttribute(SumoXMLAttr key, const std::string& value) {
             changeLane(value);
             break;
         case SUMO_ATTR_POSITION:
-            myPosition = Position(parse<SUMOReal>(value), 0);
+            myPosition = Position(parse<double>(value), 0);
             updateGeometry();
             getViewNet()->update();
             break;

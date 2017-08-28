@@ -48,10 +48,6 @@
 #include "NWFrame.h"
 #include "NWWriter_SUMO.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 
 // ===========================================================================
@@ -78,6 +74,9 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     }
     if (!oc.isDefault("junctions.internal-link-detail")) {
         attrs[SUMO_ATTR_LINKDETAIL] = toString(oc.getInt("junctions.internal-link-detail"));
+    }
+    if (oc.getBool("rectangular-lane-cut")) {
+        attrs[SUMO_ATTR_RECTANGULAR_LANE_CUT] = "true";
     }
     device.writeXMLHeader("net", "net_file.xsd", attrs); // street names may contain non-ascii chars
     device.lf();
@@ -147,7 +146,6 @@ NWWriter_SUMO::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     int numConnections = 0;
     for (std::map<std::string, NBEdge*>::const_iterator it_edge = ec.begin(); it_edge != ec.end(); it_edge++) {
         NBEdge* from = it_edge->second;
-        from->sortOutgoingConnectionsByIndex();
         const std::vector<NBEdge::Connection> connections = from->getConnections();
         numConnections += (int)connections.size();
         for (std::vector<NBEdge::Connection>::const_iterator it_c = connections.begin(); it_c != connections.end(); it_c++) {
@@ -261,7 +259,7 @@ NWWriter_SUMO::writeInternalEdges(OutputDevice& into, const NBEdgeCont& ec, cons
             NBEdge* toEdge = 0;
             std::string internalEdgeID = "";
             // first pass: compute average lengths of non-via edges
-            std::map<NBEdge*, SUMOReal> lengthSum;
+            std::map<NBEdge*, double> lengthSum;
             std::map<NBEdge*, int> numLanes;
             for (std::vector<NBEdge::Connection>::const_iterator k = elv.begin(); k != elv.end(); ++k) {
                 lengthSum[(*k).toEdge] += MAX2((*k).shape.length(), POSITION_EPS);
@@ -288,10 +286,10 @@ NWWriter_SUMO::writeInternalEdges(OutputDevice& into, const NBEdgeCont& ec, cons
                 // to avoid changing to an internal lane which has a successor
                 // with the wrong permissions we need to inherit them from the successor
                 const NBEdge::Lane& successor = (*k).toEdge->getLanes()[(*k).toLane];
-                const SUMOReal length = lengthSum[toEdge] / numLanes[toEdge];
+                const double length = lengthSum[toEdge] / numLanes[toEdge];
                 // @note the actual length should be used once sumo supports lanes of
                 // varying length within the same edge
-                //const SUMOReal length = MAX2((*k).shape.length(), POSITION_EPS);
+                //const double length = MAX2((*k).shape.length(), POSITION_EPS);
                 writeLane(into, (*k).getInternalLaneID(), (*k).vmax,
                           successor.permissions, successor.preferred,
                           NBEdge::UNSPECIFIED_OFFSET, successor.width, (*k).shape, (*k).origID,
@@ -378,12 +376,12 @@ NWWriter_SUMO::writeEdge(OutputDevice& into, const NBEdge& e, bool noNames, bool
     // write the lanes
     const std::vector<NBEdge::Lane>& lanes = e.getLanes();
 
-    const SUMOReal length = e.getFinalLength();
+    const double length = e.getFinalLength();
     for (int i = 0; i < (int) lanes.size(); i++) {
         const NBEdge::Lane& l = lanes[i];
         writeLane(into, e.getLaneID(i), l.speed,
                   l.permissions, l.preferred, l.endOffset, l.width, l.shape, l.origID,
-                  length, i, origNames, l.oppositeID);
+                  length, i, origNames, l.oppositeID, 0, l.accelRamp);
     }
     // close the edge
     into.closeTag();
@@ -392,10 +390,10 @@ NWWriter_SUMO::writeEdge(OutputDevice& into, const NBEdge& e, bool noNames, bool
 
 void
 NWWriter_SUMO::writeLane(OutputDevice& into, const std::string& lID,
-                         SUMOReal speed, SVCPermissions permissions, SVCPermissions preferred,
-                         SUMOReal endOffset, SUMOReal width, PositionVector shape,
-                         const std::string& origID, SUMOReal length, int index, bool origNames,
-                         const std::string& oppositeID, const NBNode* node) {
+                         double speed, SVCPermissions permissions, SVCPermissions preferred,
+                         double endOffset, double width, PositionVector shape,
+                         const std::string& origID, double length, int index, bool origNames,
+                         const std::string& oppositeID, const NBNode* node, bool accelRamp) {
     // output the lane's attributes
     into.openTag(SUMO_TAG_LANE).writeAttr(SUMO_ATTR_ID, lID);
     // the first lane of an edge will be the depart lane
@@ -422,6 +420,9 @@ NWWriter_SUMO::writeLane(OutputDevice& into, const std::string& lID,
     if (width != NBEdge::UNSPECIFIED_WIDTH) {
         into.writeAttr(SUMO_ATTR_WIDTH, width);
     }
+    if (accelRamp) {
+        into.writeAttr<bool>(SUMO_ATTR_ACCELERATION, accelRamp);
+    }
     if (node != 0) {
         const NBNode::CustomShapeMap& cs = node->getCustomLaneShapes();
         NBNode::CustomShapeMap::const_iterator it = cs.find(lID);
@@ -439,10 +440,11 @@ NWWriter_SUMO::writeLane(OutputDevice& into, const std::string& lID,
     }
     if (origNames && origID != "") {
         into.openTag(SUMO_TAG_PARAM);
-        into.writeAttr(SUMO_ATTR_KEY, "origId");
+        into.writeAttr(SUMO_ATTR_KEY, SUMO_PARAM_ORIGID);
         into.writeAttr(SUMO_ATTR_VALUE, origID);
         into.closeTag();
     }
+
     into.closeTag();
 }
 
@@ -711,10 +713,10 @@ NWWriter_SUMO::writeRoundabout(OutputDevice& into, const std::vector<std::string
 
 void
 NWWriter_SUMO::writeDistrict(OutputDevice& into, const NBDistrict& d) {
-    std::vector<SUMOReal> sourceW = d.getSourceWeights();
-    VectorHelper<SUMOReal>::normaliseSum(sourceW, 1.0);
-    std::vector<SUMOReal> sinkW = d.getSinkWeights();
-    VectorHelper<SUMOReal>::normaliseSum(sinkW, 1.0);
+    std::vector<double> sourceW = d.getSourceWeights();
+    VectorHelper<double>::normaliseSum(sourceW, 1.0);
+    std::vector<double> sinkW = d.getSinkWeights();
+    VectorHelper<double>::normaliseSum(sinkW, 1.0);
     // write the head and the id of the district
     into.openTag(SUMO_TAG_TAZ).writeAttr(SUMO_ATTR_ID, d.getID());
     if (d.getShape().size() > 0) {
@@ -741,7 +743,7 @@ NWWriter_SUMO::writeDistrict(OutputDevice& into, const NBDistrict& d) {
 
 std::string
 NWWriter_SUMO::writeSUMOTime(SUMOTime steps) {
-    SUMOReal time = STEPS2TIME(steps);
+    double time = STEPS2TIME(steps);
     if (time == std::floor(time)) {
         return toString(int(time));
     } else {

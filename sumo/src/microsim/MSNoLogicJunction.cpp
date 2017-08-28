@@ -36,10 +36,6 @@
 #include <cassert>
 #include <cmath>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static member definitions
@@ -52,17 +48,11 @@ MSNoLogicJunction::MSNoLogicJunction(const std::string& id,
                                      SumoXMLNodeType type,
                                      const Position& position,
                                      const PositionVector& shape,
-                                     std::vector<MSLane*> incoming
-#ifdef HAVE_INTERNAL_LANES
-                                     , std::vector<MSLane*> internal
-#endif
-                                    ):
+                                     std::vector<MSLane*> incoming, std::vector<MSLane*> internal):
     MSJunction(id, type, position, shape),
-    myIncomingLanes(incoming)
-#ifdef HAVE_INTERNAL_LANES
-    , myInternalLanes(internal)
-#endif
-{}
+    myIncomingLanes(incoming),
+    myInternalLanes(internal) {
+}
 
 
 MSNoLogicJunction::~MSNoLogicJunction() {}

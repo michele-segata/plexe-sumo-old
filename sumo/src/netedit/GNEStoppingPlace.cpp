@@ -56,16 +56,12 @@
 #include "GNEChange_Attribute.h"
 #include "GNEViewNet.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
-
 
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 
-GNEStoppingPlace::GNEStoppingPlace(const std::string& id, GNEViewNet* viewNet, SumoXMLTag tag, GUIIcon icon, GNELane* lane, SUMOReal startPos, SUMOReal endPos) :
+GNEStoppingPlace::GNEStoppingPlace(const std::string& id, GNEViewNet* viewNet, SumoXMLTag tag, GUIIcon icon, GNELane* lane, double startPos, double endPos) :
     GNEAdditional(id, viewNet, Position(), tag, icon),
     myStartPos(startPos),
     myEndPos(endPos),
@@ -84,18 +80,18 @@ GNEStoppingPlace::~GNEStoppingPlace() {
 
 Position
 GNEStoppingPlace::getPositionInView() const {
-    return myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLenght(myPosition.x()));
+    return myLane->getShape().positionAtOffset(myLane->getPositionRelativeToParametricLength(myPosition.x()));
 }
 
 
 void
-GNEStoppingPlace::moveAdditionalGeometry(SUMOReal offsetx, SUMOReal offsety) {
+GNEStoppingPlace::moveAdditionalGeometry(double offsetx, double offsety) {
     // Due a stoppingplace is placed over an lane ignore Warning of posy
     UNUSED_PARAMETER(offsety);
     // Move to Right if distance is positive, to left if distance is negative
     if (((offsetx > 0) &&
-            ((myLane->getPositionRelativeToParametricLenght(myEndPos) + offsetx) < myLane->getLaneParametricLenght())) ||
-            ((offsetx < 0) && ((myLane->getPositionRelativeToParametricLenght(myStartPos) + offsetx) > 0))) {
+            ((myLane->getPositionRelativeToParametricLength(myEndPos) + offsetx) < myLane->getLaneParametricLength())) ||
+            ((offsetx < 0) && ((myLane->getPositionRelativeToParametricLength(myStartPos) + offsetx) > 0))) {
         // change attribute
         myStartPos += offsetx;
         myEndPos += offsetx;
@@ -106,7 +102,7 @@ GNEStoppingPlace::moveAdditionalGeometry(SUMOReal offsetx, SUMOReal offsety) {
 
 
 void
-GNEStoppingPlace::commmitAdditionalGeometryMoved(SUMOReal oldPosx, SUMOReal oldPosy, GNEUndoList* undoList) {
+GNEStoppingPlace::commmitAdditionalGeometryMoved(double oldPosx, double oldPosy, GNEUndoList* undoList) {
     undoList->p_begin("position of " + toString(getTag()));
     undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_STARTPOS, toString(getStartPosition()), true, toString(oldPosx)));
     undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_ENDPOS, toString(getEndPosition()), true, toString(oldPosy)));
@@ -116,26 +112,26 @@ GNEStoppingPlace::commmitAdditionalGeometryMoved(SUMOReal oldPosx, SUMOReal oldP
 }
 
 
-SUMOReal
+double
 GNEStoppingPlace::getStartPosition() const {
     return myStartPos;
 }
 
 
-SUMOReal
+double
 GNEStoppingPlace::getEndPosition() const {
     return myEndPos;
 }
 
 
 void
-GNEStoppingPlace::setStartPosition(SUMOReal startPos) {
+GNEStoppingPlace::setStartPosition(double startPos) {
     if (startPos < 0) {
         throw InvalidArgument(toString(SUMO_ATTR_STARTPOS) + " '" + toString(startPos) + "' not allowed. Must be greater than 0");
     } else if (startPos >= myEndPos) {
         throw InvalidArgument(toString(SUMO_ATTR_STARTPOS) + " '" + toString(startPos) + "' not allowed. Must be smaller than endPos '" + toString(myEndPos) + "'");
     } else if ((myEndPos - startPos) < 1) {
-        throw InvalidArgument(toString(SUMO_ATTR_STARTPOS) + " '" + toString(startPos) + "' not allowed. Lenght of StoppingPlace must be equal or greater than 1");
+        throw InvalidArgument(toString(SUMO_ATTR_STARTPOS) + " '" + toString(startPos) + "' not allowed. Length of StoppingPlace must be equal or greater than 1");
     } else {
         myStartPos = startPos;
     }
@@ -143,13 +139,13 @@ GNEStoppingPlace::setStartPosition(SUMOReal startPos) {
 
 
 void
-GNEStoppingPlace::setEndPosition(SUMOReal endPos) {
-    if (endPos > myLane->getLaneShapeLenght()) {
+GNEStoppingPlace::setEndPosition(double endPos) {
+    if (endPos > myLane->getLaneShapeLength()) {
         throw InvalidArgument(toString(SUMO_ATTR_ENDPOS) + " '" + toString(endPos) + "' not allowed. Must be smaller than lane length");
     } else if (myStartPos >= endPos) {
         throw InvalidArgument(toString(SUMO_ATTR_ENDPOS) + " '" + toString(endPos) + "' not allowed. Must be smaller than endPos '" + toString(myEndPos) + "'");
     } else if ((endPos - myStartPos) < 1) {
-        throw InvalidArgument(toString(SUMO_ATTR_ENDPOS) + " '" + toString(endPos) + "' not allowed. Lenght of StoppingPlace must be equal or greater than 1");
+        throw InvalidArgument(toString(SUMO_ATTR_ENDPOS) + " '" + toString(endPos) + "' not allowed. Length of StoppingPlace must be equal or greater than 1");
     } else {
         myEndPos = endPos;
     }

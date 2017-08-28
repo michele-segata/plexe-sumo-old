@@ -17,9 +17,6 @@
     <ClCompile Include="..\..\..\src\netbuild\NBContHelper.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\netbuild\NBDistribution.cpp">
-      <Filter>Quellcodedateien</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\netbuild\NBDistrict.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
@@ -86,6 +83,12 @@
     <ClCompile Include="..\..\..\src\netbuild\NBHeightMapper.cpp">
       <Filter>Quellcodedateien</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\netbuild\NBPTStop.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\netbuild\NBPTStopCont.cpp">
+      <Filter>Quellcodedateien</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\netbuild\NBCapacity2Lanes.h">
@@ -101,9 +104,6 @@
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\netbuild\NBContHelper.h">
-      <Filter>Header-Dateien</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\netbuild\NBDistribution.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\netbuild\NBDistrict.h">
@@ -173,6 +173,12 @@
       <Filter>Header-Dateien</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\netbuild\NBHeightMapper.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\netbuild\NBPTStop.h">
+      <Filter>Header-Dateien</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\netbuild\NBPTStopCont.h">
       <Filter>Header-Dateien</Filter>
     </ClInclude>
   </ItemGroup>

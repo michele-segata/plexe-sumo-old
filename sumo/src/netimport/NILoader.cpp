@@ -68,20 +68,13 @@
 #include "typemap.h"
 #include "NILoader.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
-
 // ===========================================================================
 // method definitions
 // ===========================================================================
 NILoader::NILoader(NBNetBuilder& nb)
     : myNetBuilder(nb) {}
 
-
 NILoader::~NILoader() {}
-
 
 void
 NILoader::load(OptionsCont& oc) {
@@ -140,13 +133,18 @@ NILoader::load(OptionsCont& oc) {
     }
     WRITE_MESSAGE("   " + toString(myNetBuilder.getEdgeCont().size()) + " edges loaded.");
     if (myNetBuilder.getEdgeCont().getNoEdgeSplits() > 0) {
-        WRITE_MESSAGE("The split of edges was performed " + toString(myNetBuilder.getEdgeCont().getNoEdgeSplits()) + " times.");
+        WRITE_MESSAGE(
+            "The split of edges was performed " + toString(myNetBuilder.getEdgeCont().getNoEdgeSplits()) + " times.");
     }
+
+    //TODO: uncomment the following lines + adapt tests! [Gregor March '17]
+//  if (myNetBuilder.getPTStopCont().size() > 0) {
+//    WRITE_MESSAGE("   " + toString(myNetBuilder.getPTStopCont().size()) + " pt stops loaded.");
+//  }
     if (GeoConvHelper::getProcessing().usingGeoProjection()) {
         WRITE_MESSAGE("Proj projection parameters used: '" + GeoConvHelper::getProcessing().getProjString() + "'.");
     }
 }
-
 
 /* -------------------------------------------------------------------------
  * file loading methods
@@ -169,14 +167,15 @@ NILoader::loadXML(OptionsCont& oc) {
         WRITE_WARNING("Deprecated vehicle class(es) '" + toString(deprecatedVehicleClassesSeen) + "' in input edge files.");
     }
     // load the connections
-    loadXMLType(new NIXMLConnectionsHandler(myNetBuilder.getEdgeCont(), myNetBuilder.getNodeCont(), myNetBuilder.getTLLogicCont()),
+    loadXMLType(new NIXMLConnectionsHandler(myNetBuilder.getEdgeCont(),
+                                            myNetBuilder.getNodeCont(),
+                                            myNetBuilder.getTLLogicCont()),
                 oc.getStringVector("connection-files"), "connections");
     // load traffic lights (needs to come last, references loaded edges and connections)
     loadXMLType(new NIXMLTrafficLightsHandler(
                     myNetBuilder.getTLLogicCont(), myNetBuilder.getEdgeCont()),
                 oc.getStringVector("tllogic-files"), "traffic lights");
 }
-
 
 void
 NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string>& files,
@@ -204,11 +203,12 @@ NILoader::loadXMLType(SUMOSAXHandler* handler, const std::vector<std::string>& f
         }
     } catch (const XERCES_CPP_NAMESPACE::XMLException& toCatch) {
         exceptMsg = TplConvert::_2str(toCatch.getMessage())
-                    + "\n  The " + type  + " could not be loaded from '" + handler->getFileName() + "'.";
+                    + "\n  The " + type + " could not be loaded from '" + handler->getFileName() + "'.";
     } catch (const ProcessError& toCatch) {
-        exceptMsg = std::string(toCatch.what()) + "\n  The " + type  + " could not be loaded from '" + handler->getFileName() + "'.";
+        exceptMsg =
+            std::string(toCatch.what()) + "\n  The " + type + " could not be loaded from '" + handler->getFileName() + "'.";
     } catch (...) {
-        exceptMsg = "The " + type  + " could not be loaded from '" + handler->getFileName() + "'.";
+        exceptMsg = "The " + type + " could not be loaded from '" + handler->getFileName() + "'.";
     }
     delete handler;
     if (exceptMsg != "") {

@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+"""
+@file    test.py
+@author  Pablo Alvarez Lopez
+@date    2016-11-25
+@version $Id$
+
+python script used by sikulix for testing netedit
+
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
+Copyright (C) 2009-2017 DLR/TS, Germany
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+"""
 # import common functions for netedit tests
 import os
 import sys
@@ -12,48 +30,59 @@ import neteditTestFunctions as netedit
 neteditProcess, match = netedit.setupAndStart(neteditTestRoot, False)
 
 # apply zoom
-netedit.zoomIn(match.getTarget().offset(325, 200), 10)
+netedit.setZoom("25", "0", "25")
 
-# Change to create additional
+# go to additional mode
 netedit.additionalMode()
 
-# obtain match for comboboxAdditional
-comboboxAdditional = netedit.getComboBoxAdditional(match)
-
 # select E3
-netedit.changeAdditional(comboboxAdditional, 8)
+netedit.changeAdditional("e3Detector")
 
 # create E3 1
-netedit.leftClick(match, 100, 100)
+netedit.leftClick(match, 100, 50)
 
 # create E3 2
-netedit.leftClick(match, 300, 100)
+netedit.leftClick(match, 300, 50)
 
 # select entry detector
-netedit.changeAdditional(comboboxAdditional, -4)
+netedit.changeAdditional("detEntry")
 
 # Create Entry detectors for E3 2
-netedit.selectChild(comboboxAdditional, 4, 3)
-netedit.leftClick(match, 150, 250)
+netedit.selectAdditionalChild(4, 3)
+netedit.leftClick(match, 150, 300)
 
 # Change to delete
 netedit.deleteMode()
 
 # delete created E3 1
-netedit.leftClick(match, 100, 100)
+netedit.leftClick(match, 100, 50)
 
 # delete created E3 2
-netedit.leftClick(match, 300, 100)
+netedit.leftClick(match, 300, 50)
 
-# delete loaded E3 1
-netedit.leftClick(match, 400, 100)
+# delete loaded E3
+netedit.leftClick(match, 500, 50)
 
-# delete loaded E3 2
-netedit.leftClick(match, 500, 100)
+# delete lane with the second loaded entry
+netedit.leftClick(match, 400, 300)
 
-# Check undo redo
-netedit.undo(match, 4)
-netedit.redo(match, 4)
+# Check undo
+netedit.undo(match, 5)
+
+# Change to delete
+netedit.deleteMode()
+
+# disble 'Automatically delete additionals'
+netedit.changeAutomaticallyDeleteAdditionals(match)
+
+# try to delete lane with the second loaded entry (doesn't allowed)
+netedit.leftClick(match, 400, 300)
+
+# wait warning
+netedit.waitAutomaticallyDeleteAdditionalsWarning()
+
+# check redo
+netedit.redo(match, 5)
 
 # save additionals
 netedit.saveAdditionals()
@@ -62,4 +91,4 @@ netedit.saveAdditionals()
 netedit.saveNetwork()
 
 # quit netedit
-netedit.quit(neteditProcess, False, False)
+netedit.quit(neteditProcess)

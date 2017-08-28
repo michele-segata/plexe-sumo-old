@@ -45,6 +45,7 @@
 class MSLane;
 class MSBusStop;
 class OptionsCont;
+class MSDevice_Battery;
 
 
 // ===========================================================================
@@ -58,29 +59,29 @@ class MSChargingStation : public MSStoppingPlace {
 public:
 
     /// @brief constructor
-    MSChargingStation(const std::string& chargingStationID, MSLane& lane, SUMOReal startPos, SUMOReal endPos,
-                      SUMOReal chargingPower, SUMOReal efficency, bool chargeInTransit, int chargeDelay);
+    MSChargingStation(const std::string& chargingStationID, MSLane& lane, double startPos, double endPos,
+                      double chargingPower, double efficency, bool chargeInTransit, int chargeDelay);
 
     /// @brief destructor
     ~MSChargingStation();
 
     /// @brief Get charging station's charging power
-    SUMOReal getChargingPower() const;
+    double getChargingPower() const;
 
     /// @brief Get efficiency of the charging station
-    SUMOReal getEfficency() const;
+    double getEfficency() const;
 
     /// @brief Get chargeInTransit
     bool getChargeInTransit() const;
 
     /// @brief Get Charge Delay
-    SUMOReal getChargeDelay() const;
+    double getChargeDelay() const;
 
     /// @brief Set charging station's charging power
-    void setChargingPower(SUMOReal chargingPower);
+    void setChargingPower(double chargingPower);
 
     /// @brief Set efficiency of the charging station
-    void setEfficency(SUMOReal efficency);
+    void setEfficency(double efficency);
 
     /// @brief Set charge in transit of the charging station
     void setChargeInTransit(bool chargeInTransit);
@@ -95,18 +96,63 @@ public:
      * @param[in] position Position of vehicle in the LANE
      * @return true if is between StartPostion and EndPostion
      */
-    bool vehicleIsInside(const SUMOReal position) const;
+    bool vehicleIsInside(const double position) const;
 
     /// @brief Return true if in the current time step charging station is charging a vehicle
     bool isCharging() const;
 
+    /// @brief add charge value for output
+    void addChargeValueForOutput(double WCharged, MSDevice_Battery* battery);
+
+    /// @brief write charging station values
+    void writeChargingStationOutput(OutputDevice& output);
+
 protected:
 
+    /// @brief struct to save information for the cahrgingStation output
+    struct charge {
+        /// @brief constructor
+        charge(SUMOTime _timeStep, std::string _vehicleID, std::string _vehicleType, std::string _status,
+               double _WCharged, double _actualBatteryCapacity, double _maxBatteryCapacity, double _chargingPower,
+               double _chargingEfficiency, double _totalEnergyCharged) :
+            timeStep(_timeStep),
+            vehicleID(_vehicleID),
+            vehicleType(_vehicleType),
+            status(_status),
+            WCharged(_WCharged),
+            actualBatteryCapacity(_actualBatteryCapacity),
+            maxBatteryCapacity(_maxBatteryCapacity),
+            chargingPower(_chargingPower),
+            chargingEfficiency(_chargingEfficiency),
+            totalEnergyCharged(_totalEnergyCharged) {}
+
+        // @brief vehicle TimeStep
+        SUMOTime timeStep;
+        // @brief vehicle ID
+        std::string vehicleID;
+        // @brief vehicle Type
+        std::string vehicleType;
+        /// @brief status
+        std::string status;
+        // @brief W charged
+        double WCharged;
+        // @brief actual battery capacity AFTER charging
+        double actualBatteryCapacity;
+        // @brief battery max capacity
+        double maxBatteryCapacity;
+        // @brief current charging power of charging station
+        double chargingPower;
+        // @brief current efficiency of charging station
+        double chargingEfficiency;
+        // @brief current energy charged by charging stations AFTER charging
+        double totalEnergyCharged;
+    };
+
     /// @brief Charging station's charging power
-    SUMOReal myChargingPower;
+    double myChargingPower;
 
     /// @brief Efficiency of the charging station
-    SUMOReal myEfficiency;
+    double myEfficiency;
 
     /// @brief Allow charge in transit
     bool myChargeInTransit;
@@ -117,8 +163,13 @@ protected:
     /// @brief Check if in the current TimeStep chargingStation is charging a vehicle
     bool myChargingVehicle;
 
-private:
+    /// @brief total energy charged by this charging station
+    double myTotalCharge;
 
+    /// @brief vector with the charges of this charging station
+    std::vector<charge> myChargeValues;
+
+private:
     /// @brief Invalidated copy constructor.
     MSChargingStation(const MSChargingStation&);
 

@@ -44,13 +44,10 @@
 #include <foreign/tcpip/socket.h>
 
 #include <traci-server/TraCIConstants.h>
+#include <traci-server/TraCIDefs.h>
 #include <utils/common/SUMOTime.h>
 #include <utils/common/ToString.h>
 #include "TraCITestClient.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -149,7 +146,7 @@ TraCITestClient::run(std::string fileName, int port, std::string host) {
         }  else if (lineCommand.compare("subscribecontext") == 0) {
             // trigger command SubscribeXXXVariable
             int domID, varNo, domain;
-            SUMOReal range;
+            double range;
             std::string beginTime, endTime;
             std::string objID;
             defFile >> domID >> objID >> beginTime >> endTime >> domain >> range >> varNo;
@@ -186,7 +183,7 @@ TraCITestClient::commandSimulationStep(SUMOTime time) {
     tcpip::Storage inMsg;
     try {
         std::string acknowledgement;
-        check_resultState(inMsg, CMD_SIMSTEP2, false, &acknowledgement);
+        check_resultState(inMsg, CMD_SIMSTEP, false, &acknowledgement);
         answerLog << acknowledgement << std::endl;
         validateSimulationStep2(inMsg);
     } catch (tcpip::SocketException& e) {
@@ -292,7 +289,7 @@ TraCITestClient::commandSubscribeObjectVariable(int domID, const std::string& ob
 
 void
 TraCITestClient::commandSubscribeContextVariable(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime,
-        int domain, SUMOReal range, int varNo, std::ifstream& defFile) {
+        int domain, double range, int varNo, std::ifstream& defFile) {
     std::vector<int> vars;
     for (int i = 0; i < varNo; ++i) {
         int var;
@@ -579,10 +576,10 @@ TraCITestClient::readAndReportTypeDependent(tcpip::Storage& inMsg, int valueData
         double doublev = inMsg.readDouble();
         answerLog << " Double value: " << doublev << std::endl;
     } else if (valueDataType == TYPE_BOUNDINGBOX) {
-        SUMOReal lowerLeftX = inMsg.readDouble();
-        SUMOReal lowerLeftY = inMsg.readDouble();
-        SUMOReal upperRightX = inMsg.readDouble();
-        SUMOReal upperRightY = inMsg.readDouble();
+        double lowerLeftX = inMsg.readDouble();
+        double lowerLeftY = inMsg.readDouble();
+        double upperRightX = inMsg.readDouble();
+        double upperRightY = inMsg.readDouble();
         answerLog << " BoundaryBoxValue: lowerLeft x=" << lowerLeftX
                   << " y=" << lowerLeftY << " upperRight x=" << upperRightX
                   << " y=" << upperRightY << std::endl;
@@ -590,21 +587,21 @@ TraCITestClient::readAndReportTypeDependent(tcpip::Storage& inMsg, int valueData
         int length = inMsg.readUnsignedByte();
         answerLog << " PolygonValue: ";
         for (int i = 0; i < length; i++) {
-            SUMOReal x = inMsg.readDouble();
-            SUMOReal y = inMsg.readDouble();
+            double x = inMsg.readDouble();
+            double y = inMsg.readDouble();
             answerLog << "(" << x << "," << y << ") ";
         }
         answerLog << std::endl;
     } else if (valueDataType == POSITION_3D) {
-        SUMOReal x = inMsg.readDouble();
-        SUMOReal y = inMsg.readDouble();
-        SUMOReal z = inMsg.readDouble();
+        double x = inMsg.readDouble();
+        double y = inMsg.readDouble();
+        double z = inMsg.readDouble();
         answerLog << " Position3DValue: " << std::endl;
         answerLog << " x: " << x << " y: " << y
                   << " z: " << z << std::endl;
     } else if (valueDataType == POSITION_ROADMAP) {
         std::string roadId = inMsg.readString();
-        SUMOReal pos = inMsg.readDouble();
+        double pos = inMsg.readDouble();
         int laneId = inMsg.readUnsignedByte();
         answerLog << " RoadMapPositionValue: roadId=" << roadId
                   << " pos=" << pos
@@ -656,8 +653,8 @@ TraCITestClient::readAndReportTypeDependent(tcpip::Storage& inMsg, int valueData
         }
         answerLog << " ]" << std::endl;
     } else if (valueDataType == POSITION_2D) {
-        SUMOReal xv = inMsg.readDouble();
-        SUMOReal yv = inMsg.readDouble();
+        double xv = inMsg.readDouble();
+        double yv = inMsg.readDouble();
         answerLog << " position value: (" << xv << "," << yv << ")" << std::endl;
     } else if (valueDataType == TYPE_COLOR) {
         int r = inMsg.readUnsignedByte();
@@ -696,17 +693,28 @@ TraCITestClient::testAPI() {
     answerLog << "    getWidth: " << vehicletype.getWidth("t1") << "\n";
     vehicletype.setHeight("t1", 1.8);
     answerLog << "    getHeight: " << vehicletype.getHeight("t1") << "\n";
+    vehicletype.setMinGapLat("t1", 1.5);
+    answerLog << "    setMinGapLat: " << vehicletype.getMinGapLat("t1") << "\n";
+    vehicletype.setMaxSpeedLat("t1", 1.2);
+    answerLog << "    setMaxSpeedLat: " << vehicletype.getMaxSpeedLat("t1") << "\n";
+    vehicletype.setLateralAlignment("t1", "compact");
+    answerLog << "    getLateralAlignment: " << vehicletype.getLateralAlignment("t1") << "\n";
+
     answerLog << "  vehicle:\n";
     vehicle.setLine("0", "S42");
     std::vector<std::string> via;
-    via.push_back("e_m1");
+    via.push_back("e_shape1");
     vehicle.setVia("0", via);
     answerLog << "    getRoadID: " << vehicle.getRoadID("0") << "\n";
     answerLog << "    getLaneID: " << vehicle.getLaneID("0") << "\n";
+    answerLog << "    getLanePosition: " << vehicle.getLanePosition("0") << "\n";
+    answerLog << "    getLateralLanePosition: " << vehicle.getLateralLanePosition("0") << "\n";
     answerLog << "    getSpeedMode: " << vehicle.getSpeedMode("0") << "\n";
     answerLog << "    getSlope: " << vehicle.getSlope("0") << "\n";
     answerLog << "    getLine: " << vehicle.getLine("0") << "\n";
     answerLog << "    getVia: " << joinToString(vehicle.getVia("0"), ",") << "\n";
+    vehicle.setMaxSpeed("0", 30);
+    answerLog << "    getMaxSpeed: " << vehicle.getMaxSpeed("0") << "\n";
     TraCIColor col1;
     col1.r = 255;
     col1.g = 255;
@@ -714,7 +722,7 @@ TraCITestClient::testAPI() {
     col1.a = 128;
     vehicle.setColor("0", col1);
     TraCIColor col2 = vehicle.getColor("0");
-    answerLog << "    getColor: " << col2.r << "r=" << col2.r << " g=" << col2.g << " b=" << col2.b << " a=" << col2.a << "\n";
+    answerLog << "    getColor:  r=" << (int)col2.r << " g=" << (int)col2.g << " b=" << (int)col2.b << " a=" << (int)col2.a << "\n";
     answerLog << "    getNextTLS:\n";
     std::vector<VehicleScope::NextTLSData> result = vehicle.getNextTLS("0");
     for (int i = 0; i < (int)result.size(); ++i) {
@@ -726,6 +734,8 @@ TraCITestClient::testAPI() {
     simulationStep();
     answerLog << "    getRoadID: " << vehicle.getRoadID("0") << "\n";
     answerLog << "    getLaneID: " << vehicle.getLaneID("0") << "\n";
+    vehicle.changeTarget("0", "e_o0");
+    answerLog << "    edges: " << joinToString(vehicle.getEdges("0"), " ") << "\n";
     answerLog << "    add:\n";
     vehicle.add("1", "e_u1");
     simulationStep();
@@ -740,9 +750,9 @@ TraCITestClient::testAPI() {
     answerLog << "  inductionloop:\n";
     answerLog << "    getIDList: " << joinToString(inductionloop.getIDList(), " ") << "\n";
     answerLog << "    getVehicleData:\n";
-    std::vector<InductionLoopScope::VehicleData> result2 = inductionloop.getVehicleData("det1");
+    std::vector<TraCIVehicleData> result2 = inductionloop.getVehicleData("det1");
     for (int i = 0; i < (int)result2.size(); ++i) {
-        const InductionLoopScope::VehicleData& vd = result2[i];
+        const TraCIVehicleData& vd = result2[i];
         answerLog << "      veh=" << vd.id << " length=" << vd.length << " entered=" << vd.entryTime << " left=" << vd.leaveTime << " type=" << vd.typeID << "\n";
     }
 
@@ -802,6 +812,31 @@ TraCITestClient::testAPI() {
     person.removeStages("p1");
     answerLog << "    getRemainingStages: " << person.getRemainingStages("p1") << "\n";
     answerLog << "    getStage: " << person.getStage("p1") << "\n";
+    simulationStep();
+    answerLog << "  trafficlights:\n";
+    answerLog << "    getIDList: " << joinToString(trafficlights.getIDList(), " ") << "\n";
+    answerLog << "    state: " << trafficlights.getRedYellowGreenState("n_m4") << "\n";
+    answerLog << "    program: " << trafficlights.getProgram("n_m4") << "\n";
+    answerLog << "    phase: " << trafficlights.getPhase("n_m4") << "\n";
+    answerLog << "    nextSwitch: " << trafficlights.getNextSwitch("n_m4") << "\n";
+    answerLog << "    controlledLanes: " << joinToString(trafficlights.getControlledLanes("n_m4"), " ") << "\n";
+    std::vector<TraCILink> links = trafficlights.getControlledLinks("n_m4");
+    answerLog << "    controlledLinks:\n";
+    for (int i = 0; i < (int)links.size(); ++i) {
+        answerLog << "      index=" << i << " from=" << links[i].from << " via=" << links[i].via << " to=" << links[i].to << "\n";
+    }
+    answerLog << "  load:\n";
+    std::vector<std::string> args;
+    args.push_back("-n");
+    args.push_back("net.net.xml");
+    args.push_back("-r");
+    args.push_back("input_routes.rou.xml");
+    args.push_back("--no-step-log");
+    load(args);
+    simulationStep();
+    answerLog << "    getCurrentTime: " << simulation.getCurrentTime() << "\n";
+    simulation.subscribe(CMD_SUBSCRIBE_VEHICLE_VARIABLE, "0", 0, TIME2STEPS(100), vars);
+    simulation.subscribeContext(CMD_SUBSCRIBE_EDGE_CONTEXT, "e_u1", 0, TIME2STEPS(100), CMD_GET_VEHICLE_VARIABLE, 100, vars2);
 
     answerLog << "  gui:\n";
     try {

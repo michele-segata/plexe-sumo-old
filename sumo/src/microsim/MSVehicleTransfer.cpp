@@ -42,16 +42,12 @@
 #include "MSInsertionControl.h"
 #include "MSVehicleTransfer.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static member definitions
 // ===========================================================================
 MSVehicleTransfer* MSVehicleTransfer::myInstance = 0;
-const SUMOReal MSVehicleTransfer::TeleportMinSpeed = 1;
+const double MSVehicleTransfer::TeleportMinSpeed = 1;
 const std::set<const MSVehicle*> MSVehicleTransfer::myEmptyVehicleSet;
 
 // ===========================================================================
@@ -120,12 +116,13 @@ MSVehicleTransfer::checkInsertions(SUMOTime time) {
         //   then pick the one which is least occupied
         // @todo maybe parking vehicles should always continue on the rightmost lane?
         const MSLane* oldLane = desc.myVeh->getLane();
-        MSLane* l = (nextEdge != 0 ? e->getFreeLane(e->allowedLanes(*nextEdge, vclass), vclass) :
-                     e->getFreeLane(0, vclass));
+        const double departPos = desc.myParking ? desc.myVeh->getPositionOnLane() : 0;
+        MSLane* l = (nextEdge != 0 ? e->getFreeLane(e->allowedLanes(*nextEdge, vclass), vclass, departPos) :
+                     e->getFreeLane(0, vclass, departPos));
 
         if (desc.myParking) {
             // handle parking vehicles
-            if (l->isInsertionSuccess(desc.myVeh, 0, desc.myVeh->getPositionOnLane(), desc.myVeh->getLateralPositionOnLane(), false, MSMoveReminder::NOTIFICATION_PARKING)) {
+            if (l->isInsertionSuccess(desc.myVeh, 0, departPos, desc.myVeh->getLateralPositionOnLane(), false, MSMoveReminder::NOTIFICATION_PARKING)) {
                 MSNet::getInstance()->informVehicleStateListener(desc.myVeh, MSNet::VEHICLE_STATE_ENDING_PARKING);
                 myParkingVehicles[oldLane].erase(desc.myVeh);
                 i = myVehicles.erase(i);
@@ -226,7 +223,7 @@ MSVehicleTransfer::loadState(const SUMOSAXAttributes& attrs, const SUMOTime offs
     }
     SUMOTime proceedTime = (SUMOTime)attrs.getLong(SUMO_ATTR_DEPART);
     MSLane* parkingLane = attrs.hasAttribute(SUMO_ATTR_PARKING) ? MSLane::dictionary(attrs.getString(SUMO_ATTR_PARKING)) : 0;
-    myVehicles.push_back(VehicleInformation(veh, proceedTime + offset, parkingLane != 0));
+    myVehicles.push_back(VehicleInformation(veh, proceedTime - offset, parkingLane != 0));
     if (parkingLane != 0) {
         myParkingVehicles[parkingLane].insert(veh);
         veh->setTentativeLaneAndPosition(parkingLane, veh->getPositionOnLane());

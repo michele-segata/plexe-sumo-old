@@ -47,6 +47,8 @@
             <xsd:element name="poly" type="polygonType" minOccurs="0"/>
             <xsd:element name="poi" type="poiType" minOccurs="0"/>
 
+            <xsd:element name="type" type="typeType" minOccurs="0"/>
+
             <xsd:element name="include" minOccurs="0">
                 <xsd:complexType>
                     <xsd:attribute name="href" type="xsd:string"/>
@@ -270,6 +272,7 @@
             </xsd:element>
         </xsd:sequence>
         <xsd:attribute name="id" type="xsd:string" use="required"/>
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
         <xsd:attribute name="lane" type="xsd:string" use="required"/>
         <xsd:attribute name="startPos" type="xsd:float"/>
         <xsd:attribute name="endPos" type="xsd:float"/>

@@ -37,10 +37,6 @@
 #include "../tempstructs/NIVissimTL.h"
 #include "NIVissimSingleTypeParser_Lichtsignalanlagendefinition.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -106,11 +102,11 @@ NIVissimSingleTypeParser_Lichtsignalanlagendefinition::parseFixedTime(
     std::string tag;
     from >> tag;
     //
-    SUMOReal absdur;
+    double absdur;
     from >> absdur; // type-checking is missing!
     //
     tag = readEndSecure(from);
-    SUMOReal offset = 0;
+    double offset = 0;
     if (tag == "versatz") {
         from >> offset; // type-checking is missing!
     }
@@ -130,11 +126,11 @@ NIVissimSingleTypeParser_Lichtsignalanlagendefinition::parseVAS(
     std::string tag;
     from >> tag;
     //
-    SUMOReal absdur;
+    double absdur;
     from >> absdur; // type-checking is missing!
     //
     tag = readEndSecure(from);
-    SUMOReal offset = 0;
+    double offset = 0;
     if (tag == "versatz") {
         from >> offset; // type-checking is missing!
     }
@@ -148,11 +144,11 @@ NIVissimSingleTypeParser_Lichtsignalanlagendefinition::parseRestActuated(
     std::string tag;
     from >> tag;
     //
-    SUMOReal absdur;
+    double absdur;
     from >> absdur; // type-checking is missing!
     //
     tag = readEndSecure(from);
-    SUMOReal offset = 0;
+    double offset = 0;
     if (tag == "versatz") {
         from >> offset; // type-checking is missing!
     }

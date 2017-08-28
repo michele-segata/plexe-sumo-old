@@ -33,10 +33,6 @@
 #include <utils/foxtools/MFXMutex.h>
 #include "GUIEventControl.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // member definitions
@@ -48,12 +44,10 @@ GUIEventControl::~GUIEventControl() {
 }
 
 
-SUMOTime
-GUIEventControl::addEvent(Command* operation,
-                          SUMOTime execTimeStep,
-                          AdaptType type) {
+void
+GUIEventControl::addEvent(Command* operation, SUMOTime execTimeStep) {
     AbstractMutex::ScopedLocker locker(myLock);
-    return MSEventControl::addEvent(operation, execTimeStep, type);
+    MSEventControl::addEvent(operation, execTimeStep);
 }
 
 

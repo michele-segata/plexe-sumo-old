@@ -46,15 +46,20 @@ def parse_args(args):
                          default=False, help="write polgyons with geo-coordinates")
     optParser.add_option("--blur", type="float",
                          default=0, help="maximum random disturbance to route geometry")
+    optParser.add_option("--standalone", action="store_true",
+                         default=False, help="Parse stand-alone routes that are not define as child-element of a vehicle")
     options, args = optParser.parse_args(args=args)
+    if len(args) < 2:
+        sys.exit(USAGE)
     try:
-        options.net, options.routefile = args
+        options.net = args[0]
+        options.routefiles = args[1:]
         options.colorgen = Colorgen(
             (options.hue, options.saturation, options.brightness))
     except:
         sys.exit(USAGE)
     if options.outfile is None:
-        options.outfile = options.routefile + ".poly.xml"
+        options.outfile = options.routefiles[0] + ".poly.xml"
     return options
 
 
@@ -62,7 +67,7 @@ def randomize_pos(pos, blur):
     return tuple([val + random.uniform(-blur, blur) for val in pos])
 
 
-def generate_poly(net, id, color, layer, geo, edges, blur, outf):
+def generate_poly(net, id, color, layer, geo, edges, blur, outf, type="route"):
     shape = list(itertools.chain(*list(net.getEdge(e).getLane(0).getShape()
                                        for e in edges)))
     if blur > 0:
@@ -73,19 +78,41 @@ def generate_poly(net, id, color, layer, geo, edges, blur, outf):
         shape = [net.convertXY2LonLat(*pos) for pos in shape]
         geoFlag = ' geo="true"'
     shapeString = ' '.join('%s,%s' % (x, y) for x, y in shape)
-    outf.write('<poly id="%s" color="%s" layer="%s" type="route" shape="%s"%s/>\n' % (
-        id, color, layer, shapeString, geoFlag))
+    outf.write('<poly id="%s" color="%s" layer="%s" type="%s" shape="%s"%s/>\n' % (
+        id, color, layer, type, shapeString, geoFlag))
 
 
 def main(args):
     options = parse_args(args)
     net = readNet(options.net)
+    known_ids = set()
+
+    def unique_id(cand, index=0):
+        cand2 = cand
+        if index > 0:
+            cand2 = "%s#%s" % (cand, index)
+        if cand2 in known_ids:
+            return unique_id(cand, index + 1)
+        else:
+            known_ids.add(cand2)
+            return cand2
+
     with open(options.outfile, 'w') as outf:
         outf.write('<polygons>\n')
-        for vehicle in parse(options.routefile, 'vehicle'):
-            generate_poly(net, vehicle.id, options.colorgen(),
-                          options.layer, options.geo,
-                          vehicle.route[0].edges.split(), options.blur, outf)
+        for routefile in options.routefiles:
+            print("parsing %s" % routefile)
+            if options.standalone:
+                for route in parse(routefile, 'route'):
+                    #print("found veh", vehicle.id)
+                    generate_poly(net, unique_id(route.id), options.colorgen(),
+                                  options.layer, options.geo,
+                                  route.edges.split(), options.blur, outf)
+            else:
+                for vehicle in parse(routefile, 'vehicle'):
+                    #print("found veh", vehicle.id)
+                    generate_poly(net, unique_id(vehicle.id), options.colorgen(),
+                                  options.layer, options.geo,
+                                  vehicle.route[0].edges.split(), options.blur, outf)
         outf.write('</polygons>\n')
 
 if __name__ == "__main__":

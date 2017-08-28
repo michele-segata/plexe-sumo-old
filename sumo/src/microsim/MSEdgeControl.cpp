@@ -39,10 +39,6 @@
 #include <iostream>
 #include <vector>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // member method definitions
@@ -202,6 +198,16 @@ MSEdgeControl::getEdgeNames() const {
 void
 MSEdgeControl::gotActive(MSLane* l) {
     myChangedStateLanes.insert(l);
+}
+
+void
+MSEdgeControl::setAdditionalRestrictions() {
+    for (MSEdgeVector::const_iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
+        const std::vector<MSLane*>& lanes = (*i)->getLanes();
+        for (std::vector<MSLane*>::const_iterator j = lanes.begin(); j != lanes.end(); ++j) {
+            (*j)->initRestrictions();
+        }
+    }
 }
 
 

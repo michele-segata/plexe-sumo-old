@@ -37,7 +37,6 @@
 #include <utils/geom/GeomConvHelper.h>
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/common/MsgHandler.h>
-#include <utils/common/TplConvert.h>
 #include <utils/xml/XMLSubSys.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/windows/GUIMainWindow.h>
@@ -59,10 +58,6 @@
 #include "GNEChange_Attribute.h"
 #include "GNEPoly.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static members
@@ -72,8 +67,8 @@
 // method definitions
 // ===========================================================================
 GNEPoly::GNEPoly(GNENet* net, GNEJunction* junction, const std::string& id, const std::string& type, const PositionVector& shape, bool fill,
-                 const RGBColor& color, SUMOReal layer,
-                 SUMOReal angle, const std::string& imgFile) :
+                 const RGBColor& color, double layer,
+                 double angle, const std::string& imgFile) :
     GUIPolygon(id, type, color, shape, fill, layer, angle, imgFile),
     GNEAttributeCarrier(SUMO_TAG_POLY, ICON_LOCATEPOLY),
     myNet(net),
@@ -86,7 +81,7 @@ GNEPoly::~GNEPoly() { }
 
 void
 GNEPoly::drawGL(const GUIVisualizationSettings& s) const {
-    const SUMOReal hintSize = 0.8;
+    const double hintSize = 0.8;
     GUIPolygon::drawGL(s);
     // draw geometry hints
     if (s.scale * hintSize > 1.) { // check whether it is not too small

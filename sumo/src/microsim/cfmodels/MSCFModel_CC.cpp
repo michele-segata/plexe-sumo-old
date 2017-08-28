@@ -40,11 +40,11 @@
 // method definitions
 // ===========================================================================
 MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
-                           SUMOReal accel, SUMOReal decel,
-                           SUMOReal ccDecel, SUMOReal headwayTime, SUMOReal constantSpacing,
-                           SUMOReal kp, SUMOReal lambda, SUMOReal c1, SUMOReal xi,
-                           SUMOReal omegaN, SUMOReal tau, int lanesCount, SUMOReal ccAccel)
-    : MSCFModel(vtype, accel, decel, headwayTime), myCcDecel(ccDecel), myConstantSpacing(constantSpacing)
+                           double accel, double decel,
+                           double ccDecel, double headwayTime, double constantSpacing,
+                           double kp, double lambda, double c1, double xi,
+                           double omegaN, double tau, int lanesCount, double ccAccel)
+    : MSCFModel(vtype, accel, decel, decel, decel, headwayTime), myCcDecel(ccDecel), myConstantSpacing(constantSpacing)
     , myKp(kp), myLambda(lambda), myC1(c1), myXi(xi), myOmegaN(omegaN), myTau(tau), myAlpha1(1 - myC1), myAlpha2(myC1),
     myAlpha3(-(2 * myXi - myC1 *(myXi + sqrt(myXi* myXi - 1))) * myOmegaN), myAlpha4(-(myXi + sqrt(myXi* myXi - 1)) * myOmegaN* myC1),
     myAlpha5(-myOmegaN* myOmegaN), myAlpha(TS / (myTau + TS)), myOneMinusAlpha(1 - myAlpha), myLanesCount(lanesCount), myCcAccel(ccAccel) {
@@ -57,15 +57,15 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
     }
 
     //instantiate the driver model. For now, use Krauss as default, then needs to be parameterized
-    myHumanDriver = new MSCFModel_Krauss(vtype, accel, decel, 0.5, 1.5);
+    myHumanDriver = new MSCFModel_Krauss(vtype, accel, decel, decel, decel, 0.5, 1.5);
 
 }
 
 MSCFModel_CC::~MSCFModel_CC() {}
 
-SUMOReal
-MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
-    SUMOReal vNext;
+double
+MSCFModel_CC::moveHelper(MSVehicle* const veh, double vPos) const {
+    double vNext;
     CC_VehicleVariables *vars = (CC_VehicleVariables *)veh->getCarFollowVariables();
 
     if (vars->activeController != Plexe::DRIVER) {
@@ -106,8 +106,8 @@ MSCFModel_CC::moveHelper(MSVehicle* const veh, SUMOReal vPos) const {
 }
 
 
-SUMOReal
-MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const {
+double
+MSCFModel_CC::followSpeed(const MSVehicle* const veh, double speed, double gap2pred, double predSpeed, double predMaxDecel) const {
 
     CC_VehicleVariables *vars = (CC_VehicleVariables *)veh->getCarFollowVariables();
 
@@ -136,14 +136,14 @@ MSCFModel_CC::followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal g
         return myHumanDriver->followSpeed(veh, speed, gap2pred, predSpeed, predMaxDecel);
 }
 
-SUMOReal
-MSCFModel_CC::insertionFollowSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const {
+double
+MSCFModel_CC::insertionFollowSpeed(const MSVehicle* const veh, double speed, double gap2pred, double predSpeed, double predMaxDecel) const {
     //by returning speed + 1, we tell sumo that "speed" is always a safe speed
     return speed + 1;
 }
 
-SUMOReal
-MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred) const {
+double
+MSCFModel_CC::stopSpeed(const MSVehicle* const veh, double speed, double gap2pred) const {
 
     /**
      * This SUMO method is meant for asking the car what speed the driver would
@@ -189,7 +189,7 @@ MSCFModel_CC::stopSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap
     }
 }
 
-SUMOReal MSCFModel_CC::freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen, SUMOReal maxSpeed, const bool onInsertion) const {
+double MSCFModel_CC::freeSpeed(const MSVehicle* const veh, double speed, double seen, double maxSpeed, const bool onInsertion) const {
     CC_VehicleVariables *vars = (CC_VehicleVariables *)veh->getCarFollowVariables();
     if (vars->activeController != Plexe::DRIVER)
     {
@@ -200,8 +200,8 @@ SUMOReal MSCFModel_CC::freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUM
     }
 }
 
-SUMOReal
-MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
+double
+MSCFModel_CC::interactionGap(const MSVehicle* const veh, double vL) const {
 
     CC_VehicleVariables *vars = (CC_VehicleVariables *)veh->getCarFollowVariables();
     if (vars->activeController != Plexe::DRIVER)
@@ -215,13 +215,13 @@ MSCFModel_CC::interactionGap(const MSVehicle* const veh, SUMOReal vL) const {
 
 }
 
-SUMOReal
-MSCFModel_CC::maxNextSpeed(SUMOReal speed) const {
-    return speed + (SUMOReal) ACCEL2SPEED(getMaxAccel());
+double
+MSCFModel_CC::maxNextSpeed(double speed) const {
+    return speed + (double) ACCEL2SPEED(getMaxAccel());
 }
 
-SUMOReal
-MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, enum CONTROLLER_INVOKER invoker) const {
+double
+MSCFModel_CC::_v(const MSVehicle* const veh, double gap2pred, double egoSpeed, double predSpeed, double desSpeed, enum CONTROLLER_INVOKER invoker) const {
 
     //acceleration computed by the controller
     double controllerAcceleration;
@@ -381,7 +381,7 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     engineAcceleration = vars->engine->getRealAcceleration(egoSpeed, vars->egoAcceleration, controllerAcceleration, MSNet::getInstance()->getCurrentTimeStep());
 
     //compute the speed from the actual acceleration
-    speed = MAX2(SUMOReal(0), egoSpeed + ACCEL2SPEED(engineAcceleration));
+    speed = MAX2(double(0), egoSpeed + ACCEL2SPEED(engineAcceleration));
 
     //if we have to ignore modifications (e.g., when this method is invoked by the lane changing logic)
     //DO NOT change the state of the vehicle
@@ -403,24 +403,24 @@ MSCFModel_CC::_v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpee
     return speed;
 }
 
-SUMOReal
-MSCFModel_CC::_cc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal desSpeed) const {
+double
+MSCFModel_CC::_cc(const MSVehicle *veh, double egoSpeed, double desSpeed) const {
 
     //Eq. 5.5 of the Rajamani book, with Ki = 0 and bounds on max and min acceleration
     return std::min(myCcAccel, std::max(-myCcDecel, -myKp * (egoSpeed - desSpeed)));
 
 }
 
-SUMOReal
-MSCFModel_CC::_acc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const {
+double
+MSCFModel_CC::_acc(const MSVehicle *veh, double egoSpeed, double predSpeed, double gap2pred, double headwayTime) const {
 
     //Eq. 6.18 of the Rajamani book
     return -1.0 / headwayTime * (egoSpeed - predSpeed + myLambda * (-gap2pred + headwayTime * egoSpeed + 2));
 
 }
 
-SUMOReal
-MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const {
+double
+MSCFModel_CC::_cacc(const MSVehicle *veh, double egoSpeed, double predSpeed, double predAcceleration, double gap2pred, double leaderSpeed, double leaderAcceleration, double spacing) const {
 
     CC_VehicleVariables* vars = (CC_VehicleVariables*)veh->getCarFollowVariables();
     //compute epsilon, i.e., the desired distance error
@@ -433,8 +433,8 @@ MSCFModel_CC::_cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed,
 
 }
 
-SUMOReal
-MSCFModel_CC::_ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred) const {
+double
+MSCFModel_CC::_ploeg(const MSVehicle *veh, double egoSpeed, double predSpeed, double predAcceleration, double gap2pred) const {
 
     CC_VehicleVariables* vars = (CC_VehicleVariables*)veh->getCarFollowVariables();
 
@@ -447,11 +447,11 @@ MSCFModel_CC::_ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed
 
 }
 
-SUMOReal
+double
 MSCFModel_CC::d_i_j(const struct Plexe::VEHICLE_DATA *vehicles, const double h[MAX_N_CARS], int i, int j) const {
 
     int k, min_i, max_i;
-    SUMOReal d = 0;
+    double d = 0;
     //compute indexes of the summation
     if (j < i) {
         min_i = j;
@@ -472,8 +472,8 @@ MSCFModel_CC::d_i_j(const struct Plexe::VEHICLE_DATA *vehicles, const double h[M
 
 }
 
-SUMOReal
-MSCFModel_CC::_consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPosition, SUMOReal time) const {
+double
+MSCFModel_CC::_consensus(const MSVehicle* veh, double egoSpeed, Position egoPosition, double time) const {
     //TODO: this controller, by using real GPS coordinates, does only work
     //when vehicles are traveling west-to-east on a straight line, basically
     //on the X axis. This needs to be fixed to consider direction as well
@@ -530,8 +530,8 @@ MSCFModel_CC::_consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPo
     return u_i;
 }
 
-SUMOReal
-MSCFModel_CC::_actuator(const MSVehicle *veh, SUMOReal acceleration, SUMOReal currentAcceleration) const {
+double
+MSCFModel_CC::_actuator(const MSVehicle *veh, double acceleration, double currentAcceleration) const {
 
     CC_VehicleVariables* vars = (CC_VehicleVariables*)veh->getCarFollowVariables();
     //standard low-pass filter discrete implementation
@@ -540,25 +540,25 @@ MSCFModel_CC::_actuator(const MSVehicle *veh, SUMOReal acceleration, SUMOReal cu
 }
 
 void
-MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) const {
+MSCFModel_CC::setCCDesiredSpeed(const MSVehicle* veh, double ccDesiredSpeed) const {
     CC_VehicleVariables* vars = (CC_VehicleVariables*) veh->getCarFollowVariables();
     vars->ccDesiredSpeed = ccDesiredSpeed;
 }
 
 void
-MSCFModel_CC::setCACCConstantSpacing(const MSVehicle * veh, SUMOReal spacing) const {
+MSCFModel_CC::setCACCConstantSpacing(const MSVehicle * veh, double spacing) const {
     CC_VehicleVariables* vars = (CC_VehicleVariables*) veh->getCarFollowVariables();
     vars->caccSpacing = spacing;
 }
 
-SUMOReal
+double
 MSCFModel_CC::getCACCConstantSpacing(const MSVehicle * veh) const {
     CC_VehicleVariables* vars = (CC_VehicleVariables*) veh->getCarFollowVariables();
     return vars->caccSpacing;
 }
 
 void
-MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time) const {
+MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, double speed, double acceleration, Position position, double time) const {
     CC_VehicleVariables* vars = (CC_VehicleVariables*) veh->getCarFollowVariables();
     vars->leaderAcceleration = acceleration;
     vars->leaderSpeed = speed;
@@ -570,7 +570,7 @@ MSCFModel_CC::setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMORea
 }
 
 void
-MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time) const {
+MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, double speed, double acceleration, Position position, double time) const {
     CC_VehicleVariables* vars = (CC_VehicleVariables*) veh->getCarFollowVariables();
     vars->frontAcceleration = acceleration;
     vars->frontSpeed = speed;
@@ -583,7 +583,7 @@ MSCFModel_CC::setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed
 }
 
 void
-MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration, Position &position, SUMOReal &time) const {
+MSCFModel_CC::getVehicleInformation(const MSVehicle* veh, double& speed, double& acceleration, double& controllerAcceleration, Position &position, double &time) const {
     CC_VehicleVariables* vars = (CC_VehicleVariables*) veh->getCarFollowVariables();
     speed = vars->egoSpeed;
     acceleration = vars->egoAcceleration;

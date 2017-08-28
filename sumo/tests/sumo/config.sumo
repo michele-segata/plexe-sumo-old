@@ -44,6 +44,7 @@ vtk:vtk.txt
 queue:queue.xml
 emissions:emissions.xml
 battery:battery.xml
+chargingstations:chargingstations.xml
 tol_sql:tol_sql.txt
 tol_plain:tol_plain.txt
 tol_la_sql:tol_la_sql.txt
@@ -102,22 +103,23 @@ full:<!--{[->]}-->
 queue:<!--{[->]}-->
 emissions:<!--{[->]}-->
 battery:<!--{[->]}-->
+chargingstations:<!--{[->]}-->
 links:<!--{[->]}-->
 vtk:<!--{[->]}-->
 vehroutes_ignore_arrival:<!--{[->]}-->
 vehroutes_ignore_arrival:arrival="[^"]*"{REPLACE arrival="<ignored>"}
 state:<!--{[->]}-->
-state:<snapshot version="[^"]*"{REPLACE <snapshot version="<version>"}
+state:<snapshot (.*) version="[^"]*"{REPLACE <snapshot \1 version="<version>"}
 state2:<!--{[->]}-->
-state2:<snapshot version="[^"]*"{REPLACE <snapshot version="<version>"}
+state2:<snapshot (.*) version="[^"]*"{REPLACE <snapshot \1 version="<version>"}
 state_0:<!--{[->]}-->
-state_0:<snapshot version="[^"]*"{REPLACE <snapshot version="<version>"}
+state_0:<snapshot (.*) version="[^"]*"{REPLACE <snapshot \1 version="<version>"}
 state_4:<!--{[->]}-->
-state_4:<snapshot version="[^"]*"{REPLACE <snapshot version="<version>"}
+state_4:<snapshot (.*) version="[^"]*"{REPLACE <snapshot \1 version="<version>"}
 state_8:<!--{[->]}-->
-state_8:<snapshot version="[^"]*"{REPLACE <snapshot version="<version>"}
+state_8:<snapshot (.*) version="[^"]*"{REPLACE <snapshot \1 version="<version>"}
 state_12:<!--{[->]}-->
-state_12:<snapshot version="[^"]*"{REPLACE <snapshot version="<version>"}
+state_12:<snapshot (.*) version="[^"]*"{REPLACE <snapshot \1 version="<version>"}
 binstate:dev-SVN-r\d+{REPLACE dev-SVN-r<version>}
 tls_state:<!--{[->]}-->
 tls_switch:<!--{[->]}-->

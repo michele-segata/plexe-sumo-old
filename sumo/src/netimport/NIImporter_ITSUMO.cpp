@@ -49,10 +49,6 @@
 #include "NILoader.h"
 #include "NIImporter_ITSUMO.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 
 // ===========================================================================
@@ -236,8 +232,8 @@ NIImporter_ITSUMO::Handler::myEndElement(int element) {
         case ITSUMO_TAG_NODE: {
             try {
                 std::string id = myParameter["id"];
-                SUMOReal x = TplConvert::_2SUMOReal(myParameter["x"].c_str());
-                SUMOReal y = TplConvert::_2SUMOReal(myParameter["y"].c_str());
+                double x = TplConvert::_2double(myParameter["x"].c_str());
+                double y = TplConvert::_2double(myParameter["y"].c_str());
                 Position pos(x, y);
                 if (!NBNetBuilder::transformCoordinate(pos)) {
                     WRITE_ERROR("Unable to project coordinates for node '" + id + "'.");
@@ -273,11 +269,11 @@ NIImporter_ITSUMO::Handler::myEndElement(int element) {
                     if (myLaneSets.find(id) != myLaneSets.end()) {
                         WRITE_ERROR("Fond laneset-id '" + id + "' twice.");
                     } else {
-                        SUMOReal vSum = 0;
+                        double vSum = 0;
                         for (std::vector<Lane>::iterator j = myCurrentLanes.begin(); j != myCurrentLanes.end(); ++j) {
                             vSum += (*j).v;
                         }
-                        vSum /= (SUMOReal) myCurrentLanes.size();
+                        vSum /= (double) myCurrentLanes.size();
                         LaneSet* ls = new LaneSet(id, myCurrentLanes, vSum, i, from, to);
                         myLaneSets[id] = ls;
                         myCurrentLaneSets.push_back(ls);
@@ -295,7 +291,7 @@ NIImporter_ITSUMO::Handler::myEndElement(int element) {
             try {
                 std::string id = myParameter["laneID"];
                 int i = TplConvert::_2int(myParameter["i"].c_str());
-                SUMOReal v = TplConvert::_2SUMOReal(myParameter["v"].c_str());
+                double v = TplConvert::_2double(myParameter["v"].c_str());
                 myCurrentLanes.push_back(Lane(id, (int) i, v));
             } catch (NumberFormatException&) {
                 WRITE_ERROR("Not numeric value in lane '" + myParameter["laneID"] + "'.");

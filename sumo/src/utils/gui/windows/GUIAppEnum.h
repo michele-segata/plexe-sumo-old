@@ -339,6 +339,8 @@ enum {
     /// @name GLChosenEditor - Dialog IDs
     /// @{
 
+    /// @brief set type of selection
+    MID_CHOOSEN_OPERATION,
     /// @brief set subset of elements
     MID_CHOOSEN_ELEMENTS,
     /// @brief Load set
@@ -366,8 +368,6 @@ enum {
     MID_GNE_DELETEFRAME_INSPECT,
     /// @brief In GNEDeleteFrame, delete element
     MID_GNE_DELETEFRAME_DELETE,
-    /// @brief tree list with the childs
-    MID_GNEINSPECT_CHILDS,
     /// @brief In GNEInspectFrame, center element
     MID_GNE_INSPECTFRAME_CENTER,
     /// @brief In GNEInspectFrame, inspect element
@@ -417,6 +417,8 @@ enum {
 
     /// @brief abort current edit operation
     MID_GNE_ABORT,
+    /// @brief focus upper element of current frame
+    MID_GNE_FOCUS_FRAME,
     /// @brief hot key <DEL>
     MID_GNE_HOTKEY_DEL,
     /// @brief hot key <ENTER>
@@ -453,6 +455,7 @@ enum {
 
     /// @brief selector match box messages
     MID_GNE_SELMB_TAG,
+    MID_GME_SELMB_ATTRIBUTE,
     MID_GNE_SELMB_STRING,
 
     /// @brief additional match box messages
@@ -489,13 +492,23 @@ enum {
     MID_GNE_REROUTEDIALOG_ADD_CLOSINGREROUTE,
     MID_GNE_REROUTEDIALOG_ADD_DESTPROBREROUTE,
     MID_GNE_REROUTEDIALOG_ADD_ROUTEPROBREROUTE,
-    MID_GNE_REROUTEDIALOG_CHANGESTART,
-    MID_GNE_REROUTEDIALOG_CHANGEEND,
+    MID_GNE_REROUTEDIALOG_EDIT_INTERVAL,
 
     /// @brief Calibrator dialog
-    MID_GNE_MODE_CALIBRATOR_TABLE,
-    MID_GNE_MODE_CALIBRATOR_EDITVALUE,
+    MID_GNE_CALIBRATORDIALOG_TABLE_ROUTE,
+    MID_GNE_CALIBRATORDIALOG_ADD_ROUTE,
+    MID_GNE_CALIBRATORDIALOG_TABLE_FLOW,
+    MID_GNE_CALIBRATORDIALOG_ADD_FLOW,
+    MID_GNE_CALIBRATORDIALOG_TABLE_VEHICLETYPE,
+    MID_GNE_CALIBRATORDIALOG_ADD_VEHICLETYPE,
+    MID_GNE_CALIBRATORDIALOG_SET_VARIABLE,
+    MID_GNE_CALIBRATORDIALOG_SET_FLOWTYPE,
 
+    /// @brief allowDisallow dialog
+    MID_GNE_ALLOWDISALLOW_CHANGE,
+    MID_GNE_ALLOWDISALLOW_SELECTALL,
+    MID_GNE_ALLOWDISALLOW_UNSELECTALL,
+    MID_GNE_ALLOWDISALLOW_SELECTONLYNONROAD,
 
     /// @brief processing menu messages
     MID_GNE_COMPUTE_JUNCTIONS,
@@ -547,8 +560,12 @@ enum {
     MID_GNE_INSERT_NETWORK,
     /// @brief show connections
     MID_GNE_SHOW_CONNECTIONS,
+    /// @brief select edges
+    MID_GNE_SELECT_EDGES,
     /// @brief show junctions as bubbles
     MID_GNE_SHOW_BUBBLES,
+    /// @brief show grid
+    MID_GNE_SHOW_GRID,
     /// @brief attribute edited
     MID_GNE_SET_ATTRIBUTE,
     /// @brief attribute blocking

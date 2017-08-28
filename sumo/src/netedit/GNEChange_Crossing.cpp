@@ -27,15 +27,13 @@
 #include <config.h>
 #endif
 
+#include <utils/common/MsgHandler.h>
+
 #include "GNEChange_Crossing.h"
 #include "GNENet.h"
 #include "GNEViewNet.h"
 #include "GNECrossing.h"
 #include "GNEJunction.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 
 // ===========================================================================
@@ -49,7 +47,7 @@ FXIMPLEMENT_ABSTRACT(GNEChange_Crossing, GNEChange, NULL, 0)
 
 
 /// @brief constructor for creating an crossing
-GNEChange_Crossing::GNEChange_Crossing(GNEJunction* junctionParent, const std::vector<NBEdge*>& edges, SUMOReal width, bool priority, bool forward):
+GNEChange_Crossing::GNEChange_Crossing(GNEJunction* junctionParent, const std::vector<NBEdge*>& edges, double width, bool priority, bool forward):
     GNEChange(junctionParent->getNet(), forward),
     myJunctionParent(junctionParent),
     myEdges(edges),
@@ -64,12 +62,20 @@ GNEChange_Crossing::~GNEChange_Crossing() {}
 
 void GNEChange_Crossing::undo() {
     if (myForward) {
+        // show extra information for tests
+        if (myJunctionParent->getNet()->getViewNet()->isTestingModeEnabled()) {
+            WRITE_WARNING("Deleting " + toString(SUMO_TAG_CROSSING) + " from '" + myJunctionParent->getID() + "'");
+        }
         // remove crossing of NBNode and update geometry
         myJunctionParent->getNBNode()->removeCrossing(myEdges);
         myJunctionParent->updateGeometry();
         // Update view
         myNet->getViewNet()->update();
     } else {
+        // show extra information for tests
+        if (myJunctionParent->getNet()->getViewNet()->isTestingModeEnabled()) {
+            WRITE_WARNING("Deleting " + toString(SUMO_TAG_CROSSING) + " from '" + myJunctionParent->getID() + "'");
+        }
         // add crossing of NBNode and update geometry
         myJunctionParent->getNBNode()->addCrossing(myEdges, myWidth, myPriority);
         myJunctionParent->updateGeometry();
@@ -81,12 +87,20 @@ void GNEChange_Crossing::undo() {
 
 void GNEChange_Crossing::redo() {
     if (myForward) {
+        // show extra information for tests
+        if (myJunctionParent->getNet()->getViewNet()->isTestingModeEnabled()) {
+            WRITE_WARNING("Deleting " + toString(SUMO_TAG_CROSSING) + " from '" + myJunctionParent->getID() + "'");
+        }
         // add crossing of NBNode and update geometry
         myJunctionParent->getNBNode()->addCrossing(myEdges, myWidth, myPriority);
         myJunctionParent->updateGeometry();
         // Update view
         myNet->getViewNet()->update();
     } else {
+        // show extra information for tests
+        if (myJunctionParent->getNet()->getViewNet()->isTestingModeEnabled()) {
+            WRITE_WARNING("Deleting " + toString(SUMO_TAG_CROSSING) + " from '" + myJunctionParent->getID() + "'");
+        }
         // remove crossing of NBNode and update geometry
         myJunctionParent->getNBNode()->removeCrossing(myEdges);
         myJunctionParent->updateGeometry();

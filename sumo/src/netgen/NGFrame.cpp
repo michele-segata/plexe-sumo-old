@@ -39,10 +39,6 @@
 #include <utils/common/SystemFrame.h>
 #include <utils/common/ToString.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -153,7 +149,7 @@ NGFrame::fillOptions() {
     oc.addSynonyme("rand.num-tries", "num-tries");
     oc.addDescription("rand.num-tries", "Random Network", "The number of tries for creating each node");
 
-    oc.doRegister("rand.connectivity", new Option_Float((SUMOReal) 0.95));
+    oc.doRegister("rand.connectivity", new Option_Float((double) 0.95));
     oc.addSynonyme("rand.connectivity", "rand-connectivity", true);
     oc.addSynonyme("rand.connectivity", "connectivity");
     oc.addDescription("rand.connectivity", "Random Network", "Probability for roads to continue at each node");

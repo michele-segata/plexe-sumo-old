@@ -52,10 +52,6 @@
 #include "GNEViewNet.h"
 #include "GNEChange_Attribute.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // method definitions
 // ===========================================================================
@@ -87,7 +83,7 @@ GNECrossing::updateGeometry() {
                 const Position& f = myCrossing.shape[i];
                 const Position& s = myCrossing.shape[i + 1];
                 myShapeLengths.push_back(f.distanceTo2D(s));
-                myShapeRotations.push_back((SUMOReal) atan2((s.x() - f.x()), (f.y() - s.y())) * (SUMOReal) 180.0 / (SUMOReal) PI);
+                myShapeRotations.push_back((double) atan2((s.x() - f.x()), (f.y() - s.y())) * (double) 180.0 / (double) PI);
             }
         }
     }
@@ -116,8 +112,10 @@ GNECrossing::drawGL(const GUIVisualizationSettings& s) const {
         glPushName(getGlID());
         // must draw on top of junction
         glTranslated(0, 0, GLO_JUNCTION + 0.1);
-        // set color depending of priority
-        if (myCrossing.priority) {
+        // set color depending of selection and priority
+        if (gSelected.isSelected(getType(), getGlID())) {
+            glColor3d(0.118, 0.565, 1.000);
+        } else if (myCrossing.priority) {
             glColor3d(0.9, 0.9, 0.9);
         } else {
             glColor3d(0.1, 0.1, 0.1);
@@ -125,9 +123,9 @@ GNECrossing::drawGL(const GUIVisualizationSettings& s) const {
         // traslate to front
         glTranslated(0, 0, .2);
         // set default values
-        SUMOReal length = 0.5;
-        SUMOReal spacing = 1.0;
-        SUMOReal halfWidth = myCrossing.width * 0.5;
+        double length = 0.5;
+        double spacing = 1.0;
+        double halfWidth = myCrossing.width * 0.5;
         // push second draw matrix
         glPushMatrix();
         // draw on top of of the white area between the rails
@@ -139,7 +137,7 @@ GNECrossing::drawGL(const GUIVisualizationSettings& s) const {
             glTranslated(myCrossing.shape[i].x(), myCrossing.shape[i].y(), 0.0);
             glRotated(myShapeRotations[i], 0, 0, 1);
             // draw crossing
-            for (SUMOReal t = 0; t < myShapeLengths[i]; t += spacing) {
+            for (double t = 0; t < myShapeLengths[i]; t += spacing) {
                 glBegin(GL_QUADS);
                 glVertex2d(-halfWidth, -t);
                 glVertex2d(-halfWidth, -t - length);
@@ -150,6 +148,7 @@ GNECrossing::drawGL(const GUIVisualizationSettings& s) const {
             // pop three draw matrix
             glPopMatrix();
         }
+        // XXX draw junction index / tls index
         // pop second draw matrix
         glPopMatrix();
         // traslate to back
@@ -235,8 +234,7 @@ GNECrossing::isValid(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_ID:
             return false;
         case SUMO_ATTR_EDGES: {
-            std::vector<std::string> NBEdgeIDs;
-            SUMOSAXAttributes::parseStringVector(value, NBEdgeIDs);
+            std::vector<std::string> NBEdgeIDs = GNEAttributeCarrier::parse<std::vector<std::string> > (value);
             // Obtain NBEdges of GNENet and check if exists
             for (std::vector<std::string>::iterator i = NBEdgeIDs.begin(); i != NBEdgeIDs.end(); i++) {
                 if (myNet->retrieveEdge((*i), false) == NULL) {
@@ -246,7 +244,7 @@ GNECrossing::isValid(SumoXMLAttr key, const std::string& value) {
             return true;
         }
         case SUMO_ATTR_WIDTH:
-            return isPositive<SUMOReal>(value);
+            return isPositive<double>(value);
         case SUMO_ATTR_PRIORITY:
             return ((value == "true") || (value == "false"));
         default:
@@ -266,8 +264,7 @@ GNECrossing::setAttribute(SumoXMLAttr key, const std::string& value) {
         case SUMO_ATTR_EDGES: {
             // remove edges of crossing
             myCrossing.edges.clear();
-            std::vector<std::string> NBEdgeIDs;
-            SUMOSAXAttributes::parseStringVector(value, NBEdgeIDs);
+            std::vector<std::string> NBEdgeIDs = GNEAttributeCarrier::parse<std::vector<std::string> > (value);
             // Obtain NBEdges of GNENet and insert it in the crossing
             for (std::vector<std::string>::iterator i = NBEdgeIDs.begin(); i != NBEdgeIDs.end(); i++) {
                 myCrossing.edges.push_back(myNet->retrieveEdge(*i)->getNBEdge());
@@ -276,7 +273,7 @@ GNECrossing::setAttribute(SumoXMLAttr key, const std::string& value) {
         }
         case SUMO_ATTR_WIDTH:
             // Change width an refresh element
-            myCrossing.width = parse<SUMOReal>(value);
+            myCrossing.width = parse<double>(value);
             myNet->refreshElement(this);
             break;
         case SUMO_ATTR_PRIORITY:

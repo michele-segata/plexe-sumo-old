@@ -44,10 +44,8 @@
 #include "MSBaseVehicle.h"
 #include "MSNet.h"
 #include "devices/MSDevice.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include "devices/MSDevice_Routing.h"
+#include "MSInsertionControl.h"
 
 // ===========================================================================
 // static members
@@ -61,13 +59,14 @@ std::set<std::string> MSBaseVehicle::myShallTraceMoveReminders;
 // method definitions
 // ===========================================================================
 
-SUMOReal
+double
 MSBaseVehicle::getPreviousSpeed() const {
     throw ProcessError("getPreviousSpeed() is not available for non-MSVehicles.");
 }
 
+
 MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
-                             const MSVehicleType* type, const SUMOReal speedFactor) :
+                             const MSVehicleType* type, const double speedFactor) :
     myParameter(pars),
     myRoute(route),
     myType(type),
@@ -95,8 +94,15 @@ MSBaseVehicle::MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
     myRoute->addReference();
     if (!pars->wasSet(VEHPARS_FORCE_REROUTE)) {
         calculateArrivalParams();
+        if (MSGlobals::gCheckRoutes) {
+            std::string msg;
+            if (!hasValidRoute(msg)) {
+                throw ProcessError("Vehicle '" + pars->id + "' has no valid route. " + msg);
+            }
+        }
     }
 }
+
 
 MSBaseVehicle::~MSBaseVehicle() {
     myRoute->release();
@@ -122,7 +128,7 @@ MSBaseVehicle::getParameter() const {
 }
 
 
-SUMOReal
+double
 MSBaseVehicle::getMaxSpeed() const {
     return myType->getMaxSpeed();
 }
@@ -181,15 +187,24 @@ MSBaseVehicle::reroute(SUMOTime t, SUMOAbstractRouter<MSEdge, SUMOVehicle>& rout
         }
     }
     router.compute(source, sink, this, t, edges);
-    if (!edges.empty() && edges.front()->getPurpose() == MSEdge::EDGEFUNCTION_DISTRICT) {
+    if (!edges.empty() && edges.front()->isTaz()) {
         edges.erase(edges.begin());
     }
-    if (!edges.empty() && edges.back()->getPurpose() == MSEdge::EDGEFUNCTION_DISTRICT) {
+    if (!edges.empty() && edges.back()->isTaz()) {
         edges.pop_back();
     }
     replaceRouteEdges(edges, onInit);
     // this must be called even if the route could not be replaced
     if (onInit) {
+        if (edges.empty()) {
+            if (MSGlobals::gCheckRoutes) {
+                throw ProcessError("Vehicle '" + getID() + "' has no valid route.");
+            } else if (source->isTaz()) {
+                WRITE_WARNING("Removing vehicle '" + getID() + "' which has no valid route.");
+                MSNet::getInstance()->getInsertionControl().descheduleDeparture(this);
+                return;
+            }
+        }
         calculateArrivalParams();
     }
 }
@@ -248,13 +263,13 @@ MSBaseVehicle::replaceRouteEdges(ConstMSEdgeVector& edges, bool onInit, bool che
 }
 
 
-SUMOReal
+double
 MSBaseVehicle::getAcceleration() const {
     return 0;
 }
 
 
-SUMOReal
+double
 MSBaseVehicle::getSlope() const {
     return 0;
 }
@@ -343,9 +358,9 @@ MSBaseVehicle::removeReminder(MSMoveReminder* rem) {
 
 
 void
-MSBaseVehicle::activateReminders(const MSMoveReminder::Notification reason) {
+MSBaseVehicle::activateReminders(const MSMoveReminder::Notification reason, const MSLane* enteredLane) {
     for (MoveReminderCont::iterator rem = myMoveReminders.begin(); rem != myMoveReminders.end();) {
-        if (rem->first->notifyEnter(*this, reason)) {
+        if (rem->first->notifyEnter(*this, reason, enteredLane)) {
 #ifdef _DEBUG
             if (myTraceMoveReminders) {
                 traceMoveReminder("notifyEnter", rem->first, rem->second, true);
@@ -370,7 +385,7 @@ MSBaseVehicle::calculateArrivalParams() {
         return;
     }
     const std::vector<MSLane*>& lanes = myRoute->getLastEdge()->getLanes();
-    const SUMOReal lastLaneLength = lanes[0]->getLength();
+    const double lastLaneLength = lanes[0]->getLength();
     switch (myParameter->arrivalPosProcedure) {
         case ARRIVAL_POS_GIVEN:
             if (fabs(myParameter->arrivalPos) > lastLaneLength) {
@@ -379,11 +394,11 @@ MSBaseVehicle::calculateArrivalParams() {
             // Maybe we should warn the user about invalid inputs!
             myArrivalPos = MIN2(myParameter->arrivalPos, lastLaneLength);
             if (myArrivalPos < 0) {
-                myArrivalPos = MAX2(myArrivalPos + lastLaneLength, static_cast<SUMOReal>(0));
+                myArrivalPos = MAX2(myArrivalPos + lastLaneLength, 0.);
             }
             break;
         case ARRIVAL_POS_RANDOM:
-            myArrivalPos = RandHelper::rand(static_cast<SUMOReal>(0), lastLaneLength);
+            myArrivalPos = RandHelper::rand(0., lastLaneLength);
             break;
         default:
             myArrivalPos = lastLaneLength;
@@ -406,12 +421,10 @@ MSBaseVehicle::calculateArrivalParams() {
 }
 
 
-SUMOReal
+double
 MSBaseVehicle::getImpatience() const {
-    return MAX2((SUMOReal)0, MIN2((SUMOReal)1, getVehicleType().getImpatience() +
-                                  (MSGlobals::gTimeToGridlock > 0 ? (SUMOReal)getWaitingTime() / MSGlobals::gTimeToGridlock : 0)));
-//    Alternavite to avoid time to teleport effect on the simulation. No effect if time to teleport is -1
-//    return MAX2((SUMOReal)0, MIN2((SUMOReal)1, getVehicleType().getImpatience()));
+    return MAX2(0., MIN2(1., getVehicleType().getImpatience() +
+                         (MSGlobals::gTimeToImpatience > 0 ? (double)getWaitingTime() / MSGlobals::gTimeToImpatience : 0)));
 }
 
 
@@ -460,6 +473,59 @@ MSBaseVehicle::addStops(const bool ignoreStopErrors) {
     }
 }
 
+
+bool
+MSBaseVehicle::hasDevice(const std::string& deviceName) const {
+    for (std::vector<MSDevice* >::const_iterator dev = myDevices.begin(); dev != myDevices.end(); ++dev) {
+        if ((*dev)->deviceName() == deviceName) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+void
+MSBaseVehicle::createDevice(const std::string& deviceName) {
+    if (!hasDevice(deviceName)) {
+        if (deviceName == "rerouting") {
+            ((SUMOVehicleParameter*)myParameter)->addParameter("has." + deviceName + ".device", "true");
+            MSDevice_Routing::buildVehicleDevices(*this, myDevices);
+            if (hasDeparted()) {
+                // vehicle already departed: disable pre-insertion rerouting and enable regular routing behavior
+                MSDevice_Routing* routingDevice = static_cast<MSDevice_Routing*>(getDevice(typeid(MSDevice_Routing)));
+                assert(routingDevice != 0);
+                routingDevice->notifyEnter(*this, MSMoveReminder::NOTIFICATION_DEPARTED);
+            }
+        } else {
+            throw InvalidArgument("Creating device of type '" + deviceName + "' is not supported");
+        }
+    }
+}
+
+
+std::string
+MSBaseVehicle::getDeviceParameter(const std::string& deviceName, const std::string& key) const {
+    for (std::vector<MSDevice* >::const_iterator dev = myDevices.begin(); dev != myDevices.end(); ++dev) {
+        if ((*dev)->deviceName() == deviceName) {
+            return (*dev)->getParameter(key);
+        }
+    }
+    throw InvalidArgument("No device off type '" + deviceName + "' exists");
+}
+
+
+void
+MSBaseVehicle::setDeviceParameter(const std::string& deviceName, const std::string& key, const std::string& value) {
+    for (std::vector<MSDevice* >::iterator dev = myDevices.begin(); dev != myDevices.end(); ++dev) {
+        if ((*dev)->deviceName() == deviceName) {
+            (*dev)->setParameter(key, value);
+            return;
+        }
+    }
+    throw InvalidArgument("No device off type '" + deviceName + "' exists");
+}
+
 #ifdef _DEBUG
 void
 MSBaseVehicle::initMoveReminderOutput(const OptionsCont& oc) {
@@ -471,7 +537,7 @@ MSBaseVehicle::initMoveReminderOutput(const OptionsCont& oc) {
 
 
 void
-MSBaseVehicle::traceMoveReminder(const std::string& type, MSMoveReminder* rem, SUMOReal pos, bool keep) const {
+MSBaseVehicle::traceMoveReminder(const std::string& type, MSMoveReminder* rem, double pos, bool keep) const {
     OutputDevice& od = OutputDevice::getDeviceByOption("movereminder-output");
     od.openTag("movereminder");
     od.writeAttr(SUMO_ATTR_TIME, STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep()));

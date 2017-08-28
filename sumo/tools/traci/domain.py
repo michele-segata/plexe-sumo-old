@@ -55,7 +55,7 @@ class SubscriptionResults:
         self._results[refID][varID] = self._parse(varID, data)
 
     def get(self, refID=None):
-        if refID == None:
+        if refID is None:
             return self._results
         return self._results.get(refID, None)
 
@@ -64,12 +64,12 @@ class SubscriptionResults:
             self._contextResults[refID] = {}
         if objID not in self._contextResults[refID]:
             self._contextResults[refID][objID] = {}
-        if varID != None and data != None:
+        if varID is not None and data is not None:
             self._contextResults[refID][objID][
                 varID] = domain._parse(varID, data)
 
     def getContext(self, refID=None):
-        if refID == None:
+        if refID is None:
             return self._contextResults
         return self._contextResults.get(refID, None)
 
@@ -166,6 +166,11 @@ class Domain:
         return self._connection._getSubscriptionResults(self._subscribeResponseID).get(objectID)
 
     def subscribeContext(self, objectID, domain, dist, varIDs=None, begin=0, end=2**31 - 1):
+        """subscribeContext(string, int, double, list(integer), double, double) -> None
+
+        Subscribe to objects of the given domain (specified as domain=traci.constants.CMD_GET_<DOMAIN>_VARIABLE),
+        which are closer than dist to the object specified by objectID.
+        """
         if varIDs is None:
             if tc.LAST_STEP_VEHICLE_NUMBER in self._retValFunc:
                 varIDs = (tc.LAST_STEP_VEHICLE_NUMBER,)

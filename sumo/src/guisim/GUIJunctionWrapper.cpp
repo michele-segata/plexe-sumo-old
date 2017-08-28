@@ -55,10 +55,6 @@
 #include <foreign/polyfonts/polyfonts.h>
 #include <utils/gui/globjects/GLIncludes.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 //#define GUIJunctionWrapper_DEBUG_DRAW_NODE_SHAPE_VERTICES
 
 // ===========================================================================
@@ -74,11 +70,7 @@ GUIJunctionWrapper::GUIJunctionWrapper(MSJunction& junction)
         myBoundary = myJunction.getShape().getBoxBoundary();
     }
     myMaxSize = MAX2(myBoundary.getWidth(), myBoundary.getHeight());
-#ifdef HAVE_INTERNAL_LANES
     myIsInner = dynamic_cast<MSInternalJunction*>(&myJunction) != 0;
-#else
-    myIsInner = false;
-#endif
     myAmWaterway = myJunction.getIncoming().size() + myJunction.getOutgoing().size() > 0;
     for (ConstMSEdgeVector::const_iterator it = myJunction.getIncoming().begin(); it != myJunction.getIncoming().end(); ++it) {
         if (!(*it)->isInternal() && !isWaterway((*it)->getPermissions())) {
@@ -135,13 +127,13 @@ GUIJunctionWrapper::drawGL(const GUIVisualizationSettings& s) const {
     if (!myIsInner && s.drawJunctionShape) {
         glPushMatrix();
         glPushName(getGlID());
-        const SUMOReal colorValue = getColorValue(s);
+        const double colorValue = getColorValue(s);
         GLHelper::setColor(s.junctionColorer.getScheme().getColor(colorValue));
 
         // recognize full transparency and simply don't draw
         GLfloat color[4];
         glGetFloatv(GL_CURRENT_COLOR, color);
-        const SUMOReal exaggeration = s.junctionSize.getExaggeration(s);
+        const double exaggeration = s.junctionSize.getExaggeration(s);
         if (color[3] != 0 && s.scale * exaggeration > s.junctionSize.minSize) {
             PositionVector shape = myJunction.getShape();
             shape.closePolygon();
@@ -169,7 +161,7 @@ GUIJunctionWrapper::drawGL(const GUIVisualizationSettings& s) const {
 }
 
 
-SUMOReal
+double
 GUIJunctionWrapper::getColorValue(const GUIVisualizationSettings& s) const {
     switch (s.junctionColorer.getActive()) {
         case 0:
@@ -224,7 +216,7 @@ GUIJunctionWrapper::getColorValue(const GUIVisualizationSettings& s) const {
 #ifdef HAVE_OSG
 void
 GUIJunctionWrapper::updateColor(const GUIVisualizationSettings& s) {
-    const SUMOReal colorValue = getColorValue(s);
+    const double colorValue = getColorValue(s);
     const RGBColor& col = s.junctionColorer.getScheme().getColor(colorValue);
     osg::Vec4ubArray* colors = dynamic_cast<osg::Vec4ubArray*>(myGeom->getColorArray());
     (*colors)[0].set(col.red(), col.green(), col.blue(), col.alpha());

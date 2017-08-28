@@ -77,12 +77,12 @@ public:
      * controlled by and ACC, or by a human, then we want to be more careful before
      * moving in front of it
      */
-    int change2left(const std::pair<MSVehicle* const, SUMOReal>& leader, const std::pair<MSVehicle* const, SUMOReal>& rLead, const std::pair<MSVehicle* const, SUMOReal>& rFollow, const std::vector<MSVehicle::LaneQ>& preb) const;
+    int change2left(const std::pair<MSVehicle* const, double>& leader, const std::pair<MSVehicle* const, double>& rLead, const std::pair<MSVehicle* const, double>& rFollow, const std::vector<MSVehicle::LaneQ>& preb) const;
 
     /**
      * Override original change2right method, as for change2left
      */
-    int change2right(const std::pair<MSVehicle* const, SUMOReal>& leader, const std::pair<MSVehicle* const, SUMOReal>& rLead, const std::pair<MSVehicle* const, SUMOReal>& rFollow, const std::vector<MSVehicle::LaneQ>& preb) const;
+    int change2right(const std::pair<MSVehicle* const, double>& leader, const std::pair<MSVehicle* const, double>& rLead, const std::pair<MSVehicle* const, double>& rFollow, const std::vector<MSVehicle::LaneQ>& preb) const;
 
 protected:
 

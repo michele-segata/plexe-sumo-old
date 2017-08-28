@@ -114,7 +114,7 @@ bool MSCACCLaneChanger::change() {
     }
 
     vehicle->getLaneChangeModel().prepareStep();
-    std::pair<MSVehicle* const, SUMOReal> leader = getRealLeader(myCandi);
+    std::pair<MSVehicle* const, double> leader = getRealLeader(myCandi);
 
     enum Plexe::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
 
@@ -185,8 +185,8 @@ bool MSCACCLaneChanger::change() {
             int blockedCheck = 0;
             if ((myCandi + 1) != myChanger.end() && (myCandi + 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
 
-                std::pair<MSVehicle* const, SUMOReal> lLead = getRealLeader(myCandi + 1);
-                std::pair<MSVehicle* const, SUMOReal> lFollow = getRealFollower(myCandi + 1);
+                std::pair<MSVehicle* const, double> lLead = getRealLeader(myCandi + 1);
+                std::pair<MSVehicle* const, double> lFollow = getRealFollower(myCandi + 1);
                 //TODO: debug this for make it work with different situations
                 state = LCA_SPEEDGAIN | LCA_LEFT;
 
@@ -225,8 +225,8 @@ bool MSCACCLaneChanger::change() {
             int blockedCheck = 0;
             if ((myCandi - 1)->lane->allowsVehicleClass(veh(myCandi)->getVehicleType().getVehicleClass())) {
 
-                std::pair<MSVehicle* const, SUMOReal> lLead = getRealLeader(myCandi - 1);
-                std::pair<MSVehicle* const, SUMOReal> lFollow = getRealFollower(myCandi - 1);
+                std::pair<MSVehicle* const, double> lLead = getRealLeader(myCandi - 1);
+                std::pair<MSVehicle* const, double> lFollow = getRealFollower(myCandi - 1);
                 //TODO: debug this for make it work with different situations
                 state = LCA_SPEEDGAIN | LCA_RIGHT;
 
@@ -272,9 +272,9 @@ bool MSCACCLaneChanger::change() {
 }
 
 int
-MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, SUMOReal>& leader,
-                               const std::pair<MSVehicle* const, SUMOReal>& rLead,
-                               const std::pair<MSVehicle* const, SUMOReal>& rFollow,
+MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, double>& leader,
+                               const std::pair<MSVehicle* const, double>& rLead,
+                               const std::pair<MSVehicle* const, double>& rFollow,
                                const std::vector<MSVehicle::LaneQ>& preb) const {
     ChangerIt target = myCandi + 1;
     int blocked = 0;
@@ -346,9 +346,9 @@ MSCACCLaneChanger::change2left(const std::pair<MSVehicle* const, SUMOReal>& lead
 }
 
 int
-MSCACCLaneChanger::change2right(const std::pair<MSVehicle* const, SUMOReal>& leader,
-                                const std::pair<MSVehicle* const, SUMOReal>& rLead,
-                                const std::pair<MSVehicle* const, SUMOReal>& rFollow,
+MSCACCLaneChanger::change2right(const std::pair<MSVehicle* const, double>& leader,
+                                const std::pair<MSVehicle* const, double>& rLead,
+                                const std::pair<MSVehicle* const, double>& rFollow,
                                 const std::vector<MSVehicle::LaneQ>& preb) const {
     ChangerIt target = myCandi - 1;
     int blocked = 0;

@@ -3,6 +3,7 @@
 /// @author  Daniel Krajzewicz
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
+/// @author  Gregor Laemmel
 /// @date    Tue, 20 Nov 2001
 /// @version $Id$
 ///
@@ -46,10 +47,6 @@
 #include <utils/common/SystemFrame.h>
 #include "NIImporter_DlrNavteq.h"
 #include "NIFrame.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -151,7 +148,7 @@ NIFrame::fillOptions() {
     oc.doRegister("ignore-errors.edge-type", new Option_Bool(false));
     oc.addDescription("ignore-errors.edge-type", "Processing", "Continue on unknown edge types");
 
-    oc.doRegister("lanes-from-capacity.norm", new Option_Float((SUMOReal) 1800));
+    oc.doRegister("lanes-from-capacity.norm", new Option_Float((double) 1800));
     oc.addSynonyme("lanes-from-capacity.norm", "capacity-norm");
     oc.addDescription("lanes-from-capacity.norm", "Processing", "The factor for flow to no. lanes conversion");
 
@@ -266,11 +263,18 @@ NIFrame::fillOptions() {
     oc.doRegister("osm.oneway-spread-right", new Option_Bool(false));
     oc.addDescription("osm.oneway-spread-right", "Processing", "Whether one-way roads should be spread to the side instead of centered");
 
+    oc.doRegister("osm.stop-output.length", new Option_Float(100));
+    oc.addDescription("osm.stop-output.length", "Processing", "The default length of a bus/train stop in FLOAT m");
+
     // register opendrive options
     oc.doRegister("opendrive.import-all-lanes", new Option_Bool(false));
     oc.addDescription("opendrive.import-all-lanes", "Processing", "Imports all lane types");
     oc.doRegister("opendrive.ignore-widths", new Option_Bool(false));
     oc.addDescription("opendrive.ignore-widths", "Processing", "Whether lane widths shall be ignored.");
+    oc.doRegister("opendrive.curve-resolution", new Option_Float(2.0));
+    oc.addDescription("opendrive.curve-resolution", "Processing", "The geometry resolution in m when importing curved geometries as line segments.");
+    oc.doRegister("opendrive.advance-stopline", new Option_Float(12.0));
+    oc.addDescription("opendrive.advance-stopline", "Processing", "Allow stop lines to be built beyond the start of the junction if the geometries allow so");
 
     // register some additional options
     oc.doRegister("tls.discard-loaded", new Option_Bool(false));

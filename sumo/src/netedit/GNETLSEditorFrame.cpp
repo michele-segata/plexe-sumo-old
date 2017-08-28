@@ -28,14 +28,9 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_VERSION_H
-#include <version.h>
-#endif
-
 #include <iostream>
 #include <utils/foxtools/fxexdefs.h>
 #include <utils/foxtools/MFXUtils.h>
-#include <utils/common/TplConvert.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/div/GUIIOGlobals.h>
 #include <utils/gui/div/GUIGlobalSelection.h>
@@ -54,10 +49,6 @@
 #include "GNEUndoList.h"
 #include "GNEInternalLane.h"
 #include "GNEChange_TLS.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 // ===========================================================================
 // FOX callback mapping
@@ -127,7 +118,7 @@ GNETLSEditorFrame::GNETLSEditorFrame(FXHorizontalFrame* horizontalFrameParent, G
     myNameLabel = new FXLabel(myAttributeMatrix, "Name", 0, GUIDesignLabelAttribute);
 
     // create text field for name
-    myNameTextField = new FXTextField(myAttributeMatrix, GUIDesignTextFieldNCol, this, MID_GNE_DEF_SWITCH, GUIDesignTextFieldAttributeStr);
+    myNameTextField = new FXTextField(myAttributeMatrix, GUIDesignTextFieldNCol, this, MID_GNE_DEF_SWITCH, GUIDesignTextField);
 
     // create label for program
     myProgramLabel = new FXLabel(myAttributeMatrix, "Program", 0, GUIDesignLabelAttribute);
@@ -137,7 +128,7 @@ GNETLSEditorFrame::GNETLSEditorFrame(FXHorizontalFrame* horizontalFrameParent, G
 
     // create offset control
     myOffsetLabel = new FXLabel(myAttributeMatrix, "Offset", 0, GUIDesignLabelAttribute);
-    myOffset = new FXTextField(myAttributeMatrix, GUIDesignTextFieldNCol, this, MID_GNE_DEF_OFFSET, GUIDesignTextFieldAttributeReal);
+    myOffset = new FXTextField(myAttributeMatrix, GUIDesignTextFieldNCol, this, MID_GNE_DEF_OFFSET, GUIDesignTextFieldReal);
 
     // create groupbox for phases
     myGroupBoxPhases = new FXGroupBox(myContentFrame, "Phases", GUIDesignGroupBoxFrame);
@@ -421,7 +412,7 @@ GNETLSEditorFrame::onCmdPhaseEdit(FXObject*, FXSelector, void* ptr) {
     FXString value = myPhaseTable->getItemText(tp->row, tp->col);
     if (tp->col == 0) {
         // duration edited
-        if (GNEAttributeCarrier::canParse<SUMOReal>(value.text())) {
+        if (GNEAttributeCarrier::canParse<double>(value.text())) {
             SUMOTime duration = getSUMOTime(value);
             if (duration > 0) {
                 myEditedDef->getLogic()->setPhaseDuration(tp->row, duration);
@@ -659,8 +650,8 @@ GNETLSEditorFrame::controlsEdge(GNEEdge& edge) const {
 
 SUMOTime
 GNETLSEditorFrame::getSUMOTime(const FXString& string) {
-    assert(GNEAttributeCarrier::canParse<SUMOReal>(string.text()));
-    return TIME2STEPS(GNEAttributeCarrier::parse<SUMOReal>(string.text()));
+    assert(GNEAttributeCarrier::canParse<double>(string.text()));
+    return TIME2STEPS(GNEAttributeCarrier::parse<double>(string.text()));
 }
 
 

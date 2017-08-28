@@ -39,10 +39,6 @@
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/windows/GUIMainWindow.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // FOX callback mapping
@@ -60,7 +56,7 @@ FXIMPLEMENT(GUIParam_PopupMenuInterface, FXMenuPane, GUIParam_PopupMenuInterface
 // ===========================================================================
 GUIParam_PopupMenuInterface::GUIParam_PopupMenuInterface(GUIMainWindow& app,
         GUIParameterTableWindow& parentWindow, GUIGlObject& o, const std::string& varName,
-        ValueSource<SUMOReal>* src)
+        ValueSource<double>* src)
     : FXMenuPane(&parentWindow), myObject(&o), myParentWindow(&parentWindow),
       myApplication(&app), myVarName(varName), mySource(src) {
 }

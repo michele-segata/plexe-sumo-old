@@ -7,6 +7,9 @@ edge
 # Tests the vehicle API
 vehicle
 
+# Tests the vehicle API for the sublane-case. This uses the same runner as the 'vehicle' test case
+vehicle_sublane
+
 # Tests the vehicletype API
 vehicletype
 person
@@ -30,7 +33,7 @@ gui
 inductionloop
 
 # test lanearea detector
-areal
+lanearea
 
 # Tests the multientryexit API
 multientryexit
@@ -52,6 +55,9 @@ params
 
 # test setting up multiple connections
 multiconnect
+
+# test loading a simulation
+load
 
 # test various functions and options for influencing the behavior of rerouting functions
 rerouting

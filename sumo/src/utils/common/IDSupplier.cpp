@@ -35,15 +35,11 @@
 #include "StdDefs.h"
 #include "IDSupplier.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
-IDSupplier::IDSupplier(const std::string& prefix, long begin)
+IDSupplier::IDSupplier(const std::string& prefix, long long int begin)
     : myCurrent(begin), myPrefix(prefix) {}
 
 
@@ -71,7 +67,7 @@ void
 IDSupplier::avoid(const std::string& id) {
     // does it start with prefix?
     if (id.find(myPrefix) == 0) {
-        long number;
+        long long int number;
         std::istringstream buf(id.substr(myPrefix.size()));
         buf >> number;
         // does it continue with a number?

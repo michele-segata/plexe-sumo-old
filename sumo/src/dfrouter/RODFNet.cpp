@@ -46,10 +46,6 @@
 #include <utils/common/UtilExceptions.h>
 #include <utils/geom/GeomHelper.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -201,7 +197,7 @@ RODFNet::computeRoutesFor(ROEdge* edge, RODFRouteDesc& base, int /*no*/,
     std::map<ROEdge*, ROEdgeVector > dets2Follow;
     dets2Follow[edge] = ROEdgeVector();
     base.passedNo = 0;
-    SUMOReal minDist = OptionsCont::getOptions().getFloat("min-route-length");
+    double minDist = OptionsCont::getOptions().getFloat("min-route-length");
     toSolve.push(base);
     while (!toSolve.empty()) {
         RODFRouteDesc current = toSolve.top();
@@ -228,7 +224,7 @@ RODFNet::computeRoutesFor(ROEdge* edge, RODFRouteDesc& base, int /*no*/,
         if (!hasApproached(last)) {
             // ok, no further connections to follow
             current.factor = 1.;
-            SUMOReal cdist = current.edges2Pass[0]->getFromJunction()->getPosition().distanceTo(current.edges2Pass.back()->getToJunction()->getPosition());
+            double cdist = current.edges2Pass[0]->getFromJunction()->getPosition().distanceTo(current.edges2Pass.back()->getToJunction()->getPosition());
             if (minDist < cdist) {
                 into.addRouteDesc(current);
             }
@@ -252,7 +248,7 @@ RODFNet::computeRoutesFor(ROEdge* edge, RODFRouteDesc& base, int /*no*/,
 ///!!!                        //toDiscard.push_back(current);
                     }
                     current.factor = 1.;
-                    SUMOReal cdist = current.edges2Pass[0]->getFromJunction()->getPosition().distanceTo(current.edges2Pass.back()->getToJunction()->getPosition());
+                    double cdist = current.edges2Pass[0]->getFromJunction()->getPosition().distanceTo(current.edges2Pass.back()->getToJunction()->getPosition());
                     if (minDist < cdist) {
                         into.addRouteDesc(current);
                     }
@@ -270,7 +266,7 @@ RODFNet::computeRoutesFor(ROEdge* edge, RODFRouteDesc& base, int /*no*/,
         // check for highway off-ramps
         if (myAmInHighwayMode) {
             // if it's beside the highway...
-            if (last->getSpeed() < 19.4 && last != getDetectorEdge(det)) {
+            if (last->getSpeedLimit() < 19.4 && last != getDetectorEdge(det)) {
                 // ... and has more than one following edge
                 if (myApproachedEdges.find(last)->second.size() > 1) {
                     // -> let's add this edge and the following, but not any further
@@ -288,7 +284,7 @@ RODFNet::computeRoutesFor(ROEdge* edge, RODFRouteDesc& base, int /*no*/,
                 WRITE_WARNING("Could not close route for '" + det.getID() + "'");
                 unfoundEnds.push_back(current);
                 current.factor = 1.;
-                SUMOReal cdist = current.edges2Pass[0]->getFromJunction()->getPosition().distanceTo(current.edges2Pass.back()->getToJunction()->getPosition());
+                double cdist = current.edges2Pass[0]->getFromJunction()->getPosition().distanceTo(current.edges2Pass.back()->getToJunction()->getPosition());
                 if (minDist < cdist) {
                     into.addRouteDesc(current);
                 }
@@ -304,7 +300,7 @@ RODFNet::computeRoutesFor(ROEdge* edge, RODFRouteDesc& base, int /*no*/,
                 continue;
             }
             RODFRouteDesc t(current);
-            t.duration_2 += (appr[i]->getLength() / appr[i]->getSpeed()); //!!!
+            t.duration_2 += (appr[i]->getLength() / appr[i]->getSpeedLimit()); //!!!
             t.distance += appr[i]->getLength();
             t.edges2Pass.push_back(appr[i]);
             if (!addNextNoFurther) {
@@ -312,8 +308,8 @@ RODFNet::computeRoutesFor(ROEdge* edge, RODFRouteDesc& base, int /*no*/,
                 toSolve.push(t);
             } else {
                 if (!hadOne) {
-                    t.factor = (SUMOReal) 1. / (SUMOReal) appr.size();
-                    SUMOReal cdist = current.edges2Pass[0]->getFromJunction()->getPosition().distanceTo(current.edges2Pass.back()->getToJunction()->getPosition());
+                    t.factor = (double) 1. / (double) appr.size();
+                    double cdist = current.edges2Pass[0]->getFromJunction()->getPosition().distanceTo(current.edges2Pass.back()->getToJunction()->getPosition());
                     if (minDist < cdist) {
                         into.addRouteDesc(t);
                     }
@@ -366,7 +362,7 @@ RODFNet::buildRoutes(RODFDetectorCon& detcont, bool keepUnfoundEnds, bool includ
         doneEdges[e] = routes;
         RODFRouteDesc rd;
         rd.edges2Pass.push_back(e);
-        rd.duration_2 = (e->getLength() / e->getSpeed()); //!!!;
+        rd.duration_2 = (e->getLength() / e->getSpeedLimit()); //!!!;
         rd.endDetectorEdge = 0;
         rd.lastDetectorEdge = 0;
         rd.distance = e->getLength();
@@ -388,14 +384,14 @@ RODFNet::buildRoutes(RODFDetectorCon& detcont, bool keepUnfoundEnds, bool includ
             const std::vector<RODFRouteDesc>& r = routes->get();
             for (std::vector<RODFRouteDesc>::const_iterator j = r.begin(); j != r.end(); ++j) {
                 const RODFRouteDesc& mrd = *j;
-                SUMOReal duration = mrd.duration_2;
-                SUMOReal distance = mrd.distance;
+                double duration = mrd.duration_2;
+                double distance = mrd.distance;
                 // go through each route's edges
                 ROEdgeVector::const_iterator routeend = mrd.edges2Pass.end();
                 for (ROEdgeVector::const_iterator k = mrd.edges2Pass.begin(); k != routeend; ++k) {
                     // check whether any detectors lies on the current edge
                     if (myDetectorsOnEdges.find(*k) == myDetectorsOnEdges.end()) {
-                        duration -= (*k)->getLength() / (*k)->getSpeed();
+                        duration -= (*k)->getLength() / (*k)->getSpeedLimit();
                         distance -= (*k)->getLength();
                         continue;
                     }
@@ -418,7 +414,7 @@ RODFNet::buildRoutes(RODFDetectorCon& detcont, bool keepUnfoundEnds, bool includ
                             ((RODFDetector&) m).addRoute(nrd);
                         }
                     }
-                    duration -= (*k)->getLength() / (*k)->getSpeed();
+                    duration -= (*k)->getLength() / (*k)->getSpeedLimit();
                     distance -= (*k)->getLength();
                 }
             }
@@ -540,8 +536,8 @@ RODFNet::revalidateFlows(const RODFDetector* detector,
                 }
             }
         }
-        inFlow.vLKW /= (SUMOReal) previous.size();
-        inFlow.vPKW /= (SUMOReal) previous.size();
+        inFlow.vLKW /= (double) previous.size();
+        inFlow.vPKW /= (double) previous.size();
         // collect outgoing
         FlowDef outFlow;
         outFlow.qLKW = 0;
@@ -561,14 +557,14 @@ RODFNet::revalidateFlows(const RODFDetector* detector,
                 }
             }
         }
-        outFlow.vLKW /= (SUMOReal) latter.size();
-        outFlow.vPKW /= (SUMOReal) latter.size();
+        outFlow.vLKW /= (double) latter.size();
+        outFlow.vPKW /= (double) latter.size();
         //
         FlowDef mFlow;
         mFlow.qLKW = inFlow.qLKW - outFlow.qLKW;
         mFlow.qPKW = inFlow.qPKW - outFlow.qPKW;
-        mFlow.vLKW = (inFlow.vLKW + outFlow.vLKW) / (SUMOReal) 2.;
-        mFlow.vPKW = (inFlow.vPKW + outFlow.vPKW) / (SUMOReal) 2.;
+        mFlow.vLKW = (inFlow.vLKW + outFlow.vLKW) / (double) 2.;
+        mFlow.vPKW = (inFlow.vPKW + outFlow.vPKW) / (double) 2.;
         mflows.push_back(mFlow);
     }
     static_cast<RODFEdge*>(getDetectorEdge(*detector))->setFlows(mflows);
@@ -676,7 +672,7 @@ RODFNet::getDetectorList(ROEdge* edge) const {
 }
 
 
-SUMOReal
+double
 RODFNet::getAbsPos(const RODFDetector& det) const {
     if (det.getPos() >= 0) {
         return det.getPos();
@@ -743,7 +739,7 @@ RODFNet::isSource(const RODFDetector& det, ROEdge* edge,
     if (edge != getDetectorEdge(det)) {
         // ok, we are at one of the edges in front
         if (myAmInHighwayMode) {
-            if (edge->getSpeed() >= 19.4) {
+            if (edge->getSpeedLimit() >= 19.4) {
                 if (hasDetector(edge)) {
                     // we are still on the highway and there is another detector
                     return false;
@@ -769,7 +765,7 @@ RODFNet::isSource(const RODFDetector& det, ROEdge* edge,
     }
 
     if (myAmInHighwayMode) {
-        if (edge->getSpeed() < 19.4 && edge != getDetectorEdge(det)) {
+        if (edge->getSpeedLimit() < 19.4 && edge != getDetectorEdge(det)) {
             // we have left the highway already
             //  -> the detector will be a highway source
             if (!hasDetector(edge)) {
@@ -842,7 +838,7 @@ RODFNet::isDestination(const RODFDetector& det, ROEdge* edge, ROEdgeVector& seen
     if (edge != getDetectorEdge(det)) {
         // ok, we are at one of the edges coming behind
         if (myAmInHighwayMode) {
-            if (edge->getSpeed() >= 19.4) {
+            if (edge->getSpeedLimit() >= 19.4) {
                 if (hasDetector(edge)) {
                     // we are still on the highway and there is another detector
                     return false;
@@ -852,7 +848,7 @@ RODFNet::isDestination(const RODFDetector& det, ROEdge* edge, ROEdgeVector& seen
     }
 
     if (myAmInHighwayMode) {
-        if (edge->getSpeed() < 19.4 && edge != getDetectorEdge(det)) {
+        if (edge->getSpeedLimit() < 19.4 && edge != getDetectorEdge(det)) {
             if (hasDetector(edge)) {
                 return true;
             }
@@ -908,7 +904,7 @@ RODFNet::isFalseSource(const RODFDetector& det, ROEdge* edge, ROEdgeVector& seen
                 }
             }
         } else {
-            if (myAmInHighwayMode && edge->getSpeed() < 19.) {
+            if (myAmInHighwayMode && edge->getSpeedLimit() < 19.) {
                 return false;
             }
         }
@@ -939,17 +935,17 @@ RODFNet::buildEdgeFlowMap(const RODFDetectorFlows& flows,
                           SUMOTime startTime, SUMOTime endTime,
                           SUMOTime stepOffset) {
     std::map<ROEdge*, std::vector<std::string>, idComp>::iterator i;
-    SUMOReal speedFactorSumPKW = 0;
-    SUMOReal speedFactorSumLKW = 0;
-    SUMOReal speedFactorCountPKW = 0;
-    SUMOReal speedFactorCountLKW = 0;
+    double speedFactorSumPKW = 0;
+    double speedFactorSumLKW = 0;
+    double speedFactorCountPKW = 0;
+    double speedFactorCountLKW = 0;
     for (i = myDetectorsOnEdges.begin(); i != myDetectorsOnEdges.end(); ++i) {
         ROEdge* into = (*i).first;
-        const SUMOReal maxSpeedPKW = into->getVClassMaxSpeed(SVC_PASSENGER);
-        const SUMOReal maxSpeedLKW = into->getVClassMaxSpeed(SVC_TRUCK);
+        const double maxSpeedPKW = into->getVClassMaxSpeed(SVC_PASSENGER);
+        const double maxSpeedLKW = into->getVClassMaxSpeed(SVC_TRUCK);
 
         const std::vector<std::string>& dets = (*i).second;
-        std::map<SUMOReal, std::vector<std::string> > cliques;
+        std::map<double, std::vector<std::string> > cliques;
         std::vector<std::string>* maxClique = 0;
         for (std::vector<std::string>::const_iterator j = dets.begin(); j != dets.end(); ++j) {
             if (!flows.knows(*j)) {
@@ -957,7 +953,7 @@ RODFNet::buildEdgeFlowMap(const RODFDetectorFlows& flows,
             }
             const RODFDetector& det = detectors.getDetector(*j);
             bool found = false;
-            for (std::map<SUMOReal, std::vector<std::string> >::iterator k = cliques.begin(); !found && k != cliques.end(); ++k) {
+            for (std::map<double, std::vector<std::string> >::iterator k = cliques.begin(); !found && k != cliques.end(); ++k) {
                 if (fabs((*k).first - det.getPos()) < 1) {
                     (*k).second.push_back(*j);
                     if ((*k).second.size() > maxClique->size()) {
@@ -994,24 +990,24 @@ RODFNet::buildEdgeFlowMap(const RODFDetectorFlows& flows,
                 FlowDef& fd = mflows[index];
                 fd.qPKW += srcFD.qPKW;
                 fd.qLKW += srcFD.qLKW;
-                fd.vLKW += srcFD.vLKW / (SUMOReal) maxClique->size();
-                fd.vPKW += srcFD.vPKW / (SUMOReal) maxClique->size();
-                fd.fLKW += srcFD.fLKW / (SUMOReal) maxClique->size();
-                fd.isLKW += srcFD.isLKW / (SUMOReal) maxClique->size();
-                const SUMOReal speedFactorPKW = srcFD.vPKW / 3.6 / maxSpeedPKW;
-                const SUMOReal speedFactorLKW = srcFD.vLKW / 3.6 / maxSpeedLKW;
+                fd.vLKW += srcFD.vLKW / (double) maxClique->size();
+                fd.vPKW += srcFD.vPKW / (double) maxClique->size();
+                fd.fLKW += srcFD.fLKW / (double) maxClique->size();
+                fd.isLKW += srcFD.isLKW / (double) maxClique->size();
+                const double speedFactorPKW = srcFD.vPKW / 3.6 / maxSpeedPKW;
+                const double speedFactorLKW = srcFD.vLKW / 3.6 / maxSpeedLKW;
                 myMaxSpeedFactorPKW = MAX2(myMaxSpeedFactorPKW, speedFactorPKW);
                 myMaxSpeedFactorLKW = MAX2(myMaxSpeedFactorLKW, speedFactorLKW);
                 speedFactorCountPKW += srcFD.qPKW;
                 speedFactorCountLKW += srcFD.qLKW;
                 speedFactorSumPKW += srcFD.qPKW * speedFactorPKW;
                 speedFactorSumLKW += srcFD.qLKW * speedFactorLKW;
-                if (!didWarn && srcFD.vPKW > 0 && srcFD.vPKW < 255 && srcFD.vPKW / 3.6 > into->getSpeed()) {
-                    WRITE_MESSAGE("Detected PKW speed (" + toString(srcFD.vPKW / 3.6, 3) + ") higher than allowed speed (" + toString(into->getSpeed(), 3) + ") at '" + (*l) + "' on edge '" + into->getID() + "'.");
+                if (!didWarn && srcFD.vPKW > 0 && srcFD.vPKW < 255 && srcFD.vPKW / 3.6 > into->getSpeedLimit()) {
+                    WRITE_MESSAGE("Detected PKW speed (" + toString(srcFD.vPKW / 3.6, 3) + ") higher than allowed speed (" + toString(into->getSpeedLimit(), 3) + ") at '" + (*l) + "' on edge '" + into->getID() + "'.");
                     didWarn = true;
                 }
-                if (!didWarn && srcFD.vLKW > 0 && srcFD.vLKW < 255 && srcFD.vLKW / 3.6 > into->getSpeed()) {
-                    WRITE_MESSAGE("Detected LKW speed (" + toString(srcFD.vLKW / 3.6, 3) + ") higher than allowed speed (" + toString(into->getSpeed(), 3) + ") at '" + (*l) + "' on edge '" + into->getID() + "'.");
+                if (!didWarn && srcFD.vLKW > 0 && srcFD.vLKW < 255 && srcFD.vLKW / 3.6 > into->getSpeedLimit()) {
+                    WRITE_MESSAGE("Detected LKW speed (" + toString(srcFD.vLKW / 3.6, 3) + ") higher than allowed speed (" + toString(into->getSpeedLimit(), 3) + ") at '" + (*l) + "' on edge '" + into->getID() + "'.");
                     didWarn = true;
                 }
             }
@@ -1084,12 +1080,12 @@ RODFNet::mesoJoin(RODFDetectorCon& detectors, RODFDetectorFlows& flows) {
     std::map<ROEdge*, std::vector<std::string>, idComp>::iterator i;
     for (i = myDetectorsOnEdges.begin(); i != myDetectorsOnEdges.end(); ++i) {
         const std::vector<std::string>& dets = (*i).second;
-        std::map<SUMOReal, std::vector<std::string> > cliques;
+        std::map<double, std::vector<std::string> > cliques;
         // compute detector cliques
         for (std::vector<std::string>::const_iterator j = dets.begin(); j != dets.end(); ++j) {
             const RODFDetector& det = detectors.getDetector(*j);
             bool found = false;
-            for (std::map<SUMOReal, std::vector<std::string> >::iterator k = cliques.begin(); !found && k != cliques.end(); ++k) {
+            for (std::map<double, std::vector<std::string> >::iterator k = cliques.begin(); !found && k != cliques.end(); ++k) {
                 if (fabs((*k).first - det.getPos()) < 10.) {
                     (*k).second.push_back(*j);
                     found = true;
@@ -1101,7 +1097,7 @@ RODFNet::mesoJoin(RODFDetectorCon& detectors, RODFDetectorFlows& flows) {
             }
         }
         // join detector cliques
-        for (std::map<SUMOReal, std::vector<std::string> >::iterator m = cliques.begin(); m != cliques.end(); ++m) {
+        for (std::map<double, std::vector<std::string> >::iterator m = cliques.begin(); m != cliques.end(); ++m) {
             std::vector<std::string> clique = (*m).second;
             // do not join if only one
             if (clique.size() == 1) {

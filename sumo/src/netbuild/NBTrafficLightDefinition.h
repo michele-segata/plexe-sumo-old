@@ -302,6 +302,12 @@ public:
     }
 
 
+    /// @brief returns the controlled links (non const version)
+    NBConnectionVector& getControlledLinks() {
+        return myControlledLinks;
+    }
+
+
     /** @brief Returns the ProgramID
      * @return The ID of the program (subID)
      */
@@ -376,7 +382,7 @@ protected:
      * This time depends on the maximum speed allowed on incoming junctions.
      * It is computed as max_speed_allowed / minimum_vehicle_decleration
      */
-    int computeBrakingTime(SUMOReal minDecel) const;
+    int computeBrakingTime(double minDecel) const;
 
 
     // @return whether this traffic light is invalid and should be computed

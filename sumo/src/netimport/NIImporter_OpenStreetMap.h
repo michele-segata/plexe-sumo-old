@@ -4,6 +4,7 @@
 /// @author  Jakob Erdmann
 /// @author  Michael Behrisch
 /// @author  Walter Bamberger
+/// @author  Gregor Laemmel
 /// @date    Mon, 14.04.2008
 /// @version $Id$
 ///
@@ -82,20 +83,26 @@ protected:
      */
     struct NIOSMNode {
         NIOSMNode(long long int _id, double _lon, double _lat) :
-            id(_id), lon(_lon), lat(_lat), ele(0), tlsControlled(false), railwayCrossing(false), node(0) {}
+            id(_id), lon(_lon), lat(_lat), ele(0), tlsControlled(false), railwayCrossing(false), ptStopPostion(false), ptStopLength(0), node(0) {}
 
         /// @brief The node's id
         const long long int id;
         /// @brief The longitude the node is located at
-        const SUMOReal lon;
+        const double lon;
         /// @brief The latitude the node is located at
-        const SUMOReal lat;
+        const double lat;
         /// @brief The elevation of this node
-        SUMOReal ele;
+        double ele;
         /// @brief Whether this is a tls controlled junction
         bool tlsControlled;
         /// @brief Whether this is a railway crossing
         bool railwayCrossing;
+        /// @brief Whether this is a public transport stop position
+        bool ptStopPostion;
+        /// @brief The length of the pt stop
+        double ptStopLength;
+        /// @brief The name of the node
+        std::string name;
         /// @brief the NBNode that was instantiated
         NBNode* node;
 
@@ -234,13 +241,13 @@ private:
                    const std::vector<long long int>& passed, NBNetBuilder& nb);
 
     /// @brief reconstruct elevation from layer info
-    void reconstructLayerElevation(SUMOReal layerElevation, NBNetBuilder& nb);
+    void reconstructLayerElevation(double layerElevation, NBNetBuilder& nb);
 
     /// @brief collect neighboring nodes with their road distance and maximum between-speed. Search does not continue beyond knownElevation-nodes
-    std::map<NBNode*, std::pair<SUMOReal, SUMOReal> > getNeighboringNodes(NBNode* node, SUMOReal maxDist, const std::set<NBNode*>& knownElevation);
+    std::map<NBNode*, std::pair<double, double> > getNeighboringNodes(NBNode* node, double maxDist, const std::set<NBNode*>& knownElevation);
 
 protected:
-    static const SUMOReal MAXSPEED_UNGIVEN;
+    static const double MAXSPEED_UNGIVEN;
     static const long long int INVALID_ID;
 
     /**
@@ -255,9 +262,8 @@ protected:
          * @param[in, out] uniqueNodes The nodes container for ensuring uniqueness
          * @param[in] options The options to use
          */
-        NodesHandler(std::map<long long int, NIOSMNode*>& toFill,
-                     std::set<NIOSMNode*, CompareNodes>& uniqueNodes,
-                     bool importElevation);
+        NodesHandler(std::map<long long int, NIOSMNode*>& toFill, std::set<NIOSMNode*,
+                     CompareNodes>& uniqueNodes, const OptionsCont& cont);
 
 
         /// @brief Destructor
@@ -307,6 +313,9 @@ protected:
 
         /// @brief whether elevation data should be imported
         const bool myImportElevation;
+
+        /// @brief the options
+        const OptionsCont& myOptionsCont;
 
 
     private:
@@ -377,7 +386,7 @@ protected:
         std::vector<int> myParentElements;
 
         /// @brief A map of non-numeric speed descriptions to their numeric values
-        std::map<std::string, SUMOReal> mySpeedMap;
+        std::map<std::string, double> mySpeedMap;
 
     private:
         /** @brief invalidated copy constructor */

@@ -28,12 +28,9 @@
 #include <config.h>
 #endif
 
-#include "Parameterised.h"
 #include "utils/iodevices/OutputDevice.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include "TplConvert.h"
+#include "Parameterised.h"
 
 
 // ===========================================================================
@@ -83,6 +80,16 @@ Parameterised::getParameter(const std::string& key, const std::string& defaultVa
     std::map<std::string, std::string>::const_iterator i = myMap.find(key);
     if (i != myMap.end()) {
         return (*i).second;
+    }
+    return defaultValue;
+}
+
+
+double
+Parameterised::getDouble(const std::string& key, const double defaultValue) const {
+    std::map<std::string, std::string>::const_iterator i = myMap.find(key);
+    if (i != myMap.end()) {
+        return TplConvert::_2double(i->second.c_str());
     }
     return defaultValue;
 }

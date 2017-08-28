@@ -50,10 +50,6 @@
 #include "GUIDialog_EditViewport.h"
 #include "GUIDialog_ViewSettings.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // FOX callback mapping
@@ -508,6 +504,14 @@ GUIDialog_ViewSettings::~GUIDialog_ViewSettings() {
 
 
 void
+GUIDialog_ViewSettings::show() {
+    // update buttons that can be changed externally
+    myShowGrid->setCheck(mySettings->showGrid);
+    FXDialogBox::show();
+}
+
+
+void
 GUIDialog_ViewSettings::setCurrent(GUIVisualizationSettings* settings) {
     mySettings = settings;
     myBackup = (*settings);
@@ -635,7 +639,7 @@ GUIDialog_ViewSettings::updateColorRanges(FXObject* sender, std::vector<FXColorW
             }
         } else {
             if (sender == *threshIt) {
-                const SUMOReal val = (*threshIt)->getValue();
+                const double val = (*threshIt)->getValue();
                 double lo, hi;
                 if (pos != 0) {
                     threshIt--;
@@ -688,7 +692,7 @@ GUIDialog_ViewSettings::updateScaleRanges(FXObject* sender, std::vector<FXRealSp
             }
         } else {
             if (sender == *threshIt) {
-                const SUMOReal val = (*threshIt)->getValue();
+                const double val = (*threshIt)->getValue();
                 double lo, hi;
                 if (pos != 0) {
                     threshIt--;
@@ -740,8 +744,8 @@ GUIDialog_ViewSettings::onCmdColorChange(FXObject* sender, FXSelector, void* /*v
     tmpSettings.name = mySettings->name;
     tmpSettings.backgroundColor = MFXUtils::getRGBColor(myBackgroundColor->getRGBA());
     tmpSettings.showGrid = (myShowGrid->getCheck() != FALSE);
-    tmpSettings.gridXSize = (SUMOReal) myGridXSizeDialer->getValue();
-    tmpSettings.gridYSize = (SUMOReal) myGridYSizeDialer->getValue();
+    tmpSettings.gridXSize = (double) myGridXSizeDialer->getValue();
+    tmpSettings.gridYSize = (double) myGridYSizeDialer->getValue();
 
     if (GUIVisualizationSettings::UseMesoSim) {
         tmpSettings.edgeColorer.setActive(myLaneEdgeColorMode->getCurrentItem());
@@ -761,8 +765,8 @@ GUIDialog_ViewSettings::onCmdColorChange(FXObject* sender, FXSelector, void* /*v
     tmpSettings.hideConnectors = (myHideMacroConnectors->getCheck() != FALSE);
     tmpSettings.showLaneDirection = (myShowLaneDirection->getCheck() != FALSE);
     tmpSettings.showSublanes = (myShowSublanes->getCheck() != FALSE);
-    tmpSettings.laneWidthExaggeration = (SUMOReal) myLaneWidthUpscaleDialer->getValue();
-    tmpSettings.laneMinSize = (SUMOReal) myLaneMinWidthDialer->getValue();
+    tmpSettings.laneWidthExaggeration = (double) myLaneWidthUpscaleDialer->getValue();
+    tmpSettings.laneMinSize = (double) myLaneMinWidthDialer->getValue();
 
     tmpSettings.vehicleColorer.setActive(myVehicleColorMode->getCurrentItem());
     tmpSettings.vehicleQuality = myVehicleShapeDetail->getCurrentItem();
@@ -1202,13 +1206,13 @@ GUIDialog_ViewSettings::rebuildList() {
     for (j = myDecals->begin(); j != myDecals->end(); ++j) {
         GUISUMOAbstractView::Decal& d = *j;
         myDecalsTable->setItemText(row, 0, d.filename.c_str());
-        myDecalsTable->setItemText(row, 1, toString<SUMOReal>(d.centerX).c_str());
-        myDecalsTable->setItemText(row, 2, toString<SUMOReal>(d.centerY).c_str());
-        myDecalsTable->setItemText(row, 3, toString<SUMOReal>(d.width).c_str());
-        myDecalsTable->setItemText(row, 4, toString<SUMOReal>(d.height).c_str());
-        myDecalsTable->setItemText(row, 5, toString<SUMOReal>(d.rot).c_str());
-        myDecalsTable->setItemText(row, 6, toString<SUMOReal>(d.layer).c_str());
-        myDecalsTable->setItemText(row, 7, toString<SUMOReal>(d.screenRelative).c_str());
+        myDecalsTable->setItemText(row, 1, toString<double>(d.centerX).c_str());
+        myDecalsTable->setItemText(row, 2, toString<double>(d.centerY).c_str());
+        myDecalsTable->setItemText(row, 3, toString<double>(d.width).c_str());
+        myDecalsTable->setItemText(row, 4, toString<double>(d.height).c_str());
+        myDecalsTable->setItemText(row, 5, toString<double>(d.rot).c_str());
+        myDecalsTable->setItemText(row, 6, toString<double>(d.layer).c_str());
+        myDecalsTable->setItemText(row, 7, toString<double>(d.screenRelative).c_str());
         row++;
     }
     // insert dummy last field
@@ -1232,7 +1236,7 @@ GUIDialog_ViewSettings::rebuildColorMatrix(FXVerticalFrame* frame,
     buttons.clear();
     const bool fixed = scheme.isFixed();
     std::vector<RGBColor>::const_iterator colIt = scheme.getColors().begin();
-    std::vector<SUMOReal>::const_iterator threshIt = scheme.getThresholds().begin();
+    std::vector<double>::const_iterator threshIt = scheme.getThresholds().begin();
     std::vector<std::string>::const_iterator nameIt = scheme.getNames().begin();
     FX::FXString buttonText = "Add";
     while (colIt != scheme.getColors().end()) {
@@ -1285,8 +1289,8 @@ GUIDialog_ViewSettings::rebuildScaleMatrix(FXVerticalFrame* frame,
     thresholds.clear();
     buttons.clear();
     const bool fixed = scheme.isFixed();
-    std::vector<SUMOReal>::const_iterator scaleIt = scheme.getColors().begin();
-    std::vector<SUMOReal>::const_iterator threshIt = scheme.getThresholds().begin();
+    std::vector<double>::const_iterator scaleIt = scheme.getColors().begin();
+    std::vector<double>::const_iterator threshIt = scheme.getThresholds().begin();
     std::vector<std::string>::const_iterator nameIt = scheme.getNames().begin();
     FX::FXString buttonText = "Add";
     while (scaleIt != scheme.getColors().end()) {
@@ -1398,8 +1402,8 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
     // check whether we add a new entry or edit an existing entry
     if (row == static_cast<int>(myDecals->size())) {
         d.filename = "";
-        d.centerX = SUMOReal(myParent->getGridWidth() / 2.);
-        d.centerY = SUMOReal(myParent->getGridHeight() / 2.);
+        d.centerX = double(myParent->getGridWidth() / 2.);
+        d.centerY = double(myParent->getGridHeight() / 2.);
         d.width = 0.;
         d.height = 0.;
         d.initialised = false;
@@ -1425,7 +1429,7 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
             break;
         case 1:
             try {
-                d.centerX = TplConvert::_2SUMOReal(value.c_str());
+                d.centerX = TplConvert::_2double(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
                 FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
@@ -1433,7 +1437,7 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
             break;
         case 2:
             try {
-                d.centerY = TplConvert::_2SUMOReal(value.c_str());
+                d.centerY = TplConvert::_2double(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
                 FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
@@ -1441,7 +1445,7 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
             break;
         case 3:
             try {
-                d.width = TplConvert::_2SUMOReal(value.c_str());
+                d.width = TplConvert::_2double(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
                 FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
@@ -1449,7 +1453,7 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
             break;
         case 4:
             try {
-                d.height = TplConvert::_2SUMOReal(value.c_str());
+                d.height = TplConvert::_2double(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
                 FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
@@ -1457,7 +1461,7 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
             break;
         case 5:
             try {
-                d.rot = TplConvert::_2SUMOReal(value.c_str());
+                d.rot = TplConvert::_2double(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
                 FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());
@@ -1465,7 +1469,7 @@ GUIDialog_ViewSettings::onCmdEditTable(FXObject*, FXSelector, void* data) {
             break;
         case 6:
             try {
-                d.layer = TplConvert::_2SUMOReal(value.c_str());
+                d.layer = TplConvert::_2double(value.c_str());
             } catch (NumberFormatException&) {
                 std::string msg = "The value must be a float, is:" + value;
                 FXMessageBox::error(this, MBOX_OK, "Number format error", "%s", msg.c_str());

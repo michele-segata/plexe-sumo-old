@@ -80,10 +80,10 @@ public:
      * @param[in] lanesCount number of lanes of the highway
      * @param[in] ccAccel the maximum acceleration the CC can apply
      */
-    MSCFModel_CC(const MSVehicleType* vtype, SUMOReal accel, SUMOReal decel,
-                 SUMOReal ccDecel, SUMOReal headwayTime, SUMOReal constantSpacing,
-                 SUMOReal kp, SUMOReal lambda, SUMOReal c1, SUMOReal xi,
-                 SUMOReal omegaN, SUMOReal tau, int lanesCount, SUMOReal ccAccel);
+    MSCFModel_CC(const MSVehicleType* vtype, double accel, double decel,
+                 double ccDecel, double headwayTime, double constantSpacing,
+                 double kp, double lambda, double c1, double xi,
+                 double omegaN, double tau, int lanesCount, double ccAccel);
 
     /// @brief Destructor
     ~MSCFModel_CC();
@@ -97,7 +97,7 @@ public:
      * @param[in] vPos The possible velocity
      * @return The velocity after applying interactions with stops and lane change model influences
      */
-    SUMOReal moveHelper(MSVehicle* const veh, SUMOReal vPos) const;
+    double moveHelper(MSVehicle* const veh, double vPos) const;
 
 
     /** @brief Computes the vehicle's safe speed (no dawdling)
@@ -108,14 +108,14 @@ public:
      * @return EGO's safe speed
      * @see MSCFModel::ffeV
      */
-    SUMOReal followSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const;
+    double followSpeed(const MSVehicle* const veh, double speed, double gap2pred, double predSpeed, double predMaxDecel) const;
 
     /** @brief Overload base MSCFModel::insertionFollowSpeed method to inject
      * automated vehicles as soon as they are requested, without checking
      * for safe speed constraints
      *
      */
-    virtual SUMOReal insertionFollowSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred, SUMOReal predSpeed, SUMOReal predMaxDecel) const;
+    virtual double insertionFollowSpeed(const MSVehicle* const veh, double speed, double gap2pred, double predSpeed, double predMaxDecel) const;
 
 
     /** @brief Computes the vehicle's safe speed for approaching a non-moving obstacle (no dawdling)
@@ -125,7 +125,7 @@ public:
      * @see MSCFModel::ffeS
      * @todo generic Interface, models can call for the values they need
      */
-    SUMOReal stopSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal gap2pred) const;
+    double stopSpeed(const MSVehicle* const veh, double speed, double gap2pred) const;
 
     /** @brief Computes the vehicle's safe speed without a leader
      *
@@ -139,10 +139,10 @@ public:
      * @param[in] onInsertion whether speed at insertion is asked for
      * @return EGO's safe speed
      */
-    virtual SUMOReal freeSpeed(const MSVehicle* const veh, SUMOReal speed, SUMOReal seen,
-                               SUMOReal maxSpeed, const bool onInsertion = false) const;
+    virtual double freeSpeed(const MSVehicle* const veh, double speed, double seen,
+                               double maxSpeed, const bool onInsertion = false) const;
 
-    SUMOReal maxNextSpeed(SUMOReal speed) const;
+    double maxNextSpeed(double speed) const;
 
 
     /** @brief Returns the maximum gap at which an interaction between both vehicles occurs
@@ -154,7 +154,7 @@ public:
      * @todo evaluate signature
      * @see MSCFModel::interactionGap
      */
-    SUMOReal interactionGap(const MSVehicle* const , SUMOReal vL) const;
+    double interactionGap(const MSVehicle* const , double vL) const;
 
 
     /** @brief Returns the model's name
@@ -207,7 +207,7 @@ public:
      * @param[in] veh the vehicle for which the desired speed has to be changed
      * @param[in] ccDesiredSpeed the desired speed in m/s
      */
-    void setCCDesiredSpeed(const MSVehicle* veh, SUMOReal ccDesiredSpeed) const;
+    void setCCDesiredSpeed(const MSVehicle* veh, double ccDesiredSpeed) const;
 
     /**
      * @brief set CACC desired constant spacing
@@ -215,7 +215,7 @@ public:
      * @param[in] veh the vehicle to set constant spacing for
      * @param[in] spacing the spacing in meters
      */
-    void setCACCConstantSpacing(const MSVehicle * veh, SUMOReal spacing) const;
+    void setCACCConstantSpacing(const MSVehicle * veh, double spacing) const;
 
     /**
      * @brief returns CACC desired constant spacing
@@ -223,7 +223,7 @@ public:
      * @param[in] veh the vehicle to get constant spacing of
      * @return spacing the spacing in meters
      */
-    SUMOReal getCACCConstantSpacing(const MSVehicle * veh) const;
+    double getCACCConstantSpacing(const MSVehicle * veh) const;
 
     /**
      * @brief set the information about the platoon leader. This method should be invoked
@@ -236,7 +236,7 @@ public:
      * @param[in] position the position of the leader
      * @param[in] time the time at which this data was read from leader's sensors
      */
-    void setLeaderInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time)  const;
+    void setLeaderInformation(const MSVehicle* veh, double speed, double acceleration, Position position, double time)  const;
 
     /**
      * @brief set the information about preceding vehicle. This method should be invoked
@@ -250,7 +250,7 @@ public:
      * @param[in] time the time at which this data was read from preceding vehicle's sensors
      *
      */
-    void setPrecedingInformation(const MSVehicle* const veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time) const;
+    void setPrecedingInformation(const MSVehicle* const veh, double speed, double acceleration, Position position, double time) const;
 
     /**
      * @brief set the information about a generic car. This method should be invoked
@@ -263,7 +263,7 @@ public:
      * @param[in] position the position of the leader
      * @param[in] time the time at which this data was read from leader's sensors
      */
-//    void setVehicleInformation(const MSVehicle* veh, SUMOReal speed, SUMOReal acceleration, Position position, SUMOReal time)  const;
+//    void setVehicleInformation(const MSVehicle* veh, double speed, double acceleration, Position position, double time)  const;
 
     /**
      * @brief generic data passing method to this class
@@ -297,7 +297,7 @@ public:
      * the controller will be written in this variable. This might be different from
      * acceleration because of actuation lag
      */
-    void getVehicleInformation(const MSVehicle* veh, SUMOReal& speed, SUMOReal& acceleration, SUMOReal& controllerAcceleration, Position &position, SUMOReal &time) const;
+    void getVehicleInformation(const MSVehicle* veh, double& speed, double& acceleration, double& controllerAcceleration, Position &position, double &time) const;
 
     /**
      * @brief switch on the ACC, so disabling the human driver car control
@@ -448,7 +448,7 @@ private:
     void resetConsensus(const MSVehicle *veh) const;
 
 private:
-    SUMOReal _v(const MSVehicle* const veh, SUMOReal gap2pred, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal desSpeed, enum CONTROLLER_INVOKER invoker) const;
+    double _v(const MSVehicle* const veh, double gap2pred, double egoSpeed, double predSpeed, double desSpeed, enum CONTROLLER_INVOKER invoker) const;
 
     /** @brief controller for the CC which computes the acceleration to be applied. the value needs to be passed to the actuator
      *
@@ -456,7 +456,7 @@ private:
      * @param[in] desSpeed vehicle desired speed
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _cc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal desSpeed) const;
+    double _cc(const MSVehicle *veh, double egoSpeed, double desSpeed) const;
 
     /** @brief controller for the ACC which computes the acceleration to be applied. the value needs to be passed to the actuator
      *
@@ -466,7 +466,7 @@ private:
      * @param[in] headwayTime the headway time ACC should maintain
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _acc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal gap2pred, SUMOReal headwayTime) const;
+    double _acc(const MSVehicle *veh, double egoSpeed, double predSpeed, double gap2pred, double headwayTime) const;
 
     /** @brief controller for the CACC which computes the acceleration to be applied. the value needs to be passed to the actuator
      *
@@ -479,7 +479,7 @@ private:
      * @param[in] spacing the spacing to be kept
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _cacc(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred, SUMOReal leaderSpeed, SUMOReal leaderAcceleration, SUMOReal spacing) const;
+    double _cacc(const MSVehicle *veh, double egoSpeed, double predSpeed, double predAcceleration, double gap2pred, double leaderSpeed, double leaderAcceleration, double spacing) const;
 
     /** @brief controller for the Ploeg's CACC which computes the control input variation.
      * Opposed to other controllers, this method returns a value which needs to be summed
@@ -491,7 +491,7 @@ private:
      * @param[in] gap2pred the distance to preceding vehicle
      * @return the variation of desired acceleration
      */
-    SUMOReal _ploeg(const MSVehicle *veh, SUMOReal egoSpeed, SUMOReal predSpeed, SUMOReal predAcceleration, SUMOReal gap2pred) const;
+    double _ploeg(const MSVehicle *veh, double egoSpeed, double predSpeed, double predAcceleration, double gap2pred) const;
 
     /** @brief controller based on consensus strategy
      *
@@ -500,7 +500,7 @@ private:
      * @param[in] time current time
      * @return the acceleration to be given to the actuator
      */
-    SUMOReal _consensus(const MSVehicle* veh, SUMOReal egoSpeed, Position egoPosition, SUMOReal time) const;
+    double _consensus(const MSVehicle* veh, double egoSpeed, Position egoPosition, double time) const;
 
     /** @brief computes the desired distance between vehicle i and vehicle j
      *
@@ -511,7 +511,7 @@ private:
      * @return the desired distance between vehicle i and j
      *
      */
-    SUMOReal d_i_j(const struct Plexe::VEHICLE_DATA *vehicles, const double h[MAX_N_CARS], int i, int j) const;
+    double d_i_j(const struct Plexe::VEHICLE_DATA *vehicles, const double h[MAX_N_CARS], int i, int j) const;
 
     /** @brief computes the actual acceleration the actuator is able to apply to the car, given engine time constant and previous
      * acceleration
@@ -520,9 +520,9 @@ private:
      * @param[in] currentAcceleration the current car acceleration
      * @return the actual acceleration applied by the engine
      */
-    SUMOReal _actuator(const MSVehicle *veh, SUMOReal acceleration, SUMOReal currentAcceleration) const;
+    double _actuator(const MSVehicle *veh, double acceleration, double currentAcceleration) const;
 
-    SUMOReal desiredSpeed(const MSVehicle* const veh) const {
+    double desiredSpeed(const MSVehicle* const veh) const {
         return MIN2(myType->getMaxSpeed(), veh->getLane()->getSpeedLimit());
     }
 
@@ -533,46 +533,46 @@ private:
     MSCFModel *myHumanDriver;
 
     /// @brief The maximum deceleration that the CC can output
-    const SUMOReal myCcDecel;
+    const double myCcDecel;
 
     /// @brief The maximum acceleration that the CC can output
-    const SUMOReal myCcAccel;
+    const double myCcAccel;
 
     /// @brief the constant gap for CACC
-    const SUMOReal myConstantSpacing;
+    const double myConstantSpacing;
 
     /// @brief design constant for CC
-    const SUMOReal myKp;
+    const double myKp;
 
     /// @brief design constant for ACC
-    const SUMOReal myLambda;
+    const double myLambda;
 
     /// @brief design constant for CACC
-    const SUMOReal myC1;
+    const double myC1;
 
     /// @brief design constant for CACC
-    const SUMOReal myXi;
+    const double myXi;
 
     /// @brief design constant for CACC
-    const SUMOReal myOmegaN;
+    const double myOmegaN;
 
     /// @brief engine time constant used for actuation lag
-    const SUMOReal myTau;
+    const double myTau;
     /// @brief the alpha parameter for the low-pass filter used to implement the actuation lag
-    const SUMOReal myAlpha;
+    const double myAlpha;
     /// @brief one minus alpha parameters
-    const SUMOReal myOneMinusAlpha;
+    const double myOneMinusAlpha;
 
     /// @brief A computational shortcut for CACC
-    const SUMOReal myAlpha1;
+    const double myAlpha1;
     /// @brief A computational shortcut for CACC
-    const SUMOReal myAlpha2;
+    const double myAlpha2;
     /// @brief A computational shortcut for CACC
-    const SUMOReal myAlpha3;
+    const double myAlpha3;
     /// @brief A computational shortcut for CACC
-    const SUMOReal myAlpha4;
+    const double myAlpha4;
     /// @brief A computational shortcut for CACC
-    const SUMOReal myAlpha5;
+    const double myAlpha5;
 
     /// @brief number of lanes in the highway, in the absence of on-/off-ramps. This is used
     /// to move to the correct lane even when a lane is added for on-/off-ramps

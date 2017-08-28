@@ -40,10 +40,6 @@
 #include "TraCIServerAPI_Person.h"
 #include "TraCIServerAPI_VehicleType.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -196,7 +192,7 @@ TraCIServerAPI_Person::processGet(TraCIServer& server, tcpip::Storage& inputStor
                 tempMsg.writeString(p->getParameter().getParameter(paramName, ""));
             }
             default:
-                TraCIServerAPI_VehicleType::getVariable(variable, p->getVehicleType(), tempMsg);
+                TraCIServerAPI_VehicleType::getVariable(variable, p->getVehicleType().getID(), tempMsg);
                 break;
         }
     }
@@ -244,7 +240,7 @@ TraCIServerAPI_Person::processSet(TraCIServer& server, tcpip::Storage& inputStor
             // set the speed for all (walking) stages
             p->setSpeed(speed);
             // modify the vType so that stages added later are also affected
-            TraCIServerAPI_VehicleType::setVariable(CMD_SET_VEHICLE_VARIABLE, variable, getSingularType(p), server, inputStorage, outputStorage);
+            TraCIServerAPI_VehicleType::setVariable(CMD_SET_VEHICLE_VARIABLE, variable, getSingularType(p).getID(), server, inputStorage, outputStorage);
         }
         break;
         case VAR_TYPE: {
@@ -496,7 +492,7 @@ TraCIServerAPI_Person::processSet(TraCIServer& server, tcpip::Storage& inputStor
         break;
         default:
             try {
-                if (!TraCIServerAPI_VehicleType::setVariable(CMD_SET_PERSON_VARIABLE, variable, getSingularType(p), server, inputStorage, outputStorage)) {
+                if (!TraCIServerAPI_VehicleType::setVariable(CMD_SET_PERSON_VARIABLE, variable, getSingularType(p).getID(), server, inputStorage, outputStorage)) {
                     return false;
                 }
             } catch (ProcessError& e) {
@@ -524,7 +520,7 @@ MSVehicleType&
 TraCIServerAPI_Person::getSingularType(MSTransportable* const t) {
     const MSVehicleType& oType = t->getVehicleType();
     std::string newID = oType.getID().find('@') == std::string::npos ? oType.getID() + "@" + t->getID() : oType.getID();
-    MSVehicleType* type = MSVehicleType::build(newID, &oType);
+    MSVehicleType* type = MSVehicleType::buildSingularType(newID, &oType);
     t->replaceVehicleType(type);
     return *type;
 }

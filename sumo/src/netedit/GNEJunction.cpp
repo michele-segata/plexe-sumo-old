@@ -59,10 +59,6 @@
 #include "GNEConnection.h"
 #include "GNEJunction.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // method definitions
 // ===========================================================================
@@ -89,6 +85,8 @@ GNEJunction::~GNEJunction() {
 
 void
 GNEJunction::updateGeometry() {
+    //myNet->getNetBuilder()->computeSingleNode(&myNBNode, OptionsCont::getOptions());
+
     const double EXTENT = 2;
     myBoundary = Boundary(
                      myOrigPos.x() - EXTENT, myOrigPos.y() - EXTENT,
@@ -167,7 +165,7 @@ GNEJunction::getCenteringBoundary() const {
 void
 GNEJunction::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
-    SUMOReal exaggeration = gSelected.isSelected(getType(), getGlID()) ? s.selectionScale : 1;
+    double exaggeration = gSelected.isSelected(getType(), getGlID()) ? s.selectionScale : 1;
     exaggeration *= s.junctionSize.getExaggeration(s);
     if (s.scale * exaggeration * myMaxSize < 1.) {
         // draw something simple so that selection still works
@@ -231,8 +229,8 @@ GNEJunction::drawGL(const GUIVisualizationSettings& s) const {
             Position pos = myNBNode.getPosition();
             glTranslated(pos.x(), pos.y(), getType() + 0.1);
             glColor3d(1, 1, 1);
-            const SUMOReal halfWidth = 32 / s.scale;
-            const SUMOReal halfHeight = 64 / s.scale;
+            const double halfWidth = 32 / s.scale;
+            const double halfHeight = 64 / s.scale;
             GUITexturesHelper::drawTexturedBox(GUITextureSubSys::getTexture(GNETEXTURE_TLS), -halfWidth, -halfHeight, halfWidth, halfHeight);
             glPopMatrix();
         }
@@ -259,6 +257,25 @@ GNEJunction::getNBNode() const {
     return &myNBNode;
 }
 
+
+Position
+GNEJunction::getPosition() const {
+    return myNBNode.getPosition();
+}
+
+
+std::vector<GNEJunction*>
+GNEJunction::getJunctionNeighbours() const {
+    // use set to avoid duplicates junctions
+    std::set<GNEJunction*> junctions;
+    for (std::vector<GNEEdge*>::const_iterator i = myGNEIncomingEdges.begin(); i != myGNEIncomingEdges.end(); i++) {
+        junctions.insert((*i)->getGNEJunctionSource());
+    }
+    for (std::vector<GNEEdge*>::const_iterator i = myGNEOutgoingEdges.begin(); i != myGNEOutgoingEdges.end(); i++) {
+        junctions.insert((*i)->getGNEJunctionDestiny());
+    }
+    return std::vector<GNEJunction*>(junctions.begin(), junctions.end());
+}
 
 
 void
@@ -358,6 +375,23 @@ GNEJunction::selectTLS(bool selected) {
 
 
 void
+GNEJunction::recomputeNeighborsJunctions() {
+    std::set<GNEJunction*> neighborsJunctions;
+    // obtain all neighbors junctions
+    for (std::vector<GNEEdge*>::const_iterator i = myGNEIncomingEdges.begin(); i != myGNEIncomingEdges.end(); i++) {
+        neighborsJunctions.insert((*i)->getGNEJunctionSource());
+    }
+    for (std::vector<GNEEdge*>::const_iterator i = myGNEOutgoingEdges.begin(); i != myGNEOutgoingEdges.end(); i++) {
+        neighborsJunctions.insert((*i)->getGNEJunctionDestiny());
+    }
+    // recompute all neighbors junctions
+    //for(std::set<GNEJunction*>::iterator i = neighborsJunctions.begin(); i != neighborsJunctions.end(); i++) {
+    //    myNet->getNetBuilder()->computeSingleNode((*i)->getNBNode(), OptionsCont::getOptions());
+    //}
+}
+
+
+void
 GNEJunction::move(Position pos) {
     const Position orig = myNBNode.getPosition();
     setPosition(pos);
@@ -366,6 +400,10 @@ GNEJunction::move(Position pos) {
         GNEEdge* edge = myNet->retrieveEdge((*it)->getID());
         edge->updateJunctionPosition(this, orig);
     }
+    // recompute neighbors junctions
+    recomputeNeighborsJunctions();
+    // recompute junction
+    //myNet->getNetBuilder()->computeSingleNode(&myNBNode, OptionsCont::getOptions());
     // Update shapes without include connections, because the aren't showed in Move mode
     updateShapesAndGeometries();
 }
@@ -375,14 +413,19 @@ void
 GNEJunction::registerMove(GNEUndoList* undoList) {
     Position newPos = myNBNode.getPosition();
     std::string newPosValue = getAttribute(SUMO_ATTR_POSITION);
-    // actually the geometry is already up to date
-    // set the restore point to the end of the last change-set
-    setPosition(myOrigPos);
-    // do not execute the command to avoid changing the edge geometry twice
-    undoList->add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, newPosValue), false);
-    setPosition(newPos);
-    // Refresh element to avoid grabbing problems
-    myNet->refreshElement(this);
+    if (isValid(SUMO_ATTR_POSITION, newPosValue)) {
+        // actually the geometry is already up to date
+        // set the restore point to the end of the last change-set
+        setPosition(myOrigPos);
+        // do not execute the command to avoid changing the edge geometry twice
+        undoList->add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, newPosValue), false);
+        setPosition(newPos);
+        // Refresh element to avoid grabbing problems
+        myNet->refreshElement(this);
+    } else {
+        // tried to set an invalid position, revert back to the previous one
+        move(myOrigPos);
+    }
 }
 
 
@@ -407,19 +450,11 @@ GNEJunction::updateShapesAndGeometries() {
     }
     // Iterate over affected Junctions
     for (std::set<GNEJunction*>::iterator i = affectedJunctions.begin(); i != affectedJunctions.end(); i++) {
-        // Check that Node doesn't have a custom shape
-        if ((*i)->getNBNode()->hasCustomShape() == false) {
-            // Compute polygon
-            (*i)->getNBNode()->sortEdges(false);
-            (*i)->getNBNode()->computeNodeShape(-1);
-        }
         // Update geometry of Junction
         (*i)->updateGeometry();
     }
     // Iterate over affected Edges
     for (std::set<GNEEdge*>::iterator i = affectedEdges.begin(); i != affectedEdges.end(); i++) {
-        // Compute full edge shape because this funcion is related to computeNodeShape
-        (*i)->getNBEdge()->computeEdgeShape();
         // Update edge geometry
         (*i)->updateGeometry();
     }
@@ -602,6 +637,16 @@ GNEJunction::setAttribute(SumoXMLAttr key, const std::string& value, GNEUndoList
         case SUMO_ATTR_TYPE: {
             undoList->p_begin("change " + toString(getTag()) + " type");
             if (NBNode::isTrafficLight(SUMOXMLDefinitions::NodeTypes.get(value))) {
+                if (getNBNode()->isTLControlled() &&
+                        // if switching changing from or to traffic_light_right_on_red we need to remove the old plan
+                        (getNBNode()->getType() == NODETYPE_TRAFFIC_LIGHT_RIGHT_ON_RED
+                         || SUMOXMLDefinitions::NodeTypes.get(value) == NODETYPE_TRAFFIC_LIGHT_RIGHT_ON_RED)
+                   ) {
+                    const std::set<NBTrafficLightDefinition*> tls = myNBNode.getControllingTLS();
+                    for (std::set<NBTrafficLightDefinition*>::iterator it = tls.begin(); it != tls.end(); it++) {
+                        undoList->add(new GNEChange_TLS(this, *it, false), true);
+                    }
+                }
                 if (!getNBNode()->isTLControlled()) {
                     // create new traffic light
                     undoList->add(new GNEChange_TLS(this, 0, true), true);
@@ -683,7 +728,7 @@ GNEJunction::isValid(SumoXMLAttr key, const std::string& value) {
             break;
         }
         case SUMO_ATTR_RADIUS:
-            return canParse<SUMOReal>(value);
+            return canParse<double>(value);
             break;
         case SUMO_ATTR_TLTYPE:
             return myNBNode.isTLControlled() && SUMOXMLDefinitions::TrafficLightTypes.hasString(value);
@@ -721,6 +766,10 @@ GNEJunction::setAttribute(SumoXMLAttr key, const std::string& value) {
             bool ok;
             myOrigPos = GeomConvHelper::parseShapeReporting(value, "netedit-given", 0, ok, false)[0];
             move(myOrigPos);
+            // recompute neighbors junctions
+            recomputeNeighborsJunctions();
+            // recompute junction
+            //myNet->getNetBuilder()->computeSingleNode(&myNBNode, OptionsCont::getOptions());
             // Refresh element to avoid grabbing problems
             myNet->refreshElement(this);
             break;
@@ -742,7 +791,7 @@ GNEJunction::setAttribute(SumoXMLAttr key, const std::string& value) {
             break;
         }
         case SUMO_ATTR_RADIUS:
-            myNBNode.setRadius(parse<SUMOReal>(value));
+            myNBNode.setRadius(parse<double>(value));
             break;
         case SUMO_ATTR_TLTYPE: {
             const std::set<NBTrafficLightDefinition*> tls = myNBNode.getControllingTLS();
@@ -772,7 +821,7 @@ GNEJunction::setPosition(Position pos) {
 }
 
 
-SUMOReal
+double
 GNEJunction::getColorValue(const GUIVisualizationSettings& s, bool bubble) const {
     switch (s.junctionColorer.getActive()) {
         case 0:

@@ -5,12 +5,8 @@ GUI_APPS = sumo-gui
 GUI_DIRS = gui guinetload guisim netedit mesogui osgview
 endif
 
-if CHECK_MEMORY_LEAKS
-MEM_LIBS  = ./foreign/nvwa/libnvwa.a
-endif
-
 if TRACI
-TRACI_LIBS = ./traci-server/libtraciserver.a ./utils/traci/libtraci.a
+TRACI_LIBS = ./traci-server/libtraciserver.a ./traci-server/lib/libtraci.a ./utils/traci/libtraciclient.a  
 TRACI_DIRS = traci-server traci_testclient
 endif
 
@@ -18,12 +14,13 @@ bin_PROGRAMS = od2trips sumo netconvert $(GUI_APPS)
 
 COMMON_LIBS = ./utils/options/liboptions.a \
 ./utils/xml/libxml.a \
+./utils/distribution/libdistribution.a \
+./utils/geom/libgeom.a \
 ./utils/common/libcommon.a \
 ./utils/importio/libimportio.a \
 ./utils/iodevices/libiodevices.a \
 ./foreign/PHEMlight/cpp/libphemlight.a \
 ./foreign/tcpip/libtcpip.a \
-$(MEM_LIBS) \
 $(XERCES_LIBS)
 
 
@@ -31,10 +28,7 @@ od2trips_SOURCES = od2trips_main.cpp
 
 od2trips_LDADD   = ./od/libod.a \
 ./utils/options/liboptions.a \
-./utils/distribution/libdistribution.a \
 ./utils/vehicle/libvehicle.a \
-./utils/common/libcommon.a \
-./utils/geom/libgeom.a \
 $(COMMON_LIBS) $(XERCES_LDFLAGS)
 
 
@@ -52,7 +46,6 @@ sumo_LDADD   = ./netload/libnetload.a \
 ./microsim/traffic_lights/libmicrosimtls.a \
 ./microsim/pedestrians/libmicrosimpeds.a \
 ./mesosim/libmesosim.a \
-./utils/geom/libgeom.a \
 ./utils/vehicle/libvehicle.a \
 ./utils/shapes/libshapes.a \
 ./utils/emissions/libemissions.a \
@@ -70,8 +63,6 @@ netconvert_LDADD   = ./netimport/libnetimport.a \
 ./netimport/vissim/tempstructs/libvissimtmpstr.a \
 ./netbuild/libnetbuild.a \
 ./netwrite/libnetwrite.a \
-./utils/distribution/libdistribution.a \
-./utils/geom/libgeom.a \
 ./foreign/eulerspiral/libeulerspiral.a \
 $(COMMON_LIBS) \
 $(XERCES_LDFLAGS) $(GDAL_LDFLAGS) $(PROJ_LDFLAGS)

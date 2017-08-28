@@ -12,68 +12,59 @@ import neteditTestFunctions as netedit
 neteditProcess, match = netedit.setupAndStart(neteditTestRoot, False)
 
 # apply zoom
-netedit.zoomIn(match.getTarget().offset(325, 200), 10)
+netedit.setZoom("25", "0", "25")
 
-# Change to create additional
+# go to additional mode
 netedit.additionalMode()
 
-# obtain match for comboboxAdditional
-comboboxAdditional = netedit.getComboBoxAdditional(match)
-
 # select E3
-netedit.changeAdditional(comboboxAdditional, 8)
+netedit.changeAdditional("e3Detector")
 
 # create E3
-netedit.leftClick(match, 250, 100)
+netedit.leftClick(match, 250, 50)
 
 # select entry detector
-netedit.changeAdditional(comboboxAdditional, -4)
+netedit.changeAdditional("detEntry")
 
 # Create Entry detector
-netedit.selectChild(comboboxAdditional, 4, 1)
-netedit.leftClick(match, 100, 250)
+netedit.selectAdditionalChild(4, 0)
+netedit.leftClick(match, 100, 200)
 
 # change to move mode
 netedit.moveMode()
 
 # move Entry to right
-netedit.moveElement(match, 15, 250, 150, 250)
+netedit.moveElement(match, 15, 200, 150, 200)
 
-# Change to inspect mode
+# go to inspect mode
 netedit.inspectMode()
 
 # inspect Entry
-netedit.leftClick(match, 200, 250)
-
-# obtain parameters reference
-parametersReference = netedit.getParametersReference(match)
+netedit.leftClick(match, 200, 200)
 
 # block additional
-netedit.changeBlockAdditional(comboboxAdditional, 2)
+netedit.modifyBoolAttribute(2)
 
 # change to move mode
 netedit.moveMode()
 
 # try to move Entry to right (must be blocked)
-netedit.moveElement(match, 150, 250, 300, 250)
+netedit.moveElement(match, 150, 200, 300, 200)
 
-# Change to inspect mode
+# go to inspect mode
 netedit.inspectMode()
 
 # inspect Entry
-netedit.leftClick(match, 200, 250)
-
-# obtain parameters reference
-parametersReference = netedit.getParametersReference(match)
+netedit.leftClick(match, 200, 200)
 
 # unblock additional
-netedit.changeBlockAdditional(comboboxAdditional, 2)
+netedit.modifyBoolAttribute(2)
 
 # change to move mode
 netedit.moveMode()
 
 # move Entry to right (must be allowed)
-netedit.moveElement(match, 150, 250, 300, 250)
+netedit.moveElement(match, 150, 200, 300, 200)
 
 # Check undos and redos
 netedit.undo(match, 6)
@@ -86,4 +77,4 @@ netedit.saveAdditionals()
 netedit.saveNetwork()
 
 # quit netedit
-netedit.quit(neteditProcess, False, False)
+netedit.quit(neteditProcess)

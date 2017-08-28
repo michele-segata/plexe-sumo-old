@@ -35,10 +35,6 @@
 #include "GNEAttributeCarrier.h"
 #include "GNEUndoList.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // static members
 // ===========================================================================
@@ -54,6 +50,7 @@ std::map<SumoXMLTag, std::set<SumoXMLAttr> > GNEAttributeCarrier::myUniqueAttrs;
 std::map<SumoXMLTag, std::set<SumoXMLAttr> > GNEAttributeCarrier::myNonEditableAttrs;
 std::map<SumoXMLTag, std::set<SumoXMLAttr> > GNEAttributeCarrier::myPositiveAttrs;
 std::map<SumoXMLTag, std::set<SumoXMLAttr> > GNEAttributeCarrier::myProbabilityAttrs;
+std::map<SumoXMLTag, std::set<SumoXMLAttr> > GNEAttributeCarrier::myFileAttrs;
 std::map<SumoXMLTag, SumoXMLTag> GNEAttributeCarrier::myAllowedAdditionalWithParentTags;
 std::map<SumoXMLTag, std::map<SumoXMLAttr, std::vector<std::string> > > GNEAttributeCarrier::myDiscreteChoices;
 std::map<SumoXMLTag, std::map<SumoXMLAttr, std::string > > GNEAttributeCarrier::myAttrDefinitions;
@@ -81,9 +78,9 @@ GNEAttributeCarrier::parse(const std::string& string) {
 }
 
 
-template<> SUMOReal
+template<> double
 GNEAttributeCarrier::parse(const std::string& string) {
-    return TplConvert::_str2SUMOReal(string);
+    return TplConvert::_str2double(string);
 }
 
 
@@ -96,6 +93,71 @@ GNEAttributeCarrier::parse(const std::string& string) {
 template<> std::string
 GNEAttributeCarrier::parse(const std::string& string) {
     return string;
+}
+
+
+template<> SUMOVehicleClass
+GNEAttributeCarrier::parse(const std::string& string) {
+    if (string.size() == 0) {
+        throw EmptyData();
+    } else if (SumoVehicleClassStrings.hasString(string) == false) {
+        return SVC_IGNORING;
+    } else {
+        return SumoVehicleClassStrings.get(string);
+    }
+}
+
+
+template<> SUMOVehicleShape
+GNEAttributeCarrier::parse(const std::string& string) {
+    if (string.size() == 0) {
+        throw EmptyData();
+    } else if ((string == "unknown") || (SumoVehicleShapeStrings.hasString(string) == false)) {
+        return SVS_UNKNOWN;
+    } else {
+        return SumoVehicleShapeStrings.get(string);
+    }
+}
+
+
+template<> std::vector<std::string>
+GNEAttributeCarrier::parse(const std::string& string) {
+    std::vector<std::string> parsedValues;
+    SUMOSAXAttributes::parseStringVector(string, parsedValues);
+    return parsedValues;
+}
+
+
+template<> std::vector<int>
+GNEAttributeCarrier::parse(const std::string& string) {
+    std::vector<std::string> parsedValues = parse<std::vector<std::string> >(string);
+    std::vector<int> parsedIntValues;
+    for (std::vector<std::string>::const_iterator i = parsedValues.begin(); i != parsedValues.end(); i++) {
+        parsedIntValues.push_back(parse<int>(*i));
+    }
+    return parsedIntValues;
+}
+
+
+template<> std::vector<double>
+GNEAttributeCarrier::parse(const std::string& string) {
+    std::vector<std::string> parsedValues = parse<std::vector<std::string> >(string);
+    std::vector<double> parsedDoubleValues;
+    for (std::vector<std::string>::const_iterator i = parsedValues.begin(); i != parsedValues.end(); i++) {
+        parsedDoubleValues.push_back(parse<double>(*i));
+    }
+    return parsedDoubleValues;
+}
+
+
+template<> std::vector<bool>
+GNEAttributeCarrier::parse(const std::string& string) {
+    std::vector<std::string> parsedValues = parse<std::vector<std::string> >(string);
+    std::vector<bool> parsedBoolValues;
+    for (std::vector<std::string>::const_iterator i = parsedValues.begin(); i != parsedValues.end(); i++) {
+        parsedBoolValues.push_back(parse<bool>(*i));
+    }
+    return parsedBoolValues;
 }
 
 
@@ -173,47 +235,12 @@ GNEAttributeCarrier::isValidID(const std::string& value) {
 
 
 bool
-GNEAttributeCarrier::isValidFileValue(const std::string& value) {
+GNEAttributeCarrier::isValidFilename(const std::string& value) {
     // @note Only characteres that aren't permited in a file path or belong
     // to XML sintax
-    return value.find_first_of("\t\n\r@$%^&|\\{}*'\";:<>") == std::string::npos;
+    return (value.find_first_of("\t\n\r@$%^&|\\{}*'\";:<>") == std::string::npos);
 }
 
-
-bool
-GNEAttributeCarrier::isValidStringVector(const std::string& value) {
-    // 1) check if value is empty
-    if (value.empty()) {
-        return true;
-    }
-    // 2) Check if there are duplicated spaces
-    for (int i = 1; i < (int)value.size(); i++) {
-        if (value.at(i - 1) == ' ' && value.at(i) == ' ') {
-            return false;
-        }
-    }
-    // 3) Check if the first and last character aren't spaces
-    if ((value.at(0) == ' ') || (value.at(value.size() - 1) == ' ')) {
-        return false;
-    }
-    // 4) Check if every sub-string is valid
-    int index = 0;
-    std::string subString;
-    while (index < (int)value.size()) {
-        if (value.at(index) == ' ') {
-            if (!isValidFileValue(subString)) {
-                return false;
-            } else {
-                subString.clear();
-            }
-        } else {
-            subString.push_back(value.at(index));
-        }
-        index++;
-    }
-    // 5) All right, then return true
-    return true;
-}
 
 // ===========================================================================
 // static methods
@@ -242,6 +269,8 @@ GNEAttributeCarrier::allowedAttributes(SumoXMLTag tag) {
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_NAME, ""));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_WIDTH, "default"));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ENDOFFSET, "0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(GNE_ATTR_SHAPE_START, "")); // virtual attribute used to define an endPoint
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(GNE_ATTR_SHAPE_END, ""));   // virtual attribute from to define an endPoint
                 break;
             case SUMO_TAG_JUNCTION:
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ID, NODEFAULTVALUE));
@@ -261,6 +290,7 @@ GNEAttributeCarrier::allowedAttributes(SumoXMLTag tag) {
                 //attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_PREFER, ));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_WIDTH, "default"));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ENDOFFSET, "0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ACCELERATION, "false"));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_INDEX, NODEFAULTVALUE));
                 break;
             case SUMO_TAG_POI:
@@ -354,7 +384,7 @@ GNEAttributeCarrier::allowedAttributes(SumoXMLTag tag) {
             case SUMO_TAG_CALIBRATOR:
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ID, NODEFAULTVALUE));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_LANE, NODEFAULTVALUE));
-                // Currently unused attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_POSITION, ""));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_POSITION, "0"));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_FREQUENCY, "100"));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ROUTEPROBE, ""));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_OUTPUT, ""));
@@ -377,6 +407,66 @@ GNEAttributeCarrier::allowedAttributes(SumoXMLTag tag) {
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_EDGE, NODEFAULTVALUE));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_STARTTIME, "0"));
                 attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_END, "10"));
+                break;
+            case SUMO_TAG_FLOW:
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ID, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_TYPE, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ROUTE, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_BEGIN, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_END, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_VEHSPERHOUR, "-1"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_PERIOD, "-1"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_PROB, "-1"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_NUMBER, "100"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_DEPARTLANE, "first"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_DEPARTPOS, "base"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_DEPARTSPEED, "0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ARRIVALLANE, "current"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ARRIVALPOS, "max"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ARRIVALSPEED, "current"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_LINE, ""));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_PERSON_NUMBER, "0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_CONTAINER_NUMBER, "0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_REROUTE, "false"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_DEPARTPOS_LAT, "center"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ARRIVALPOS_LAT, ""));
+                break;
+            case SUMO_TAG_ROUTE:
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ID, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_EDGES, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_COLOR, ""));
+                break;
+            case SUMO_TAG_VTYPE:
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ID, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_ACCEL, "2.6"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_DECEL, "4.5"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_SIGMA, "0.5"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_TAU, "1.0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_LENGTH, "5.0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_MINGAP, "2.5"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_MAXSPEED, "70.0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_SPEEDFACTOR, "1.0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_SPEEDDEV, "0.0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_COLOR, "1,1,0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_VCLASS, "unknown"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_EMISSIONCLASS, "P_7_7"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_GUISHAPE, "unknown"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_WIDTH, "2.0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_IMGFILE, ""));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_IMPATIENCE, "0.0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_LANE_CHANGE_MODEL, "LC2013"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_CAR_FOLLOW_MODEL, "Krauss"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_PERSON_CAPACITY, "4"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_CONTAINER_CAPACITY, "0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_BOARDING_DURATION, "0.5"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_LOADING_DURATION, "90.0"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_LATALIGNMENT, "center"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_MINGAP_LAT, "0.12"));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_MAXSPEED_LAT, "1.0"));
+                break;
+            case SUMO_TAG_STEP:
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_TIME, NODEFAULTVALUE));
+                attrs.push_back(std::pair<SumoXMLAttr, std::string>(SUMO_ATTR_SPEED, "50.0"));
                 break;
             default:
                 // Throw exception if tag isn't defined
@@ -426,12 +516,22 @@ bool
 GNEAttributeCarrier::isInt(SumoXMLTag tag, SumoXMLAttr attr) {
     // define on first access
     if (myNumericalIntAttrs.empty()) {
+        // connection
         myNumericalIntAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_FROM_LANE);
         myNumericalIntAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_TO_LANE);
-        myNumericalIntAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_FREQUENCY);
+        // edge
         myNumericalIntAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_NUMLANES);
         myNumericalIntAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_PRIORITY);
+        // lane
         myNumericalIntAttrs[SUMO_TAG_LANE].insert(SUMO_ATTR_INDEX);
+        // flow
+        myNumericalIntAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_PROB);
+        myNumericalIntAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_PERSON_NUMBER);
+        myNumericalIntAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_CONTAINER_NUMBER);
+        myNumericalIntAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_NUMBER);
+        // vehicle type
+        myNumericalIntAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_PERSON_CAPACITY);
+        myNumericalIntAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_CONTAINER_CAPACITY);
     }
     return myNumericalIntAttrs[tag].count(attr) == 1;
 }
@@ -441,30 +541,63 @@ bool
 GNEAttributeCarrier::isFloat(SumoXMLTag tag, SumoXMLAttr attr) {
     // define on first access
     if (myNumericalFloatAttrs.empty()) {
+        // bus stop
         myNumericalFloatAttrs[SUMO_TAG_BUS_STOP].insert(SUMO_ATTR_ENDPOS);
         myNumericalFloatAttrs[SUMO_TAG_BUS_STOP].insert(SUMO_ATTR_STARTPOS);
+        // charging station
         myNumericalFloatAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_CHARGINGPOWER);
         myNumericalFloatAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_EFFICIENCY);
         myNumericalFloatAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_ENDPOS);
         myNumericalFloatAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_STARTPOS);
+        // connection
         myNumericalFloatAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_CONTPOS);
         myNumericalFloatAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_VISIBILITY_DISTANCE);
+        // container stop
         myNumericalFloatAttrs[SUMO_TAG_CONTAINER_STOP].insert(SUMO_ATTR_ENDPOS);
         myNumericalFloatAttrs[SUMO_TAG_CONTAINER_STOP].insert(SUMO_ATTR_STARTPOS);
+        // crossing
         myNumericalFloatAttrs[SUMO_TAG_CROSSING].insert(SUMO_ATTR_WIDTH);
+        // E2
         myNumericalFloatAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_HALTING_SPEED_THRESHOLD);
         myNumericalFloatAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_JAM_DIST_THRESHOLD);
         myNumericalFloatAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_LENGTH);
+        // E3
         myNumericalFloatAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_X);
         myNumericalFloatAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_Y);
         myNumericalFloatAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_HALTING_SPEED_THRESHOLD);
+        // Edge
         myNumericalFloatAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_ENDOFFSET);
         myNumericalFloatAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_LENGTH);
         myNumericalFloatAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_SPEED);
+        // Junction
         myNumericalFloatAttrs[SUMO_TAG_JUNCTION].insert(SUMO_ATTR_RADIUS);
+        // Lane
         myNumericalFloatAttrs[SUMO_TAG_LANE].insert(SUMO_ATTR_ENDOFFSET);
         myNumericalFloatAttrs[SUMO_TAG_LANE].insert(SUMO_ATTR_SPEED);
+        // Rerouter
         myNumericalFloatAttrs[SUMO_TAG_REROUTER].insert(SUMO_ATTR_PROB);
+        // Calibrator
+        myNumericalFloatAttrs[SUMO_TAG_CALIBRATOR].insert(SUMO_ATTR_POSITION);
+        // vehicle type
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_ACCEL);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_DECEL);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_SIGMA);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_TAU);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_LENGTH);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_MINGAP);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_MAXSPEED);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_SPEEDFACTOR);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_SPEEDDEV);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_WIDTH);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_MINGAP_LAT);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_MAXSPEED_LAT);
+        myNumericalFloatAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_IMPATIENCE);
+        // flow
+        myNumericalFloatAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_VEHSPERHOUR);
+        myNumericalFloatAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_PERIOD);
+        myNumericalFloatAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_PROB);
+        // step
+        myNumericalFloatAttrs[SUMO_TAG_STEP].insert(SUMO_ATTR_SPEED);
     }
     return myNumericalFloatAttrs[tag].count(attr) == 1;
 }
@@ -474,16 +607,32 @@ bool
 GNEAttributeCarrier::isTime(SumoXMLTag tag, SumoXMLAttr attr) {
     // define on first access
     if (myTimeAttrs.empty()) {
+        // calibrator
         myTimeAttrs[SUMO_TAG_CALIBRATOR].insert(SUMO_ATTR_FREQUENCY);
+        // charging station
         myTimeAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_CHARGEDELAY);
+        // E1
         myTimeAttrs[SUMO_TAG_E1DETECTOR].insert(SUMO_ATTR_FREQUENCY);
+        // E2
         myTimeAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_FREQUENCY);
         myTimeAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_HALTING_TIME_THRESHOLD);
+        // E3
+        myTimeAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_FREQUENCY);
         myTimeAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_HALTING_TIME_THRESHOLD);
+        // RouteProbe
         myTimeAttrs[SUMO_TAG_ROUTEPROBE].insert(SUMO_ATTR_BEGIN);
         myTimeAttrs[SUMO_TAG_ROUTEPROBE].insert(SUMO_ATTR_FREQUENCY);
+        // Vaporizer
         myTimeAttrs[SUMO_TAG_VAPORIZER].insert(SUMO_ATTR_END);
         myTimeAttrs[SUMO_TAG_VAPORIZER].insert(SUMO_ATTR_STARTTIME);
+        // Vehicle type
+        myTimeAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_BOARDING_DURATION);
+        myTimeAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_LOADING_DURATION);
+        // Flow
+        myTimeAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_BEGIN);
+        myTimeAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_END);
+        // step
+        myTimeAttrs[SUMO_TAG_STEP].insert(SUMO_ATTR_TIME);
     }
     return myTimeAttrs[tag].count(attr) == 1;
 }
@@ -493,14 +642,25 @@ bool
 GNEAttributeCarrier::isBool(SumoXMLTag tag, SumoXMLAttr attr) {
     // define on first access
     if (myBoolAttrs.empty()) {
+        // charging station
         myBoolAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_CHARGEINTRANSIT);
+        // lane
+        myBoolAttrs[SUMO_TAG_LANE].insert(SUMO_ATTR_ACCELERATION);
+        // connection
         myBoolAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_PASS);
         myBoolAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_UNCONTROLLED);
+        // crossing
         myBoolAttrs[SUMO_TAG_CROSSING].insert(SUMO_ATTR_PRIORITY);
+        // E1
         myBoolAttrs[SUMO_TAG_E1DETECTOR].insert(SUMO_ATTR_SPLIT_VTYPE);
+        // E2
         myBoolAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_CONT);
+        // junction
         myBoolAttrs[SUMO_TAG_JUNCTION].insert(SUMO_ATTR_KEEP_CLEAR);
+        // rerouter
         myBoolAttrs[SUMO_TAG_REROUTER].insert(SUMO_ATTR_OFF);
+        // flow
+        myBoolAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_REROUTE);
     }
     return myBoolAttrs[tag].count(attr) == 1;
 }
@@ -516,11 +676,18 @@ bool
 GNEAttributeCarrier::isList(SumoXMLTag tag, SumoXMLAttr attr) {
     // define on first access
     if (myListAttrs.empty()) {
+        // bus stop
         myListAttrs[SUMO_TAG_BUS_STOP].insert(SUMO_ATTR_LINES);
+        // container stop
         myListAttrs[SUMO_TAG_CONTAINER_STOP].insert(SUMO_ATTR_LINES);
+        // crossing
         myListAttrs[SUMO_TAG_CROSSING].insert(SUMO_ATTR_EDGES);
+        // rerouter
         myListAttrs[SUMO_TAG_REROUTER].insert(SUMO_ATTR_EDGES);
+        // variable speed signal
         myListAttrs[SUMO_TAG_VSS].insert(SUMO_ATTR_LANES);
+        // route
+        myListAttrs[SUMO_TAG_ROUTE].insert(SUMO_ATTR_EDGES);
     }
     return myListAttrs[tag].count(attr) == 1;
 }
@@ -534,49 +701,69 @@ GNEAttributeCarrier::isUnique(SumoXMLTag tag, SumoXMLAttr attr) {
     } else {
         // define on first access
         if (myUniqueAttrs.empty()) {
+            // connection
             myUniqueAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_FROM_LANE);
             myUniqueAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_TO);
             myUniqueAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_TO_LANE);
+            // edge
             myUniqueAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_FROM);
             myUniqueAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_TO);
+            // busstop
             myUniqueAttrs[SUMO_TAG_BUS_STOP].insert(SUMO_ATTR_ENDPOS);
             myUniqueAttrs[SUMO_TAG_BUS_STOP].insert(SUMO_ATTR_LANE);
             myUniqueAttrs[SUMO_TAG_BUS_STOP].insert(SUMO_ATTR_STARTPOS);
+            // calibrator
             myUniqueAttrs[SUMO_TAG_CALIBRATOR].insert(SUMO_ATTR_LANE);
             myUniqueAttrs[SUMO_TAG_CALIBRATOR].insert(SUMO_ATTR_OUTPUT);
             myUniqueAttrs[SUMO_TAG_CALIBRATOR].insert(SUMO_ATTR_ROUTEPROBE);
+            // charging station
             myUniqueAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_ENDPOS);
             myUniqueAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_LANE);
             myUniqueAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_STARTPOS);
+            // connection
             myUniqueAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_FROM);
+            // container stop
             myUniqueAttrs[SUMO_TAG_CONTAINER_STOP].insert(SUMO_ATTR_ENDPOS);
             myUniqueAttrs[SUMO_TAG_CONTAINER_STOP].insert(SUMO_ATTR_LANE);
             myUniqueAttrs[SUMO_TAG_CONTAINER_STOP].insert(SUMO_ATTR_STARTPOS);
+            // crossing
             myUniqueAttrs[SUMO_TAG_CROSSING].insert(SUMO_ATTR_EDGES);
+            // det entry
             myUniqueAttrs[SUMO_TAG_DET_ENTRY].insert(SUMO_ATTR_LANE);
             myUniqueAttrs[SUMO_TAG_DET_ENTRY].insert(SUMO_ATTR_POSITION);
+            // det exit
             myUniqueAttrs[SUMO_TAG_DET_EXIT].insert(SUMO_ATTR_LANE);
             myUniqueAttrs[SUMO_TAG_DET_EXIT].insert(SUMO_ATTR_POSITION);
+            // E1
             myUniqueAttrs[SUMO_TAG_E1DETECTOR].insert(SUMO_ATTR_FILE);
             myUniqueAttrs[SUMO_TAG_E1DETECTOR].insert(SUMO_ATTR_LANE);
             myUniqueAttrs[SUMO_TAG_E1DETECTOR].insert(SUMO_ATTR_POSITION);
+            // E2
             myUniqueAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_FILE);
             myUniqueAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_LANE);
             myUniqueAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_POSITION);
+            // E3
             myUniqueAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_FILE);
             myUniqueAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_X);
             myUniqueAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_Y);
+            // Edge
             myUniqueAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_SHAPE);
+            // Junction
             myUniqueAttrs[SUMO_TAG_JUNCTION].insert(SUMO_ATTR_POSITION);
             myUniqueAttrs[SUMO_TAG_JUNCTION].insert(SUMO_ATTR_SHAPE);
             myUniqueAttrs[SUMO_TAG_JUNCTION].insert(SUMO_ATTR_TLID);
+            // POI
             myUniqueAttrs[SUMO_TAG_POI].insert(SUMO_ATTR_POSITION);
+            // Rerouter
             myUniqueAttrs[SUMO_TAG_REROUTER].insert(SUMO_ATTR_EDGES);
             myUniqueAttrs[SUMO_TAG_REROUTER].insert(SUMO_ATTR_FILE);
+            // Routeprobe
             myUniqueAttrs[SUMO_TAG_ROUTEPROBE].insert(SUMO_ATTR_EDGE);
             myUniqueAttrs[SUMO_TAG_ROUTEPROBE].insert(SUMO_ATTR_FILE);
+            // Vaporizer
             myUniqueAttrs[SUMO_TAG_VAPORIZER].insert(SUMO_ATTR_EDGE);
             myUniqueAttrs[SUMO_TAG_VAPORIZER].insert(SUMO_ATTR_FILE);
+            // VSS
             myUniqueAttrs[SUMO_TAG_VSS].insert(SUMO_ATTR_FILE);
         }
         return myUniqueAttrs[tag].count(attr) == 1;
@@ -598,58 +785,113 @@ bool
 GNEAttributeCarrier::isPositive(SumoXMLTag tag, SumoXMLAttr attr) {
     // define on first access
     if (myPositiveAttrs.empty()) {
+        // edge
         myPositiveAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_SPEED);
         myPositiveAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_PRIORITY);
         myPositiveAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_NUMLANES);
         myPositiveAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_LENGTH);
         myPositiveAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_WIDTH);
         myPositiveAttrs[SUMO_TAG_EDGE].insert(SUMO_ATTR_ENDOFFSET);
+        // junction
         myPositiveAttrs[SUMO_TAG_JUNCTION].insert(SUMO_ATTR_RADIUS);
+        // lane
         myPositiveAttrs[SUMO_TAG_LANE].insert(SUMO_ATTR_SPEED);
         myPositiveAttrs[SUMO_TAG_LANE].insert(SUMO_ATTR_WIDTH);
         myPositiveAttrs[SUMO_TAG_LANE].insert(SUMO_ATTR_ENDOFFSET);
+        // poi
         myPositiveAttrs[SUMO_TAG_POI].insert(SUMO_ATTR_POSITION);
+        // crossing
         myPositiveAttrs[SUMO_TAG_CROSSING].insert(SUMO_ATTR_PRIORITY);
+        // connection
         myPositiveAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_CONTPOS);
         myPositiveAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_VISIBILITY_DISTANCE);
+        // busstop
         myPositiveAttrs[SUMO_TAG_BUS_STOP].insert(SUMO_ATTR_STARTPOS);
         myPositiveAttrs[SUMO_TAG_BUS_STOP].insert(SUMO_ATTR_ENDPOS);
+        // container stop
         myPositiveAttrs[SUMO_TAG_CONTAINER_STOP].insert(SUMO_ATTR_STARTPOS);
         myPositiveAttrs[SUMO_TAG_CONTAINER_STOP].insert(SUMO_ATTR_ENDPOS);
+        // charging station
         myPositiveAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_STARTPOS);
         myPositiveAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_ENDPOS);
         myPositiveAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_CHARGINGPOWER);
         myPositiveAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_EFFICIENCY);
         myPositiveAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_CHARGEINTRANSIT);
-        myPositiveAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_CHARGEDELAY);
+        // E1
         myPositiveAttrs[SUMO_TAG_E1DETECTOR].insert(SUMO_ATTR_POSITION);
-        myPositiveAttrs[SUMO_TAG_E1DETECTOR].insert(SUMO_ATTR_FREQUENCY);
+        // E2
         myPositiveAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_POSITION);
         myPositiveAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_LENGTH);
-        myPositiveAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_FREQUENCY);
         myPositiveAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_HALTING_TIME_THRESHOLD);
         myPositiveAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_HALTING_SPEED_THRESHOLD);
         myPositiveAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_JAM_DIST_THRESHOLD);
-        myPositiveAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_FREQUENCY);
+        // entry
         myPositiveAttrs[SUMO_TAG_DET_ENTRY].insert(SUMO_ATTR_POSITION);
+        // exit
         myPositiveAttrs[SUMO_TAG_DET_EXIT].insert(SUMO_ATTR_POSITION);
+        // calibrator
         myPositiveAttrs[SUMO_TAG_CALIBRATOR].insert(SUMO_ATTR_POSITION);
-        myPositiveAttrs[SUMO_TAG_CALIBRATOR].insert(SUMO_ATTR_FREQUENCY);
-        myPositiveAttrs[SUMO_TAG_ROUTEPROBE].insert(SUMO_ATTR_FREQUENCY);
-        myPositiveAttrs[SUMO_TAG_ROUTEPROBE].insert(SUMO_ATTR_BEGIN);
-        myPositiveAttrs[SUMO_TAG_REROUTER].insert(SUMO_ATTR_PROB);
+        // flow
+        myPositiveAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_PERSON_NUMBER);
+        myPositiveAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_CONTAINER_NUMBER);
+        myPositiveAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_VEHSPERHOUR);
+        myPositiveAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_PERIOD);
+        myPositiveAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_NUMBER);
+        // vehicle type
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_ACCEL);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_DECEL);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_SIGMA);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_TAU);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_LENGTH);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_MINGAP);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_MAXSPEED);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_SPEEDFACTOR);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_SPEEDDEV);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_WIDTH);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_MINGAP_LAT);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_MAXSPEED_LAT);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_PERSON_CAPACITY);
+        myPositiveAttrs[SUMO_TAG_VTYPE].insert(SUMO_ATTR_CONTAINER_CAPACITY);
     }
     return myPositiveAttrs[tag].count(attr) == 1;
 }
+
 
 bool
 GNEAttributeCarrier::isProbability(SumoXMLTag tag, SumoXMLAttr attr) {
     // define on first access
     if (myProbabilityAttrs.empty()) {
+        // charging station
         myProbabilityAttrs[SUMO_TAG_CHARGING_STATION].insert(SUMO_ATTR_EFFICIENCY);
+        // rerouter
         myProbabilityAttrs[SUMO_TAG_REROUTER].insert(SUMO_ATTR_PROB);
+        // flow
+        myProbabilityAttrs[SUMO_TAG_FLOW].insert(SUMO_ATTR_PROB);
     }
     return myProbabilityAttrs[tag].count(attr) == 1;
+}
+
+
+bool
+GNEAttributeCarrier::isFilename(SumoXMLTag tag, SumoXMLAttr attr) {
+    // define on first access
+    if (myFileAttrs.empty()) {
+        // E1
+        myFileAttrs[SUMO_TAG_E1DETECTOR].insert(SUMO_ATTR_FILE);
+        // E2
+        myFileAttrs[SUMO_TAG_E2DETECTOR].insert(SUMO_ATTR_FILE);
+        // E3
+        myFileAttrs[SUMO_TAG_E3DETECTOR].insert(SUMO_ATTR_FILE);
+        // calibrator
+        myFileAttrs[SUMO_TAG_CALIBRATOR].insert(SUMO_ATTR_OUTPUT);
+        // rerouter
+        myFileAttrs[SUMO_TAG_REROUTER].insert(SUMO_ATTR_FILE);
+        // routeprobe
+        myFileAttrs[SUMO_TAG_ROUTEPROBE].insert(SUMO_ATTR_FILE);
+        // Variable Speed Signal
+        myFileAttrs[SUMO_TAG_VSS].insert(SUMO_ATTR_FILE);
+    }
+    return myFileAttrs[tag].count(attr) == 1;
 }
 
 
@@ -657,11 +899,14 @@ bool
 GNEAttributeCarrier::isNonEditable(SumoXMLTag tag, SumoXMLAttr attr) {
     // define on first access
     if (myNonEditableAttrs.empty()) {
+        // connection
         myNonEditableAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_FROM);
         myNonEditableAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_FROM_LANE);
         myNonEditableAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_TO);
         myNonEditableAttrs[SUMO_TAG_CONNECTION].insert(SUMO_ATTR_TO_LANE);
+        // crossing
         myNonEditableAttrs[SUMO_TAG_CROSSING].insert(SUMO_ATTR_ID);
+        // lane
         myNonEditableAttrs[SUMO_TAG_LANE].insert(SUMO_ATTR_INDEX);
     }
     return myNonEditableAttrs[tag].count(attr) == 1;
@@ -683,7 +928,8 @@ GNEAttributeCarrier::hasAttribute(SumoXMLTag tag, SumoXMLAttr attr) {
 
 bool
 GNEAttributeCarrier::hasDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
-    for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
+    const std::vector<std::pair <SumoXMLAttr, std::string> >& attrs = allowedAttributes(tag);
+    for (std::vector<std::pair <SumoXMLAttr, std::string> >::const_iterator i = attrs.begin(); i != attrs.end(); i++) {
         if ((*i).first == attr) {
             if ((*i).second != NODEFAULTVALUE) {
                 return true;
@@ -705,6 +951,7 @@ GNEAttributeCarrier::discreteChoices(SumoXMLTag tag, SumoXMLAttr attr) {
         choices = SUMOXMLDefinitions::NodeTypes.getStrings();
         for (std::vector<std::string>::const_iterator it = choices.begin(); it != choices.end(); ++it) {
             if (*it != toString(NODETYPE_DEAD_END_DEPRECATED)) {
+                // junction
                 myDiscreteChoices[SUMO_TAG_JUNCTION][SUMO_ATTR_TYPE].push_back(*it);
             }
         }
@@ -712,22 +959,41 @@ GNEAttributeCarrier::discreteChoices(SumoXMLTag tag, SumoXMLAttr attr) {
         choices = SUMOXMLDefinitions::TrafficLightTypes.getStrings();
         for (std::vector<std::string>::const_iterator it = choices.begin(); it != choices.end(); ++it) {
             if (*it != toString(TLTYPE_INVALID)) {
+                // junction
                 myDiscreteChoices[SUMO_TAG_JUNCTION][SUMO_ATTR_TLTYPE].push_back(*it);
             }
         }
         // get type of lane spread functions
         choices = SUMOXMLDefinitions::LaneSpreadFunctions.getStrings();
         for (std::vector<std::string>::const_iterator it = choices.begin(); it != choices.end(); ++it) {
+            // edge
             myDiscreteChoices[SUMO_TAG_EDGE][SUMO_ATTR_SPREADTYPE].push_back(*it);
         }
         // get vehicle types
         choices = SumoVehicleClassStrings.getStrings();
         for (std::vector<std::string>::const_iterator it = choices.begin(); it != choices.end(); ++it) {
+            // edge
             myDiscreteChoices[SUMO_TAG_EDGE][SUMO_ATTR_ALLOW].push_back(*it);
             myDiscreteChoices[SUMO_TAG_EDGE][SUMO_ATTR_DISALLOW].push_back(*it);
+            // lane
             myDiscreteChoices[SUMO_TAG_LANE][SUMO_ATTR_ALLOW].push_back(*it);
             myDiscreteChoices[SUMO_TAG_LANE][SUMO_ATTR_DISALLOW].push_back(*it);
+            // vehicle type
+            myDiscreteChoices[SUMO_TAG_VTYPE][SUMO_ATTR_VCLASS].push_back(*it);
         }
+        // get vehicle shapes
+        choices = SumoVehicleShapeStrings.getStrings();
+        for (std::vector<std::string>::const_iterator it = choices.begin(); it != choices.end(); ++it) {
+            // vehicle type
+            myDiscreteChoices[SUMO_TAG_VTYPE][SUMO_ATTR_GUISHAPE].push_back(*it);
+        }
+        // lat alignments of vehicle types
+        myDiscreteChoices[SUMO_TAG_VTYPE][SUMO_ATTR_LATALIGNMENT].push_back("left");
+        myDiscreteChoices[SUMO_TAG_VTYPE][SUMO_ATTR_LATALIGNMENT].push_back("right");
+        myDiscreteChoices[SUMO_TAG_VTYPE][SUMO_ATTR_LATALIGNMENT].push_back("center");
+        myDiscreteChoices[SUMO_TAG_VTYPE][SUMO_ATTR_LATALIGNMENT].push_back("compact");
+        myDiscreteChoices[SUMO_TAG_VTYPE][SUMO_ATTR_LATALIGNMENT].push_back("nice");
+        myDiscreteChoices[SUMO_TAG_VTYPE][SUMO_ATTR_LATALIGNMENT].push_back("arbitrary");
     }
     return myDiscreteChoices[tag][attr];
 }
@@ -840,6 +1106,8 @@ GNEAttributeCarrier::getDefinition(SumoXMLTag tag, SumoXMLAttr attr) {
         myAttrDefinitions[SUMO_TAG_E3DETECTOR][SUMO_ATTR_ID] = "ID (Must be unique)";
         myAttrDefinitions[SUMO_TAG_E3DETECTOR][SUMO_ATTR_FREQUENCY] = "The aggregation period the values the detector collects shall be summed up";
         myAttrDefinitions[SUMO_TAG_E3DETECTOR][SUMO_ATTR_FILE] = "The path to the output file";
+        myAttrDefinitions[SUMO_TAG_E3DETECTOR][SUMO_ATTR_HALTING_TIME_THRESHOLD] = "The time-based threshold that describes how much time has to pass until a vehicle is recognized as halting; in s, default: 1s";
+        myAttrDefinitions[SUMO_TAG_E3DETECTOR][SUMO_ATTR_HALTING_SPEED_THRESHOLD] = "The speed-based threshold that describes how slow a vehicle has to be to be recognized as halting; in m/s, default: 5/3.6m/s";
         myAttrDefinitions[SUMO_TAG_E3DETECTOR][SUMO_ATTR_X] = "X position in editor (Only used in netedit)";
         myAttrDefinitions[SUMO_TAG_E3DETECTOR][SUMO_ATTR_Y] = "Y position in editor (Only used in netedit)";
         // Entry
@@ -854,7 +1122,7 @@ GNEAttributeCarrier::getDefinition(SumoXMLTag tag, SumoXMLAttr attr) {
         myAttrDefinitions[SUMO_TAG_VSS][SUMO_ATTR_FILE] = "The path to the output file";
         // Calibrator
         myAttrDefinitions[SUMO_TAG_CALIBRATOR][SUMO_ATTR_ID] = "ID (Must be unique)";
-        myAttrDefinitions[SUMO_TAG_CALIBRATOR][SUMO_ATTR_LANE] = "List of lanes of calibrator";
+        myAttrDefinitions[SUMO_TAG_CALIBRATOR][SUMO_ATTR_LANE] = "The id of lane in the simulation network";
         myAttrDefinitions[SUMO_TAG_CALIBRATOR][SUMO_ATTR_POSITION] = "The position of the calibrator on the specified lane";
         myAttrDefinitions[SUMO_TAG_CALIBRATOR][SUMO_ATTR_FREQUENCY] = "The aggregation interval in which to calibrate the flows. default is step-length";
         myAttrDefinitions[SUMO_TAG_CALIBRATOR][SUMO_ATTR_ROUTEPROBE] = "The id of the routeProbe element from which to determine the route distribution for generated vehicles";
@@ -865,12 +1133,65 @@ GNEAttributeCarrier::getDefinition(SumoXMLTag tag, SumoXMLAttr attr) {
         myAttrDefinitions[SUMO_TAG_REROUTER][SUMO_ATTR_FILE] = "The path to the definition file (alternatively, the intervals may defined as children of the rerouter)";
         myAttrDefinitions[SUMO_TAG_REROUTER][SUMO_ATTR_PROB] = "The probability for vehicle rerouting (0-1), default 1";
         myAttrDefinitions[SUMO_TAG_REROUTER][SUMO_ATTR_OFF] = "Whether the router should be inactive initially (and switched on in the gui), default:false";
-        // SUMO_TAG_ROUTEPROBE
+        // route probe
         myAttrDefinitions[SUMO_TAG_ROUTEPROBE][SUMO_ATTR_ID] = "ID (Must be unique)";
         myAttrDefinitions[SUMO_TAG_ROUTEPROBE][SUMO_ATTR_EDGE] = "The id of an edge in the simulation network";
         myAttrDefinitions[SUMO_TAG_ROUTEPROBE][SUMO_ATTR_FREQUENCY] = "The frequency in which to report the distribution";
         myAttrDefinitions[SUMO_TAG_ROUTEPROBE][SUMO_ATTR_FILE] = "The file for generated output";
         myAttrDefinitions[SUMO_TAG_ROUTEPROBE][SUMO_ATTR_BEGIN] = "The time at which to start generating output";
+        // flow
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_ID] = "The name of the vehicle (Must be unique)";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_TYPE] = "The id of the vehicle type to use for this vehicle.";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_ROUTE] = "The id of the route the vehicle shall drive along";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_BEGIN] = "First vehicle departure time";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_END] = "End of departure interval";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_VEHSPERHOUR] = "Number of vehicles per hour, equally spaced (not together with period or probability)";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_PERIOD] = "Insert equally spaced vehicles at that period (not together with vehsPerHour or probability)";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_PROB] = "Probability for emitting a vehicle each second (not together with vehsPerHour or period)";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_NUMBER] = "Total number of vehicles, equally spaced";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_DEPARTLANE] = "The lane on which the vehicle shall be inserted";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_DEPARTPOS] = "The position at which the vehicle shall enter the net";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_DEPARTSPEED] = "The speed with which the vehicle shall enter the network";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_ARRIVALLANE] = "The lane at which the vehicle shall leave the network";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_ARRIVALPOS] = "The position at which the vehicle shall leave the network";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_ARRIVALSPEED] = "The speed with which the vehicle shall leave the network";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_LINE] = "A string specifying the id of a public transport line which can be used when specifying person rides";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_PERSON_NUMBER] = "The number of occupied seats when the vehicle is inserted";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_CONTAINER_NUMBER] = "The number of occupied container places when the vehicle is inserted";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_REROUTE] = "	Whether the vehicle should be equipped with a rerouting device";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_DEPARTPOS_LAT] = "The lateral position on the departure lane at which the vehicle shall enter the net";
+        myAttrDefinitions[SUMO_TAG_FLOW][SUMO_ATTR_ARRIVALPOS_LAT] = "The lateral position on the arrival lane at which the vehicle shall arrive";
+        // route
+        myAttrDefinitions[SUMO_TAG_ROUTE][SUMO_ATTR_ID] = "The name of the route (Must be unique)";
+        myAttrDefinitions[SUMO_TAG_ROUTE][SUMO_ATTR_EDGES] = "The edges the vehicle shall drive along, given as their ids, separated using spaces";
+        myAttrDefinitions[SUMO_TAG_ROUTE][SUMO_ATTR_COLOR] = "This route's color";
+        // vehicle type
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_ID] = "The name of the vehicle type (Must be unique)";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_ACCEL] = "The acceleration ability of vehicles of this type [m/s^2]";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_DECEL] = "The deceleration ability of vehicles of this type [m/s^2]";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_SIGMA] = "Car-following model parameter";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_TAU] = "Car-following model parameter";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_LENGTH] = "The vehicle's netto-length (length) [m]";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_MINGAP] = "Empty space after leader [m]";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_MAXSPEED] = "The vehicle's maximum velocity [m/s]";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_SPEEDFACTOR] = "The vehicles expected multiplicator for lane speed limits";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_SPEEDDEV] = "The deviation of the speedFactor";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_COLOR] = "This vehicle type's color";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_VCLASS] = "An abstract vehicle class";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_EMISSIONCLASS] = "An abstract emission class";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_GUISHAPE] = "How this vehicle is rendered";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_WIDTH] = "The vehicle's width [m] (only used for drawing)";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_IMGFILE] = "Image file for rendering vehicles of this type (should be grayscale to allow functional coloring)";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_IMPATIENCE] = "Willingess of drivers to impede vehicles with higher priority";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_LANE_CHANGE_MODEL] = "The model used for changing lanes";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_CAR_FOLLOW_MODEL] = "The model used for car following";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_PERSON_CAPACITY] = "The number of persons (excluding an autonomous driver) the vehicle can transport";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_CONTAINER_CAPACITY] = "The number of containers the vehicle can transport";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_BOARDING_DURATION] = "The time required by a person to board the vehicle";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_LOADING_DURATION] = "The time required to load a container onto the vehicle";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_LATALIGNMENT] = "The preferred lateral alignment when using the sublane-model";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_MINGAP_LAT] = "The minimum lateral gap at a speed difference of 50km/h when using the sublane-model";
+        myAttrDefinitions[SUMO_TAG_VTYPE][SUMO_ATTR_MAXSPEED_LAT] = "The maximum lateral speed when using the sublane-model";
     }
     return myAttrDefinitions[tag][attr];
 }
@@ -896,7 +1217,7 @@ template<> int
 GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
     for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
         if (((*i).first == attr) && ((*i).second != NODEFAULTVALUE)) {
-            return TplConvert::_str2int((*i).second);
+            return parse<int>((*i).second);
         }
     }
     // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings
@@ -904,11 +1225,11 @@ GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
 }
 
 
-template<> SUMOReal
+template<> double
 GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
     for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
         if (((*i).first == attr) && ((*i).second != NODEFAULTVALUE)) {
-            return TplConvert::_str2SUMOReal((*i).second);
+            return parse<double>((*i).second);
         }
     }
     // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings
@@ -920,7 +1241,7 @@ template<> bool
 GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
     for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
         if (((*i).first == attr) && ((*i).second != NODEFAULTVALUE)) {
-            return TplConvert::_str2Bool((*i).second);
+            return parse<bool>((*i).second);
         }
     }
     // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings
@@ -940,19 +1261,50 @@ GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
 }
 
 
-template<> std::vector<int>
+template<> SUMOVehicleClass
 GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
-    std::cout << "FINISH" << std::endl;
-
+    for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
+        if (((*i).first == attr) && ((*i).second != NODEFAULTVALUE)) {
+            return parse<SUMOVehicleClass>((*i).second);
+        }
+    }
     // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings
     throw ProcessError("attribute '" + toString(attr) + "' for tag '" + toString(tag) + "' doesn't have a default value");
 }
 
 
-template<> std::vector<SUMOReal>
-GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
-    std::cout << "FINISH" << std::endl;
 
+template<> SUMOVehicleShape
+GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
+    for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
+        if (((*i).first == attr) && ((*i).second != NODEFAULTVALUE)) {
+            return parse<SUMOVehicleShape>((*i).second);
+        }
+    }
+    // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings
+    throw ProcessError("attribute '" + toString(attr) + "' for tag '" + toString(tag) + "' doesn't have a default value");
+}
+
+
+template<> std::vector<int>
+GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
+    for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
+        if (((*i).first == attr) && ((*i).second != NODEFAULTVALUE)) {
+            return parse<std::vector<int> >((*i).second);
+        }
+    }
+    // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings
+    throw ProcessError("attribute '" + toString(attr) + "' for tag '" + toString(tag) + "' doesn't have a default value");
+}
+
+
+template<> std::vector<double>
+GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
+    for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
+        if (((*i).first == attr) && ((*i).second != NODEFAULTVALUE)) {
+            return parse<std::vector<double> >((*i).second);
+        }
+    }
     // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings
     throw ProcessError("attribute '" + toString(attr) + "' for tag '" + toString(tag) + "' doesn't have a default value");
 }
@@ -960,8 +1312,11 @@ GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
 
 template<> std::vector<bool>
 GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
-    std::cout << "FINISH" << std::endl;
-
+    for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
+        if (((*i).first == attr) && ((*i).second != NODEFAULTVALUE)) {
+            return parse<std::vector<bool> >((*i).second);
+        }
+    }
     // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings
     throw ProcessError("attribute '" + toString(attr) + "' for tag '" + toString(tag) + "' doesn't have a default value");
 }
@@ -971,9 +1326,7 @@ template<> std::vector<std::string>
 GNEAttributeCarrier::getDefaultValue(SumoXMLTag tag, SumoXMLAttr attr) {
     for (std::vector<std::pair<SumoXMLAttr, std::string> >::iterator i = _allowedAttributes.at(tag).begin(); i != _allowedAttributes.at(tag).end(); i++) {
         if ((*i).first == attr) {
-            std::vector<std::string> myVectorString;
-            SUMOSAXAttributes::parseStringVector((*i).second, myVectorString);
-            return myVectorString;
+            return parse<std::vector<std::string> >((*i).second);
         }
     }
     // throw exception if attribute doesn't have a default value and return a empty value to avoid warnings

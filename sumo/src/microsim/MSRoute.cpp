@@ -42,10 +42,6 @@
 #include "MSLane.h"
 #include "MSRoute.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static member variables
@@ -281,13 +277,13 @@ MSRoute::dict_saveState(OutputDevice& out) {
 }
 
 
-SUMOReal
-MSRoute::getDistanceBetween(SUMOReal fromPos, SUMOReal toPos,
+double
+MSRoute::getDistanceBetween(double fromPos, double toPos,
                             const MSEdge* fromEdge, const MSEdge* toEdge, bool includeInternal) const {
     ConstMSEdgeVector::const_iterator it = std::find(myEdges.begin(), myEdges.end(), fromEdge);
     if (it == myEdges.end() || std::find(it, myEdges.end(), toEdge) == myEdges.end()) {
         // start or destination not contained in route
-        return std::numeric_limits<SUMOReal>::max();
+        return std::numeric_limits<double>::max();
     }
     ConstMSEdgeVector::const_iterator it2 = std::find(it + 1, myEdges.end(), toEdge);
 
@@ -296,18 +292,18 @@ MSRoute::getDistanceBetween(SUMOReal fromPos, SUMOReal toPos,
             return toPos - fromPos;
         } else if (it2 == myEdges.end()) {
             // we don't visit the edge again
-            return std::numeric_limits<SUMOReal>::max();
+            return std::numeric_limits<double>::max();
         }
     }
     return getDistanceBetween(fromPos, toPos, it, it2, includeInternal);
 }
 
 
-SUMOReal
-MSRoute::getDistanceBetween(SUMOReal fromPos, SUMOReal toPos,
+double
+MSRoute::getDistanceBetween(double fromPos, double toPos,
                             const MSRouteIterator& fromEdge, const MSRouteIterator& toEdge, bool includeInternal) const {
     bool isFirstIteration = true;
-    SUMOReal distance = -fromPos;
+    double distance = -fromPos;
     MSRouteIterator it = fromEdge;
     if (fromEdge == toEdge) {
         // destination position is on start edge
@@ -315,11 +311,11 @@ MSRoute::getDistanceBetween(SUMOReal fromPos, SUMOReal toPos,
             return toPos - fromPos;
         } else {
             // we cannot go backwards. Something is wrong here
-            return std::numeric_limits<SUMOReal>::max();
+            return std::numeric_limits<double>::max();
         }
     } else if (fromEdge > toEdge) {
         // we don't visit the edge again
-        return std::numeric_limits<SUMOReal>::max();
+        return std::numeric_limits<double>::max();
     }
     for (; it != end(); ++it) {
         if (it == toEdge && !isFirstIteration) {
@@ -327,7 +323,6 @@ MSRoute::getDistanceBetween(SUMOReal fromPos, SUMOReal toPos,
             break;
         } else {
             distance += (*it)->getLength();
-#ifdef HAVE_INTERNAL_LANES
             if (includeInternal) {
                 // add length of internal lanes to the result
                 const MSEdge* internal = (*it)->getInternalFollowingEdge(*(it + 1));
@@ -335,9 +330,6 @@ MSRoute::getDistanceBetween(SUMOReal fromPos, SUMOReal toPos,
                     distance += internal->getLength();
                 }
             }
-#else
-            UNUSED_PARAMETER(includeInternal);
-#endif
         }
         isFirstIteration = false;
     }

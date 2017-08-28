@@ -38,10 +38,6 @@
 #include <utils/emissions/PollutantsInterface.h>
 #include "MSAmitranTrajectories.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // static member definitions
 // ===========================================================================
@@ -72,7 +68,7 @@ MSAmitranTrajectories::writeVehicle(OutputDevice& of, const SUMOVehicle& veh, co
                 of.writeAttr(SUMO_ATTR_VEHICLECLASS, PollutantsInterface::getAmitranVehicleClass(c));
                 of.writeAttr("fuel", PollutantsInterface::getFuel(c));
                 of.writeAttr(SUMO_ATTR_EMISSIONCLASS, "Euro" + toString(PollutantsInterface::getEuroClass(c)));
-                const SUMOReal weight = PollutantsInterface::getWeight(c);
+                const double weight = PollutantsInterface::getWeight(c);
                 if (weight > 0.) {
                     of.writeAttr(SUMO_ATTR_WEIGHT, int(weight / 10. + 0.5));
                 }

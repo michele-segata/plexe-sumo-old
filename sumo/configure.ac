@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(sumo, 0.29.0)
+AC_INIT(sumo, 0.30.0)
 AC_CONFIG_SRCDIR(src/sumo_main.cpp)
 AC_CANONICAL_SYSTEM
 
@@ -64,41 +64,8 @@ AC_PROG_RANLIB
 AM_PROG_LIBTOOL
 
 
-dnl Check for enable-features that shall go into config.h
-AC_ARG_ENABLE([memcheck], [AS_HELP_STRING([--enable-memcheck],[enable compilation of memory leak checks [default=no].])])
-if test x$enable_memcheck = xyes; then
-    if test x$CXX = xclang++; then
-        AC_MSG_WARN([--enable-memcheck does not work with clang yet])
-        enable_memcheck="no"
-    fi
-fi
-AM_CONDITIONAL(CHECK_MEMORY_LEAKS, test x$enable_memcheck = xyes)
-if test x$enable_memcheck = xyes; then
-    AC_DEFINE(CHECK_MEMORY_LEAKS, 1, [Define to 1 in order to enable memory checks.])
-    ac_enabled="$ac_enabled MemoryChecks"
-else
-    ac_disabled="$ac_disabled MemoryChecks"
-fi
-
-AC_ARG_ENABLE([internal-lanes], [AS_HELP_STRING([--disable-internal-lanes],[Disable junction internal lanes.])])
-if test x$enable_internal_lanes != xno; then
-    AC_DEFINE(HAVE_INTERNAL_LANES, 1, [Define to 1 if you want junction internal lanes])
-    ac_enabled="$ac_enabled InternalLanes"
-else
-    ac_disabled="$ac_disabled InternalLanes"
-fi
-
-AC_ARG_ENABLE([double-precision], [AS_HELP_STRING([--disable-double-precision],[Use "float" instead of "double" for calculations.])])
-if test x$enable_double_precision != xno; then
-    AC_DEFINE([SUMOReal], [double], [defines the precision of floats])
-    ac_enabled="$ac_enabled DoublePrecision"
-else
-    AC_DEFINE([SUMOReal], [float], [defines the precision of floats])
-    ac_disabled="$ac_disabled DoublePrecision"
-fi
-
-AC_DEFINE([POSITION_EPS], [(SUMOReal)0.1], [defines the epsilon to use on position comparison])
-AC_DEFINE([NUMERICAL_EPS], [(SUMOReal)0.001], [defines the epsilon to use on general floating point comparison])
+AC_DEFINE([POSITION_EPS], [0.1], [defines the epsilon to use on position comparison])
+AC_DEFINE([NUMERICAL_EPS], [0.001], [defines the epsilon to use on general floating point comparison])
 
 AC_ARG_ENABLE([traci],[AS_HELP_STRING([--disable-traci],[disable Traffic Control Interface (TraCI) Server [default=no].])])
 AM_CONDITIONAL(TRACI, test x$enable_traci != xno)
@@ -475,7 +442,6 @@ src/foreign/Makefile
 src/foreign/eulerspiral/Makefile
 src/foreign/gl2ps/Makefile
 src/foreign/mersenne/Makefile
-src/foreign/nvwa/Makefile
 src/foreign/PHEMlight/Makefile
 src/foreign/PHEMlight/cpp/Makefile
 src/foreign/polyfonts/Makefile
@@ -517,6 +483,7 @@ src/jtrrouter/Makefile
 src/tools/Makefile
 src/traci_testclient/Makefile
 src/traci-server/Makefile
+src/traci-server/lib/Makefile
 src/utils/Makefile
 src/utils/common/Makefile
 src/utils/distribution/Makefile

@@ -5,7 +5,7 @@
 @date    2015-07-06
 @version $Id$
 
-This script rebuilds "../../src/netimport/typemap.h", the file 
+This script rebuilds "../../src/netimport/typemap.h", the file
 representing the default typemaps.
 It does this by parsing the data from the sumo data dir.
 
@@ -27,7 +27,7 @@ from os.path import dirname, exists, getmtime, join
 
 def writeTypeMap(typemapFile, typemap):
     with open(typemapFile, 'w') as f:
-        for format, mapFile in sorted(typemap.iteritems()):
+        for format, mapFile in sorted(typemap.items()):
             print("const std::string %sTypemap =" % format, file=f)
             for line in open(mapFile):
                 print('"%s"' %

@@ -94,6 +94,13 @@ def check(vehID):
     print("MinGap", traci.vehicle.getMinGap(vehID))
     print("width", traci.vehicle.getWidth(vehID))
     print("height", traci.vehicle.getHeight(vehID))
+    print("lcStrategic", traci.vehicle.getParameter(vehID, "laneChangeModel.lcStrategic"))
+    print("lcCooperative", traci.vehicle.getParameter(vehID, "laneChangeModel.lcCooperative"))
+    print("lcSpeedGain", traci.vehicle.getParameter(vehID, "laneChangeModel.lcSpeedGain"))
+    print("maxSpeedLat", traci.vehicle.getMaxSpeedLat(vehID))
+    print("minGapLat", traci.vehicle.getMinGapLat(vehID))
+    print("lateralAlignment", traci.vehicle.getLateralAlignment(vehID))
+    print("lanePosLat", traci.vehicle.getLateralLanePosition(vehID))
     print("person number", traci.vehicle.getPersonNumber(vehID))
     print("waiting time", traci.vehicle.getWaitingTime(vehID))
     print("driving dist", traci.vehicle.getDrivingDistance(vehID, "4fi", 2.))
@@ -101,6 +108,12 @@ def check(vehID):
         "driving dist 2D", traci.vehicle.getDrivingDistance2D(vehID, 100., 100.))
     print("line", traci.vehicle.getLine(vehID))
     print("via", traci.vehicle.getVia(vehID))
+    print("lane change state right", traci.vehicle.getLaneChangeState(vehID, -1))
+    print("lane change state left", traci.vehicle.getLaneChangeState(vehID, 1))
+    print("lane change able right", traci.vehicle.couldChangeLane(vehID, -1))
+    print("lane change able left", traci.vehicle.couldChangeLane(vehID, 1))
+    print("lane change wish right", traci.vehicle.wantsAndCouldChangeLane(vehID, -1))
+    print("lane change wish left", traci.vehicle.wantsAndCouldChangeLane(vehID, 1))
 
 
 def checkOffRoad(vehID):
@@ -119,6 +132,8 @@ vehID = "horiz"
 check(vehID)
 traci.vehicle.subscribe(vehID)
 print(traci.vehicle.getSubscriptionResults(vehID))
+traci.vehicle.setLateralAlignment(vehID, "arbitrary")
+traci.vehicle.changeSublane(vehID, 0.2)
 for i in range(3):
     print("step", step())
     print(traci.vehicle.getSubscriptionResults(vehID))
@@ -135,12 +150,17 @@ traci.vehicle.setShapeClass(vehID, "bicycle")
 traci.vehicle.setMinGap(vehID, 1.1)
 traci.vehicle.setWidth(vehID, 1.1)
 traci.vehicle.setHeight(vehID, 1.6)
+traci.vehicle.setMinGapLat(vehID, 0.5)
+traci.vehicle.setMaxSpeedLat(vehID, 1.5)
 traci.vehicle.setColor(vehID, (255, 0, 0, 255))
 traci.vehicle.setLine(vehID, "S46")
 traci.vehicle.setVia(vehID, ["3o", "4o"])
 traci.vehicle.setAdaptedTraveltime(vehID, 0, 1000, "1o", 55)
+traci.vehicle.setParameter(vehID, "foo", "bar")
+traci.vehicle.setParameter(vehID, "laneChangeModel.lcStrategic", "2.0")
 traci.vehicle.setStop(
     vehID, "2fi", pos=50.0, laneIndex=0, duration=2000, flags=1)
+
 check(vehID)
 try:
     check("bla")
@@ -329,6 +349,52 @@ traci.vehicle.rerouteTraveltime("rerouteTT")
 traci.vehicle.rerouteTraveltime("rerouteTT")
 print("step", step())
 print(traci.vehicle.getSubscriptionResults(vehID))
+
+parkingAreaVeh = "pav"
+traci.vehicle.add(parkingAreaVeh, "horizontal")
+traci.vehicle.setParkingAreaStop(parkingAreaVeh, "parkingArea1", duration=2000)
+for i in range(18):
+    print("step", step())
+    print("pav edge=%s pos=%s stopState=%s" %
+          (traci.vehicle.getRoadID(parkingAreaVeh),
+           traci.vehicle.getLanePosition(parkingAreaVeh),
+           traci.vehicle.getStopState(parkingAreaVeh)
+           ))
+
+electricVeh = "elVeh"
+traci.vehicle.add(electricVeh, "horizontal", typeID="electric")
+traci.vehicle.setParameter(electricVeh, "device.battery.maximumBatteryCapacity", "40000")
+print("has battery device: %s" % traci.vehicle.getParameter(electricVeh, "has.battery.device"))
+print("has vehroute device: %s" % traci.vehicle.getParameter(electricVeh, "has.vehroute.device"))
+print("has rerouting device: %s" % traci.vehicle.getParameter(electricVeh, "has.rerouting.device"))
+traci.vehicle.setParameter(electricVeh, "has.rerouting.device", "true")
+print("has rerouting device: %s" % traci.vehicle.getParameter(electricVeh, "has.rerouting.device"))
+
+try:
+    print(traci.vehicle.getParameter(electricVeh, "device.foo.bar"))
+except traci.TraCIException as e:
+    print("recovering from exception (%s)" % e)
+try:
+    print(traci.vehicle.getParameter(electricVeh, "device.battery.foobar"))
+except traci.TraCIException as e:
+    print("recovering from exception (%s)" % e)
+
+for i in range(10):
+    step()
+    print('%s speed="%s" consumed="%s" charged="%s" cap="%s" maxCap="%s" station="%s"' % (
+        electricVeh,
+        traci.vehicle.getSpeed(electricVeh),
+        traci.vehicle.getParameter(electricVeh, "device.battery.energyConsumed"),
+        traci.vehicle.getParameter(electricVeh, "device.battery.energyCharged"),
+        traci.vehicle.getParameter(electricVeh, "device.battery.actualBatteryCapacity"),
+        traci.vehicle.getParameter(electricVeh, "device.battery.maximumBatteryCapacity"),
+        traci.vehicle.getParameter(electricVeh, "device.battery.chargingStationId")))
+# test for adding a trip
+traci.route.add("trip2", ["3si", "4si"])
+traci.vehicle.add("triptest2", "trip2", typeID="reroutingType")
+print("triptest route:", traci.vehicle.getRoute("triptest2"))
+step()
+print("triptest route:", traci.vehicle.getRoute("triptest2"))
 # done
 traci.close()
 sumoProcess.wait()

@@ -43,6 +43,7 @@ class GNEDetectorEntry;
 class GNEDetectorExit;
 class GNEDetectorE3;
 class GNELane;
+class GNEEdge;
 
 // ===========================================================================
 // class definitions
@@ -88,6 +89,9 @@ private:
     /// @brief pointer to lane (used by additionals with lane parent)
     GNELane* myLaneParent;
 
+    /// @brief pointer to edge (used by additionals with edge parent)
+    GNEEdge* myEdgeParent;
+
     /// @brief pointer to E3 parent (used by Entry/exits)
     GNEDetectorE3* myE3Parent;
 
@@ -96,6 +100,9 @@ private:
 
     /// @brief list of Exit detectors child used (used by E3 Detector)
     std::vector<GNEDetectorExit*> myExitChilds;
+
+    /// @brief list of Edge childs (used by Rerouters)
+    std::vector<GNEEdge*> myEdgeChilds;
 };
 
 #endif

@@ -44,10 +44,6 @@
 #include "NBOwnTLDef.h"
 #include "NBContHelper.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // static members
 // ===========================================================================
@@ -142,8 +138,8 @@ NBTrafficLightDefinition::amInvalid() const {
 
 
 int
-NBTrafficLightDefinition::computeBrakingTime(SUMOReal minDecel) const {
-    SUMOReal vmax = NBContHelper::maxSpeed(myIncomingEdges);
+NBTrafficLightDefinition::computeBrakingTime(double minDecel) const {
+    double vmax = NBContHelper::maxSpeed(myIncomingEdges);
     return (int)(vmax / minDecel);
 }
 
@@ -480,6 +476,10 @@ NBTrafficLightDefinition::rightOnRedConflict(int index, int foeIndex) const {
             (*i)->removeTrafficLight(&dummy);
         }
         myRightOnRedConflictsReady = true;
+        //std::cout << " rightOnRedConflicts tls=" << getID() << " pro=" << getProgramID() << "\n";
+        //for (RightOnRedConflicts::const_iterator it = myRightOnRedConflicts.begin(); it != myRightOnRedConflicts.end(); ++it) {
+        //    std::cout << "   " << it->first << ", " << it->second << "\n";
+        //}
     }
     return std::find(myRightOnRedConflicts.begin(), myRightOnRedConflicts.end(), std::make_pair(index, foeIndex)) != myRightOnRedConflicts.end();
 }

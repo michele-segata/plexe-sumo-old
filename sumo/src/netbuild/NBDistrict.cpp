@@ -42,10 +42,6 @@
 #include "NBEdge.h"
 #include "NBDistrict.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // member method definitions
@@ -64,7 +60,7 @@ NBDistrict::~NBDistrict() {}
 
 // -----------  Applying offset
 void
-NBDistrict::reshiftPosition(SUMOReal xoff, SUMOReal yoff) {
+NBDistrict::reshiftPosition(double xoff, double yoff) {
     myPosition.add(xoff, yoff, 0);
     myShape.add(xoff, yoff, 0);
 }
@@ -78,7 +74,7 @@ NBDistrict::mirrorX() {
 
 
 bool
-NBDistrict::addSource(NBEdge* const source, SUMOReal weight) {
+NBDistrict::addSource(NBEdge* const source, double weight) {
     EdgeVector::iterator i = find(mySources.begin(), mySources.end(), source);
     if (i != mySources.end()) {
         return false;
@@ -91,7 +87,7 @@ NBDistrict::addSource(NBEdge* const source, SUMOReal weight) {
 
 
 bool
-NBDistrict::addSink(NBEdge* const sink, SUMOReal weight) {
+NBDistrict::addSink(NBEdge* const sink, double weight) {
     EdgeVector::iterator i = find(mySinks.begin(), mySinks.end(), sink);
     if (i != mySinks.end()) {
         return false;
@@ -114,13 +110,13 @@ NBDistrict::replaceIncoming(const EdgeVector& which, NBEdge* const by) {
     // temporary structures
     EdgeVector newList;
     WeightsCont newWeights;
-    SUMOReal joinedVal = 0;
+    double joinedVal = 0;
     // go through the list of sinks
     EdgeVector::iterator i = mySinks.begin();
     WeightsCont::iterator j = mySinkWeights.begin();
     for (; i != mySinks.end(); i++, j++) {
         NBEdge* tmp = (*i);
-        SUMOReal val = (*j);
+        double val = (*j);
         if (find(which.begin(), which.end(), tmp) == which.end()) {
             // if the current edge shall not be replaced, add to the
             //  temporary list
@@ -146,13 +142,13 @@ NBDistrict::replaceOutgoing(const EdgeVector& which, NBEdge* const by) {
     // temporary structures
     EdgeVector newList;
     WeightsCont newWeights;
-    SUMOReal joinedVal = 0;
+    double joinedVal = 0;
     // go through the list of sinks
     EdgeVector::iterator i = mySources.begin();
     WeightsCont::iterator j = mySourceWeights.begin();
     for (; i != mySources.end(); i++, j++) {
         NBEdge* tmp = (*i);
-        SUMOReal val = (*j);
+        double val = (*j);
         if (find(which.begin(), which.end(), tmp) == which.end()) {
             // if the current edge shall not be replaced, add to the
             //  temporary list

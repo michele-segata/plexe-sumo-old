@@ -1,0 +1,11 @@
+# default values of selection
+select_default
+
+# try to select elements with wrong parameters
+wrong_parameters
+
+# select differents busstops
+selectadditional_basic
+
+# check set operators clear and invert
+select_setoperators

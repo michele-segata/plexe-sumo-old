@@ -35,15 +35,13 @@
 #include <microsim/MSLane.h>
 #include <microsim/MSEdge.h>
 #include <microsim/MSRoute.h>
+#include <microsim/MSVehicle.h>
 #include <microsim/MSVehicleType.h>
 #include <utils/vehicle/SUMOVehicle.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice_String.h>
+#include <utils/xml/SUMOSAXAttributes.h>
 #include "MSDevice_Vehroutes.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -112,8 +110,15 @@ MSDevice_Vehroutes::StateListener::vehicleStateChanged(const SUMOVehicle* const 
 // ---------------------------------------------------------------------------
 // MSDevice_Vehroutes-methods
 // ---------------------------------------------------------------------------
-MSDevice_Vehroutes::MSDevice_Vehroutes(SUMOVehicle& holder, const std::string& id, int maxRoutes)
-    : MSDevice(holder, id), myCurrentRoute(&holder.getRoute()), myMaxRoutes(maxRoutes), myLastSavedAt(0) {
+MSDevice_Vehroutes::MSDevice_Vehroutes(SUMOVehicle& holder, const std::string& id, int maxRoutes) :
+    MSDevice(holder, id),
+    myCurrentRoute(&holder.getRoute()),
+    myMaxRoutes(maxRoutes),
+    myLastSavedAt(0),
+    myDepartLane(-1),
+    myDepartPos(-1),
+    myDepartSpeed(-1),
+    myDepartPosLat(0) {
     myCurrentRoute->addReference();
 }
 
@@ -128,19 +133,25 @@ MSDevice_Vehroutes::~MSDevice_Vehroutes() {
 
 
 bool
-MSDevice_Vehroutes::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) {
+MSDevice_Vehroutes::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
     if (reason == MSMoveReminder::NOTIFICATION_DEPARTED) {
         if (mySorted && myStateListener.myDevices[&veh] == this) {
             const SUMOTime departure = myIntendedDepart ? myHolder.getParameter().depart : MSNet::getInstance()->getCurrentTimeStep();
             myDepartureCounts[departure]++;
         }
+        if (!MSGlobals::gUseMesoSim) {
+            myDepartLane = static_cast<MSVehicle&>(veh).getLane()->getIndex();
+            myDepartPosLat = static_cast<MSVehicle&>(veh).getLateralPositionOnLane();
+        }
+        myDepartSpeed = veh.getSpeed();
+        myDepartPos = veh.getPositionOnLane();
     }
     return mySaveExits;
 }
 
 
 bool
-MSDevice_Vehroutes::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/, MSMoveReminder::Notification reason) {
+MSDevice_Vehroutes::notifyLeave(SUMOVehicle& veh, double /*lastPos*/, MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
     if (mySaveExits && reason != NOTIFICATION_LANE_CHANGE) {
         if (reason != NOTIFICATION_TELEPORT && myLastSavedAt == veh.getEdge()) { // need to check this for internal lanes
             myExits.back() = MSNet::getInstance()->getCurrentTimeStep();
@@ -231,26 +242,36 @@ void
 MSDevice_Vehroutes::writeOutput(const bool hasArrived) const {
     OutputDevice& routeOut = OutputDevice::getDeviceByOption("vehroute-output");
     OutputDevice_String od(routeOut.isBinary(), 1);
-    const SUMOTime departure = myIntendedDepart ? myHolder.getParameter().depart : myHolder.getDeparture();
-    od.openTag(SUMO_TAG_VEHICLE).writeAttr(SUMO_ATTR_ID, myHolder.getID());
-    if (myHolder.getVehicleType().getID() != DEFAULT_VTYPE_ID) {
-        od.writeAttr(SUMO_ATTR_TYPE, myHolder.getVehicleType().getID());
+    SUMOVehicleParameter tmp = myHolder.getParameter();
+    tmp.depart = myIntendedDepart ? myHolder.getParameter().depart : myHolder.getDeparture();
+    if (!MSGlobals::gUseMesoSim) {
+        if (tmp.wasSet(VEHPARS_DEPARTLANE_SET)) {
+            tmp.departLaneProcedure = DEPART_LANE_GIVEN;
+            tmp.departLane = myDepartLane;
+        }
+        if (tmp.wasSet(VEHPARS_DEPARTPOSLAT_SET)) {
+            tmp.departPosLatProcedure = DEPART_POSLAT_GIVEN;
+            tmp.departPosLat = myDepartPosLat;
+        }
     }
-    od.writeAttr(SUMO_ATTR_DEPART, time2string(departure));
+    if (tmp.wasSet(VEHPARS_DEPARTPOS_SET)) {
+        tmp.departPosProcedure = DEPART_POS_GIVEN;
+        tmp.departPos = myDepartPos;
+    }
+    if (tmp.wasSet(VEHPARS_DEPARTSPEED_SET)) {
+        tmp.departSpeedProcedure = DEPART_SPEED_GIVEN;
+        tmp.departSpeed = myDepartSpeed;
+    }
+    const std::string typeID = myHolder.getVehicleType().getID() != DEFAULT_VTYPE_ID ? myHolder.getVehicleType().getID() : "";
+    tmp.write(od, OptionsCont::getOptions(), SUMO_TAG_VEHICLE, typeID);
     if (hasArrived) {
         od.writeAttr("arrival", time2string(MSNet::getInstance()->getCurrentTimeStep()));
         if (myRouteLength) {
             const bool includeInternalLengths = MSGlobals::gUsingInternalLanes && MSNet::getInstance()->hasInternalLinks();
-            const SUMOReal routeLength = myHolder.getRoute().getDistanceBetween(myHolder.getDepartPos(), myHolder.getArrivalPos(),
-                                         myHolder.getRoute().begin(), myHolder.getCurrentRouteEdge(), includeInternalLengths);
+            const double routeLength = myHolder.getRoute().getDistanceBetween(myHolder.getDepartPos(), myHolder.getArrivalPos(),
+                                       myHolder.getRoute().begin(), myHolder.getCurrentRouteEdge(), includeInternalLengths);
             od.writeAttr("routeLength", routeLength);
         }
-    }
-    if (myHolder.getParameter().wasSet(VEHPARS_FROM_TAZ_SET)) {
-        od.writeAttr(SUMO_ATTR_FROM_TAZ, myHolder.getParameter().fromTaz);
-    }
-    if (myHolder.getParameter().wasSet(VEHPARS_TO_TAZ_SET)) {
-        od.writeAttr(SUMO_ATTR_TO_TAZ, myHolder.getParameter().toTaz);
     }
     if (myDUAStyle) {
         const RandomDistributor<const MSRoute*>* const routeDist = MSRoute::distDictionary("!" + myHolder.getID());
@@ -261,7 +282,7 @@ MSDevice_Vehroutes::writeOutput(const bool hasArrived) const {
                 ++index;
             }
             od.openTag(SUMO_TAG_ROUTE_DISTRIBUTION).writeAttr(SUMO_ATTR_LAST, index);
-            const std::vector<SUMOReal>& probs = routeDist->getProbs();
+            const std::vector<double>& probs = routeDist->getProbs();
             for (int i = 0; i < (int)routes.size(); ++i) {
                 od.setPrecision();
                 od.openTag(SUMO_TAG_ROUTE).writeAttr(SUMO_ATTR_COST, routes[i]->getCosts());
@@ -298,8 +319,8 @@ MSDevice_Vehroutes::writeOutput(const bool hasArrived) const {
     od.closeTag();
     od.lf();
     if (mySorted) {
-        myRouteInfos[departure][myHolder.getID()] = od.getString();
-        myDepartureCounts[departure]--;
+        myRouteInfos[tmp.depart][myHolder.getID()] = od.getString();
+        myDepartureCounts[tmp.depart]--;
         std::map<const SUMOTime, int>::iterator it = myDepartureCounts.begin();
         while (it != myDepartureCounts.end() && it->second == 0) {
             std::map<const std::string, std::string>& infos = myRouteInfos[it->first];
@@ -357,5 +378,49 @@ MSDevice_Vehroutes::generateOutputForUnfinished() {
 }
 
 
-/****************************************************************************/
+void
+MSDevice_Vehroutes::saveState(OutputDevice& out) const {
+    out.openTag(SUMO_TAG_DEVICE);
+    out.writeAttr(SUMO_ATTR_ID, getID());
+    std::vector<std::string> internals;
+    if (!MSGlobals::gUseMesoSim) {
+        internals.push_back(toString(myDepartLane));
+        internals.push_back(toString(myDepartPosLat));
+    }
+    internals.push_back(toString(myDepartSpeed));
+    internals.push_back(toString(myDepartPos));
+    internals.push_back(toString(myReplacedRoutes.size()));
+    for (int i = 0; i < (int)myReplacedRoutes.size(); ++i) {
+        internals.push_back(myReplacedRoutes[i].edge->getID());
+        internals.push_back(toString(myReplacedRoutes[i].time));
+        internals.push_back(myReplacedRoutes[i].route->getID());
+    }
+    out.writeAttr(SUMO_ATTR_STATE, toString(internals));
+    out.closeTag();
+}
 
+
+void
+MSDevice_Vehroutes::loadState(const SUMOSAXAttributes& attrs) {
+    std::istringstream bis(attrs.getString(SUMO_ATTR_STATE));
+    if (!MSGlobals::gUseMesoSim) {
+        bis >> myDepartLane;
+        bis >> myDepartPosLat;
+    }
+    bis >> myDepartSpeed;
+    bis >> myDepartPos;
+    int size;
+    bis >> size;
+    for (int i = 0; i < size; ++i) {
+        std::string edgeID;
+        SUMOTime time;
+        std::string routeID;
+        bis >> edgeID;
+        bis >> time;
+        bis >> routeID;
+        myReplacedRoutes.push_back(RouteReplaceInfo(MSEdge::dictionary(edgeID), time, MSRoute::dictionary(routeID)));
+    }
+}
+
+
+/****************************************************************************/

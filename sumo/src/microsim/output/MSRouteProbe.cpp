@@ -43,10 +43,6 @@
 #include <mesosim/MESegment.h>
 #include "MSRouteProbe.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -79,9 +75,9 @@ MSRouteProbe::~MSRouteProbe() {
 
 
 bool
-MSRouteProbe::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) {
+MSRouteProbe::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
     if (reason != MSMoveReminder::NOTIFICATION_SEGMENT && reason != MSMoveReminder::NOTIFICATION_LANE_CHANGE) {
-        if (myCurrentRouteDistribution.second->add(1., &veh.getRoute())) {
+        if (myCurrentRouteDistribution.second->add(&veh.getRoute(), 1.)) {
             veh.getRoute().addReference();
         }
     }
@@ -95,7 +91,7 @@ MSRouteProbe::writeXMLOutput(OutputDevice& dev,
     if (myCurrentRouteDistribution.second->getOverallProb() > 0) {
         dev.openTag("routeDistribution") << " id=\"" << getID() + "_" + time2string(startTime) << "\"";
         const std::vector<const MSRoute*>& routes = myCurrentRouteDistribution.second->getVals();
-        const std::vector<SUMOReal>& probs = myCurrentRouteDistribution.second->getProbs();
+        const std::vector<double>& probs = myCurrentRouteDistribution.second->getProbs();
         for (int j = 0; j < (int)routes.size(); ++j) {
             const MSRoute* r = routes[j];
             dev.openTag("route") << " id=\"" << r->getID() + "_" + time2string(startTime) << "\" edges=\"";

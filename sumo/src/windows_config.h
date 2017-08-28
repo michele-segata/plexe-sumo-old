@@ -50,34 +50,22 @@
 /* Define for dynamic Fox linkage */
 #define FOXDLL 1
 
-/* defines the precision of floats */
-#define SUMOReal double
-
 /* defines the epsilon to use on position comparison */
-#define POSITION_EPS (SUMOReal)0.1
+#define POSITION_EPS 0.1
 
 /* defines the epsilon to use on general floating point comparison */
-#define NUMERICAL_EPS (SUMOReal)0.001
+#define NUMERICAL_EPS 0.001
 
 /* Define if auto-generated version.h should be used. */
 //#define HAVE_VERSION_H 1
 
 /* Version number of package */
 #ifndef HAVE_VERSION_H
-#define VERSION_STRING "0.29.0"
+#define VERSION_STRING "0.30.0"
 #endif
-
-/* Define if junction internal lanes should be used. */
-#define HAVE_INTERNAL_LANES 1
 
 /* Definition for the character function of Xerces  */
 #define XERCES3_SIZE_t XMLSize_t //Xerces >= 3.0
 //#define XERCES3_SIZE_t unsigned int //Xerces < 3.0
-
-/* define to use nvwa for memory leak checking */
-//#define CHECK_MEMORY_LEAKS 1
-
-/* work around missing snprintf function (WARNING: return value semantics differ) */
-#define snprintf _snprintf
 
 #endif

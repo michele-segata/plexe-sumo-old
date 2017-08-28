@@ -45,7 +45,7 @@ class GNEEdge;
 // ===========================================================================
 /**
  * @class GNECrossingFrame
- * The Widget for setting default parameters of Crossing elements
+ * The Widget for setting internal attributes of Crossing elements
  */
 class GNECrossingFrame : public GNEFrame {
     /// @brief FOX-declaration
@@ -168,7 +168,7 @@ public:
         bool getCrossingPriority() const;
 
         /// @brief get crossing width
-        SUMOReal getCrossingWidth() const;
+        double getCrossingWidth() const;
 
         /// @brief get candidate color
         const RGBColor& getCandidateColor() const;
@@ -202,9 +202,6 @@ public:
         /// @brief current selected edges
         std::vector<GNEEdge*> myCurrentSelectedEdges;
 
-        /// @brief FXMatrix for place attributes
-        FXMatrix* myAttributesMatrix;
-
         /// @brief Label for edges
         FXLabel* myCrossingEdgesLabel;
 
@@ -215,7 +212,7 @@ public:
         FXLabel* myCrossingPriorityLabel;
 
         /// @brief CheckBox for Priority
-        FXMenuCheck* myCrossingPriority;
+        FXCheckButton* myCrossingPriorityCheckButton;
 
         /// @brief Label for width
         FXLabel* myCrossingWidthLabel;

@@ -117,13 +117,9 @@
 #include <utils/common/FileHelpers.h>
 #include <utils/common/StringTokenizer.h>
 #include <utils/distribution/Distribution_Points.h>
+#include <utils/distribution/DistributionCont.h>
 
 #include <netbuild/NBEdgeCont.h> // !!! only for debugging purposes
-#include <netbuild/NBDistribution.h>
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -321,15 +317,15 @@ NIImporter_Vissim::NIVissimXMLHandler_Streckendefinition::myEndElement(int eleme
             std::vector<std::string> sPos_v(StringTokenizer(
                                                 myElemData["pos"].front(), " ").getVector());
             myElemData["pos"].pop_front();
-            std::vector<SUMOReal> pos_v(3);
+            std::vector<double> pos_v(3);
 
             // doing a transform with explicit hint on function signature
             std::transform(sPos_v.begin(), sPos_v.end(), pos_v.begin(),
-                           TplConvert::_str2SUMOReal);
+                           TplConvert::_str2double);
             geom.push_back_noDoublePos(Position(pos_v[0], pos_v[1], pos_v[2]));
         }
         // FIXME: a length = 0 PosVec seems fatal -> segfault
-        SUMOReal length(geom.length());
+        double length(geom.length());
 
         if (isConnector == false) {
             // Add Edge
@@ -337,8 +333,8 @@ NIImporter_Vissim::NIVissimXMLHandler_Streckendefinition::myEndElement(int eleme
                                                   myElemData["name"].front(),
                                                   myElemData["type"].front(),
                                                   (int)myElemData["width"].size(),   // numLanes,
-                                                  TplConvert::_str2SUMOReal(myElemData["zuschlag1"].front()),
-                                                  TplConvert::_str2SUMOReal(myElemData["zuschlag2"].front()),
+                                                  TplConvert::_str2double(myElemData["zuschlag1"].front()),
+                                                  TplConvert::_str2double(myElemData["zuschlag2"].front()),
                                                   length, geom, clv);
             NIVissimEdge::dictionary(id, edge);
             if (id == 85 || id == 91) {
@@ -363,7 +359,7 @@ NIImporter_Vissim::NIVissimXMLHandler_Streckendefinition::myEndElement(int eleme
             NIVissimExtendedEdgePoint from_def(
                 TplConvert::_str2int(myElemData["from_id"].front()),
                 laneVec,
-                TplConvert::_str2SUMOReal(myElemData["from_pos"].front()),
+                TplConvert::_str2double(myElemData["from_pos"].front()),
                 assignedVehicles);
 
             //NOTE: there should be only 1 lane number in XML
@@ -377,7 +373,7 @@ NIImporter_Vissim::NIVissimXMLHandler_Streckendefinition::myEndElement(int eleme
             NIVissimExtendedEdgePoint to_def(
                 TplConvert::_str2int(myElemData["to_id"].front()),
                 laneVec,
-                TplConvert::_str2SUMOReal(myElemData["to_pos"].front()),
+                TplConvert::_str2double(myElemData["to_pos"].front()),
                 assignedVehicles);
 
             NIVissimConnection* connector = new
@@ -444,15 +440,15 @@ NIImporter_Vissim::NIVissimXMLHandler_Parkplatzdefinition::myStartElement(int el
         int id = attrs.get<int>(VISSIM_ATTR_NO, 0, ok);
         int edgeid = attrs.get<int>(VISSIM_ATTR_INTLINK, 0, ok);
         std::string name = attrs.get<std::string>(VISSIM_ATTR_NAME, 0, ok, false);
-        SUMOReal position = attrs.get<SUMOReal>(VISSIM_ATTR_POS, 0, ok);
+        double position = attrs.get<double>(VISSIM_ATTR_POS, 0, ok);
         std::vector<std::pair<int, int> > assignedVehicles; // (vclass, vwunsch)
         //FIXME: vWunsch + Fahzeugklassen einlesen
         // There can be s
         std::vector<int> districts;
         //FIXME: Parkplatzdefinition für mehrere Zonen implementieren
-        std::vector<SUMOReal> percentages;
+        std::vector<double> percentages;
         districts.push_back(attrs.get<int>(VISSIM_ATTR_DISTRICT, 0, ok));
-        percentages.push_back(attrs.get<SUMOReal>(VISSIM_ATTR_PERCENTAGE, 0, ok));
+        percentages.push_back(attrs.get<double>(VISSIM_ATTR_PERCENTAGE, 0, ok));
 
         NIVissimDistrictConnection::dictionary(id,
                                                name,
@@ -568,22 +564,14 @@ NIImporter_Vissim::NIVissimXMLHandler_Geschwindigkeitsverteilungsdefinition::myS
 void
 NIImporter_Vissim::NIVissimXMLHandler_Geschwindigkeitsverteilungsdefinition::myEndElement(int element) {
     if (element == VISSIM_TAG_SPEED_DIST && myHierarchyLevel == 3) {
-        PositionVector points;
+        Distribution_Points* points = new Distribution_Points(myElemData["id"].front());
         while (!myElemData["points"].empty()) {
             std::vector<std::string> sPos_v(StringTokenizer(
                                                 myElemData["points"].front(), " ").getVector());
             myElemData["points"].pop_front();
-            std::vector<SUMOReal> pos_v(2);
-
-            // doing a transform with explicit hint on function signature
-            std::transform(sPos_v.begin(), sPos_v.end(), pos_v.begin(),
-                           TplConvert::_str2SUMOReal);
-            points.push_back_noDoublePos(Position(pos_v[0], pos_v[1]));
+            points->add(TplConvert::_str2double(sPos_v[0]), TplConvert::_str2double(sPos_v[1]));
         }
-        NBDistribution::dictionary("speed",
-                                   myElemData["id"].front(),
-                                   new Distribution_Points(myElemData["id"].front(),
-                                           points));
+        DistributionCont::dictionary("speed", myElemData["id"].front(), points);
         myElemData.clear();
     }
     --myHierarchyLevel;
@@ -778,7 +766,7 @@ NIImporter_Vissim::VissimSingleTypeParser::overrideOptionalLabel(std::istream& f
 
 Position
 NIImporter_Vissim::VissimSingleTypeParser::getPosition(std::istream& from) {
-    SUMOReal x, y;
+    double x, y;
     from >> x; // type-checking is missing!
     from >> y; // type-checking is missing!
     return Position(x, y);
@@ -818,7 +806,7 @@ NIImporter_Vissim::VissimSingleTypeParser::readExtEdgePointDef(
             lanes.push_back(lane - 1);
         }
     }
-    SUMOReal position;
+    double position;
     from >> position;
     std::vector<int> dummy;
     return NIVissimExtendedEdgePoint(edgeid, lanes, position, dummy);
@@ -1051,7 +1039,7 @@ NIImporter_Vissim::readContents(std::istream& strm) {
 
 
 void
-NIImporter_Vissim::postLoadBuild(SUMOReal offset) {
+NIImporter_Vissim::postLoadBuild(double offset) {
     // close the loading process
     NIVissimBoundedClusterObject::closeLoading();
     NIVissimConnection::dict_assignToEdges();

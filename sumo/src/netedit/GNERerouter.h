@@ -57,7 +57,7 @@ public:
      * @param[in] probability The probability for vehicle rerouting
      * @param[in] off Whether the router should be inactive initially
      */
-    GNERerouter(const std::string& id, GNEViewNet* viewNet, Position pos, std::vector<GNEEdge*> edges, const std::string& filename, SUMOReal probability, bool off);
+    GNERerouter(const std::string& id, GNEViewNet* viewNet, Position pos, std::vector<GNEEdge*> edges, const std::string& filename, double probability, bool off);
 
     /// @brief Destructor
     ~GNERerouter();
@@ -73,10 +73,10 @@ public:
     void openAdditionalDialog();
 
     /// @brief change the position of the rerouter geometry
-    void moveAdditionalGeometry(SUMOReal offsetx, SUMOReal offsety);
+    void moveAdditionalGeometry(double offsetx, double offsety);
 
     /// @brief updated geometry changes in the attributes of additional
-    void commmitAdditionalGeometryMoved(SUMOReal oldPosx, SUMOReal oldPosy, GNEUndoList* undoList);
+    void commmitAdditionalGeometryMoved(double oldPosx, double oldPosy, GNEUndoList* undoList);
 
     /**@brief writte additional element into a xml file
      * @param[in] device device in which write parameters of additional element
@@ -89,13 +89,21 @@ public:
     /// @brief remove edge child
     void removeEdgeChild(GNEEdge* edge);
 
+    /// @brief get edge chidls
+    const std::vector<GNEEdge*>& getEdgeChilds() const;
+
+    /**@brief add rerouter interval
+     * @return true if was sucesfully added, false if wasn't added due overlapping
+     */
+    bool addRerouterInterval(const GNERerouterInterval& rerouterInterval);
+
     /// @brief get rerouter intervals
     const std::vector<GNERerouterInterval>& getRerouterIntervals() const;
 
     /**@brief set rerouter intervals
-     * @note all previously intervals will be deleted
-    */
-    void setRerouterIntervals(const std::vector<GNERerouterInterval>& rerouterIntervals);
+     * @return true if was sucesfully set, false if wasn't set due overlapping
+     */
+    bool setRerouterIntervals(const std::vector<GNERerouterInterval>& rerouterIntervals);
 
     /// @name inherited from GUIGlObject
     /// @{
@@ -133,6 +141,9 @@ public:
     bool isValid(SumoXMLAttr key, const std::string& value);
     /// @}
 
+    /// @brief check overlapping of a vector of rerouter intervals
+    bool checkOverlapping(std::vector<GNERerouterInterval> rerouterIntervals);
+
 protected:
     /// @brief edges of Rerouter
     std::vector<GNEEdge*> myEdges;
@@ -141,7 +152,7 @@ protected:
     std::string myFilename;
 
     /// @brief probability of rerouter
-    SUMOReal myProbability;
+    double myProbability;
 
     /// @brief attribute to enable or disable inactive initially
     bool myOff;

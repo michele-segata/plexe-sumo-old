@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+"""
+@file    test.py
+@author  Pablo Alvarez Lopez
+@date    2016-11-25
+@version $Id$
+
+python script used by sikulix for testing netedit
+
+SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
+Copyright (C) 2009-2017 DLR/TS, Germany
+
+This file is part of SUMO.
+SUMO is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+"""
 # import common functions for netedit tests
 import os
 import sys
@@ -12,100 +30,97 @@ import neteditTestFunctions as netedit
 neteditProcess, match = netedit.setupAndStart(neteditTestRoot, False)
 
 # apply zoom
-netedit.zoomIn(match.getTarget().offset(325, 100), 10)
+netedit.setZoom("25", "25", "25")
 
-# Change to create additional
+# go to additional mode
 netedit.additionalMode()
 
-# obtain match for comboboxAdditional
-comboboxAdditional = netedit.getComboBoxAdditional(match)
-
 # select E3
-netedit.changeAdditional(comboboxAdditional, 8)
+netedit.changeAdditional("e3Detector")
 
 # create E3 1
-netedit.leftClick(match, 250, 250)
+netedit.leftClick(match, 250, 100)
 
 # create E3 2 (for check duplicated ID)
-netedit.leftClick(match, 450, 250)
+netedit.leftClick(match, 450, 100)
 
 # select entry detector
-netedit.changeAdditional(comboboxAdditional, -4)
+netedit.changeAdditional("detEntry")
 
 # Create Entry detector E3 (for saving)
-netedit.selectChild(comboboxAdditional, 4, 0)
-netedit.leftClick(match, 100, 180)
-netedit.selectChild(comboboxAdditional, 4, 1)
-netedit.leftClick(match, 400, 180)
+netedit.selectAdditionalChild(4, 0)
+netedit.leftClick(match, 100, 200)
+netedit.selectAdditionalChild(4, 1)
+netedit.leftClick(match, 400, 300)
 
-# Change to inspect mode
+# go to inspect mode
 netedit.inspectMode()
 
 # inspect first E3
-netedit.leftClick(match, 250, 250)
-
-# obtain parameters reference
-parametersReference = netedit.getParametersReference(match)
+netedit.leftClick(match, 250, 100)
 
 # Change parameter 0 with a non valid value (Duplicated ID)
-netedit.modifyAttribute(parametersReference, 0, "e3Detector_1")
+netedit.modifyAttribute(0, "e3Detector_1")
 
 # Change parameter 0 with a valid value
-netedit.modifyAttribute(parametersReference, 0, "correct ID")
+netedit.modifyAttribute(0, "correct ID")
 
 # Change parameter 1 with a non valid value (dummy position X)
-netedit.modifyAttribute(parametersReference, 1, "dummy position X")
+netedit.modifyAttribute(1, "dummy position X")
 
 # Change parameter 1 with a non valid value (empty)
-netedit.modifyAttribute(parametersReference, 1, "")
+netedit.modifyAttribute(1, "")
 
 # Change parameter 1 with a valid value (different position X)
-netedit.modifyAttribute(parametersReference, 1, "25")
+netedit.modifyAttribute(1, "25")
 
 # Change parameter 2 with a non valid value (dummy)
-netedit.modifyAttribute(parametersReference, 2, "dummy position Y")
+netedit.modifyAttribute(2, "dummy position Y")
 
 # Change parameter 1 with a non valid value (empty)
-netedit.modifyAttribute(parametersReference, 2, "")
+netedit.modifyAttribute(2, "")
 
 # Change parameter 2 with a non valid value (different position Y)
-netedit.modifyAttribute(parametersReference, 2, "25")
+netedit.modifyAttribute(2, "25")
 
 # Change parameter 3 with a non valid value (non numeral)
-netedit.modifyAttribute(parametersReference, 3, "dummyFrequency")
+netedit.modifyAttribute(3, "dummyFrequency")
 
 # Change parameter 3 with a non valid value (negative)
-netedit.modifyAttribute(parametersReference, 3, "-100")
+netedit.modifyAttribute(3, "-100")
 
 # Change parameter 3 with a valid value
-netedit.modifyAttribute(parametersReference, 3, "120")
+netedit.modifyAttribute(3, "120")
+
+# Change parameter 4 with a non valid value
+netedit.modifyAttribute(4, "%%%%%&%&&")
 
 # Change parameter 4 with an empty value
-netedit.modifyAttribute(parametersReference, 4, "")
+netedit.modifyAttribute(4, "")
 
 # Change parameter 4 with a duplicated value
-netedit.modifyAttribute(parametersReference, 4, "e3Detector_1.txt")
+netedit.modifyAttribute(4, "e3Detector_1.txt")
 
 # Change parameter 4 with a valid value
-netedit.modifyAttribute(parametersReference, 4, "myOwnOutput.txt")
+netedit.modifyAttribute(4, "myOwnOutput.txt")
 
 # Change parameter 5 with a non valid value (dummy)
-netedit.modifyAttribute(parametersReference, 5, "dummyTimeTreshold")
+netedit.modifyAttribute(5, "dummyTimeTreshold")
 
 # Change parameter 5 with a non valid value (negative)
-netedit.modifyAttribute(parametersReference, 5, "-5")
+netedit.modifyAttribute(5, "-5")
 
 # Change parameter 5 with a valid value
-netedit.modifyAttribute(parametersReference, 5, "4")
+netedit.modifyAttribute(5, "4")
 
 # Change parameter 6 with a non valid value (dummy)
-netedit.modifyAttribute(parametersReference, 6, "dummySpeedTreshold")
+netedit.modifyAttribute(6, "dummySpeedTreshold")
 
 # Change parameter 6 with a non valid value (negative)
-netedit.modifyAttribute(parametersReference, 6, "-12.1")
+netedit.modifyAttribute(6, "-12.1")
 
 # Change parameter 6 with a valid value
-netedit.modifyAttribute(parametersReference, 6, "6.3")
+netedit.modifyAttribute(6, "6.3")
 
 # go to a empty area
 netedit.leftClick(match, 0, 0)
@@ -121,4 +136,4 @@ netedit.saveAdditionals()
 netedit.saveNetwork()
 
 # quit netedit
-netedit.quit(neteditProcess, False, False)
+netedit.quit(neteditProcess)

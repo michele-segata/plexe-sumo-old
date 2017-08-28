@@ -43,10 +43,6 @@
 #include "GUITriggerBuilder.h"
 
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -70,7 +66,7 @@ GUITriggerBuilder::buildLaneSpeedTrigger(MSNet& net,
 MSTriggeredRerouter*
 GUITriggerBuilder::buildRerouter(MSNet& net, const std::string& id,
                                  MSEdgeVector& edges,
-                                 SUMOReal prob, const std::string& file, bool off) {
+                                 double prob, const std::string& file, bool off) {
     GUITriggeredRerouter* rr = new GUITriggeredRerouter(id, edges, prob, file, off,
             dynamic_cast<GUINet&>(net).getVisualisationSpeedUp());
     return rr;
@@ -78,17 +74,18 @@ GUITriggerBuilder::buildRerouter(MSNet& net, const std::string& id,
 
 
 void
-GUITriggerBuilder::buildStoppingPlace(MSNet& net, const std::string& id, const std::vector<std::string>& lines,
-                                      MSLane* lane, SUMOReal frompos, SUMOReal topos, const SumoXMLTag element) {
+GUITriggerBuilder::buildStoppingPlace(MSNet& net, std::string id, std::vector<std::string> lines, MSLane* lane,
+                                      double frompos, double topos, const SumoXMLTag element, std::string name) {
     bool success = false;
     GUIGlObject* o = 0;
     if (element == SUMO_TAG_CONTAINER_STOP) {
+        //TODO: shall we also allow names for container stops? might make sense [GL March '17]
         GUIContainerStop* stop = new GUIContainerStop(id, lines, *lane, frompos, topos);
         success = net.addContainerStop(stop);
         o = stop;
         myCurrentStop = stop;
     } else {
-        GUIBusStop* stop = new GUIBusStop(id, lines, *lane, frompos, topos);
+        GUIBusStop* stop = new GUIBusStop(id, lines, *lane, frompos, topos, name);
         success = net.addBusStop(stop);
         o = stop;
         myCurrentStop = stop;
@@ -105,9 +102,9 @@ void
 GUITriggerBuilder::beginParkingArea(MSNet& net, const std::string& id,
                                     const std::vector<std::string>& lines,
                                     MSLane* lane,
-                                    SUMOReal frompos, SUMOReal topos,
+                                    double frompos, double topos,
                                     unsigned int capacity,
-                                    SUMOReal width, SUMOReal length, SUMOReal angle) {
+                                    double width, double length, double angle) {
     assert(myParkingArea == 0);
 
     GUIParkingArea* stop = new GUIParkingArea(id, lines, *lane, frompos, topos, capacity, width, length, angle);
@@ -121,8 +118,8 @@ GUITriggerBuilder::beginParkingArea(MSNet& net, const std::string& id,
 }
 
 void
-GUITriggerBuilder::buildChargingStation(MSNet& net, const std::string& id, MSLane* lane, SUMOReal frompos, SUMOReal topos,
-                                        SUMOReal chargingPower, SUMOReal efficiency, bool chargeInTransit, int chargeDelay) {
+GUITriggerBuilder::buildChargingStation(MSNet& net, const std::string& id, MSLane* lane, double frompos, double topos,
+                                        double chargingPower, double efficiency, bool chargeInTransit, int chargeDelay) {
     GUIChargingStation* chargingStation = new GUIChargingStation(id, *lane, frompos, topos, chargingPower, efficiency, chargeInTransit, chargeDelay);
 
     if (!net.addChargingStation(chargingStation)) {
@@ -135,7 +132,7 @@ GUITriggerBuilder::buildChargingStation(MSNet& net, const std::string& id, MSLan
 
 MSCalibrator*
 GUITriggerBuilder::buildCalibrator(MSNet& net, const std::string& id,
-                                   MSEdge* edge, SUMOReal pos,
+                                   MSEdge* edge, double pos,
                                    const std::string& file,
                                    const std::string& outfile,
                                    const SUMOTime freq,

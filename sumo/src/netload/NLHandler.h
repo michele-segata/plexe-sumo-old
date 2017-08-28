@@ -69,7 +69,7 @@ public:
     /// @brief Destructor
     virtual ~NLShapeHandler() {}
 
-    Position getLanePos(const std::string& poiID, const std::string& laneID, SUMOReal lanePos);
+    Position getLanePos(const std::string& poiID, const std::string& laneID, double lanePos);
 };
 
 
@@ -113,11 +113,15 @@ public:
         return myHaveSeenNeighs;
     }
 
+    bool haveSeenAdditionalSpeedRestrictions() const {
+        return myHaveSeenAdditionalSpeedRestrictions;
+    }
+
     bool lefthand() const {
         return myLefthand;
     }
 
-    SUMOReal networkVersion() const {
+    double networkVersion() const {
         return myNetworkVersion;
     }
 
@@ -339,11 +343,14 @@ protected:
     /// @brief whether the loaded network contains explicit neighbor lanes
     bool myHaveSeenNeighs;
 
+    /// @brief whether additional files contained type-specific speed limits
+    bool myHaveSeenAdditionalSpeedRestrictions;
+
     /// @brief whether the loaded network was built for left hand traffic
     bool myLefthand;
 
     /// @brief the loaded network version
-    SUMOReal myNetworkVersion;
+    double myNetworkVersion;
 
     /// @brief whether the location element was already loadee
     bool myNetIsLoaded;

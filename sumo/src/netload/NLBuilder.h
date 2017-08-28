@@ -100,6 +100,11 @@ public:
      */
     virtual bool build();
 
+    /**
+    * loads the net, additional routes and the detectors and starts the simulation
+    */
+    static int loadAndRun();
+
 
 protected:
     /** @brief Loads a described subpart form the given list of files
@@ -159,7 +164,7 @@ protected:
          * @see SAXWeightsHandler::EdgeFloatTimeLineRetriever::addEdgeWeight
          */
         void addEdgeWeight(const std::string& id,
-                           SUMOReal val, SUMOReal beg, SUMOReal end) const;
+                           double val, double beg, double end) const;
 
     private:
         /// @brief The network edges shall be obtained from
@@ -190,7 +195,7 @@ protected:
          * @see SAXWeightsHandler::EdgeFloatTimeLineRetriever::addEdgeWeight
          */
         void addEdgeWeight(const std::string& id,
-                           SUMOReal val, SUMOReal beg, SUMOReal end) const;
+                           double val, double beg, double end) const;
 
     private:
         /// @brief The network edges shall be obtained from

@@ -29,16 +29,11 @@
 
 #include <iostream>
 #include <utils/gui/windows/GUIAppEnum.h>
-#include <utils/common/TplCheck.h>
 #include <utils/gui/images/GUIIconSubSys.h>
 #include <utils/gui/div/GUIDesigns.h>
 
 #include "GNEVariableSpeedSignDialog.h"
 #include "GNEVariableSpeedSign.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 
 // ===========================================================================
@@ -81,7 +76,7 @@ GNEVariableSpeedSignDialog::GNEVariableSpeedSignDialog(GNEVariableSpeedSign* var
     myAddRow = new FXButton(myRowFrame, "Add", 0, this, MID_GNE_VARIABLESPEEDSIGN_ADDROW, GUIDesignButtonIcon);
 
     // Get values of variable speed signal
-    myVSSValues = myVariableSpeedSignParent->getVariableSpeedSignSteps();
+    mySteps = myVariableSpeedSignParent->getSteps();
 
     // update table
     updateTable();
@@ -97,25 +92,25 @@ GNEVariableSpeedSignDialog::~GNEVariableSpeedSignDialog() {
 long
 GNEVariableSpeedSignDialog::onCmdAddRow(FXObject*, FXSelector, void*) {
     // Declare variables for time and speed
-    SUMOReal time, speed;
+    GNEVariableSpeedSignStep step(myVariableSpeedSignParent);
 
     // Get Time
-    if (TplCheck::_str2SUMOReal(myRowStep->getText().text()) == false) {
+    if (GNEAttributeCarrier::canParse<double>(myRowStep->getText().text()) == false) {
         return 0;
     } else {
-        time = TplConvert::_str2SUMOReal(myRowStep->getText().text());
+        step.setTime(GNEAttributeCarrier::parse<double>(myRowStep->getText().text()));
     }
 
     // get SPeed
-    if (TplCheck::_str2SUMOReal(myRowSpeed->getText().text()) == false) {
+    if (GNEAttributeCarrier::canParse<double>(myRowSpeed->getText().text()) == false) {
         return 0;
     } else {
-        speed = TplConvert::_str2SUMOReal(myRowSpeed->getText().text());
+        step.setSpeed(GNEAttributeCarrier::parse<double>(myRowSpeed->getText().text()));
     }
 
     // Set new time and their speed if don't exist already
-    if (myVSSValues.find(time) == myVSSValues.end()) {
-        myVSSValues[time] = speed;
+    if (std::find(mySteps.begin(), mySteps.end(), step) == mySteps.end()) {
+        mySteps.push_back(step);
     } else {
         return false;
     }
@@ -132,7 +127,7 @@ GNEVariableSpeedSignDialog::onCmdRemoveRow(FXObject*, FXSelector, void*) {
     for (int i = 0; i < myDataList->getNumRows(); i++) {
         if (myDataList->getItem(i, 2)->isSelected()) {
             // Remove element of table and map
-            myVSSValues.erase(TplConvert::_2int(myDataList->getItem(i, 0)->getText().text()));
+            mySteps.erase(mySteps.begin() + i);
             myDataList->removeRows(i);
             // update table
             updateTable();
@@ -146,7 +141,7 @@ GNEVariableSpeedSignDialog::onCmdRemoveRow(FXObject*, FXSelector, void*) {
 long
 GNEVariableSpeedSignDialog::onCmdAccept(FXObject*, FXSelector, void*) {
     // Save new data in Variable Speed Signal edited
-    myVariableSpeedSignParent->setVariableSpeedSignSteps(myVSSValues);
+    myVariableSpeedSignParent->setVariableSpeedSignSteps(mySteps);
     // Stop Modal with positive out
     getApp()->stopModal(this, TRUE);
     return 1;
@@ -164,7 +159,7 @@ GNEVariableSpeedSignDialog::onCmdCancel(FXObject*, FXSelector, void*) {
 long
 GNEVariableSpeedSignDialog::onCmdReset(FXObject*, FXSelector, void*) {
     // Get old values
-    myVSSValues = myVariableSpeedSignParent->getVariableSpeedSignSteps();
+    mySteps = myVariableSpeedSignParent->getSteps();
     updateTable();
     return 1;
 }
@@ -175,7 +170,7 @@ GNEVariableSpeedSignDialog::updateTable() {
     // clear table
     myDataList->clearItems();
     // set number of rows
-    myDataList->setTableSize(int(myVSSValues.size()), 3);
+    myDataList->setTableSize(int(mySteps.size()), 3);
     // Configure list
     myDataList->setVisibleColumns(3);
     myDataList->setColumnWidth(0, getWidth() / 3);
@@ -189,12 +184,12 @@ GNEVariableSpeedSignDialog::updateTable() {
     int indexRow = 0;
     FXTableItem* item = 0;
     // iterate over values
-    for (std::map<SUMOReal, SUMOReal>::iterator i = myVSSValues.begin(); i != myVSSValues.end(); i++) {
+    for (std::vector<GNEVariableSpeedSignStep>::iterator i = mySteps.begin(); i != mySteps.end(); i++) {
         // Set time
-        item = new FXTableItem(toString(i->first).c_str());
+        item = new FXTableItem(toString(i->getTime()).c_str());
         myDataList->setItem(indexRow, 0, item);
         // Set speed
-        item = new FXTableItem(toString(i->second).c_str());
+        item = new FXTableItem(toString(i->getSpeed()).c_str());
         myDataList->setItem(indexRow, 1, item);
         // set remove
         item = new FXTableItem("", GUIIconSubSys::getIcon(ICON_REMOVE));

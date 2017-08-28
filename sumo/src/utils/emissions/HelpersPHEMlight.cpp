@@ -39,10 +39,6 @@
 #include <utils/options/OptionsCont.h>
 #include "HelpersPHEMlight.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // idle speed is usually given in rpm (but may depend on electrical consumers). Actual speed depends on the gear so this number is only a rough estimate
 #define IDLE_SPEED (10 / 3.6)
 
@@ -220,7 +216,7 @@ HelpersPHEMlight::getEuroClass(const SUMOEmissionClass c) const {
 }
 
 
-SUMOReal
+double
 HelpersPHEMlight::getWeight(const SUMOEmissionClass c) const {
     const std::string name = myEmissionClassStrings.getString(c);
     if (name.find("LNF_") != std::string::npos) {
@@ -243,7 +239,7 @@ HelpersPHEMlight::getWeight(const SUMOEmissionClass c) const {
 }
 
 
-SUMOReal
+double
 HelpersPHEMlight::getEmission(const PHEMCEP* oldCep, PHEMlightdll::CEP* currCep, const std::string& e, const double p, const double v) const {
     if (oldCep != 0) {
         return oldCep->GetEmission(e, p, v);
@@ -252,8 +248,8 @@ HelpersPHEMlight::getEmission(const PHEMCEP* oldCep, PHEMlightdll::CEP* currCep,
 }
 
 
-SUMOReal
-HelpersPHEMlight::compute(const SUMOEmissionClass c, const PollutantsInterface::EmissionType e, const double v, const double a, const double slope) const {
+double
+HelpersPHEMlight::compute(const SUMOEmissionClass c, const PollutantsInterface::EmissionType e, const double v, const double a, const double slope, const std::map<int, double>* /* param */) const {
     if (c == PHEMLIGHT_BASE) { // zero emission class
         return 0.;
     }
@@ -320,4 +316,3 @@ HelpersPHEMlight::compute(const SUMOEmissionClass c, const PollutantsInterface::
 
 
 /****************************************************************************/
-

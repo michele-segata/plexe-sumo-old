@@ -259,15 +259,24 @@ class Connection:
     def isEmbedded(self):
         return _embedded
 
+    def load(self, args):
+        """
+        Load a simulation from the given arguments.
+        """
+        self._queue.append(tc.CMD_LOAD)
+        self._string += struct.pack("!BB", 1 + 1 + 1 + 4 + sum(map(len, args)) + 4 * len(args), tc.CMD_LOAD)
+        self._packStringList(args)
+        self._sendExact()
+
     def simulationStep(self, step=0):
         """
         Make a simulation step and simulate up to the given millisecond in sim time.
         If the given value is 0 or absent, exactly one step is performed.
         Values smaller than or equal to the current sim time result in no action.
         """
-        self._queue.append(tc.CMD_SIMSTEP2)
+        self._queue.append(tc.CMD_SIMSTEP)
         self._string += struct.pack("!BBi", 1 +
-                                    1 + 4, tc.CMD_SIMSTEP2, step)
+                                    1 + 4, tc.CMD_SIMSTEP, step)
         result = self._sendExact()
         for subscriptionResults in self._subscriptionMapping.values():
             subscriptionResults.reset()

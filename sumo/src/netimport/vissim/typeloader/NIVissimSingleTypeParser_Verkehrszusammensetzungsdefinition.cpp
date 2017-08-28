@@ -37,10 +37,6 @@
 #include "../tempstructs/NIVissimTrafficDescription.h"
 #include "NIVissimSingleTypeParser_Verkehrszusammensetzungsdefinition.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -71,7 +67,7 @@ NIVissimSingleTypeParser_Verkehrszusammensetzungsdefinition::parse(std::istream&
     while (tag != "DATAEND") {
         int type;
         from >> type;
-        SUMOReal percentage;
+        double percentage;
         from >> tag;
         from >> percentage;
         int vwish;

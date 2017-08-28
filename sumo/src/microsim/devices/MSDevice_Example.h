@@ -92,8 +92,8 @@ public:
      *
      * @return True (always).
      */
-    bool notifyMove(SUMOVehicle& veh, SUMOReal oldPos,
-                    SUMOReal newPos, SUMOReal newSpeed);
+    bool notifyMove(SUMOVehicle& veh, double oldPos,
+                    double newPos, double newSpeed);
 
 
     /** @brief Saves departure info on insertion
@@ -104,7 +104,7 @@ public:
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason);
+    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason, const MSLane* enteredLane = 0);
 
 
     /** @brief Saves arrival info
@@ -115,11 +115,21 @@ public:
      * @param[in] isLaneChange whether the vehicle changed from the lane
      * @return True if it did not leave the net.
      */
-    bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos,
-                     MSMoveReminder::Notification reason);
+    bool notifyLeave(SUMOVehicle& veh, double lastPos,
+                     MSMoveReminder::Notification reason, const MSLane* enteredLane = 0);
     /// @}
 
 
+    /// @brief return the name for this type of device
+    const std::string deviceName() const {
+        return "example";
+    }
+
+    /// @brief try to retrieve the given parameter from this device. Throw exception for unsupported key
+    std::string getParameter(const std::string& key) const;
+
+    /// @brief try to set the given parameter for this device. Throw exception for unsupported key
+    void setParameter(const std::string& key, const std::string& value);
 
     /** @brief Called on writing tripinfo output
      *
@@ -137,8 +147,8 @@ private:
      * @param[in] holder The vehicle that holds this device
      * @param[in] id The ID of the device
      */
-    MSDevice_Example(SUMOVehicle& holder, const std::string& id, SUMOReal customValue1,
-                     SUMOReal customValue2, SUMOReal customValue3);
+    MSDevice_Example(SUMOVehicle& holder, const std::string& id, double customValue1,
+                     double customValue2, double customValue3);
 
 
 
@@ -146,13 +156,13 @@ private:
     // private state members of the Example device
 
     /// @brief a value which is initialised based on a commandline/configuration option
-    SUMOReal myCustomValue1;
+    double myCustomValue1;
 
     /// @brief a value which is initialised based on a vehicle parameter
-    SUMOReal myCustomValue2;
+    double myCustomValue2;
 
     /// @brief a value which is initialised based on a vType parameter
-    SUMOReal myCustomValue3;
+    double myCustomValue3;
 
 
 

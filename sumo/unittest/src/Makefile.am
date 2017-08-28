@@ -2,10 +2,6 @@ XERCES_LIBS = -l$(LIB_XERCES)
 
 MESO_LIBS = ../../src/mesosim/libmesosim.a
 
-if CHECK_MEMORY_LEAKS
-MEM_LIBS = ../../src/foreign/nvwa/libnvwa.a
-endif
-
 if WITH_GUI
 GUI_TESTS = ./utils/foxtools/FXWorkerThreadTest.o
 endif
@@ -34,8 +30,12 @@ sumo_unittest_LDADD   = \
 ./microsim/MSEventControlTest.o \
 $(GUI_TESTS) \
 ../../src/netbuild/libnetbuild.a \
-../../src/traci-server/libtraciserver.a \
 ../../src/microsim/libmicrosim.a \
+../../src/netload/libnetload.a \
+../../src/microsim/MSJunctionLogic.o \
+../../src/microsim/MSNoLogicJunction.o \
+../../src/traci-server/libtraciserver.a \
+../../src/traci-server/lib/libtraci.a \
 ../../src/traci-server/TraCIServer.o \
 ../../src/microsim/devices/libmicrosimdevs.a \
 ../../src/microsim/trigger/libmicrosimtrigger.a \
@@ -44,7 +44,6 @@ $(GUI_TESTS) \
 ../../src/microsim/pedestrians/libmicrosimpeds.a \
 ../../src/microsim/output/libmicrosimoutput.a \
 ../../src/microsim/MSMoveReminder.o \
-../../src/microsim/MSRouteHandler.o \
 ../../src/microsim/actions/libmsactions.a \
 ../../src/microsim/traffic_lights/libmicrosimtls.a \
 $(MESO_LIBS) \
@@ -52,6 +51,7 @@ $(MESO_LIBS) \
 ../../src/utils/shapes/libshapes.a \
 ../../src/utils/emissions/libemissions.a \
 ../../src/utils/xml/libxml.a \
+../../src/utils/distribution/libdistribution.a \
 ../../src/utils/vehicle/libvehicle.a \
 ../../src/utils/common/libcommon.a \
 ../../src/utils/options/liboptions.a \
@@ -59,7 +59,6 @@ $(MESO_LIBS) \
 ../../src/utils/common/FileHelpers.o \
 ../../src/foreign/PHEMlight/cpp/libphemlight.a \
 ../../src/foreign/tcpip/libtcpip.a \
-$(MEM_LIBS) \
 $(PYTHON_LIBS) \
 $(XERCES_LIBS) \
 $(FOX_LDFLAGS)

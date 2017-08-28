@@ -40,10 +40,6 @@
 #include "../tempstructs/NIVissimTL.h"
 #include "NIVissimSingleTypeParser_Signalgruppendefinition.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -113,7 +109,7 @@ NIVissimSingleTypeParser_Signalgruppendefinition::parseFixedTime(
     int id, const std::string& name, int lsaid, std::istream& from) {
     //
     bool isGreenBegin;
-    std::vector<SUMOReal> times;
+    std::vector<double> times;
     std::string tag = myRead(from);
     if (tag == "dauergruen") {
         isGreenBegin = true;
@@ -125,7 +121,7 @@ NIVissimSingleTypeParser_Signalgruppendefinition::parseFixedTime(
         // the first phase will be green
         isGreenBegin = true;
         while (tag == "rotende" || tag == "gruenanfang") {
-            SUMOReal point;
+            double point;
             from >> point; // type-checking is missing!
             times.push_back(point);
             from >> tag;
@@ -135,7 +131,7 @@ NIVissimSingleTypeParser_Signalgruppendefinition::parseFixedTime(
         }
     }
     //
-    SUMOReal tredyellow, tyellow;
+    double tredyellow, tyellow;
     from >> tredyellow;
     from >> tag;
     from >> tyellow;

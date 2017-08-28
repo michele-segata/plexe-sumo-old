@@ -123,7 +123,7 @@ protected:
      * @param[in] varNo The number of subscribed variables
      * @param[in] defFile The stream to read variable values from
      */
-    void commandSubscribeContextVariable(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime, int domain, SUMOReal range, int varNo, std::ifstream& defFile);
+    void commandSubscribeContextVariable(int domID, const std::string& objID, SUMOTime beginTime, SUMOTime endTime, int domain, double range, int varNo, std::ifstream& defFile);
     /// @}
 
 
@@ -148,7 +148,7 @@ private:
     /// @name Results validation methods
     /// @{
 
-    /** @brief Validates whether the given message is a valid answer to CMD_SIMSTEP2
+    /** @brief Validates whether the given message is a valid answer to CMD_SIMSTEP
      * @param[in] inMsg The storage contain the message to validate
      * @return Whether the message is valid
      */

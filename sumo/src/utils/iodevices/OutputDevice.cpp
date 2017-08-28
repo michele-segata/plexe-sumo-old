@@ -48,10 +48,6 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/options/OptionsCont.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static member definitions
@@ -165,7 +161,7 @@ OutputDevice::closeAll() {
 
 
 std::string
-OutputDevice::realString(const SUMOReal v, const int precision) {
+OutputDevice::realString(const double v, const int precision) {
     std::ostringstream oss;
     if (v == 0) {
         return "0";

@@ -46,10 +46,6 @@
 #include <utils/common/ToString.h>
 #include <utils/common/StdDefs.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -60,8 +56,8 @@ ShapeContainer::~ShapeContainer() {}
 
 bool
 ShapeContainer::addPolygon(const std::string& id, const std::string& type,
-                           const RGBColor& color, SUMOReal layer,
-                           SUMOReal angle, const std::string& imgFile,
+                           const RGBColor& color, double layer,
+                           double angle, const std::string& imgFile,
                            const PositionVector& shape, bool fill, bool ignorePruning) {
     return add(new SUMO::Polygon(id, type, color, shape, fill, layer, angle, imgFile), ignorePruning);
 }
@@ -69,8 +65,8 @@ ShapeContainer::addPolygon(const std::string& id, const std::string& type,
 
 bool
 ShapeContainer::addPOI(const std::string& id, const std::string& type,
-                       const RGBColor& color, SUMOReal layer, SUMOReal angle, const std::string& imgFile,
-                       const Position& pos, SUMOReal width, SUMOReal height, bool ignorePruning) {
+                       const RGBColor& color, double layer, double angle, const std::string& imgFile,
+                       const Position& pos, double width, double height, bool ignorePruning) {
     return add(new PointOfInterest(id, type, color, pos, layer, angle, imgFile, width, height), ignorePruning);
 }
 

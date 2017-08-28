@@ -56,10 +56,6 @@
 #include <utils/common/UtilExceptions.h>
 #include <utils/iodevices/OutputDevice.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -117,9 +113,9 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
         std::vector<std::string> polyS = oc.getStringVector(oc.isSet("keep-edges.in-boundary") ?
                                          "keep-edges.in-boundary" : "keep-edges.in-geo-boundary");
         // !!! throw something if length<4 || length%2!=0?
-        std::vector<SUMOReal> poly;
+        std::vector<double> poly;
         for (std::vector<std::string>::iterator i = polyS.begin(); i != polyS.end(); ++i) {
-            poly.push_back(TplConvert::_2SUMOReal((*i).c_str())); // !!! may throw something anyhow...
+            poly.push_back(TplConvert::_2double((*i).c_str())); // !!! may throw something anyhow...
         }
         if (poly.size() < 4) {
             throw ProcessError("Invalid boundary: need at least 2 coordinates");
@@ -132,9 +128,9 @@ NBEdgeCont::applyOptions(OptionsCont& oc) {
             myPrunningBoundary.push_back(Position(poly[2], poly[3]));
             myPrunningBoundary.push_back(Position(poly[0], poly[3]));
         } else {
-            for (std::vector<SUMOReal>::iterator j = poly.begin(); j != poly.end();) {
-                SUMOReal x = *j++;
-                SUMOReal y = *j++;
+            for (std::vector<double>::iterator j = poly.begin(); j != poly.end();) {
+                double x = *j++;
+                double y = *j++;
                 myPrunningBoundary.push_back(Position(x, y));
             }
         }
@@ -240,7 +236,7 @@ NBEdgeCont::ignoreFilterMatch(NBEdge* edge) {
             }
             myNeedGeoTransformedPrunningBoundary = false;
         }
-        if (!(edge->getGeometry().getBoxBoundary().grow((SUMOReal) POSITION_EPS).overlapsWith(myPrunningBoundary))) {
+        if (!(edge->getGeometry().getBoxBoundary().grow((double) POSITION_EPS).overlapsWith(myPrunningBoundary))) {
             return true;
         }
     }
@@ -341,7 +337,7 @@ NBEdgeCont::retrievePossiblySplit(const std::string& id, const std::string& hint
 
 
 NBEdge*
-NBEdgeCont::retrievePossiblySplit(const std::string& id, SUMOReal pos) const {
+NBEdgeCont::retrievePossiblySplit(const std::string& id, double pos) const {
     // check whether the edge was not split, yet
     NBEdge* edge = retrieve(id);
     if (edge != 0) {
@@ -355,7 +351,7 @@ NBEdgeCont::retrievePossiblySplit(const std::string& id, SUMOReal pos) const {
         }
     }
     // find the part of the edge which matches the position
-    SUMOReal seen = 0;
+    double seen = 0;
     std::vector<std::string> names;
     names.push_back(id + "[1]");
     names.push_back(id + "[0]");
@@ -428,9 +424,9 @@ NBEdgeCont::splitAt(NBDistrictCont& dc, NBEdge* edge, NBNode* node,
                     const std::string& firstEdgeName,
                     const std::string& secondEdgeName,
                     int noLanesFirstEdge, int noLanesSecondEdge,
-                    const SUMOReal speed,
+                    const double speed,
                     const int changedLeft) {
-    SUMOReal pos;
+    double pos;
     pos = edge->getGeometry().nearest_offset_to_point2D(node->getPosition());
     if (pos <= 0) {
         pos = GeomHelper::nearest_offset_on_line_to_point2D(
@@ -447,11 +443,11 @@ NBEdgeCont::splitAt(NBDistrictCont& dc, NBEdge* edge, NBNode* node,
 
 bool
 NBEdgeCont::splitAt(NBDistrictCont& dc,
-                    NBEdge* edge, SUMOReal pos, NBNode* node,
+                    NBEdge* edge, double pos, NBNode* node,
                     const std::string& firstEdgeName,
                     const std::string& secondEdgeName,
                     int noLanesFirstEdge, int noLanesSecondEdge,
-                    const SUMOReal speed,
+                    const double speed,
                     const int changedLeft
                    ) {
     // there must be at least some overlap between first and second edge
@@ -526,16 +522,18 @@ NBEdgeCont::splitAt(NBDistrictCont& dc,
 
 void
 NBEdgeCont::patchRoundabouts(NBEdge* orig, NBEdge* part1, NBEdge* part2, std::set<EdgeSet>& roundabouts) {
+    std::set<EdgeSet> addLater;
     for (std::set<EdgeSet>::iterator it = roundabouts.begin(); it != roundabouts.end(); ++it) {
         EdgeSet roundaboutSet = *it;
         if (roundaboutSet.count(orig) > 0) {
-            roundabouts.erase(roundaboutSet);
             roundaboutSet.erase(orig);
             roundaboutSet.insert(part1);
             roundaboutSet.insert(part2);
-            roundabouts.insert(roundaboutSet);
         }
+        addLater.insert(roundaboutSet);
     }
+    roundabouts.clear();
+    roundabouts.insert(addLater.begin(), addLater.end());
 }
 
 
@@ -580,7 +578,7 @@ NBEdgeCont::splitGeometry(NBNodeCont& nc) {
 
 
 void
-NBEdgeCont::reduceGeometries(const SUMOReal minDist) {
+NBEdgeCont::reduceGeometries(const double minDist) {
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
         (*i).second->reduceGeometry(minDist);
     }
@@ -588,7 +586,7 @@ NBEdgeCont::reduceGeometries(const SUMOReal minDist) {
 
 
 void
-NBEdgeCont::checkGeometries(const SUMOReal maxAngle, const SUMOReal minRadius, bool fix) {
+NBEdgeCont::checkGeometries(const double maxAngle, const double minRadius, bool fix) {
     if (maxAngle > 0 || minRadius > 0) {
         for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
             (*i).second->checkGeometry(maxAngle, minRadius, fix);
@@ -701,7 +699,7 @@ NBEdgeCont::joinSameNodeConnectingEdges(NBDistrictCont& dc,
 
     // count the number of lanes, the speed and the id
     int nolanes = 0;
-    SUMOReal speed = 0;
+    double speed = 0;
     int priority = 0;
     std::string id;
     sort(edges.begin(), edges.end(), NBContHelper::same_connection_edge_sorter());
@@ -780,7 +778,7 @@ NBEdgeCont::joinSameNodeConnectingEdges(NBDistrictCont& dc,
 void
 NBEdgeCont::guessOpposites() {
     //@todo magic values
-    const SUMOReal distanceThreshold = 7;
+    const double distanceThreshold = 7;
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
         NBEdge* edge = i->second;
         const int numLanes = edge->getNumLanes();
@@ -788,10 +786,10 @@ NBEdgeCont::guessOpposites() {
             NBEdge::Lane& lastLane = edge->getLaneStruct(numLanes - 1);
             if (lastLane.oppositeID == "") {
                 NBEdge* opposite = 0;
-                //SUMOReal minOppositeDist = std::numeric_limits<SUMOReal>::max();
+                //double minOppositeDist = std::numeric_limits<double>::max();
                 for (EdgeVector::const_iterator j = edge->getToNode()->getOutgoingEdges().begin(); j != edge->getToNode()->getOutgoingEdges().end(); ++j) {
                     if ((*j)->getToNode() == edge->getFromNode() && !(*j)->getLanes().empty()) {
-                        const SUMOReal distance = VectorHelper<SUMOReal>::maxValue(lastLane.shape.distances((*j)->getLanes().back().shape));
+                        const double distance = VectorHelper<double>::maxValue(lastLane.shape.distances((*j)->getLanes().back().shape));
                         if (distance < distanceThreshold) {
                             //minOppositeDist = distance;
                             opposite = *j;
@@ -828,22 +826,34 @@ NBEdgeCont::getOppositeByID(const std::string& edgeID) const {
     return it != myEdges.end() ? it->second : (NBEdge*)0;
 }
 
+NBEdge*
+NBEdgeCont::getByID(const std::string& edgeID) const {
+    EdgeCont::const_iterator it = myEdges.find(edgeID);
+    return it != myEdges.end() ? it->second : (NBEdge*)0;
+}
 
 // ----- other
 void
-NBEdgeCont::addPostProcessConnection(const std::string& from, int fromLane, const std::string& to, int toLane, bool mayDefinitelyPass, bool keepClear, SUMOReal contPos, SUMOReal visibility) {
-    myConnections.push_back(PostProcessConnection(from, fromLane, to, toLane, mayDefinitelyPass, keepClear, contPos, visibility));
+NBEdgeCont::addPostProcessConnection(const std::string& from, int fromLane, const std::string& to, int toLane, bool mayDefinitelyPass,
+                                     bool keepClear, double contPos, double visibility, bool warnOnly) {
+    myConnections.push_back(PostProcessConnection(from, fromLane, to, toLane, mayDefinitelyPass, keepClear, contPos, visibility, warnOnly));
 }
 
 
 void
 NBEdgeCont::recheckPostProcessConnections() {
+    const bool warnOnly = OptionsCont::getOptions().exists("ignore-errors.connections") && OptionsCont::getOptions().getBool("ignore-errors.connections");
     for (std::vector<PostProcessConnection>::const_iterator i = myConnections.begin(); i != myConnections.end(); ++i) {
         NBEdge* from = retrievePossiblySplit((*i).from, true);
         NBEdge* to = retrievePossiblySplit((*i).to, false);
         if (from == 0 || to == 0 ||
                 !from->addLane2LaneConnection((*i).fromLane, to, (*i).toLane, NBEdge::L2L_USER, true, (*i).mayDefinitelyPass, (*i).keepClear, (*i).contPos)) {
-            WRITE_ERROR("Could not insert connection between '" + (*i).from + "' and '" + (*i).to + "' after build.");
+            const std::string msg = "Could not insert connection between '" + (*i).from + "' and '" + (*i).to + "' after build.";
+            if (warnOnly || (*i).warnOnly) {
+                WRITE_WARNING(msg);
+            } else {
+                WRITE_ERROR(msg);
+            }
         }
     }
     // during loading we also kept some ambiguous connections in hope they might be valid after processing
@@ -955,7 +965,7 @@ NBEdgeCont::guessRoundabouts() {
             EdgeVector::const_iterator me = find(edges.begin(), edges.end(), e);
             NBContHelper::nextCW(edges, me);
             NBEdge* left = *me;
-            SUMOReal angle = fabs(NBHelpers::relAngle(e->getAngleAtNode(e->getToNode()), left->getAngleAtNode(e->getToNode())));
+            double angle = fabs(NBHelpers::relAngle(e->getAngleAtNode(e->getToNode()), left->getAngleAtNode(e->getToNode())));
             if (angle >= 90) {
                 // roundabouts do not have sharp turns (or they wouldn't be called 'round')
                 doLoop = false;
@@ -1003,13 +1013,13 @@ NBEdgeCont::guessRoundabouts() {
 }
 
 
-SUMOReal
+double
 NBEdgeCont::formFactor(const EdgeVector& loopEdges) {
     PositionVector points;
     for (EdgeVector::const_iterator it = loopEdges.begin(); it != loopEdges.end(); ++it) {
         points.append((*it)->getGeometry());
     }
-    SUMOReal circumference = points.length2D();
+    double circumference = points.length2D();
     return 4 * M_PI * points.area() / (circumference * circumference);
 }
 
@@ -1065,7 +1075,7 @@ void
 NBEdgeCont::generateStreetSigns() {
     for (EdgeCont::iterator i = myEdges.begin(); i != myEdges.end(); ++i) {
         NBEdge* e = i->second;
-        const SUMOReal offset = MAX2((SUMOReal)0, e->getLength() - 3);
+        const double offset = MAX2(0., e->getLength() - 3);
         if (e->getToNode()->isSimpleContinuation(false)) {
             // not a "real" junction?
             continue;
@@ -1102,7 +1112,7 @@ NBEdgeCont::generateStreetSigns() {
 
 
 int
-NBEdgeCont::guessSidewalks(SUMOReal width, SUMOReal minSpeed, SUMOReal maxSpeed, bool fromPermissions) {
+NBEdgeCont::guessSidewalks(double width, double minSpeed, double maxSpeed, bool fromPermissions) {
     int sidewalksCreated = 0;
     const std::vector<std::string> edges = OptionsCont::getOptions().getStringVector("sidewalks.guess.exclude");
     std::set<std::string> exclude(edges.begin(), edges.end());
@@ -1159,7 +1169,7 @@ NBEdgeCont::remapIDs(bool numericaIDs, bool reservedIDs) {
 
 
 void
-NBEdgeCont::checkOverlap(SUMOReal threshold, SUMOReal zThreshold) const {
+NBEdgeCont::checkOverlap(double threshold, double zThreshold) const {
     for (EdgeCont::const_iterator it = myEdges.begin(); it != myEdges.end(); it++) {
         const NBEdge* e1 = it->second;
         Boundary b1 = e1->getGeometry().getBoxBoundary();
@@ -1177,7 +1187,7 @@ NBEdgeCont::checkOverlap(SUMOReal threshold, SUMOReal zThreshold) const {
             if (b1.overlapsWith(b2)) {
                 PositionVector outline2 = e2->getCCWBoundaryLine(*e2->getFromNode());
                 outline2.append(e2->getCCWBoundaryLine(*e2->getToNode()));
-                const SUMOReal overlap = outline1.getOverlapWith(outline2, zThreshold);
+                const double overlap = outline1.getOverlapWith(outline2, zThreshold);
                 if (overlap > threshold) {
                     WRITE_WARNING("Edge '" + e1->getID() + "' overlaps with edge '" + e2->getID() + "' by " + toString(overlap) + ".");
                 }
@@ -1188,11 +1198,11 @@ NBEdgeCont::checkOverlap(SUMOReal threshold, SUMOReal zThreshold) const {
 
 
 void
-NBEdgeCont::checkGrade(SUMOReal threshold) const {
+NBEdgeCont::checkGrade(double threshold) const {
     for (EdgeCont::const_iterator it = myEdges.begin(); it != myEdges.end(); it++) {
         const NBEdge* edge = it->second;
         for (int i = 0; i < (int)edge->getNumLanes(); i++) {
-            const SUMOReal grade = edge->getLaneShape(i).getMaxGrade();
+            const double grade = edge->getLaneShape(i).getMaxGrade();
             if (grade > threshold) {
                 WRITE_WARNING("Edge '" + edge->getID() + "' has a grade of " + toString(grade * 100) + "%.");
                 break;
@@ -1201,7 +1211,7 @@ NBEdgeCont::checkGrade(SUMOReal threshold) const {
         const std::vector<NBEdge::Connection>& connections = edge->getConnections();
         for (std::vector<NBEdge::Connection>::const_iterator it_con = connections.begin(); it_con != connections.end(); ++it_con) {
             const NBEdge::Connection& c = *it_con;
-            const SUMOReal grade = MAX2(c.shape.getMaxGrade(), c.viaShape.getMaxGrade());
+            const double grade = MAX2(c.shape.getMaxGrade(), c.viaShape.getMaxGrade());
             if (grade > threshold) {
                 WRITE_WARNING("Connection '" + c.getDescription(edge) + "' has a grade of " + toString(grade * 100) + "%.");
                 break;

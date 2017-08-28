@@ -37,10 +37,6 @@
 #include <utils/emissions/PollutantsInterface.h>
 #include <utils/iodevices/OutputDevice.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -77,10 +73,10 @@ MSDevice_Emissions::~MSDevice_Emissions() {
 
 
 bool
-MSDevice_Emissions::notifyMove(SUMOVehicle& veh, SUMOReal /*oldPos*/, SUMOReal /*newPos*/, SUMOReal newSpeed) {
+MSDevice_Emissions::notifyMove(SUMOVehicle& veh, double /*oldPos*/, double /*newPos*/, double newSpeed) {
     const SUMOEmissionClass c = veh.getVehicleType().getEmissionClass();
-    const SUMOReal a = veh.getAcceleration();
-    const SUMOReal slope = veh.getSlope();
+    const double a = veh.getAcceleration();
+    const double slope = veh.getSlope();
     myEmissions.addScaled(PollutantsInterface::computeAll(c, newSpeed, a, slope), TS);
     return true;
 }
@@ -97,6 +93,7 @@ MSDevice_Emissions::generateOutput() const {
          "\" PMx_abs=\"" << OutputDevice::realString(myEmissions.PMx, 6) <<
          "\" NOx_abs=\"" << OutputDevice::realString(myEmissions.NOx, 6) <<
          "\" fuel_abs=\"" << OutputDevice::realString(myEmissions.fuel, 6) <<
+         "\" electricity_abs=\"" << OutputDevice::realString(myEmissions.electricity, 6) <<
          "\"").closeTag();
     }
 }

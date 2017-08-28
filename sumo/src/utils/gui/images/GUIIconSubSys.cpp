@@ -36,6 +36,7 @@
 #include "GUIIconSubSys.h"
 
 #include "dlr.xpm"
+#include "sumo.xpm"
 
 #include "empty.xpm"
 #include "filesave.xpm"
@@ -106,7 +107,6 @@
 #include "paintbrush4x.xpm"
 #include "paintbrush5x.xpm"
 #include "edit_graph.xpm"
-
 
 #include "flag.cpp"
 #include "flag_plus.cpp"
@@ -203,9 +203,9 @@
 #include "reset.xpm"
 #include "warning.xpm"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include "grid1.xpm"
+#include "grid2.xpm"
+#include "grid3.xpm"
 
 
 // ===========================================================================
@@ -222,6 +222,7 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     // build icons
     myIcons[ICON_APP] = new FXXPMIcon(a, document_xpm);
     myIcons[ICON_DLR] = new FXXPMIcon(a, dlr_xpm);
+    myIcons[ICON_SUMO] = new FXXPMIcon(a, sumo_xpm);
     myIcons[ICON_EMPTY] = new FXXPMIcon(a, empty_xpm);
     myIcons[ICON_OPEN_CONFIG] = new FXXPMIcon(a, fileopen_xpm);
     myIcons[ICON_OPEN_NET] = new FXXPMIcon(a, netopen_xpm);
@@ -382,12 +383,17 @@ GUIIconSubSys::GUIIconSubSys(FXApp* a) {
     myIcons[ICON_VCLASS_CUSTOM1] = new FXXPMIcon(a, vclass_custom1_xpm);
     myIcons[ICON_VCLASS_CUSTOM2] = new FXXPMIcon(a, vclass_custom2_xpm);
 
+    myIcons[ICON_OK] = new FXXPMIcon(a, accept_xpm);    // @todo create ok icon
     myIcons[ICON_ACCEPT] = new FXXPMIcon(a, accept_xpm);
     myIcons[ICON_CANCEL] = new FXXPMIcon(a, cancel_xpm);
     myIcons[ICON_CORRECT] = new FXXPMIcon(a, correct_xpm);
     myIcons[ICON_ERROR] = new FXXPMIcon(a, error_xpm);
     myIcons[ICON_RESET] = new FXXPMIcon(a, reset_xpm);
     myIcons[ICON_WARNING] = new FXXPMIcon(a, warning_xpm);
+
+    myIcons[ICON_GRID1] = new FXXPMIcon(a, grid1_xpm);
+    myIcons[ICON_GRID2] = new FXXPMIcon(a, grid2_xpm);
+    myIcons[ICON_GRID3] = new FXXPMIcon(a, grid3_xpm);
 
     // ... and create them
     for (int i = 0; i < ICON_MAX; i++) {

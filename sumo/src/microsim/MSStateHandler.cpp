@@ -46,15 +46,12 @@
 #include <microsim/MSGlobals.h>
 #include <microsim/MSNet.h>
 #include <microsim/MSVehicleTransfer.h>
+#include <microsim/MSInsertionControl.h>
 #include <microsim/MSRoute.h>
 #include "MSStateHandler.h"
 
 #include <mesosim/MESegment.h>
 #include <mesosim/MELoop.h>
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -81,6 +78,7 @@ void
 MSStateHandler::saveState(const std::string& file, SUMOTime step) {
     OutputDevice& out = OutputDevice::getDevice(file);
     out.writeHeader<MSEdge>(SUMO_TAG_SNAPSHOT);
+    out.writeAttr("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance").writeAttr("xsi:noNamespaceSchemaLocation", "http://sumo.dlr.de/xsd/state_file.xsd");
     out.writeAttr(SUMO_ATTR_VERSION, VERSION_STRING).writeAttr(SUMO_ATTR_TIME, time2string(step));
     MSRoute::dict_saveState(out);
     MSNet::getInstance()->getVehicleControl().saveState(out);
@@ -131,6 +129,10 @@ MSStateHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
         case SUMO_TAG_VEHICLE: {
             myLastParameterised = myVehicleParameter;
             myAttrs = attrs.clone();
+            break;
+        }
+        case SUMO_TAG_DEVICE: {
+            myDeviceAttrs.push_back(attrs.clone());
             break;
         }
         case SUMO_TAG_VEHICLETRANSFER: {
@@ -196,6 +198,7 @@ MSStateHandler::myEndElement(int element) {
 void
 MSStateHandler::closeVehicle() {
     assert(myVehicleParameter != 0);
+    myVehicleParameter->depart -= myOffset;
     // the vehicle was already counted in MSVehicleControl::setState
     MSVehicleControl& vc = MSNet::getInstance()->getVehicleControl();
     // make a copy because myVehicleParameter is reset in closeVehicle()
@@ -212,6 +215,17 @@ MSStateHandler::closeVehicle() {
             if (routingDevice != 0) {
                 routingDevice->notifyEnter(*v, MSMoveReminder::NOTIFICATION_DEPARTED);
             }
+            MSNet::getInstance()->getInsertionControl().alreadyDeparted(v);
+        }
+        while (!myDeviceAttrs.empty()) {
+            const std::string attrID = myDeviceAttrs.back()->getString(SUMO_ATTR_ID);
+            for (std::vector<MSDevice*>::const_iterator dev = v->getDevices().begin(); dev != v->getDevices().end(); ++dev) {
+                if ((*dev)->getID() == attrID) {
+                    (*dev)->loadState(*myDeviceAttrs.back());
+                }
+            }
+            delete myDeviceAttrs.back();
+            myDeviceAttrs.pop_back();
         }
     } else {
         vc.discountStateLoaded(true);

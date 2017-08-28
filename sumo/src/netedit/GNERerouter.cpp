@@ -59,15 +59,12 @@
 #include "GNENet.h"
 #include "GNEChange_Attribute.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 
-GNERerouter::GNERerouter(const std::string& id, GNEViewNet* viewNet, Position pos, std::vector<GNEEdge*> edges, const std::string& filename, SUMOReal probability, bool off) :
+GNERerouter::GNERerouter(const std::string& id, GNEViewNet* viewNet, Position pos, std::vector<GNEEdge*> edges, const std::string& filename, double probability, bool off) :
     GNEAdditional(id, viewNet, pos, SUMO_TAG_REROUTER, ICON_REROUTER),
     myEdges(edges),
     myFilename(filename),
@@ -130,7 +127,7 @@ GNERerouter::openAdditionalDialog() {
 
 
 void
-GNERerouter::moveAdditionalGeometry(SUMOReal offsetx, SUMOReal offsety) {
+GNERerouter::moveAdditionalGeometry(double offsetx, double offsety) {
     // change Position
     myPosition = Position(offsetx, offsety);
     updateGeometry();
@@ -138,7 +135,7 @@ GNERerouter::moveAdditionalGeometry(SUMOReal offsetx, SUMOReal offsety) {
 
 
 void
-GNERerouter::commmitAdditionalGeometryMoved(SUMOReal oldPosx, SUMOReal oldPosy, GNEUndoList* undoList) {
+GNERerouter::commmitAdditionalGeometryMoved(double oldPosx, double oldPosy, GNEUndoList* undoList) {
     undoList->p_begin("position of " + toString(getTag()));
     undoList->p_add(new GNEChange_Attribute(this, SUMO_ATTR_POSITION, toString(myPosition), true, toString(Position(oldPosx, oldPosy))));
     undoList->p_end();
@@ -162,6 +159,7 @@ GNERerouter::writeAdditional(OutputDevice& device) const {
     if (!myFilename.empty()) {
         device.writeAttr(SUMO_ATTR_FILE, myFilename);
     }
+    device.writeAttr(SUMO_ATTR_OFF, myOff);
     device.writeAttr(SUMO_ATTR_X, myPosition.x());
     device.writeAttr(SUMO_ATTR_Y, myPosition.y());
     if (myBlocked) {
@@ -242,15 +240,40 @@ GNERerouter::removeEdgeChild(GNEEdge* edge) {
 }
 
 
+const std::vector<GNEEdge*>&
+GNERerouter::getEdgeChilds() const {
+    return myEdges;
+}
+
+
+bool
+GNERerouter::addRerouterInterval(const GNERerouterInterval& rerouterInterval) {
+    // obtain a copy of current rerouter Intervals to check overlapping
+    std::vector<GNERerouterInterval> copyOfMyRerouterIntervals;
+    copyOfMyRerouterIntervals.push_back(rerouterInterval);
+    if (checkOverlapping(copyOfMyRerouterIntervals) == true) {
+        myRerouterIntervals = copyOfMyRerouterIntervals;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
 const std::vector<GNERerouterInterval>&
 GNERerouter::getRerouterIntervals() const {
     return myRerouterIntervals;
 }
 
 
-void
+bool
 GNERerouter::setRerouterIntervals(const std::vector<GNERerouterInterval>& rerouterIntervals) {
-    myRerouterIntervals = rerouterIntervals;
+    if (checkOverlapping(rerouterIntervals) == true) {
+        myRerouterIntervals = rerouterIntervals;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 
@@ -286,7 +309,7 @@ GNERerouter::drawGL(const GUIVisualizationSettings& s) const {
 
     /*
     // Draw symbols in every lane
-    const SUMOReal exaggeration = s.addSize.getExaggeration(s);
+    const double exaggeration = s.addSize.getExaggeration(s);
 
     if (s.scale * exaggeration >= 3) {
         // draw rerouter symbol over all lanes
@@ -315,7 +338,7 @@ GNERerouter::drawGL(const GUIVisualizationSettings& s) const {
                 glColor3d(0, 0, 0);
                 pfSetPosition(0, 0);
                 pfSetScale(3.f);
-                SUMOReal w = pfdkGetStringWidth("U");
+                double w = pfdkGetStringWidth("U");
                 glRotated(180, 0, 1, 0);
                 glTranslated(-w / 2., 2, 0);
                 pfDrawString("U");
@@ -405,8 +428,7 @@ GNERerouter::isValid(SumoXMLAttr key, const std::string& value) {
                 return false;
             }
         case SUMO_ATTR_EDGES: {
-            std::vector<std::string> edgeIds;
-            SUMOSAXAttributes::parseStringVector(value, edgeIds);
+            std::vector<std::string> edgeIds = GNEAttributeCarrier::parse<std::vector<std::string> > (value);
             // Empty Edges aren't valid
             if (edgeIds.empty()) {
                 return false;
@@ -424,9 +446,9 @@ GNERerouter::isValid(SumoXMLAttr key, const std::string& value) {
             bool ok;
             return GeomConvHelper::parseShapeReporting(value, "user-supplied position", 0, ok, false).size() == 1;
         case SUMO_ATTR_FILE:
-            return isValidFileValue(value);
+            return isValidFilename(value);
         case SUMO_ATTR_PROB:
-            return canParse<SUMOReal>(value);
+            return canParse<double>(value) && (parse<double>(value)) >= 0 && (parse<double>(value) <= 1);
         case SUMO_ATTR_OFF:
             return canParse<bool>(value);
         case GNE_ATTR_BLOCK_MOVEMENT:
@@ -444,17 +466,21 @@ GNERerouter::setAttribute(SumoXMLAttr key, const std::string& value) {
             setAdditionalID(value);
             break;
         case SUMO_ATTR_EDGES: {
-            // Declare variables
-            std::vector<std::string> edgeIds;
+            // Declare auxiliar variables
+            std::vector<std::string> edgeIds = GNEAttributeCarrier::parse<std::vector<std::string> > (value);
             GNEEdge* edge;
+            // first remove references of current rerouter in all edge childs
+            for (std::vector<GNEEdge*>::iterator i = myEdges.begin(); i != myEdges.end(); i++) {
+                (*i)->removeGNERerouter(this);
+            }
             // clear previous edges
             myEdges.clear();
-            SUMOSAXAttributes::parseStringVector(value, edgeIds);
             // Iterate over parsed edges and obtain pointer to edges
             for (int i = 0; i < (int)edgeIds.size(); i++) {
                 edge = myViewNet->getNet()->retrieveEdge(edgeIds.at(i), false);
                 if (edge) {
                     myEdges.push_back(edge);
+                    edge->addGNERerouter(this);
                 } else {
                     throw InvalidArgument("Trying to set an non-valid edge in " + getID());
                 }
@@ -471,7 +497,7 @@ GNERerouter::setAttribute(SumoXMLAttr key, const std::string& value) {
             myFilename = value;
             break;
         case SUMO_ATTR_PROB:
-            myProbability = parse<SUMOReal>(value);
+            myProbability = parse<double>(value);
             break;
         case SUMO_ATTR_OFF:
             myOff = parse<bool>(value);
@@ -485,4 +511,30 @@ GNERerouter::setAttribute(SumoXMLAttr key, const std::string& value) {
     }
 }
 
+
+bool
+GNERerouter::checkOverlapping(std::vector<GNERerouterInterval> rerouterIntervals) {
+    // only can be overlapping if there are more than two elements
+    if (rerouterIntervals.size() <= 1) {
+        return true;
+    }
+    // first short vector
+    std::sort(rerouterIntervals.begin(), rerouterIntervals.end());
+
+    // first check that all Begins are differents
+    for (std::vector<GNERerouterInterval>::const_iterator i = (rerouterIntervals.begin() + 1); i != rerouterIntervals.end(); i++) {
+        if ((i - 1)->getBegin() == i->getBegin()) {
+            return false;
+        }
+    }
+    // now check that end of every interval isn't overlapped with the begin of the next interval
+    for (std::vector<GNERerouterInterval>::const_iterator i = rerouterIntervals.begin(); i != (rerouterIntervals.end() - 1); i++) {
+        if (i->getEnd() > (i + 1)->getBegin()) {
+            return false;
+        }
+    }
+
+    // all ok, then return true
+    return true;
+}
 /****************************************************************************/

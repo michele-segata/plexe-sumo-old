@@ -11,8 +11,5 @@ inspect
 load
 
 # move
-move
-
-# lock/unlock
-lock_unlock
+#move
 

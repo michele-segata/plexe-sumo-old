@@ -28,10 +28,6 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_VERSION_H
-#include <version.h>
-#endif
-
 #include <iostream>
 #include <utils/common/MsgHandler.h>
 #include <utils/foxtools/MFXMenuHeader.h>
@@ -62,10 +58,7 @@
 #include "GNEUndoList.h"
 #include "GNEViewNet.h"
 #include "GNEViewParent.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include "GNERerouter.h"
 
 
 // ===========================================================================
@@ -97,8 +90,8 @@ GNEDeleteFrame::GNEDeleteFrame(FXHorizontalFrame* horizontalFrameParent, GNEView
     myGroupBoxOptions = new FXGroupBox(myContentFrame, "Options", GUIDesignGroupBoxFrame);
 
     // Create checkbox for enabling/disabling automatic deletion of additionals childs (by default, enabled)
-    myCheckBoxAutomaticallyDeleteAdditionals = new FXMenuCheck(myGroupBoxOptions, "Force deletion of additionals", this, MID_GNE_AUTOMATICALLYDELETEADDITIONALS, GUIDesignMenuCheck);
-    myCheckBoxAutomaticallyDeleteAdditionals->setCheck(true);
+    myAutomaticallyDeleteAdditionalsCheckButton = new FXCheckButton(myGroupBoxOptions, "Force deletion of additionals", this, MID_GNE_AUTOMATICALLYDELETEADDITIONALS, GUIDesignCheckButtonAttribute);
+    myAutomaticallyDeleteAdditionalsCheckButton->setCheck(true);
 
     // Create groupbox for tree list
     myGroupBoxTreeList = new FXGroupBox(myContentFrame, "Childs", GUIDesignGroupBoxFrame);
@@ -120,7 +113,7 @@ GNEDeleteFrame::showAttributeCarrierChilds(GNEAttributeCarrier* ac) {
     // clear items
     myTreelist->clearItems();
     myTreeItemToACMap.clear();
-    myTreeItesmWithoutAC.clear();
+    myTreeItemsWithoutAC.clear();
     // Switch gl type of ac
     if (ac) {
         switch (dynamic_cast<GUIGlObject*>(ac)->getType()) {
@@ -152,7 +145,7 @@ GNEDeleteFrame::showAttributeCarrierChilds(GNEAttributeCarrier* ac) {
                         // insert incoming connections of lanes (by default isn't expanded)
                         if (lane->getGNEIncomingConnections().size() > 0) {
                             FXTreeItem* incomingConnections = myTreelist->insertItem(0, laneItem, "Incomings", lane->getGNEIncomingConnections().front()->getIcon(), lane->getGNEIncomingConnections().front()->getIcon());
-                            myTreeItesmWithoutAC.insert(incomingConnections);
+                            myTreeItemsWithoutAC.insert(incomingConnections);
                             incomingConnections->setExpanded(false);
                             for (int k = 0; k < (int)lane->getGNEIncomingConnections().size(); k++) {
                                 GNEConnection* connection = lane->getGNEIncomingConnections().at(k);
@@ -164,7 +157,7 @@ GNEDeleteFrame::showAttributeCarrierChilds(GNEAttributeCarrier* ac) {
                         // insert outcoming connections of lanes (by default isn't expanded)
                         if (lane->getGNEOutcomingConnections().size() > 0) {
                             FXTreeItem* outgoingConnections = myTreelist->insertItem(0, laneItem, "Outcomings", lane->getGNEOutcomingConnections().front()->getIcon(), lane->getGNEOutcomingConnections().front()->getIcon());
-                            myTreeItesmWithoutAC.insert(outgoingConnections);
+                            myTreeItemsWithoutAC.insert(outgoingConnections);
                             outgoingConnections->setExpanded(false);
                             for (int k = 0; k < (int)lane->getGNEOutcomingConnections().size(); k++) {
                                 GNEConnection* connection = lane->getGNEOutcomingConnections().at(k);
@@ -214,7 +207,7 @@ GNEDeleteFrame::showAttributeCarrierChilds(GNEAttributeCarrier* ac) {
                     // insert incoming connections of lanes (by default isn't expanded)
                     if (lane->getGNEIncomingConnections().size() > 0) {
                         FXTreeItem* incomingConnections = myTreelist->insertItem(0, laneItem, "Incomings", lane->getGNEIncomingConnections().front()->getIcon(), lane->getGNEIncomingConnections().front()->getIcon());
-                        myTreeItesmWithoutAC.insert(incomingConnections);
+                        myTreeItemsWithoutAC.insert(incomingConnections);
                         incomingConnections->setExpanded(false);
                         for (int j = 0; j < (int)lane->getGNEIncomingConnections().size(); j++) {
                             GNEConnection* connection = lane->getGNEIncomingConnections().at(j);
@@ -226,7 +219,7 @@ GNEDeleteFrame::showAttributeCarrierChilds(GNEAttributeCarrier* ac) {
                     // insert outcoming connections of lanes (by default isn't expanded)
                     if (lane->getGNEOutcomingConnections().size() > 0) {
                         FXTreeItem* outgoingConnections = myTreelist->insertItem(0, laneItem, "Outcomings", lane->getGNEOutcomingConnections().front()->getIcon(), lane->getGNEOutcomingConnections().front()->getIcon());
-                        myTreeItesmWithoutAC.insert(outgoingConnections);
+                        myTreeItemsWithoutAC.insert(outgoingConnections);
                         outgoingConnections->setExpanded(false);
                         for (int j = 0; j < (int)lane->getGNEOutcomingConnections().size(); j++) {
                             GNEConnection* connection = lane->getGNEOutcomingConnections().at(j);
@@ -242,6 +235,19 @@ GNEDeleteFrame::showAttributeCarrierChilds(GNEAttributeCarrier* ac) {
                     FXTreeItem* additionalItem = myTreelist->insertItem(0, edgeItem, (toString(additional->getTag()) + " " + toString(i)).c_str(), additional->getIcon(), additional->getIcon());
                     myTreeItemToACMap[additionalItem] = additional;
                     additionalItem->setExpanded(true);
+                }
+                // add a extra section for rerouter in which this edge is part
+                if (edge->getNumberOfGNERerouters() > 0) {
+                    FXTreeItem* rerouters = myTreelist->insertItem(0, edgeItem, (toString(SUMO_TAG_REROUTER) + "s").c_str(), edge->getGNERerouters().front()->getIcon(), edge->getGNERerouters().front()->getIcon());
+                    myTreeItemsWithoutAC.insert(rerouters);
+                    rerouters->setExpanded(true);
+                    // insert reroutes of edge
+                    for (int i = 0; i < (int)edge->getNumberOfGNERerouters(); i++) {
+                        GNERerouter* rerouter = edge->getGNERerouters().at(i);
+                        FXTreeItem* rerouterItem = myTreelist->insertItem(0, rerouters, (toString(rerouter->getTag()) + " " + toString(i)).c_str(), rerouter->getIcon(), rerouter->getIcon());
+                        myTreeItemToACMap[rerouterItem] = rerouter;
+                        rerouterItem->setExpanded(true);
+                    }
                 }
                 break;
             }
@@ -261,7 +267,7 @@ GNEDeleteFrame::showAttributeCarrierChilds(GNEAttributeCarrier* ac) {
                 // insert incoming connections of lanes (by default isn't expanded)
                 if (lane->getGNEIncomingConnections().size() > 0) {
                     FXTreeItem* incomingConnections = myTreelist->insertItem(0, laneItem, "Incomings", lane->getGNEIncomingConnections().front()->getIcon(), lane->getGNEIncomingConnections().front()->getIcon());
-                    myTreeItesmWithoutAC.insert(incomingConnections);
+                    myTreeItemsWithoutAC.insert(incomingConnections);
                     incomingConnections->setExpanded(false);
                     for (int i = 0; i < (int)lane->getGNEIncomingConnections().size(); i++) {
                         GNEConnection* connection = lane->getGNEIncomingConnections().at(i);
@@ -273,7 +279,7 @@ GNEDeleteFrame::showAttributeCarrierChilds(GNEAttributeCarrier* ac) {
                 // insert outcoming connections of lanes (by default isn't expanded)
                 if (lane->getGNEOutcomingConnections().size() > 0) {
                     FXTreeItem* outgoingConnections = myTreelist->insertItem(0, laneItem, "Outcomings", lane->getGNEOutcomingConnections().front()->getIcon(), lane->getGNEOutcomingConnections().front()->getIcon());
-                    myTreeItesmWithoutAC.insert(outgoingConnections);
+                    myTreeItemsWithoutAC.insert(outgoingConnections);
                     outgoingConnections->setExpanded(false);
                     for (int i = 0; i < (int)lane->getGNEOutcomingConnections().size(); i++) {
                         GNEConnection* connection = lane->getGNEOutcomingConnections().at(i);
@@ -349,20 +355,45 @@ GNEDeleteFrame::removeAttributeCarrier(GNEAttributeCarrier* ac) {
             case GLO_EDGE: {
                 GNEEdge* edge = dynamic_cast<GNEEdge*>(ac);
                 int numberOfAdditionals = (int)edge->getAdditionalChilds().size();
+                int numberOfRerouters = (int)edge->getGNERerouters().size();
                 // Iterate over lanes and obtain total number of additional childs
                 for (std::vector<GNELane*>::const_iterator i = edge->getLanes().begin(); i != edge->getLanes().end(); i++) {
                     numberOfAdditionals += (int)(*i)->getAdditionalChilds().size();
                 }
                 // Check if edge can be deleted
-                if (myCheckBoxAutomaticallyDeleteAdditionals->getCheck()) {
+                if (myAutomaticallyDeleteAdditionalsCheckButton->getCheck()) {
                     myViewNet->getNet()->deleteGeometryOrEdge(edge, myViewNet->getPositionInformation(), myViewNet->getUndoList());
                 } else {
-                    if (numberOfAdditionals == 0) {
-                        myViewNet->getNet()->deleteGeometryOrEdge(edge, myViewNet->getPositionInformation(), myViewNet->getUndoList());
-                    } else {
+                    if (numberOfAdditionals > 0) {
+                        // write warning if netedit is running in testing mode
+                        if (myViewNet->isTestingModeEnabled() == true) {
+                            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+                        }
+                        std::string plural = numberOfAdditionals > 1 ? "s" : "";
+                        // Open warning DialogBox
                         FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + toString(edge->getTag())).c_str(), "%s",
-                                              (toString(edge->getTag()) + " '" + edge->getID() + "' cannot be deleted because it has " +
-                                               toString(numberOfAdditionals) + " additional childs.\n Check 'Force deletion of additionals' to force deletion.").c_str());
+                                              (toString(edge->getTag()) + " '" + edge->getID() + "' cannot be deleted because owns " +
+                                               toString(numberOfAdditionals) + " additional child" + plural + ".\n Check 'Force deletion of additionals' to force deletion.").c_str());
+                        // write warning if netedit is running in testing mode
+                        if (myViewNet->isTestingModeEnabled() == true) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+                        }
+                    } else if (numberOfRerouters > 0) {
+                        // write warning if netedit is running in testing mode
+                        if (myViewNet->isTestingModeEnabled() == true) {
+                            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+                        }
+                        std::string plural = numberOfRerouters > 1 ? "s" : "";
+                        // Open warning DialogBox
+                        FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + toString(edge->getTag())).c_str(), "%s",
+                                              (toString(edge->getTag()) + " '" + edge->getID() + "' cannot be deleted because is part of " +
+                                               toString(numberOfRerouters) + " " + toString(SUMO_TAG_REROUTER) + plural + ".\n Check 'Force deletion of additionals' to force deletion.").c_str());
+                        // write warning if netedit is running in testing mode
+                        if (myViewNet->isTestingModeEnabled() == true) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+                        }
+                    } else {
+                        myViewNet->getNet()->deleteGeometryOrEdge(edge, myViewNet->getPositionInformation(), myViewNet->getUndoList());
                     }
                 }
                 break;
@@ -370,15 +401,24 @@ GNEDeleteFrame::removeAttributeCarrier(GNEAttributeCarrier* ac) {
             case GLO_LANE: {
                 GNELane* lane = dynamic_cast<GNELane*>(ac);
                 // Check if lane can be deleted
-                if (myCheckBoxAutomaticallyDeleteAdditionals->getCheck()) {
+                if (myAutomaticallyDeleteAdditionalsCheckButton->getCheck()) {
                     myViewNet->getNet()->deleteLane(lane, myViewNet->getUndoList());
                 } else {
                     if (lane->getAdditionalChilds().size() == 0) {
                         myViewNet->getNet()->deleteLane(lane, myViewNet->getUndoList());
                     } else {
+                        // write warning if netedit is running in testing mode
+                        if (myViewNet->isTestingModeEnabled() == true) {
+                            WRITE_WARNING("Opening FXMessageBox of type 'warning'");
+                        }
+                        // open warning box
                         FXMessageBox::warning(getViewNet()->getApp(), MBOX_OK, ("Problem deleting " + toString(lane->getTag())).c_str(), "%s",
                                               (toString(lane->getTag()) + " '" + lane->getID() + "' cannot be deleted because it has " +
                                                toString(lane->getAdditionalChilds().size()) + " additional childs.\n Check 'Force deletion of Additionals' to force deletion.").c_str());
+                        // write warning if netedit is running in testing mode
+                        if (myViewNet->isTestingModeEnabled() == true) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'warning' with 'OK'");
+                        }
                     }
                 }
                 break;
@@ -454,7 +494,7 @@ GNEDeleteFrame::onCmdShowChildMenu(FXObject*, FXSelector, void* data) {
     FXEvent* e = (FXEvent*) data;
     FXTreeItem* item = myTreelist->getItemAt(e->win_x, e->win_y);
     // Check if there are an item in the position and create pop-up menu
-    if (item && (myTreeItesmWithoutAC.find(item) == myTreeItesmWithoutAC.end())) {
+    if (item && (myTreeItemsWithoutAC.find(item) == myTreeItemsWithoutAC.end())) {
         createPopUpMenu(e->root_x, e->root_y, myTreeItemToACMap[myTreelist->getItemAt(e->win_x, e->win_y)]);
     }
     return 1;

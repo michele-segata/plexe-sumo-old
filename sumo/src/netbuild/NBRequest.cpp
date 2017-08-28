@@ -48,10 +48,6 @@
 #include "NBNode.h"
 #include "NBRequest.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static member variables
@@ -645,13 +641,13 @@ NBRequest::laneConflict(const NBEdge* from, const NBEdge* to, int toLane,
     // since we know that the edge2edge connections are in conflict, the only
     // situation in which the lane2lane connections can be conflict-free is, if
     // they target the same edge but do not cross each other
-    SUMOReal angle = NBHelpers::relAngle(
-                         from->getAngleAtNode(from->getToNode()), to->getAngleAtNode(to->getFromNode()));
+    double angle = NBHelpers::relAngle(
+                       from->getAngleAtNode(from->getToNode()), to->getAngleAtNode(to->getFromNode()));
     if (angle == 180) {
         angle = -180; // turnarounds are left turns
     }
-    const SUMOReal prohibitorAngle = NBHelpers::relAngle(
-                                         prohibitorFrom->getAngleAtNode(prohibitorFrom->getToNode()), to->getAngleAtNode(to->getFromNode()));
+    const double prohibitorAngle = NBHelpers::relAngle(
+                                       prohibitorFrom->getAngleAtNode(prohibitorFrom->getToNode()), to->getAngleAtNode(to->getFromNode()));
     const bool rightOfProhibitor = prohibitorFrom->isTurningDirectionAt(to)
                                    || (angle > prohibitorAngle && !from->isTurningDirectionAt(to));
     return rightOfProhibitor ? toLane >= prohibitorToLane : toLane <= prohibitorToLane;

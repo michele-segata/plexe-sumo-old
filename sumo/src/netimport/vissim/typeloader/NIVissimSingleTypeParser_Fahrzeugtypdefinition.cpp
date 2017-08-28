@@ -36,10 +36,6 @@
 #include "../tempstructs/NIVissimVehicleType.h"
 #include "NIVissimSingleTypeParser_Fahrzeugtypdefinition.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -92,19 +88,19 @@ NIVissimSingleTypeParser_Fahrzeugtypdefinition::parse(std::istream& from) {
         }
         tag = myRead(from);
     }
-    SUMOReal length;
+    double length;
     from >> length;
     // overread until "Maxbeschleunigung"
     while (tag != "maxbeschleunigung") {
         tag = myRead(from);
     }
-    SUMOReal amax;
+    double amax;
     from >> amax; // type-checking is missing!
     // overread until "Maxverzoegerung"
     while (tag != "maxverzoegerung") {
         tag = myRead(from);
     }
-    SUMOReal dmax;
+    double dmax;
     from >> dmax; // type-checking is missing!
     while (tag != "besetzungsgrad") {
         tag = myRead(from);

@@ -31,6 +31,8 @@
 #include <config.h>
 #endif
 
+#include <vector>
+#include <string>
 #include <utils/common/UtilExceptions.h>
 
 
@@ -59,6 +61,18 @@ public:
      * @param[in] argv arguments given at the command line
      */
     static void setArgs(int argc, char** argv);
+
+    /** @brief Stores faked command line arguments for later parsing
+    *
+    * @param[in] args arguments given as substitute for the command line
+    */
+    static void setArgs(const std::vector<std::string>& args);
+
+    /** @brief Return the number of command line arguments
+     */
+    static int getArgC() {
+        return myArgC;
+    }
 
 
     /** @brief Parses the command line arguments and loads the configuration

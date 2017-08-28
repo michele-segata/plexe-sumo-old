@@ -39,46 +39,48 @@
 #include <utils/gui/images/GUIIconSubSys.h>
 #include <utils/gui/div/GUIDesigns.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // method definitions
 // ===========================================================================
 GUIDialog_AboutSUMO::GUIDialog_AboutSUMO(FXWindow* parent) :
     FXDialogBox(parent, "About PLEXE SUMO", GUIDesignDialogBox) {
-    FXVerticalFrame* f1 = new FXVerticalFrame(this, GUIDesignAboutFrame1);
+    // set dialog icon
+    setIcon(GUIIconSubSys::getIcon(ICON_SUMO));
+
+    // create frame for main info
+    FXHorizontalFrame* mainInfoFrame = new FXHorizontalFrame(this, GUIDesignAuxiliarHorizontalFrame);
 
     // DLR Icon
-    FXHorizontalFrame* f2 = new FXHorizontalFrame(f1, GUIDesignAboutFrame2);
-    new FXLabel(f2, "\tDLR\t.", GUIIconSubSys::getIcon(ICON_DLR), GUIDesignAboutLabelIcon);
+    new FXLabel(mainInfoFrame, "", GUIIconSubSys::getIcon(ICON_DLR), GUIDesignLabelIcon64x64noSpacing);
 
     // "SUMO <VERSION>"
-    FXVerticalFrame* f4 = new FXVerticalFrame(f2, GUIDesignAboutFrame3);
+    FXVerticalFrame* descriptionFrame = new FXVerticalFrame(mainInfoFrame, GUIDesignLabelAboutInfo);
     myHeadlineFont = new FXFont(getApp(), "Arial", 18, FXFont::Bold);
-    new FXLabel(f2, "", GUIIconSubSys::getIcon(ICON_APP), GUIDesignAboutLabelIcon);
-    FXLabel* l = new FXLabel(f4, "PLEXE SUMO " VERSION_STRING, 0, GUIDesignAboutLabelDescription);
-    l->setFont(myHeadlineFont);
-    new FXLabel(f4, "Simulation of Urban MObility", 0, GUIDesignAboutLabelDescription);
-    new FXLabel(f4, HAVE_ENABLED, 0, GUIDesignAboutLabelDescription);
+    FXLabel* neteditLabel = new FXLabel(descriptionFrame, "PLEXE SUMO " VERSION_STRING, 0, GUIDesignLabelAboutInfo);
+    neteditLabel->setFont(myHeadlineFont);
+    new FXLabel(descriptionFrame, "Simulation of Urban MObility", 0, GUIDesignLabelAboutInfo);
+    new FXLabel(descriptionFrame, HAVE_ENABLED, 0, GUIDesignLabelAboutInfo);
 
-    // additional infos
-    FXVerticalFrame* f3 = new FXVerticalFrame(f1, GUIDesignAboutFrame3);
+    // Netedit icon
+    new FXLabel(mainInfoFrame, "", GUIIconSubSys::getIcon(ICON_SUMO), GUIDesignLabelIcon64x64noSpacing);
 
     // copyright notice
-    new FXLabel(f3, "A microscopic, multi-modal, open source road traffic simulation.", 0, GUIDesignAboutLabelInformation);
-    new FXLabel(f3, "Includes the Platooning Extension for Veins (PLEXE)", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
-    new FXLabel(f3, "Copyright (C) 2001-2017 DLR / Institute of Transportation Systems", 0, GUIDesignAboutLabelInformation);
-    new FXLabel(f3, "Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    new FXLabel(this, "A microscopic, multi-modal, open source road traffic simulation.", 0, GUIDesignLabelAboutInfo);
+    new FXLabel(this, "Includes the Platooning Extension for Veins (PLEXE)", 0, LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
+    new FXLabel(this, "Copyright (C) 2001-2017 DLR / Institute of Transportation Systems", 0, GUIDesignLabelAboutInfo);
+    new FXLabel(this, "Copyright (C) 2012-2016 Michele Segata (segata@ccs-labs.org)", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 0, 0, 0, 0);
 
-    FXLinkLabel* link = new FXLinkLabel(f3, "http://sumo.dlr.de", 0, GUIDesignAboutLinkLabel);
+    // link to homepage
+    FXLinkLabel* link = new FXLinkLabel(this, "http://sumo.dlr.de", 0, GUIDesignLabelCenter);
     link->setTipText("http://sumo.dlr.de");
-    FXLinkLabel* plexeLink = new FXLinkLabel(f3, "http://plexe.car2x.org", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
+    FXLinkLabel* plexeLink = new FXLinkLabel(this, "http://plexe.car2x.org", 0, LAYOUT_CENTER_X | JUSTIFY_CENTER_X | LABEL_NORMAL, 0, 0, 0, 0, 5, 5, 5, 5);
     plexeLink->setTipText("http://plexe.car2x.org");
-    // ok-button
-    new FXButton(f1, "OK\t\t", GUIIconSubSys::getIcon(ICON_ACCEPT), this, ID_ACCEPT, GUIDesignButtonOK);
-    setIcon(GUIIconSubSys::getIcon(ICON_APP));
+
+    // centered ok-button
+    FXHorizontalFrame* buttonFrame = new FXHorizontalFrame(this, GUIDesignHorizontalFrame);
+    new FXHorizontalFrame(buttonFrame, GUIDesignAuxiliarHorizontalFrame);
+    new FXButton(buttonFrame, "OK\t\t", GUIIconSubSys::getIcon(ICON_ACCEPT), this, ID_ACCEPT, GUIDesignButtonOK);
+    new FXHorizontalFrame(buttonFrame, GUIDesignAuxiliarHorizontalFrame);
 }
 
 

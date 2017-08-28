@@ -40,17 +40,14 @@
 #include "MSDevice_BTsender.h"
 #include "MSDevice_Example.h"
 #include "MSDevice_Battery.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
+#include "MSDevice_SSM.h"
 
 
 // ===========================================================================
 // static member variables
 // ===========================================================================
 std::map<std::string, std::set<std::string> > MSDevice::myExplicitIDs;
-
+MTRand MSDevice::myEquipmentRNG;
 
 // ===========================================================================
 // method definitions
@@ -66,6 +63,7 @@ MSDevice::insertOptions(OptionsCont& oc) {
     MSDevice_BTsender::insertOptions(oc);
     MSDevice_Example::insertOptions(oc);
     MSDevice_Battery::insertOptions(oc);
+    MSDevice_SSM::insertOptions(oc);
 }
 
 
@@ -87,6 +85,7 @@ MSDevice::buildVehicleDevices(SUMOVehicle& v, std::vector<MSDevice*>& into) {
     MSDevice_BTsender::buildVehicleDevices(v, into);
     MSDevice_Example::buildVehicleDevices(v, into);
     MSDevice_Battery::buildVehicleDevices(v, into);
+    MSDevice_SSM::buildVehicleDevices(v, into);
 }
 
 
@@ -112,7 +111,7 @@ MSDevice::equippedByDefaultAssignmentOptions(const OptionsCont& oc, const std::s
         haveByNumber = MSNet::getInstance()->getVehicleControl().getQuota(oc.getFloat("device." + deviceName + ".probability")) == 1;
     } else {
         if (oc.exists("device." + deviceName + ".probability") && oc.getFloat("device." + deviceName + ".probability") != 0) {
-            haveByNumber = RandHelper::rand() <= oc.getFloat("device." + deviceName + ".probability");
+            haveByNumber = myEquipmentRNG.rand() <= oc.getFloat("device." + deviceName + ".probability");
         }
     }
     // assignment by name
@@ -140,5 +139,15 @@ MSDevice::equippedByDefaultAssignmentOptions(const OptionsCont& oc, const std::s
 }
 
 
-/****************************************************************************/
+void
+MSDevice::saveState(OutputDevice& /* out */) const {
+    WRITE_WARNING("Device '" + getID() + "' cannot save state");
+}
 
+
+void
+MSDevice::loadState(const SUMOSAXAttributes& /* attrs */) {
+}
+
+
+/****************************************************************************/

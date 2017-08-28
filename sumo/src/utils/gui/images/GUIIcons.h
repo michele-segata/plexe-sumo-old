@@ -45,6 +45,7 @@ enum GUIIcon {
     /// @{
     ICON_APP = 0,
     ICON_DLR,
+    ICON_SUMO,
     ICON_EMPTY,
     ICON_OPEN_CONFIG,
     ICON_OPEN_NET,
@@ -274,12 +275,20 @@ enum GUIIcon {
 
     /// @name icons for status
     /// @{
+    ICON_OK,
     ICON_ACCEPT,
     ICON_CANCEL,
     ICON_CORRECT,
     ICON_ERROR,
     ICON_RESET,
     ICON_WARNING,
+    /// @}
+
+    /// @name icons for grid
+    /// @{
+    ICON_GRID1,
+    ICON_GRID2,
+    ICON_GRID3,
     /// @}
 
     /// @brief max number of icons

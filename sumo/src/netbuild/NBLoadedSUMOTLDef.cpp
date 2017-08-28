@@ -43,10 +43,6 @@
 #include "NBLoadedSUMOTLDef.h"
 #include "NBNode.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 // ===========================================================================
 // method definitions
 // ===========================================================================
@@ -390,7 +386,7 @@ NBLoadedSUMOTLDef::initNeedsContRelation() const {
             for (NBConnectionVector::const_iterator it1 = myControlledLinks.begin(); it1 != myControlledLinks.end(); it1++) {
                 const NBConnection& c1 = *it1;
                 const int i1 = c1.getTLIndex();
-                if (i1 == NBConnection::InvalidTlIndex || state[i1] != 'g' || c1.getFrom() == 0 || c1.getTo() == 0) {
+                if (i1 == NBConnection::InvalidTlIndex || (state[i1] != 'g' && state[i1] != 's') || c1.getFrom() == 0 || c1.getTo() == 0) {
                     continue;
                 }
                 for (NBConnectionVector::const_iterator it2 = myControlledLinks.begin(); it2 != myControlledLinks.end(); it2++) {
@@ -403,7 +399,7 @@ NBLoadedSUMOTLDef::initNeedsContRelation() const {
                         const bool rightTurnConflict = NBNode::rightTurnConflict(
                                                            c1.getFrom(), c1.getTo(), c1.getFromLane(), c2.getFrom(), c2.getTo(), c2.getFromLane());
                         const bool forbidden = forbids(c2.getFrom(), c2.getTo(), c1.getFrom(), c1.getTo(), true, controlledWithin);
-                        const bool isFoes = foes(c2.getFrom(), c2.getTo(), c1.getFrom(), c1.getTo());
+                        const bool isFoes = foes(c2.getFrom(), c2.getTo(), c1.getFrom(), c1.getTo()) && !c2.getFrom()->isTurningDirectionAt(c2.getTo());
                         if (forbidden || rightTurnConflict) {
                             myNeedsContRelation.insert(StreamPair(c1.getFrom(), c1.getTo(), c2.getFrom(), c2.getTo()));
                         }

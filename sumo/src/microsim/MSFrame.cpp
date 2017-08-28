@@ -58,10 +58,6 @@
 #include "MSFrame.h"
 #include <utils/common/SystemFrame.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -139,6 +135,9 @@ MSFrame::fillOptions() {
     oc.addDescription("battery-output", "Output", "Save the battery values of each vehicle");
     oc.doRegister("battery-output.precision", new Option_Integer(2));
     oc.addDescription("battery-output.precision", "Output", "Write battery values with the given precision (default 2)");
+
+    oc.doRegister("chargingstations-output", new Option_FileName());
+    oc.addDescription("chargingstations-output", "Output", "Write data of charging stations");
 
     oc.doRegister("fcd-output", new Option_FileName());
     oc.addDescription("fcd-output", "Output", "Save the Floating Car Data");
@@ -248,13 +247,11 @@ MSFrame::fillOptions() {
     oc.doRegister("route-steps", 's', new Option_String("200", "TIME"));
     oc.addDescription("route-steps", "Processing", "Load routes for the next number of seconds ahead");
 
-#ifdef HAVE_INTERNAL_LANES
     oc.doRegister("no-internal-links", new Option_Bool(false));
     oc.addDescription("no-internal-links", "Processing", "Disable (junction) internal links");
 
     oc.doRegister("ignore-junction-blocker", new Option_String("-1", "TIME"));
     oc.addDescription("ignore-junction-blocker", "Processing", "Ignore vehicles which block the junction after they have been standing for SECONDS (-1 means never ignore)");
-#endif
 
     oc.doRegister("ignore-route-errors", new Option_Bool(false));
     oc.addDescription("ignore-route-errors", "Processing", "Do not check whether routes are connected");
@@ -265,11 +262,17 @@ MSFrame::fillOptions() {
     oc.doRegister("collision.action", new Option_String("teleport"));
     oc.addDescription("collision.action", "Processing", "How to deal with collisions: [none,warn,teleport,remove]");
 
+    oc.doRegister("collision.stoptime", new Option_String("0", "TIME"));
+    oc.addDescription("collision.stoptime", "Processing", "Let vehicle stop for TIME before performing collision.action (except for action 'none')");
+
     oc.doRegister("collision.check-junctions", new Option_Bool(false));
     oc.addDescription("collision.check-junctions", "Processing", "Enables collisions checks on junctions");
 
     oc.doRegister("max-num-vehicles", new Option_Integer(-1));
     oc.addDescription("max-num-vehicles", "Processing", "Delay vehicle insertion to stay within the given maximum number");
+
+    oc.doRegister("max-num-teleports", new Option_Integer(-1));
+    oc.addDescription("max-num-teleports", "Processing", "Abort the simulation if the given maximum number of teleports is exceeded");
 
     oc.doRegister("scale", new Option_Float(1.));
     oc.addDescription("scale", "Processing", "Scale demand by the given factor (by discarding or duplicating vehicles)");
@@ -303,6 +306,10 @@ MSFrame::fillOptions() {
 
     oc.doRegister("tls.all-off", new Option_Bool(false));
     oc.addDescription("tls.all-off", "Processing", "Switches off all traffic lights.");
+
+    oc.doRegister("time-to-impatience", new Option_String("300", "TIME"));
+    oc.addDescription("time-to-impatience", "Processing", "Specify how long a vehicle may wait until impatience grows from 0 to 1, defaults to 300, non-positive values disable impatience growth");
+
 
     // pedestrian model
     oc.doRegister("pedestrian.model", new Option_String("striping"));
@@ -439,6 +446,7 @@ MSFrame::buildStreams() {
     OutputDevice::createDeviceByOption("fcd-output", "fcd-export", "fcd_file.xsd");
     OutputDevice::createDeviceByOption("emission-output", "emission-export", "emission_file.xsd");
     OutputDevice::createDeviceByOption("battery-output", "battery-export");
+    OutputDevice::createDeviceByOption("chargingstations-output", "chargingstations-export");
     OutputDevice::createDeviceByOption("full-output", "full-export", "full_file.xsd");
     OutputDevice::createDeviceByOption("queue-output", "queue-export", "queue_file.xsd");
     OutputDevice::createDeviceByOption("amitran-output", "trajectories", "amitran/trajectories.xsd\" timeStepSize=\"" + toString(STEPS2MS(DELTA_T)));
@@ -447,7 +455,7 @@ MSFrame::buildStreams() {
     OutputDevice::createDeviceByOption("link-output", "link-output");
     OutputDevice::createDeviceByOption("bt-output", "bt-output");
     OutputDevice::createDeviceByOption("lanechange-output", "lanechanges");
-    OutputDevice::createDeviceByOption("stop-output", "stops");
+    OutputDevice::createDeviceByOption("stop-output", "stops", "stopinfo_file.xsd");
 
 #ifdef _DEBUG
     OutputDevice::createDeviceByOption("movereminder-output", "movereminder-output");
@@ -548,17 +556,13 @@ MSFrame::setMSGlobals(OptionsCont& oc) {
     // pre-initialise the network
     // set whether empty edges shall be printed on dump
     MSGlobals::gOmitEmptyEdgesOnDump = !oc.getBool("netstate-dump.empty-edges");
-#ifdef HAVE_INTERNAL_LANES
     // set whether internal lanes shall be used
     MSGlobals::gUsingInternalLanes = !oc.getBool("no-internal-links");
     MSGlobals::gIgnoreJunctionBlocker = string2time(oc.getString("ignore-junction-blocker")) < 0 ?
                                         std::numeric_limits<SUMOTime>::max() : string2time(oc.getString("ignore-junction-blocker"));
-#else
-    MSGlobals::gUsingInternalLanes = false;
-    MSGlobals::gIgnoreJunctionBlocker = 0;
-#endif
     // set the grid lock time
     MSGlobals::gTimeToGridlock = string2time(oc.getString("time-to-teleport")) < 0 ? 0 : string2time(oc.getString("time-to-teleport"));
+    MSGlobals::gTimeToImpatience = string2time(oc.getString("time-to-impatience"));
     MSGlobals::gTimeToGridlockHighways = string2time(oc.getString("time-to-teleport.highways")) < 0 ? 0 : string2time(oc.getString("time-to-teleport.highways"));
     MSGlobals::gCheck4Accidents = !oc.getBool("ignore-accidents");
     MSGlobals::gCheckRoutes = !oc.getBool("ignore-route-errors");

@@ -37,11 +37,8 @@
 #include <microsim/MSVehicle.h>
 #include <utils/options/OptionsCont.h>
 #include <utils/iodevices/OutputDevice.h>
+#include <utils/xml/SUMOSAXAttributes.h>
 #include "MSDevice_Tripinfo.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 #define NOT_ARRIVED TIME2STEPS(-1)
 
@@ -51,8 +48,8 @@
 // ===========================================================================
 MSDevice_Tripinfo::DeviceSet MSDevice_Tripinfo::myPendingOutput;
 
-SUMOReal MSDevice_Tripinfo::myVehicleCount(0);
-SUMOReal MSDevice_Tripinfo::myTotalRouteLength(0);
+double MSDevice_Tripinfo::myVehicleCount(0);
+double MSDevice_Tripinfo::myTotalRouteLength(0);
 SUMOTime MSDevice_Tripinfo::myTotalDuration(0);
 SUMOTime MSDevice_Tripinfo::myTotalWaitingTime(0);
 SUMOTime MSDevice_Tripinfo::myTotalTimeLoss(0);
@@ -99,8 +96,8 @@ MSDevice_Tripinfo::~MSDevice_Tripinfo() {
 
 
 bool
-MSDevice_Tripinfo::notifyMove(SUMOVehicle& veh, SUMOReal /*oldPos*/,
-                              SUMOReal /*newPos*/, SUMOReal newSpeed) {
+MSDevice_Tripinfo::notifyMove(SUMOVehicle& veh, double /*oldPos*/,
+                              double /*newPos*/, double newSpeed) {
     if (veh.isStopped()) {
         return true;
     }
@@ -112,15 +109,15 @@ MSDevice_Tripinfo::notifyMove(SUMOVehicle& veh, SUMOReal /*oldPos*/,
 
 void
 MSDevice_Tripinfo::notifyMoveInternal(const SUMOVehicle& veh,
-                                      const SUMOReal /* frontOnLane */,
-                                      const SUMOReal timeOnLane,
-                                      const SUMOReal /* meanSpeedFrontOnLane */,
-                                      const SUMOReal meanSpeedVehicleOnLane,
-                                      const SUMOReal /* travelledDistanceFrontOnLane */,
-                                      const SUMOReal /* travelledDistanceVehicleOnLane */) {
+                                      const double /* frontOnLane */,
+                                      const double timeOnLane,
+                                      const double /* meanSpeedFrontOnLane */,
+                                      const double meanSpeedVehicleOnLane,
+                                      const double /* travelledDistanceFrontOnLane */,
+                                      const double /* travelledDistanceVehicleOnLane */) {
 
     // called by meso
-    const SUMOReal vmax = veh.getEdge()->getVehicleMaxSpeed(&veh);
+    const double vmax = veh.getEdge()->getVehicleMaxSpeed(&veh);
     if (vmax > 0) {
         myMesoTimeLoss += TIME2STEPS(timeOnLane * (vmax - meanSpeedVehicleOnLane) / vmax);
     }
@@ -128,7 +125,7 @@ MSDevice_Tripinfo::notifyMoveInternal(const SUMOVehicle& veh,
 }
 
 bool
-MSDevice_Tripinfo::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason) {
+MSDevice_Tripinfo::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
     if (reason == MSMoveReminder::NOTIFICATION_DEPARTED) {
         if (!MSGlobals::gUseMesoSim) {
             myDepartLane = static_cast<MSVehicle&>(veh).getLane()->getID();
@@ -141,8 +138,8 @@ MSDevice_Tripinfo::notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification re
 
 
 bool
-MSDevice_Tripinfo::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/,
-                               MSMoveReminder::Notification reason) {
+MSDevice_Tripinfo::notifyLeave(SUMOVehicle& veh, double /*lastPos*/,
+                               MSMoveReminder::Notification reason, const MSLane* /* enteredLane */) {
     if (reason >= MSMoveReminder::NOTIFICATION_ARRIVED) {
         myArrivalTime = MSNet::getInstance()->getCurrentTimeStep();
         if (!MSGlobals::gUseMesoSim) {
@@ -163,10 +160,10 @@ MSDevice_Tripinfo::notifyLeave(SUMOVehicle& veh, SUMOReal /*lastPos*/,
 }
 
 void
-MSDevice_Tripinfo::computeLengthAndDuration(SUMOReal& routeLength, SUMOTime& duration) const {
+MSDevice_Tripinfo::computeLengthAndDuration(double& routeLength, SUMOTime& duration) const {
     SUMOTime finalTime;
-    SUMOReal finalPos;
-    SUMOReal finalPosOnInternal = 0;
+    double finalPos;
+    double finalPosOnInternal = 0;
     if (myArrivalTime == NOT_ARRIVED) {
         finalTime = MSNet::getInstance()->getCurrentTimeStep();
         finalPos = myHolder.getPositionOnLane();
@@ -197,7 +194,7 @@ MSDevice_Tripinfo::generateOutput() const {
         return;
     }
     myPendingOutput.erase(this);
-    SUMOReal routeLength;
+    double routeLength;
     SUMOTime duration;
     computeLengthAndDuration(routeLength, duration);
 
@@ -260,7 +257,7 @@ MSDevice_Tripinfo::generateOutputForUnfinished() {
 
 void
 MSDevice_Tripinfo::updateStatistics(SUMOTime timeLoss) const {
-    SUMOReal routeLength;
+    double routeLength;
     SUMOTime duration;
     computeLengthAndDuration(routeLength, duration);
 
@@ -288,7 +285,7 @@ MSDevice_Tripinfo::printStatistics() {
 }
 
 
-SUMOReal
+double
 MSDevice_Tripinfo::getAvgRouteLength() {
     if (myVehicleCount > 0) {
         return myTotalRouteLength / myVehicleCount;
@@ -297,7 +294,7 @@ MSDevice_Tripinfo::getAvgRouteLength() {
     }
 }
 
-SUMOReal
+double
 MSDevice_Tripinfo::getAvgDuration() {
     if (myVehicleCount > 0) {
         return STEPS2TIME(myTotalDuration / myVehicleCount);
@@ -306,7 +303,7 @@ MSDevice_Tripinfo::getAvgDuration() {
     }
 }
 
-SUMOReal
+double
 MSDevice_Tripinfo::getAvgWaitingTime() {
     if (myVehicleCount > 0) {
         return STEPS2TIME(myTotalWaitingTime / myVehicleCount);
@@ -315,7 +312,8 @@ MSDevice_Tripinfo::getAvgWaitingTime() {
     }
 }
 
-SUMOReal
+
+double
 MSDevice_Tripinfo::getAvgTimeLoss() {
     if (myVehicleCount > 0) {
         return STEPS2TIME(myTotalTimeLoss / myVehicleCount);
@@ -324,7 +322,8 @@ MSDevice_Tripinfo::getAvgTimeLoss() {
     }
 }
 
-SUMOReal
+
+double
 MSDevice_Tripinfo::getAvgDepartDelay() {
     if (myVehicleCount > 0) {
         return STEPS2TIME(myTotalDepartDelay / myVehicleCount);
@@ -334,5 +333,26 @@ MSDevice_Tripinfo::getAvgDepartDelay() {
 }
 
 
-/****************************************************************************/
+void
+MSDevice_Tripinfo::saveState(OutputDevice& out) const {
+    out.openTag(SUMO_TAG_DEVICE);
+    out.writeAttr(SUMO_ATTR_ID, getID());
+    std::vector<std::string> internals;
+    internals.push_back(myDepartLane);
+    internals.push_back(toString(myDepartPosLat));
+    internals.push_back(toString(myDepartSpeed));
+    out.writeAttr(SUMO_ATTR_STATE, toString(internals));
+    out.closeTag();
+}
 
+
+void
+MSDevice_Tripinfo::loadState(const SUMOSAXAttributes& attrs) {
+    std::istringstream bis(attrs.getString(SUMO_ATTR_STATE));
+    bis >> myDepartLane;
+    bis >> myDepartPosLat;
+    bis >> myDepartSpeed;
+}
+
+
+/****************************************************************************/

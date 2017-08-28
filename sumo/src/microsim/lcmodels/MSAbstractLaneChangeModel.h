@@ -117,14 +117,18 @@ public:
         // @brief LaneChangeAction flags
         int state;
         // @brief lateralDistance
-        SUMOReal latDist;
+        double latDist;
         // @brief direction that was checked
         int dir;
 
-        StateAndDist(int _state, SUMOReal _latDist, int _dir) :
+        StateAndDist(int _state, double _latDist, int _dir) :
             state(_state),
             latDist(_latDist),
             dir(_dir) {}
+
+        bool sameDirection(const StateAndDist& other) const {
+            return latDist * other.latDist > 0;
+        }
     };
 
     /// @brief init global model parameters
@@ -149,11 +153,21 @@ public:
         return myOwnState;
     }
 
-    virtual void setOwnState(int state) {
-        myOwnState = state;
+    virtual void setOwnState(const int state);
+
+    const std::pair<int, int>& getSavedState(const int dir) const {
+        return mySavedStates.find(dir)->second;
     }
 
-    virtual void prepareStep() { }
+    void saveState(const int dir, const int stateWithoutTraCI, const int state) {
+        mySavedStates[dir] = std::make_pair(stateWithoutTraCI, state);
+    }
+
+    virtual void prepareStep() {
+        saveState(-1, LCA_UNKNOWN, LCA_UNKNOWN);
+        saveState(0, LCA_UNKNOWN, LCA_UNKNOWN);
+        saveState(1, LCA_UNKNOWN, LCA_UNKNOWN);
+    }
 
     /** @brief Called to examine whether the vehicle wants to change
      * using the given laneOffset.
@@ -162,9 +176,9 @@ public:
     virtual int wantsChange(
         int laneOffset,
         MSAbstractLaneChangeModel::MSLCMessager& msgPass, int blocked,
-        const std::pair<MSVehicle*, SUMOReal>& leader,
-        const std::pair<MSVehicle*, SUMOReal>& neighLead,
-        const std::pair<MSVehicle*, SUMOReal>& neighFollow,
+        const std::pair<MSVehicle*, double>& leader,
+        const std::pair<MSVehicle*, double>& neighLead,
+        const std::pair<MSVehicle*, double>& neighFollow,
         const MSLane& neighLane,
         const std::vector<MSVehicle::LaneQ>& preb,
         MSVehicle** lastBlocked,
@@ -194,7 +208,7 @@ public:
         const std::vector<MSVehicle::LaneQ>& preb,
         MSVehicle** lastBlocked,
         MSVehicle** firstBlocked,
-        SUMOReal& latDist, int& blocked) {
+        double& latDist, int& blocked) {
         UNUSED_PARAMETER(laneOffset);
         UNUSED_PARAMETER(&leaders);
         UNUSED_PARAMETER(&followers);
@@ -239,8 +253,8 @@ public:
      * @param cfModel The model used
      * @return the new speed of the vehicle as proposed by the lane changer
      */
-    virtual SUMOReal patchSpeed(const SUMOReal min, const SUMOReal wanted, const SUMOReal max,
-                                const MSCFModel& cfModel) = 0;
+    virtual double patchSpeed(const double min, const double wanted, const double max,
+                              const MSCFModel& cfModel) = 0;
 
     /* @brief called once when the primary lane of the vehicle changes (updates
      * the custom variables of each child implementation */
@@ -282,7 +296,7 @@ public:
         return myShadowFurtherLanes;
     }
 
-    const std::vector<SUMOReal>& getShadowFurtherLanesPosLat() const {
+    const std::vector<double>& getShadowFurtherLanesPosLat() const {
         return myShadowFurtherLanesPosLat;
     }
 
@@ -313,10 +327,10 @@ public:
     int getShadowDirection() const;
 
     /// @brief return the angle offset during a continuous change maneuver
-    SUMOReal getAngleOffset() const;
+    double getAngleOffset() const;
 
     /// @brief return the lateral speed of the current lane change maneuver
-    inline SUMOReal getLateralSpeed() const {
+    inline double getLateralSpeed() const {
         return myLateralspeed;
     }
 
@@ -350,7 +364,7 @@ public:
     void cleanupShadowLane();
 
     /// @brief reserve space at the end of the lane to avoid dead locks
-    virtual void saveBlockerLength(SUMOReal length) {
+    virtual void saveBlockerLength(double length) {
         UNUSED_PARAMETER(length);
     };
 
@@ -373,10 +387,21 @@ public:
         return myAmOpposite;
     }
 
+    /// @brief try to retrieve the given parameter from this laneChangeModel. Throw exception for unsupported key
+    virtual std::string getParameter(const std::string& key) const {
+        throw InvalidArgument("Parameter '" + key + "' is not supported for laneChangeModel of type '" + toString(myModel) + "'");
+    }
+
+    /// @brief try to set the given parameter for this laneChangeModel. Throw exception for unsupported key
+    virtual void setParameter(const std::string& key, const std::string& value) {
+        UNUSED_PARAMETER(value);
+        throw InvalidArgument("Setting parameter '" + key + "' is not supported for laneChangeModel of type '" + toString(myModel) + "'");
+    }
+
 protected:
     virtual bool congested(const MSVehicle* const neighLeader);
 
-    virtual bool predInteraction(const std::pair<MSVehicle*, SUMOReal>& leader);
+    virtual bool predInteraction(const std::pair<MSVehicle*, double>& leader);
 
     /// @brief whether the influencer cancels the given request
     bool cancelRequest(int state);
@@ -388,15 +413,16 @@ protected:
 
     /// @brief The current state of the vehicle
     int myOwnState;
+    std::map<int, std::pair<int, int> > mySavedStates;
 
     /// @brief progress of the lane change maneuver 0:started, 1:complete
-    SUMOReal myLaneChangeCompletion;
+    double myLaneChangeCompletion;
 
     /// @brief direction of the lane change maneuver -1 means right, 1 means left
     int myLaneChangeDirection;
 
     /// @brief The lateral offset during a continuous LaneChangeManeuver
-    SUMOReal myLateralspeed;
+    double myLateralspeed;
 
     /// @brief whether the vehicle has already moved this step
     bool myAlreadyChanged;
@@ -407,7 +433,7 @@ protected:
     /* @brief Lanes that are parially (laterally) occupied by the back of the
      * vehicle (analogue to MSVehicle::myFurtherLanes) */
     std::vector<MSLane*> myShadowFurtherLanes;
-    std::vector<SUMOReal> myShadowFurtherLanesPosLat;
+    std::vector<double> myShadowFurtherLanesPosLat;
 
     /// @brief The vehicle's car following model
     const MSCFModel& myCarFollowModel;
@@ -422,6 +448,11 @@ protected:
      * (when changing to a lane that has no predecessor) */
     std::vector<MSLane*> myNoPartiallyOccupatedByShadow;
 
+    /// @brief the minimum lateral gaps to other vehicles that were found when last changing to the left and right
+    double myLastLateralGapLeft;
+    double myLastLateralGapRight;
+
+
     /* @brief to be called by derived classes in their changed() method.
      * If dir=0 is given, the current value remains unchanged */
     void initLastLaneChangeOffset(int dir);
@@ -431,6 +462,8 @@ protected:
 
     /// @brief whether to record lane-changing
     static bool myLCOutput;
+
+    static const double NO_LATERAL_NEIGHBOR;
 
 private:
     /* @brief information how long ago the vehicle has performed a lane-change,

@@ -43,10 +43,6 @@
 #include "ROJTREdge.h"
 #include "ROJTRTurnDefLoader.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -65,8 +61,8 @@ ROJTRTurnDefLoader::myStartElement(int element,
     bool ok = true;
     switch (element) {
         case SUMO_TAG_INTERVAL:
-            myIntervalBegin = attrs.get<SUMOReal>(SUMO_ATTR_BEGIN, 0, ok);
-            myIntervalEnd = attrs.get<SUMOReal>(SUMO_ATTR_END, 0, ok);
+            myIntervalBegin = attrs.get<double>(SUMO_ATTR_BEGIN, 0, ok);
+            myIntervalEnd = attrs.get<double>(SUMO_ATTR_END, 0, ok);
             break;
         case SUMO_TAG_FROMEDGE:
             beginFromEdge(attrs);
@@ -143,7 +139,7 @@ ROJTRTurnDefLoader::addToEdge(const SUMOSAXAttributes& attrs) {
         WRITE_ERROR("The edge '" + id + "' is not known within the network (within a 'to-edge' tag).");
         return;
     }
-    const SUMOReal probability = attrs.get<SUMOReal>(SUMO_ATTR_PROB, id.c_str(), ok);
+    const double probability = attrs.get<double>(SUMO_ATTR_PROB, id.c_str(), ok);
     if (ok) {
         if (probability < 0) {
             WRITE_ERROR("'probability' must be positive (in definition of to-edge '" + id + "').");

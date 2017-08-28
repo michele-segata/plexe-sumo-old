@@ -55,8 +55,8 @@
 #include <X11/Xlib.h>
 #endif
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
+#ifndef NO_TRACI
+#include <traci-server/TraCIServer.h>
 #endif
 
 
@@ -75,7 +75,7 @@ main(int argc, char** argv) {
     OptionsCont& oc = OptionsCont::getOptions();
     // give some application descriptions
     oc.setApplicationDescription("GUI version of the simulation SUMO.");
-    oc.setApplicationName("sumo-gui.exe", "SUMO gui Version " VERSION_STRING);
+    oc.setApplicationName("sumo-gui", "SUMO gui Version " VERSION_STRING);
     int ret = 0;
     try {
         // initialise subsystems
@@ -128,6 +128,9 @@ main(int argc, char** argv) {
         ret = 1;
 #endif
     }
+#ifndef NO_TRACI
+    TraCIServer::close();
+#endif
     SystemFrame::close();
     return ret;
 }

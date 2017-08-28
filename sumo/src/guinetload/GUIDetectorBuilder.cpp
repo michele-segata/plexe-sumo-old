@@ -32,8 +32,7 @@
 #include <string>
 #include <iostream>
 #include <guisim/GUIInductLoop.h>
-#include <guisim/GUI_E2_ZS_Collector.h>
-#include <guisim/GUI_E2_ZS_CollectorOverLanes.h>
+#include <guisim/GUIE2Collector.h>
 #include <guisim/GUIE3Collector.h>
 #include <guisim/GUIInstantInductLoop.h>
 #include <microsim/MSGlobals.h>
@@ -45,10 +44,6 @@
 
 #include <mesogui/GUIMEInductLoop.h>
 #include <mesosim/MELoop.h>
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -63,7 +58,7 @@ GUIDetectorBuilder::~GUIDetectorBuilder() {}
 
 MSDetectorFileOutput*
 GUIDetectorBuilder::createInductLoop(const std::string& id,
-                                     MSLane* lane, SUMOReal pos, const std::string& vTypes, bool show) {
+                                     MSLane* lane, double pos, const std::string& vTypes, bool show) {
     if (show) {
         if (MSGlobals::gUseMesoSim) {
             return new GUIMEInductLoop(id, MSGlobals::gMesoNet->getSegmentForEdge(lane->getEdge(), pos), pos, vTypes);
@@ -77,36 +72,32 @@ GUIDetectorBuilder::createInductLoop(const std::string& id,
 
 MSDetectorFileOutput*
 GUIDetectorBuilder::createInstantInductLoop(const std::string& id,
-        MSLane* lane, SUMOReal pos, const std::string& od, const std::string& vTypes) {
+        MSLane* lane, double pos, const std::string& od, const std::string& vTypes) {
     return new GUIInstantInductLoop(id, OutputDevice::getDevice(od), lane, pos, vTypes);
 }
 
 
 MSE2Collector*
-GUIDetectorBuilder::createSingleLaneE2Detector(const std::string& id,
-        DetectorUsage usage, MSLane* lane, SUMOReal pos, SUMOReal length,
-        SUMOTime haltingTimeThreshold,
-        SUMOReal haltingSpeedThreshold,
-        SUMOReal jamDistThreshold, const std::string& vTypes) {
-    return new GUI_E2_ZS_Collector(id, usage, lane, pos, length, haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold, vTypes);
+GUIDetectorBuilder::createE2Detector(const std::string& id,
+                                     DetectorUsage usage, MSLane* lane, double pos, double endPos, double length,
+                                     SUMOTime haltingTimeThreshold, double haltingSpeedThreshold, double jamDistThreshold,
+                                     const std::string& vTypes, bool showDetector) {
+    return new GUIE2Collector(id, usage, lane, pos, endPos, length, haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold, vTypes, showDetector);
 }
 
-
-MSDetectorFileOutput*
-GUIDetectorBuilder::createMultiLaneE2Detector(const std::string& id,
-        DetectorUsage usage, MSLane* lane, SUMOReal pos,
-        SUMOTime haltingTimeThreshold,
-        SUMOReal haltingSpeedThreshold,
-        SUMOReal jamDistThreshold, const std::string& vTypes) {
-    return new GUI_E2_ZS_CollectorOverLanes(id, usage, lane, pos, haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold, vTypes);
+MSE2Collector*
+GUIDetectorBuilder::createE2Detector(const std::string& id,
+                                     DetectorUsage usage, std::vector<MSLane*> lanes, double pos, double endPos,
+                                     SUMOTime haltingTimeThreshold, double haltingSpeedThreshold, double jamDistThreshold,
+                                     const std::string& vTypes, bool showDetector) {
+    return new GUIE2Collector(id, usage, lanes, pos, endPos, haltingTimeThreshold, haltingSpeedThreshold, jamDistThreshold, vTypes, showDetector);
 }
-
 
 MSDetectorFileOutput*
 GUIDetectorBuilder::createE3Detector(const std::string& id,
                                      const CrossSectionVector& entries,
                                      const CrossSectionVector& exits,
-                                     SUMOReal haltingSpeedThreshold,
+                                     double haltingSpeedThreshold,
                                      SUMOTime haltingTimeThreshold, const std::string& vTypes) {
     return new GUIE3Collector(id, entries, exits, haltingSpeedThreshold, haltingTimeThreshold, vTypes);
 }

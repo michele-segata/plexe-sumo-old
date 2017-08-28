@@ -35,7 +35,7 @@
 #include <string>
 #include <microsim/output/MSDetectorFileOutput.h>
 #include <microsim/MSMoveReminder.h>
-#include <utils/common/RandomDistributor.h>
+#include <utils/distribution/RandomDistributor.h>
 
 
 // ===========================================================================
@@ -97,7 +97,7 @@ public:
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason);
+    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason, const MSLane* enteredLane = 0);
     /// @}
 
 

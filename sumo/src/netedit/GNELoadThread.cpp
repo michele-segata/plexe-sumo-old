@@ -55,10 +55,6 @@
 #include "GNEEvent_NetworkLoaded.h"
 #include "GNEAdditionalHandler.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // member method definitions
@@ -149,6 +145,10 @@ GNELoadThread::run() {
                 throw ProcessError();
             } else {
                 net = new GNENet(netBuilder);
+                if (oc.getBool("lefthand")) {
+                    // force initial geometry computation because the net will look strange otherwise
+                    net->computeAndUpdate(oc);
+                }
             }
 
         } catch (ProcessError& e) {

@@ -69,6 +69,9 @@ public:
     /** The time to detect grid locks on highways */
     static SUMOTime gTimeToGridlockHighways;
 
+    /** Information how long a vehicle must wait for impatience to grow from 0 to 1 */
+    static SUMOTime gTimeToImpatience;
+
     /// Information whether the simulation regards internal lanes
     static bool gUsingInternalLanes;
 
@@ -86,7 +89,7 @@ public:
     static SUMOTime gLaneChangeDuration;
 
     /** Lateral resolution within a lane */
-    static SUMOReal gLateralResolution;
+    static double gLateralResolution;
 
     /// Information whether a state has been loaded
     static bool gStateLoaded;
@@ -101,7 +104,7 @@ public:
     static bool gMesoOvertaking;
 
     /** scaling factor for macroscopic time penalty when passing tls controlled intersection */
-    static SUMOReal gMesoTLSPenalty;
+    static double gMesoTLSPenalty;
 
     /** penalty time for passing a minor link */
     static SUMOTime gMesoMinorPenalty;

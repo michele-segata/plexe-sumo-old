@@ -78,10 +78,6 @@
 #include "ROMARouteHandler.h"
 #include "ROMAEdge.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // functions
@@ -104,7 +100,7 @@ initNet(RONet& net, ROLoader& loader, OptionsCont& oc) {
     /* const SUMOTime begin = string2time(oc.getString("begin"));
     const SUMOTime end = string2time(oc.getString("end"));
     for (std::map<std::string, ROEdge*>::const_iterator i = net.getEdgeMap().begin(); i != net.getEdgeMap().end(); ++i) {
-        (*i).second->addTravelTime(STEPS2TIME(begin), STEPS2TIME(end), (*i).second->getLength() / (*i).second->getSpeed());
+        (*i).second->addTravelTime(STEPS2TIME(begin), STEPS2TIME(end), (*i).second->getLength() / (*i).second->getSpeedLimit());
     }*/
     // load the weights when wished/available
     if (oc.isSet("weight-files")) {
@@ -115,9 +111,9 @@ initNet(RONet& net, ROLoader& loader, OptionsCont& oc) {
     }
 }
 
-SUMOReal
-getTravelTime(const ROEdge* const edge, const ROVehicle* const /* veh */, SUMOReal /* time */) {
-    return edge->getLength() / edge->getSpeed();
+double
+getTravelTime(const ROEdge* const edge, const ROVehicle* const /* veh */, double /* time */) {
+    return edge->getLength() / edge->getSpeedLimit();
 }
 
 
@@ -155,8 +151,8 @@ writeInterval(OutputDevice& dev, const SUMOTime begin, const SUMOTime end, const
         ROMAEdge* edge = static_cast<ROMAEdge*>(i->second);
         if (edge->getFunc() == ROEdge::ET_NORMAL) {
             dev.openTag(SUMO_TAG_EDGE).writeAttr(SUMO_ATTR_ID, edge->getID());
-            const SUMOReal traveltime = edge->getTravelTime(veh, STEPS2TIME(begin));
-            const SUMOReal flow = edge->getFlow(STEPS2TIME(begin));
+            const double traveltime = edge->getTravelTime(veh, STEPS2TIME(begin));
+            const double flow = edge->getFlow(STEPS2TIME(begin));
             dev.writeAttr("traveltime", traveltime);
             dev.writeAttr("speed", edge->getLength() / traveltime);
             dev.writeAttr("entered", flow);

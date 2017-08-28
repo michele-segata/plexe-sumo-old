@@ -43,10 +43,6 @@
 #include <utils/xml/SUMOVehicleParserHelper.h>
 #include "SUMORouteHandler.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -208,8 +204,8 @@ SUMORouteHandler::myEndElement(int element) {
 
 
 bool
-SUMORouteHandler::checkStopPos(SUMOReal& startPos, SUMOReal& endPos, const SUMOReal laneLength,
-                               const SUMOReal minLength, const bool friendlyPos) {
+SUMORouteHandler::checkStopPos(double& startPos, double& endPos, const double laneLength,
+                               const double minLength, const bool friendlyPos) {
     if (minLength > laneLength) {
         return false;
     }

@@ -4,6 +4,7 @@
 /// @author  Jakob Erdmann
 /// @author  Sascha Krieg
 /// @author  Michael Behrisch
+/// @author  Gregor Laemmel
 /// @date    Fri, 29.04.2005
 /// @version $Id$
 ///
@@ -43,6 +44,7 @@
 #include "NBNode.h"
 #include "NBTrafficLightLogicCont.h"
 #include "NBDistrictCont.h"
+#include "NBPTStopCont.h"
 #include <utils/common/UtilExceptions.h>
 
 
@@ -138,6 +140,15 @@ public:
      */
     void compute(OptionsCont& oc, const std::set<std::string>& explicitTurnarounds = std::set<std::string>(), bool mayAddOrRemove = true);
 
+    /** @brief Performs the network building steps only for a single Node
+     *
+     * @param[in] oc Container that contains options for building
+     * @param[in] explicitTurnarounds List of edge ids for which turn-arounds should be added (used by NETEDIT)
+     * @param[in] mayAddOrRemove whether processing steps which cause nodes and edges to be added or removed shall be triggered (used by netedit)
+     * @exception ProcessError (recheck)
+     */
+    void computeSingleNode(NBNode* node, OptionsCont& oc, const std::set<std::string>& explicitTurnarounds = std::set<std::string>(), bool mayAddOrRemove = true);
+
     /// @name Retrieval of subcontainers
     /// @{
     /// @brief Returns a reference to edge container
@@ -163,6 +174,12 @@ public:
     /// @brief Returns a reference the districts container
     NBDistrictCont& getDistrictCont() {
         return myDistrictCont;
+    }
+
+
+    /// @brief Returns a reference to the pt stop container
+    NBPTStopCont& getPTStopCont() {
+        return myPTStopCont;
     }
     /// @}
 
@@ -219,6 +236,9 @@ protected:
 
     /// @brief The used container for districts
     NBDistrictCont myDistrictCont;
+
+    /// @brief The used container for pt stops
+    NBPTStopCont myPTStopCont;
 
     /// @brief whether a .net.xml without internal edges was loaded
     bool myHaveLoadedNetworkWithoutInternalEdges;

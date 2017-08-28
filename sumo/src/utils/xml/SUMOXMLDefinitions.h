@@ -243,12 +243,14 @@ enum SumoXMLTag {
     /// @}
 
     SUMO_TAG_VEHICLETRANSFER,
+    SUMO_TAG_DEVICE,
 
     /// @name Car-Following models
     /// @{
     SUMO_TAG_CF_KRAUSS,
     SUMO_TAG_CF_KRAUSS_PLUS_SLOPE,
     SUMO_TAG_CF_KRAUSS_ORIG1,
+    SUMO_TAG_CF_KRAUSSX,
     SUMO_TAG_CF_SMART_SK,
     SUMO_TAG_CF_DANIEL1,
     SUMO_TAG_CF_IDM,
@@ -256,6 +258,7 @@ enum SumoXMLTag {
     SUMO_TAG_CF_PWAGNER2009,
     SUMO_TAG_CF_BKERNER,
     SUMO_TAG_CF_WIEDEMANN,
+    SUMO_TAG_CF_RAIL,
     SUMO_TAG_CF_CC,
     /// @}
 
@@ -393,6 +396,8 @@ enum SumoXMLAttr {
     SUMO_ATTR_MINGAP_LAT,
     SUMO_ATTR_ACCEL,
     SUMO_ATTR_DECEL,
+    SUMO_ATTR_EMERGENCYDECEL,
+    SUMO_ATTR_APPARENTDECEL,
     SUMO_ATTR_VCLASS,
     SUMO_ATTR_REPNUMBER,
     SUMO_ATTR_SPEEDFACTOR,
@@ -416,6 +421,72 @@ enum SumoXMLAttr {
     SUMO_ATTR_CHARGEDELAY,
     /// @}
 
+    /// @name battery device parameters
+    /// @{
+    /// @brief Actual battery capacity
+    SUMO_ATTR_ACTUALBATTERYCAPACITY,
+    /// @brief Maxium battery capacity
+    SUMO_ATTR_MAXIMUMBATTERYCAPACITY,
+    /// @brief Maximum Power
+    SUMO_ATTR_MAXIMUMPOWER,
+    /// @brief Vehicle mass
+    SUMO_ATTR_VEHICLEMASS,
+    /// @brief Front surface area
+    SUMO_ATTR_FRONTSURFACEAREA,
+    /// @brief Air drag coefficient
+    SUMO_ATTR_AIRDRAGCOEFFICIENT,
+    /// @brief Internal moment of inertia
+    SUMO_ATTR_INTERNALMOMENTOFINERTIA,
+    /// @brief Radial drag coefficient
+    SUMO_ATTR_RADIALDRAGCOEFFICIENT,
+    /// @brief Roll Drag coefficient
+    SUMO_ATTR_ROLLDRAGCOEFFICIENT,
+    /// @brief Constant Power Intake
+    SUMO_ATTR_CONSTANTPOWERINTAKE,
+    /// @brief Propulsion efficiency
+    SUMO_ATTR_PROPULSIONEFFICIENCY,
+    /// @brief Recuperation efficiency
+    SUMO_ATTR_RECUPERATIONEFFICIENCY,
+    /// @brief Stopping treshold
+    SUMO_ATTR_STOPPINGTRESHOLD,
+    /// @}
+
+    /// @name battery export parameters
+    /// @{
+    /// @brief charging status
+    SUMO_ATTR_CHARGING_STATUS,
+    /// @brief Energy consumed
+    SUMO_ATTR_ENERGYCONSUMED,
+    /// @brief Charging Station ID
+    SUMO_ATTR_CHARGINGSTATIONID,
+    /// @brief tgotal of Energy charged
+    SUMO_ATTR_ENERGYCHARGED,
+    /// @brief Energy charged in transit
+    SUMO_ATTR_ENERGYCHARGEDINTRANSIT,
+    /// @brief Energy charged stopped
+    SUMO_ATTR_ENERGYCHARGEDSTOPPED,
+    /// @brief Position on lane
+    SUMO_ATTR_POSONLANE,
+    /// @brief Time stopped
+    SUMO_ATTR_TIMESTOPPED,
+    /// @}
+
+    /// @name chargingStations export parameters
+    /// @{
+    /// @brief total energy charged by charging station
+    SUMO_ATTR_TOTALENERGYCHARGED,
+    /// @brief number of steps that a vehicle is charging
+    SUMO_ATTR_CHARGINGSTEPS,
+    /// @brief total energy charged into a single vehicle
+    SUMO_ATTR_TOTALENERGYCHARGED_VEHICLE,
+    /// @brief timestep in which charging begins
+    SUMO_ATTR_CHARGINGBEGIN,
+    /// @brief timesteps in which charging ends
+    SUMO_ATTR_CHARGINGEND,
+    /// @brief energy provied by charging station at certain timestep
+    SUMO_ATTR_PARTIALCHARGE,
+    /// @}
+
     /// @name Car following model attributes
     /// @{
     SUMO_ATTR_SIGMA,    // used by: Krauss
@@ -427,6 +498,11 @@ enum SumoXMLAttr {
     SUMO_ATTR_TMP5,
     /// @}
 
+    /// @name Train model attributes
+    /// @{
+    SUMO_ATTR_TRAIN_TYPE, //used by: Rail
+    /// @}
+
     /// @name Lane changing model attributes
     /// @{
     SUMO_ATTR_LCA_STRATEGIC_PARAM,
@@ -436,6 +512,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_LCA_SUBLANE_PARAM,
     SUMO_ATTR_LCA_PUSHY,
     SUMO_ATTR_LCA_ASSERTIVE,
+    SUMO_ATTR_LCA_EXPERIMENTAL1,
     /// @}
 
     /// @name route alternatives / distribution attributes
@@ -649,6 +726,7 @@ enum SumoXMLAttr {
     SUMO_ATTR_VERSION,
     SUMO_ATTR_CORNERDETAIL,
     SUMO_ATTR_LINKDETAIL,
+    SUMO_ATTR_RECTANGULAR_LANE_CUT,
     SUMO_ATTR_LEFTHAND,
     SUMO_ATTR_COMMAND,
 
@@ -756,6 +834,12 @@ enum SumoXMLAttr {
  * Since these enums shall be used in switch statements we keep them separated
  * @{
  */
+
+/**
+ * SumoXMLParam Key Constants. Since all usage contexts needs strings rather
+ * than enum values we do not bother with a StringBijection
+ */
+extern const std::string SUMO_PARAM_ORIGID;
 
 /**
  * @enum SumoXMLNodeType
@@ -927,6 +1011,8 @@ enum LaneChangeAction {
     LCA_TRACI = 1 << 7,
     /// @brief The action is urgent (to be defined by lc-model)
     LCA_URGENT = 1 << 8,
+    /// @brief The action has not been determined
+    LCA_UNKNOWN = 1 << 30,
     /// @}
 
     /// @name External state
@@ -940,9 +1026,9 @@ enum LaneChangeAction {
     /// @brief The vehicle is blocked by right follower
     LCA_BLOCKED_BY_RIGHT_FOLLOWER = 1 << 12,
     /// @brief The vehicle is blocked being overlapping
-    LCA_OVERLAPPING =  1 << 13,
+    LCA_OVERLAPPING = 1 << 13,
     /// @brief The vehicle does not have enough space to complete a continuous lane and change before the next turning movement
-    LCA_INSUFFICIENT_SPACE =  1 << 14,
+    LCA_INSUFFICIENT_SPACE = 1 << 14,
     /// @brief used by the sublane model
     LCA_SUBLANE = 1 << 15,
     /// @brief lane can change
@@ -1018,6 +1104,7 @@ public:
 
     /// @name Special values of SUMO-XML attributes
     /// @{
+
     /// @brief node types
     static StringBijection<SumoXMLNodeType> NodeTypes;
 
@@ -1061,6 +1148,7 @@ public:
 private:
     /// @brief containers for the different SUMOXMLDefinitions
     /// @{
+
     /// @brief node type values
     static StringBijection<SumoXMLNodeType>::Entry sumoNodeTypeValues[];
 
@@ -1077,7 +1165,7 @@ private:
     static StringBijection<LinkDirection>::Entry linkDirectionValues[];
 
     /// @brief traffic light types values
-    static StringBijection<TrafficLightType>::Entry trafficLightTypesVales[];
+    static StringBijection<TrafficLightType>::Entry trafficLightTypesValues[];
 
     /// @brief lane change model values
     static StringBijection<LaneChangeModel>::Entry laneChangeModelValues[];

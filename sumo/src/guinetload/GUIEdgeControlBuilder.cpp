@@ -42,10 +42,6 @@
 #include "GUIEdgeControlBuilder.h"
 #include <gui/GUIGlobals.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -59,12 +55,12 @@ GUIEdgeControlBuilder::~GUIEdgeControlBuilder() {}
 
 MSLane*
 GUIEdgeControlBuilder::addLane(const std::string& id,
-                               SUMOReal maxSpeed, SUMOReal length,
+                               double maxSpeed, double length,
                                const PositionVector& shape,
-                               SUMOReal width,
+                               double width,
                                SVCPermissions permissions,
-                               int index) {
-    MSLane* lane = new GUILane(id, maxSpeed, length, myActiveEdge, myCurrentNumericalLaneID++, shape, width, permissions, index);
+                               int index, bool isRampAccel) {
+    MSLane* lane = new GUILane(id, maxSpeed, length, myActiveEdge, myCurrentNumericalLaneID++, shape, width, permissions, index, isRampAccel);
     myLaneStorage->push_back(lane);
     return lane;
 }

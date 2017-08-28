@@ -46,6 +46,7 @@
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/images/GUITexturesHelper.h>
 #include <utils/xml/SUMOSAXHandler.h>
+#include <utils/common/MsgHandler.h>
 
 #include "GNEChargingStation.h"
 #include "GNELane.h"
@@ -56,15 +57,12 @@
 #include "GNEChange_Attribute.h"
 #include "GNEViewNet.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 
-GNEChargingStation::GNEChargingStation(const std::string& id, GNELane* lane, GNEViewNet* viewNet, SUMOReal startPos, SUMOReal endPos, SUMOReal chargingPower, SUMOReal efficiency, bool chargeInTransit, const SUMOReal chargeDelay) :
+GNEChargingStation::GNEChargingStation(const std::string& id, GNELane* lane, GNEViewNet* viewNet, double startPos, double endPos, double chargingPower, double efficiency, bool chargeInTransit, const double chargeDelay) :
     GNEStoppingPlace(id, viewNet, SUMO_TAG_CHARGING_STATION, ICON_CHARGINGSTATION, lane, startPos, endPos),
     myChargingPower(chargingPower),
     myEfficiency(efficiency),
@@ -98,7 +96,7 @@ GNEChargingStation::updateGeometry() {
     myShape = myLane->getShape();
 
     // Cut shape using as delimitators from start position and end position
-    myShape = myShape.getSubpart(myLane->getPositionRelativeToParametricLenght(myStartPos), myLane->getPositionRelativeToParametricLenght(myEndPos));
+    myShape = myShape.getSubpart(myLane->getPositionRelativeToParametricLength(myStartPos), myLane->getPositionRelativeToParametricLength(myEndPos));
 
     // Get number of parts of the shape
     int numberOfSegments = (int) myShape.size() - 1;
@@ -123,7 +121,7 @@ GNEChargingStation::updateGeometry() {
             myShapeLengths.push_back(f.distanceTo(s));
 
             // Save rotation (angle) of the vector constructed by points f and s
-            myShapeRotations.push_back((SUMOReal) atan2((s.x() - f.x()), (f.y() - s.y())) * (SUMOReal) 180.0 / (SUMOReal) PI);
+            myShapeRotations.push_back((double) atan2((s.x() - f.x()), (f.y() - s.y())) * (double) 180.0 / (double) PI);
         }
     }
 
@@ -171,13 +169,13 @@ GNEChargingStation::writeAdditional(OutputDevice& device) const {
 }
 
 
-SUMOReal
+double
 GNEChargingStation::getChargingPower() {
     return myChargingPower;
 }
 
 
-SUMOReal
+double
 GNEChargingStation::getEfficiency() {
     return myEfficiency;
 }
@@ -189,14 +187,14 @@ GNEChargingStation::getChargeInTransit() {
 }
 
 
-SUMOReal
+double
 GNEChargingStation::getChargeDelay() {
     return myChargeDelay;
 }
 
 
 void
-GNEChargingStation::setChargingPower(SUMOReal chargingPower) {
+GNEChargingStation::setChargingPower(double chargingPower) {
     if (chargingPower > 0) {
         myChargingPower = chargingPower;
     } else {
@@ -206,7 +204,7 @@ GNEChargingStation::setChargingPower(SUMOReal chargingPower) {
 
 
 void
-GNEChargingStation::setEfficiency(SUMOReal efficiency) {
+GNEChargingStation::setEfficiency(double efficiency) {
     if (efficiency >= 0 && efficiency <= 1) {
         myEfficiency = efficiency;
     } else {
@@ -222,7 +220,7 @@ GNEChargingStation::setChargeInTransit(bool chargeInTransit) {
 
 
 void
-GNEChargingStation::setChargeDelay(SUMOReal chargeDelay) {
+GNEChargingStation::setChargeDelay(double chargeDelay) {
     if (chargeDelay < 0) {
         throw InvalidArgument("Value of chargeDelay cannot be negative");
     }
@@ -249,7 +247,7 @@ GNEChargingStation::drawGL(const GUIVisualizationSettings& s) const {
     }
 
     // Get exaggeration
-    const SUMOReal exaggeration = s.addSize.getExaggeration(s);
+    const double exaggeration = s.addSize.getExaggeration(s);
 
     // Draw base
     GLHelper::drawBoxLines(myShape, myShapeRotations, myShapeLengths, exaggeration);
@@ -299,10 +297,10 @@ GNEChargingStation::drawGL(const GUIVisualizationSettings& s) const {
         // Set position over sign
         glTranslated(mySignPos.x(), mySignPos.y(), 0);
 
-        // Define nº points (for efficiency)
+        // Define number of points (for efficiency)
         int noPoints = 9;
 
-        // If the scale * exaggeration is more than 25, recalculate nº points
+        // If the scale * exaggeration is more than 25, recalculate number of points
         if (s.scale * exaggeration > 25) {
             noPoints = MIN2((int)(9.0 + (s.scale * exaggeration) / 10.0), 36);
         }
@@ -318,7 +316,7 @@ GNEChargingStation::drawGL(const GUIVisualizationSettings& s) const {
         }
 
         // Draw extern
-        GLHelper::drawFilledCircle((SUMOReal) 1.1, noPoints);
+        GLHelper::drawFilledCircle((double) 1.1, noPoints);
 
         // Move to top
         glTranslated(0, 0, .1);
@@ -330,7 +328,7 @@ GNEChargingStation::drawGL(const GUIVisualizationSettings& s) const {
             GLHelper::setColor(mySignColor);
         }
         // Draw internt sign
-        GLHelper::drawFilledCircle((SUMOReal) 0.9, noPoints);
+        GLHelper::drawFilledCircle((double) 0.9, noPoints);
 
         // Draw sign 'C'
         if (s.scale * exaggeration >= 4.5) {
@@ -424,19 +422,33 @@ GNEChargingStation::isValid(SumoXMLAttr key, const std::string& value) {
                 return false;
             }
         case SUMO_ATTR_STARTPOS:
-            return (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 0 && parse<SUMOReal>(value) < (myEndPos - 1));
+            return (canParse<double>(value) && parse<double>(value) >= 0 && parse<double>(value) < (myEndPos - 1));
         case SUMO_ATTR_ENDPOS: {
-            if (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 1 && parse<SUMOReal>(value) > myStartPos) {
+            if (canParse<double>(value) && parse<double>(value) >= 1 && parse<double>(value) > myStartPos) {
                 // If extension is larger than Lane
-                if (parse<SUMOReal>(value) > myLane->getLaneParametricLenght()) {
-                    // Ask user if want to assign the lenght of lane as endPosition
+                if (parse<double>(value) > myLane->getLaneParametricLength()) {
+                    // write warning if netedit is running in testing mode
+                    if (myViewNet->isTestingModeEnabled() == true) {
+                        WRITE_WARNING("Opening FXMessageBox of type 'question'");
+                    }
+                    // Ask user if want to assign the length of lane as endPosition
                     FXuint answer = FXMessageBox::question(getViewNet()->getApp(), MBOX_YES_NO,
                                                            (toString(SUMO_ATTR_ENDPOS) + " exceeds the size of the " + toString(SUMO_TAG_LANE)).c_str(), "%s",
                                                            (toString(SUMO_ATTR_ENDPOS) + " exceeds the size of the " + toString(SUMO_TAG_LANE) +
-                                                            ". Do you want to assign the lenght of the " + toString(SUMO_TAG_LANE) + " as " + toString(SUMO_ATTR_ENDPOS) + "?").c_str());
+                                                            ". Do you want to assign the length of the " + toString(SUMO_TAG_LANE) + " as " + toString(SUMO_ATTR_ENDPOS) + "?").c_str());
                     if (answer == 1) { //1:yes, 2:no, 4:esc
+                        // write warning if netedit is running in testing mode
+                        if (myViewNet->isTestingModeEnabled() == true) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'question' with 'Yes'");
+                        }
                         return true;
                     } else {
+                        // write warning if netedit is running in testing mode
+                        if ((answer == 2) && (myViewNet->isTestingModeEnabled() == true)) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'question' with 'No'");
+                        } else if ((answer == 4) && (myViewNet->isTestingModeEnabled() == true)) {
+                            WRITE_WARNING("Closed FXMessageBox of type 'question' with 'ESC'");
+                        }
                         return false;
                     }
                 } else {
@@ -447,13 +459,13 @@ GNEChargingStation::isValid(SumoXMLAttr key, const std::string& value) {
             }
         }
         case SUMO_ATTR_CHARGINGPOWER:
-            return (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 0);
+            return (canParse<double>(value) && parse<double>(value) >= 0);
         case SUMO_ATTR_EFFICIENCY:
-            return (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 0 && parse<SUMOReal>(value) <= 1);
+            return (canParse<double>(value) && parse<double>(value) >= 0 && parse<double>(value) <= 1);
         case SUMO_ATTR_CHARGEINTRANSIT:
             return canParse<bool>(value);
         case SUMO_ATTR_CHARGEDELAY:
-            return (canParse<SUMOReal>(value) && parse<SUMOReal>(value) >= 0);
+            return (canParse<double>(value) && parse<double>(value) >= 0);
         case GNE_ATTR_BLOCK_MOVEMENT:
             return canParse<bool>(value);
         default:
@@ -475,30 +487,30 @@ GNEChargingStation::setAttribute(SumoXMLAttr key, const std::string& value) {
             changeLane(value);
             break;
         case SUMO_ATTR_STARTPOS:
-            myStartPos = parse<SUMOReal>(value);
+            myStartPos = parse<double>(value);
             updateGeometry();
             getViewNet()->update();
             break;
         case SUMO_ATTR_ENDPOS:
-            if (parse<SUMOReal>(value) > myLane->getLaneParametricLenght()) {
-                myEndPos = myLane->getLaneParametricLenght();
+            if (parse<double>(value) > myLane->getLaneParametricLength()) {
+                myEndPos = myLane->getLaneParametricLength();
             } else {
-                myEndPos = parse<SUMOReal>(value);
+                myEndPos = parse<double>(value);
             }
             updateGeometry();
             getViewNet()->update();
             break;
         case SUMO_ATTR_CHARGINGPOWER:
-            myChargingPower = parse<SUMOReal>(value);
+            myChargingPower = parse<double>(value);
             break;
         case SUMO_ATTR_EFFICIENCY:
-            myEfficiency = parse<SUMOReal>(value);
+            myEfficiency = parse<double>(value);
             break;
         case SUMO_ATTR_CHARGEINTRANSIT:
             myChargeInTransit = parse<bool>(value);
             break;
         case SUMO_ATTR_CHARGEDELAY:
-            myChargeDelay = parse<SUMOReal>(value);
+            myChargeDelay = parse<double>(value);
             break;
         case GNE_ATTR_BLOCK_MOVEMENT:
             myBlocked = parse<bool>(value);

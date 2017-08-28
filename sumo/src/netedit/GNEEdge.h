@@ -41,6 +41,9 @@ class GNEJunction;
 class GNELane;
 class GNEConnection;
 class GNEAdditional;
+class GNERouteProbe;
+class GNEVaporizer;
+class GNERerouter;
 
 // ===========================================================================
 // class definitions
@@ -209,8 +212,7 @@ public:
     /// @brief returns a reference to the GNEConnection vector
     const std::vector<GNEConnection*>& getGNEConnections();
 
-    /**@brief get connection
-    */
+    /// @brief get connection
     GNEConnection* retrieveConnection(int fromLane, NBEdge* to, int toLane);
 
     /// @brief whether this edge was created from a split
@@ -232,14 +234,33 @@ public:
     /// @brief return list of additionals associated with this edge
     const std::vector<GNEAdditional*>& getAdditionalChilds() const;
 
+    /// @brief add a reference to a rerouter that has this edge as parameter
+    void addGNERerouter(GNERerouter* rerouter);
+
+    /// @brief remove a reference to a rerouter that has this edge as parameter
+    void removeGNERerouter(GNERerouter* rerouter);
+
+    /// @brief get rerouters vinculated with this edge
+    const std::vector<GNERerouter*>& getGNERerouters() const;
+
+    /// @brief get number of rerouters that has this edge as parameters
+    int getNumberOfGNERerouters() const;
+
     /// @brief check if edge has a restricted lane
     bool hasRestrictedLane(SUMOVehicleClass vclass) const;
 
     // the radius in which to register clicks for geometry nodes
-    static const SUMOReal SNAP_RADIUS;
+    static const double SNAP_RADIUS;
 
     /// @brief clear current connections
     void clearGNEConnections();
+
+    /// @brief obtain relative positions of RouteProbes
+    int getRouteProbeRelativePosition(GNERouteProbe* routeProbe) const;
+
+    /// @brief obtain relative positions of Vaporizer
+    int getVaporizerRelativePosition(GNEVaporizer* vaporizer) const;
+
 protected:
     /// @brief the underlying NBEdge
     NBEdge& myNBEdge;
@@ -268,8 +289,11 @@ protected:
     /// @brief modification status of the connections
     std::string myConnectionStatus;
 
-    /// @brief list with the additonals vinculated with this edge
+    /// @brief list with the additionals vinculated with this edge
     AdditionalVector myAdditionals;
+
+    /// @brief list of reroutes that has this edge as parameter
+    std::vector<GNERerouter*> myReroutes;
 
 private:
     /// @brief set attribute after validation

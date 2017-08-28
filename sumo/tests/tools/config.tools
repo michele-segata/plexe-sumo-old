@@ -143,7 +143,10 @@ errors:Leaked object at
 errors:*** 9 leaks found
 errors:delete: freed
 errors:Traceback{->}XMLSyntaxError
+errors:lxml.etree.XMLSyntaxError{REPLACE XMLSyntaxError}
 errors:Traceback{->}IOError
+errors:Traceback{->}OSError
+errors:OSError: Error reading file{REPLACE IOError: Error reading file}
 errors:.*RuntimeWarning: divide{REPLACE RuntimeWarning: divide}
 errors:Ran [0-9]+ tests in [0-9]+\.[0-9]+s{REPLACE Ran <COUNT> tests in <TIME>}
 errors:No imaging
@@ -152,7 +155,7 @@ omnet:<!-- generated on
 shawn:<!-- generated on
 net:<!--{[->]}-->
 osmimport:<!--{[->]}-->
-osmbatch:python.*randomTrips\.py{REPLACE python /path/to/randomTrips.py}
+osmbatch:python.*randomTrips\.py"{REPLACE python /path/to/randomTrips.py}
 osmbatch:python.*route2trips\.py{REPLACE python /path/to/route2trips.py}
 osmbatch:--trip-attributes.*--{REPLACE --trip-attributes <attrs-with-os-dependent-quoting> --}
 image:id="[^"]*"{REPLACE id="ReplacedTransientID"}

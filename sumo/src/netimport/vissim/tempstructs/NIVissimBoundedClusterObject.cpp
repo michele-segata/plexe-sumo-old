@@ -33,10 +33,6 @@
 #include <utils/geom/Boundary.h>
 #include "NIVissimBoundedClusterObject.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 NIVissimBoundedClusterObject::ContType NIVissimBoundedClusterObject::myDict;
 
 NIVissimBoundedClusterObject::NIVissimBoundedClusterObject()
@@ -52,7 +48,7 @@ NIVissimBoundedClusterObject::~NIVissimBoundedClusterObject() {
 
 bool
 NIVissimBoundedClusterObject::crosses(const AbstractPoly& poly,
-                                      SUMOReal offset) const {
+                                      double offset) const {
     assert(myBoundary != 0 && myBoundary->xmax() >= myBoundary->xmin());
     return myBoundary->overlapsWith(poly, offset);
 }

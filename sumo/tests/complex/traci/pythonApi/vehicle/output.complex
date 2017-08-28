@@ -1,5 +1,5 @@
 Loading configuration... done.
-Could not connect to TraCI server at localhost:43119 [Errno 111] Connection refused
+Could not connect to TraCI server at localhost:48467 [Errno 111] Connection refused
  Retrying in 1 seconds
 step 0
 step 1
@@ -47,12 +47,25 @@ shape passenger
 MinGap 2.5
 width 1.8
 height 1.5
+lcStrategic 1.00
+lcCooperative 1.00
+lcSpeedGain 1.00
+maxSpeedLat 1.0
+minGapLat 1.0
+lateralAlignment center
+lanePosLat 0.0
 person number 0
 waiting time 0.0
 driving dist 2992.34286403
 driving dist 2D 1090.34286403
 line 
 via []
+lane change state right (1073741824, 1073741824)
+lane change state left (1073741824, 1073741824)
+lane change able right False
+lane change able left False
+lane change wish right False
+lane change wish left False
 {80: '2fi', 86: 9.657135966210626}
 step 3
 {80: '2fi', 86: 15.313460015063175}
@@ -103,12 +116,25 @@ shape bicycle
 MinGap 1.1
 width 1.1
 height 1.6
+lcStrategic 2.00
+lcCooperative 1.00
+lcSpeedGain 1.00
+maxSpeedLat 1.5
+minGapLat 0.5
+lateralAlignment arbitrary
+lanePosLat 0.0
 person number 0
 waiting time 0.0
 driving dist 2969.61859065
 driving dist 2D 1067.61859065
 line S46
 via ['3o', '4o']
+lane change state right (1073741824, 1073741824)
+lane change state left (1073741824, 1073741824)
+lane change able right False
+lane change able left False
+lane change wish right False
+lane change wish left False
 vehicles ['horiz']
 vehicle count 1
 examining bla
@@ -156,12 +182,25 @@ shape passenger
 MinGap 2.5
 width 1.8
 height 1.5
+lcStrategic 1.00
+lcCooperative 1.00
+lcSpeedGain 1.00
+maxSpeedLat 1.0
+minGapLat 1.0
+lateralAlignment center
+lanePosLat -1001.0
 person number 0
 waiting time 0.0
 driving dist -1001.0
 driving dist 2D -1001.0
 line 
 via []
+lane change state right (1073741824, 1073741824)
+lane change state left (1073741824, 1073741824)
+lane change able right False
+lane change able left False
+lane change wish right False
+lane change wish left False
 routeID horizontal
 route ['2fi', '2si', '1o', '1fi', '1si', '3o', '3fi', '3si', '4o', '4fi', '4si']
 step 6
@@ -221,12 +260,25 @@ shape passenger
 MinGap 2.5
 width 1.8
 height 1.5
+lcStrategic 1.00
+lcCooperative 1.00
+lcSpeedGain 1.00
+maxSpeedLat 1.0
+minGapLat 1.0
+lateralAlignment center
+lanePosLat 0.0
 person number 0
 waiting time 0.0
 driving dist 2991.71057563
 driving dist 2D 1089.71057563
 line t
 via []
+lane change state right (1073741824, 1073741824)
+lane change state left (1073741824, 1073741824)
+lane change able right False
+lane change able left False
+lane change wish right False
+lane change wish left False
 nextTLS [('0', 5, 489.7105756313773, 'r'), ('0', 12, 1489.7105756313772, 'r'), ('0', 9, 2489.710575631377, 'G')]
 speedmode 0
 slope 0.0
@@ -507,12 +559,25 @@ shape passenger
 MinGap 2.5
 width 1.8
 height 1.5
+lcStrategic 1.00
+lcCooperative 1.00
+lcSpeedGain 1.00
+maxSpeedLat 1.0
+minGapLat 1.0
+lateralAlignment center
+lanePosLat 0.0
 person number 0
 waiting time 0.0
 driving dist -1001.0
 driving dist 2D -1001.0
 line 
 via []
+lane change state right (1073741824, 1073741824)
+lane change state left (1073741824, 1073741824)
+lane change able right False
+lane change able left False
+lane change wish right False
+lane change wish left False
 tazVeh edges ['taz34-source', 'taz12-sink']
 step 127
 tazVeh pos=0.0 edges=['3fi', '3si', '1o', '1fi']
@@ -529,3 +594,57 @@ step 132
 failVeh pos=6.62293354494 edges=['3fi', 'disconnected']
 step 133
 {80: '4o', 86: 246.3030799140489}
+step 134
+pav edge= pos=-1001.0 stopState=0
+step 135
+pav edge= pos=-1001.0 stopState=0
+step 136
+pav edge= pos=-1001.0 stopState=0
+step 137
+pav edge=2fi pos=0.0 stopState=0
+step 138
+pav edge=2fi pos=1.93300303526 stopState=0
+step 139
+pav edge=2fi pos=6.0846945775 stopState=0
+step 140
+pav edge=2fi pos=12.2310154907 stopState=0
+step 141
+pav edge=2fi pos=20.0054956066 stopState=0
+step 142
+pav edge=2fi pos=29.862651051 stopState=0
+step 143
+pav edge=2fi pos=38.2721786538 stopState=0
+step 144
+pav edge=2fi pos=43.0743475574 stopState=0
+step 145
+pav edge=2fi pos=44.1433572459 stopState=0
+step 146
+pav edge=2fi pos=44.9284751113 stopState=0
+step 147
+pav edge=2fi pos=-1001.0 stopState=131
+step 148
+pav edge=2fi pos=-1001.0 stopState=131
+step 149
+pav edge=2fi pos=44.9683335699 stopState=0
+step 150
+pav edge=2fi pos=47.2666811078 stopState=0
+step 151
+pav edge=2fi pos=52.1420388769 stopState=0
+has battery device: true
+has vehroute device: false
+has rerouting device: false
+has rerouting device: true
+recovering from exception (Vehicle 'elVeh' does not support device parameter 'device.foo.bar' (No device off type 'foo' exists).)
+recovering from exception (Vehicle 'elVeh' does not support device parameter 'device.battery.foobar' (Parameter 'foobar' is not supported for device of type 'battery').)
+elVeh speed="0.0" consumed="0.00" charged="0.00" cap="17500.00" maxCap="40000.00" station="NULL"
+elVeh speed="1.65090168689" consumed="5.28" charged="0.00" cap="17494.72" maxCap="40000.00" station="NULL"
+elVeh speed="3.99752460115" consumed="19.18" charged="0.00" cap="17475.54" maxCap="40000.00" station="NULL"
+elVeh speed="6.25754488341" consumed="23.69" charged="0.00" cap="17451.85" maxCap="40000.00" station="NULL"
+elVeh speed="7.82445030983" consumed="27.71" charged="0.00" cap="17424.15" maxCap="40000.00" station="NULL"
+elVeh speed="9.93102647497" consumed="37.93" charged="0.00" cap="17386.22" maxCap="40000.00" station="NULL"
+elVeh speed="11.0593673231" consumed="37.21" charged="0.00" cap="17349.00" maxCap="40000.00" station="NULL"
+elVeh speed="10.375461159" consumed="24.42" charged="0.00" cap="17324.58" maxCap="40000.00" station="NULL"
+elVeh speed="10.9483979427" consumed="33.65" charged="0.00" cap="17290.93" maxCap="40000.00" station="NULL"
+elVeh speed="10.142997031" consumed="23.11" charged="0.00" cap="17267.82" maxCap="40000.00" station="NULL"
+triptest route: ['3si', '4si']
+triptest route: ['3si', '4o', '4fi', '4si']

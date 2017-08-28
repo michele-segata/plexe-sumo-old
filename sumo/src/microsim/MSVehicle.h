@@ -102,7 +102,7 @@ public:
 
     public:
         /// Constructor.
-        State(SUMOReal pos, SUMOReal speed, SUMOReal posLat, SUMOReal backPos);
+        State(double pos, double speed, double posLat, double backPos);
 
         /// Copy constructor.
         State(const State& state);
@@ -114,54 +114,54 @@ public:
         bool operator!=(const State& state);
 
         /// Position of this state.
-        SUMOReal pos() const {
+        double pos() const {
             return myPos;
         }
 
         /// Speed of this state
-        SUMOReal speed() const {
+        double speed() const {
             return mySpeed;
         };
 
         /// Lateral Position of this state (m relative to the centerline of the lane).
-        SUMOReal posLat() const {
+        double posLat() const {
             return myPosLat;
         }
 
         /// back Position of this state
-        SUMOReal backPos() const {
+        double backPos() const {
             return myBackPos;
         }
 
         /// previous Speed of this state
-        SUMOReal lastCoveredDist() const {
+        double lastCoveredDist() const {
             return myLastCoveredDist;
         }
 
 
     private:
         /// the stored position
-        SUMOReal myPos;
+        double myPos;
 
         /// the stored speed (should be >=0 at any time)
-        SUMOReal mySpeed;
+        double mySpeed;
 
         /// the stored lateral position
-        SUMOReal myPosLat;
+        double myPosLat;
 
         /// @brief the stored back position
         // if the vehicle occupies multiple lanes, this is the position relative
         // to the lane occupied by its back
-        SUMOReal myBackPos;
+        double myBackPos;
 
         /// the speed at the begin of the previous time step
-        SUMOReal myPreviousSpeed;
+        double myPreviousSpeed;
 
         /// the distance covered in the last timestep
         /// NOTE: In case of ballistic positional update, this is not necessarily given by
         ///       myPos - SPEED2DIST(mySpeed + myPreviousSpeed)/2,
         /// because a stop may have occured within the last step.
-        SUMOReal myLastCoveredDist;
+        double myLastCoveredDist;
 
     };
 
@@ -242,7 +242,7 @@ public:
      * @exception ProcessError If a value is wrong
      */
     MSVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
-              const MSVehicleType* type, const SUMOReal speedFactor);
+              const MSVehicleType* type, const double speedFactor);
 
     /// @brief Destructor.
     virtual ~MSVehicle();
@@ -322,7 +322,7 @@ public:
      * @param[in] newSpeed The vehicle's speed within this move
      * @see MSMoveReminder
      */
-    void workOnMoveReminders(SUMOReal oldPos, SUMOReal newPos, SUMOReal newSpeed);
+    void workOnMoveReminders(double oldPos, double newPos, double newSpeed);
     //@}
 
 
@@ -333,7 +333,7 @@ public:
      * This method goes through the best continuation lanes of the current lane and
      * computes the safe velocities for passing/stopping at the next link as a DriveProcessItem
      *
-     * Afterwards it checks if any DriveProcessItem should be discared to avoid
+     * Afterwards it checks if any DriveProcessItem should be discarded to avoid
      * blocking a junction (checkRewindLinkLanes).
      *
      * Finally the ApproachingVehicleInformation is registered for all links that
@@ -343,7 +343,7 @@ public:
      * @param[in] ahead The leaders (may be 0)
      * @param[in] lengthsInFront Sum of vehicle lengths in front of the vehicle
      */
-    void planMove(const SUMOTime t, const MSLeaderInfo& ahead, const SUMOReal lengthsInFront);
+    void planMove(const SUMOTime t, const MSLeaderInfo& ahead, const double lengthsInFront);
 
 
     /** @brief Executes planned vehicle movements with regards to right-of-way
@@ -367,7 +367,7 @@ public:
      *  @param[in] accel the assumed acceleration
      *  @return distance covered in next integration step
      */
-    SUMOReal getDeltaPos(SUMOReal accel);
+    double getDeltaPos(double accel);
 
 
     /// @name state setter/getter
@@ -376,31 +376,31 @@ public:
     /** @brief Get the vehicle's position along the lane
      * @return The position of the vehicle (in m from the lane's begin)
      */
-    SUMOReal getPositionOnLane() const {
+    double getPositionOnLane() const {
         return myState.myPos;
     }
 
     /** @brief Get the distance the vehicle covered in the previous timestep
      * @return The distance covered in the last timestep (in m)
      */
-    SUMOReal getLastStepDist() const {
+    double getLastStepDist() const {
         return myState.lastCoveredDist();
     }
 
     /** @brief Get the vehicle's front position relative to the given lane
      * @return The front position of the vehicle (in m from the given lane's begin)
      */
-    SUMOReal getPositionOnLane(const MSLane* lane) const;
+    double getPositionOnLane(const MSLane* lane) const;
 
     /** @brief Get the vehicle's position relative to the given lane
      * @return The back position of the vehicle (in m from the given lane's begin)
      */
-    SUMOReal getBackPositionOnLane(const MSLane* lane) const;
+    double getBackPositionOnLane(const MSLane* lane) const;
 
     /** @brief Get the vehicle's position relative to its current lane
      * @return The back position of the vehicle (in m from the current lane's begin)
      */
-    SUMOReal getBackPositionOnLane() const {
+    double getBackPositionOnLane() const {
         return getBackPositionOnLane(myLane);
     }
 
@@ -408,7 +408,7 @@ public:
      * @return The lateral position of the vehicle (in m relative to the
      * centerline of the lane)
      */
-    SUMOReal getLateralPositionOnLane() const {
+    double getLateralPositionOnLane() const {
         return myState.myPosLat;
     }
 
@@ -416,40 +416,40 @@ public:
      * @return The lateral position of the vehicle (in m distance between right
      * side of vehicle and ride side of the lane it is on
      */
-    SUMOReal getRightSideOnLane() const;
+    double getRightSideOnLane() const;
 
     /// @brief return the amount by which the vehicle extends laterally outside it's primary lane
-    SUMOReal getLateralOverlap() const;
+    double getLateralOverlap() const;
 
     /** @brief Get the vehicle's lateral position on the edge of the given lane
      * (or its current edge if lane == 0)
      * @return The lateral position of the vehicle (in m distance between right
      * side of vehicle and ride side of edge
      */
-    SUMOReal getRightSideOnEdge(const MSLane* lane = 0) const;
+    double getRightSideOnEdge(const MSLane* lane = 0) const;
 
     /** @brief Get the vehicle's lateral position on the edge of the given lane
      * (or its current edge if lane == 0)
      * @return The lateral position of the vehicle (in m distance between center
      * of vehicle and ride side of edge
      */
-    SUMOReal getCenterOnEdge(const MSLane* lane = 0) const;
+    double getCenterOnEdge(const MSLane* lane = 0) const;
 
     /** @brief Get the offset that that must be added to interpret
      * myState.myPosLat for the given lane
      */
-    SUMOReal getLatOffset(const MSLane* lane) const;
+    double getLatOffset(const MSLane* lane) const;
 
     /** @brief Returns the vehicle's current speed
      * @return The vehicle's speed
      */
-    SUMOReal getSpeed() const {
+    double getSpeed() const {
         return myState.mySpeed;
     }
-    SUMOReal getSpeedKmph() const {
+    double getSpeedKmph() const {
         return myState.mySpeed * 3.6;
     }
-    SUMOReal getControllerAcceleration() const {
+    double getControllerAcceleration() const {
         if (myType->getCarFollowModel().getModelID() == SUMO_TAG_CF_CC) {
             CC_VehicleVariables *vars = (CC_VehicleVariables *)myCFVariables;
             return vars->controllerAcceleration;
@@ -458,7 +458,7 @@ public:
             return 0;
         }
     }
-    SUMOReal getRealAcceleration() const {
+    double getRealAcceleration() const {
         if (myType->getCarFollowModel().getModelID() == SUMO_TAG_CF_CC) {
             CC_VehicleVariables *vars = (CC_VehicleVariables *)myCFVariables;
             return vars->egoAcceleration;
@@ -467,7 +467,7 @@ public:
             return myAcceleration;
         }
     }
-    SUMOReal getRadarDistance() const {
+    double getRadarDistance() const {
         if (myType->getCarFollowModel().getModelID() == SUMO_TAG_CF_CC) {
             CC_VehicleVariables *vars = (CC_VehicleVariables *)myCFVariables;
             return vars->radarFrontDistance;
@@ -481,7 +481,7 @@ public:
     /** @brief Returns the vehicle's speed before the previous time step
      * @return The vehicle's speed before the previous time step
      */
-    SUMOReal getPreviousSpeed() const {
+    double getPreviousSpeed() const {
         return myState.myPreviousSpeed;
     }
 
@@ -490,7 +490,7 @@ public:
      *         (this is computed as the last step's mean acceleration in case that a stop occurs within the middle of the time-step)
      * @return The acceleration
      */
-    SUMOReal getAcceleration() const {
+    double getAcceleration() const {
         return myAcceleration;
     }
     //@}
@@ -503,7 +503,7 @@ public:
     /** @brief Returns the slope of the road at vehicle's position
      * @return The slope
      */
-    SUMOReal getSlope() const;
+    double getSlope() const;
 
 
     /** @brief Return current position (x/y, cartesian)
@@ -513,7 +513,7 @@ public:
      * @return The current position (in cartesian coordinates)
      * @see myLane
      */
-    Position getPosition(const SUMOReal offset = 0) const;
+    Position getPosition(const double offset = 0) const;
 
 
     /** @brief Returns the lane the vehicle is on
@@ -528,7 +528,7 @@ public:
      *         i.e., not necessarily the allowed speed limit)
      * @return The vehicle's max speed
      */
-    SUMOReal
+    double
     getMaxSpeedOnLane() const {
         if (myLane != 0) {
             return myLane->getVehicleMaxSpeed(this);
@@ -601,7 +601,7 @@ public:
      * Intentional stopping does not count towards this time.
      * @return The time the vehicle is standing
      */
-    SUMOReal getWaitingSeconds() const {
+    double getWaitingSeconds() const {
         return STEPS2TIME(myWaitingTime);
     }
 
@@ -611,13 +611,13 @@ public:
      * @return The time the vehicle was standing within the last t millisecs
      */
 
-    SUMOReal getAccumulatedWaitingSeconds() const {
+    double getAccumulatedWaitingSeconds() const {
         return STEPS2TIME(getAccumulatedWaitingTime());
     }
 
     /** @brief Returns the time loss in seconds
      */
-    SUMOReal getTimeLossSeconds() const {
+    double getTimeLossSeconds() const {
         return STEPS2TIME(myTimeLoss);
     }
 
@@ -625,16 +625,24 @@ public:
     /** @brief Returns the vehicle's direction in radians
      * @return The vehicle's current angle
      */
-    SUMOReal getAngle() const {
+    double getAngle() const {
         return myAngle;
+    }
+
+
+    /** @brief Returns the vehicle's direction in radians
+     * @return The vehicle's current angle
+     */
+    Position getVelocityVector() const {
+        return Position(std::cos(myAngle) * myState.speed(), std::sin(myAngle) * myState.speed());
     }
     //@}
 
     /// @brief compute the current vehicle angle
-    SUMOReal computeAngle() const;
+    double computeAngle() const;
 
     /// @brief Set a custom vehicle angle in rad
-    void setAngle(SUMOReal angle);
+    void setAngle(double angle);
 
     /** Returns true if the two vehicles overlap. */
     static bool overlap(const MSVehicle* veh1, const MSVehicle* veh2) {
@@ -648,7 +656,7 @@ public:
     /** Returns true if vehicle's speed is below 60km/h. This is only relevant
         on highways. Overtaking on the right is allowed then. */
     bool congested() const {
-        return myState.mySpeed < SUMOReal(60) / SUMOReal(3.6);
+        return myState.mySpeed < double(60) / double(3.6);
     }
 
 
@@ -658,11 +666,12 @@ public:
      *  "MSMoveReminder::notifyEnter" is called.
      *
      * @param[in] reason The reason for changing the reminders' states
+     * @param[in] enteredLane The lane, which is entered (if applicable)
      * @see MSMoveReminder
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    void activateReminders(const MSMoveReminder::Notification reason);
+    void activateReminders(const MSMoveReminder::Notification reason, const MSLane* enteredLane = 0);
 
     /** @brief Update when the vehicle enters a new lane in the move step.
      *
@@ -682,14 +691,14 @@ public:
      * @param[in] posLat The lateral position the vehicle was inserted into the lane
      * @param[in] notification The cause of insertion (i.e. departure, teleport, parking)
      */
-    void enterLaneAtInsertion(MSLane* enteredLane, SUMOReal pos, SUMOReal speed, SUMOReal posLat,
+    void enterLaneAtInsertion(MSLane* enteredLane, double pos, double speed, double posLat,
                               MSMoveReminder::Notification notification);
 
     /** @brief set tentative lane and position during insertion to ensure that
      * all cfmodels work (some of them require veh->getLane() to return a valid lane)
      * Once the vehicle is sucessfully inserted the lane is set again (see enterLaneAtInsertion)
      */
-    void setTentativeLaneAndPosition(MSLane* lane, SUMOReal pos, SUMOReal posLat = 0);
+    void setTentativeLaneAndPosition(MSLane* lane, double pos, double posLat = 0);
 
     /** @brief Update when the vehicle enters a new lane in the laneChange step.
      *
@@ -699,7 +708,7 @@ public:
 
 
     /** @brief Update of members if vehicle leaves a new lane in the lane change step or at arrival. */
-    void leaveLane(const MSMoveReminder::Notification reason);
+    void leaveLane(const MSMoveReminder::Notification reason, const MSLane* approachedLane = 0);
 
 
     MSAbstractLaneChangeModel& getLaneChangeModel();
@@ -709,9 +718,13 @@ public:
         return myFurtherLanes;
     }
 
-    const std::vector<SUMOReal>& getFurtherLanesPosLat() const {
+    const std::vector<double>& getFurtherLanesPosLat() const {
         return myFurtherLanesPosLat;
     }
+
+
+    /// @brief whether this vehicle has its back (and no its front) on the given edge
+    bool onFurtherEdge(const MSEdge* edge) const;
 
     /// @name strategical/tactical lane choosing methods
     /// @{
@@ -724,13 +737,13 @@ public:
         /// @brief The described lane
         MSLane* lane;
         /// @brief The overall length which may be driven when using this lane without a lane change
-        SUMOReal length;
+        double length;
         /// @brief The length which may be driven on this lane
-        SUMOReal currentLength;
+        double currentLength;
         /// @brief The overall vehicle sum on consecutive lanes which can be passed without a lane change
-        SUMOReal occupation;
+        double occupation;
         /// @brief As occupation, but without the first lane
-        SUMOReal nextOccupation;
+        double nextOccupation;
         /// @brief The (signed) number of lanes to be crossed to get to the lane which allows to continue the drive
         int bestLaneOffset;
         /// @brief Whether this lane allows to continue the drive
@@ -788,7 +801,7 @@ public:
     int getBestLaneOffset() const;
 
     /// @brief update occupation from MSLaneChanger
-    void adaptBestLanesOccupation(int laneIndex, SUMOReal density);
+    void adaptBestLanesOccupation(int laneIndex, double density);
 
     /// @}
 
@@ -827,6 +840,10 @@ public:
         return myCFVariables;
     }
 
+    /// @brief whether this vehicle is selected in the GUI
+    virtual bool isSelected() const {
+        return false;
+    }
 
     /// @name vehicle stops definitions and i/o
     //@{
@@ -848,9 +865,9 @@ public:
         /// @brief (Optional) charging station if one is assigned to the stop
         MSChargingStation* chargingStation;
         /// @brief The stopping position start
-        SUMOReal startPos;
+        double startPos;
         /// @brief The stopping position end
-        SUMOReal endPos;
+        double endPos;
         /// @brief The stopping duration
         SUMOTime duration;
         /// @brief The time at which the vehicle may continue its journey
@@ -871,11 +888,13 @@ public:
         SUMOTime timeToBoardNextPerson;
         /// @brief The time at which the vehicle is able to load another container
         SUMOTime timeToLoadNextContainer;
+        /// @brief Whether this stop was triggered by a collision
+        bool collision;
 
         void write(OutputDevice& dev) const;
 
         /// @brief return halting position for upcoming stop;
-        SUMOReal getEndPos(const SUMOVehicle& veh) const;
+        double getEndPos(const SUMOVehicle& veh) const;
     };
 
 
@@ -885,7 +904,7 @@ public:
      * @param[in] stop The stop to add
      * @return Whether the stop could be added
      */
-    bool addStop(const SUMOVehicleParameter::Stop& stopPar, std::string& errorMsg, SUMOTime untilOffset = 0);
+    bool addStop(const SUMOVehicleParameter::Stop& stopPar, std::string& errorMsg, SUMOTime untilOffset = 0, bool collision = false);
 
     /** @brief replace the current parking area stop with a new stop with merge duration
      */
@@ -908,6 +927,11 @@ public:
      */
     bool isStopped() const;
 
+    /** @brief Returns the remaining time a vehicle needs to stop due to a
+     * collision. A negative value indicates that the vehicle is not stopping due to a collision (or at all)
+     */
+    SUMOTime collisionStopTime() const;
+
     /** @brief Returns whether the vehicle is parking
      * @return whether the vehicle is parking
      */
@@ -918,8 +942,13 @@ public:
      */
     bool isRemoteControlled() const;
 
-    /// @brief return the distance to the next stop or SUMORealMax if there is none.
-    SUMOReal nextStopDist() const {
+    /** @brief Returns the information whether the vehicle is fully controlled via TraCI
+     * within the lookBack time
+     */
+    bool wasRemoteControlled(SUMOTime lookBack = DELTA_T) const;
+
+    /// @brief return the distance to the next stop or doubleMax if there is none.
+    double nextStopDist() const {
         return myStopDist;
     }
 
@@ -930,7 +959,7 @@ public:
 
     /** @brief return whether the given position is within range of the current stop
      */
-    bool isStoppedInRange(SUMOReal pos) const;
+    bool isStoppedInRange(double pos) const;
     /// @}
 
     bool knowsEdgeTest(MSEdge& edge) const;
@@ -945,7 +974,7 @@ public:
      *          or a near infinite real value if the destination position is not contained
      *          within the vehicles route or the vehicle is not active
      */
-    SUMOReal getDistanceToPosition(SUMOReal destPos, const MSEdge* destEdge) const;
+    double getDistanceToPosition(double destPos, const MSEdge* destEdge) const;
 
 
     /** @brief Processes stops, returns the velocity needed to reach the stop
@@ -955,7 +984,7 @@ public:
      * @see MSStoppingPlace
      * @see MSStoppingPlace
      */
-    SUMOReal processNextStop(SUMOReal currentVelocity);
+    double processNextStop(double currentVelocity);
 
     /** @brief Returns the leader of the vehicle looking for a fixed distance.
      *
@@ -964,7 +993,7 @@ public:
      * @param dist    up to which distance to look for a leader
      * @return The leading vehicle together with the gap; (0, -1) if no leader was found.
      */
-    std::pair<const MSVehicle* const, SUMOReal> getLeader(SUMOReal dist = 0) const;
+    std::pair<const MSVehicle* const, double> getLeader(double dist = 0) const;
 
     /** @brief Returns the time gap in seconds to the leader of the vehicle on the same lane.
      *
@@ -972,7 +1001,7 @@ public:
      * The gap returned takes the minGap into account.
      * @return The time gap in seconds; -1 if no leader was found or speed is 0.
      */
-    SUMOReal getTimeGapOnLane() const;
+    double getTimeGapOnLane() const;
 
 
     /// @name Emission retrieval
@@ -981,49 +1010,49 @@ public:
     /** @brief Returns CO2 emission of the current state
      * @return The current CO2 emission
      */
-    SUMOReal getCO2Emissions() const;
+    double getCO2Emissions() const;
 
 
     /** @brief Returns CO emission of the current state
      * @return The current CO emission
      */
-    SUMOReal getCOEmissions() const;
+    double getCOEmissions() const;
 
 
     /** @brief Returns HC emission of the current state
      * @return The current HC emission
      */
-    SUMOReal getHCEmissions() const;
+    double getHCEmissions() const;
 
 
     /** @brief Returns NOx emission of the current state
      * @return The current NOx emission
      */
-    SUMOReal getNOxEmissions() const;
+    double getNOxEmissions() const;
 
 
     /** @brief Returns PMx emission of the current state
      * @return The current PMx emission
      */
-    SUMOReal getPMxEmissions() const;
+    double getPMxEmissions() const;
 
 
     /** @brief Returns fuel consumption of the current state
     * @return The current fuel consumption
     */
-    SUMOReal getFuelConsumption() const;
+    double getFuelConsumption() const;
 
 
     /** @brief Returns electricity consumption of the current state
     * @return The current electricity consumption
     */
-    SUMOReal getElectricityConsumption() const;
+    double getElectricityConsumption() const;
 
 
     /** @brief Returns noise emissions of the current state
      * @return The noise produced
      */
-    SUMOReal getHarmonoise_NoiseEmissions() const;
+    double getHarmonoise_NoiseEmissions() const;
     //@}
 
 
@@ -1169,7 +1198,7 @@ public:
      * @return The vehicle's velocity as it would without an influence
      * @see Influencer::getOriginalSpeed
      */
-    SUMOReal getSpeedWithoutTraciInfluence() const;
+    double getSpeedWithoutTraciInfluence() const;
 
     /**
      * schedule a new stop for the vehicle; each time a stop is reached, the vehicle
@@ -1183,7 +1212,7 @@ public:
      * @param triggered a flag indicating whether the traci stop is triggered or not
      * @param containerTriggered a flag indicating whether the traci stop is triggered by a container or not
      */
-    bool addTraciStop(MSLane* const lane, const SUMOReal startPos, const SUMOReal endPos, const SUMOTime duration, const SUMOTime until,
+    bool addTraciStop(MSLane* const lane, const double startPos, const double endPos, const SUMOTime duration, const SUMOTime until,
                       const bool parking, const bool triggered, const bool containerTriggered, std::string& errorMsg);
 
     /**
@@ -1195,10 +1224,10 @@ public:
      * @param parking   a flag indicating whether the traci stop is used for parking or not
      * @param triggered a flag indicating whether the traci stop is triggered or not
      * @param containerTriggered a flag indicating whether the traci stop is triggered by a container or not
-     * @param isContainerStop a flag indicating whether the stop is a container stop
+     * @param stoppingPlaceType a flag indicating the type of stopping place
      */
-    bool addTraciBusOrContainerStop(const std::string& stopId, const SUMOTime duration, const SUMOTime until, const bool parking,
-                                    const bool triggered, const bool containerTriggered, const bool isContainerStop, std::string& errorMsg);
+    bool addTraciStopAtStoppingPlace(const std::string& stopId, const SUMOTime duration, const SUMOTime until, const bool parking,
+                                     const bool triggered, const bool containerTriggered, const SumoXMLTag stoppingPlaceType, std::string& errorMsg);
 
     /**
     * returns the next imminent stop in the stop queue
@@ -1214,9 +1243,9 @@ public:
 
 
     /// @brief update a vector of further lanes and return the new backPos
-    SUMOReal updateFurtherLanes(std::vector<MSLane*>& furtherLanes,
-                                std::vector<SUMOReal>& furtherLanesPosLat,
-                                const std::vector<MSLane*>& passedLanes);
+    double updateFurtherLanes(std::vector<MSLane*>& furtherLanes,
+                              std::vector<double>& furtherLanesPosLat,
+                              const std::vector<MSLane*>& passedLanes);
 
     /// @brief get bounding rectangle
     PositionVector getBoundingBox() const;
@@ -1249,13 +1278,18 @@ public:
         /** @brief Sets a new velocity timeline
          * @param[in] speedTimeLine The time line of speeds to use
          */
-        void setSpeedTimeLine(const std::vector<std::pair<SUMOTime, SUMOReal> >& speedTimeLine);
+        void setSpeedTimeLine(const std::vector<std::pair<SUMOTime, double> >& speedTimeLine);
 
 
         /** @brief Sets a new lane timeline
          * @param[in] laneTimeLine The time line of lanes to use
          */
         void setLaneTimeLine(const std::vector<std::pair<SUMOTime, int> >& laneTimeLine);
+
+        /** @brief Sets a new sublane-change request
+         * @param[in] latDist The lateral distance for changing
+         */
+        void setSublaneChange(double latDist);
 
         /// @brief return the current speed mode
         int getSpeedMode() const;
@@ -1271,7 +1305,7 @@ public:
          * @param[in] vMax The maximum simulation time
          * @return The speed to use
          */
-        SUMOReal influenceSpeed(SUMOTime currentTime, SUMOReal speed, SUMOReal vSafe, SUMOReal vMin, SUMOReal vMax);
+        double influenceSpeed(SUMOTime currentTime, double speed, double vSafe, double vMin, double vMax);
 
         /** @brief Applies stored LaneChangeMode information and laneTimeLine
          * @param[in] currentTime The current simulation time
@@ -1288,7 +1322,7 @@ public:
          * @param[in] currentTime The current simulation time
          * @return The remaining seconds to change lanes
          */
-        SUMOReal changeRequestRemainingSeconds(const SUMOTime currentTime) const;
+        double changeRequestRemainingSeconds(const SUMOTime currentTime) const;
 
         /** @brief Returns whether junction priority rules shall be respected
          * @return Whether junction priority rules be respected
@@ -1317,13 +1351,11 @@ public:
 
 
         /** @brief Returns the originally longitudinal speed to use
-         * @return The speed given before influence
+         * @return The speed given before influence or -1 if no influence is active
          */
-        inline SUMOReal getOriginalSpeed() const {
-            return myOriginalSpeed;
-        }
+        double getOriginalSpeed() const;
 
-        void setVTDControlled(Position xyPos, MSLane* l, SUMOReal pos, SUMOReal posLat, SUMOReal angle, int edgeOffset, const ConstMSEdgeVector& route, SUMOTime t);
+        void setVTDControlled(Position xyPos, MSLane* l, double pos, double posLat, double angle, int edgeOffset, const ConstMSEdgeVector& route, SUMOTime t);
 
         SUMOTime getLastAccessTimeStep() const {
             return myLastVTDAccess;
@@ -1332,10 +1364,10 @@ public:
         void postProcessVTD(MSVehicle* v);
 
         /// @brief return the speed that is implicit in the new VTD position
-        SUMOReal implicitSpeedVTD(const MSVehicle* veh, SUMOReal oldSpeed);
+        double implicitSpeedVTD(const MSVehicle* veh, double oldSpeed);
 
         /// @brief return the change in longitudinal position that is implicit in the new VTD position
-        SUMOReal implicitDeltaPosVTD(const MSVehicle* veh);
+        double implicitDeltaPosVTD(const MSVehicle* veh);
 
         bool isVTDControlled() const;
 
@@ -1349,15 +1381,22 @@ public:
             return myTraCISignals;
         }
 
+        double getLatDist() const {
+            return myLatDist;
+        }
+
     private:
         /// @brief The velocity time line to apply
-        std::vector<std::pair<SUMOTime, SUMOReal> > mySpeedTimeLine;
+        std::vector<std::pair<SUMOTime, double> > mySpeedTimeLine;
 
         /// @brief The lane usage time line to apply
         std::vector<std::pair<SUMOTime, int> > myLaneTimeLine;
 
         /// @brief The velocity before influence
-        SUMOReal myOriginalSpeed;
+        double myOriginalSpeed;
+
+        /// @brief The requested lateral change
+        double myLatDist;
 
         /// @brief Whether influencing the speed has already started
         bool mySpeedAdaptationStarted;
@@ -1379,9 +1418,9 @@ public:
 
         Position myVTDXYPos;
         MSLane* myVTDLane;
-        SUMOReal myVTDPos;
-        SUMOReal myVTDPosLat;
-        SUMOReal myVTDAngle;
+        double myVTDPos;
+        double myVTDPosLat;
+        double myVTDAngle;
         int myVTDEdgeOffset;
         ConstMSEdgeVector myVTDRoute;
         SUMOTime myLastVTDAccess;
@@ -1428,8 +1467,8 @@ public:
     void setVTDState(Position xyPos);
 
     /// @brief compute safe speed for following the given leader
-    SUMOReal getSafeFollowSpeed(const std::pair<const MSVehicle*, SUMOReal> leaderInfo,
-                                const SUMOReal seen, const MSLane* const lane, SUMOReal distToCrossing) const;
+    double getSafeFollowSpeed(const std::pair<const MSVehicle*, double> leaderInfo,
+                              const double seen, const MSLane* const lane, double distToCrossing) const;
 
     /// @brief get a numerical value for the priority of the  upcoming link
     static int nextLinkPriority(const std::vector<MSLane*>& conts);
@@ -1449,7 +1488,7 @@ public:
 
 protected:
 
-    SUMOReal getSpaceTillLastStanding(const MSLane* l, bool& foundStopped) const;
+    double getSpaceTillLastStanding(const MSLane* l, bool& foundStopped) const;
 
     /// @name Interaction with move reminders
     ///@{
@@ -1533,11 +1572,11 @@ protected:
     MSDevice_Transportable* myContainerDevice;
 
     /// @brief The current acceleration after dawdling in m/s
-    SUMOReal myAcceleration;
+    double myAcceleration;
 
     /// @brief The information into which lanes the vehicle laps into
     std::vector<MSLane*> myFurtherLanes;
-    std::vector<SUMOReal> myFurtherLanesPosLat;
+    std::vector<double> myFurtherLanesPosLat;
 
     /// @brief State of things of the vehicle that can be on or off
     int mySignals;
@@ -1554,33 +1593,36 @@ protected:
     bool myHaveToWaitOnNextLink;
 
     /// @brief the angle in radians (@todo consider moving this into myState)
-    SUMOReal myAngle;
+    double myAngle;
 
     /// @brief distance to the next stop or -1 if there is none
-    SUMOReal myStopDist;
+    double myStopDist;
+
+    /// @brief amount of time for which the vehicle is immune from collisions
+    SUMOTime myCollisionImmunity;
 
     mutable Position myCachedPosition;
 
 protected:
     struct DriveProcessItem {
         MSLink* myLink;
-        SUMOReal myVLinkPass;
-        SUMOReal myVLinkWait;
+        double myVLinkPass;
+        double myVLinkWait;
         bool mySetRequest;
         SUMOTime myArrivalTime;
-        SUMOReal myArrivalSpeed;
+        double myArrivalSpeed;
         SUMOTime myArrivalTimeBraking;
-        SUMOReal myArrivalSpeedBraking;
-        SUMOReal myDistance;
-        SUMOReal accelV;
+        double myArrivalSpeedBraking;
+        double myDistance;
+        double accelV;
         bool hadVehicle;
-        SUMOReal availableSpace;
+        double availableSpace;
 
-        DriveProcessItem(MSLink* link, SUMOReal vPass, SUMOReal vWait, bool setRequest,
-                         SUMOTime arrivalTime, SUMOReal arrivalSpeed,
-                         SUMOTime arrivalTimeBraking, SUMOReal arrivalSpeedBraking,
-                         SUMOReal distance,
-                         SUMOReal leaveSpeed = -1.) :
+        DriveProcessItem(MSLink* link, double vPass, double vWait, bool setRequest,
+                         SUMOTime arrivalTime, double arrivalSpeed,
+                         SUMOTime arrivalTimeBraking, double arrivalSpeedBraking,
+                         double distance,
+                         double leaveSpeed = -1.) :
             myLink(link), myVLinkPass(vPass), myVLinkWait(vWait), mySetRequest(setRequest),
             myArrivalTime(arrivalTime), myArrivalSpeed(arrivalSpeed),
             myArrivalTimeBraking(arrivalTimeBraking), myArrivalSpeedBraking(arrivalSpeedBraking),
@@ -1592,7 +1634,7 @@ protected:
 
 
         /// @brief constructor if the link shall not be passed
-        DriveProcessItem(SUMOReal vWait, SUMOReal distance) :
+        DriveProcessItem(double vWait, double distance) :
             myLink(0), myVLinkPass(vWait), myVLinkWait(vWait), mySetRequest(false),
             myArrivalTime(0), myArrivalSpeed(0),
             myArrivalTimeBraking(0), myArrivalSpeedBraking(0),
@@ -1602,14 +1644,14 @@ protected:
         };
 
 
-        inline void adaptLeaveSpeed(const SUMOReal v) {
+        inline void adaptLeaveSpeed(const double v) {
             if (accelV < 0) {
                 accelV = v;
             } else {
                 accelV = MIN2(accelV, v);
             }
         }
-        inline SUMOReal getLeaveSpeed() const {
+        inline double getLeaveSpeed() const {
             return accelV < 0 ? myVLinkPass : accelV;
         }
     };
@@ -1619,17 +1661,17 @@ protected:
     DriveItemVector myLFLinkLanes;
 
     /// @todo: documentation
-    void planMoveInternal(const SUMOTime t, MSLeaderInfo ahead, DriveItemVector& lfLinks, SUMOReal& myStopDist) const;
+    void planMoveInternal(const SUMOTime t, MSLeaderInfo ahead, DriveItemVector& lfLinks, double& myStopDist) const;
 
     /// @todo: documentation
-    void checkRewindLinkLanes(const SUMOReal lengthsInFront, DriveItemVector& lfLinks) const;
+    void checkRewindLinkLanes(const double lengthsInFront, DriveItemVector& lfLinks) const;
 
     /// @brief unregister approach from all upcoming links
     void removeApproachingInformation(DriveItemVector& lfLinks) const;
 
 
     /// @brief estimate leaving speed when accelerating across a link
-    inline SUMOReal estimateLeaveSpeed(const MSLink* const link, const SUMOReal vLinkPass) const {
+    inline double estimateLeaveSpeed(const MSLink* const link, const double vLinkPass) const {
         // estimate leave speed for passing time computation
         // l=linkLength, a=accel, t=continuousTime, v=vLeave
         // l=v*t + 0.5*a*t^2, solve for t and multiply with a, then add v
@@ -1649,10 +1691,10 @@ protected:
      * @param[in,out] the safe velocity for arriving at the next link
      * @param[in] distToCrossing The distance to the crossing point with the current leader where relevant or -1
      */
-    void adaptToLeader(const std::pair<const MSVehicle*, SUMOReal> leaderInfo,
-                       const SUMOReal seen, DriveProcessItem* const lastLink,
-                       const MSLane* const lane, SUMOReal& v, SUMOReal& vLinkPass,
-                       SUMOReal distToCrossing = -1) const;
+    void adaptToLeader(const std::pair<const MSVehicle*, double> leaderInfo,
+                       const double seen, DriveProcessItem* const lastLink,
+                       const MSLane* const lane, double& v, double& vLinkPass,
+                       double distToCrossing = -1) const;
 
     /* @brief adapt safe velocity in accordance to multiple vehicles ahead:
      * @param[in] ahead The leader information according to the current lateral-resolution
@@ -1664,9 +1706,13 @@ protected:
      * @param[in,out] the safe velocity for arriving at the next link
      */
     void adaptToLeaders(const MSLeaderInfo& ahead,
-                        SUMOReal latOffset,
-                        const SUMOReal seen, DriveProcessItem* const lastLink,
-                        const MSLane* const lane, SUMOReal& v, SUMOReal& vLinkPass) const;
+                        double latOffset,
+                        const double seen, DriveProcessItem* const lastLink,
+                        const MSLane* const lane, double& v, double& vLinkPass) const;
+
+    /// @brief checks for link leaders on the given link
+    void checkLinkLeader(const MSLink* link, const MSLane* lane, double seen,
+                         DriveProcessItem* const lastLink, double& v, double& vLinkPass, double& vLinkWait, bool& setRequest) const;
 
 
     // @brief return the lane on which the back of this vehicle resides
@@ -1682,7 +1728,7 @@ protected:
      *         acceleration a within the next time step is then a = (vNext - vCurrent)/TS )
      *  @param[in] vNext speed in the next time step
      */
-    void updateState(SUMOReal vNext);
+    void updateState(double vNext);
 
 private:
     /* @brief The vehicle's knowledge about edge efforts/travel times; @see MSEdgeWeightsStorage

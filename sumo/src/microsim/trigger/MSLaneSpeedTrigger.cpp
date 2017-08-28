@@ -49,10 +49,6 @@
 #include <mesosim/MELoop.h>
 #include <mesosim/MESegment.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -96,7 +92,7 @@ MSLaneSpeedTrigger::init() {
     // add the processing to the event handler
     MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(
         new WrappingCommand<MSLaneSpeedTrigger>(this, &MSLaneSpeedTrigger::execute),
-        (*myCurrentEntry).first, MSEventControl::NO_CHANGE);
+        (*myCurrentEntry).first);
     myDidInit = true;
 }
 
@@ -114,7 +110,7 @@ SUMOTime
 MSLaneSpeedTrigger::processCommand(bool move2next, SUMOTime currentTime) {
     UNUSED_PARAMETER(currentTime);
     std::vector<MSLane*>::iterator i;
-    const SUMOReal speed = getCurrentSpeed();
+    const double speed = getCurrentSpeed();
     if (MSGlobals::gUseMesoSim) {
         if (myDestLanes.size() > 0 && myDestLanes.front()->getSpeedLimit() != speed) {
             myDestLanes.front()->getEdge().setMaxSpeed(speed);
@@ -154,7 +150,7 @@ MSLaneSpeedTrigger::myStartElement(int element,
     // extract the values
     bool ok = true;
     SUMOTime next = attrs.getSUMOTimeReporting(SUMO_ATTR_TIME, getID().c_str(), ok);
-    SUMOReal speed = attrs.getOpt<SUMOReal>(SUMO_ATTR_SPEED, getID().c_str(), ok, -1);
+    double speed = attrs.getOpt<double>(SUMO_ATTR_SPEED, getID().c_str(), ok, -1);
     // check the values
     if (next < 0) {
         WRITE_ERROR("Wrong time in vss '" + getID() + "'.");
@@ -181,7 +177,7 @@ MSLaneSpeedTrigger::myEndElement(int element) {
 }
 
 
-SUMOReal
+double
 MSLaneSpeedTrigger::getDefaultSpeed() const {
     return myDefaultSpeed;
 }
@@ -195,13 +191,13 @@ MSLaneSpeedTrigger::setOverriding(bool val) {
 
 
 void
-MSLaneSpeedTrigger::setOverridingValue(SUMOReal val) {
+MSLaneSpeedTrigger::setOverridingValue(double val) {
     mySpeedOverrideValue = val;
     processCommand(false, MSNet::getInstance()->getCurrentTimeStep());
 }
 
 
-SUMOReal
+double
 MSLaneSpeedTrigger::getLoadedSpeed() {
     if (myCurrentEntry != myLoadedSpeeds.begin()) {
         return (*(myCurrentEntry - 1)).second;
@@ -211,7 +207,7 @@ MSLaneSpeedTrigger::getLoadedSpeed() {
 }
 
 
-SUMOReal
+double
 MSLaneSpeedTrigger::getCurrentSpeed() const {
     if (myAmOverriding) {
         return mySpeedOverrideValue;

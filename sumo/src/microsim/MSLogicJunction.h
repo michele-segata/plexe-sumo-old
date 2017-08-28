@@ -68,8 +68,10 @@ public:
     /// initialises the junction after the whole net has been loaded
     virtual void postloadInit();
 
-    std::vector<MSLane*> getIncomingLanes() {
-        return myIncomingLanes;
+    /** @brief Returns all internal lanes on the junction
+     */
+    virtual const std::vector<MSLane*>& getInternalLanes() const {
+        return myInternalLanes;
     }
 
 protected:
@@ -85,20 +87,16 @@ protected:
                     SumoXMLNodeType type,
                     const Position& position,
                     const PositionVector& shape,
-                    std::vector<MSLane*> incoming
-#ifdef HAVE_INTERNAL_LANES
-                    , std::vector<MSLane*> internal
-#endif
+                    std::vector<MSLane*> incoming,
+                    std::vector<MSLane*> internal
                    );
 
 protected:
     /// list of incoming lanes
     std::vector<MSLane*> myIncomingLanes;
 
-#ifdef HAVE_INTERNAL_LANES
-    /// list of incoming lanes
+    /// list of internal lanes
     std::vector<MSLane*> myInternalLanes;
-#endif
 
 private:
     /// @brief Invalidated copy constructor.

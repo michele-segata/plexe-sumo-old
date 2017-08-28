@@ -40,6 +40,7 @@
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <utils/common/SUMOVehicleClass.h>
 #include <utils/common/Named.h>
+#include <utils/distribution/Distribution_Parameterized.h>
 #include <utils/geom/Position.h>
 #include "StdDefs.h"
 
@@ -69,6 +70,14 @@ inline std::string toHex(const T i, std::streamsize numDigits = 0) {
     return stream.str();
 }
 
+
+inline std::string toString(const Named* obj, std::streamsize accuracy) {
+    UNUSED_PARAMETER(accuracy);
+    if (obj == 0) {
+        return "NULL";
+    }
+    return obj->getID();
+}
 
 template <>
 inline std::string toString<SumoXMLTag>(const SumoXMLTag& tag, std::streamsize accuracy) {
@@ -164,6 +173,17 @@ inline std::string toString<LaneChangeAction>(const LaneChangeAction& action, st
     return oss.str();
 }
 
+template <>
+inline std::string toString<Position>(const Position& pos, std::streamsize accuracy) {
+    UNUSED_PARAMETER(accuracy);
+    return toString(pos.x(), accuracy) + "," + toString(pos.y(), accuracy);
+}
+
+template <>
+inline std::string toString<Distribution_Parameterized>(const Distribution_Parameterized& dist, std::streamsize accuracy) {
+    return dist.toStr(accuracy);
+}
+
 template <typename V>
 inline std::string toString(const std::vector<V*>& v, std::streamsize accuracy = gPrecision) {
     return toString<V>(v.begin(), v.end(), accuracy);
@@ -182,6 +202,26 @@ inline std::string toString(const typename std::vector<V*>::const_iterator& b, c
     }
     return oss.str();
 }
+
+
+//template <typename V>
+//inline std::string toString(const std::vector<V>& v, std::streamsize accuracy = gPrecision) {
+//    return toString<V>(v.begin(), v.end(), accuracy);
+//}
+//
+//
+//template <typename V>
+//inline std::string toString(const typename std::vector<V>::const_iterator& b, const typename std::vector<V>::const_iterator& e, std::streamsize accuracy = gPrecision) {
+//    UNUSED_PARAMETER(accuracy);
+//    std::ostringstream oss;
+//    for (typename std::vector<V>::const_iterator it = b; it != e; ++it) {
+//        if (it != b) {
+//            oss << " ";
+//        }
+//        oss << Named::getIDSecure(*it);
+//    }
+//    return oss.str();
+//}
 
 
 template <typename T, typename T_BETWEEN>
@@ -232,7 +272,7 @@ inline std::string toString(const std::vector<long long int>& v, std::streamsize
 
 
 template <>
-inline std::string toString(const std::vector<SUMOReal>& v, std::streamsize accuracy) {
+inline std::string toString(const std::vector<double>& v, std::streamsize accuracy) {
     return joinToString(v, " ", accuracy);
 }
 
@@ -250,6 +290,12 @@ inline std::string joinToString(const std::set<T>& s, const T_BETWEEN& between, 
         oss << toString(*it, accuracy);
     }
     return oss.str();
+}
+
+
+template <>
+inline std::string toString(const std::vector<std::string>& v, std::streamsize) {
+    return joinToString(v, " ");
 }
 
 

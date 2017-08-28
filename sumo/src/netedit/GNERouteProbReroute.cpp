@@ -33,15 +33,11 @@
 #include "GNEEdge.h"
 
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
-
 // ===========================================================================
 // member method definitions
 // ===========================================================================
 
-GNERouteProbReroute::GNERouteProbReroute(GNERerouterInterval& rerouterIntervalParent, std::string newRouteId, SUMOReal probability) :
+GNERouteProbReroute::GNERouteProbReroute(GNERerouterInterval& rerouterIntervalParent, std::string newRouteId, double probability) :
     myRerouterIntervalParent(&rerouterIntervalParent),
     myNewRouteId(newRouteId),
     myProbability(probability),
@@ -67,14 +63,14 @@ GNERouteProbReroute::setNewRouteId(std::string newRouteId) {
 }
 
 
-SUMOReal
+double
 GNERouteProbReroute::getProbability() const {
     return myProbability;
 }
 
 
 bool
-GNERouteProbReroute::setProbability(SUMOReal probability) {
+GNERouteProbReroute::setProbability(double probability) {
     if (probability >= 0 && probability <= 1) {
         myProbability = probability;
         return true;
@@ -97,7 +93,7 @@ GNERouteProbReroute::getRerouterIntervalParent() const {
 
 
 bool
-GNERouteProbReroute::operator==(const GNERouteProbReroute& routeProbReroute) {
+GNERouteProbReroute::operator==(const GNERouteProbReroute& routeProbReroute) const {
     if ((myRerouterIntervalParent == routeProbReroute.myRerouterIntervalParent) &&
             (myNewRouteId == routeProbReroute.myNewRouteId) &&
             (myProbability && routeProbReroute.myProbability)) {

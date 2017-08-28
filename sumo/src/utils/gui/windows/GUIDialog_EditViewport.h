@@ -34,7 +34,6 @@
 #include <fx.h>
 #include <utils/foxtools/FXRealSpinDial.h>
 
-
 // ===========================================================================
 // class declarations
 // ===========================================================================
@@ -69,14 +68,13 @@ public:
      * @param[in] x x-position to show the dialog at
      * @param[in] y y-position to show the dialog at
      */
-    GUIDialog_EditViewport(GUISUMOAbstractView* parent,  const char* name,
-                           int x, int y);
-
+    GUIDialog_EditViewport(GUISUMOAbstractView* parent,  const char* name, int x, int y);
 
     /// @brief Destructor
     ~GUIDialog_EditViewport();
 
-
+    /// @brief overload show function to focus always in OK Button
+    void show();
 
     /// @name FOX-callbacks
     /// @{
@@ -105,8 +103,7 @@ public:
      * @param[in] xoff Current view's x-offset
      * @param[in] yoff Current view's y-offset
      */
-    void setValues(SUMOReal zoom, SUMOReal xoff, SUMOReal yoff);
-
+    void setValues(double zoom, double xoff, double yoff);
 
     /** @brief Sets the given values into the dialog
      * @param[in] lookFrom Current viewport's from
@@ -114,13 +111,11 @@ public:
      */
     void setValues(const Position& lookFrom, const Position& lookAt);
 
-
     /** @brief Resets old values
      * @param[in] lookFrom Current viewport's from
      * @param[in] lookAt Current viewport's at
      */
     void setOldValues(const Position& lookFrom, const Position& lookAt);
-
 
     /** @brief Returns the information whether one of the spin dialers is grabbed
      * @return Whether the spin dialers are currently used
@@ -137,6 +132,9 @@ protected:
 
     /// @brief The spin dialers used to change the view
     FXRealSpinDial* myZoom, *myXOff, *myYOff, *myZOff;
+
+    /// @brief OK button
+    FXButton* buttonOk;
 
 #ifdef HAVE_OSG
     /// @brief The spin dialers used to change the view at (osg only)

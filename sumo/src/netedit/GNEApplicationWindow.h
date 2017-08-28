@@ -224,6 +224,12 @@ public:
     /// @brief called if the user hits enter
     long onCmdEnter(FXObject* sender, FXSelector sel, void* ptr);
 
+    /// @brief called if the user hits f
+    long onCmdFocusFrame(FXObject* sender, FXSelector sel, void* ptr);
+
+    /// @brief called if the user press key v to open zoom editor
+    long onCmdEditViewport(FXObject*, FXSelector, void*);
+
     /// @brief called if the user selects help->Documentation
     long onCmdHelp(FXObject* sender, FXSelector sel, void* ptr);
 
@@ -355,7 +361,7 @@ protected:
          * @param[in] laneID lane ID
          * @param[in] SlanePos position in the lane
          */
-        Position getLanePos(const std::string& poiID, const std::string& laneID, SUMOReal lanePos);
+        Position getLanePos(const std::string& poiID, const std::string& laneID, double lanePos);
 
     private:
         /// @brief pointer of the net
@@ -377,6 +383,7 @@ private:
 
     /// @brief warns about unsaved changes and gives the user the option to abort
     bool continueWithUnsavedChanges();
+    bool continueWithUnsavedAdditionalChanges();
 };
 
 

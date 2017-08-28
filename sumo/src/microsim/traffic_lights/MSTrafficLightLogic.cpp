@@ -44,10 +44,6 @@
 #include "MSTLLogicControl.h"
 #include "MSTrafficLightLogic.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static value definitions
@@ -116,8 +112,7 @@ MSTrafficLightLogic::MSTrafficLightLogic(MSTLLogicControl& tlcontrol, const std:
     myCurrentDurationIncrement(-1),
     myDefaultCycleTime(0) {
     mySwitchCommand = new SwitchCommand(tlcontrol, this, delay);
-    MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(
-        mySwitchCommand, delay, MSEventControl::NO_CHANGE);
+    MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(mySwitchCommand, delay);
 }
 
 
@@ -293,9 +288,9 @@ void MSTrafficLightLogic::initMesoTLSPenalties() {
     // warning already given if not all states are used
     assert(numLinks <= (int)phases.front()->getState().size());
     SUMOTime duration = 0;
-    std::vector<SUMOReal> redDuration(numLinks, 0);
-    std::vector<SUMOReal> totalRedDuration(numLinks, 0);
-    std::vector<SUMOReal> penalty(numLinks, 0);
+    std::vector<double> redDuration(numLinks, 0);
+    std::vector<double> totalRedDuration(numLinks, 0);
+    std::vector<double> penalty(numLinks, 0);
     for (int i = 0; i < (int)phases.size(); ++i) {
         const std::string& state = phases[i]->getState();
         duration += phases[i]->duration;
@@ -318,7 +313,7 @@ void MSTrafficLightLogic::initMesoTLSPenalties() {
             redDuration[j] = 0;
         }
     }
-    const SUMOReal durationSeconds = STEPS2TIME(duration);
+    const double durationSeconds = STEPS2TIME(duration);
     std::set<const MSJunction*> controlledJunctions;
     for (int j = 0; j < numLinks; ++j) {
         for (int k = 0; k < (int)myLinks[j].size(); ++k) {

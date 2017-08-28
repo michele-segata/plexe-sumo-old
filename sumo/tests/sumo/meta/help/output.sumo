@@ -1,4 +1,4 @@
-SUMO Version dev-SVN-r22796
+SUMO Version dev-SVN-r23908
  Copyright (C) 2001-2017 DLR and contributors; http://sumo.dlr.de
 A microscopic road traffic simulation.
 
@@ -45,6 +45,7 @@ Output Options:
   --battery-output FILE                Save the battery values of each vehicle
   --battery-output.precision INT       Write battery values with the given
                                          precision (default 2)
+  --chargingstations-output FILE       Write data of charging stations
   --fcd-output FILE                    Save the Floating Car Data
   --fcd-output.geo                     Save the Floating Car Data using
                                          geo-coordinates (lon/lat)
@@ -118,9 +119,14 @@ Processing Options:
   --ignore-accidents                   Do not check whether accidents occur
   --collision.action STR               How to deal with collisions:
                                          [none,warn,teleport,remove]
+  --collision.stoptime TIME            Let vehicle stop for TIME before
+                                         performing collision.action (except for
+                                         action 'none')
   --collision.check-junctions          Enables collisions checks on junctions
   --max-num-vehicles INT               Delay vehicle insertion to stay within
                                          the given maximum number
+  --max-num-teleports INT              Abort the simulation if the given
+                                         maximum number of teleports is exceeded
   --scale FLOAT                        Scale demand by the given factor (by
                                          discarding or duplicating vehicles)
   --time-to-teleport TIME              Specify how long a vehicle may wait
@@ -149,6 +155,10 @@ Processing Options:
   --lanechange.overtake-right          Whether overtaking on the right on
                                          motorways is permitted
   --tls.all-off                        Switches off all traffic lights.
+  --time-to-impatience TIME            Specify how long a vehicle may wait
+                                         until impatience grows from 0 to 1,
+                                         defaults to 300, non-positive values
+                                         disable impatience growth
   --pedestrian.model STR               Select among pedestrian models
                                          ['nonInteracting', 'striping']
   --pedestrian.striping.stripe-width FLOAT  Width of parallel stripes for
@@ -263,9 +273,34 @@ Example Device Options:
   --device.example.parameter FLOAT     An exemplary parameter which can be used
                                          by all instances of the example device
 
+SSM Device Options:
+  --device.ssm.probability FLOAT       The probability for a vehicle to have a
+                                         'ssm' device
+  --device.ssm.explicit STR            Assign a 'ssm' device to named vehicles
+  --device.ssm.deterministic           The 'ssm' devices are set deterministic
+                                         using a fraction of 1000
+  --device.ssm.measures STR            Specifies which measures will be logged
+                                         (as a space seperated sequence of IDs
+                                         in ('TTC', 'DRAC', 'PET')).
+  --device.ssm.thresholds STR          Specifies thresholds corresponding to
+                                         the specified measures (see
+                                         documentation and watch the order!).
+                                         Only events exceeding the thresholds
+                                         will be logged.
+  --device.ssm.trajectories            Specifies whether trajectories will be
+                                         logged (if false, only the extremal
+                                         values and times are reported).
+  --device.ssm.frequency FLOAT         Specifies the maximal length of stored
+                                         conflict trajectories in seconds (the
+                                         frequency of logging, default is
+                                         30.00s.).
+  --device.ssm.range FLOAT             Specifies the detection range in meters
+                                         (default is 50.00m.). For vehicles
+                                         below this distance from the equipped
+                                         vehicle, SSM values are traced.
+
 TraCI Server Options:
   --remote-port INT                    Enables TraCI Server if set
-  --python-script STR                  Runs TraCI script with embedded python
 
 Mesoscopic Options:
   --mesosim                            Enables mesoscopic simulation

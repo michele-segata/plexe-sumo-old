@@ -13,6 +13,9 @@ traffic_lights_resused_linkIndex
 # whether discarding traffic lights works
 traffic_lights-discard
 
+# re-import network with right_on_red logic
+traffic_light_right_on_red
+
 # handle shape, allow, disallow, type
 attributes
 
@@ -62,3 +65,6 @@ geometry.remove
 # import lefthand and junctionCornerDetail
 network_attributes
 remove_lane
+
+# load a network with edge types and write it to plain-xml and .net.xml
+edge_types

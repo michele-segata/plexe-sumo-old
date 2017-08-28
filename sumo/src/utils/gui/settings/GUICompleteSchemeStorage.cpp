@@ -39,10 +39,6 @@
 #include <utils/gui/settings/GUISettingsHandler.h>
 #include <utils/iodevices/OutputDevice_String.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static variable definitions
@@ -209,7 +205,7 @@ GUICompleteSchemeStorage::writeSettings(FXApp* app) {
 
 
 void
-GUICompleteSchemeStorage::saveViewport(const SUMOReal x, const SUMOReal y, const SUMOReal z) {
+GUICompleteSchemeStorage::saveViewport(const double x, const double y, const double z) {
     myLookFrom.set(x, y, z);
 }
 

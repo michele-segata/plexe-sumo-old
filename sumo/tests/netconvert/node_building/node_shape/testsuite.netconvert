@@ -17,3 +17,6 @@ entering_paths
 4bidi
 5bidi
 misleading_angles
+
+# see #1443
+t_intersection

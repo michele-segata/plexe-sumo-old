@@ -44,8 +44,48 @@
 #include <cassert>
 #include <vector>
 #include <ctime>
+
+#include "trigger/MSTrigger.h"
+#include "trigger/MSCalibrator.h"
+#include "traffic_lights/MSTLLogicControl.h"
+#include "MSVehicleControl.h"
+#include <utils/common/MsgHandler.h>
+#include <utils/common/ToString.h>
+#include <utils/common/SysUtils.h>
 #include <utils/common/UtilExceptions.h>
-#include "MSNet.h"
+#include <utils/common/WrappingCommand.h>
+#include <utils/common/SystemFrame.h>
+#include <utils/geom/GeoConvHelper.h>
+#include <utils/iodevices/OutputDevice_File.h>
+#include <utils/iodevices/OutputDevice.h>
+#include <utils/options/OptionsCont.h>
+#include <utils/options/OptionsIO.h>
+#include <utils/shapes/Polygon.h>
+#include <utils/shapes/ShapeContainer.h>
+#include <utils/vehicle/PedestrianRouter.h>
+#include <utils/xml/SUMORouteLoaderControl.h>
+#include <utils/xml/XMLSubSys.h>
+#include <mesosim/MELoop.h>
+#include <microsim/output/MSDetectorControl.h>
+#include <microsim/MSCModel_NonInteracting.h>
+#include <microsim/MSVehicleTransfer.h>
+#include <microsim/devices/MSDevice_Routing.h>
+#include <microsim/devices/MSDevice_Vehroutes.h>
+#include <microsim/devices/MSDevice_Tripinfo.h>
+#include <microsim/devices/MSDevice_BTsender.h>
+#include <microsim/devices/MSDevice_SSM.h>
+#include <microsim/output/MSBatteryExport.h>
+#include <microsim/output/MSEmissionExport.h>
+#include <microsim/output/MSFCDExport.h>
+#include <microsim/output/MSFullExport.h>
+#include <microsim/output/MSQueueExport.h>
+#include <microsim/output/MSVTKExport.h>
+#include <microsim/output/MSXMLRawOut.h>
+#include <microsim/output/MSAmitranTrajectories.h>
+#include <microsim/pedestrians/MSPModel.h>
+#include <microsim/pedestrians/MSPerson.h>
+#include <microsim/traffic_lights/MSTrafficLightLogic.h>
+
 #include "MSTransportableControl.h"
 #include "MSEdgeControl.h"
 #include "MSJunctionControl.h"
@@ -57,57 +97,17 @@
 #include "MSLane.h"
 #include "MSVehicleTransfer.h"
 #include "MSRoute.h"
-#include <utils/xml/SUMORouteLoaderControl.h>
-#include "trigger/MSTrigger.h"
-#include "trigger/MSCalibrator.h"
-#include "traffic_lights/MSTLLogicControl.h"
-#include "MSVehicleControl.h"
-#include <utils/common/MsgHandler.h>
-#include <utils/common/ToString.h>
-#include <microsim/output/MSDetectorControl.h>
-#include <microsim/MSVehicleTransfer.h>
-#include <microsim/devices/MSDevice_Routing.h>
-#include <microsim/devices/MSDevice_Vehroutes.h>
-#include <microsim/devices/MSDevice_Tripinfo.h>
-#include <microsim/devices/MSDevice_BTsender.h>
-#include "traffic_lights/MSTrafficLightLogic.h"
-#include <utils/shapes/Polygon.h>
-#include <utils/shapes/ShapeContainer.h>
-
-#include <utils/iodevices/OutputDevice_File.h>
-#include "output/MSFCDExport.h"
-#include "output/MSEmissionExport.h"
-
-#include "output/MSBatteryExport.h"
-
-#include "output/MSFullExport.h"
-#include "output/MSQueueExport.h"
-#include "output/MSVTKExport.h"
-#include "output/MSXMLRawOut.h"
-#include "output/MSAmitranTrajectories.h"
-#include <utils/iodevices/OutputDevice.h>
-#include <utils/common/SysUtils.h>
-#include <utils/common/WrappingCommand.h>
-#include <utils/options/OptionsCont.h>
-#include <utils/vehicle/PedestrianRouter.h>
 #include "MSGlobals.h"
-#include <microsim/pedestrians/MSPModel.h>
-#include <microsim/MSCModel_NonInteracting.h>
-#include <utils/geom/GeoConvHelper.h>
-#include <microsim/pedestrians/MSPerson.h>
 #include "MSContainer.h"
 #include "MSEdgeWeightsStorage.h"
 #include "MSStateHandler.h"
-
-#include <mesosim/MELoop.h>
+#include "MSFrame.h"
+#include "MSNet.h"
 
 #ifndef NO_TRACI
 #include <traci-server/TraCIServer.h>
+#include <traci-server/lib/TraCI.h>
 #endif
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -121,11 +121,11 @@ const std::string MSNet::STAGE_LANECHANGE("laneChange");
 const std::string MSNet::STAGE_INSERTIONS("insertion");
 
 // ===========================================================================
-// member method definitions
+// static member method definitions
 // ===========================================================================
-SUMOReal
-MSNet::getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t) {
-    SUMOReal value;
+double
+MSNet::getEffort(const MSEdge* const e, const SUMOVehicle* const v, double t) {
+    double value;
     const MSVehicle* const veh = dynamic_cast<const MSVehicle* const>(v);
     if (veh != 0 && veh->getWeightsStorage().retrieveExistingEffort(e, t, value)) {
         return value;
@@ -137,9 +137,9 @@ MSNet::getEffort(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t) 
 }
 
 
-SUMOReal
-MSNet::getTravelTime(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal t) {
-    SUMOReal value;
+double
+MSNet::getTravelTime(const MSEdge* const e, const SUMOVehicle* const v, double t) {
+    double value;
     const MSVehicle* const veh = dynamic_cast<const MSVehicle* const>(v);
     if (veh != 0 && veh->getWeightsStorage().retrieveExistingTravelTime(e, t, value)) {
         return value;
@@ -149,7 +149,6 @@ MSNet::getTravelTime(const MSEdge* const e, const SUMOVehicle* const v, SUMOReal
     }
     return e->getMinimumTravelTime(v);
 }
-
 
 
 // ---------------------------------------------------------------------------
@@ -181,6 +180,7 @@ MSNet::MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
     }
     OptionsCont& oc = OptionsCont::getOptions();
     myStep = string2time(oc.getString("begin"));
+    myMaxTeleports = oc.getInt("max-num-teleports");
     myLogExecutionTime = !oc.getBool("no-duration-log");
     myLogStepNumber = !oc.getBool("no-step-log");
     myInserter = new MSInsertionControl(*vc, string2time(oc.getString("max-depart-delay")), oc.getBool("eager-insert"), oc.getInt("max-num-vehicles"));
@@ -207,8 +207,6 @@ MSNet::MSNet(MSVehicleControl* vc, MSEventControl* beginOfTimestepEvents,
 }
 
 
-
-
 void
 MSNet::closeBuilding(const OptionsCont& oc, MSEdgeControl* edges, MSJunctionControl* junctions,
                      SUMORouteLoaderControl* routeLoaders,
@@ -218,7 +216,7 @@ MSNet::closeBuilding(const OptionsCont& oc, MSEdgeControl* edges, MSJunctionCont
                      bool hasInternalLinks,
                      bool hasNeighs,
                      bool lefthand,
-                     SUMOReal version) {
+                     double version) {
     myEdges = edges;
     myJunctions = junctions;
     myRouteLoaders = routeLoaders;
@@ -287,14 +285,14 @@ MSNet::~MSNet() {
 
 
 void
-MSNet::addRestriction(const std::string& id, const SUMOVehicleClass svc, const SUMOReal speed) {
+MSNet::addRestriction(const std::string& id, const SUMOVehicleClass svc, const double speed) {
     myRestrictions[id][svc] = speed;
 }
 
 
-const std::map<SUMOVehicleClass, SUMOReal>*
+const std::map<SUMOVehicleClass, double>*
 MSNet::getRestrictions(const std::string& id) const {
-    std::map<std::string, std::map<SUMOVehicleClass, SUMOReal> >::const_iterator i = myRestrictions.find(id);
+    std::map<std::string, std::map<SUMOVehicleClass, double> >::const_iterator i = myRestrictions.find(id);
     if (i == myRestrictions.end()) {
         return 0;
     }
@@ -302,12 +300,12 @@ MSNet::getRestrictions(const std::string& id) const {
 }
 
 
-int
+MSNet::SimulationState
 MSNet::simulate(SUMOTime start, SUMOTime stop) {
     // report the begin when wished
     WRITE_MESSAGE("Simulation started with time: " + time2string(start));
     // the simulation loop
-    MSNet::SimulationState state = SIMSTATE_RUNNING;
+    SimulationState state = SIMSTATE_RUNNING;
     myStep = start;
     // preload the routes especially for TraCI
     loadRoutes();
@@ -318,7 +316,7 @@ MSNet::simulate(SUMOTime start, SUMOTime stop) {
         closeSimulation(start);
         WRITE_MESSAGE("Simulation ended at time: " + time2string(getCurrentTimeStep()));
         WRITE_MESSAGE("Reason: Script ended");
-        return 0;
+        return state;
     }
 #endif
 #endif
@@ -332,7 +330,10 @@ MSNet::simulate(SUMOTime start, SUMOTime stop) {
         }
         state = simulationState(stop);
 #ifndef NO_TRACI
-        if (state != SIMSTATE_RUNNING) {
+        if (state == SIMSTATE_LOADING) {
+            OptionsIO::setArgs(TraCI::getLoadArgs());
+            TraCI::getLoadArgs().clear();
+        } else if (state != SIMSTATE_RUNNING) {
             if (OptionsCont::getOptions().getInt("remote-port") != 0 && !TraCIServer::wasClosed()) {
                 state = SIMSTATE_RUNNING;
             }
@@ -344,7 +345,7 @@ MSNet::simulate(SUMOTime start, SUMOTime stop) {
     WRITE_MESSAGE("Reason: " + getStateMessage(state));
     // exit simulation loop
     closeSimulation(start);
-    return 0;
+    return state;
 }
 
 void
@@ -361,10 +362,10 @@ MSNet::closeSimulation(SUMOTime start) {
         // print performance notice
         msg << "Performance: " << "\n" << " Duration: " << duration << "ms" << "\n";
         if (duration != 0) {
-            msg << " Real time factor: " << (STEPS2TIME(myStep - start) * 1000. / (SUMOReal)duration) << "\n";
+            msg << " Real time factor: " << (STEPS2TIME(myStep - start) * 1000. / (double)duration) << "\n";
             msg.setf(std::ios::fixed , std::ios::floatfield);    // use decimal format
             msg.setf(std::ios::showpoint);    // print decimal point
-            msg << " UPS: " << ((SUMOReal)myVehiclesMoved / ((SUMOReal)duration / 1000)) << "\n";
+            msg << " UPS: " << ((double)myVehiclesMoved / ((double)duration / 1000)) << "\n";
         }
         // print vehicle statistics
         const std::string discardNotice = ((myVehicleControl->getLoadedVehicleNo() != myVehicleControl->getDepartedVehicleNo()) ?
@@ -414,9 +415,9 @@ MSNet::closeSimulation(SUMOTime start) {
     if (OptionsCont::getOptions().getBool("tripinfo-output.write-unfinished")) {
         MSDevice_Tripinfo::generateOutputForUnfinished();
     }
-#ifndef NO_TRACI
-    TraCIServer::close();
-#endif
+    if (OptionsCont::getOptions().isSet("chargingstations-output")) {
+        writeChargingStationOutput();
+    }
 }
 
 
@@ -535,9 +536,12 @@ MSNet::simulationState(SUMOTime stopTime) const {
     if (TraCIServer::wasClosed()) {
         return SIMSTATE_CONNECTION_CLOSED;
     }
-    if (stopTime < 0 && OptionsCont::getOptions().getInt("remote-port") == 0) {
+    if (!TraCI::getLoadArgs().empty()) {
+        return SIMSTATE_LOADING;
+    }
+    if ((stopTime < 0 || myStep > stopTime) && OptionsCont::getOptions().getInt("remote-port") == 0) {
 #else
-    if (stopTime < 0) {
+    if (stopTime < 0 || myStep > stopTime) {
 #endif
         if (myInsertionEvents->isEmpty()
                 && (myVehicleControl->getActiveVehicleCount() == 0)
@@ -557,6 +561,9 @@ MSNet::simulationState(SUMOTime stopTime) const {
     if (stopTime >= 0 && myStep >= stopTime) {
         return SIMSTATE_END_STEP_REACHED;
     }
+    if (myMaxTeleports >= 0 && myVehicleControl->getTeleportCount() > myMaxTeleports) {
+        return SIMSTATE_TOO_MANY_TELEPORTS;
+    }
     return SIMSTATE_RUNNING;
 }
 
@@ -574,8 +581,8 @@ MSNet::getStateMessage(MSNet::SimulationState state) {
             return "TraCI requested termination.";
         case MSNet::SIMSTATE_ERROR_IN_SIM:
             return "An error occured (see log).";
-        case MSNet::SIMSTATE_TOO_MANY_VEHICLES:
-            return "Too many vehicles.";
+        case MSNet::SIMSTATE_TOO_MANY_TELEPORTS:
+            return "Too many teleports.";
         default:
             return "Unknown reason.";
     }
@@ -595,6 +602,13 @@ MSNet::clearAll() {
     MSPModel::cleanup();
     MSCModel_NonInteracting::cleanup();
     MSDevice_BTsender::cleanup();
+    MSDevice_SSM::cleanup();
+#ifndef NO_TRACI
+    TraCIServer* t = TraCIServer::getInstance();
+    if (t != 0) {
+        t->cleanup();
+    }
+#endif
 }
 
 
@@ -664,9 +678,9 @@ MSNet::writeOutput() {
     if (OptionsCont::getOptions().isSet("summary-output")) {
         OutputDevice& od = OutputDevice::getDeviceByOption("summary-output");
         int departedVehiclesNumber = myVehicleControl->getDepartedVehicleNo();
-        const SUMOReal meanWaitingTime = departedVehiclesNumber != 0 ? myVehicleControl->getTotalDepartureDelay() / (SUMOReal) departedVehiclesNumber : -1.;
+        const double meanWaitingTime = departedVehiclesNumber != 0 ? myVehicleControl->getTotalDepartureDelay() / (double) departedVehiclesNumber : -1.;
         int endedVehicleNumber = myVehicleControl->getEndedVehicleNo();
-        const SUMOReal meanTravelTime = endedVehicleNumber != 0 ? myVehicleControl->getTotalTravelTime() / (SUMOReal) endedVehicleNumber : -1.;
+        const double meanTravelTime = endedVehicleNumber != 0 ? myVehicleControl->getTotalTravelTime() / (double) endedVehicleNumber : -1.;
         od.openTag("step").writeAttr("time", time2string(myStep)).writeAttr("loaded", myVehicleControl->getLoadedVehicleNo())
         .writeAttr("inserted", myVehicleControl->getDepartedVehicleNo()).writeAttr("running", myVehicleControl->getRunningVehicleNo())
         .writeAttr("waiting", myInserter->getWaitingVehicleNo()).writeAttr("ended", myVehicleControl->getEndedVehicleNo())
@@ -696,6 +710,12 @@ MSNet::writeOutput() {
             }
         }
         od.closeTag();
+    }
+
+    // write SSM output
+    for (std::set<MSDevice*>::iterator di = MSDevice_SSM::getInstances().begin(); di != MSDevice_SSM::getInstances().end(); ++di) {
+        MSDevice_SSM* dev = static_cast<MSDevice_SSM*>(*di);
+        dev->updateAndWriteOutput();
     }
 }
 
@@ -746,10 +766,10 @@ MSNet::postSimStepOutput() const {
         oss.setf(std::ios::showpoint);    // print decimal point
         oss << std::setprecision(gPrecision);
         if (mySimStepDuration != 0) {
-            const SUMOReal durationSec = (SUMOReal)mySimStepDuration / 1000.;
+            const double durationSec = (double)mySimStepDuration / 1000.;
             oss << " (" << mySimStepDuration << "ms ~= "
                 << (TS / durationSec) << "*RT, ~"
-                << ((SUMOReal) myVehicleControl->getRunningVehicleNo() / durationSec);
+                << ((double) myVehicleControl->getRunningVehicleNo() / durationSec);
         } else {
             oss << " (0ms ?*RT. ?";
         }
@@ -810,7 +830,7 @@ MSNet::getBusStop(const std::string& id) const {
 
 
 std::string
-MSNet::getBusStopID(const MSLane* lane, const SUMOReal pos) const {
+MSNet::getBusStopID(const MSLane* lane, const double pos) const {
     const std::map<std::string, MSStoppingPlace*>& vals = myBusStopDict.getMyMap();
     for (std::map<std::string, MSStoppingPlace*>::const_iterator it = vals.begin(); it != vals.end(); ++it) {
         MSStoppingPlace* stop = it->second;
@@ -833,7 +853,7 @@ MSNet::getContainerStop(const std::string& id) const {
 }
 
 std::string
-MSNet::getContainerStopID(const MSLane* lane, const SUMOReal pos) const {
+MSNet::getContainerStopID(const MSLane* lane, const double pos) const {
     const std::map<std::string, MSStoppingPlace*>& vals = myContainerStopDict.getMyMap();
     for (std::map<std::string, MSStoppingPlace*>::const_iterator it = vals.begin(); it != vals.end(); ++it) {
         MSStoppingPlace* stop = it->second;
@@ -856,7 +876,7 @@ MSNet::getParkingArea(const std::string& id) const {
 }
 
 std::string
-MSNet::getParkingAreaID(const MSLane* lane, const SUMOReal pos) const {
+MSNet::getParkingAreaID(const MSLane* lane, const double pos) const {
     const std::map<std::string, MSParkingArea*>& vals = myParkingAreaDict.getMyMap();
     for (std::map<std::string, MSParkingArea*>::const_iterator it = vals.begin(); it != vals.end(); ++it) {
         MSParkingArea* stop = it->second;
@@ -880,7 +900,7 @@ MSNet::getChargingStation(const std::string& id) const {
 
 
 std::string
-MSNet::getChargingStationID(const MSLane* lane, const SUMOReal pos) const {
+MSNet::getChargingStationID(const MSLane* lane, const double pos) const {
     const std::map<std::string, MSChargingStation*>& vals = myChargingStationDict.getMyMap();
     for (std::map<std::string, MSChargingStation*>::const_iterator it = vals.begin(); it != vals.end(); ++it) {
         MSChargingStation* chargingStation = it->second;
@@ -889,6 +909,15 @@ MSNet::getChargingStationID(const MSLane* lane, const SUMOReal pos) const {
         }
     }
     return "";
+}
+
+
+void
+MSNet::writeChargingStationOutput() const {
+    OutputDevice& output = OutputDevice::getDeviceByOption("chargingstations-output");
+    for (std::map<std::string, MSChargingStation*>::const_iterator it = myChargingStationDict.getMyMap().begin(); it != myChargingStationDict.getMyMap().end(); it++) {
+        it->second->writeChargingStationOutput(output);
+    }
 }
 
 

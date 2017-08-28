@@ -1,10 +1,10 @@
 /****************************************************************************/
 /// @file    GNECalibratorDialog.cpp
 /// @author  Pablo Alvarez Lopez
-/// @date    Jun 2016
+/// @date    March 2017
 /// @version $Id$
 ///
-/// Dialog for edit rerouters
+/// Dialog for edit calibrators
 /****************************************************************************/
 // SUMO, Simulation of Urban MObility; see http://sumo.dlr.de/
 // Copyright (C) 2001-2017 DLR (http://www.dlr.de/) and contributors
@@ -28,27 +28,33 @@
 #endif
 
 #include <iostream>
-#include <utils/common/TplCheck.h>
 #include <utils/gui/windows/GUIAppEnum.h>
 #include <utils/gui/images/GUIIconSubSys.h>
 #include <utils/gui/div/GUIDesigns.h>
+#include <utils/common/MsgHandler.h>
 
 #include "GNECalibratorDialog.h"
+#include "GNECalibrator.h"
+#include "GNEViewNet.h"
+#include "GNECalibratorFlowDialog.h"
+#include "GNECalibratorRouteDialog.h"
+#include "GNECalibratorVehicleTypeDialog.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif
 
 // ===========================================================================
 // FOX callback mapping
 // ===========================================================================
 
 FXDEFMAP(GNECalibratorDialog) GNECalibratorDialogMap[] = {
-    FXMAPFUNC(SEL_COMMAND,       MID_GNE_MODE_ADDITIONALDIALOG_ACCEPT,  GNECalibratorDialog::onCmdAccept),
-    FXMAPFUNC(SEL_COMMAND,       MID_GNE_MODE_ADDITIONALDIALOG_CANCEL,  GNECalibratorDialog::onCmdCancel),
-    FXMAPFUNC(SEL_COMMAND,       MID_GNE_MODE_ADDITIONALDIALOG_RESET,   GNECalibratorDialog::onCmdReset),
-    FXMAPFUNC(SEL_COMMAND,       MID_GNE_MODE_CALIBRATOR_TABLE,         GNECalibratorDialog::onCmdAddRow),
-    FXMAPFUNC(SEL_DOUBLECLICKED, MID_GNE_MODE_CALIBRATOR_TABLE,         GNECalibratorDialog::onCmdRemoveRow),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_CALIBRATORDIALOG_ADD_ROUTE,         GNECalibratorDialog::onCmdAddRoute),
+    FXMAPFUNC(SEL_CLICKED,  MID_GNE_CALIBRATORDIALOG_TABLE_ROUTE,       GNECalibratorDialog::onCmdClickedRoute),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_CALIBRATORDIALOG_ADD_FLOW,          GNECalibratorDialog::onCmdAddFlow),
+    FXMAPFUNC(SEL_CLICKED,  MID_GNE_CALIBRATORDIALOG_TABLE_FLOW,        GNECalibratorDialog::onCmdClickedFlow),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_CALIBRATORDIALOG_ADD_VEHICLETYPE,   GNECalibratorDialog::onCmdAddVehicleType),
+    FXMAPFUNC(SEL_CLICKED,  MID_GNE_CALIBRATORDIALOG_TABLE_VEHICLETYPE, GNECalibratorDialog::onCmdClickedVehicleType),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_MODE_ADDITIONALDIALOG_ACCEPT,       GNECalibratorDialog::onCmdAccept),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_MODE_ADDITIONALDIALOG_CANCEL,       GNECalibratorDialog::onCmdCancel),
+    FXMAPFUNC(SEL_COMMAND,  MID_GNE_MODE_ADDITIONALDIALOG_RESET,        GNECalibratorDialog::onCmdReset),
 };
 
 // Object implementation
@@ -59,81 +65,56 @@ FXIMPLEMENT(GNECalibratorDialog, FXDialogBox, GNECalibratorDialogMap, ARRAYNUMBE
 // ===========================================================================
 
 GNECalibratorDialog::GNECalibratorDialog(GNECalibrator* calibratorParent) :
-    GNEAdditionalDialog(calibratorParent, 1024, 360),
+    GNEAdditionalDialog(calibratorParent, 640, 480),
     myCalibratorParent(calibratorParent) {
 
-    // create List with the data
-    myDataList = new FXTable(myContentFrame, this, MID_GNE_MODE_CALIBRATOR_TABLE, GUIDesignTableLimitedHeight);
-    myDataList->setEditable(false);
+    // Create two columns, one for Routes and VehicleTypes, and other for Flows
+    FXHorizontalFrame* columns = new FXHorizontalFrame(myContentFrame, GUIDesignUniformHorizontalFrame);
+    FXVerticalFrame* columnLeft = new FXVerticalFrame(columns, GUIDesignAuxiliarFrame);
+    FXVerticalFrame* columnRight = new FXVerticalFrame(columns, GUIDesignAuxiliarFrame);
 
-    // create Horizontal frame for row elements
-    myRowFrame = new FXHorizontalFrame(myContentFrame, GUIDesignAuxiliarHorizontalFrame);
+    // create add buton and label for routes
+    FXHorizontalFrame* buttonAndLabelRoute = new FXHorizontalFrame(columnLeft, GUIDesignAuxiliarHorizontalFrame);
+    myAddRoute = new FXButton(buttonAndLabelRoute, "", GUIIconSubSys::getIcon(ICON_ADD), this, MID_GNE_CALIBRATORDIALOG_ADD_ROUTE, GUIDesignButtonIcon);
+    new FXLabel(buttonAndLabelRoute, ("Add new " + toString(SUMO_TAG_ROUTE) + "s").c_str(), 0, GUIDesignLabelThick);
 
-    // create Text field for id
-    myTextFieldId = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
+    // Create table in left frame
+    myRouteList = new FXTable(columnLeft, this, MID_GNE_CALIBRATORDIALOG_TABLE_ROUTE, GUIDesignTableAdditionals);
+    myRouteList->setSelBackColor(FXRGBA(255, 255, 255, 255));
+    myRouteList->setSelTextColor(FXRGBA(0, 0, 0, 255));
+    myRouteList->setEditable(false);
 
-    // create Text field for begin
-    myTextFieldBegin = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignTextFieldReal);
+    // create add buton and label for vehicle types
+    FXHorizontalFrame* buttonAndLabelVehicleType = new FXHorizontalFrame(columnLeft, GUIDesignAuxiliarHorizontalFrame);
+    myAddVehicleType = new FXButton(buttonAndLabelVehicleType, "", GUIIconSubSys::getIcon(ICON_ADD), this, MID_GNE_CALIBRATORDIALOG_ADD_VEHICLETYPE, GUIDesignButtonIcon);
+    new FXLabel(buttonAndLabelVehicleType, ("Add new " + toString(SUMO_TAG_VTYPE) + "s").c_str(), 0, GUIDesignLabelThick);
 
-    // create Text field for end
-    myTextFieldEnd = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignTextFieldReal);
+    // Create table in left frame
+    myVehicleTypeList = new FXTable(columnLeft, this, MID_GNE_CALIBRATORDIALOG_TABLE_VEHICLETYPE, GUIDesignTableAdditionals);
+    myVehicleTypeList->setSelBackColor(FXRGBA(255, 255, 255, 255));
+    myVehicleTypeList->setSelTextColor(FXRGBA(0, 0, 0, 255));
+    myVehicleTypeList->setEditable(false);
 
-    // create Text field for type
-    myTextFieldType = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
+    // create add buton and label for flows in right frame
+    FXHorizontalFrame* buttonAndLabelFlow = new FXHorizontalFrame(columnRight, GUIDesignAuxiliarHorizontalFrame);
+    myAddFlow = new FXButton(buttonAndLabelFlow, "", GUIIconSubSys::getIcon(ICON_ADD), this, MID_GNE_CALIBRATORDIALOG_ADD_FLOW, GUIDesignButtonIcon);
+    myLabelFlow = new FXLabel(buttonAndLabelFlow, ("Add new " + toString(SUMO_TAG_FLOW) + "s").c_str(), 0, GUIDesignLabelThick);
 
-    // create Text field for route
-    myTextFieldRoute = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
+    // Create table in right frame
+    myFlowList = new FXTable(columnRight, this, MID_GNE_CALIBRATORDIALOG_TABLE_FLOW, GUIDesignTableAdditionals);
+    myFlowList->setSelBackColor(FXRGBA(255, 255, 255, 255));
+    myFlowList->setSelTextColor(FXRGBA(0, 0, 0, 255));
+    myFlowList->setEditable(false);
 
-    // create Text field for color
-    myTextFieldColor = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
+    // obtain copy of calibrator values
+    myCopyOfCalibratorRoutes = myCalibratorParent->getCalibratorRoutes();
+    myCopyOfCalibratorFlows = myCalibratorParent->getCalibratorFlows();
+    myCopyOfCalibratorVehicleTypes = myCalibratorParent->getCalibratorVehicleTypes();
 
-    // create Text field for depart lane
-    myTextFieldDepartLane = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
-
-    // create Text field for depart pos
-    myTextFieldDepartPos = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
-
-    // create Text field for depart speed
-    myTextFieldDepartSpeed = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
-
-    // create Text field for arrival lane
-    myTextFieldArrivalLane = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
-
-    // create Text field for arrival pos
-    myTextFieldArrivalPos = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
-
-    // create Text field for arrival speed
-    myTextFieldArrivalSpeed = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
-
-    // create Text field for line
-    myTextFieldLine = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignLabelThick);
-
-    // create Text field for person number
-    myTextFieldPersonNumber = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignTextFieldInt);
-
-    // create Text field for container number
-    myTextFieldContainerNumber = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignTextFieldInt);
-
-    // create Text field for vehsPerHour
-    myTextFieldVehsPerHour = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignTextFieldReal);
-
-    // create Text field for period
-    myTextFieldPeriod = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignTextFieldReal);
-
-    // create Text field for probability
-    myTextFieldProbability = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignTextFieldReal);
-
-    // create Text field for number
-    myTextFieldNumber = new FXTextField(myRowFrame, 10, this, MID_GNE_MODE_CALIBRATOR_EDITVALUE, GUIDesignTextFieldInt);
-
-    // create Button for insert row
-    myAddRow = new FXButton(myRowFrame, "Add", 0, this, MID_GNE_MODE_CALIBRATOR_TABLE, GUIDesignLabelThick);
-
-    // Get values of variable speed signal
-    myFlowValues = myCalibratorParent->getFlowValues();
-
-    // Fill table
-    updateTable();
+    // update tables
+    updateRouteTable();
+    updateFlowTable();
+    updateVehicleTypeTable();
 
     // Execute additional dialog (To make it modal)
     execute();
@@ -144,118 +125,14 @@ GNECalibratorDialog::~GNECalibratorDialog() {
 }
 
 
-long
-GNECalibratorDialog::onCmdAddRow(FXObject*, FXSelector, void*) {
-    // Declare new calibrator
-    GNECalibrator::GNECalibratorFlow* calibratorFlow = new GNECalibrator::GNECalibratorFlow(0, "", "");
-    // set ID
-    std::string id = myTextFieldId->getText().text();
-
-    // set Start
-    if (myTextFieldBegin->getText().empty()) {
-        return 0;
-    } else {
-        calibratorFlow->setBegin(TplConvert::_str2SUMOReal(myTextFieldBegin->getText().text()));
-    }
-
-    // set End
-    if (myTextFieldEnd->getText().empty()) {
-        return 0;
-    } else {
-        calibratorFlow->setEnd(TplConvert::_str2SUMOReal(myTextFieldEnd->getText().text()));
-    }
-
-    // set Type
-    if (myTextFieldType->getText().empty()) {
-        return 0;
-    } else {
-        calibratorFlow->setType(myTextFieldType->getText().text());
-    }
-
-    // set Route
-    if (myTextFieldType->getText().empty()) {
-        return 0;
-    } else {
-        calibratorFlow->setRoute(myTextFieldRoute->getText().text());
-    }
-
-    // Set color
-    calibratorFlow->setColor(myTextFieldColor->getText().text());
-
-    // Set depart lane
-    calibratorFlow->setDepartLane(myTextFieldDepartLane->getText().text());
-
-    // Set depart pos
-    calibratorFlow->setDepartPos(myTextFieldDepartPos->getText().text());
-
-    // Set depart speed
-    calibratorFlow->setDepartSpeed(myTextFieldDepartSpeed->getText().text());
-
-    // Set arrival lane
-    calibratorFlow->setArrivalLane(myTextFieldArrivalLane->getText().text());
-
-    // Set arrival pos
-    calibratorFlow->setArrivalPos(myTextFieldArrivalPos->getText().text());
-
-    // Set arrival speed
-    calibratorFlow->setArrivalSpeed(myTextFieldArrivalSpeed->getText().text());
-
-    // Set Line
-    calibratorFlow->setLine(myTextFieldLine->getText().text());
-
-    // set PersionNumber
-    calibratorFlow->setPersonNumber(TplConvert::_str2int(myTextFieldPersonNumber->getText().text()));
-
-    // set Container Number
-    calibratorFlow->setContainerNumber(TplConvert::_str2int(myTextFieldContainerNumber->getText().text()));
-
-    // Set vehsPerHour
-    calibratorFlow->setVehsPerHour(TplConvert::_str2SUMOReal(myTextFieldVehsPerHour->getText().text()));
-
-    // set Period
-    calibratorFlow->setPeriod(TplConvert::_str2SUMOReal(myTextFieldPeriod->getText().text()));
-
-    // set Probability
-    calibratorFlow->setProbability(TplCheck::_str2SUMOReal(myTextFieldProbability->getText().text()));
-
-    // set Number
-    calibratorFlow->setNumber(TplConvert::_str2int(myTextFieldNumber->getText().text()));
-
-    // addd new calibrator flow to table
-    if (std::find(myFlowValues.begin(), myFlowValues.end(), calibratorFlow) == myFlowValues.end()) {
-        myFlowValues.push_back(calibratorFlow);
-    } else {
-        delete calibratorFlow;
-        return 0;
-    }
-
-    // Update table
-    updateTable();
-    return 1;
-}
-
-
-long
-GNECalibratorDialog::onCmdRemoveRow(FXObject*, FXSelector, void*) {
-    // Iterate over rows to find the row to erase
-    for (int i = 0; i < myDataList->getNumRows(); i++) {
-        if (myDataList->getItem(i, 19)->isSelected()) {
-            // Remove element of table and map
-            myFlowValues.erase(myFlowValues.begin() + i);
-            myDataList->removeRows(i);
-            // update table
-            updateTable();
-            return 1;
-        }
-    }
-    return 0;
+GNECalibrator*
+GNECalibratorDialog::getCalibratorParent() const {
+    return myCalibratorParent;
 }
 
 
 long
 GNECalibratorDialog::onCmdAccept(FXObject*, FXSelector, void*) {
-    // Get values of variable speed signal
-    myCalibratorParent->setFlowValues(myFlowValues);
     // Stop Modal
     getApp()->stopModal(this, TRUE);
     return 1;
@@ -264,6 +141,10 @@ GNECalibratorDialog::onCmdAccept(FXObject*, FXSelector, void*) {
 
 long
 GNECalibratorDialog::onCmdCancel(FXObject*, FXSelector, void*) {
+    // set original VTypes, routes and flows into calibrator
+    myCalibratorParent->setCalibratorVehicleTypes(myCopyOfCalibratorVehicleTypes);
+    myCalibratorParent->setCalibratorRoutes(myCopyOfCalibratorRoutes);
+    myCalibratorParent->setCalibratorFlows(myCopyOfCalibratorFlows);
     // Stop Modal
     getApp()->stopModal(this, FALSE);
     return 1;
@@ -272,149 +153,391 @@ GNECalibratorDialog::onCmdCancel(FXObject*, FXSelector, void*) {
 
 long
 GNECalibratorDialog::onCmdReset(FXObject*, FXSelector, void*) {
-    // Get values of variable speed signal
-    myFlowValues = myCalibratorParent->getFlowValues();
-    // Update Table
-    updateTable();
+    // set original VTypes, routes and flows into calibrator
+    myCalibratorParent->setCalibratorVehicleTypes(myCopyOfCalibratorVehicleTypes);
+    myCalibratorParent->setCalibratorRoutes(myCopyOfCalibratorRoutes);
+    myCalibratorParent->setCalibratorFlows(myCopyOfCalibratorFlows);
+    // update tables
+    updateRouteTable();
+    updateVehicleTypeTable();
+    updateFlowTable();
     return 1;
 }
 
 
-void
-GNECalibratorDialog::updateTable() {
-    // clear table
-    myDataList->clearItems();
-    // set number of rows
-    myDataList->setTableSize(int(myFlowValues.size()), 20);
-    // Configure list
-    myDataList->setVisibleColumns(20);
-    myDataList->setColumnWidth(0, getWidth() / 20);
-    myDataList->setColumnWidth(1, getWidth() / 20);
-    myDataList->setColumnWidth(2, getWidth() / 20);
-    myDataList->setColumnWidth(3, getWidth() / 20);
-    myDataList->setColumnWidth(4, getWidth() / 20);
-    myDataList->setColumnWidth(5, getWidth() / 20);
-    myDataList->setColumnWidth(6, getWidth() / 20);
-    myDataList->setColumnWidth(7, getWidth() / 20);
-    myDataList->setColumnWidth(8, getWidth() / 20);
-    myDataList->setColumnWidth(9, getWidth() / 20);
-    myDataList->setColumnWidth(10, getWidth() / 20);
-    myDataList->setColumnWidth(11, getWidth() / 20);
-    myDataList->setColumnWidth(12, getWidth() / 20);
-    myDataList->setColumnWidth(13, getWidth() / 20);
-    myDataList->setColumnWidth(14, getWidth() / 20);
-    myDataList->setColumnWidth(15, getWidth() / 20);
-    myDataList->setColumnWidth(16, getWidth() / 20);
-    myDataList->setColumnWidth(17, getWidth() / 20);
-    myDataList->setColumnWidth(18, getWidth() / 20);
-    myDataList->setColumnWidth(19, getWidth() / 20 - 10);
-    myDataList->setColumnText(0, "Id");
-    myDataList->setColumnText(1, "Begin");
-    myDataList->setColumnText(2, "End");
-    myDataList->setColumnText(3, "Type");
-    myDataList->setColumnText(4, "Route");
-    myDataList->setColumnText(5, "Color");
-    myDataList->setColumnText(6, "Dep.Lane");
-    myDataList->setColumnText(7, "Dep.Pos.");
-    myDataList->setColumnText(8, "Dep.Speed");
-    myDataList->setColumnText(9, "Arr.Lane");
-    myDataList->setColumnText(10, "Arr.Pos.");
-    myDataList->setColumnText(11, "Arr.Speed");
-    myDataList->setColumnText(12, "Line");
-    myDataList->setColumnText(13, "Per.Num.");
-    myDataList->setColumnText(14, "Con.Num");
-    myDataList->setColumnText(15, "VehPerHour");
-    myDataList->setColumnText(16, "Period");
-    myDataList->setColumnText(17, "Prob.");
-    myDataList->setColumnText(18, "Number");
-    myDataList->setColumnText(19, "Del.");
-    myDataList->getRowHeader()->setWidth(0);
+long
+GNECalibratorDialog::onCmdAddRoute(FXObject*, FXSelector, void*) {
+    // create empty calibrator route and configure it with GNECalibratorRouteDialog
+    GNECalibratorRoute newRoute(myCalibratorParent);
+    if (GNECalibratorRouteDialog(this, newRoute, false).execute() == TRUE) {
+        // if new route was sucesfully configured, add it to calibrator routes
+        std::vector<GNECalibratorRoute> vehicleTypes = myCalibratorParent->getCalibratorRoutes();
+        vehicleTypes.push_back(newRoute);
+        myCalibratorParent->setCalibratorRoutes(vehicleTypes);
+        // update routes table
+        updateRouteTable();
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
+
+long
+GNECalibratorDialog::onCmdClickedRoute(FXObject*, FXSelector, void*) {
+    // check if some delete button was pressed
+    for (int i = 0; i < (int)myCalibratorParent->getCalibratorRoutes().size(); i++) {
+        if (myRouteList->getItem(i, 2)->hasFocus()) {
+            // find all flows that contains route to delete as "route" parameter
+            std::vector<GNECalibratorFlow> calibratorFlowsToErase;
+            for (std::vector<GNECalibratorFlow>::const_iterator j = myCalibratorParent->getCalibratorFlows().begin(); j != myCalibratorParent->getCalibratorFlows().end(); j++) {
+                if (j->getRoute() == myRouteList->getItem(i, 0)->getText().text()) {
+                    calibratorFlowsToErase.push_back(*j);
+                }
+            }
+            // if there are flows that has route to remove as "route" parameter
+            if (calibratorFlowsToErase.size() > 0) {
+                // write warning if netedit is running in testing mode
+                if (myCalibratorParent->getViewNet()->isTestingModeEnabled() == true) {
+                    WRITE_WARNING("Opening FXMessageBox of type 'question'");
+                }
+                // open question dialog box
+                FXuint answer = FXMessageBox::question(myCalibratorParent->getViewNet()->getApp(), MBOX_YES_NO, ("Remove " + toString(SUMO_TAG_FLOW) + "s").c_str(), "%s",
+                                                       ("Deletion of " + toString(SUMO_TAG_ROUTE) + " '" + myRouteList->getItem(i, 0)->getText().text() +
+                                                        "' will remove " + toString(calibratorFlowsToErase.size()) + " " + toString(SUMO_TAG_FLOW) + (calibratorFlowsToErase.size() > 1 ? ("s") : ("")) +
+                                                        ". Continue?").c_str());
+                if (answer != 1) { //1:yes, 2:no, 4:esc
+                    // write warning if netedit is running in testing mode
+                    if ((answer == 2) && (myCalibratorParent->getViewNet()->isTestingModeEnabled() == true)) {
+                        WRITE_WARNING("Closed FXMessageBox of type 'question' with 'No'");
+                    } else if ((answer == 4) && (myCalibratorParent->getViewNet()->isTestingModeEnabled() == true)) {
+                        WRITE_WARNING("Closed FXMessageBox of type 'question' with 'ESC'");
+                    }
+                    // abort deletion of route
+                    return 0;
+                } else {
+                    // write warning if netedit is running in testing mode
+                    if (myCalibratorParent->getViewNet()->isTestingModeEnabled() == true) {
+                        WRITE_WARNING("Closed FXMessageBox of type 'question' with 'Yes'");
+                    }
+                    // remove flows with route to delete
+                    std::vector<GNECalibratorFlow> flowSubstraction;
+                    for (std::vector<GNECalibratorFlow>::const_iterator j = myCalibratorParent->getCalibratorFlows().begin(); j != myCalibratorParent->getCalibratorFlows().end(); j++) {
+                        if (std::find(calibratorFlowsToErase.begin(), calibratorFlowsToErase.end(), *j) == calibratorFlowsToErase.end()) {
+                            flowSubstraction.push_back(*j);
+                        }
+                    }
+                    // set substracted flows into calibrator
+                    myCalibratorParent->setCalibratorFlows(flowSubstraction);
+                    // update flows table
+                    updateFlowTable();
+                }
+            }
+            // remove route of calibrator routes
+            std::vector<GNECalibratorRoute> vehicleTypes = myCalibratorParent->getCalibratorRoutes();
+            vehicleTypes.erase(vehicleTypes.begin() + i);
+            myCalibratorParent->setCalibratorRoutes(vehicleTypes);
+            // update routes table
+            updateRouteTable();
+            return 1;
+        }
+    }
+    // check if other field was pressed
+    for (int i = 0; i < (int)myCalibratorParent->getCalibratorRoutes().size(); i++) {
+        if (myRouteList->getItem(i, 0)->hasFocus() || myRouteList->getItem(i, 1)->hasFocus()) {
+            // modify route of calibrator routes
+            std::vector<GNECalibratorRoute> routes = myCalibratorParent->getCalibratorRoutes();
+            if (GNECalibratorRouteDialog(this, routes.at(i), true).execute() == TRUE) {
+                myCalibratorParent->setCalibratorRoutes(routes);
+                // update routes table
+                updateRouteTable();
+            }
+            return 1;
+        }
+    }
+    // nothing to do
+    return 0;
+}
+
+
+long
+GNECalibratorDialog::onCmdAddFlow(FXObject*, FXSelector, void*) {
+    // create empty calibrator flow and configure it with GNECalibratorFlowDialog
+    GNECalibratorFlow newFlow(myCalibratorParent);
+    if (GNECalibratorFlowDialog(this, newFlow, false).execute() == TRUE) {
+        // if new flow was sucesfully configured, add it to calibrator flows
+        std::vector<GNECalibratorFlow> vehicleTypes = myCalibratorParent->getCalibratorFlows();
+        vehicleTypes.push_back(newFlow);
+        myCalibratorParent->setCalibratorFlows(vehicleTypes);
+        // update flows table
+        updateFlowTable();
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
+long
+GNECalibratorDialog::onCmdClickedFlow(FXObject*, FXSelector, void*) {
+    // check if some delete button was pressed
+    for (int i = 0; i < (int)myCalibratorParent->getCalibratorFlows().size(); i++) {
+        if (myFlowList->getItem(i, 3)->hasFocus()) {
+            // remove flow of calibrator flows
+            std::vector<GNECalibratorFlow> flows = myCalibratorParent->getCalibratorFlows();
+            flows.erase(flows.begin() + i);
+            myCalibratorParent->setCalibratorFlows(flows);
+            // update flows table
+            updateFlowTable();
+            return 1;
+        }
+    }
+    // check if other field was pressed
+    for (int i = 0; i < (int)myCalibratorParent->getCalibratorFlows().size(); i++) {
+        if (myFlowList->getItem(i, 0)->hasFocus() || myFlowList->getItem(i, 1)->hasFocus() || myFlowList->getItem(i, 2)->hasFocus()) {
+            // modify flow of calibrator flows
+            std::vector<GNECalibratorFlow> flows = myCalibratorParent->getCalibratorFlows();
+            if (GNECalibratorFlowDialog(this, flows.at(i), true).execute() == TRUE) {
+                myCalibratorParent->setCalibratorFlows(flows);
+                // update flows table
+                updateFlowTable();
+            }
+            return 1;
+        }
+    }
+    // nothing to do
+    return 0;
+}
+
+
+long
+GNECalibratorDialog::onCmdAddVehicleType(FXObject*, FXSelector, void*) {
+    // create empty calibrator flow and configure it with GNECalibratorVehicleTypeDialog
+    GNECalibratorVehicleType newVehicleType(myCalibratorParent);
+    if (GNECalibratorVehicleTypeDialog(this, newVehicleType, false).execute() == TRUE) {
+        // if new vehicle type was sucesfully configured, add it to calibrator vehicle types
+        std::vector<GNECalibratorVehicleType> vehicleTypes = myCalibratorParent->getCalibratorVehicleTypes();
+        vehicleTypes.push_back(newVehicleType);
+        myCalibratorParent->setCalibratorVehicleTypes(vehicleTypes);
+        // update vehicle types table
+        updateVehicleTypeTable();
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+
+long
+GNECalibratorDialog::onCmdClickedVehicleType(FXObject*, FXSelector, void*) {
+    // check if some delete button was pressed
+    for (int i = 0; i < (int)myCalibratorParent->getCalibratorVehicleTypes().size(); i++) {
+        if (myVehicleTypeList->getItem(i, 2)->hasFocus()) {
+            // find all flows that contains vehicle type to delete as "vehicle type" parameter
+            std::vector<GNECalibratorFlow> calibratorFlowsToErase;
+            for (std::vector<GNECalibratorFlow>::const_iterator j = myCalibratorParent->getCalibratorFlows().begin(); j != myCalibratorParent->getCalibratorFlows().end(); j++) {
+                if (j->getVehicleType() == myVehicleTypeList->getItem(i, 0)->getText().text()) {
+                    calibratorFlowsToErase.push_back(*j);
+                }
+            }
+            // if there are flows that has vehicle type to remove as "vehicle type" parameter
+            if (calibratorFlowsToErase.size() > 0) {
+                FXuint answer = FXMessageBox::question(myCalibratorParent->getViewNet()->getApp(), MBOX_YES_NO, ("Remove " + toString(SUMO_TAG_FLOW) + "s").c_str(), "%s",
+                                                       ("Deletion of " + toString(SUMO_TAG_ROUTE) + " '" + myRouteList->getItem(i, 0)->getText().text() +
+                                                        "' will remove " + toString(calibratorFlowsToErase.size()) + " " + toString(SUMO_TAG_FLOW) + (calibratorFlowsToErase.size() > 1 ? ("s") : ("")) +
+                                                        ". Continue?").c_str());
+                if (answer != 1) { //1:yes, 2:no, 4:esc
+                    // write warning if netedit is running in testing mode
+                    if ((answer == 2) && (myCalibratorParent->getViewNet()->isTestingModeEnabled() == true)) {
+                        WRITE_WARNING("Closed FXMessageBox of type 'question' with 'No'");
+                    } else if ((answer == 4) && (myCalibratorParent->getViewNet()->isTestingModeEnabled() == true)) {
+                        WRITE_WARNING("Closed FXMessageBox of type 'question' with 'ESC'");
+                    }
+                    // abort deletion of vehicle type
+                    return 0;
+                } else {
+                    // write warning if netedit is running in testing mode
+                    if (myCalibratorParent->getViewNet()->isTestingModeEnabled() == true) {
+                        WRITE_WARNING("Closed FXMessageBox of type 'question' with 'Yes'");
+                    }
+                    // remove flows with vehicle type to delete
+                    std::vector<GNECalibratorFlow> flowSubstraction;
+                    for (std::vector<GNECalibratorFlow>::const_iterator j = myCalibratorParent->getCalibratorFlows().begin(); j != myCalibratorParent->getCalibratorFlows().end(); j++) {
+                        if (std::find(calibratorFlowsToErase.begin(), calibratorFlowsToErase.end(), *j) == calibratorFlowsToErase.end()) {
+                            flowSubstraction.push_back(*j);
+                        }
+                    }
+                    // set substracted flows into calibrator
+                    myCalibratorParent->setCalibratorFlows(flowSubstraction);
+                    // update flows table
+                    updateFlowTable();
+                }
+            }
+            // remove vehicle type of calibrator vehicle types
+            std::vector<GNECalibratorVehicleType> vehicleTypes = myCalibratorParent->getCalibratorVehicleTypes();
+            vehicleTypes.erase(vehicleTypes.begin() + i);
+            myCalibratorParent->setCalibratorVehicleTypes(vehicleTypes);
+            // update vehicle types table
+            updateVehicleTypeTable();
+            return 1;
+        }
+    }
+    // check if other field was pressed
+    for (int i = 0; i < (int)myCalibratorParent->getCalibratorVehicleTypes().size(); i++) {
+        if (myVehicleTypeList->getItem(i, 0)->hasFocus() || myVehicleTypeList->getItem(i, 1)->hasFocus()) {
+            // modify vehicle type of calibratorVehicleTypes
+            std::vector<GNECalibratorVehicleType> vehicleTypes = myCalibratorParent->getCalibratorVehicleTypes();
+            if (GNECalibratorVehicleTypeDialog(this, vehicleTypes.at(i), true).execute() == TRUE) {
+                myCalibratorParent->setCalibratorVehicleTypes(vehicleTypes);
+                // update vehicle types table
+                updateVehicleTypeTable();
+            }
+            return 1;
+        }
+    }
+    // nothing to do
+    return 0;
+}
+
+
+void
+GNECalibratorDialog::updateRouteTable() {
+    // clear table
+    myRouteList->clearItems();
+    // set number of rows
+    myRouteList->setTableSize(int(myCalibratorParent->getCalibratorRoutes().size()), 3);
+    // Configure list
+    myRouteList->setVisibleColumns(4);
+    myRouteList->setColumnWidth(0, 136);
+    myRouteList->setColumnWidth(1, 136);
+    myRouteList->setColumnWidth(2, GUIDesignTableIconCellWidth);
+    myRouteList->setColumnText(0, toString(SUMO_ATTR_ID).c_str());
+    myRouteList->setColumnText(1, toString(SUMO_ATTR_EDGES).c_str());
+    myRouteList->setColumnText(2, "");
+    myRouteList->getRowHeader()->setWidth(0);
     // Declare index for rows and pointer to FXTableItem
     int indexRow = 0;
     FXTableItem* item = 0;
-
     // iterate over values
-    for (std::vector<GNECalibrator::GNECalibratorFlow*>::iterator i = myFlowValues.begin(); i != myFlowValues.end(); i++) {
-        // set begin
-        item = new FXTableItem(toString((*i)->getBegin()).c_str());
-        myDataList->setItem(indexRow, 1, item);
-
-        // set end
-        item = new FXTableItem(toString((*i)->getEnd()).c_str());
-        myDataList->setItem(indexRow, 2, item);
-
-        // set type
-        item = new FXTableItem(toString((*i)->getType()).c_str());
-        myDataList->setItem(indexRow, 3, item);
-
-        // set route
-        item = new FXTableItem(toString((*i)->getRoute()).c_str());
-        myDataList->setItem(indexRow, 4, item);
-
-        // set color
-        item = new FXTableItem(toString((*i)->getColor()).c_str());
-        myDataList->setItem(indexRow, 5, item);
-
-        // set depart lane
-        item = new FXTableItem(toString((*i)->getDepartLane()).c_str());
-        myDataList->setItem(indexRow, 6, item);
-
-        // set depart pos
-        item = new FXTableItem(toString((*i)->getDepartPos()).c_str());
-        myDataList->setItem(indexRow, 7, item);
-
-        // set depart speed
-        item = new FXTableItem(toString((*i)->getDepartSpeed()).c_str());
-        myDataList->setItem(indexRow, 8, item);
-
-        // set arrival lane
-        item = new FXTableItem(toString((*i)->getArrivalLane()).c_str());
-        myDataList->setItem(indexRow, 9, item);
-
-        // set arrival pos
-        item = new FXTableItem(toString((*i)->getArrivalPos()).c_str());
-        myDataList->setItem(indexRow, 10, item);
-
-        // set arrival speed
-        item = new FXTableItem(toString((*i)->getArrivalSpeed()).c_str());
-        myDataList->setItem(indexRow, 11, item);
-
-        // set line
-        item = new FXTableItem(toString((*i)->getLine()).c_str());
-        myDataList->setItem(indexRow, 12, item);
-
-        // set person number
-        item = new FXTableItem(toString((*i)->getPersonNumber()).c_str());
-        myDataList->setItem(indexRow, 13, item);
-
-        // set container number
-        item = new FXTableItem(toString((*i)->getContainerNumber()).c_str());
-        myDataList->setItem(indexRow, 14, item);
-
-        // set vehsPerHour
-        item = new FXTableItem(toString((*i)->getVehsPerHour()).c_str());
-        myDataList->setItem(indexRow, 15, item);
-
-        // set period
-        item = new FXTableItem(toString((*i)->getPeriod()).c_str());
-        myDataList->setItem(indexRow, 16, item);
-
-        // set probability
-        item = new FXTableItem(toString((*i)->getProbability()).c_str());
-        myDataList->setItem(indexRow, 17, item);
-
-        // set number
-        item = new FXTableItem(toString((*i)->getNumber()).c_str());
-        myDataList->setItem(indexRow, 18, item);
-
+    for (std::vector<GNECalibratorRoute>::const_iterator i = myCalibratorParent->getCalibratorRoutes().begin(); i != myCalibratorParent->getCalibratorRoutes().end(); i++) {
+        // Set ID
+        item = new FXTableItem(toString(i->getRouteID()).c_str());
+        myRouteList->setItem(indexRow, 0, item);
+        // Set edges
+        item = new FXTableItem(toString(i->getEdgesIDs()).c_str());
+        myRouteList->setItem(indexRow, 1, item);
         // set remove
         item = new FXTableItem("", GUIIconSubSys::getIcon(ICON_REMOVE));
         item->setJustify(FXTableItem::CENTER_X | FXTableItem::CENTER_Y);
-        myDataList->setItem(indexRow, 19, item);
-
+        item->setEnabled(false);
+        myRouteList->setItem(indexRow, 2, item);
         // Update index
         indexRow++;
+    }
+    // enable or disable flow and label button
+    updateFlowAndLabelButton();
+}
+
+
+void
+GNECalibratorDialog::updateFlowTable() {
+    // clear table
+    myFlowList->clearItems();
+    // set number of rows
+    myFlowList->setTableSize(int(myCalibratorParent->getCalibratorFlows().size()), 4);
+    // Configure list
+    myFlowList->setVisibleColumns(4);
+    myFlowList->setColumnWidth(0, 92);
+    myFlowList->setColumnWidth(1, 90);
+    myFlowList->setColumnWidth(2, 90);
+    myFlowList->setColumnWidth(3, GUIDesignTableIconCellWidth);
+    myFlowList->setColumnText(0, toString(SUMO_ATTR_ID).c_str());
+    myFlowList->setColumnText(1, toString(SUMO_ATTR_VCLASS).c_str());
+    myFlowList->setColumnText(2, toString(SUMO_ATTR_ROUTE).c_str());
+    myFlowList->setColumnText(3, "");
+    myFlowList->getRowHeader()->setWidth(0);
+    // Declare index for rows and pointer to FXTableItem
+    int indexRow = 0;
+    FXTableItem* item = 0;
+    // iterate over values
+    for (std::vector<GNECalibratorFlow>::const_iterator i = myCalibratorParent->getCalibratorFlows().begin(); i != myCalibratorParent->getCalibratorFlows().end(); i++) {
+        // Set id
+        item = new FXTableItem(toString(i->getFlowID()).c_str());
+        myFlowList->setItem(indexRow, 0, item);
+        // Set vehicle type
+        item = new FXTableItem(toString(i->getVehicleType()).c_str());
+        myFlowList->setItem(indexRow, 1, item);
+        // Set route
+        item = new FXTableItem(toString(i->getRoute()).c_str());
+        myFlowList->setItem(indexRow, 2, item);
+        // set remove
+        item = new FXTableItem("", GUIIconSubSys::getIcon(ICON_REMOVE));
+        item->setJustify(FXTableItem::CENTER_X | FXTableItem::CENTER_Y);
+        item->setEnabled(false);
+        myFlowList->setItem(indexRow, 3, item);
+        // Update index
+        indexRow++;
+    }
+    // enable or disable flow and label button
+    updateFlowAndLabelButton();
+}
+
+
+void
+GNECalibratorDialog::updateVehicleTypeTable() {
+    // clear table
+    myVehicleTypeList->clearItems();
+    // set number of rows
+    myVehicleTypeList->setTableSize(int(myCalibratorParent->getCalibratorVehicleTypes().size()), 3);
+    // Configure list
+    myVehicleTypeList->setVisibleColumns(4);
+    myVehicleTypeList->setColumnWidth(0, 136);
+    myVehicleTypeList->setColumnWidth(1, 136);
+    myVehicleTypeList->setColumnWidth(2, GUIDesignTableIconCellWidth);
+    myVehicleTypeList->setColumnText(0, toString(SUMO_ATTR_ID).c_str());
+    myVehicleTypeList->setColumnText(1, toString(SUMO_ATTR_VCLASS).c_str());
+    myVehicleTypeList->setColumnText(2, "");
+    myVehicleTypeList->getRowHeader()->setWidth(0);
+    // Declare index for rows and pointer to FXTableItem
+    int indexRow = 0;
+    FXTableItem* item = 0;
+    // iterate over values
+    for (std::vector<GNECalibratorVehicleType>::const_iterator i = myCalibratorParent->getCalibratorVehicleTypes().begin(); i != myCalibratorParent->getCalibratorVehicleTypes().end(); i++) {
+        // Set id
+        item = new FXTableItem(toString(i->getVehicleTypeID()).c_str());
+        myVehicleTypeList->setItem(indexRow, 0, item);
+        // Set VClass
+        item = new FXTableItem(toString(i->getVClass()).c_str());
+        myVehicleTypeList->setItem(indexRow, 1, item);
+        // set remove
+        item = new FXTableItem("", GUIIconSubSys::getIcon(ICON_REMOVE));
+        item->setJustify(FXTableItem::CENTER_X | FXTableItem::CENTER_Y);
+        item->setEnabled(false);
+        myVehicleTypeList->setItem(indexRow, 2, item);
+        // Update index
+        indexRow++;
+    }
+    // enable or disable flow and label button
+    updateFlowAndLabelButton();
+}
+
+void
+GNECalibratorDialog::updateFlowAndLabelButton() {
+    // Enable or disable AddFlow button and flow list depending of currently there are routes and vehicle types defined
+    std::string errorMsg;
+    if (myCalibratorParent->getCalibratorRoutes().empty() && myCalibratorParent->getCalibratorVehicleTypes().empty()) {
+        errorMsg = " and ";
+    }
+    if (myCalibratorParent->getCalibratorRoutes().size() == 0 || myCalibratorParent->getCalibratorVehicleTypes().size() == 0) {
+        myAddFlow->disable();
+        myFlowList->disable();
+        std::string errorMessage = "No " + (myCalibratorParent->getCalibratorRoutes().empty() ? (toString(SUMO_TAG_ROUTE) + "s") : ("")) + errorMsg +
+                                   (myCalibratorParent->getCalibratorVehicleTypes().empty() ? (toString(SUMO_TAG_VTYPE) + "s") : ("")) + " defined";
+        myLabelFlow->setText(errorMessage.c_str());
+    } else {
+        myAddFlow->enable();
+        myFlowList->enable();
+        myLabelFlow->setText(("Add new " + toString(SUMO_TAG_FLOW) + "s").c_str());
     }
 }
 

@@ -40,10 +40,6 @@
 #include <utils/xml/SUMOXMLDefinitions.h>
 #include <utils/emissions/PollutantsInterface.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 #define EMPREFIX std::string("HBEFA3/")
 
 
@@ -53,12 +49,12 @@
 SUMOVTypeParameter::SUMOVTypeParameter(const std::string& vtid, const SUMOVehicleClass vclass)
     : id(vtid), length(5./*4.3*/), minGap(2.5), maxSpeed(200. / 3.6),
       defaultProbability(DEFAULT_VEH_PROB),
-      speedFactor(1.0), speedDev(0.0),
+      speedFactor("normc", 1.0, 0.0, 0.2, 2.0),
       emissionClass(PollutantsInterface::getClassByName(EMPREFIX + "PC_G_EU4", vclass)), color(RGBColor::DEFAULT_COLOR),
       vehicleClass(vclass), impatience(0.0), personCapacity(4), containerCapacity(0), boardingDuration(500),
       loadingDuration(90000), width(1.8), height(1.5), shape(SVS_UNKNOWN), osgFile("car-normal-citrus.obj"),
       cfModel(SUMO_TAG_CF_KRAUSS), lcModel(LCM_DEFAULT),
-      maxSpeedLat(1.0), latAlignment(LATALIGN_CENTER), minGapLat(0.12),
+      maxSpeedLat(1.0), latAlignment(LATALIGN_CENTER), minGapLat(1.00),
       setParameter(0), saved(false), onlyReferenced(false) {
     switch (vclass) {
         case SVC_PEDESTRIAN:
@@ -159,7 +155,7 @@ SUMOVTypeParameter::SUMOVTypeParameter(const std::string& vtid, const SUMOVehicl
             break;
         case SVC_RAIL:
             length = 67.5 * 2;
-            maxSpeed = 160. / 3.6;
+            maxSpeed = 1600. / 3.6;
             width = 2.84;
             height = 3.75;
             shape = SVS_RAIL;
@@ -236,9 +232,6 @@ SUMOVTypeParameter::write(OutputDevice& dev) const {
     if (wasSet(VTYPEPARS_SPEEDFACTOR_SET)) {
         dev.writeAttr(SUMO_ATTR_SPEEDFACTOR, speedFactor);
     }
-    if (wasSet(VTYPEPARS_SPEEDDEVIATION_SET)) {
-        dev.writeAttr(SUMO_ATTR_SPEEDDEV, speedDev);
-    }
     if (wasSet(VTYPEPARS_VEHICLECLASS_SET)) {
         dev.writeAttr(SUMO_ATTR_VCLASS, toString(vehicleClass));
     }
@@ -246,7 +239,7 @@ SUMOVTypeParameter::write(OutputDevice& dev) const {
         dev.writeAttr(SUMO_ATTR_EMISSIONCLASS, PollutantsInterface::getName(emissionClass));
     }
     if (wasSet(VTYPEPARS_IMPATIENCE_SET)) {
-        if (impatience == -std::numeric_limits<SUMOReal>::max()) {
+        if (impatience == -std::numeric_limits<double>::max()) {
             dev.writeAttr(SUMO_ATTR_IMPATIENCE, "off");
         } else {
             dev.writeAttr(SUMO_ATTR_IMPATIENCE, impatience);
@@ -319,8 +312,18 @@ SUMOVTypeParameter::write(OutputDevice& dev) const {
 }
 
 
-SUMOReal
-SUMOVTypeParameter::getCFParam(const SumoXMLAttr attr, const SUMOReal defaultValue) const {
+double
+SUMOVTypeParameter::getCFParam(const SumoXMLAttr attr, const double defaultValue) const {
+    if (cfParameter.count(attr)) {
+        return TplConvert::_str2double(cfParameter.find(attr)->second);
+    } else {
+        return defaultValue;
+    }
+}
+
+
+std::string
+SUMOVTypeParameter::getCFParamString(const SumoXMLAttr attr, const std::string defaultValue) const {
     if (cfParameter.count(attr)) {
         return cfParameter.find(attr)->second;
     } else {
@@ -328,10 +331,10 @@ SUMOVTypeParameter::getCFParam(const SumoXMLAttr attr, const SUMOReal defaultVal
     }
 }
 
-SUMOReal
-SUMOVTypeParameter::getLCParam(const SumoXMLAttr attr, const SUMOReal defaultValue) const {
+double
+SUMOVTypeParameter::getLCParam(const SumoXMLAttr attr, const double defaultValue) const {
     if (lcParameter.count(attr)) {
-        return lcParameter.find(attr)->second;
+        return TplConvert::_str2double(lcParameter.find(attr)->second);
     } else {
         return defaultValue;
     }
@@ -339,7 +342,7 @@ SUMOVTypeParameter::getLCParam(const SumoXMLAttr attr, const SUMOReal defaultVal
 
 
 
-SUMOReal
+double
 SUMOVTypeParameter::getDefaultAccel(const SUMOVehicleClass vc) {
     switch (vc) {
         case SVC_PEDESTRIAN:
@@ -374,7 +377,7 @@ SUMOVTypeParameter::getDefaultAccel(const SUMOVehicleClass vc) {
 }
 
 
-SUMOReal
+double
 SUMOVTypeParameter::getDefaultDecel(const SUMOVehicleClass vc) {
     switch (vc) {
         case SVC_PEDESTRIAN:
@@ -409,7 +412,43 @@ SUMOVTypeParameter::getDefaultDecel(const SUMOVehicleClass vc) {
 }
 
 
-SUMOReal
+double
+SUMOVTypeParameter::getDefaultEmergencyDecel(const SUMOVehicleClass vc) {
+    switch (vc) {
+        case SVC_PEDESTRIAN:
+            return 3.;
+        case SVC_BICYCLE:
+            return 5.;
+        case SVC_MOPED:
+            return 8.;
+        case SVC_MOTORCYCLE:
+            return 10.;
+        case SVC_TRUCK:
+            return 7.;
+        case SVC_TRAILER:
+            return 7.;
+        case SVC_BUS:
+            return 7.;
+        case SVC_COACH:
+            return 7.;
+        case SVC_TRAM:
+            return 5.;
+        case SVC_RAIL_URBAN:
+            return 5.;
+        case SVC_RAIL:
+            return 4;
+        case SVC_RAIL_ELECTRIC:
+            return 4;
+        case SVC_SHIP:
+            return 1;
+        default:
+            return 9;//7.5;
+    }
+}
+
+
+
+double
 SUMOVTypeParameter::getDefaultImperfection(const SUMOVehicleClass vc) {
     switch (vc) {
         case SVC_TRAM:

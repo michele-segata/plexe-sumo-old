@@ -41,10 +41,6 @@
 #include <mesosim/MESegment.h>
 #include "GUIMEInductLoop.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -53,7 +49,7 @@
  * GUIMEInductLoop-methods
  * ----------------------------------------------------------------------- */
 GUIMEInductLoop::GUIMEInductLoop(const std::string& id, MESegment* s,
-                                 SUMOReal position, const std::string& vTypes)
+                                 double position, const std::string& vTypes)
     : MEInductLoop(id, s, position, vTypes) {}
 
 
@@ -69,13 +65,13 @@ GUIMEInductLoop::buildDetectorGUIRepresentation() {
 /* -------------------------------------------------------------------------
  * GUIMEInductLoop::MyWrapper-methods
  * ----------------------------------------------------------------------- */
-GUIMEInductLoop::MyWrapper::MyWrapper(GUIMEInductLoop& detector, SUMOReal pos)
+GUIMEInductLoop::MyWrapper::MyWrapper(GUIMEInductLoop& detector, double pos)
     : GUIDetectorWrapper("induct loop", detector.getID()),
       myDetector(detector), myPosition(pos) {
     const MSLane* lane = detector.mySegment->getEdge().getLanes()[0];
     myFGPosition = lane->geometryPositionAtOffset(pos);
-    myBoundary.add(myFGPosition.x() + (SUMOReal) 5.5, myFGPosition.y() + (SUMOReal) 5.5);
-    myBoundary.add(myFGPosition.x() - (SUMOReal) 5.5, myFGPosition.y() - (SUMOReal) 5.5);
+    myBoundary.add(myFGPosition.x() + (double) 5.5, myFGPosition.y() + (double) 5.5);
+    myBoundary.add(myFGPosition.x() - (double) 5.5, myFGPosition.y() - (double) 5.5);
     myFGRotation = -lane->getShape().rotationDegreeAtOffset(pos);
 }
 
@@ -100,20 +96,20 @@ GUIMEInductLoop::MyWrapper::getParameterWindow(GUIMainWindow& app,
     // add items
     /*
     ret->mkItem("flow [veh/h]", true,
-        new FuncBinding_IntParam<GUIMEInductLoop, SUMOReal>(
+        new FuncBinding_IntParam<GUIMEInductLoop, double>(
             &(getLoop()), &GUIMEInductLoop::getFlow, 1));
     ret->mkItem("mean speed [m/s]", true,
-        new FuncBinding_IntParam<GUIMEInductLoop, SUMOReal>(
+        new FuncBinding_IntParam<GUIMEInductLoop, double>(
             &(getLoop()), &GUIMEInductLoop::getMeanSpeed, 1));
     ret->mkItem("occupancy [%]", true,
-        new FuncBinding_IntParam<GUIMEInductLoop, SUMOReal>(
+        new FuncBinding_IntParam<GUIMEInductLoop, double>(
             &(getLoop()), &GUIMEInductLoop::getOccupancy, 1));
     ret->mkItem("mean vehicle length [m]", true,
-        new FuncBinding_IntParam<GUIMEInductLoop, SUMOReal>(
+        new FuncBinding_IntParam<GUIMEInductLoop, double>(
             &(getLoop()), &GUIMEInductLoop::getMeanVehicleLength, 1));
     ret->mkItem("empty time [s]", true,
-        new FunctionBinding<GUIMEInductLoop, SUMOReal>(
-            &(getLoop()), &GUIMEInductLoop::getTimestepsSinceLastDetection));
+        new FunctionBinding<GUIMEInductLoop, double>(
+            &(getLoop()), &GUIMEInductLoop::getTimeSinceLastDetection));
             */
     //
     ret->mkItem("position [m]", false, myPosition);
@@ -128,9 +124,9 @@ void
 GUIMEInductLoop::MyWrapper::drawGL(const GUIVisualizationSettings& s) const {
     glPushName(getGlID());
     glPolygonOffset(0, -2);
-    SUMOReal width = (SUMOReal) 2.0 * s.scale;
+    double width = (double) 2.0 * s.scale;
     glLineWidth(1.0);
-    const SUMOReal exaggeration = s.addSize.getExaggeration(s);
+    const double exaggeration = s.addSize.getExaggeration(s);
     // shape
     glColor3d(1, 1, 0);
     glPushMatrix();

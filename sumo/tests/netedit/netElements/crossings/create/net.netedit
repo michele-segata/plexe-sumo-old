@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 13/02/2017 12:58:45 by Netedit Version dev-SVN-r22880
+<!-- generated on 04/04/2017 10:39:58 by Netedit Version dev-SVN-r22880
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netedit.exeConfiguration.xsd">
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
-        <additionals-output value="C:/Users/Palcraft/.texttest/tmp/netedit.server.13Feb125826.2260/netedit.server/netElements/crossings/create\additionals.xml"/>
-        <sumo-net-file value="C:/Users/Palcraft/.texttest/tmp/netedit.server.13Feb125826.2260/netedit.server/netElements/crossings/create\input_net.net.xml"/>
+        <additionals-output value="C:/Users/Palcraft/.texttest/tmp/netedit.server.04Apr103928.3816/netedit.server/netElements/crossings/create\additionals.xml"/>
+        <sumo-net-file value="C:/Users/Palcraft/.texttest/tmp/netedit.server.04Apr103928.3816/netedit.server/netElements/crossings/create\input_net.net.xml"/>
     </input>
 
     <output>
-        <output-file value="C:/Users/Palcraft/.texttest/tmp/netedit.server.13Feb125826.2260/netedit.server/netElements/crossings/create\net.net.xml"/>
+        <output-file value="C:/Users/Palcraft/.texttest/tmp/netedit.server.04Apr103928.3816/netedit.server/netElements/crossings/create\net.net.xml"/>
     </output>
 
     <processing>
@@ -20,16 +20,18 @@
         <offset.disable-normalization value="true"/>
         <lefthand value="false"/>
         <junctions.corner-detail value="0"/>
+        <rectangular-lane-cut value="false"/>
     </processing>
 
     <visualisation>
         <window-size value="700,500"/>
+        <window-pos value="50,50"/>
         <gui-testing value="true"/>
     </visualisation>
 
     <report>
         <no-warnings value="true"/>
-        <error-log value="C:/Users/Palcraft/.texttest/tmp/netedit.server.13Feb125826.2260/netedit.server/netElements/crossings/create\log.txt"/>
+        <error-log value="C:/Users/Palcraft/.texttest/tmp/netedit.server.04Apr103928.3816/netedit.server/netElements/crossings/create\log.txt"/>
     </report>
 
 </configuration>

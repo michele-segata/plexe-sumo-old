@@ -55,10 +55,6 @@
 #include <utils/geom/Position.h>
 #include <utils/geom/GeoConvHelper.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -155,7 +151,7 @@ PCLoaderDlrNavteq::loadPOIFile(const std::string& file,
 
         // patch the values
         bool discard = oc.getBool("discard");
-        SUMOReal layer = oc.getFloat("layer");
+        double layer = oc.getFloat("layer");
         RGBColor color;
         if (tm.has(type)) {
             const PCTypeMap::TypeDef& def = tm.get(type);
@@ -214,8 +210,8 @@ PCLoaderDlrNavteq::loadPolyFile(const std::string& file,
             std::string xpos = values[index];
             std::string ypos = values[index + 1];
             index += 2;
-            SUMOReal x = TplConvert::_2SUMOReal(xpos.c_str());
-            SUMOReal y = TplConvert::_2SUMOReal(ypos.c_str());
+            double x = TplConvert::_2double(xpos.c_str());
+            double y = TplConvert::_2double(ypos.c_str());
             Position pos(x, y);
             if (!GeoConvHelper::getProcessing().x2cartesian(pos)) {
                 WRITE_WARNING("Unable to project coordinates for polygon '" + id + "'.");
@@ -241,7 +237,7 @@ PCLoaderDlrNavteq::loadPolyFile(const std::string& file,
         // patch the values
         bool fill = vec.front() == vec.back();
         bool discard = oc.getBool("discard");
-        SUMOReal layer = oc.getFloat("layer");
+        double layer = oc.getFloat("layer");
         RGBColor color;
         if (tm.has(type)) {
             const PCTypeMap::TypeDef& def = tm.get(type);

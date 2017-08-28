@@ -37,10 +37,6 @@
 #include "NBDistrict.h"
 #include "NBDistrictCont.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -85,7 +81,7 @@ NBDistrictCont::size() const {
 
 bool
 NBDistrictCont::addSource(const std::string& dist, NBEdge* const source,
-                          SUMOReal weight) {
+                          double weight) {
     NBDistrict* o = retrieve(dist);
     if (o == 0) {
         return false;
@@ -96,7 +92,7 @@ NBDistrictCont::addSource(const std::string& dist, NBEdge* const source,
 
 bool
 NBDistrictCont::addSink(const std::string& dist, NBEdge* const destination,
-                        SUMOReal weight) {
+                        double weight) {
     NBDistrict* o = retrieve(dist);
     if (o == 0) {
         return false;

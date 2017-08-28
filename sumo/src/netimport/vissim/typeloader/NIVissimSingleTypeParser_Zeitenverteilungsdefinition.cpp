@@ -34,14 +34,10 @@
 #include <utils/geom/PositionVector.h>
 #include <utils/common/TplConvert.h>
 #include "../NIImporter_Vissim.h"
+#include <utils/distribution/Distribution_Parameterized.h>
 #include <utils/distribution/Distribution_Points.h>
-#include <utils/distribution/Distribution_MeanDev.h>
-#include <netbuild/NBDistribution.h>
+#include <utils/distribution/DistributionCont.h>
 #include "NIVissimSingleTypeParser_Zeitenverteilungsdefinition.h"
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -60,30 +56,28 @@ NIVissimSingleTypeParser_Zeitenverteilungsdefinition::parse(std::istream& from) 
     std::string id;
     from >> id;
     // list of points
-    PositionVector points;
+    Distribution_Points* points = new Distribution_Points(id);
     std::string tag;
     do {
         tag = readEndSecure(from);
         if (tag == "mittelwert") {
-            SUMOReal mean, deviation;
+            double mean, deviation;
             from >> mean;
             from >> tag;
             from >> deviation;
-            return NBDistribution::dictionary("times", id,
-                                              new Distribution_MeanDev(id, mean, deviation));
+            delete points;
+            return DistributionCont::dictionary("times", id,
+                                                new Distribution_Parameterized(id, mean, deviation));
         }
         if (tag != "DATAEND") {
-            SUMOReal p1 = TplConvert::_2SUMOReal(tag.c_str());
+            double p1 = TplConvert::_2double(tag.c_str());
             from >> tag;
-            SUMOReal p2 = TplConvert::_2SUMOReal(tag.c_str());
-            points.push_back(Position(p1, p2));
+            double p2 = TplConvert::_2double(tag.c_str());
+            points->add(p1, p2);
         }
     } while (tag != "DATAEND");
-    return NBDistribution::dictionary("times",
-                                      id, new Distribution_Points(id, points));
+    return DistributionCont::dictionary("times", id, points);
 }
 
 
-
 /****************************************************************************/
-

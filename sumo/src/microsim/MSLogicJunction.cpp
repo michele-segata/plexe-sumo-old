@@ -34,10 +34,6 @@
 #include "MSLogicJunction.h"
 #include "MSLane.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // member method definitions
@@ -50,16 +46,12 @@ MSLogicJunction::MSLogicJunction(const std::string& id,
                                  const Position& position,
                                  const PositionVector& shape,
                                  std::vector<MSLane*> incoming
-#ifdef HAVE_INTERNAL_LANES
                                  , std::vector<MSLane*> internal
-#endif
                                 ):
     MSJunction(id, type, position, shape),
-    myIncomingLanes(incoming)
-#ifdef HAVE_INTERNAL_LANES
-    , myInternalLanes(internal)
-#endif
-{}
+    myIncomingLanes(incoming),
+    myInternalLanes(internal) {
+}
 
 
 MSLogicJunction::~MSLogicJunction() {}
@@ -84,7 +76,6 @@ MSLogicJunction::postloadInit() {
             requestPos++;
         }
     }
-    #ifdef HAVE_INTERNAL_LANES
     // set information for the internal lanes
     requestPos = 0;
     for(i=myInternalLanes.begin(); i!=myInternalLanes.end(); ++i) {
@@ -92,7 +83,6 @@ MSLogicJunction::postloadInit() {
         static_cast<MSInternalLane*>(*i)->setParentJunctionInformation(
             &myInnerState, requestPos++);
     }
-    #endif
     */
 }
 

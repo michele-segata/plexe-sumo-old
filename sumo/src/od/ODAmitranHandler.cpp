@@ -32,10 +32,6 @@
 #include "ODMatrix.h"
 #include "ODAmitranHandler.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -62,7 +58,7 @@ ODAmitranHandler::myStartElement(int element, const SUMOSAXAttributes& attrs) {
             }
             break;
         case SUMO_TAG_OD_PAIR:
-            myMatrix.add(attrs.get<SUMOReal>(SUMO_ATTR_AMOUNT, myVehicleType.c_str(), ok),
+            myMatrix.add(attrs.get<double>(SUMO_ATTR_AMOUNT, myVehicleType.c_str(), ok),
                          myBegin, myEnd, attrs.get<std::string>(SUMO_ATTR_ORIGIN, myVehicleType.c_str(), ok),
                          attrs.get<std::string>(SUMO_ATTR_DESTINATION, myVehicleType.c_str(), ok), myVehicleType);
             break;

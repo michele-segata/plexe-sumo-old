@@ -49,13 +49,8 @@
 #include <netbuild/NBDistrict.h>
 #include <netbuild/NBDistrictCont.h>
 #include "NIVissimDistrictConnection.h"
-#include <utils/distribution/Distribution.h>
-#include <netbuild/NBDistribution.h>
+#include <utils/distribution/DistributionCont.h>
 #include <utils/common/MsgHandler.h>
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -70,14 +65,14 @@ std::map<int, std::vector<int> > NIVissimDistrictConnection::myDistrictsConnecti
 // ===========================================================================
 NIVissimDistrictConnection::NIVissimDistrictConnection(int id,
         const std::string& name,
-        const std::vector<int>& districts, const std::vector<SUMOReal>& percentages,
-        int edgeid, SUMOReal position,
+        const std::vector<int>& districts, const std::vector<double>& percentages,
+        int edgeid, double position,
         const std::vector<std::pair<int, int> >& assignedVehicles)
     : myID(id), myName(name), myDistricts(districts),
       myEdgeID(edgeid), myPosition(position),
       myAssignedVehicles(assignedVehicles) {
     std::vector<int>::iterator i = myDistricts.begin();
-    std::vector<SUMOReal>::const_iterator j = percentages.begin();
+    std::vector<double>::const_iterator j = percentages.begin();
     while (i != myDistricts.end()) {
         myPercentages[*i] = *j;
         i++;
@@ -92,8 +87,8 @@ NIVissimDistrictConnection::~NIVissimDistrictConnection() {}
 
 bool
 NIVissimDistrictConnection::dictionary(int id, const std::string& name,
-                                       const std::vector<int>& districts, const std::vector<SUMOReal>& percentages,
-                                       int edgeid, SUMOReal position,
+                                       const std::vector<int>& districts, const std::vector<double>& percentages,
+                                       int edgeid, double position,
                                        const std::vector<std::pair<int, int> >& assignedVehicles) {
     NIVissimDistrictConnection* o =
         new NIVissimDistrictConnection(id, name, districts, percentages,
@@ -194,11 +189,10 @@ NIVissimDistrictConnection::dict_BuildDistrictNodes(NBDistrictCont& dc,
 void
 NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
         NBEdgeCont& ec,
-        NBNodeCont& nc/*,
-                                                                                NBDistribution &distc*/) {
+        NBNodeCont& nc) {
     // add the sources and sinks
     //  their normalised probability is computed within NBDistrict
-    //   to avoid SUMOReal code writing and more securty within the converter
+    //   to avoid double code writing and more securty within the converter
     //  go through the district table
     for (std::map<int, std::vector<int> >::iterator k = myDistrictsConnections.begin(); k != myDistrictsConnections.end(); k++) {
         // get the connections
@@ -223,7 +217,7 @@ NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
             std::string id = "ParkingPlace" + toString<int>(*l);
             NBNode* parkingPlace = nc.retrieve(id);
             if (parkingPlace == 0) {
-                SUMOReal pos = c->getPosition();
+                double pos = c->getPosition();
                 if (pos < e->getLength() - pos) {
                     parkingPlace = e->getFromNode();
                     parkingPlace->invalidateIncomingConnections();
@@ -242,12 +236,12 @@ NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
                 id = "VissimFromParkingplace" + toString<int>((*k).first) + "-" + toString<int>(c->myID);
                 NBEdge* source =
                     new NBEdge(id, districtNode, parkingPlace,
-                               "Connection", c->getMeanSpeed(/*distc*/) / (SUMOReal) 3.6, 3, -1,
+                               "Connection", c->getMeanSpeed(/*distc*/) / (double) 3.6, 3, -1,
                                NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET);
                 if (!ec.insert(source)) { // !!! in den Konstruktor
                     throw 1; // !!!
                 }
-                SUMOReal percNormed =
+                double percNormed =
                     c->myPercentages[(*k).first];
                 if (!district->addSource(source, percNormed)) {
                     throw 1;
@@ -259,12 +253,12 @@ NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
                 id = "VissimToParkingplace"  + toString<int>((*k).first) + "-" + toString<int>(c->myID);
                 NBEdge* destination =
                     new NBEdge(id, parkingPlace, districtNode,
-                               "Connection", (SUMOReal) 100 / (SUMOReal) 3.6, 2, -1,
+                               "Connection", (double) 100 / (double) 3.6, 2, -1,
                                NBEdge::UNSPECIFIED_WIDTH, NBEdge::UNSPECIFIED_OFFSET);
                 if (!ec.insert(destination)) { // !!! (in den Konstruktor)
                     throw 1; // !!!
                 }
-                SUMOReal percNormed2 =
+                double percNormed2 =
                     c->myPercentages[(*k).first];
                 if (!district->addSink(destination, percNormed2)) {
                     throw 1; // !!!
@@ -273,12 +267,12 @@ NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
 
             /*
             if(e->getToNode()==districtNode) {
-            SUMOReal percNormed =
+            double percNormed =
                 c->myPercentages[(*k).first];
             district->addSink(e, percNormed);
             }
             if(e->getFromNode()==districtNode) {
-            SUMOReal percNormed =
+            double percNormed =
                 c->myPercentages[(*k).first];
             district->addSource(e, percNormed);
             }
@@ -315,7 +309,7 @@ NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
                     "Connection", 100/3.6, 2, 100, 0,
                     NBEdge::EDGEFUNCTION_SOURCE);
                 NBEdgeCont::insert(source); // !!! (in den Konstruktor)
-                SUMOReal percNormed =
+                double percNormed =
                     c->myPercentages[(*k).first];
                 district->addSource(source, percNormed);
             } else {
@@ -330,7 +324,7 @@ NIVissimDistrictConnection::dict_BuildDistricts(NBDistrictCont& dc,
                 NBEdgeCont::insert(destination); // !!! (in den Konstruktor)
 
                 // add both the source and the sink to the district
-                SUMOReal percNormed =
+                double percNormed =
                     c->myPercentages[(*k).first];
                 district->addSink(destination, percNormed);
             }
@@ -368,33 +362,33 @@ NIVissimDistrictConnection::clearDict() {
 }
 
 
-SUMOReal
-NIVissimDistrictConnection::getMeanSpeed(/*NBDistribution &dc*/) const {
+double
+NIVissimDistrictConnection::getMeanSpeed() const {
     //assert(myAssignedVehicles.size()!=0);
     if (myAssignedVehicles.size() == 0) {
         WRITE_WARNING("No streams assigned at district'" + toString(myID) + "'.\n Using default speed 200km/h");
-        return (SUMOReal) 200 / (SUMOReal) 3.6;
+        return (double) 200 / (double) 3.6;
     }
-    SUMOReal speed = 0;
+    double speed = 0;
     std::vector<std::pair<int, int> >::const_iterator i;
     for (i = myAssignedVehicles.begin(); i != myAssignedVehicles.end(); i++) {
-        speed += getRealSpeed(/*dc, */(*i).second);
+        speed += getRealSpeed((*i).second);
     }
-    return speed / (SUMOReal) myAssignedVehicles.size();
+    return speed / (double) myAssignedVehicles.size();
 }
 
 
-SUMOReal
-NIVissimDistrictConnection::getRealSpeed(/*NBDistribution &dc, */int distNo) const {
+double
+NIVissimDistrictConnection::getRealSpeed(int distNo) const {
     std::string id = toString<int>(distNo);
-    Distribution* dist = NBDistribution::dictionary("speed", id);
+    Distribution* dist = DistributionCont::dictionary("speed", id);
     if (dist == 0) {
         WRITE_WARNING("The referenced speed distribution '" + id + "' is not known.");
         WRITE_WARNING(". Using default.");
         return OptionsCont::getOptions().getFloat("vissim.default-speed");
     }
     assert(dist != 0);
-    SUMOReal speed = dist->getMax();
+    double speed = dist->getMax();
     if (speed < 0 || speed > 1000) {
         WRITE_WARNING(" False speed at district '" + id);
         WRITE_WARNING(". Using default.");

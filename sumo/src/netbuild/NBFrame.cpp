@@ -37,7 +37,6 @@
 #include "NBEdgeCont.h"
 #include "NBTrafficLightLogicCont.h"
 #include "NBDistrictCont.h"
-#include "NBDistribution.h"
 #include "NBRequest.h"
 #include "NBTypeCont.h"
 #include <utils/options/OptionsCont.h>
@@ -48,10 +47,6 @@
 #include <utils/geom/GeoConvHelper.h>
 #include <utils/iodevices/OutputDevice.h>
 #include <utils/xml/SUMOXMLDefinitions.h>
-
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
 
 
 // ===========================================================================
@@ -69,7 +64,7 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addSynonyme("default.lanewidth", "lanewidth", true);
     oc.addDescription("default.lanewidth", "Building Defaults", "The default width of lanes");
 
-    oc.doRegister("default.speed", 'S', new Option_Float((SUMOReal) 13.9));
+    oc.doRegister("default.speed", 'S', new Option_Float((double) 13.9));
     oc.addSynonyme("default.speed", "speed", true);
     oc.addDescription("default.speed", "Building Defaults", "The default speed on an edge (in m/s)");
 
@@ -77,7 +72,7 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addSynonyme("default.priority", "priority", true);
     oc.addDescription("default.priority", "Building Defaults", "The default priority of an edge");
 
-    oc.doRegister("default.sidewalk-width", new Option_Float((SUMOReal) 2.0));
+    oc.doRegister("default.sidewalk-width", new Option_Float((double) 2.0));
     oc.addDescription("default.sidewalk-width", "Building Defaults", "The default width of added sidewalks");
 
     oc.doRegister("default.disallow", new Option_String());
@@ -235,11 +230,11 @@ NBFrame::fillOptions(bool forNetgen) {
     oc.addDescription("sidewalks.guess", "Processing",
                       "Guess pedestrian sidewalks based on edge speed");
 
-    oc.doRegister("sidewalks.guess.max-speed", new Option_Float((SUMOReal) 13.89));
+    oc.doRegister("sidewalks.guess.max-speed", new Option_Float((double) 13.89));
     oc.addDescription("sidewalks.guess.max-speed", "Processing",
                       "Add sidewalks for edges with a speed equal or below the given limit");
 
-    oc.doRegister("sidewalks.guess.min-speed", new Option_Float((SUMOReal) 5.8));
+    oc.doRegister("sidewalks.guess.min-speed", new Option_Float((double) 5.8));
     oc.addDescription("sidewalks.guess.min-speed", "Processing",
                       "Add sidewalks for edges with a speed above the given limit");
 
@@ -415,7 +410,7 @@ NBFrame::fillOptions(bool forNetgen) {
         oc.addSynonyme("ramps.max-ramp-speed", "ramp-guess.max-ramp-speed", true);
         oc.addDescription("ramps.max-ramp-speed", "Ramp Guessing", "Treat edges with speed > FLOAT as no ramps");
 
-        oc.doRegister("ramps.min-highway-speed", new Option_Float((SUMOReal)(79 / 3.6)));
+        oc.doRegister("ramps.min-highway-speed", new Option_Float((double)(79 / 3.6)));
         oc.addSynonyme("ramps.min-highway-speed", "ramp-guess.min-highway-speed", true);
         oc.addDescription("ramps.min-highway-speed", "Ramp Guessing", "Treat edges with speed < FLOAT as no highways");
 

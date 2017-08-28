@@ -32,10 +32,6 @@
 
 #include "MSGlobals.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // static member variable definitions
@@ -47,6 +43,7 @@ SUMOTime MSGlobals::gIgnoreJunctionBlocker;
 
 SUMOTime MSGlobals::gTimeToGridlock;
 SUMOTime MSGlobals::gTimeToGridlockHighways;
+SUMOTime MSGlobals::gTimeToImpatience;
 
 bool MSGlobals::gCheck4Accidents;
 
@@ -54,13 +51,13 @@ bool MSGlobals::gCheckRoutes;
 
 SUMOTime MSGlobals::gLaneChangeDuration;
 
-SUMOReal MSGlobals::gLateralResolution;
+double MSGlobals::gLateralResolution;
 
 bool MSGlobals::gStateLoaded;
 bool MSGlobals::gUseMesoSim;
 bool MSGlobals::gMesoLimitedJunctionControl;
 bool MSGlobals::gMesoOvertaking;
-SUMOReal MSGlobals::gMesoTLSPenalty;
+double MSGlobals::gMesoTLSPenalty;
 SUMOTime MSGlobals::gMesoMinorPenalty;
 MELoop* MSGlobals::gMesoNet;
 

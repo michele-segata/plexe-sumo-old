@@ -78,7 +78,7 @@ public:
      * @see MSMoveReminder
      * @see MSMoveReminder::notifyMove
      */
-    bool notifyMove(SUMOVehicle& veh, SUMOReal oldPos, SUMOReal newPos, SUMOReal newSpeed);
+    bool notifyMove(SUMOVehicle& veh, double oldPos, double newPos, double newSpeed);
 
 
     /** @brief Adds passengers on vehicle insertion
@@ -89,7 +89,7 @@ public:
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason);
+    bool notifyEnter(SUMOVehicle& veh, MSMoveReminder::Notification reason, const MSLane* enteredLane = 0);
 
 
     /** @brief Passengers leaving on arrival
@@ -101,11 +101,18 @@ public:
      *
      * @return True if it did not leave the net.
      */
-    bool notifyLeave(SUMOVehicle& veh, SUMOReal lastPos,
-                     MSMoveReminder::Notification reason);
+    bool notifyLeave(SUMOVehicle& veh, double lastPos,
+                     MSMoveReminder::Notification reason, const MSLane* enteredLane = 0);
     /// @}
 
 
+    /// @brief return the name for this type of device
+    const std::string deviceName() const {
+        return myAmContainer ? "container" : "person";
+    }
+
+    /// @brief try to retrieve the given parameter from this device. Throw exception for unsupported key
+    std::string getParameter(const std::string& key) const;
 
     /** @brief Add a passenger
      *

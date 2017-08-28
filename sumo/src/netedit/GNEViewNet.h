@@ -79,6 +79,7 @@ class GNEUndoList;
 class GNEAdditional;
 class GNEPoly;
 class GNEPOI;
+class GNEFrame;
 
 // ===========================================================================
 // class definitions
@@ -118,6 +119,7 @@ public:
 
     /// @name overloaded handlers
     /// @{
+
     /// @brief called when user press mouse's left button
     long onLeftBtnPress(FXObject*, FXSelector, void*);
 
@@ -133,6 +135,7 @@ public:
 
     /// @name set mode call backs
     /// @{
+
     /// @brief called when user press the button for create edge mode
     long onCmdSetModeCreateEdge(FXObject*, FXSelector, void*);
 
@@ -159,6 +162,7 @@ public:
 
     /// @brief called when user press the button for crossing mode
     long onCmdSetModeCrossing(FXObject*, FXSelector, void*);
+
     /// @}
 
     /// @brief split edge at cursor position
@@ -230,11 +234,18 @@ public:
     /// @brief toogle show connections
     long onCmdToogleShowConnection(FXObject*, FXSelector, void*);
 
+    /// @brief toogle selet edges
+    long onCmdToogleSelectEdges(FXObject*, FXSelector, void*);
+
     /// @brief toogle show bubbles
     long onCmdToogleShowBubbles(FXObject*, FXSelector, void*);
 
-    /// @brief sets edit mode (from hotkey)
-    /// @param[in] selid An id MID_GNE_MODE_<foo> as defined in GUIAppEnum
+    /// @brief toogle show grid
+    long onCmdShowGrid(FXObject*, FXSelector, void*);
+
+    /**@brief sets edit mode (from hotkey)
+     * @param[in] selid An id MID_GNE_MODE_<foo> as defined in GUIAppEnum
+     **/
     void setEditModeFromHotkey(FXushort selid);
 
     /// @brief abort current edition operation
@@ -245,6 +256,9 @@ public:
 
     /// @brief handle enter keypress
     void hotkeyEnter();
+
+    /// @brief handle focus frame keypress
+    void hotkeyFocusFrame();
 
     /// @brief store the position where a popup-menu was requested
     void markPopupPosition();
@@ -277,7 +291,7 @@ public:
     bool autoSelectNodes();
 
     /// @brief set selection scaling
-    void setSelectionScaling(SUMOReal selectionScale);
+    void setSelectionScaling(double selectionScale);
 
     /// @brief update control contents after undo/redo or recompute
     void updateControls();
@@ -287,6 +301,9 @@ public:
 
     /// @brief return true if junction must be showed as bubbles
     bool showJunctionAsBubbles() const;
+
+    /// @brief check if netedit is running in testing mode
+    bool isTestingModeEnabled() const;
 
 protected:
     /// @brief FOX needs this
@@ -311,20 +328,29 @@ private:
     /// @brief the previous edit mode used for toggling
     EditMode myPreviousEditMode;
 
+    /// @brief the current frame
+    GNEFrame* myCurrentFrame;
+
     /// @brief menu check to select only edges
-    FXMenuCheck* mySelectEdges;
+    FXMenuCheck* myMenuCheckSelectEdges;
 
     /// @brief menu check to show connections
-    FXMenuCheck* myShowConnections;
-
-    /// @brief whether show connections has been activated once
-    bool myShowConnectionActivated;
+    FXMenuCheck* myMenuCheckShowConnections;
 
     /// @brief menu check to extend to edge nodes
-    FXMenuCheck* myExtendToEdgeNodes;
+    FXMenuCheck* myMenuCheckExtendToEdgeNodes;
 
     /// @brief menu check to set change all phases
-    FXMenuCheck* myChangeAllPhases;
+    FXMenuCheck* myMenuCheckChangeAllPhases;
+
+    /// @brief show grid button
+    FXMenuCheck* myMenuCheckShowGrid;
+
+    /// @brief whether show connections has been activated once
+    bool myShowConnections;
+
+    /// @brief flag to check if select edges is enabled
+    bool mySelectEdges;
 
     /// @name the state-variables of the create-edge state-machine
     // @{
@@ -338,6 +364,13 @@ private:
 
     /// @name the state-variables of the move state-machine
     // @{
+
+    /// @brief whether we should warn about merging junctions
+    FXMenuCheck* myMenuCheckWarnAboutMerge;
+
+    /// @brief show connection as buuble in "Move" mode.
+    FXMenuCheck* myMenuCheckShowBubbleOverJunction;
+
     /// @brief the Junction to be moved.
     GNEJunction* myJunctionToMove;
 
@@ -364,12 +397,6 @@ private:
 
     /// @brief whether a selection is being moved
     bool myMoveSelection;
-
-    /// @brief whether we should warn about merging junctions
-    FXMenuCheck* myWarnAboutMerge;
-
-    /// @brief show connection as buuble in "Move" mode.
-    FXMenuCheck* myShowBubbleOverJunction;
     // @}
 
     /// @name state-variables of inspect-mode and select-mode
@@ -384,8 +411,6 @@ private:
     Position mySelCorner2;
     // @}
 
-    /// @name toolbar related stuff
-    /// @{
     /// @brief a reference to the toolbar in myParent
     FXToolBar* myToolbar;
 
@@ -437,12 +462,18 @@ private:
     /// @brief current polygon
     GNEPoly* myCurrentPoly;
 
-    /// @brief testing mode
+    /// @name variables for testing mode
+    /// @{
+    /// @brief flag to enable or disable testing mode
     bool myTestingMode;
-    int myTestingWidth;
-    int myTestingHeight;
 
-private:
+    /// @brief Width of viewNet in testing mode
+    int myTestingWidth;
+
+    /// @brief Height of viewNet in testing mode
+    int myTestingHeight;
+    /// @}
+
     /// @brief set edit mode
     void setEditMode(EditMode mode);
 
@@ -457,6 +488,9 @@ private:
 
     /// @brief delete all currently selected edges
     void deleteSelectedEdges();
+
+    /// @brief delete all currently selected additionals
+    void deleteSelectedAdditionals();
 
     /// @brief try to merge moved junction with another junction in that spot return true if merging did take place
     bool mergeJunctions(GNEJunction* moved);
@@ -484,6 +518,9 @@ private:
 
     /// @brief remove restricted lane
     bool removeRestrictedLane(SUMOVehicleClass vclass);
+
+    /// @brief Auxiliar function used by onLeftBtnPress(...)
+    void processClick(FXEvent* e, void* data);
 
     /// @brief Invalidated copy constructor.
     GNEViewNet(const GNEViewNet&);

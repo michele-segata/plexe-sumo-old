@@ -46,16 +46,12 @@
 #include "MEVehicle.h"
 #include "MESegment.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
 // ===========================================================================
 MEVehicle::MEVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
-                     const MSVehicleType* type, const SUMOReal speedFactor) :
+                     const MSVehicleType* type, const double speedFactor) :
     MSBaseVehicle(pars, route, type, speedFactor),
     mySegment(0),
     myQueIndex(0),
@@ -74,28 +70,28 @@ MEVehicle::MEVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
 }
 
 
-SUMOReal
+double
 MEVehicle::getBackPositionOnLane(const MSLane* /* lane */) const {
     return getPositionOnLane() - getVehicleType().getLength();
 }
 
 
-SUMOReal
+double
 MEVehicle::getPositionOnLane() const {
 // the following interpolation causes problems with arrivals and calibrators
-//    const SUMOReal fracOnSegment = MIN2(SUMOReal(1), STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep() - myLastEntryTime) / STEPS2TIME(myEventTime - myLastEntryTime));
-    return (SUMOReal(mySegment->getIndex()) /* + fracOnSegment */) * mySegment->getLength();
+//    const double fracOnSegment = MIN2(double(1), STEPS2TIME(MSNet::getInstance()->getCurrentTimeStep() - myLastEntryTime) / STEPS2TIME(myEventTime - myLastEntryTime));
+    return (double(mySegment->getIndex()) /* + fracOnSegment */) * mySegment->getLength();
 }
 
 
-SUMOReal
+double
 MEVehicle::getAngle() const {
     const MSLane* const lane = getEdge()->getLanes()[0];
     return lane->getShape().rotationAtOffset(lane->interpolateLanePosToGeometryPos(getPositionOnLane()));
 }
 
 
-SUMOReal
+double
 MEVehicle::getSlope() const {
     const MSLane* const lane = getEdge()->getLanes()[0];
     return lane->getShape().slopeDegreeAtOffset(lane->interpolateLanePosToGeometryPos(getPositionOnLane()));
@@ -103,13 +99,13 @@ MEVehicle::getSlope() const {
 
 
 Position
-MEVehicle::getPosition(const SUMOReal offset) const {
+MEVehicle::getPosition(const double offset) const {
     const MSLane* const lane = getEdge()->getLanes()[0];
     return lane->geometryPositionAtOffset(getPositionOnLane() + offset);
 }
 
 
-SUMOReal
+double
 MEVehicle::getSpeed() const {
     if (getWaitingTime() > 0) {
         return 0;
@@ -119,22 +115,22 @@ MEVehicle::getSpeed() const {
 }
 
 
-SUMOReal
+double
 MEVehicle::getAverageSpeed() const {
     return mySegment->getLength() / STEPS2TIME(myEventTime - myLastEntryTime);
 }
 
 
-SUMOReal
+double
 MEVehicle::estimateLeaveSpeed(const MSLink* link) const {
     /// @see MSVehicle.cpp::estimateLeaveSpeed
-    const SUMOReal v = getSpeed();
+    const double v = getSpeed();
     return MIN2(link->getViaLaneOrLane()->getVehicleMaxSpeed(this),
-                (SUMOReal)sqrt(2 * link->getLength() * getVehicleType().getCarFollowModel().getMaxAccel() + v * v));
+                (double)sqrt(2 * link->getLength() * getVehicleType().getCarFollowModel().getMaxAccel() + v * v));
 }
 
 
-SUMOReal
+double
 MEVehicle::getConservativeSpeed(SUMOTime& earliestArrival) const {
     earliestArrival = MAX2(myEventTime, earliestArrival - DELTA_T); // event times have subsecond resolution
     return mySegment->getLength() / STEPS2TIME(earliestArrival - myLastEntryTime);
@@ -219,7 +215,7 @@ MEVehicle::replaceRoute(const MSRoute* newRoute, bool onInit, int offset, bool a
 
 
 bool
-MEVehicle::addStop(const SUMOVehicleParameter::Stop& stopPar, std::string& /*errorMsg*/, SUMOTime /* untilOffset */) {
+MEVehicle::addStop(const SUMOVehicleParameter::Stop& stopPar, std::string& /*errorMsg*/, SUMOTime /* untilOffset */, bool /*collision*/) {
     const MSEdge* const edge = MSEdge::dictionary(stopPar.lane.substr(0, stopPar.lane.rfind('_')));
     assert(edge != 0);
     MESegment* stopSeg = MSGlobals::gMesoNet->getSegmentForEdge(*edge, stopPar.endPos);
@@ -265,7 +261,7 @@ MEVehicle::mayProceed() const {
 }
 
 
-SUMOReal
+double
 MEVehicle::getCurrentLinkPenaltySeconds() const {
     if (mySegment == 0) {
         return 0;

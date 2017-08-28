@@ -32,6 +32,7 @@
 
 #include <map>
 #include "GNEAdditionalDialog.h"
+#include "GNEVariableSpeedSignStep.h"
 
 
 // ===========================================================================
@@ -85,7 +86,7 @@ protected:
     GNEVariableSpeedSign* myVariableSpeedSignParent;
 
     /// @brief Map with the temporal VSSValues
-    std::map<SUMOReal, SUMOReal> myVSSValues;
+    std::vector<GNEVariableSpeedSignStep> mySteps;
 
     /// @brief Table with the data
     FXTable* myDataList;

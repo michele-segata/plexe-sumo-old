@@ -46,6 +46,7 @@ class NBEdgeCont;
 class NBNetBuilder;
 class NBNode;
 class NBNodeCont;
+class NBPTStopCont;
 class NBTrafficLightLogicCont;
 class NBTypeCont;
 class OptionsCont;
@@ -107,6 +108,11 @@ private:
      */
     static void writeTrafficLights(const OptionsCont& oc, NBTrafficLightLogicCont& tc, NBEdgeCont& ec);
 
+    /** @brief Writes the pt stops file
+     * @param[in] oc The options to use
+     * @param[in] nc The pt stop container from which to read data
+     */
+    static void writePTStops(const OptionsCont& oc, NBPTStopCont& ec);
 };
 
 

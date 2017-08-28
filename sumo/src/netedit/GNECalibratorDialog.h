@@ -1,7 +1,7 @@
 /****************************************************************************/
 /// @file    GNECalibratorDialog.h
 /// @author  Pablo Alvarez Lopez
-/// @date    Jun 2016
+/// @date    March 2017
 /// @version $Id$
 ///
 /// Dialog for edit calibrators
@@ -31,7 +31,16 @@
 #endif
 
 #include "GNEAdditionalDialog.h"
-#include "GNECalibrator.h"
+
+
+// ===========================================================================
+// class declarations
+// ===========================================================================
+
+class GNECalibrator;
+class GNECalibratorRoute;
+class GNECalibratorFlow;
+class GNECalibratorVehicleType;
 
 // ===========================================================================
 // class definitions
@@ -46,20 +55,17 @@ class GNECalibratorDialog : public GNEAdditionalDialog {
     FXDECLARE(GNECalibratorDialog)
 
 public:
-    /// @brief constructor
+    /// @brief Constructor
     GNECalibratorDialog(GNECalibrator* calibratorParent);
 
     /// @brief destructor
     ~GNECalibratorDialog();
 
+    /// @brief get calibrator parent
+    GNECalibrator* getCalibratorParent() const;
+
     /// @name FOX-callbacks
     /// @{
-    /// @brief event called after press add row button
-    long onCmdAddRow(FXObject*, FXSelector, void*);
-
-    /// @brief event called after press remove row
-    long onCmdRemoveRow(FXObject*, FXSelector, void*);
-
     /// @brief event after press accept button
     long onCmdAccept(FXObject*, FXSelector, void*);
 
@@ -68,89 +74,76 @@ public:
 
     /// @brief event after press reset button
     long onCmdReset(FXObject*, FXSelector, void*);
+
+    /// @brief add new route
+    long onCmdAddRoute(FXObject*, FXSelector, void*);
+
+    /// @brief remove or edit route
+    long onCmdClickedRoute(FXObject*, FXSelector, void*);
+
+    /// @brief add new flow
+    long onCmdAddFlow(FXObject*, FXSelector, void*);
+
+    /// @brief remove or edit flow
+    long onCmdClickedFlow(FXObject*, FXSelector, void*);
+
+    /// @brief add new vehicle type
+    long onCmdAddVehicleType(FXObject*, FXSelector, void*);
+
+    /// @brief remove or edit vehicle type
+    long onCmdClickedVehicleType(FXObject*, FXSelector, void*);
     /// @}
 
 protected:
-
     /// @brief FOX needs this
     GNECalibratorDialog() {}
 
     /// @brief pointer to calibrator parent
     GNECalibrator* myCalibratorParent;
 
-    /// @brief Map with the temporal FlowValues
-    std::vector<GNECalibrator::GNECalibratorFlow*> myFlowValues;
+    /// @brief button for add new route
+    FXButton* myAddRoute;
 
-    /// @brief Table with the data
-    FXTable* myDataList;
+    /// @brief list with routes
+    FXTable* myRouteList;
 
-    /// @brief textField for insert a flow's Id
-    FXTextField* myTextFieldId;
+    /// @brief label for flows
+    FXLabel* myLabelFlow;
 
-    /// @brief textField for insert a flow's begin
-    FXTextField* myTextFieldBegin;
+    /// @brief button for add new flow
+    FXButton* myAddFlow;
 
-    /// @brief textField for insert a flow's end
-    FXTextField* myTextFieldEnd;
+    /// @brief list with flows
+    FXTable* myFlowList;
 
-    /// @brief textField for insert a flow's Type
-    FXTextField* myTextFieldType;
+    /// @brief button for add new vehicle type
+    FXButton* myAddVehicleType;
 
-    /// @brief textField for insert a flow's Route
-    FXTextField* myTextFieldRoute;
+    /// @brief list with vehicle types
+    FXTable* myVehicleTypeList;
 
-    /// @brief textField for insert a flow's color
-    FXTextField* myTextFieldColor;
+    /// @brief vector with a copy of calibrator routes (used by reset)
+    std::vector<GNECalibratorRoute> myCopyOfCalibratorRoutes;
 
-    /// @brief textField for insert a flow's DepartLane
-    FXTextField* myTextFieldDepartLane;
+    /// @brief vector with a copy of calibrator flows (used by reset)
+    std::vector<GNECalibratorFlow> myCopyOfCalibratorFlows;
 
-    /// @brief textField for insert a flow's DepartPos
-    FXTextField* myTextFieldDepartPos;
+    /// @brief vector with a copy of calibrator vehicle types (used by reset)
+    std::vector<GNECalibratorVehicleType> myCopyOfCalibratorVehicleTypes;
 
-    /// @brief textField for insert a flow's DepartSpeed
-    FXTextField* myTextFieldDepartSpeed;
+    /// @brief update data table with routes
+    void updateRouteTable();
 
-    /// @brief textField for insert a flow's ArrivalLane
-    FXTextField* myTextFieldArrivalLane;
+    /// @brief update data table with flows
+    void updateFlowTable();
 
-    /// @brief textField for insert a flow's ArrivalPos
-    FXTextField* myTextFieldArrivalPos;
+    /// @brief update data table with vehicle types
+    void updateVehicleTypeTable();
 
-    /// @brief textField for insert a flow's ArrivalSpeed
-    FXTextField* myTextFieldArrivalSpeed;
-
-    /// @brief textField for insert a flow's Line
-    FXTextField* myTextFieldLine;
-
-    /// @brief textField for insert a flow's PersonNumber
-    FXTextField* myTextFieldPersonNumber;
-
-    /// @brief textField for insert a flow's ContainerNumber
-    FXTextField* myTextFieldContainerNumber;
-
-    /// @brief textField for insert a flow's vehsPerHour
-    FXTextField* myTextFieldVehsPerHour;
-
-    /// @brief textField for insert a flow's period
-    FXTextField* myTextFieldPeriod;
-
-    /// @brief textField for insert a flow's probability
-    FXTextField* myTextFieldProbability;
-
-    /// @brief textField for insert a flow's number
-    FXTextField* myTextFieldNumber;
-
-    /// @brief Button for insert row
-    FXButton* myAddRow;
-
-    /// @brief Horizontal frame for row elements
-    FXHorizontalFrame* myRowFrame;
+    /// @brief update flow and label button
+    void updateFlowAndLabelButton();
 
 private:
-    /// @brief update data table
-    void updateTable();
-
     /// @brief Invalidated copy constructor.
     GNECalibratorDialog(const GNECalibratorDialog&);
 

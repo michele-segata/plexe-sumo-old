@@ -41,10 +41,6 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/common/ToString.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -82,9 +78,9 @@ Option::isSet() const {
 }
 
 
-SUMOReal
+double
 Option::getFloat() const {
-    throw InvalidArgument("This is not a SUMOReal-option");
+    throw InvalidArgument("This is not a double-option");
 }
 
 
@@ -299,7 +295,7 @@ Option_String::getValueString() const {
 /* -------------------------------------------------------------------------
  * Option_Float - methods
  * ----------------------------------------------------------------------- */
-Option_Float::Option_Float(SUMOReal value)
+Option_Float::Option_Float(double value)
     : Option(true), myValue(value) {
     myTypeName = "FLOAT";
 }
@@ -325,7 +321,7 @@ Option_Float::operator=(const Option_Float& s) {
 }
 
 
-SUMOReal
+double
 Option_Float::getFloat() const {
     return myValue;
 }
@@ -334,7 +330,7 @@ Option_Float::getFloat() const {
 bool
 Option_Float::set(const std::string& v) {
     try {
-        myValue = TplConvert::_2SUMOReal(v.c_str());
+        myValue = TplConvert::_2double(v.c_str());
         return markSet();
     } catch (...) {
         throw ProcessError("'" + v + "' is not a valid float.");

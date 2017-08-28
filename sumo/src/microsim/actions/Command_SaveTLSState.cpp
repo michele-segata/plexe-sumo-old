@@ -35,10 +35,6 @@
 #include <utils/common/MsgHandler.h>
 #include <utils/iodevices/OutputDevice.h>
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // method definitions
@@ -46,8 +42,8 @@
 Command_SaveTLSState::Command_SaveTLSState(const MSTLLogicControl::TLSLogicVariants& logics,
         OutputDevice& od)
     : myOutputDevice(od), myLogics(logics) {
-    MSNet::getInstance()->getEndOfTimestepEvents()->addEvent(this, 0, MSEventControl::ADAPT_AFTER_EXECUTION);
-    myOutputDevice.writeXMLHeader("tls-states", "tlsstate_file.xsd");
+    MSNet::getInstance()->getEndOfTimestepEvents()->addEvent(this);
+    myOutputDevice.writeXMLHeader("tlsStates", "tlsstates_file.xsd");
 }
 
 

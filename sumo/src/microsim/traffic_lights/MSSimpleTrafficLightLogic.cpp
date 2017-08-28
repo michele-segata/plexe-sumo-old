@@ -43,10 +43,6 @@
 #include "MSTrafficLightLogic.h"
 #include "MSSimpleTrafficLightLogic.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 
 // ===========================================================================
 // member method definitions
@@ -202,8 +198,7 @@ MSSimpleTrafficLightLogic::changeStepAndDuration(MSTLLogicControl& tlcontrol,
         tlcontrol.get(getID()).executeOnSwitchActions();
     }
     MSNet::getInstance()->getBeginOfTimestepEvents()->addEvent(
-        mySwitchCommand, stepDuration + simStep,
-        MSEventControl::ADAPT_AFTER_EXECUTION);
+        mySwitchCommand, stepDuration + simStep);
 }
 
 

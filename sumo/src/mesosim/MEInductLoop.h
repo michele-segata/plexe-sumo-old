@@ -56,7 +56,7 @@ class MEInductLoop : public MSDetectorFileOutput {
 public:
     MEInductLoop(const std::string& id,
                  MESegment* s,
-                 SUMOReal positionInMeters,
+                 double positionInMeters,
                  const std::string& vTypes);
 
 
@@ -80,13 +80,13 @@ public:
 
     /**
      * Get the XML-formatted output of all the get*-methods except
-     * getTimestepsSinceLastDetection.
+     * getTimeSinceLastDetection.
      *
      * @param lastNTimesteps take data out of the interval
      * (now-lastNTimesteps, now].
      *
      * @return XML-formatted output of all the get*-methods except
-     * getTimestepsSinceLastDetection.
+     * getTimeSinceLastDetection.
      *
      * @see MSDetector2File
      */
@@ -99,7 +99,7 @@ protected:
     MESegment* const mySegment;
 
     /// @brief position from the start of the edge / lane
-    const SUMOReal myPosition;
+    const double myPosition;
 
     /// @brief data collector for the loop
     MSMeanData_Net::MSLaneMeanDataValues myMeanData;

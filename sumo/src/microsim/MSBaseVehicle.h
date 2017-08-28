@@ -62,7 +62,7 @@ public:
     /** @brief Returns the vehicle's previous speed
      * @return The vehicle's speed
      */
-    SUMOReal getPreviousSpeed() const;
+    double getPreviousSpeed() const;
 
     friend class GUIBaseVehicle;
 
@@ -74,7 +74,7 @@ public:
      * @exception ProcessError If a value is wrong
      */
     MSBaseVehicle(SUMOVehicleParameter* pars, const MSRoute* route,
-                  const MSVehicleType* type, const SUMOReal speedFactor);
+                  const MSVehicleType* type, const double speedFactor);
 
 
     /// @brief Destructor
@@ -90,6 +90,17 @@ public:
      */
     const SUMOVehicleParameter& getParameter() const;
 
+    /// @brief check whether the vehicle is equiped with a device of the given type
+    bool hasDevice(const std::string& deviceName) const;
+
+    /// @brief create device of the given type
+    void createDevice(const std::string& deviceName);
+
+    /// @brief try to retrieve the given parameter from any of the vehicles devices, raise InvalidArgument if no device parameter by that name exists
+    std::string getDeviceParameter(const std::string& deviceName, const std::string& key) const;
+
+    /// @brief try to set the given parameter from any of the vehicles devices, raise InvalidArgument if no device parameter by that name exists
+    void setDeviceParameter(const std::string& deviceName, const std::string& key, const std::string& value);
 
     /** @brief Returns the current route
      * @return The route the vehicle uses
@@ -117,7 +128,7 @@ public:
     /** @brief Returns the maximum speed
      * @return The vehicle's maximum speed
      */
-    SUMOReal getMaxSpeed() const;
+    double getMaxSpeed() const;
 
 
     /** @brief Returns the nSuccs'th successor of edge the vehicle is currently at
@@ -162,7 +173,7 @@ public:
      * @return The lateral position of the vehicle (in m relative to the
      * centerline of the lane)
      */
-    virtual SUMOReal getLateralPositionOnLane() const {
+    virtual double getLateralPositionOnLane() const {
         return 0;
     }
 
@@ -216,14 +227,14 @@ public:
      * This default implementation returns always 0.
      * @return The acceleration
      */
-    virtual SUMOReal getAcceleration() const;
+    virtual double getAcceleration() const;
 
     /** @brief Returns the slope of the road at vehicle's position
      *
      * This default implementation returns always 0.
      * @return The slope
      */
-    virtual SUMOReal getSlope() const;
+    virtual double getSlope() const;
 
     /** @brief Called when the vehicle is inserted into the network
      *
@@ -248,7 +259,7 @@ public:
     /** @brief Returns this vehicle's real departure position
      * @return This vehicle's real departure position
      */
-    inline SUMOReal getDepartPos() const {
+    inline double getDepartPos() const {
         return myDepartPos;
     }
 
@@ -256,13 +267,13 @@ public:
      * (may change on reroute)
      * @return This vehicle's real arrivalPos
      */
-    virtual SUMOReal getArrivalPos() const {
+    virtual double getArrivalPos() const {
         return myArrivalPos;
     }
 
     /** @brief Sets this vehicle's desired arrivalPos for its current route
      */
-    virtual void setArrivalPos(SUMOReal arrivalPos) {
+    virtual void setArrivalPos(double arrivalPos) {
         myArrivalPos = arrivalPos;
     }
 
@@ -283,7 +294,7 @@ public:
     }
 
     /// @brief Returns this vehicles impatience
-    SUMOReal getImpatience() const;
+    double getImpatience() const;
 
 
     /** @brief Returns this vehicle's devices
@@ -337,23 +348,24 @@ public:
      *  "MSMoveReminder::notifyEnter" is called.
      *
      * @param[in] reason The reason for changing the reminders' states
+     * @param[in] enteredLane The lane, which is entered (if applicable)
      * @see MSMoveReminder
      * @see MSMoveReminder::notifyEnter
      * @see MSMoveReminder::Notification
      */
-    virtual void activateReminders(const MSMoveReminder::Notification reason);
+    virtual void activateReminders(const MSMoveReminder::Notification reason, const MSLane* enteredLane = 0);
 
     /** @brief Returns the precomputed factor by which the driver wants to be faster than the speed limit
      * @return Speed limit factor
      */
-    inline SUMOReal getChosenSpeedFactor() const {
+    inline double getChosenSpeedFactor() const {
         return myChosenSpeedFactor;
     }
 
     /** @brief Returns the precomputed factor by which the driver wants to be faster than the speed limit
      * @return Speed limit factor
      */
-    inline void setChosenSpeedFactor(const SUMOReal factor) {
+    inline void setChosenSpeedFactor(const double factor) {
         myChosenSpeedFactor = factor;
     }
 
@@ -401,18 +413,18 @@ protected:
     MSRouteIterator myCurrEdge;
 
     /// @brief A precomputed factor by which the driver wants to be faster than the speed limit
-    SUMOReal myChosenSpeedFactor;
+    double myChosenSpeedFactor;
 
 
     /// @name Move reminder structures
     /// @{
 
     /// @brief Definition of a move reminder container
-    //         The SUMOReal value holds the relative position offset, i.e.,
+    //         The double value holds the relative position offset, i.e.,
     //         offset + vehicle-position - moveReminder-position = distance,
     //         i.e. the offset is counted up when the vehicle continues to a
     //         succeeding lane.
-    typedef std::vector< std::pair<MSMoveReminder*, SUMOReal> > MoveReminderCont;
+    typedef std::vector< std::pair<MSMoveReminder*, double> > MoveReminderCont;
 
     /// @brief Currently relevant move reminders
     MoveReminderCont myMoveReminders;
@@ -425,10 +437,10 @@ protected:
     SUMOTime myDeparture;
 
     /// @brief The real depart position
-    SUMOReal myDepartPos;
+    double myDepartPos;
 
     /// @brief The position on the destination lane where the vehicle stops
-    SUMOReal myArrivalPos;
+    double myArrivalPos;
 
     /// @brief The destination lane where the vehicle stops
     int myArrivalLane;
@@ -452,7 +464,7 @@ public:
 
 protected:
     /// @brief optionally generate movereminder-output for this vehicle
-    void traceMoveReminder(const std::string& type, MSMoveReminder* rem, SUMOReal pos, bool keep) const;
+    void traceMoveReminder(const std::string& type, MSMoveReminder* rem, double pos, bool keep) const;
 
     /// @brief whether this vehicle shall trace its moveReminders
     const bool myTraceMoveReminders;

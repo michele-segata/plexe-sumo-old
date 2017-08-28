@@ -25,10 +25,6 @@
 #include "../MSEdge.h"
 #include "MSPushButton.h"
 
-#ifdef CHECK_MEMORY_LEAKS
-#include <foreign/nvwa/debug_new.h>
-#endif // CHECK_MEMORY_LEAKS
-
 #if 1
 #define ANALYSIS_DBG(X) {X}
 #else
@@ -321,8 +317,8 @@ MSSOTLTrafficLightLogic::isThresholdPassed() {
     /*
      * if a dynamic threshold based on the exponential decrease, if passed we force the phase change
      */
-//	SUMOReal random = ((SUMOReal) RandHelper::rand(RAND_MAX) / (RAND_MAX));
-    SUMOReal random = RandHelper::rand();
+//	double random = ((double) RandHelper::rand(RAND_MAX) / (RAND_MAX));
+    double random = RandHelper::rand();
 //	ANALYSIS_DBG(
     DBG(
     if (isDecayThresholdActivated()) {
