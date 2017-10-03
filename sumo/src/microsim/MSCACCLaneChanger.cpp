@@ -116,6 +116,13 @@ bool MSCACCLaneChanger::change() {
     vehicle->getLaneChangeModel().prepareStep();
     std::pair<MSVehicle* const, double> leader = getRealLeader(myCandi);
 
+    //call the check change method to check and save lane changing state
+    //this enables traci queries for lane change possibility
+    if (mayChange(-1))
+        checkChangeWithinEdge(-1, leader, preb);
+    if (mayChange(+1))
+        checkChangeWithinEdge(+1, leader, preb);
+
     enum Plexe::PLATOONING_LANE_CHANGE_ACTION laneChangeAction = getLaneChangeAction(vehicle);
 
     CC_VehicleVariables *vars = (CC_VehicleVariables *)vehicle->getCarFollowVariables();
