@@ -197,6 +197,9 @@ public:
     double flatbedD;
     double flatbedH;
 
+    double myccKd;
+    double myccKs;
+
     /// @brief engine model employed by this car
     GenericEngineModel *engine;
     /// @brief numeric value indicating the employed model

@@ -43,7 +43,7 @@ enum PLATOONING_LANE_CHANGE_ACTION {
  * leave the control to the mobility model which reproduces a human driver
  */
 enum ACTIVE_CONTROLLER
-{DRIVER = 0, ACC = 1, CACC = 2, FAKED_CACC = 3, PLOEG = 4, CONSENSUS = 5, FLATBED = 6};
+{DRIVER = 0, ACC = 1, CACC = 2, FAKED_CACC = 3, PLOEG = 4, CONSENSUS = 5, FLATBED = 6, MYCC = 7};
 
 /**
  * @brief struct used as header for generic data passing to this model through
@@ -106,6 +106,9 @@ struct VEHICLE_DATA {
 #define CC_PAR_FLATBED_KP                "ccfkp"   //kp parameter of flatbed CACC
 #define CC_PAR_FLATBED_H                 "ccfh"    //h parameter of flatbed CACC
 #define CC_PAR_FLATBED_D                 "ccfd"    //distance parameter of flatbed CACC
+
+#define CC_PAR_MYCC_KD                   "ccmykd"  //k_d constant for new controller
+#define CC_PAR_MYCC_KS                   "ccmyks"  //k_s constant for new controller
 
 #define CC_PAR_VEHICLE_ENGINE_MODEL      "ccem"    //set the engine model for a vehicle
 

@@ -54,7 +54,8 @@ MSCFModel_CC::MSCFModel_CC(const MSVehicleType* vtype,
     : MSCFModel(vtype, accel, decel, decel, decel, headwayTime), myCcDecel(ccDecel), myCcAccel(ccAccel), myConstantSpacing(constantSpacing)
     , myKp(kp), myLambda(lambda), myC1(c1), myXi(xi), myOmegaN(omegaN), myTau(tau), myLanesCount(lanesCount),
     myPloegH(ploegH), myPloegKp(ploegKp), myPloegKd(ploegKd),
-    myFlatbedKa(flatbedKa), myFlatbedKv(flatbedKv), myFlatbedKp(flatbedKp), myFlatbedH(flatbedH), myFlatbedD(flatbedD) {
+    myFlatbedKa(flatbedKa), myFlatbedKv(flatbedKv), myFlatbedKp(flatbedKp), myFlatbedH(flatbedH), myFlatbedD(flatbedD),
+    myCcKd(0.2), myCcKs(0.4) {
 
     //if the lanes count has not been specified in the attributes of the model, lane changing cannot properly work
     if (lanesCount == -1) {
@@ -95,6 +96,8 @@ MSCFModel_CC::createVehicleVariables() const {
     vars->flatbedKp = myFlatbedKp;
     vars->flatbedD = myFlatbedD;
     vars->flatbedH = myFlatbedH;
+    vars->myccKs = myCcKs;
+    vars->myccKd = myCcKd;
     //by default use a first order lag model for the engine
     vars->engine = new FirstOrderLagModel();
     vars->engine->setParameter(FOLM_PAR_TAU, vars->engineTau);
@@ -437,6 +440,14 @@ MSCFModel_CC::_v(const MSVehicle* const veh, double gap2pred, double egoSpeed, d
 
                 break;
 
+            case Plexe::MYCC:
+
+                if (vars->frontInitialized)
+                    controllerAcceleration = _mycc(veh, egoSpeed, vars->frontSpeed, gap2pred);
+                else
+                    controllerAcceleration = 0;
+                break;
+
             case Plexe::DRIVER:
 
                 std::cerr << "Switching to normal driver behavior still not implemented in MSCFModel_CC\n";
@@ -612,6 +623,12 @@ MSCFModel_CC::_flatbed(const MSVehicle *veh, double egoAcceleration, double egoS
 }
 
 double
+MSCFModel_CC::_mycc(const MSVehicle *veh, double egoSpeed, double predSpeed, double gap2pred) const {
+    CC_VehicleVariables* vars = (CC_VehicleVariables*)veh->getCarFollowVariables();
+    return vars->myccKd * (gap2pred - 25) + vars->myccKs * (predSpeed - egoSpeed);
+}
+
+double
 MSCFModel_CC::getCACCConstantSpacing(const MSVehicle * veh) const {
     CC_VehicleVariables* vars = (CC_VehicleVariables*) veh->getCarFollowVariables();
     return vars->caccSpacing;
@@ -783,6 +800,14 @@ void MSCFModel_CC::setParameter(MSVehicle *veh, const std::string& key, const st
         }
         if (key.compare(CC_PAR_FLATBED_D) == 0) {
             vars->flatbedD = TplConvert::_2double(value.c_str());
+            return;
+        }
+        if (key.compare(CC_PAR_MYCC_KD) == 0) {
+            vars->myccKd = TplConvert::_2double(value.c_str());
+            return;
+        }
+        if (key.compare(CC_PAR_MYCC_KS) == 0) {
+            vars->myccKs = TplConvert::_2double(value.c_str());
             return;
         }
         if (key.compare(CC_PAR_VEHICLE_ENGINE_MODEL) == 0) {

@@ -59,6 +59,7 @@ CC_VehicleVariables::CC_VehicleVariables() :
     uMin(-1e6), uMax(1e6),
     ploegH(0.5), ploegKp(0.2), ploegKd(0.7),
     flatbedKa(2.4), flatbedKv(0.6), flatbedKp(12), flatbedD(5), flatbedH(4),
+    myccKd(0.2), myccKs(0.4),
     engine(0), engineModel(CC_ENGINE_MODEL_FOLM),
     usePrediction(false),
     autoLaneChange(false) {

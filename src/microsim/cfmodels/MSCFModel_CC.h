@@ -365,6 +365,7 @@ private:
     double _flatbed(const MSVehicle *veh, double egoAcceleration, double egoSpeed, double predSpeed,
                     double gap2pred, double leaderSpeed) const;
 
+    double _mycc(const MSVehicle *veh, double egoSpeed, double predSpeed, double gap2pred) const;
 
 private:
 
@@ -413,6 +414,10 @@ private:
     const double myFlatbedKp;
     const double myFlatbedH;
     const double myFlatbedD;
+
+    /// @brief sample MYCC controller parameters
+    const double myCcKd;
+    const double myCcKs;
 
 };
 
